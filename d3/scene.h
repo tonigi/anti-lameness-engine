@@ -78,15 +78,30 @@ class scene {
 			children[1] = NULL;
 		}
 
-		void write_tree(int level = 0) {
+		void write_tree(int print_vertices = 0, int level = 0) {
 			for (int i = 0; i < level; i++)
 				fprintf(stderr, " ");
 			fprintf(stderr, "%p (%p %p %p)\n", this, neighbors[0], neighbors[1], neighbors[2]);
 
+			if (print_vertices) {
+				for (int i = 0; i < level; i++)
+					fprintf(stderr, " ");
+				fprintf(stderr, "\t[%f %f %f] [%f %f %f] [%f %f %f]\n",
+						(*vertices[0])[0],
+						(*vertices[0])[1],
+						(*vertices[0])[2],
+						(*vertices[1])[0],
+						(*vertices[1])[1],
+						(*vertices[1])[2],
+						(*vertices[2])[0],
+						(*vertices[2])[1],
+						(*vertices[2])[2]);
+			}
+
 			if (children[0])
-				children[0]->write_tree(level + 1);
+				children[0]->write_tree(print_vertices, level + 1);
 			if (children[1])
-				children[1]->write_tree(level + 1);
+				children[1]->write_tree(print_vertices, level + 1);
 		}
 
 		/*
@@ -288,8 +303,8 @@ class scene {
 		int split_on_aux() {
 
 			if (children[0] && children[1]) {
-				return children[0]->split_on_aux()
-				    || children[1]->split_on_aux();
+				return (children[0]->split_on_aux()
+				      | children[1]->split_on_aux());
 			}
 
 			assert (!children[0] && !children[1] && !division_new_vertex);
@@ -569,8 +584,8 @@ class scene {
 	 */
 	static int density_test(int split) {
 
-		triangle_head[0]->write_tree();
-		triangle_head[1]->write_tree();
+		// triangle_head[0]->write_tree(1);
+		// triangle_head[1]->write_tree(1);
 
 		ale_pos scale = (split ? 1 : 2);
 		d2::pixel init_value = d2::pixel(1, 1, 1) * (ale_real) (split ? 1 : 0);
@@ -590,8 +605,8 @@ class scene {
 			 */
 			pt _pt = align::projective(n);
 			_pt.scale(scale * sf / _pt.scale_2d());
-			unsigned int height = (unsigned int) _pt.scaled_height();
-			unsigned int width  = (unsigned int) _pt.scaled_width();
+			unsigned int height = (unsigned int) floor(_pt.scaled_height());
+			unsigned int width  = (unsigned int) floor(_pt.scaled_width());
 			triangle **zbuf = init_zbuf(_pt);
 			assert (zbuf);
 			zbuffer(_pt, zbuf, triangle_head[0]);
@@ -652,9 +667,9 @@ class scene {
 		}
 
 		if (split)
-			return (triangle_head[0]->split_on_aux() || triangle_head[1]->split_on_aux());
+			return (triangle_head[0]->split_on_aux() | triangle_head[1]->split_on_aux());
 		if (!split)
-			return (triangle_head[0]->unsplit_on_aux() || triangle_head[1]->unsplit_on_aux());
+			return (triangle_head[0]->unsplit_on_aux() | triangle_head[1]->unsplit_on_aux());
 
 		assert(0);
 
@@ -839,10 +854,12 @@ public:
 		d2::image *im = new d2::image_ale_real((int) floor(d2::align::of(n).scaled_height()),
 				               (int) floor(d2::align::of(n).scaled_width()), 3);
 
-		triangle **zbuf = init_zbuf(align::projective(n));
+		pt _pt = align::projective(n);
 
-		zbuffer(align::projective(n), zbuf, triangle_head[0]);
-		zbuffer(align::projective(n), zbuf, triangle_head[1]);
+		triangle **zbuf = init_zbuf(_pt);
+
+		zbuffer(_pt, zbuf, triangle_head[0]);
+		zbuffer(_pt, zbuf, triangle_head[1]);
 
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++)
