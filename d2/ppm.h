@@ -73,6 +73,8 @@ static inline int digest_comment(FILE *f, const char *filename, extended_t *exte
 
 		if (extended->is_extended && fscanf(f, "Black-level: %d", &value) == 1)
 			extended->black_level = value;
+		else if (next != '\n' && next != '\r' && next != EOF)
+			next = fgetc(f);
 
 		next = fgetc(f);
 	}
