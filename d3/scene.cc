@@ -25,4 +25,4 @@
  */
 
 scene::lod *scene::cl;
-scene::triangle *scene::triangle_head;
+scene::triangle *scene::triangle_head[2];

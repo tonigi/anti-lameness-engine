@@ -38,9 +38,24 @@ class scene {
 		struct triangle *neighbors[3];
 		point *division_vertex;
 		struct triangle *children[2];
+
+		triangle() {
+			vertices[0] = NULL;
+			vertices[1] = NULL;
+			vertices[2] = NULL;
+
+			neighbors[0] = NULL;
+			neighbors[1] = NULL;
+			neighbors[2] = NULL;
+
+			division_vertex = NULL;
+
+			children[0] = NULL;
+			children[1] = NULL;
+		}
 	};
 
-	static struct triangle *triangle_head;
+	static struct triangle *triangle_head[2];
 
 	/*
 	 * Structure to hold input frame information for a given level of
@@ -108,6 +123,53 @@ public:
 			cl->reference[n] = d2::image_rw::copy(n, "3D scene reference");
 			assert(cl->reference[n]);
 		}
+
+		/*
+		 * Determine the bounding box of the intersections of the view
+		 * pyramids with the estimated scene plane, and construct an
+		 * initial (planar) triangular decomposition of the scene.
+		 */
+
+		d2::point min = d2::point(0, 0);
+		d2::point max = d2::point(0, 0);
+
+		for (int n = 0; n < N; n++) {
+			d2::transformation t = d2::align::of(n);
+
+			d2::point a[4];
+
+			a[0] = t.transform_scaled(d2::point(0, 0));
+			a[1] = t.transform_scaled(d2::point(t.scaled_height() - 1, 0));
+			a[2] = t.transform_scaled(d2::point(t.scaled_height() - 1, t.scaled_width() - 1));
+			a[3] = t.transform_scaled(d2::point(0, t.scaled_width() - 1));
+
+			for (int p = 0; p < 4; p++)
+			for (int d = 0; d < 2; d++) {
+				if (a[p][d] < min[d])
+					min[d] = a[p][d];
+				if (a[p][d] > max[d])
+					max[d] = a[p][d];
+			}
+		}
+
+		for (int head = 0; head < 2; head++) {
+			triangle_head[head] = new triangle;
+			assert(triangle_head[head]);
+			if (!triangle_head)
+				ui::get()->memory_error("triangular approximation of 3D scene");
+		}
+
+		triangle_head[0]->vertices[0] = new point(min[0], min[1]);
+		triangle_head[0]->vertices[1] = new point(max[0], min[1]);
+		triangle_head[0]->vertices[2] = new point(min[0], max[1]);
+
+		triangle_head[0]->neighbors[0] = triangle_head[1];
+
+		triangle_head[1]->vertices[0] = new point(max[0], max[1]);
+		triangle_head[1]->vertices[1] = new point(min[0], max[1]);
+		triangle_head[1]->vertices[2] = new point(max[0], min[1]);
+
+		triangle_head[1]->neighbors[0] = triangle_head[0];
 	}
 
 	/*
