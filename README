@@ -4,6 +4,11 @@ This is a program designed to produce relatively alias-free images from digital
 camera samples.  Much of it could be applied to images from any source, as long
 as they are in PPM binary format.  
 
+Other image formats can optionally be supported by ImageMagick.  See the
+section 'Compiling from source' below for more information on compiling with
+ImageMagick support.
+
+
 Downloading a binary
 --------------------
 
@@ -13,7 +18,13 @@ Downloading a binary
 	Download ale-x_x_x-win32.zip, unzip, and execute ale.exe.  Note that 
 	ALE takes arguments on the command line, so you may need to open a 
 	command prompt window to use ALE successfully.  Typing 'ale.exe' with 
-	no arguments will print a usage message.
+	no arguments will print a usage message.  
+
+	This build does not use ImageMagick for handling files, so only PPM
+	binary format is currently supported.  If you want support for files
+	other than PPM, try compiling from source; otherwise, convert the input
+	files to PPM if necessary (e.g. with ImageMagick's command-line
+	utilities).
 
 	
 	Other Platforms
@@ -22,17 +33,18 @@ Downloading a binary
 	No binaries provided.  Compile from source.
 
 
-Compiling from source
----------------------
+Compiling from source (version 0.1.2)
+-------------------------------------
 
 You will need GCC and a make utility (GNU Make will do fine).  To compile from
 source, download the tarball into a directory, expand it with 'tar xzf
-ale-x.x.x.tar.gz', enter the unzipped directory, and type 'make'.  The makefile
-may need some tweaking on Windows systems (e.g. you may want to write the
-output to 'ale.exe' or something.
+ale-x.x.x.tar.gz', enter the unzipped directory, and type either 'make' or
+'make IMAGEMAGICK=1', depending on whether ImageMagick support is desired.  The
+makefile may need some tweaking on Windows systems (e.g. you may want to write
+the output to 'ale.exe' or something.
 
 
-Using ALE (version 0.1.1)
+Using ALE (version 0.1.2)
 -------------------------
 
 Usage: ./ale [<options>] <input-files> ... <output-file>
@@ -41,12 +53,13 @@ Usage: ./ale [<options>] <input-files> ... <output-file>
 This program clips several supplemental frames against an original frame and
 merges the results into a single output file result.  The first input file is
 considered the original frame, and subsequent input files are considered
-supplemental frames.  All files must be in PPM binary (as opposed to ascii)
-format.  The merge is produced incrementally, and you can inspect the output
-file as the process progresses.  Options are described in the next section.
+supplemental frames.  Unless ALE has been compiled with the ImageMagick option,
+all files must be in PPM binary (as opposed to ascii) format.  The merge is
+produced incrementally, and you can inspect the output file as the process
+progresses.  Options are described in the next section.
 
 
-Options (version 0.1.1)
+Options (version 0.1.2)
 -----------------------
 
 Options:

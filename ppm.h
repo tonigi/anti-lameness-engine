@@ -17,6 +17,8 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef __ppm_h__
+#define __ppm_h__
 
 #include <stdio.h>
 #include <assert.h>
@@ -37,6 +39,11 @@ static inline image *read_ppm(char *filename) {
 	int n;
 	FILE *f = fopen(filename, "r");
 	assert(f);
+
+	if (f == NULL) {
+		fprintf(stderr, "\n\nUnable to open '%s'.\n\n", filename);
+		exit(1);
+	}
 
 	/* Magic */
 
@@ -100,6 +107,11 @@ static inline void write_ppm(char *filename, image *im) {
 	FILE *f = fopen(filename, "w");
 	assert(f);
 
+	if (f == NULL) {
+		fprintf(stderr, "\n\nUnable to open '%s'.\n\n", filename);
+		exit(1);
+	}
+
 	/* Magic */
 
 	fprintf(f, "P6 ");
@@ -127,3 +139,5 @@ static inline void write_ppm(char *filename, image *im) {
 
 	fclose(f);
 }
+
+#endif

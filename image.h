@@ -17,13 +17,13 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef __image_h__
+#define __image_h__
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
-
-#ifndef __image_h__
-#define __image_h__
 
 typedef struct {
 	unsigned int dimx, dimy, depth;

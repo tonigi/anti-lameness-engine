@@ -16,13 +16,23 @@
 #  along with Anti-Lamenessing Engine; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-all: ale
+CFLAGS:=-DNDEBUG $(if $(IMAGEMAGICK), -DUSE_MAGICK $(shell Magick-config --cflags --cppflags), -Wall -O3)
+
+LDFLAGS:=-lm $(if $(IMAGEMAGICK), $(shell Magick-config --ldflags --libs))
+
+#
+# We're using 'ale-phony' because we're using make for configuration,
+# and we want to make sure that the output is updated if the configuration
+# changes.  XXX: this is horrible.
+#
+
+all: ale-phony
 
 clean:
 	rm -f ale
 
-ale: ale.c *.h
-	gcc -o $@ -Wall -DNDEBUG -O3 ale.c -lm
+ale-phony: ale.c *.h
+	gcc -o ale $(CFLAGS) ale.c $(LDFLAGS)
 
 # XXX: this isn't even remotely portable.  It's how I make the Windows
 # binary, though, so I might as well put it here.

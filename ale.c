@@ -18,7 +18,7 @@
 */
 
 #include "image.h"
-#include "ppm.h"
+#include "image_rw.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,7 +30,13 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-char *version = "0.1.1";
+char *version = "0.1.2"
+#ifdef USE_MAGICK
+		" (File handler: ImageMagick)";
+#else
+		" (File handler: PPM binary)";
+#endif
+
 
 image *display_image, *input_image, *weight_image;
 
@@ -375,14 +381,14 @@ int main(int argc, char *argv[]){
 
 			fprintf(stderr, "Reading original frame '%s'", argv[i]);
 
-			display_image = read_ppm(argv[i]);
+			display_image = read_image(argv[i]);
 
 			if (res_scale != 1)
 				scale(display_image, res_scale);
 			weight_image = new_image(height(display_image), 
 						 width(display_image), 1);
 
-			write_ppm(argv[argc - 1], display_image);
+			write_image(argv[argc - 1], display_image);
 
 			fprintf(stderr, ".\n");
 
@@ -391,12 +397,12 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, "Merging supplemental frame '%s'", 
 					argv[i]);
 
-			input_image = read_ppm(argv[i]);
+			input_image = read_image(argv[i]);
 			if (res_scale != 1)
 				scale(input_image, res_scale);
 			update();
 
-			write_ppm(argv[argc - 1], display_image);
+			write_image(argv[argc - 1], display_image);
 
 			fprintf(stderr, ".\n");
 			

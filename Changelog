@@ -1,3 +1,11 @@
+0.1.2
+
+o	Add optional support for .jpg, .png, .tiff, and other file formats
+	through ImageMagick.  Inspired by a translation script idea suggested
+	by Nick Rusnov.
+
+o	Don't segfault if a file can't be opened.
+
 0.1.1
 
 o	Use reduced levels of detail in coarser alignment steps to increase
