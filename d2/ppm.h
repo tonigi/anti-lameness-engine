@@ -248,7 +248,8 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 					error_ppm(filename);
 			}
 
-			p[k] = (ale_real) (ival - (extended.is_extended ? extended.black_level : 0)) / mcv;
+			p[k] = (ale_real) (ival - (extended.is_extended ? extended.black_level : 0)) 
+			     / (ale_real) (mcv  - (extended.is_extended ? extended.black_level : 0));
 		}
 
 		im->set_pixel(i, j, e->linearize(p));
