@@ -30,6 +30,12 @@
 /*
  * Structure to describe a 3D->2D projective transformation.  3D information is
  * preserved by adding a depth element to the result.
+ *
+ * The following coordinate systems are considered:
+ *
+ * 	P: projective
+ * 	C: local cartesian
+ * 	W: world
  */
 
 struct pt {
@@ -67,15 +73,16 @@ public:
 	}
 
 	/*
-	 * Transform point p.
+	 * Transform W to C.
 	 */
-	struct point generic_transform(struct point p, ale_pos w, ale_pos h) {
-		/*
-		 * First, apply the euclidean transformation.
-		 */
+	point wc(point p) {
+		return euclidean(p);
+	}
 
-		p = euclidean(p);
-
+	/*
+	 * Transform C to P for given width and height.
+	 */
+	point cp_generic(point p, ale_pos w, ale_pos h) {
 		/*
 		 * Divide x and y by negative z
 		 */
@@ -102,6 +109,13 @@ public:
 	}
 
 	/*
+	 * Transform point p.
+	 */
+	struct point wp_generic(struct point p, ale_pos w, ale_pos h) {
+		return cp_generic(wc(p), w, h);
+	}
+
+	/*
 	 * Width and height
 	 */
 
@@ -122,25 +136,33 @@ public:
 	}
 
 	/*
-	 * Scaled transform
+	 * Scaled transforms
 	 */
 
-	point scaled_transform(point p) {
-		return generic_transform(p, scaled_width(), scaled_height());
+	point cp_scaled(point p) {
+		return cp_generic(p, scaled_width(), scaled_height());
+	}
+
+	point wp_scaled(point p) {
+		return wp_generic(p, scaled_width(), scaled_height());
 	}
 
 	/*
-	 * Unscaled transform
+	 * Unscaled transforms
 	 */
 
-	point unscaled_transform(point p) {
-		return generic_transform(p, unscaled_width(), unscaled_height());
+	point cp_unscaled(point p) {
+		return cp_generic(p, unscaled_width(), unscaled_height());
+	}
+
+	point wp_unscaled(point p) {
+		return wp_generic(p, unscaled_width(), unscaled_height());
 	}
 
 	/*
-	 * Map point p using the inverse of the transform.
+	 * Transform P to C.
 	 */
-	point inverse_transform_generic(point p, ale_pos w, ale_pos h) {
+	point pc_generic(point p, ale_pos w, ale_pos h) {
 		/*
 		 * Subtract offset
 		 */
@@ -163,30 +185,47 @@ public:
 		p[0] *= -p[2];
 		p[1] *= -p[2];
 
-		/*
-		 * Apply the inverse euclidean transformation.
-		 */
-
-		p = euclidean.inverse_transform(p);
-
 		return p;
 	}
 
 	/*
-	 * Inverse transform for scaled points.
+	 * Transform C to W
 	 */
-
-	point inverse_transform_scaled(point p) {
-		return inverse_transform_generic(p, scaled_width(), scaled_height());
+	point cw(point p) {
+		return euclidean.inverse_transform(p);
 	}
 
 	/*
-	 * Inverse transform for unscaled points.
+	 * Transform P to W
+	 */
+	point pw_generic(point p, ale_pos w, ale_pos h) {
+		return cw(pc_generic(p, w, h));
+	}
+
+	/*
+	 * Inverse transforms for scaled points.
 	 */
 
-	point inverse_transform_unscaled(point p) {
-		return inverse_transform_generic(p, unscaled_width(), unscaled_height());
+	point pc_scaled(point p) {
+		return pc_generic(p, scaled_width(), scaled_height());
 	}
+
+	point pw_scaled(point p) {
+		return pw_generic(p, scaled_width(), scaled_height());
+	}
+
+	/*
+	 * Inverse transforms for unscaled points.
+	 */
+
+	point pc_unscaled(point p) {
+		return pc_generic(p, unscaled_width(), unscaled_height());
+	}
+
+	point pw_unscaled(point p) {
+		return pw_generic(p, unscaled_width(), unscaled_height());
+	}
+
 };
 
 #endif

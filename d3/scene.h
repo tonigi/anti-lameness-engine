@@ -41,6 +41,12 @@ class scene {
 	 *
 	 * Variables should be specified in cartesian coordinates (not
 	 * projective coordinates).
+	 *
+	 * Return value elements are:
+	 *
+	 * 	0: ray multiplier
+	 * 	1: v[1] - v[0] component
+	 * 	2: v[2] - v[0] component
 	 */
 	static point rt_intersect(point r, point vertices[3]) {
 		point a = vertices[0];
@@ -84,7 +90,7 @@ class scene {
 		        a[0] * m_inverse_t[1][0] + a[1] * m_inverse_t[1][1] + a[2] * m_inverse_t[1][2],
 			a[0] * m_inverse_t[2][0] + a[1] * m_inverse_t[2][1] + a[2] * m_inverse_t[2][2]);
 
-		return k[0] * r;
+		return k;
 	}
 
 	/*
@@ -533,9 +539,9 @@ class scene {
 		}
 
 		ale_pos compute_area(pt _pt) {
-			point a = _pt.scaled_transform(*vertices[0]);
-			point b = _pt.scaled_transform(*vertices[1]);
-			point c = _pt.scaled_transform(*vertices[2]);
+			point a = _pt.wp_scaled(*vertices[0]);
+			point b = _pt.wp_scaled(*vertices[1]);
+			point c = _pt.wp_scaled(*vertices[2]);
 
 			a[2] = 0;
 			b[2] = 0;
@@ -677,7 +683,7 @@ class scene {
 					 * Map the centroid into image space.
 					 */
 
-					point mapped_centroid = _pt.scaled_transform(centroid);
+					point mapped_centroid = _pt.wp_scaled(centroid);
 
 					/*
 					 * Check the bounds
@@ -750,7 +756,7 @@ class scene {
 					 * Map the centroid into image space.
 					 */
 
-					point mapped_centroid = _pt.scaled_transform(centroid);
+					point mapped_centroid = _pt.wp_scaled(centroid);
 
 					/*
 					 * Check the bounds
@@ -892,6 +898,33 @@ class scene {
 	static struct triangle *triangle_head[2];
 
 	/*
+	 * Vector test for interiority.
+	 *
+	 * P is a set of triangle vertex points in euclidean space.  R is a ray
+	 * endpoint in euclidean space.  The intersection of R and the plane defined
+	 * by P is the point being tested for interiority.
+	 */
+	 static int is_interior_v(point p[3], point r, int print_on_failure = 0) {
+
+		point multipliers = rt_intersect(r, p);
+
+		if (multipliers[1] >= 0
+		 && multipliers[2] >= 0
+		 && (multipliers[1] + multipliers[2] <= 0.5))
+			return 1;
+
+		if (print_on_failure && 0) {
+			 fprintf(stderr, "is_interior_v({{%f, %f}, {%f, %f}, {%f, %f}}, {%f, %f})",
+					 p[0][0], p[0][1],
+					 p[1][0], p[1][1],
+					 p[2][0], p[2][1],
+					 r[0], r[1]);
+			fprintf(stderr, " = 0\n");
+		}
+
+		return 0;
+	}
+	/*
 	 * Upper/lower test for interiority.
 	 *
 	 * P is a set of triangle vertex points mapped into image space.
@@ -943,14 +976,14 @@ class scene {
 	}
 
 	/*
-	 * Return a subtriangle index for a given position.
+	 * Return a subtriangle index for a given position.  Assumes cartesian
+	 * (not projective) coordinates.
+	 *
+	 * R is the endpoint of a ray whose tail is at zero.
+	 * P_W are the vertex coordinates.
 	 */
-
-	static int subtriangle_index(pt _pt, d2::point test_point, point p_w[3], int depth, int prefix) {
-		point p_i[3];
-
-		for (int v = 0; v < 3; v++)
-			p_i[v] = _pt.scaled_transform(p_w[v]);
+#if 0
+	static int subtriangle_index(point r, point p_w[3], int depth, int prefix) {
 
 		if (depth == 0)
 			return prefix;
@@ -970,7 +1003,51 @@ class scene {
 			hp_w[v] = (p_w[(v + 1) % 3] + p_w[(v + 2) % 3]) / 2;
 
 		for (int v = 0; v < 3; v++)
-			hp_i[v] = _pt.scaled_transform(hp_w[v]);
+			hp_i[v] = _pt.wp_scaled(hp_w[v]);
+
+		for (int v = 0; v < 3; v++) {
+			point arg_array_i[3] = {p_i[v], hp_i[(v + 2) % 3], hp_i[(v + 1) % 3]};
+			point arg_array_w[3] = {p_w[v], hp_w[(v + 2) % 3], hp_w[(v + 1) % 3]};
+
+			int interior_t = is_interior(arg_array_i, point(test_point[0], test_point[1], 1));
+
+			if (interior_t)
+				return subtriangle_index(_pt, test_point, arg_array_w, depth - 1, prefix * 4 + v);
+		}
+
+		return subtriangle_index(_pt, test_point, hp_w, depth - 1, prefix * 4 + 3);
+	}
+#endif
+
+	/*
+	 * Return a subtriangle index for a given position.
+	 */
+
+	static int subtriangle_index(pt _pt, d2::point test_point, point p_w[3], int depth, int prefix) {
+		point p_i[3];
+
+		for (int v = 0; v < 3; v++)
+			p_i[v] = _pt.wp_scaled(p_w[v]);
+
+		if (depth == 0)
+			return prefix;
+
+		if (!is_interior(p_i, point(test_point[0], test_point[1], 1), 1)) {
+			/*
+			 * XXX: Error condition ... what should we do here?
+			 */
+			// assert(0);
+			return prefix;
+		}
+
+		point hp_w[3];
+		point hp_i[3];
+
+		for (int v = 0; v < 3; v++)
+			hp_w[v] = (p_w[(v + 1) % 3] + p_w[(v + 2) % 3]) / 2;
+
+		for (int v = 0; v < 3; v++)
+			hp_i[v] = _pt.wp_scaled(hp_w[v]);
 
 		for (int v = 0; v < 3; v++) {
 			point arg_array_i[3] = {p_i[v], hp_i[(v + 2) % 3], hp_i[(v + 1) % 3]};
@@ -1035,7 +1112,7 @@ class scene {
 			point p[3];
 
 			for (int v = 0; v < 3; v++)
-				p[v] = _pt.scaled_transform(*t->vertices[v]);
+				p[v] = _pt.wp_scaled(*t->vertices[v]);
 
 			/*
 			 * Determine the bounding box of the transformed vertices.
@@ -1101,7 +1178,7 @@ class scene {
 				 * XXX: this doesn't work correctly in all cases.
 				 */
 
-				if (*zbuf_tri && _pt.scaled_transform(*(*zbuf_tri)->vertices[0])[2] > p[0][2])
+				if (*zbuf_tri && _pt.wp_scaled(*(*zbuf_tri)->vertices[0])[2] > p[0][2])
 					continue;
 				
 				/*
@@ -1568,7 +1645,7 @@ public:
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++)
 		if (zbuf[i * im->width() + j])
-			im->pix(i, j) = d2::pixel(1, 1, 1) * _pt.scaled_transform(*zbuf[i * im->width() + j]->vertices[0])[2];
+			im->pix(i, j) = d2::pixel(1, 1, 1) * _pt.wp_scaled(*zbuf[i * im->width() + j]->vertices[0])[2];
 
 		free(zbuf);
 
@@ -1593,11 +1670,6 @@ public:
 		int max_depth = 2;
 		int improved = 1;
 		int count = 0;
-
-		point int_v[3] = {point(0, 0, 10), point(10, 0, 10), point(0, 10, 10)};
-		point intersect = rt_intersect(point(1, 1, 2), int_v);
-
-		fprintf(stderr, "Intersect: %f %f %f\n", intersect[0], intersect[1], intersect[2]);
 
 		assert (max_depth > 0);
 
