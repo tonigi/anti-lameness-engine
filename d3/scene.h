@@ -768,6 +768,10 @@ class scene {
 					color += cl->reference[n]->get_bl(mapped_centroid.xy());
 					weight += d2::pixel(1, 1, 1);
 					color = weight * (mapped_centroid.xy()[1] / cl->reference[n]->width());
+
+					point centroid_local = _pt.wc(centroid);
+					point _vertices[3] = {_pt.wc(*vertices[0]), _pt.wc(*vertices[1]), _pt.wc(*vertices[2])};
+					assert (e == subtriangle_index(centroid_local, _vertices, PLANAR_SUBDIVISION_DEPTH, 0));
 				}
 
 				color /= weight;
@@ -983,7 +987,7 @@ class scene {
 	 * R_C is the endpoint of a ray whose tail is at zero.
 	 * P_C are the vertex coordinates.
 	 */
-	static int subtriangle_index(point r_c, point p_c[3], int depth, int prefix) {
+	static unsigned int subtriangle_index(point r_c, point p_c[3], int depth, int prefix) {
 
 		if (depth == 0)
 			return prefix;
@@ -1002,7 +1006,11 @@ class scene {
 			hp_c[v] = (p_c[(v + 1) % 3] + p_c[(v + 2) % 3]) / 2;
 
 		for (int v = 0; v < 3; v++) {
-			point arg_array_c[3] = {p_c[v], hp_c[(v + 2) % 3], hp_c[(v + 1) % 3]};
+			point arg_array_c[3];
+
+			arg_array_c[v] = p_c[v];
+			arg_array_c[(v + 1) % 3] = hp_c[(v + 2) % 3];
+			arg_array_c[(v + 2) % 3] = hp_c[(v + 1) % 3];
 
 			int interior_t = is_interior_c(arg_array_c, r_c);
 
