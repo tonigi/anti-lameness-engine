@@ -1,3 +1,10 @@
+0.7.4-pre2
+
+o	Modify d2::exposure::one_sided_confidence() so that the 'one-sided'
+	condition only applies to bright (>50%) areas.  Applying it to dark
+	areas has no clear benefit, and an experiment by Gregory Maxwell
+	demonstrates that doing so can exacerbate noise.
+
 0.7.4-pre1
 
 o	Modify d2::align to use unscaled input images when the scale factor

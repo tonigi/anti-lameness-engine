@@ -175,14 +175,17 @@ public:
 
 	/*
 	 * Confidence that the real value is lower or higher than the given
-	 * value.
+	 * value.  
+	 *
+	 * XXX: This function now applies the one-sided condition only to
+	 * responses greater than 50%.  Should it be called
+	 * 'upper_one_sided_confidence' instead?
 	 */
 	virtual pixel one_sided_confidence(pixel input, pixel sign) const {
 		if (confidence_exponent) {
 			pixel result = confidence(input);
 			for (unsigned int k = 0; k < 3; k++) {
-				if ((sign[k] > 0 && input[k] / _multiplier[k] > 0.5)
-				 || (sign[k] < 0 && input[k] / _multiplier[k] < 0.5))
+				if (sign[k] > 0 && input[k] / _multiplier[k] > 0.5)
 					result[k] = 1;
 			}
 			return result;
