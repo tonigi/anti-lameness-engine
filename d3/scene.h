@@ -303,8 +303,13 @@ class scene {
 		int split_on_aux() {
 
 			if (children[0] && children[1]) {
-				return (children[0]->split_on_aux()
-				      | children[1]->split_on_aux());
+
+				// int a = rand() % 2;
+				int a = 0;
+				int b = 1 - a;
+
+				return (children[a]->split_on_aux()
+				      | children[b]->split_on_aux());
 			}
 
 			assert (!children[0] && !children[1] && !division_new_vertex);
@@ -318,17 +323,26 @@ class scene {
 
 		int unsplit_on_aux() {
 			if (aux_stat != d2::pixel(0, 0, 0)) {
-				assert (children[0] && children[1] && division_new_vertex);
 				unsplit();
 				return 1;
 			} else if (children[0] && children[1]) {
 				return children[0]->unsplit_on_aux()
-				    || children[1]->unsplit_on_aux();
+				     | children[1]->unsplit_on_aux();
 			}
 
 			return 0;
 		}
 
+		ale_pos compute_area(pt _pt) {
+			point a = _pt.scaled_transform(*vertices[0]);
+			point b = _pt.scaled_transform(*vertices[1]);
+			point c = _pt.scaled_transform(*vertices[2]);
+
+			return 0.5 
+			     * a.lengthto(b) 
+			     * a.lengthto(c)
+			     * sin(a.anglebetw(b, c));
+		}
 	};
 
 	/*
@@ -566,6 +580,11 @@ class scene {
 				if (!t)
 					continue;
 
+				point pp = _pt.scaled_transform(*t->vertices[0]);
+				point aa = _pt.inverse_transform_scaled(point(i, j, pp[2]));
+				if (i * im->width() + j < 100)
+					fprintf(stderr, "\n%d: (%u %u %f) --> (%f %f %f) ", i * im->width() + j, i, j, pp[2], aa[0], aa[1], aa[2]);
+
 				/*
 				 * Set new color and weight.
 				 */
@@ -640,26 +659,15 @@ class scene {
 				t->aux_stat = d2::pixel(0, 0, 0);
 
 				/*
-				 * Check that at least one point in the
-				 * neighboring eight is associated with the
-				 * same triangle.  
+				 * Check that the triangle area is at least
+				 * four.
 				 */
 
-				int count = 0;
+				ale_pos area = t->compute_area(_pt);
 
-				for (int ii = -1; ii <= 1; ii++)
-				for (int jj = -1; jj <= 1; jj++)
-				if (zbuf[(i + ii) * width + (j + jj)] == t)
-					count++;
-
-				/*
-				 * Since we revisit the original point, the
-				 * final sum should be two.
-				 */
-
-				if (count < 2 && split)
+				if (area < 4 && split)
 					t->aux_stat = d2::pixel(-1, -1, -1);
-				else if (count < 2 && !split && t->parent)
+				else if (area < 4 && !split && t->parent)
 					t->parent->aux_stat = d2::pixel(-1, -1, -1);
 			}
 
