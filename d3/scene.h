@@ -630,6 +630,39 @@ class scene {
 	static struct lod *cl;
 
 	/*
+	 * Upper/lower test for interiority.
+	 *
+	 * P is a set of triangle vertex points mapped into image space.
+	 * TEST_POINT is a test point at distance 1 from a camera.
+	 */
+	 int is_interior(point p[3], point test_point) {
+
+		int lower[2] = {0, 0};
+		int upper[2] = {0, 0};
+
+		for (int v = 0; v < 3; v++) {
+			point cv = p[v];
+			point nv = p[(v + 1) % 3];
+
+			for (int d = 0; d < 2; d++)
+			if ((test_point[d] - cv[d]) * (test_point[d] - nv[d]) < 0) {
+				int e = (d + 1) % 2;
+				ale_pos travel = (test_point[d] - cv[d]) / (nv[d] - cv[d]);
+				ale_pos intersect = cv[e] + travel * (nv[e] - cv[e]);
+				if (intersect <= test_point[e]) 
+					lower[e] = 1;
+				if (intersect >= test_point[e])
+					upper[e] = 1;
+			}
+		}
+
+		if (!lower[0] || !upper[0] || !lower[1] || !upper[1])
+			return 0;
+
+		return 1;
+	}
+
+	/*
 	 * Z-buffer initialization function.
 	 */
 	static triangle **init_zbuf(pt _pt) {
@@ -739,27 +772,9 @@ class scene {
 				 * Test for interiority
 				 */
 
-				int lower[2] = {0, 0};
-				int upper[2] = {0, 0};
+				point test_point = point(i, j, 1);
 
-				for (int v = 0; v < 3; v++) {
-					point cv = p[v];
-					point nv = p[(v + 1) % 3];
-					point test_point = point(i, j, 1);
-
-					for (int d = 0; d < 2; d++)
-					if ((test_point[d] - cv[d]) * (test_point[d] - nv[d]) < 0) {
-						int e = (d + 1) % 2;
-						ale_pos travel = (test_point[d] - cv[d]) / (nv[d] - cv[d]);
-						ale_pos intersect = cv[e] + travel * (nv[e] - cv[e]);
-						if (intersect <= test_point[e]) 
-							lower[e] = 1;
-						if (intersect >= test_point[e])
-							upper[e] = 1;
-					}
-				}
-
-				if (!lower[0] || !upper[0] || !lower[1] || !upper[1])
+				if (!is_interior(p, test_point))
 					continue;
 
 				/*
