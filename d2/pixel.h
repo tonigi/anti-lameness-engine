@@ -183,6 +183,16 @@ public:
 	static pixel zero() {
 		return pixel(0, 0, 0);
 	}
+
+	int operator==(const pixel &p) {
+		return x[0] == p[0]
+		    && x[1] == p[1]
+		    && x[2] == p[2];
+	}
+
+	int operator!=(const pixel &p) {
+		return !operator!=(p);
+	}
 };
 
 inline pixel operator*(const pixel &p, float d) {

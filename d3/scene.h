@@ -230,7 +230,7 @@ class scene {
 				return 1;
 			} else if (children[0] && children[1]) {
 				return children[0]->unsplit_on_aux()
-				    || children[1]->umsplit_on_aux();
+				    || children[1]->unsplit_on_aux();
 			}
 
 			return 0;
