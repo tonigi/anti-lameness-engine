@@ -28,3 +28,4 @@ double align::perturb_upper = 32;
 double align::match_sum = 0;
 int align::match_count = 0;
 
+double align::_mc = 0;

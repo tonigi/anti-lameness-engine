@@ -164,6 +164,17 @@ private:
 	static int match_count;
 
 	/*
+	 * Monte Carlo parameter
+	 *
+	 * 0.  Don't use monte carlo alignment sampling.
+	 *
+	 * (0,1].  Select, on average, a number of pixels which is the
+	 * specified fraction of the number of pixels in the accumulated image.
+	 */
+
+	static double _mc;
+
+	/*
 	 * Not-quite-symmetric difference function.  Determines the difference in areas
 	 * where the arrays overlap.  Uses the first array's notion of pixel positions.
 	 *
@@ -174,8 +185,13 @@ private:
 	 * a) Extending the boundaries of the image, or
 	 * 
 	 * b) following the previous frame's transform
+	 *
+	 * If we are doing monte-carlo pixel sampling for alignment, we
+	 * typically sample a subset of available pixels; otherwise, we sample
+	 * all pixels.
+	 *
 	 */
-	static double diff(image *a, image *b, transformation t) {
+	static double diff(image *a, image *b, transformation t, double _mc_arg) {
 		assert (reference_image);
 		float result = 0;
 		float divisor = 0;
@@ -187,83 +203,210 @@ private:
 
 		int i, j, k;
 
-		for (i = 0; (unsigned int) i < a->height(); i++)
-		for (j = 0; (unsigned int) j < a->width();  j++) {
+		/*
+		 * We cut-and-paste to handle the difference between
+		 * monte-carlo and non-monte-carlo cases.  This is amenable to
+		 * abstraction by function definition.  An investigation into
+		 * execution speed for the various possibilities would be
+		 * appropriate.
+		 */
+
+		if (_mc_arg <= 0 || _mc_arg >= 1) {
 
 			/*
-			 * Transform
+			 * No monte-carlo pixel sampling; sample all pixels
 			 */
 
-			struct point q;
-			struct point offset = reference_image->offset();
+			for (i = 0; (unsigned int) i < a->height(); i++)
+			for (j = 0; (unsigned int) j < a->width();  j++) {
 
-			q = t.inverse_transform(
-				point(i + offset[0], j + offset[1]));
+				/*
+				 * Transform
+				 */
 
-			my_real ti = q[0];
-			my_real tj = q[1];
+				struct point q;
+				struct point offset = reference_image->offset();
 
-			/*
-			 * Check that the transformed coordinates are within
-			 * the boundaries of array b.  
-			 *
-			 * Also, check that the weight value in the accumulated array
-			 * is nonzero, unless we know it is nonzero by virtue of the
-			 * fact that it falls within the region of the original frame
-			 * (e.g. when we're not increasing image extents).
-			 */
+				q = t.inverse_transform(
+					point(i + offset[0], j + offset[1]));
 
-			if (ti >= 0
-			 && ti <= b->height() - 1
-			 && tj >= 0
-			 && tj <= b->width() - 1
-			 && (extend == 0
-			  || (i >= -offset[0]
-			   && j >= -offset[1] 
-			   && i <  -offset[0] + extend_orig_height
-			   && j <  -offset[1] + extend_orig_width)
-			  || reference_defined->get_pixel_component(i, j, 0) != 0)) { 
+				my_real ti = q[0];
+				my_real tj = q[1];
 
-				if (channel_alignment_type == 0) {
-					/*
-					 * Align based on all channels.
-					 */
+				/*
+				 * Check that the transformed coordinates are within
+				 * the boundaries of array b.  
+				 *
+				 * Also, check that the weight value in the accumulated array
+				 * is nonzero, unless we know it is nonzero by virtue of the
+				 * fact that it falls within the region of the original frame
+				 * (e.g. when we're not increasing image extents).
+				 */
 
-					for (k = 0; k < 3; k++) {
-						float achan = a->get_pixel_component(i, j, k) / apm_a;
-						float bchan = b->get_bl_component(ti, tj, k) / apm_b;
+				if (ti >= 0
+				 && ti <= b->height() - 1
+				 && tj >= 0
+				 && tj <= b->width() - 1
+				 && (extend == 0
+				  || (i >= -offset[0]
+				   && j >= -offset[1] 
+				   && i <  -offset[0] + extend_orig_height
+				   && j <  -offset[1] + extend_orig_width)
+				  || reference_defined->get_pixel_component(i, j, 0) != 0)) { 
+
+					if (channel_alignment_type == 0) {
+						/*
+						 * Align based on all channels.
+						 */
+
+						for (k = 0; k < 3; k++) {
+							float achan = a->get_pixel_component(i, j, k) / apm_a;
+							float bchan = b->get_bl_component(ti, tj, k) / apm_b;
+
+							result += pow(fabs(achan - bchan), metric_exponent);
+							divisor += pow(achan > bchan ? achan : bchan, metric_exponent);
+						}
+					} else if (channel_alignment_type == 1) {
+						/*
+						 * Align based on the green channel.  XXX: apm_* shouldn't be used here.
+						 */
+
+						float achan = a->get_pixel_component(i, j, 1) / apm_a;
+						float bchan = b->get_bl_component(ti, tj, 1) / apm_b;
 
 						result += pow(fabs(achan - bchan), metric_exponent);
 						divisor += pow(achan > bchan ? achan : bchan, metric_exponent);
+					} else if (channel_alignment_type == 2) {
+						/*
+						 * Align based on the sum of all channels.
+						 */
+
+						float asum = 0;
+						float bsum = 0;
+
+						for (k = 0; k < 3; k++) {
+							asum += a->get_pixel_component(i, j, k) / apm_a;
+							bsum += b->get_bl_component(ti, tj, k) / apm_b;
+						}
+
+						result += pow(fabs(asum - bsum), metric_exponent);
+						divisor += pow(asum > bsum ? asum : bsum, metric_exponent);
 					}
-				} else if (channel_alignment_type == 1) {
-					/*
-					 * Align based on the green channel.  XXX: apm_* shouldn't be used here.
-					 */
+				}
+			}
+		} else {
 
-					float achan = a->get_pixel_component(i, j, 1) / apm_a;
-					float bchan = b->get_bl_component(ti, tj, 1) / apm_b;
+			/*
+			 * Monte Carlo pixel sampling
+			 */
 
-					result += pow(fabs(achan - bchan), metric_exponent);
-					divisor += pow(achan > bchan ? achan : bchan, metric_exponent);
-				} else if (channel_alignment_type == 2) {
-					/*
-					 * Align based on the sum of all channels.
-					 */
+			int index;
+			int index_max = a->height() * a->width();
+			
+			/*
+			 * We have USE/ALL, or (# pixels to use)/(# pixels
+			 * total).  We want SKIP/USE.
+			 *
+			 * SKIP/USE == (SKIP/ALL)/(USE/ALL) == (1 - (USE/ALL))/(USE/ALL)
+			 *
+			 * Once we have SKIP/USE, we know the typical number of
+			 * pixels to skip in each iteration.  Since we're
+			 * drawing from a uniform distribution, and the
+			 * smallest number of pixels we skip is zero, the
+			 * maximum number of pixels to skip is twice the
+			 * typical number.
+			 */
 
-					float asum = 0;
-					float bsum = 0;
+			double mc_max = 2 * (1 - _mc_arg) / _mc_arg;
 
-					for (k = 0; k < 3; k++) {
-						asum += a->get_pixel_component(i, j, k) / apm_a;
-						bsum += b->get_bl_component(ti, tj, k) / apm_b;
+			for(index = -1 + (int) ceil((mc_max+1) 
+						  * ( (1 + ((double) rand()) ) 
+						    / (1 + ((double) RAND_MAX)) ));
+			    index < index_max;
+			    index += (int) ceil((mc_max+1) 
+				              * ( (1 + ((double) rand()) ) 
+					        / (1 + ((double) RAND_MAX)) ))){
+
+				i = index / a->width();
+				j = index % a->width();
+
+				/*
+				 * Transform
+				 */
+
+				struct point q;
+				struct point offset = reference_image->offset();
+
+				q = t.inverse_transform(
+					point(i + offset[0], j + offset[1]));
+
+				my_real ti = q[0];
+				my_real tj = q[1];
+
+				/*
+				 * Check that the transformed coordinates are within
+				 * the boundaries of array b.  
+				 *
+				 * Also, check that the weight value in the accumulated array
+				 * is nonzero, unless we know it is nonzero by virtue of the
+				 * fact that it falls within the region of the original frame
+				 * (e.g. when we're not increasing image extents).
+				 */
+
+				if (ti >= 0
+				 && ti <= b->height() - 1
+				 && tj >= 0
+				 && tj <= b->width() - 1
+				 && (extend == 0
+				  || (i >= -offset[0]
+				   && j >= -offset[1] 
+				   && i <  -offset[0] + extend_orig_height
+				   && j <  -offset[1] + extend_orig_width)
+				  || reference_defined->get_pixel_component(i, j, 0) != 0)) { 
+
+					if (channel_alignment_type == 0) {
+						/*
+						 * Align based on all channels.
+						 */
+
+						for (k = 0; k < 3; k++) {
+							float achan = a->get_pixel_component(i, j, k) / apm_a;
+							float bchan = b->get_bl_component(ti, tj, k) / apm_b;
+
+							result += pow(fabs(achan - bchan), metric_exponent);
+							divisor += pow(achan > bchan ? achan : bchan, metric_exponent);
+						}
+					} else if (channel_alignment_type == 1) {
+						/*
+						 * Align based on the green channel.  XXX: apm_* shouldn't be used here.
+						 */
+
+						float achan = a->get_pixel_component(i, j, 1) / apm_a;
+						float bchan = b->get_bl_component(ti, tj, 1) / apm_b;
+
+						result += pow(fabs(achan - bchan), metric_exponent);
+						divisor += pow(achan > bchan ? achan : bchan, metric_exponent);
+					} else if (channel_alignment_type == 2) {
+						/*
+						 * Align based on the sum of all channels.
+						 */
+
+						float asum = 0;
+						float bsum = 0;
+
+						for (k = 0; k < 3; k++) {
+							asum += a->get_pixel_component(i, j, k) / apm_a;
+							bsum += b->get_bl_component(ti, tj, k) / apm_b;
+						}
+
+						result += pow(fabs(asum - bsum), metric_exponent);
+						divisor += pow(asum > bsum ? asum : bsum, metric_exponent);
 					}
-
-					result += pow(fabs(asum - bsum), metric_exponent);
-					divisor += pow(asum > bsum ? asum : bsum, metric_exponent);
 				}
 			}
 		}
+
+
 
 		return pow(result / divisor, 1/metric_exponent);
 	}
@@ -351,7 +494,13 @@ private:
 
 		offset = tload_next(tload, lod, alignment_class == 2, default_initial_alignment);
 
-		here = diff(accum_scales[lod], input_scales[lod], offset);
+		double _mc_arg = _mc * pow(2, 2 * lod);
+		image *ai = accum_scales[lod];
+		image *ii = input_scales[lod];
+		double adj_p = (perturb >= pow(2, lod_diff))
+			     ? pow(2, lod_diff) : perturb;
+
+		here = diff(ai, ii, offset, _mc_arg);
 
 		/*
 		 * Simulated annealing perturbation adjustment loop.  
@@ -359,11 +508,6 @@ private:
 
 		while (perturb >= perturb_lower) {
 
-			image *ai = accum_scales[lod];
-			image *ii = input_scales[lod];
-
-			double adj_p = (perturb >= pow(2, lod_diff)) 
-				     ? pow(2, lod_diff) : perturb;
 			double adj_s;
 
 			transformation test_t;
@@ -385,7 +529,7 @@ private:
 
 					test_t.eu_modify(i, adj_s);
 
-					test_d = diff(ai, ii, test_t);
+					test_d = diff(ai, ii, test_t, _mc_arg);
 
 					if (test_d < here) {
 						here = test_d;
@@ -408,7 +552,7 @@ private:
 
 					test_t.gpt_modify(j, i, adj_s);
 
-					test_d = diff(ai, ii, test_t);
+					test_d = diff(ai, ii, test_t, _mc_arg);
 
 					if (test_d < here) {
 						here = test_d;
@@ -438,10 +582,15 @@ private:
 					 */
 
 					lod--;
+					ai = accum_scales[lod];
+					ii = input_scales[lod];
+					_mc_arg /= 4;
 
 					if (perturb >= perturb_lower)
-						here = diff(accum_scales[lod], 
-							input_scales[lod], offset);
+						here = diff(ai, ii, offset, _mc_arg);
+
+				} else {
+					adj_p = perturb;
 				}
 
 				/*
@@ -729,6 +878,20 @@ public:
 			assert(0);
 			exit(1);
 		}
+	}
+
+	/*
+	 * Use Monte Carlo alignment sampling with argument N.
+	 */
+	static void mc(double n) {
+		_mc = n;
+	}
+
+	/*
+	 * Don't use Monte Carlo alignment sampling.
+	 */
+	static void no_mc() {
+		_mc = 0;
 	}
 
 	/*

@@ -1,3 +1,10 @@
+0.4.3
+
+o	Add support for Monte Carlo alignment of images, in which only a
+	random subset of pixels is sampled.
+
+o	Add an option to disable incremental image output.
+
 0.4.2
 
 o	Implement an image reconstruction option based on the work of Irani and

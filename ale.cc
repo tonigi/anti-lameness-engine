@@ -40,7 +40,7 @@
  * Version Information
  */
 
-char *version = "0.4.2"
+char *version = "0.4.3"
 #ifdef USE_MAGICK
 		" (File handler: ImageMagick)";
 #else
@@ -93,6 +93,14 @@ inline void usage(const char *argv0) {
 		"\n\n"
 		"Image reconstruction:\n\n"
 		"--ip <d> <i>      Irani-Peleg solve with pixel diameter <d> for <i> iterations.\n"
+		"\n\n"
+		"Monte Carlo alignment:\n\n"
+		"--mc <x>          Align using, on average, x%% of available pixels (0 < x < 100)\n"
+		"--no-mc           Align using all pixels.  [default]\n"
+		"\n\n"
+		"File output options:\n\n"
+		"--inc             Produce incremental image output.  [default]\n"
+		"--no-inc          Don't produce incremental image output.\n"
 		"\n",
 		argv0, argv0);
 	exit(1);
@@ -136,6 +144,7 @@ int main(int argc, const char *argv[]){
 	struct tsave_t *tsave = NULL;
 	int ip_iterations = 0;
 	double ip_radius = 0;
+	int inc = 1;
 
 	/* 
 	 * Iterate through arguments until we reach the first file 
@@ -180,6 +189,19 @@ int main(int argc, const char *argv[]){
 		} else if (!strcmp(argv[i], "--extend")) {
 			align::set_extend();
 			extend = 1;
+		} else if (!strcmp(argv[i], "--no-mc")) {
+			align::no_mc();
+		} else if (!strcmp(argv[i], "--mc")) {
+			double mc_parameter;
+			if (i + 1 < argc) {
+				sscanf(argv[i+1], "%lf", &mc_parameter);
+				mc_parameter /= 100;
+				i += 1;
+				align::mc(mc_parameter);
+			} else {
+				fprintf(stderr, "\n\n*** Not enough arguments for --mc ***\n\n\n");
+				exit(1);
+			}
 		} else if (!strcmp(argv[i], "--ip")) {
 			if (i + 2 < argc) {
 				sscanf(argv[i+1], "%lf", &ip_radius);
@@ -193,6 +215,10 @@ int main(int argc, const char *argv[]){
 			}
 		} else if (!strcmp(argv[i], "--drizzle-only")) {
 			drizzle_only = 1;
+		} else if (!strcmp(argv[i], "--inc")) {
+			inc = 1;
+		} else if (!strcmp(argv[i], "--no-inc")) {
+			inc = 0;
 		} else if (!strncmp(argv[i], "--scale=", strlen("--scale="))) {
 			sscanf(argv[i] + strlen("--scale="), "%lf", &scale_factor);
 			if (scale_factor < 1.0) {
@@ -305,7 +331,8 @@ int main(int argc, const char *argv[]){
 
 			_render->operator()(0);
 
-			image_rw::output(_render->get_image());
+			if (inc)
+				image_rw::output(_render->get_image());
 
 			fprintf(stderr, ".\n");
 
@@ -330,16 +357,17 @@ int main(int argc, const char *argv[]){
 
 				_render->operator()(j);
 
-				image_rw::output(_render->get_image());
+				if (inc)
+					image_rw::output(_render->get_image());
 
 				fprintf(stderr, ".\n");
 			}
 
 			/*
-			 * Do any post-processing
+			 * Do any post-processing and output final image
 			 */
 
-			if (_render->operator()())
+			if (_render->operator()() || !inc)
 				image_rw::output(_render->get_image());
 
 			/*

@@ -1,4 +1,4 @@
-ALE version 0.4.2
+ALE version 0.4.3
 =================
 
 
@@ -62,7 +62,7 @@ produced incrementally, and the output file is updated as the process
 progresses.  Options are described in the next section.
 
 
-Options (version 0.4.2)
+Options (version 0.4.3)
 -----------------------
 
 
@@ -118,8 +118,20 @@ Image reconstruction:
   
 --ip <d> <i>      Irani-Peleg solve with pixel diameter <d> for <i> iterations.
 
+ 
+Monte Carlo alignment:
+ 
+--mc <x>          Align using, on average, x% of available pixels (0 < x < 100)
+--no-mc           Align using all pixels.  [default]
+ 
+ 
+File output options:
+ 
+--inc             Produce incremental output.  [default]
+--no-inc          Don't produce incremental output.
 
-Option Descriptions (version 0.4.2)
+
+Option Descriptions (version 0.4.3)
 -----------------------------------
 
 
@@ -239,6 +251,31 @@ their paper, "Improving Resolution by Image Registration", at
 
 ftp://ftp.wisdom.weizmann.ac.il/pub/irani/PAPERS/SR_CVGIP91.pdf
 
+
+Monte Carlo alignment:
+
+Monte Carlo alignment uses a random subset of pixels to determine image
+alignment, possibly reducing alignment time.  
+
+The expected size of the random subset is specified as a percentage of pixels.
+If the expected size is larger than the number of available pixels (e.g. when
+aligning at a reduced level of detail), then all pixels will be used.  Since
+the distance between sampled pixels is randomly chosen, it is possible that the
+actual number of pixels sampled differs from the expected number.
+
+Note that small subsets may adversely affect alignment.  In this case, it may
+be helpful to use the --threshold option to exclude images that are poorly
+aligned.  Alternatively, increasing the subset size may improve alignment.
+ 
+ 
+File output options:
+
+ALE normally produces incremental output of the merging or drizzling process.
+In this case, the output file is written after the original frame is loaded and
+after each supplemental frame has been aligned.  To suppress incremental output, 
+specify the --no-inc option, in which case output will only occur after all
+rendering steps are complete.
+ 
 
 URLs
 ----
