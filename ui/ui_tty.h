@@ -146,20 +146,20 @@ private:
 		status_printf(1, " | ");
 
 		switch (status.code) {
-			case status.LOAD_FILE:
+			case status_type::LOAD_FILE:
 				status_printf(3, "Loading Image", "Loading", "load");
 				break;
-			case status.EXPOSURE_PASS_1:
+			case status_type::EXPOSURE_PASS_1:
 				status_printf(3, "Registering exposure (first pass)", "Registering exposure", "regexp1");
 				break;
-			case status.LODCLUSTER_CREATE:
+			case status_type::LODCLUSTER_CREATE:
 				status_printf(3, "Creating LOD cluster, scale %f", "Creating LOD clusters", "lodcluster", 
 						pow(2, -status.align_lod));
 				break;
-			case status.PREMATCH:
+			case status_type::PREMATCH:
 				status_printf(3, "Calculating pre-alignment match", "Calculating match", "prematch");
 				break;
-			case status.ALIGN:
+			case status_type::ALIGN:
 				status_printf(4, "Aligning [perturb=%f] [lod=%f] [exp_mult=%f %f %f]", 
 						 "Aligning [perturb=%f] [lod=%f]", "Aligning...", "align",
 						 status.perturb_size,
@@ -168,35 +168,35 @@ private:
 						 status.exp_multiplier[1],
 						 status.exp_multiplier[2]);
 				break;
-			case status.POSTMATCH:
+			case status_type::POSTMATCH:
 				status_printf(3, "Calculating post-alignment match", "Calculating match", "postmatch");
 				break;
-			case status.EXPOSURE_PASS_2:
+			case status_type::EXPOSURE_PASS_2:
 				status_printf(3, "Registering exposure (second pass)", "Registering exposure", "regexp2");
 				break;
-			case status.RENDERA:
+			case status_type::RENDERA:
 				status_printf(3, "Rendering alignment reference image", "Rendering", "render-a");
 				break;
-			case status.RENDERD:
+			case status_type::RENDERD:
 				status_printf(3, "Rendering default chain", "Rendering", "render-d");
 				break;
-			case status.RENDERO:
+			case status_type::RENDERO:
 				status_printf(3, "Rendering chain %d", "Rendering", "render-o%d", status.onum);
 				break;
-			case status.WRITED:
+			case status_type::WRITED:
 				status_printf(4, "Writing default chain to '%s'", 
 						 "Writing '%s'", "Writing", "write-d", d2::image_rw::output_name());
 				break;
-			case status.WRITEO:
+			case status_type::WRITEO:
 				status_printf(3, "Writing image for chain %d", "Writing", "write-o%d", status.onum);
 				break;
-			case status.IP_RENDER:
+			case status_type::IP_RENDER:
 				status_printf(2, "Processing frame '%s'", "Processing", d2::image_rw::name(status.ip_frame_num));
 				break;
-			case status.IP_UPDATE:
+			case status_type::IP_UPDATE:
 				status_printf(3, "Updating approximation", "Updating", "update");
 				break;
-			case status.IP_WRITE:
+			case status_type::IP_WRITE:
 				status_printf(3, "Writing '%s'", "Writing", "write", d2::image_rw::output_name());
 				break;
 			default:
@@ -256,8 +256,8 @@ private:
 	}
 
 	void update() {
-		if (status.code == status.FRAME_DONE
-		 || status.code == status.SET_DONE) {
+		if (status.code == status_type::FRAME_DONE
+		 || status.code == status_type::SET_DONE) {
 			printf(".");
 			fputc('\n', ui_stream);
 			buffer_index = 0;
