@@ -1503,12 +1503,6 @@ private:
 		final_clusters(scale_clusters, scale_factor, steps);
 
 		/*
-		 * Close the image file.
-		 */
-
-		image_rw::close(m);
-
-		/*
 		 * Ensure that the match meets the threshold.
 		 */
 
@@ -1581,6 +1575,12 @@ private:
 		match_sum += (1 - here) * 100;
 		match_count++;
 		latest = m;
+
+		/*
+		 * Close the image file.
+		 */
+
+		image_rw::close(m);
 
 		return here;
 	}

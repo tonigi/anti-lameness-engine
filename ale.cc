@@ -192,7 +192,6 @@ int main(int argc, const char *argv[]){
 	
 	help hi(argv[0], short_version);
 
-
 	/*
 	 * Output version information if --version appears
 	 * on the command line.
@@ -343,6 +342,7 @@ int main(int argc, const char *argv[]){
 	unsigned int d3_count = 0;
 	double user_view_angle = 0;
 	int user_bayer = IMAGE_BAYER_DEFAULT;
+	d2::pixel exp_mult = d2::pixel(1, 1, 1);
 
 	/*
 	 * dchain is ochain[0].
@@ -928,7 +928,7 @@ int main(int argc, const char *argv[]){
 		} else if (!strncmp(argv[i], "--exp-mult=", strlen("--exp-mult="))) {
 			double exp_c, exp_r, exp_b;
 			sscanf(argv[i] + strlen("--exp-mult="), "%lf,%lf,%lf", &exp_c, &exp_r, &exp_b);
-			d2::exposure::set_default_multiplier(d2::pixel(exp_r * exp_c, exp_c, exp_b * exp_c));
+			exp_mult = d2::pixel(1/(exp_r * exp_c), 1/exp_c, 1/(exp_b * exp_c));
 		} else if (!strncmp(argv[i], "--visp-scale=", strlen("--visp-scale="))) {
 
 			sscanf(argv[i] + strlen("--visp-scale="), "%lf", &vise_scale_factor);
@@ -1183,6 +1183,7 @@ int main(int argc, const char *argv[]){
 			 */
 
 			d2::exposure *output_exposure = new d2::exposure_default();
+			output_exposure->set_multiplier(exp_mult);
 
 			/*
 			 * Configure the response function.
@@ -1273,8 +1274,10 @@ int main(int argc, const char *argv[]){
 			 * have one.
 			 */
 
-			tsave_orig(tsave, argv[i]);
+			const d2::image *im = d2::image_rw::open(0);
+			tsave_orig(tsave, argv[i], im->avg_channel_magnitude());
 			tsave_target(tsave, argv[argc - 1]);
+			d2::image_rw::close(0);
 
 			/*
 			 * Initialize alignment interpolant.
@@ -1399,6 +1402,11 @@ int main(int argc, const char *argv[]){
 				 */
 
 				tsave_info (tsave, name);
+
+				const d2::image *im = d2::image_rw::open(j);
+				d2::pixel apm = im->avg_channel_magnitude();
+				tsave_apm(tsave, apm[0], apm[1], apm[2]);
+				d2::image_rw::close(j);
 
 				for (int opt = 0; opt < oc_count; opt++) {
 					ui::get()->set_orender_current(opt);

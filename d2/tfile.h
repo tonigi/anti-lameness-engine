@@ -58,6 +58,7 @@ struct tsave_t {
 	const char *filename;
 	const char *target;
 	const char *orig;
+	pixel orig_apm;
 	FILE *file;
 };
 
@@ -651,6 +652,7 @@ static inline void tsave_first(struct tsave_t *t, transformation offset, int is_
 
 	fprintf(t->file, "# Comment: Target output file is %s\n", t->target);
 	fprintf(t->file, "# Comment: Original frame is %s\n", t->orig);
+	fprintf(t->file, "# Comment: Avg magnitude [r=%f g=%f b=%f]\n", t->orig_apm[0], t->orig_apm[1], t->orig_apm[2]);
 
 	if (tfile_output_version < 3) {
 		fclose(t->file);
@@ -763,17 +765,12 @@ static inline void tsave_target(struct tsave_t *t, const char *filename) {
  * frames).
  */
 
-static inline void tsave_orig(struct tsave_t *t, const char *filename) {
+static inline void tsave_orig(struct tsave_t *t, const char *filename, pixel apm) {
 	if (t == NULL)
 		return;
 
 	t->orig = filename;
-	if (t != NULL) {
-		t->file = fopen(t->filename, "a");
-
-		
-		fclose(t->file);
-	}
+	t->orig_apm = apm;
 }
 
 /*
@@ -806,6 +803,22 @@ static inline void tsave_trm(struct tsave_t *t, ale_real r, ale_real g, ale_real
                fclose(t->file);
        }
 }
+
+/*
+ * Write information to a transformation data file indicating the average
+ * pixel magnitude.
+ */
+
+static inline void tsave_apm(struct tsave_t *t, ale_real r, ale_real g, ale_real b) {
+       if (t != NULL) {
+               t->file = fopen(t->filename, "a");
+
+               fprintf(t->file, "# Comment: Avg magnitude [r=%f g=%f b=%f]\n", r, g, b);
+
+               fclose(t->file);
+       }
+}
+
 
 /*
  * Destroy a tload_t transformation data file structure.

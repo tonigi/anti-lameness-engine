@@ -37,16 +37,11 @@
 class exposure {
 private:
 	static float confidence_exponent;
-	static pixel default_multiplier;
 	pixel _multiplier;
 	ale_real _gain_multiplier;
 	static ale_real _gain_reference;
 
 public:
-
-	static void set_default_multiplier(pixel p) {
-		default_multiplier = p;
-	}
 
 	/*
 	 * confidence/uniform static mutators
@@ -226,7 +221,7 @@ public:
 
 	exposure() {
 		listener_head = NULL;
-		_multiplier = default_multiplier;
+		_multiplier = pixel(1, 1, 1);
 		_gain_multiplier = 1;
 	}
 };
