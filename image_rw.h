@@ -215,13 +215,27 @@ private:
 	 * Private data members
 	 */
 
+	/*
+	 * Pointer to the output filename
+	 */
+	static const char *output_filename;
+	
+	/*
+	 * Variables relating to input image files and image data structures.
+	 */
 	static const char **filenames;
 	static int filename_count;
-	static const char *output_filename;
 	static const image **images;
 	static int *files_open;
 
+	/*
+	 * The most recently closed image number.
+	 */
 	static int latest_close_num;
+
+	/*
+	 * A cache of the data associated with the most recently closed image.
+	 */
 	static const image *latest_close;
 
 public:

@@ -17,6 +17,10 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+ * combine.h: A renderer that combines two renderings.
+ */
+
 #ifndef __combine_h__
 #define __combine_h__
 
@@ -24,9 +28,9 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
-#include "gpt.h"
-#include "image.h"
-#include "point.h"
+#include "../gpt.h"
+#include "../image.h"
+#include "../point.h"
 
 /*
  * Combine two renderings. 

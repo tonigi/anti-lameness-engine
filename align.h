@@ -17,6 +17,10 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+ * align.h: Handle alignment of frames.
+ */
+
 #ifndef __align_h__
 #define __align_h__
 
@@ -121,6 +125,20 @@ private:
 	static transformation default_initial_alignment;
 
 	/*
+	 * Helper variables for new --follow semantics (as of 0.5.0).
+	 *
+	 * These variables implement delta following.  The change between the
+	 * non-default old initial alignment and old final alignment is used to
+	 * adjust the non-default current initial alignment.  If either the old
+	 * or new initial alignment is a default alignment, the old --follow
+	 * semantics are preserved.
+	 */
+
+	static int is_default, old_is_default;
+	static transformation old_initial_alignment;
+	static transformation old_final_alignment;
+
+	/*
 	 * Alignment code.
 	 * 
 	 * 0. Align images with an error contribution from each color channel.
@@ -205,7 +223,7 @@ private:
 	 * all pixels.
 	 *
 	 */
-	static double diff(image *a, image *b, image_weights *d, transformation t, double _mc_arg) {
+	static double diff(const image *a, const image *b, const image_weights *d, transformation t, double _mc_arg) {
 		assert (reference_image);
 		float result = 0;
 		float divisor = 0;
@@ -484,9 +502,9 @@ private:
 
 		int steps = (perturb > pow(2, lod_max)) ? (int) (log(perturb) / log(2)) - lod_max + 1 : 1;
 		int step;
-		image **accum_scales = (image **) malloc(steps * sizeof(image *));
-		image **input_scales = (image **) malloc(steps * sizeof(image *));
-		image_weights **defined_scales = (image_weights **) malloc(steps * sizeof(image_weights *));
+		const image **accum_scales = (const image **) malloc(steps * sizeof(image *));
+		const image **input_scales = (const image **) malloc(steps * sizeof(image *));
+		const image_weights **defined_scales = (const image_weights **) malloc(steps * sizeof(image_weights *));
 
 		assert (accum_scales);
 		assert (input_scales);
@@ -501,20 +519,43 @@ private:
 		 * Prepare multiple levels of detail.
 		 */
 
-		accum_scales[0] = reference_image->clone();
+		/*
+		 * First, we prepare the highest levels of detail.  Then, we
+		 * use scale_by_half() and defined_scale_by_half() to create
+		 * reduced levels of detail.
+		 */
+
+		accum_scales[0] = reference_image;
+
 		if (extend)
-			defined_scales[0] = reference_defined->clone();
-		input_scales[0] = input_frame->clone();
-		input_scales[0]->scale(scale_factor);
-		
+			defined_scales[0] = reference_defined;
+
+		if (scale_factor != 1.0) {
+			
+			/*
+			 * In cursory tests, scaling is much more expensive
+			 * than cloning, so we don't go out of our way to avoid
+			 * this cloning step, although it could be avoided with
+			 * certain (possibly ugly) source code modifications.
+			 */
+
+			image *input_frame_clone = input_frame->clone();
+
+			input_frame_clone->scale(scale_factor);
+
+			input_scales[0] = input_frame_clone;
+
+		} else {
+
+			input_scales[0] = input_frame;
+
+		}
+
 		for (step = 1; step < steps; step++) {
-			accum_scales[step] = accum_scales[step - 1]->clone();
-			accum_scales[step]->scale_by_half();
-			input_scales[step] = input_scales[step - 1]->clone();
-			input_scales[step]->scale_by_half();
+			accum_scales[step] = accum_scales[step - 1]->scale_by_half();
+			input_scales[step] = input_scales[step - 1]->scale_by_half();
 			if (extend) {
-				defined_scales[step] = defined_scales[step - 1]->clone();
-				defined_scales[step]->defined_scale_by_half();
+				defined_scales[step] = defined_scales[step - 1]->defined_scale_by_half();
 			}
 		}
 
@@ -555,12 +596,92 @@ private:
 		else
 			assert(0);
 
-		offset = tload_next(tload, lod, alignment_class == 2, default_initial_alignment);
+		old_is_default = is_default;
+		offset = tload_next(tload, lod, alignment_class == 2, default_initial_alignment, &is_default);
+
+		transformation new_offset = offset;
+		
+		if (!old_is_default && !is_default && default_initial_alignment_type == 1) {
+
+			/*
+			 * Implement new delta --follow semantics.
+			 *
+			 * XXX: we assume that the lod for the old initial
+			 * alignment is equal to the lod for the new initial
+			 * alignment, both being equal to the variable 'lod'.
+			 *
+			 * If we have a transformation T such that
+			 *
+			 * 	prev_final == T(prev_init)
+			 *
+			 * Then we also have
+			 *
+			 * 	current_init_follow == T(current_init)
+			 *
+			 * We can calculate T as follows:
+			 *
+			 * 	T == prev_final(prev_init^-1)
+			 *
+			 * Where ^-1 is the inverse operator.
+			 */
+
+			old_final_alignment.rescale (1 / pow(2, lod));
+
+			if (alignment_class == 0) {
+				/*
+				 * Translational transformations
+				 */
+	
+				double t0 = -old_initial_alignment.eu_get(0) + old_final_alignment.eu_get(0);
+				double t1 = -old_initial_alignment.eu_get(1) + old_final_alignment.eu_get(1);
+
+				new_offset.eu_modify(0, t0);
+				new_offset.eu_modify(1, t1);
+
+			} else if (alignment_class == 1) {
+				/*
+				 * Euclidean transformations
+				 */
+
+				double t2 = -old_initial_alignment.eu_get(2) + old_final_alignment.eu_get(2);
+
+				new_offset.eu_modify(2, t2);
+
+				point p( offset.height()/2 + offset.eu_get(0) - old_initial_alignment.eu_get(0),
+					 offset.width()/2 + offset.eu_get(1) - old_initial_alignment.eu_get(1) );
+
+				p = old_final_alignment(p);
+
+				new_offset.eu_modify(0, p[0] - offset.height()/2 - offset.eu_get(0));
+				new_offset.eu_modify(1, p[1] - offset.width()/2 - offset.eu_get(1));
+				
+			} else if (alignment_class == 2) {
+				/*
+				 * Projective transformations
+				 */
+
+				point p[4];
+
+				p[0] = old_final_alignment(old_initial_alignment
+				     . inverse_transform(offset(point(      0        ,       0       ))));
+				p[1] = old_final_alignment(old_initial_alignment
+				     . inverse_transform(offset(point(offset.height(),       0       ))));
+				p[2] = old_final_alignment(old_initial_alignment
+				     . inverse_transform(offset(point(offset.height(), offset.width()))));
+				p[3] = old_final_alignment(old_initial_alignment
+				     . inverse_transform(offset(point(      0        , offset.width()))));
+
+				new_offset.gpt_set(p);
+			}
+		}
+
+		old_initial_alignment = offset;
+		offset = new_offset;
 
 		double _mc_arg = _mc * pow(2, 2 * lod);
-		image *ai = accum_scales[lod];
-		image *ii = input_scales[lod];
-		image_weights *di = defined_scales[lod];
+		const image *ai = accum_scales[lod];
+		const image *ii = input_scales[lod];
+		const image_weights *di = defined_scales[lod];
 
 		/*
 		 * Positional adjustment value
@@ -576,7 +697,7 @@ private:
 		here = diff(ai, ii, di, offset, _mc_arg);
 
 		/*
-		 * Simulated annealing perturbation adjustment loop.  
+		 * Perturbation adjustment loop.  
 		 */
 
 		while (perturb >= perturb_lower) {
@@ -702,12 +823,17 @@ private:
 		/*
 		 * Free the level-of-detail structures
 		 */
-		for (step = 0; step < steps; step++) {
+
+		if (scale_factor != 1.0)
+			delete input_scales[0];
+
+		for (step = 1; step < steps; step++) {
 			delete accum_scales[step];
 			delete input_scales[step];
 			if (extend)
 				delete defined_scales[step];
 		}
+
 		free(accum_scales);
 		free(input_scales);
 		free(defined_scales);
@@ -727,6 +853,7 @@ private:
 		if ((1 - here) * 100 > match_threshold) {
 			latest_ok = 1;
 			default_initial_alignment = offset;
+			old_final_alignment = offset;
 			fprintf(stderr, " okay (%f%% match)", (1 - here) * 100);
 		} else {
 			latest_ok = 0;

@@ -21,7 +21,7 @@
 #define __xvp610_320x240_h__
 
 #include <assert.h>
-#include "../point.h"
+#include "../../point.h"
 
 /*
  * This is a first hack at a response function for an IBM XVP610 webcam.  
@@ -146,27 +146,19 @@ public:
 	float max_j() { return  RADIUS; }
 
 	/*
-	 * Get the response to the quadrilateral (p[0], p[1], p[2], p[3]).
+	 * Get the response to the rectangle bounded by (top, bot, lef, rig).
 	 * This function must correctly handle points which fall outside of the
 	 * filter support.  The position (i, j) of the responding pixel is
 	 * provided, in case response is not uniform for all pixels (e.g. some
 	 * sensor arrays stagger red, green, and blue sensors).
 	 */
-	struct ipc_result operator()(const point p[4], int i, int j) {
+	struct ipc_result operator()(float top, float bot, float lef, float
+			rig, int i, int j) {
 		struct ipc_result result;
 
 		result.response[0] = 0;
 		result.response[1] = 0;
 		result.response[2] = 0;
-
-		/* 
-		 * XXX: We make some unsafe assumptions here.
-		 */
-
-		float top = p[0][0];
-		float bot = p[2][0];
-		float lef = p[0][1];
-		float rig = p[1][1];
 
 		if (top < min_i())
 			top = min_i();

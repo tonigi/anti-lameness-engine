@@ -1,4 +1,4 @@
-ALE version 0.4.8
+ALE version 0.5.0
 =================
 
 
@@ -9,9 +9,14 @@ ALE is designed to produce relatively alias-free images from digital camera
 samples.  Much of it could be applied to images from any source, as long as
 they are in PPM binary format.  
 
-Other image formats can optionally be supported by ImageMagick.  See the
-section 'Compiling from source' below for more information on compiling with
-ImageMagick support.
+Other image formats, such as PNG and JPEG, can optionally be supported by
+ImageMagick.  See the section 'Compiling from source' below for more
+information on compiling with ImageMagick support.
+
+This README discusses downloading, compilation, and the command-line interface,
+including a description of program options.  More detailed documentation about
+the semantics of certain program options can be found on the ALE web site; see
+the end of the README for URLs.
 
 
 Downloading a binary
@@ -29,7 +34,7 @@ Downloading a binary
 	binary format is currently supported.  If you want support for files
 	other than PPM, try compiling from source; otherwise, convert the input
 	files to PPM if necessary (e.g. with ImageMagick's command-line
-	utilities).
+	utilities, available from http://www.imagemagick.org/ ).
 
 	
 	Other Platforms
@@ -38,7 +43,7 @@ Downloading a binary
 	No binaries provided.  Compile from source.
 
 
-Compiling from source (version 0.4.8)
+Compiling from source (version 0.5.0)
 -------------------------------------
 
 GCC version 3.2.3 with C++ support and GNU Make 3.80 are known to build ALE
@@ -51,7 +56,7 @@ desired.  The makefile may need some tweaking on Windows systems (e.g. you may
 want to write the output to 'ale.exe' or something).
 
 
-Using ALE (version 0.4.x)
+Using ALE (version 0.5.0)
 -------------------------
 
 Usage: ale [<options>] <original-frame> [<supplemental-frame> ...] <output-file>
@@ -59,12 +64,16 @@ Usage: ale [<options>] <original-frame> [<supplemental-frame> ...] <output-file>
 
 ALE merges supplemental frames with an original frame to produce a single
 output file result.  Unless ALE has been compiled with the ImageMagick option,
-all files must be in PPM binary (as opposed to ascii) format.  The merge is
+all files must be in PPM binary (as opposed to PPM ASCII) format.  The merge is
 produced incrementally, and the output file is updated as the process
 progresses.  Options are described in the next section.
 
+NOTE:  When handling large images, it is generally advisable to use the Monte
+Carlo alignment option (e.g. --mc 10), since calculating transformations for
+a large number of pixels can take a long time.
 
-Options (version 0.4.8)
+
+Options (version 0.5.0)
 -----------------------
 
 Alignment channel options:
@@ -78,12 +87,12 @@ Transformation options:
 --projective      Use projective transformations.  Best quality, but slow.
 
 Image extents:
---extend          Increase output image extents to accommodate all pixel data.
+--extend          Increase image extents to accommodate all pixel data.
 --no-extend       Don't increase extents; crop to original frame. [default]
 
-Transformation defaults:
---identity        Default alignment begins with identity transform. [default]
---follow          Default alignment begins with the previous frame's transform.
+Alignment following:
+--identity        Frames align closely with the original frame.  [default]
+--follow          Frames align closely with their immediate predecessor.
 
 Transformation file operations:
 --trans-load=x    Load initial transformation settings from file x
@@ -118,12 +127,12 @@ File output options:
 --inc             Produce incremental output.  [default]
 --no-inc          Don't produce incremental output.
 
-Video Stabilization options: [Experimental]
---replace         Replace frame areas rather than merging.
+Pixel replacement:
+--replace         Replace overlapping areas rather than merging.
 --no-replace      Do not replace.  [default]
 
 
-Option Descriptions (version 0.4.8)
+Option Descriptions (version 0.5.0)
 -----------------------------------
 
 
@@ -145,31 +154,24 @@ data, use the --extend option.  This option may be useful in providing
 additional constraints for alignment.  
 
 
-Transformation defaults:
+Alignment following:
 
-When aligning a new supplemental frame, ALE must begin with an initial
-transformation.  If this transformation is not supplied by a transformation
-data file (see next section), a default transformation will be used.
-The --identity option indicates that the identity transform should be used as
-the default transformation, whereas --follow indicates that the previous
-frame's final transformation should be used.  
-
-If a frame does not meet the threshold (see Threshold section below), its final
-transform will not be used by --follow.  If there is no valid previously
-aligned frame to follow (e.g. when aligning the first supplemental frame), the
-identity transform is used instead.
-
-The --follow option may be useful when significant panning or zooming occurs.
+The --follow option should be used when adjacent frames are more closely
+aligned with each other than with the original frame (i.e. with the first frame
+in the sequence).  The --identity option should be used when the reverse holds.
+These flags have no effect when alignment is disabled.  (See notes on
+Perturbation bounds below for information on disabling alignment.)  
 
 
 Transformation data files:
 
-Transformation data may be loaded from a file, overriding the transformation
-defaults, or saved to a file once alignment is complete.  Note that projective
-transformation data will be ignored when performing euclidean alignment.  On
-the other hand, euclidean transformation data can be used to set the initial
-values for projective alignment.  When loading transformation data, it may also
-be useful to reduce the perturbation upper bound.  
+Transformation data may be loaded from a file to determine the initial
+transformations used in alignment, or saved to a file once alignment is
+complete.  Note that projective transformation data will not be used when
+performing euclidean alignment.  On the other hand, euclidean transformation
+data can be used to set the initial values for projective alignment.  When
+loading transformation data, it may also be useful to reduce the perturbation
+upper bound.  
 
 ALE versions older than 0.4.1 will not correctly read transformation files
 written with this version of ALE.
@@ -209,26 +211,29 @@ Scaling:
 
 If a scaling argument is given, ALE will internally scale all input
 frames by the scale factor, resulting in an output file of this larger
-scale.  
+scale.  When dealing with scaled images, perturbation bounds measured in units
+of pixels refer to scaled pixels.  All other measurements specified in pixels
+(e.g. drizzling diameters and filter diameters for Irani-Peleg iterative image
+reconstruction) refer to pixels in the original unscaled image.
 
 
 High-frequency Enhancement:
 
-ALE's high-frequency enhancement filter can be used in some cases to emphasize
-edges realistically.  However, use of this option may also emphasize noise or
-aliases, and may produce unrealistic contrast.  Enhancement occurs on the final
-rendered output after all inputs have been processed, but before Irani-Peleg
-image reconstruction.  Larger positive numbers imply greater enhancement.
+ALE's high-frequency enhancement filter can be used to emphasize small features
+and edges.  Enhancement occurs on the final rendered output after all inputs
+have been processed, but before Irani-Peleg image reconstruction.  Larger
+positive numbers imply greater enhancement.
 
 
 Drizzling:
 
-ALE's drizzle renderer may preserve image details better than the standard ALE
-rendering approach, but may produce unrealistically speckled or mottled output
-when used in conjunction with the --scale argument.  The diameter of drizzled
-pixels is specified by --drizzle-diam=x, and --drizzle-only indicates that the
-standard rendering approach should not be used as a fallback where no drizzle
-data is available.
+The diameter of drizzled pixels is specified by --drizzle-diam=x, where x is
+specified in units of the distance between pixels (e.g. a value of 1 indicates
+that each pixel's footprint should end where the next footprint begins).
+
+--drizzle-only indicates that the standard rendering approach should not be
+used as a fallback where no drizzle data is available, and that a black
+background should be used instead.
 
 For more information about drizzling, see the paper by Hook and Fruchter,
 "Variable-Pixel Linear Combination", or the following URL:
@@ -238,14 +243,18 @@ http://www.cv.nrao.edu/adass/adassVI/hookr.html
 
 Irani-Peleg Image reconstruction:
 
-ALE's backprojection-based image reconstruction may provide realistic emphasis
-of edges in both scaled and unscaled images.  However, this option is sensitive
-to the chosen diameter, and small diameters can cause speckled output.
-Intermediate results of image reconstruction are normally written after each
-iteration is complete, but this behavior can be disabled by specifying --no-inc.
+To iterate using a box filter as the projection and backprojection function,
+specify --ip <d> <i>, where <d> is the diameter of the filter in units of the
+distance between pixels (e.g. a diameter of 3 implies a filter support of nine
+pixels) and <i> is the number of iterations to run.
 
-A rudimentary script for calibrating devices with unknown projection functions
-has been included as ipc/ale-calibrate.
+To iterate using a custom filter, specify --ip <c> <i>, where <c> is the name
+of the custom filter and <i> is the number of iterations to run.  The stdin 
+custom filter supports a wide range of filters based on user input.
+
+A rudimentary script for calibrating filters for devices with unknown
+projection functions has been included as render/ipc/ale-calibrate.  The script
+must be modified to include filenames of sample frames from the device.
 
 For more information on the backprojection technique of Irani and Peleg, on
 which this feature is based, see their paper, "Improving Resolution by Image
@@ -257,46 +266,37 @@ ftp://ftp.wisdom.weizmann.ac.il/pub/irani/PAPERS/SR_CVGIP91.pdf
 Monte Carlo alignment:
 
 Monte Carlo alignment uses a random subset of pixels to determine image
-alignment, possibly reducing alignment time.  
+alignment, possibly reducing alignment time significantly.  The expected size
+of the random subset is specified as a percentage of all available pixels.
 
-The expected size of the random subset is specified as a percentage of pixels.
-If the expected size is larger than the number of available pixels (e.g. when
-aligning at a reduced level of detail), then all pixels will be used.  Since
-the distance between sampled pixels is randomly chosen, it is possible that the
-actual number of pixels sampled differs from the expected number.
-
-Note that small subsets may adversely affect alignment.  In this case, it may
-be helpful to use the --threshold option to exclude images that are poorly
-aligned.  Alternatively, increasing the subset size may improve alignment.
- 
  
 File output options:
 
-ALE normally produces incremental output of the merging or drizzling process.
-In this case, the output file is written after the original frame is loaded and
-after each supplemental frame has been aligned.  Also, the Irani-Peleg renderer
-normally produces incremental output after each iteration.  To suppress
-incremental output, specify the --no-inc option, in which case output will only
-occur after all rendering steps are complete.
+By default (--inc), the output file is written after the original frame is
+loaded and after each supplemental frame has been aligned, as well as after
+each step of Irani-Peleg iterative image reconstruction.  
+
+To suppress incremental output, specify the --no-inc option, in which case
+output will only occur after all rendering steps are complete.
 
  
-Video stabilization options:
+Pixel replacement:
 
 --replace indicates that each new frame should replace the corresponding region
-of the accumulated image instead of being merged with existing data.  If 0.ppm,
-1.ppm, ..., 9.ppm represent frames from an unstabilized video stream, then the
-following sequence of commands may result in a stabilized sequence:
+of the accumulated image instead of being merged with existing data.  This
+option was originally suggested by Jeff Treece for use in stabilization of
+video streams.  His approach to stabilization is outlined below.
 
-ale        0.ppm 1.ppm 1.stable.ppm
-ale 1.stable.ppm 2.ppm 2.stable.ppm
-ale 2.stable.ppm 3.ppm 3.stable.ppm
-.
-.
-.
-ale 8.stable.ppm 9.ppm 9.stable.ppm
+If 0.ppm, 1.ppm, ..., 9.ppm represent frames from an unstabilized video stream,
+then the following sequence of commands may result in a stabilized sequence:
 
-Jeff Treece suggested the replacement option and reports success using the
-stabilization approach outlined above.
+ale --replace         0.ppm 1.ppm 1.stable.ppm
+ale --replace  1.stable.ppm 2.ppm 2.stable.ppm
+ale --replace  2.stable.ppm 3.ppm 3.stable.ppm
+.
+.
+.
+ale --replace  8.stable.ppm 9.ppm 9.stable.ppm
 
 
 URLs

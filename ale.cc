@@ -17,21 +17,31 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+ * ale.cc: The main loop of ALE, including the user interface.
+ */
+
 #include "image.h"
 #include "image_rw.h"
 #include "gpt.h"
 #include "my_real.h"
 #include "tfile.h"
-#include "render.h"
-#include "combine.h"
 #include "align.h"
-#include "merge.h"
-#include "drizzle.h"
-#include "hf_filter.h"
-#include "ipc.h"
-#include "ipc/xvp610_320x240.h"
-#include "ipc/box.h"
-#include "ipc/stdin.h"
+
+/*
+ * Renderers
+ */
+
+#include "render.h"
+#include "render/combine.h"
+#include "render/merge.h"
+#include "render/drizzle.h"
+#include "render/hf_filter.h"
+#include "render/ipc.h"
+#include "render/ipc/xvp610_320x240.h"
+#include "render/ipc/box.h"
+#include "render/ipc/stdin.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -43,7 +53,7 @@
  * Version Information
  */
 
-char *version = "0.4.8"
+char *version = "0.5.0"
 #ifdef USE_MAGICK
 		" (File handler: ImageMagick)";
 #else
@@ -79,10 +89,10 @@ inline void usage(const char *argv0) {
 		"--extend          Increase image extents to accommodate all pixel data.\n"
 		"--no-extend       Don't increase extents; crop to original frame. [default]\n"
 		BETWEEN_SECTIONS
-		"Transformation defaults:\n"
+		"Alignment following:\n"
 		HEADER_SPACE
-		"--identity        Default alignment begins with identity transform. [default]\n"
-		"--follow          Default alignment begins with the previous frame's transform.\n"
+                "--identity        Frames align closely with the original frame.  [default]\n"
+                "--follow          Frames align closely with their immediate predecessor.\n"
 		BETWEEN_SECTIONS
 		"Transformation file operations:\n"
 		HEADER_SPACE
@@ -120,12 +130,12 @@ inline void usage(const char *argv0) {
 		BETWEEN_SECTIONS
 		"File output options:\n"
 		HEADER_SPACE
-		"--inc             Produce incremental image output.  [default]\n"
-		"--no-inc          Don't produce incremental image output.\n"
+		"--inc             Produce incremental output.  [default]\n"
+		"--no-inc          Don't produce incremental output.\n"
 		BETWEEN_SECTIONS
-		"Video stabilization options: [Experimental]\n"
+		"Pixel replacement:\n"
 		HEADER_SPACE
-		"--replace         Replace frame areas rather than merging.\n"
+		"--replace         Replace overlapping areas rather than merging.\n"
 		"--no-replace      Do not replace.  [default]\n"
 		"\n",
 		argv0, argv0);
@@ -239,7 +249,13 @@ int main(int argc, const char *argv[]){
 				sscanf(argv[i+2], "%d", &ip_iterations);
 				ip_radius /= 2;
 				i += 2;
+
+				/*
+				 * We need to keep alignment information for IP.
+				 */
+
 				align::keep();
+
 			} else {
 				fprintf(stderr, "\n\n*** Not enough arguments for IP-solve ***\n\n\n");
 				exit(1);
@@ -249,7 +265,13 @@ int main(int argc, const char *argv[]){
 				ipc_config = argv[i+1];
 				sscanf(argv[i+2], "%d", &ip_iterations);
 				i += 2;
+
+				/*
+				 * We need to keep alignment information for IP.
+				 */
+
 				align::keep();
+
 			} else {
 				fprintf(stderr, "\n\n*** Not enough arguments for IP-solve ***\n\n\n");
 				exit(1);

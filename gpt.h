@@ -17,6 +17,10 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+ * gpt.h: Represent transformations of projective or Euclidean type.
+ */
+
 #ifndef __gpt_h__
 #define __gpt_h__
 
@@ -536,8 +540,10 @@ public:
 	} 
 
 	/*
-	 * Modify all projective parameters at once.  Accommodate 
-	 * bugs from version 0 of the transformation file.
+	 * Modify all projective parameters at once.  Accommodate bugs in the
+	 * version 0 transformation file handler (ALE versions 0.4.0p1 and
+	 * earlier).  This code is only called when using a transformation data
+	 * file created with an old version of ALE.
 	 */
 	void gpt_v0_set(point x[4]) {
 
@@ -588,8 +594,10 @@ public:
 	}
 
 	/*
-	 * Modify all euclidean parameters at once.  Accommodate bugs
-	 * from version 0 of the transformation file.
+	 * Modify all euclidean parameters at once.  Accommodate bugs in the
+	 * version 0 transformation file handler (ALE versions 0.4.0p1 and 
+	 * earlier).  This code is only called when using a transformation data
+	 * file created with an old version of ALE.
 	 */
 	void eu_v0_set(my_real eu[3]) {
 

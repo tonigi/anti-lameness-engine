@@ -17,6 +17,13 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+ * drizzle.h: A renderer that implements a drizzling algorithm based on research
+ * by Richard Hook and Andrew Fruchter.  For more details, see:
+ *
+ * 	http://www.cv.nrao.edu/adass/adassVI/hookr.html
+ */
+
 #ifndef __drizzle_h__
 #define __drizzle_h__
 
@@ -24,9 +31,9 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
-#include "gpt.h"
-#include "image.h"
-#include "point.h"
+#include "../gpt.h"
+#include "../image.h"
+#include "../point.h"
 
 class drizzle : public render {
 private:

@@ -17,6 +17,18 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+ * merge.h: A render subclass implementing the default renderer used by ALE,
+ * also used as the reference rendering for alignment.  A template value indicates
+ * whether the merging weights should be altered so that a replacement algorithm is
+ * used instead.
+ *
+ * Template value:
+ * 	
+ * 	0	Implement standard merging algorithm
+ * 	1	Implement pixel replacement variant of the merging algorithm
+ */
+
 #ifndef __merge_h__
 #define __merge_h__
 
@@ -24,9 +36,9 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
-#include "gpt.h"
-#include "image.h"
-#include "point.h"
+#include "../gpt.h"
+#include "../image.h"
+#include "../point.h"
 
 template <int replace>
 class merge : public render {

@@ -1,5 +1,9 @@
 #include "align.h"
 
+/*
+ * See align.h for details on these variables.
+ */
+
 double align::scale_factor;
 
 int align::_keep = 0;
@@ -22,6 +26,10 @@ int align::extend_orig_width = 0;
 int align::alignment_class = 1;
 int align::default_initial_alignment_type = 0;
 transformation align::default_initial_alignment;
+int align::is_default = 1;
+int align::old_is_default;
+transformation align::old_initial_alignment;
+transformation align::old_final_alignment;
 int align::channel_alignment_type = 2;
 double align::metric_exponent = 2;
 double align::match_threshold = 0;

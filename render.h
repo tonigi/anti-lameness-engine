@@ -17,6 +17,10 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+ * render.h: A superclass for all rendering classes.
+ */
+
 #ifndef __render_h__
 #define __render_h__
 
@@ -27,6 +31,13 @@
 #include "gpt.h"
 #include "image.h"
 #include "point.h"
+
+/*
+ * Class render accepts messages synchronizing rendering steps through the
+ * methods sync(n) and sync(), and returns information about the currently
+ * rendered image via methods get_image() and get_defined().  This class is
+ * abstract, and must be subclassed to be instantiated.
+ */
 
 class render {
 public:

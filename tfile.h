@@ -17,6 +17,17 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+ * tfile.h: Read and write transformation data files.
+ */
+
+/*
+ * This version of ALE reads transformation data file versions 0, 1, and 2, and
+ * writes version 2 transformation data files.  Data file versions 1 and 2 are
+ * identified by a version command "V 1" or "V 2", respectively.  Data file
+ * version 0 is identified by having no version command.
+ */
+
 #ifndef __tfile_h__
 #define __tfile_h__
 
@@ -29,15 +40,28 @@
 
 static int tfile_version = 0;
 
+/*
+ * Structure to describe a transformation data file to load data from.
+ */
+
 struct tload_t {
 	const char *filename;
 	FILE *file;
 };
 
+/*
+ * Structure to describe a transformation data file to write data to.
+ */
+
 struct tsave_t {
 	const char *filename;
 	FILE *file;
 };
+
+/*
+ * Create a new tload_t transformation data file structure, used for
+ * reading data from transformation data files.
+ */
 
 static inline struct tload_t *tload_new(const char *filename) {
 	FILE *file = fopen (filename, "r");
@@ -52,6 +76,11 @@ static inline struct tload_t *tload_new(const char *filename) {
 
 	return result;
 }
+
+/*
+ * Create a new tsave_t transformation data file structure, used for
+ * writing data to transformation data files.
+ */
 
 static inline struct tsave_t *tsave_new(const char *filename) {
 	FILE *file = fopen (filename, "w");
@@ -73,23 +102,51 @@ static inline struct tsave_t *tsave_new(const char *filename) {
 	return result;
 }
 
+/*
+ * Destroy a tload_t transformation data file structure.
+ */
+
 static inline void tload_delete(struct tload_t *victim) {
 	if (victim)
 		fclose(victim->file);
 	free(victim);
 }
 
+/*
+ * Destroy a tsave_t transformation data file structure.
+ */
+
 static inline void tsave_delete(struct tsave_t *victim) {
 	free(victim);
 }
 
+/*
+ * Load the next transformation from a transformation data file associated with
+ * transformation data file structure T, or return the default transformation
+ * if no transformation is available.
+ *
+ * 	T is a pointer to the tload_t transformation data file structure.
+ *
+ * 	LOD is the level of detail currently in use by the alignment class.
+ *
+ * 	IS_P is nonzero if a projective transformation is expected.
+ *
+ * 	DEFAULT_TRANSFORM is the default transformation result.
+ *
+ *	IS_DEFAULT is used to signal a non-default transformation result.
+ */
+
 static inline transformation tload_next(struct tload_t *t, int lod, int is_p, 
-		transformation default_transform) {
+		transformation default_transform, int *is_default) {
 
 	transformation result = default_transform;
 
+	*is_default = 1;
+
 	/*
 	 * Scale default initial transform for lod
+	 *
+	 * XXX: Can this be moved into align.h?
 	 */
 
 	result.rescale (1 / pow(2, lod));
@@ -142,6 +199,7 @@ static inline transformation tload_next(struct tload_t *t, int lod, int is_p,
 			case 'P':
 			case 'p':
 				/* Projective transformation data */
+				*is_default = 0;
 				if (is_p == 0) {
 					fprintf(stderr, "\ntrans-load: warning: "
 						"Ignoring projective data for euclidean "
@@ -193,6 +251,7 @@ static inline transformation tload_next(struct tload_t *t, int lod, int is_p,
 			case 'E':
 			case 'e':
 				/* Euclidean transformation data */
+				*is_default = 0;
 				{
 					double width, height;
 					int count, i;
@@ -242,6 +301,16 @@ static inline transformation tload_next(struct tload_t *t, int lod, int is_p,
 	return result;
 }
 
+/*
+ * Save the next transformation to a transformation data file associated with
+ * transformation data file structure T, or do nothing if T is NULL.
+ *
+ * 	OFFSET is the transformation to be saved.
+ *
+ * 	IS_PROJECTIVE indicates whether to write a projective transformation.
+ *
+ */
+
 static inline void tsave_next(struct tsave_t *t, transformation offset, int is_projective) {
 	if (t != NULL) {
 		t->file = fopen(t->filename, "a");
@@ -268,6 +337,11 @@ static inline void tsave_next(struct tsave_t *t, transformation offset, int is_p
 	}
 }
 
+/*
+ * Write information to a transformation file indicating the target output
+ * file.
+ */
+
 static inline void tsave_target(struct tsave_t *t, const char *filename) {
 	if (t != NULL) {
 		t->file = fopen(t->filename, "a");
@@ -278,6 +352,12 @@ static inline void tsave_target(struct tsave_t *t, const char *filename) {
 	}
 }
 
+/*
+ * Write information to a transformation data file indicating the filename
+ * of the original frame (i.e. the first frame in the sequence of input
+ * frames).
+ */
+
 static inline void tsave_orig(struct tsave_t *t, const char *filename) {
 	if (t != NULL) {
 		t->file = fopen(t->filename, "a");
@@ -287,6 +367,12 @@ static inline void tsave_orig(struct tsave_t *t, const char *filename) {
 		fclose(t->file);
 	}
 }
+
+/*
+ * Write information to a transformation data file indicating the filename
+ * of a supplemental frame (i.e. a frame in the sequence of input frames 
+ * that is not the first frame).
+ */
 
 static inline void tsave_info(struct tsave_t *t, const char *filename) {
 	if (t != NULL) {

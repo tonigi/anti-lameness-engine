@@ -17,6 +17,10 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+ * ppm.h: Read and write PPM binary files.
+ */
+
 #ifndef __ppm_h__
 #define __ppm_h__
 
@@ -26,7 +30,11 @@
 
 static inline void error_ppm(const char *filename) {
 	fprintf(stderr, 
-		"\n'%s' doesn't look like a binary PPM file.\n", 
+		"\n\n*** '%s' doesn't look like a binary PPM file.\n"
+		"\n*** To handle other file types, compile ALE with\n"
+		"*** ImageMagick support ('make IMAGEMAGICK=1').\n"
+		"*** (To do this, you must have a source distribution\n"
+		"*** of ALE, and you must have ImageMagick installed.)\n\n", 
 		filename);
 	exit(1);
 }

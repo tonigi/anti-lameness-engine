@@ -17,6 +17,10 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+ * image.h: The internal representation of images used by ALE.
+ */
+
 #ifndef __image_h__
 #define __image_h__
 
@@ -97,7 +101,7 @@ public:
 
 #if 0
 
-	/* Tested for ALE 0.4.5 */
+	/* Tested for ALE 0.4.5 -- offers an increase in speed but breaks encapsulation. */
 
 	unsigned char *get_pixel_array() {
 		_apm_memo = 0;
@@ -208,7 +212,7 @@ public:
 	 * At the edges, these values are normalized so that the sum of
 	 * contributing pixels is 1.
 	 */
-	void scale_by_half() {
+	image_base<colorT> *scale_by_half() const {
 		double f = 0.5;
 
 		image_base<colorT> *is = new image_base<colorT> (
@@ -279,18 +283,9 @@ public:
 				    ? 0.0625
 				    : 0 ) ) );
 
-		free(_p);
+		is->_offset = point(_offset[0] * f, _offset[1] * f);
 
-		_p = is->_p;
-		_dimx = is->_dimx;
-		_dimy = is->_dimy;
-		_depth = is->_depth;
-		_apm_memo = 0;
-		_offset = point(_offset[0] * f, _offset[1] * f);
-
-		is->_p = NULL;
-
-		delete is;
+		return is;
 	}
 
 	/*
@@ -321,7 +316,7 @@ public:
 	 * in the code below to ': 1'.
 	 */
 
-	void defined_scale_by_half() {
+	image_base<colorT> *defined_scale_by_half() const {
 		double f = 0.5;
 
 		image_base<colorT> *is = new image_base<colorT> (
@@ -364,18 +359,9 @@ public:
 				    ? get_pixel_component(2 * i + 1, 2 * j + 1, k)
 				    : 0 ) );
 
-		free(_p);
+		is->_offset = point(_offset[0] * f, _offset[1] * f);
 
-		_p = is->_p;
-		_dimx = is->_dimx;
-		_dimy = is->_dimy;
-		_depth = is->_depth;
-		_apm_memo = 0;
-		_offset = point(_offset[0] * f, _offset[1] * f);
-
-		is->_p = NULL;
-
-		delete is;
+		return is;
 	}
 
 	/*
@@ -425,6 +411,13 @@ public:
 
 		assert(ic);
 
+#if 0
+		/*
+		 * Tested for 0.5.0.  No obvious increase in speed.
+		 */
+
+		memcpy(ic->_p, _p, height() * width() * depth() * sizeof(colorT));
+#else
 		unsigned int i, j, k;
 
 		for (i = 0; i < height(); i++)
@@ -432,6 +425,7 @@ public:
 		for (k = 0; k < depth();  k++)
 			ic->set_pixel_component(i, j, k,
 				get_pixel_component(i, j, k));
+#endif
 
 		ic->_apm_memo = _apm_memo;
 		ic->_apm = _apm;

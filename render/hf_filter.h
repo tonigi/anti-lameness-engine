@@ -17,6 +17,11 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+ * hf_filter.h: A render subclass that implements an unsharp mask
+ * postprocessing algorithm to enhance high frequencies.
+ */
+
 #ifndef __hf_filter_h__
 #define __hf_filter_h__
 
@@ -25,8 +30,8 @@
 #include <assert.h>
 #include <math.h>
 
-#include "image.h"
-#include "render.h"
+#include "../image.h"
+#include "../render.h"
 
 #define FILTER_SCALE 2.5
 

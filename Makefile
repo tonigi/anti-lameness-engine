@@ -16,8 +16,7 @@
 #  along with Anti-Lamenessing Engine; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# CFLAGS:=-DNDEBUG $(if $(IMAGEMAGICK), -DUSE_MAGICK $(shell Magick-config --cflags --cppflags), -Wall -Os) 
-CFLAGS:=-DNDEBUG $(if $(IMAGEMAGICK), -DUSE_MAGICK $(shell Magick-config --cflags --cppflags), -Wall -Os) -g
+CFLAGS:=-DNDEBUG $(if $(IMAGEMAGICK), -DUSE_MAGICK $(shell Magick-config --cflags --cppflags), -Wall -Os) 
 LDFLAGS:=-lm $(if $(IMAGEMAGICK), $(shell Magick-config --ldflags --libs))
 
 #
@@ -31,11 +30,11 @@ all: ale-phony
 clean:
 	rm -f ale
 
-ale-phony: ale.cc align.cc image_rw.cc *.h
+ale-phony: ale.cc align.cc image_rw.cc *.h render/*.h render/ipc/*.h
 	g++ -o ale $(CFLAGS) ale.cc align.cc image_rw.cc $(LDFLAGS)
 
 # XXX: this isn't even remotely portable.  It's how I make the Windows
 # binary, though, so I might as well put it here.
 
-ale.exe: ale.cc align.cc image_rw.cc *.h
+ale.exe: ale.cc align.cc image_rw.cc render/*.h render/ipc/*.h
 	i586-mingw32msvc-g++ -Wall -DNDEBUG -o ale.exe -Os ale.cc align.cc image_rw.cc -lm 

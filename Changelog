@@ -1,3 +1,33 @@
+0.5.0
+
+o	Remove certain cloning operations from align.h, but since cursory tests
+	indicate that scaling with --scale is much more expensive than cloning,
+	allow cloning to occur when scaling occurs.
+
+o	Add more comment documentation to header files.
+
+o	Emit a more informative error message when the PPM file handler
+	encounters a file that is not a well-formed PPM binary file.
+
+o	Move rendering implementations to subdirectory 'render/'.
+
+o	Modify semantics of alignment following by applying to file-loaded
+	initial transformations a delta transformation D = AB^-1, where B is
+	the previous frame's (unmodified) initial transformation, A is the
+	previous frame's final transformation, and ^-1 is the inverse operator.
+	Using --follow with --trans-load can now improve alignment success when
+	working with panoramic image mosaics.
+
+o	We're not using simulated annealing, so remove comments that claim
+	otherwise.
+
+o	Remove certain unsafe assumptions from ipc/* (now render/ipc/*); this
+	change includes a modification to ipc.h (now render/ipc.h).  Limits of
+	the rectangle used as an argument to the <type>::response() function
+	are now explicitly given rather than implied.
+
+o	Change documentation for --replace.
+
 0.4.8
 
 o	Modify Irani-Peleg renderer to produce incremental output.

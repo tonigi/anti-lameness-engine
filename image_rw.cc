@@ -19,6 +19,10 @@
 
 #include "image_rw.h"
 
+/*
+ * See image_rw.h for details on these variables.
+ */
+
 int image_rw::filename_count = 0;
 const char *image_rw::output_filename = NULL;
 const char **image_rw::filenames = NULL;

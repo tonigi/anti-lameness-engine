@@ -17,6 +17,15 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+ * ipc.h: A render subclass implementing an iterative image reconstruction
+ * algorithm based on the work of Michal Irani and Shmuel Peleg.  The
+ * projection and backprojection function used is configurable by template.
+ * For more information on the algorithm used, see:
+ *
+ * 	http://www.wisdom.weizmann.ac.il/~irani/abstracts/superResolution.html
+ */
+
 #ifndef __ipc_h__
 #define __ipc_h__
 
@@ -25,8 +34,8 @@
 #include <assert.h>
 #include <math.h>
 
-#include "image.h"
-#include "render.h"
+#include "../image.h"
+#include "../render.h"
 
 template <class Response>
 class ipc : public render {
@@ -111,14 +120,10 @@ class ipc : public render {
                                  && jj >= (int) 0
                                  && jj < (int) im->width()) {
 
-					point p_array[4] = {
-						point(top - ii, lef - jj),
-						point(top - ii, rig - jj),
-						point(bot - ii, rig - jj),
-						point(bot - ii, lef - jj)
-					};
-
-					class Response::ipc_result r = response(p_array, i, j);
+					class Response::ipc_result r = response(top - ii,
+							                        bot - ii,
+										lef - jj,
+										rig - jj, i, j);
 
                                         for (int k_in = 0; k_in < 3; k_in++) {
 					int k_out = k_in;
@@ -217,14 +222,10 @@ class ipc : public render {
                                  && jj >= (int) 0
                                  && jj < (int) im->width()) {
 
-					point p_array[4] = {
-						point(top - ii, lef - jj),
-						point(top - ii, rig - jj),
-						point(bot - ii, rig - jj),
-						point(bot - ii, lef - jj)
-					};
-
-					struct Response::ipc_result r = response(p_array, i, j);
+					struct Response::ipc_result r = response(top - ii,
+							                         bot - ii,
+										 lef - jj,
+										 rig - jj, i, j);
 
                                         for (int k_in = 0; k_in < 3; k_in++) {
 					int k_out = k_in;

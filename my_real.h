@@ -21,7 +21,7 @@
 #define __my_real_h__
 
 /*
- * Real-valued type.
+ * Real-valued type used by ALE.
  */
 
 typedef double my_real;
