@@ -1,22 +1,16 @@
-ALE version 0.5.0
+ALE version 0.5.1
 =================
 
 
 Overview
 --------
 
-ALE is designed to produce relatively alias-free images from digital camera
-samples.  Much of it could be applied to images from any source, as long as
-they are in PPM binary format.  
-
-Other image formats, such as PNG and JPEG, can optionally be supported by
-ImageMagick.  See the section 'Compiling from source' below for more
-information on compiling with ImageMagick support.
+ALE is designed to render high-fidelity images of real scenes based on digital
+camera and scanner samples.  
 
 This README discusses downloading, compilation, and the command-line interface,
-including a description of program options.  More detailed documentation about
-the semantics of certain program options can be found on the ALE web site; see
-the end of the README for URLs.
+including a description of program options.  More detailed documentation can be
+found on the ALE web site; see the end of the README for URLs.
 
 
 Downloading a binary
@@ -31,10 +25,10 @@ Downloading a binary
 	no arguments will print a usage message.  
 
 	This build does not use ImageMagick for handling files, so only PPM
-	binary format is currently supported.  If you want support for files
-	other than PPM, try compiling from source; otherwise, convert the input
-	files to PPM if necessary (e.g. with ImageMagick's command-line
-	utilities, available from http://www.imagemagick.org/ ).
+	formats are currently supported.  If you want support for files other
+	than PPM, try compiling from source; otherwise, convert the input files
+	to PPM if necessary (e.g. with ImageMagick's command-line utilities,
+	available from http://www.imagemagick.org/ ).
 
 	
 	Other Platforms
@@ -43,38 +37,93 @@ Downloading a binary
 	No binaries provided.  Compile from source.
 
 
-Compiling from source (version 0.5.0)
--------------------------------------
+Compiling from source
+---------------------
 
 GCC version 3.2.3 with C++ support and GNU Make 3.80 are known to build ALE
 successfully.  Older versions of GCC may fail to compile this version of ALE.
 
 To compile from source, download the tarball into a directory, expand it with
-'tar xzf ale-x.x.x.tar.gz', enter the untarred directory, and type either
-'make' or 'make IMAGEMAGICK=1', depending on whether ImageMagick support is
-desired.  The makefile may need some tweaking on Windows systems (e.g. you may
-want to write the output to 'ale.exe' or something).
+'tar xzf ale-x.x.x.tar.gz', enter the untarred directory, and type 
+
+	make [OPTIONS]
+
+where [OPTIONS] contains zero or more of the compilation options listed below.
+The makefile may need some tweaking on Windows systems (e.g. you may want to
+write the output to 'ale.exe' or something).
 
 
-Using ALE (version 0.5.0)
--------------------------
+Compilation options
+-------------------
+
+IMAGEMAGICK=0	Disable ImageMagick support.  [default]
+IMAGEMAGICK=1	Enable ImageMagick support.  
+BITS=8		Use 8 bits per channel (24 bit color).  [default]
+BITS=16		Use 16 bits per channel (48 bit color).
+PLAIN=0		Output PPM files in raw (binary) format. [default]
+PLAIN=1		Output PPM files in plain (ASCII) format.
+
+Note: The PLAIN option is ignored when ImageMagick support is enabled.
+
+
+Compilation option descriptions
+-------------------------------
+
+
+IMAGEMAGICK:
+
+ImageMagick support allows ALE to make use of the file-handling capabilities of
+ImageMagick.  This includes reading and writing a variety of file formats,
+including, among many others, PNG and JPEG, two formats commonly used in web
+publishing, as well as common interchange formats, such as PPM and TIFF.  As an
+added bonus, it also allows URL specification of input files.
+
+
+BITS:
+
+Using 8 bits per color channel (24 bit color) is adequate for most
+applications, but performing certain postprocessing operations on 8-bit output
+can cause visible color banding and other artifacts.  In such cases, using 16
+bits per color channel (BITS=16) may be desirable.  
+
+In order to take advantage of this added color depth, it is necessary to use
+postprocessing tools capable of handling more than 8 bits per channel, such as
+the NetPBM command-line tools and the interactive editor CinePaint (formerly
+known as Film Gimp); see the following URLs for more information.
+
+http://netpbm.sourceforge.net/
+http://cinepaint.sourceforge.net/
+
+
+PLAIN:
+
+By default, ALE's internal file handler always outputs raw (binary) format PPM
+files.  To output plain (ASCII) format instead, specify PLAIN=1.  This option
+may be useful when outputting 16-bit files to be handled by older programs, as
+the PPM specification did not support a 16-bit raw format prior to April 2000.
+Note that plain PPM files can be about triple the size of raw PPM files.  This
+option has no effect when ImageMagick support is enabled.
+
+
+Using ALE
+---------
 
 Usage: ale [<options>] <original-frame> [<supplemental-frame> ...] <output-file>
    or: ale --version
 
 ALE merges supplemental frames with an original frame to produce a single
 output file result.  Unless ALE has been compiled with the ImageMagick option,
-all files must be in PPM binary (as opposed to PPM ASCII) format.  The merge is
-produced incrementally, and the output file is updated as the process
-progresses.  Options are described in the next section.
+all files must be in PPM format.  The merge is produced incrementally, and the
+output file is updated as the process progresses.  Options are described in the
+next section.
 
 NOTE:  When handling large images, it is generally advisable to use the Monte
 Carlo alignment option (e.g. --mc 10), since calculating transformations for
 a large number of pixels can take a long time.
 
 
-Options (version 0.5.0)
------------------------
+Options
+-------
 
 Alignment channel options:
 --align-all       Align images using all color channels
@@ -100,8 +149,8 @@ Transformation file operations:
 
 Tunable parameters:
 --scale=x         Scale images by the factor x (where x is at least 1.0)
---hf-enhance=x    Enhance high frequency details by factor x. (0.0 is default)
---metric=x        Set the error metric exponent (2 is default)
+--hf-enhance=x    Enhance high frequency details by factor x.  (0.0 is default)
+--metric=x        Set the error metric exponent.                 (2 is default)
 --threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)
 --perturb-upper=x Perturbation upper bound in pixels/degrees  (32.0 is default)
 --perturb-lower=x Perturbation lower bound in pixels/degrees  (.125 is default)
@@ -132,8 +181,8 @@ Pixel replacement:
 --no-replace      Do not replace.  [default]
 
 
-Option Descriptions (version 0.5.0)
------------------------------------
+Option Descriptions
+-------------------
 
 
 Transformations:
@@ -157,10 +206,10 @@ additional constraints for alignment.
 Alignment following:
 
 The --follow option should be used when adjacent frames are more closely
-aligned with each other than with the original frame (i.e. with the first frame
-in the sequence).  The --identity option should be used when the reverse holds.
-These flags have no effect when alignment is disabled.  (See notes on
-Perturbation bounds below for information on disabling alignment.)  
+aligned with each other than with the original frame.  The --identity option
+should be used when the reverse holds.  These flags have no effect when
+alignment is disabled.  (See notes on "Perturbation bounds" below for
+information on disabling alignment.)  
 
 
 Transformation data files:
@@ -168,7 +217,7 @@ Transformation data files:
 Transformation data may be loaded from a file to determine the initial
 transformations used in alignment, or saved to a file once alignment is
 complete.  Note that projective transformation data will not be used when
-performing euclidean alignment.  On the other hand, euclidean transformation
+performing Euclidean alignment.  On the other hand, Euclidean transformation
 data can be used to set the initial values for projective alignment.  When
 loading transformation data, it may also be useful to reduce the perturbation
 upper bound.  
@@ -211,8 +260,10 @@ Scaling:
 
 If a scaling argument is given, ALE will internally scale all input
 frames by the scale factor, resulting in an output file of this larger
-scale.  When dealing with scaled images, perturbation bounds measured in units
-of pixels refer to scaled pixels.  All other measurements specified in pixels
+scale.  
+
+When dealing with scaled images, perturbation bounds measured in units of
+pixels refer to scaled pixels.  All other measurements specified in pixels
 (e.g. drizzling diameters and filter diameters for Irani-Peleg iterative image
 reconstruction) refer to pixels in the original unscaled image.
 
@@ -298,11 +349,17 @@ ale --replace  2.stable.ppm 3.ppm 3.stable.ppm
 .
 ale --replace  8.stable.ppm 9.ppm 9.stable.ppm
 
+The resulting stabilized sequence would be:
+
+0.ppm, 1.stable.ppm, 2.stable.ppm, ..., 9.stable.ppm.
+
 
 URLs
 ----
 
 Home Page		http://auricle.dyndns.org/ALE/
+User Manual		http://auricle.dyndns.org/ALE/user/
+Technical Description   http://auricle.dyndns.org/ALE/tech/
 
 
 Contact

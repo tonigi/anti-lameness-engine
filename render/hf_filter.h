@@ -118,8 +118,8 @@ class hf_filter : public render {
 
 					if (result < 0)
 						result = 0;
-					if (result > 255)
-						result = 255;
+					if (result > CHANNEL_MAX)
+						result = CHANNEL_MAX;
 
 					target->set_pixel_component(i, j, k, result);
 				}

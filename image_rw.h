@@ -41,7 +41,32 @@
 
 class image_rw {
 
-private:
+	/*
+	 * Private data members
+	 */
+
+	/*
+	 * Pointer to the output filename
+	 */
+	static const char *output_filename;
+	
+	/*
+	 * Variables relating to input image files and image data structures.
+	 */
+	static const char **filenames;
+	static int filename_count;
+	static const image **images;
+	static int *files_open;
+
+	/*
+	 * The most recently closed image number.
+	 */
+	static int latest_close_num;
+
+	/*
+	 * A cache of the data associated with the most recently closed image.
+	 */
+	static const image *latest_close;
 
 	/*
 	 * Private methods to init and shut down the file reader.
@@ -111,12 +136,23 @@ private:
 				CatchException(&exception);
 			if (p == NULL)
 				exit(1);
-		
-			for (j = 0; j < mi->columns; j++) {
-				im->set_pixel_component(i, j, 0, p->red);
-				im->set_pixel_component(i, j, 1, p->green);
-				im->set_pixel_component(i, j, 2, p->blue);
-				p++;
+
+			if (MaxRGB == 255 && CHANNEL_MAX == 65535) {
+				for (j = 0; j < mi->columns; j++) {
+					im->set_pixel_component(i, j, 0, ((channel) p->red << 8) | p->red);
+					im->set_pixel_component(i, j, 1, ((channel) p->green << 8) | p->green);
+					im->set_pixel_component(i, j, 2, ((channel) p->blue << 8) | p->blue);
+					p++;
+				}
+			} else if (MaxRGB > 255 || CHANNEL_MAX == 255) {
+				for (j = 0; j < mi->columns; j++) {
+					im->set_pixel_component(i, j, 0, p->red);
+					im->set_pixel_component(i, j, 1, p->green);
+					im->set_pixel_component(i, j, 2, p->blue);
+					p++;
+				}
+			} else {
+				assert(0);
 			}
 		}
 
@@ -160,20 +196,57 @@ private:
 
 		mi->columns = im->width();
 		mi->rows = im->height();
-		mi->depth = 8;
+
+		if (MaxRGB < 65535 || CHANNEL_MAX < 65535)
+			mi->depth = 8;
+		else
+			mi->depth = 16;
+
+		if (MaxRGB < 65535 && CHANNEL_MAX == 65535) {
+			fprintf(stderr, "\n\n*** Warning: ALE was compiled with support for 16 bits per channel,\n");
+			fprintf(stderr, "*** but ImageMagick has not been compiled with support for this.\n");
+			fprintf(stderr, "*** Writing output using 8 bits per channel.\n");
+		}
 
 		for (i = 0; i < mi->rows; i++) {
 			p = SetImagePixels(mi, 0, i, mi->columns, 1);
 			if (p == NULL)
 				break;
-			for (j = 0; j < mi->columns; j++) {
-				p->red = im->get_pixel_component(i, j, 0);
-				p->green = im->get_pixel_component(i, j, 1);
-				p->blue = im->get_pixel_component(i, j, 2);
-				p->red |= p->red << 8;
-				p->green |= p->green << 8;
-				p->blue |= p->blue << 8;
-				p++;
+
+			if (MaxRGB == 255 && CHANNEL_MAX == 65535) {
+
+				/*
+				 * XXX: It is possible that this could be done
+				 * better by rounding.
+				 */
+
+				for (j = 0; j < mi->columns; j++) {
+					p->red = im->get_pixel_component(i, j, 0) >> 8;
+					p->green = im->get_pixel_component(i, j, 1) >> 8;
+					p->blue = im->get_pixel_component(i, j, 2) >> 8;
+					p++;
+				}
+
+			} else if (CHANNEL_MAX == 255 && MaxRGB > 255) {
+				for (j = 0; j < mi->columns; j++) {
+					p->red = im->get_pixel_component(i, j, 0);
+					p->green = im->get_pixel_component(i, j, 1);
+					p->blue = im->get_pixel_component(i, j, 2);
+					p->red |= (p->red) << 8;
+					p->green |= (p->green) << 8;
+					p->blue |= (p->blue) << 8;
+					p++;
+				}
+			} else if ((CHANNEL_MAX == 65535 && MaxRGB == 65535)
+				|| (CHANNEL_MAX == 255   && MaxRGB == 255  )) {
+				for (j = 0; j < mi->columns; j++) {
+					p->red = im->get_pixel_component(i, j, 0);
+					p->green = im->get_pixel_component(i, j, 1);
+					p->blue = im->get_pixel_component(i, j, 2);
+					p++;
+				}
+			} else {
+				assert(0);
 			}
 			if (!SyncImagePixels(mi))
 				break;
@@ -210,33 +283,6 @@ private:
 		}
 #endif
 	}
-
-	/*
-	 * Private data members
-	 */
-
-	/*
-	 * Pointer to the output filename
-	 */
-	static const char *output_filename;
-	
-	/*
-	 * Variables relating to input image files and image data structures.
-	 */
-	static const char **filenames;
-	static int filename_count;
-	static const image **images;
-	static int *files_open;
-
-	/*
-	 * The most recently closed image number.
-	 */
-	static int latest_close_num;
-
-	/*
-	 * A cache of the data associated with the most recently closed image.
-	 */
-	static const image *latest_close;
 
 public:
 

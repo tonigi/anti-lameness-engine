@@ -1,3 +1,42 @@
+0.5.1
+
+o	Several of the changes below are based on a suggestion by Bert
+	Douglas regarding support for 16-bit-per-channel color.  See the README
+	for more information about relevant compilation options.
+
+o	Add information to the README regarding new compilation options.
+
+o	Modify the makefile to accept a variable BITS, and differentiate between
+	values BITS=8 and BITS=16.  The latter option causes the macro BITS_16
+	to be defined during compilation.
+	
+o	Modify image_rw.h to handle 16-bit data when BITS_16 is defined.  Also,
+	differentiate between 8-bit and 16-bit ImageMagick builds by checking
+	MaxRGB.
+
+o	In ppm.h, add carriage returns to the set of recognized whitespace
+	characters.
+
+o	Modify ppm.h to read 16-bit binary PPM files (added to the PPM format
+	spec in April 2000).  
+
+o	Modify ppm.h to read plain (ASCII) as well as raw (binary) PPM files.  
+
+o	Add a Makefile option for writing plain (ASCII) PPM files instead of
+	raw (binary).  This option causes the macro PPM_PLAIN to be defined
+	during compilation.
+	
+o	Modify ppm.h to write plain (ASCII) PPM files when PPM_PLAIN is defined.
+
+o	Modify ppm.h to output 16-bit PPM files when BITS_16 is defined.
+
+o	Modify ppm.h to scale input intensity values based on the internal
+	representation depth (8 or 16 bits per channel).
+
+o	Add a file 'channel.h' to describe the color channel data type and
+	valid range, both being dependent on whether BITS_16 is defined.  Use
+	these generic values, where appropriate, throughout the ALE codebase.
+
 0.5.0
 
 o	Remove certain cloning operations from align.h, but since cursory tests

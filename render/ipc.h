@@ -36,6 +36,7 @@
 
 #include "../image.h"
 #include "../render.h"
+#include "../channel.h"
 
 template <class Response>
 class ipc : public render {
@@ -148,8 +149,8 @@ class ipc : public render {
 
 							// fprintf(stderr, "%lf\n", new_value);
 
-							if (new_value > 255)
-								new_value = 255;
+							if (new_value > CHANNEL_MAX)
+								new_value = CHANNEL_MAX;
 							if (new_value < 0)
 								new_value = 0;
 
@@ -299,11 +300,11 @@ class ipc : public render {
 
 				if (new_value < 0)
 					new_value = 0;
-				else if (new_value > 255)
-					new_value = 255;
+				else if (new_value > CHANNEL_MAX)
+					new_value = CHANNEL_MAX;
 
 				done_image->set_pixel_component(i, j, k, 
-						(unsigned char) new_value);
+						(channel) new_value);
 			}
 
                         delete correction;

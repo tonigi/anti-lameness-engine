@@ -16,13 +16,30 @@
 #  along with Anti-Lamenessing Engine; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-CFLAGS:=-DNDEBUG $(if $(IMAGEMAGICK), -DUSE_MAGICK $(shell Magick-config --cflags --cppflags), -Wall -Os) 
-LDFLAGS:=-lm $(if $(IMAGEMAGICK), $(shell Magick-config --ldflags --libs))
+#
+# Compile options (defaults)
+#
+
+BITS=8
+IMAGEMAGICK=0
+PLAIN=0
+
+#
+# Compilation flags passed to GCC
+#
+
+BITSFLAGS:=$(if $(subst 8,,$(BITS)), -DBITS_16,)
+USE_IMAGEMAGICK:=$(subst 0,,$(IMAGEMAGICK))
+PPMFLAGS:=$(if $(subst 0,,$(PLAIN)), -DPPM_PLAIN)
+CFLAGS:=-DNDEBUG $(BITSFLAGS) $(if $(USE_IMAGEMAGICK), -DUSE_MAGICK $(shell Magick-config --cflags --cppflags), $(PPMFLAGS) -Wall -Os) 
+LDFLAGS:=-lm $(if $(USE_IMAGEMAGICK), $(shell Magick-config --ldflags --libs))
 
 #
 # We're using 'ale-phony' because we're using make for configuration,
 # and we want to make sure that the output is updated if the configuration
-# changes.  XXX: this is horrible.
+# changes.  
+# 
+# XXX: is there a better way to do this?
 #
 
 all: ale-phony
@@ -33,8 +50,9 @@ clean:
 ale-phony: ale.cc align.cc image_rw.cc *.h render/*.h render/ipc/*.h
 	g++ -o ale $(CFLAGS) ale.cc align.cc image_rw.cc $(LDFLAGS)
 
-# XXX: this isn't even remotely portable.  It's how I make the Windows
-# binary, though, so I might as well put it here.
+# XXX: This approach to building a Windows binary is probably very dependent on
+# the build configuration.  The above target may be a better place to start for
+# Windows users.
 
-ale.exe: ale.cc align.cc image_rw.cc render/*.h render/ipc/*.h
-	i586-mingw32msvc-g++ -Wall -DNDEBUG -o ale.exe -Os ale.cc align.cc image_rw.cc -lm 
+ale.exe: ale.cc align.cc image_rw.cc *.h render/*.h render/ipc/*.h
+	i586-mingw32msvc-g++ -Wall $(BITSFLAGS) $(PPMFLAGS) -DNDEBUG -o ale.exe -Os ale.cc align.cc image_rw.cc -lm 

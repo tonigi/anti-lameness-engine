@@ -39,6 +39,7 @@
 #include "../gpt.h"
 #include "../image.h"
 #include "../point.h"
+#include "../channel.h"
 
 template <int replace>
 class merge : public render {
@@ -163,7 +164,7 @@ private:
 					 */
 					
 					for (k = 0; k < 3; k++)
-						accum_image->set_pixel_component(i, j, k, (unsigned char)
+						accum_image->set_pixel_component(i, j, k, (channel)
 							((weight * accum_image->get_pixel_component(i, j, k)
 						     +   delta->get_scaled_bl_component(
 							     ti, tj, k, scale_factor)) 

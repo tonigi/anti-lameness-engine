@@ -18,19 +18,21 @@
 */
 
 /*
- * ppm.h: Read and write PPM binary files.
+ * ppm.h: Read and write PPM files.
  */
 
 #ifndef __ppm_h__
 #define __ppm_h__
 
 #include <stdio.h>
+#include <math.h>
 #include <assert.h>
 #include "image.h"
+#include "channel.h"
 
 static inline void error_ppm(const char *filename) {
 	fprintf(stderr, 
-		"\n\n*** '%s' doesn't look like a binary PPM file.\n"
+		"\n\n*** '%s' doesn't look like a PPM file.\n"
 		"\n*** To handle other file types, compile ALE with\n"
 		"*** ImageMagick support ('make IMAGEMAGICK=1').\n"
 		"*** (To do this, you must have a source distribution\n"
@@ -64,10 +66,10 @@ static inline void eat_comments(FILE *f, const char *filename) {
 
 	int next = ' ';
 
-	while (next == ' ' || next == '\n' || next == '\t' || next == '#') {
+	while (next == ' ' || next == '\n' || next == '\t' || next == '#' || next == '\r') {
 		next = fgetc(f);
 		if (next == '#')
-			while (next != '\n' && next != EOF)
+			while (next != '\n' && next != '\r' && next != EOF)
 				next = fgetc(f);
 		if (feof(f))
 			error_ppm(filename);
@@ -84,7 +86,8 @@ static inline void eat_comments(FILE *f, const char *filename) {
 static inline image *read_ppm(const char *filename) {
 	unsigned int i, j, k;
 	image *im;
-	char m1, m2, val;
+	unsigned char m1, m2, val;
+	unsigned int ival;
 	int w, h, mcv;
 	int n;
 	FILE *f = fopen(filename, "rb");
@@ -99,9 +102,9 @@ static inline image *read_ppm(const char *filename) {
 
 	eat_comments(f, filename);	/* XXX - should we eat comments here? */
 	n = fscanf(f, "%c%c", &m1, &m2);
-	assert(n == 2 && m1 == 'P' && m2 == '6');
+	assert(n == 2 && m1 == 'P' && (m2 == '6' || m2 == '3'));
 
-	if (n != 2 || m1 != 'P' || m2 != '6')
+	if (n != 2 || m1 != 'P' || (m2 != '6' && m2 != '3'))
 		error_ppm(filename);
 
 	/* Width */
@@ -127,34 +130,69 @@ static inline image *read_ppm(const char *filename) {
 	eat_comments(f, filename);
 	n = fscanf(f, "%d", &mcv);
 	assert(n == 1);
-	assert(mcv == 255);
+	assert(mcv <= 65535 || m2 == '3');
 
-	if (n != 1)
+	if (n != 1 || (mcv > 65535 && m2 == '6'))
 		error_ppm(filename);
-
-	/* Trailing whitespace */
-
-	fgetc(f);
 
 	/* Make a new image */
 
 	im = new image(h, w, 3);
 	assert (im);
 
+	/* Trailing whitespace */
+
+	if (fgetc(f) == EOF) {
+		assert(0);
+		error_ppm(filename);
+	}
+
 	/* Pixels */
 
-#if 1
 	for (i = 0; i < im->height(); i++)
 	for (j = 0; j < im->width();  j++)
 	for (k = 0; k < im->depth();  k++) {
-		fscanf(f, "%c", &val);
-		im->set_pixel_component(i, j, k, val);
-	}
-#else
-	/* 15% improvement in speed; tested for ALE 0.4.5  */
 
-	fread(im->get_pixel_array(), 1, im->height() * im->width() * im->depth(), f);
-#endif
+		if (m2 == '6') {
+
+			/* Binary data */
+
+			n = fscanf(f, "%c", &val);
+			assert (n == 1);
+
+			if (n != 1)
+				error_ppm(filename);
+
+			ival = val;
+
+			if (mcv > 255) {
+				n = fscanf(f, "%c", &val);
+				assert(n == 1);
+
+				if (n != 1)
+					error_ppm(filename);
+
+				ival = (ival << 8) | val;
+			}
+
+		} else {
+
+			/* ASCII data */
+
+			eat_comments(f, filename);
+
+			n = fscanf(f, "%d", &ival);
+
+			assert (n == 1);
+			if (n != 1)
+				error_ppm(filename);
+		}
+
+		if (mcv != CHANNEL_MAX)
+			ival = (int) round(((double) ival / (double) (mcv)) * (CHANNEL_MAX));
+
+		im->set_pixel_component(i, j, k, ival);
+	}
 
 	/* Done */
 
@@ -173,6 +211,46 @@ static inline void write_ppm(const char *filename, const image *im) {
 		exit(1);
 	}
 
+#ifdef PPM_PLAIN
+
+	/*
+	 * Output an ASCII PPM of 16 bit depth
+	 */
+
+	/* Magic */
+
+	fprintf(f, "P3 ");
+
+	/* Width */
+
+	fprintf(f, "%d ", im->width());
+
+	/* Height */
+
+	fprintf(f, "%d ", im->height());
+
+	/* Maximum component value */
+
+	fprintf(f, "%d\n", CHANNEL_MAX);
+
+	/* Pixels */
+
+	for (i = 0; i < im->height(); i++)
+	for (j = 0; j < im->width();  j++) {
+
+		for (k = 0; k < im->depth();  k++)
+			fprintf(f, "%d ", im->get_pixel_component(i, j, k));
+
+		fprintf(f, "\n");
+
+	}
+
+#else
+
+	/*
+	 * Output a binary PPM
+	 */
+
 	/* Magic */
 
 	fprintf(f, "P6 ");
@@ -187,14 +265,19 @@ static inline void write_ppm(const char *filename, const image *im) {
 
 	/* Maximum component value */
 
-	fprintf(f, "255\n");
+	fprintf(f, "%d\n", CHANNEL_MAX);
 
 	/* Pixels */
 
 	for (i = 0; i < im->height(); i++)
 	for (j = 0; j < im->width();  j++)
-	for (k = 0; k < im->depth();  k++)
-		fprintf(f, "%c", im->get_pixel_component(i, j, k));
+	for (k = 0; k < im->depth();  k++) {
+		if (CHANNEL_MAX > 255) 
+			fprintf(f, "%c", im->get_pixel_component(i, j, k) >> 8);
+		fprintf(f, "%c", 0xff & im->get_pixel_component(i, j, k));
+	}
+
+#endif
 
 	/* Done */
 

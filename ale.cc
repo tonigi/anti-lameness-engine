@@ -53,11 +53,16 @@
  * Version Information
  */
 
-char *version = "0.5.0"
+char *version = "ALE Version:      0.5.1\n"
 #ifdef USE_MAGICK
-		" (File handler: ImageMagick)";
+		"File handler:     ImageMagick\n"
 #else
-		" (File handler: PPM binary)";
+		"File handler:     PPM\n"
+#endif
+#ifdef BITS_16
+		"Bits per channel: 16\n";
+#else
+		"Bits per channel: 8\n";
 #endif
 
 
@@ -102,8 +107,8 @@ inline void usage(const char *argv0) {
 		"Tunable parameters:\n"
 		HEADER_SPACE
 		"--scale=x         Scale images by the factor x (where x is at least 1.0)\n"
-		"--hf-enhance=x    Enhance high frequency details by factor x. (0.0 is default)\n"
-		"--metric=x        Set the error metric exponent (2 is default)\n"
+		"--hf-enhance=x    Enhance high frequency details by factor x.  (0.0 is default)\n"
+		"--metric=x        Set the error metric exponent.                 (2 is default)\n"
 		"--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)\n"
 		"--perturb-upper=x Perturbation upper bound in pixels/degrees  (32.0 is default)\n"
 		"--perturb-lower=x Perturbation lower bound in pixels/degrees  (.125 is default)\n"
@@ -165,7 +170,7 @@ int main(int argc, const char *argv[]){
 		 * Output the version
 		 */
 
-		fprintf(stderr, "%s\n", version);
+		fprintf(stderr, "%s", version);
 
 		return 0;
 	}

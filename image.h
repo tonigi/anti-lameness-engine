@@ -29,6 +29,7 @@
 #include <assert.h>
 #include <math.h>
 #include "point.h"
+#include "channel.h"
 
 template <class colorT>
 class image_base {
@@ -98,16 +99,6 @@ public:
 
 		_p[y * _dimx * _depth + x * _depth + color] = value;
 	}
-
-#if 0
-
-	/* Tested for ALE 0.4.5 -- offers an increase in speed but breaks encapsulation. */
-
-	unsigned char *get_pixel_array() {
-		_apm_memo = 0;
-		return _p;
-	}
-#endif
 
 	/*
 	 * Get a color value at a given position using bilinear interpolation between the
@@ -464,7 +455,7 @@ public:
 
 };
 
-typedef image_base<unsigned char> image;
+typedef image_base<channel> image;
 
 static inline image *new_image(unsigned int dimy, unsigned int dimx, 
 		unsigned int depth) {
