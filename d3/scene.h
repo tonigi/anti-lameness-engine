@@ -394,11 +394,15 @@ class scene {
 			}
 
 			/*
-			 * Get the list of frames in which this triangle appears.
+			 * Get the list of frames in which this triangle appears.  If
+			 * it doesn't appear in any frames, then we don't adjust any
+			 * vertices.
 			 */
 
 			char *frame_list = (char *)aux_var;
-			assert (frame_list);
+
+			if (!frame_list)
+				return 0;
 
 			/*
 			 * As a basis for determining the step size for
@@ -434,6 +438,7 @@ class scene {
 			for (int dir = 1; dir >= -1; dir--) {
 
 				ale_accum error = 0;
+				ale_accum divisor = 0;
 
 				point adjusted_centroid = centroid() + normal() * (step * dir);
 
@@ -449,8 +454,18 @@ class scene {
 					if (!cl->reference[n]->in_bounds(mapped_centroid.xy()))
 						continue;
 
-					error += (cl->reference[n]->get_bl(mapped_centroid.xy()) - color).normsq();
+					d2::pixel c1 = cl->reference[n]->get_bl(mapped_centroid.xy());
+					d2::pixel c2 = color;
+
+					error += (c1 - c2).normsq();
+
+					if (c1.normsq() > c2.normsq()) 
+						divisor += c1.normsq();
+					else
+						divisor += c2.normsq();
 				}
+
+				error /= divisor;
 
 				if (error < lowest_error) {
 					lowest_error = error;
@@ -876,7 +891,12 @@ class scene {
 
 		determine_visibility();
 
-		return (triangle_head[0]->adjust_vertices() | triangle_head[1]->adjust_vertices());
+		int result = triangle_head[0]->adjust_vertices() | triangle_head[1]->adjust_vertices();
+
+		triangle_head[0]->free_aux_vars();
+		triangle_head[1]->free_aux_vars();
+
+		return result;
 	}
 
 public:
