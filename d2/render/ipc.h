@@ -764,39 +764,28 @@ protected:
 				pixel ccpix = correction_count ->get_pixel(i, j);
 				pixel  apix = approximation    ->get_pixel(i, j);
 
-				const ale_real cc_floor = 0.00001;
+				for (unsigned int k = 0; k < 3; k++) {
 
-				if (ccpix[0] < cc_floor
-				 || ccpix[1] < cc_floor
-				 || ccpix[2] < cc_floor)
-					continue;
+					const ale_real cc_floor = 0.00001;
 
-				pixel new_value = cpix / ccpix + apix;
+					if (ccpix[k] < cc_floor)
+						continue;
 
-				assert (finite(apix[0])
-				     && finite(apix[1])
-				     && finite(apix[2]));
+					ale_real new_value = cpix[k] / ccpix[k] + apix[k];
 
-				assert (finite(ccpix[0])
-				     && finite(ccpix[1])
-				     && finite(ccpix[2]));
+					assert (finite(apix[k]));
+					assert (finite(ccpix[k]));
+					assert (finite(cpix[k]));
+					assert (finite(new_value));
 
-				assert (finite(cpix[0])
-				     && finite(cpix[1])
-				     && finite(cpix[2]));
+					/*
+					 * Negative light doesn't make sense.
+					 */
+					if (new_value < 0)
+						new_value = 0;
 
-				assert (finite(new_value[0])
-				     && finite(new_value[1])
-				     && finite(new_value[2]));
-
-				/*
-				 * Negative light doesn't make sense.
-				 */
-				for (unsigned int k = 0; k < 3; k++)
-					if (new_value[k] < 0)
-						new_value[k] = 0;
-
-				approximation->set_pixel(i, j, new_value);
+					approximation->chan(i, j, k) = new_value;
+				}
 			}
 
                         delete correction;
