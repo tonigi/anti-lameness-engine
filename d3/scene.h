@@ -30,7 +30,21 @@
 class scene {
 
 	/*
-	 * Structure to hold information for a given level of detail.
+	 * Structure to hold a subdivisible triangle.
+	 */
+
+	struct triangle {
+		point *vertices[3];
+		struct triangle *neighbors[3];
+		point *division_vertex;
+		struct triangle *children[2];
+	};
+
+	static struct triangle *triangle_head;
+
+	/*
+	 * Structure to hold input frame information for a given level of
+	 * detail.
 	 */
 	struct lod {
 
@@ -59,10 +73,6 @@ class scene {
 	 */
 
 	static struct lod *cl;
-
-
-	static void local_puts(char *s, unsigned int search_depth, unsigned int f,
-			unsigned int x, unsigned int y, double value);
 
 public:
 	/*
