@@ -151,7 +151,7 @@ class scene {
 		 */
 
 		point *vertices[3];
-		char external_vertices[3];
+		char vertex_fixed[3];
 		struct triangle *neighbors[3];
 		struct triangle *parent;
 		int division_vertex;
@@ -181,9 +181,9 @@ class scene {
 			vertices[1] = NULL;
 			vertices[2] = NULL;
 
-			external_vertices[0] = 1;
-			external_vertices[1] = 1;
-			external_vertices[2] = 1;
+			vertex_fixed[0] = 1;
+			vertex_fixed[1] = 1;
+			vertex_fixed[2] = 1;
 
 			neighbors[0] = NULL;
 			neighbors[1] = NULL;
@@ -439,7 +439,7 @@ class scene {
 				children[c]->children[0] = NULL;
 				children[c]->children[1] = NULL;
 				children[c]->division_new_vertex = NULL;
-				children[c]->external_vertices[(division_vertex + 1 + c) % 3] 
+				children[c]->vertex_fixed[(division_vertex + 1 + c) % 3] 
 					= neighbors[division_vertex] ? 0 : 1;
 			}
 
@@ -1025,13 +1025,12 @@ class scene {
 			}
 
 			/*
-			 * Don't allow triangles to move if they contain
-			 * external points.
+			 * If all vertices are fixed, then return.
 			 */
 
-			if (external_vertices[0]
-			 || external_vertices[1]
-			 || external_vertices[2])
+			if (vertex_fixed[0]
+			 && vertex_fixed[1]
+			 && vertex_fixed[2])
 				return 0;
 
 			/*
@@ -1080,18 +1079,28 @@ class scene {
 			point best_vertices[3] = {*vertices[0], *vertices[1], *vertices[2]};
 
 			/*
-			 * Evaluate the error at the current position.
-			 */
-
-//			color_neighbors_negative();
-//			lowest_error = accumulate_neighbor_error();
-
-			/*
 			 * Test modifications to the current position.
 			 */
 
 			for (int v = 0; v < 3; v++) {
+
+				/*
+				 * Check for fixed vertices.
+				 */
+
+				if (vertex_fixed[v])
+					continue;
+
+				/*
+				 * Evaluate the error at the current position.
+				 */
+
 				lowest_error = traverse_around_vertex(vertices[v], &triangle::reference_error, 0);
+
+				/*
+				 * Perturb the position.
+				 */
+
 				for (int axis = 0; axis < 3; axis++)
 				for (int dir = -1; dir <= 1; dir += 2) {
 
