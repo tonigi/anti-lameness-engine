@@ -30,7 +30,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-char *version = "0.1.0";
+char *version = "0.1.1";
 
 image *display_image, *input_image, *weight_image;
 
@@ -42,7 +42,7 @@ static int use_rotation = 1;
 static int align_code = 2;
 static double metric = 2;
 static double match_threshold = 0;
-static double minimum_stepsize = 0.1;
+static double minimum_stepsize = 0.125;
 
 /*
  * Not-quite-symmetric difference function.  Determines the difference in areas
@@ -196,55 +196,93 @@ merge(image *target, image *delta, double xoff, double yoff, double theta) {
  * Update an accumulated image with a new input image.
  */
 inline void update() {
-	double perturb = 16;
+	double perturb = 32;
 	double xoff = 0, yoff = 0, theta = 0;
 	double here = diff(display_image, input_image, 0, 0, 0);
 	int last = -1;
+	int lod;
 
-	while (perturb > minimum_stepsize) {
+	/*
+	 * Determine how many whole-pixel adjustment steps will occur
+	 */
 
-		/*
-		 * Assumes that (perturb < 360) is an invariant.  XXX: this may be
-		 * unnecessary.
-		 */
+	int steps = (int) (log(perturb) / log(2)) + 1;
+	int step;
+	image **display_scales = (image **) malloc(steps * sizeof(image *));
+	image **input_scales = (image **) malloc(steps * sizeof(image *));
+
+	/*
+	 * Prepare multiple levels of detail.
+	 */
+
+	display_scales[0] = clone(display_image);
+	input_scales[0] = clone(input_image);
+	
+	for (step = 1; step < steps; step++) {
+		display_scales[step] = clone(display_scales[step - 1]);
+		scale(display_scales[step], 0.5);
+		input_scales[step] = clone(input_scales[step - 1]);
+		scale(input_scales[step], 0.5);
+	}
+
+	/*
+	 * Simulated annealing perturbation adjustment loop.  Empirically, it's
+	 * okay to use a level-of-detail equal to twice the resolution of the
+	 * perturbation, so we take two pixel steps in each direction until we
+	 * run out of levels of detail, at which point we use the perturbation
+	 * size as the pixel step size.
+	 */
+
+	lod = steps - 2;
+	while (perturb >= minimum_stepsize) {
+
+		image *di = display_scales[lod];
+		image *ii = input_scales[lod];
 
 		double perturb_radians = (2 * M_PI / 360) * perturb;
-		double theta_p_perturb = (theta + perturb_radians >= 2 * M_PI) 
-                                       ? (theta + perturb_radians -  2 * M_PI) 
-                                       : (theta + perturb_radians); 
-		double theta_m_perturb = (theta - perturb_radians < 0) 
-                                       ? (theta - perturb_radians + 2 * M_PI) 
-                                       : (theta - perturb_radians); 
+		double perturb_pixels = (perturb > 1) ? 2 : perturb;	/* XXX: magic value 2 */
+		double theta_p_perturb = theta + perturb_radians;
+		double theta_m_perturb = theta - perturb_radians;
+		double xoff_p_perturb = xoff + perturb_pixels;
+		double xoff_m_perturb = xoff - perturb_pixels;
+		double yoff_p_perturb = yoff + perturb_pixels;
+		double yoff_m_perturb = yoff - perturb_pixels;
 
 		double test = 0;
 
-		if (last != 1 && (test = diff(display_image, input_image, xoff, yoff - perturb, theta)) < here) {
-			yoff -= perturb;
+		if (last != 1 && (test = diff(di, ii, xoff, yoff_m_perturb, theta)) < here) {
+			yoff = yoff_m_perturb;
 			here = test;
 			last = 0;
-		} else if (last != 0 && (test = diff(display_image, input_image, xoff, yoff + perturb, theta)) < here) {
-			yoff += perturb;
+		} else if (last != 0 && (test = diff(di, ii, xoff, yoff_p_perturb, theta)) < here) {
+			yoff = yoff_p_perturb;
 			here = test;
 			last = 1;
-		} else if (last != 3 && (test = diff(display_image, input_image, xoff - perturb, yoff, theta)) < here) {
-			xoff -= perturb;
+		} else if (last != 3 && (test = diff(di, ii, xoff_m_perturb, yoff, theta)) < here) {
+			xoff = xoff_m_perturb;
 			here = test;
 			last = 2;
-		} else if (last != 2 && (test = diff(display_image, input_image, xoff + perturb, yoff, theta)) < here) {
-			xoff += perturb;
+		} else if (last != 2 && (test = diff(di, ii, xoff_p_perturb, yoff, theta)) < here) {
+			xoff = xoff_p_perturb;
 			here = test;
 			last = 3;
-		} else if (last != 5 && (test = diff(display_image, input_image, xoff, yoff, theta_p_perturb)) < here) {
+		} else if (last != 5 && (test = diff(di, ii, xoff, yoff, theta_p_perturb)) < here) {
 			theta = theta_p_perturb;
 			here = test;
 			last = 4;
-		} else if (last != 4 && (test = diff(display_image, input_image, xoff, yoff, theta_m_perturb)) < here) {
+		} else if (last != 4 && (test = diff(di, ii, xoff, yoff, theta_m_perturb)) < here) {
 			theta = theta_m_perturb;
 			here = test;
 			last = 5;
 		} else {
 			perturb *= 0.5;
 			last = -1;
+
+			if (lod > 0) {
+				lod--;
+				xoff *= 2;
+				yoff *= 2;
+			}
 
 			/*
 			 * Announce that we've dropped a perturbation level.
@@ -255,6 +293,18 @@ inline void update() {
 		}
 
 	}
+
+	/*
+	 * Free the level-of-detail structures
+	 */
+	for (step = 0; step < steps; step++) {
+		image_final(display_scales[step]);
+		image_final(input_scales[step]);
+		free(display_scales[step]);
+		free(input_scales[step]);
+	}
+	free(display_scales);
+	free(input_scales);
 
 	/*
 	 * Ensure that the match meets the threshold.
@@ -374,7 +424,7 @@ int main(int argc, char *argv[]){
 			"--no-rotation	Don't make rotational adjustments to images\n"
 			"--metric=x	Set the error metric exponent (2 is default)\n"
 			"--threshold=x  Min. match threshold; a perfect match is 100.  (0 is default)\n"
-			"--stepsize=x	Set the min. correction step, in pixels or degrees (0.1 default)\n",
+			"--stepsize=x	Min. correction step, in pixels or degrees (0.125 is default)\n",
 			argv[0], argv[0]);
 		return 1;
 	} else {

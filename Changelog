@@ -1,3 +1,19 @@
+0.1.1
+
+o	Use reduced levels of detail in coarser alignment steps to increase
+	speed.
+
+o	Change perturbation step lower-bound check from less-than ('<') to 
+	less-than-or-equal-to ('<=').  Change default lower bound
+	to .125 from .1 (the behavior is the same, but the value
+	makes more sense).
+
+o	Change perturbation initial value to 32 pixels from
+	16 pixels, since coarse alignment is now less expensive.
+
+o	Modify scale function so that the borders aren't 
+	corrupted (too badly).
+
 0.1.0
 
 o	Add support for correction of rotation about the lens axis.

@@ -47,6 +47,10 @@ static inline image *new_image(unsigned int dimy, unsigned int dimx, unsigned in
 	return im;
 }
 
+static inline void image_final(image *im) {
+	free(im->p);
+}
+
 static inline unsigned int width(image *im) {
 	return im->dimx;
 }
@@ -85,8 +89,8 @@ static inline unsigned char get_bl_component(image *im, double y, double x, unsi
 
 	assert (y >= 0);
 	assert (x >= 0);
-	assert (y < im->dimy);
-	assert (x < im->dimx);
+	assert (y <= im->dimy - 1);
+	assert (x <= im->dimx - 1);
 	assert (color < im->depth);
 
 	return (int) ((hx - x) * (hy - y)
@@ -109,10 +113,11 @@ static inline void scale(image *im, double f) {
 	unsigned int i, j, k;
 
 	for (i = 0; i < height(is); i++)
-		for (j = 0; j < width(is); j++)
+		for (j = 0; j < width(is); j++) 
 			for (k = 0; k < is->depth; k++)
 				set_pixel_component(is, i, j, k,
-					get_bl_component(im, i / f, j / f, k));
+					get_bl_component(im, (i/f <= height(im) - 1) ? (i/f) : (height(im) - 1), 
+							     (j/f <= width(im) - 1)  ? (j/f) : (width(im) - 1), k));
 
 	free(im->p);
 
@@ -123,6 +128,25 @@ static inline void scale(image *im, double f) {
 	im->apm_memo = -1;
 
 	free(is);
+}
+
+/*
+ * Clone an image
+ */
+static inline image *clone(image *im) {
+	image *ic = new_image(height(im), width(im), im->depth);
+
+	unsigned int i, j, k;
+
+	for (i = 0; i < height(ic); i++)
+		for (j = 0; j < width(ic); j++)
+			for (k = 0; k < ic->depth; k++)
+				set_pixel_component(ic, i, j, k,
+					get_pixel_component(im, i, j, k));
+
+	ic->apm_memo = im->apm_memo;
+
+	return ic;
 }
 
 static inline double avg_pixel_magnitude(image *im) {

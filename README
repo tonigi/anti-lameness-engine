@@ -32,7 +32,7 @@ may need some tweaking on Windows systems (e.g. you may want to write the
 output to 'ale.exe' or something.
 
 
-Using ALE (version 0.1.0)
+Using ALE (version 0.1.1)
 -------------------------
 
 Usage: ./ale [<options>] <input-files> ... <output-file>
@@ -46,7 +46,7 @@ format.  The merge is produced incrementally, and you can inspect the output
 file as the process progresses.  Options are described in the next section.
 
 
-Options (version 0.1.0)
+Options (version 0.1.1)
 -----------------------
 
 Options:
@@ -60,7 +60,7 @@ Options:
 --no-rotation	Don't make rotational adjustments to images
 --metric=x	Set the error metric exponent (2 is default)
 --threshold=x   Min. match threshold; a perfect match is 100.  (0 is default)
---stepsize=x	Set the min. correction step, in pixels or degrees (0.1 default)
+--stepsize=x	Min. correction step, in pixels or degrees (0.125 default)
 
 If a scaling argument is given, the program will internally scale all input
 frames up by 2, 4, or 8, respectively, resulting in an output file of this
