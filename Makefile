@@ -1,4 +1,5 @@
-# Copyright 2002 David Hilvert <dhilvert@ugcs.caltech.edu>
+# Copyright 2002, 2003 David Hilvert <dhilvert@auricle.dyndns.org>,
+#                                    <dhilvert@ugcs.caltech.edu>
 
 #  This file is part of the Anti-Lamenessing Engine.
 #
@@ -20,19 +21,36 @@
 # Compile options (defaults)
 #
 
-BITS=8
 IMAGEMAGICK=0
-PLAIN=0
+FFTW=0
+DEBUG=0
+COLORS=SINGLE
+COORDINATES=SINGLE
 
 #
-# Compilation flags passed to GCC
+# Variable that is false when ImageMagick is not being used
 #
 
-BITSFLAGS:=$(if $(subst 8,,$(BITS)), -DBITS_16,)
-USE_IMAGEMAGICK:=$(subst 0,,$(IMAGEMAGICK))
-PPMFLAGS:=$(if $(subst 0,,$(PLAIN)), -DPPM_PLAIN)
-CFLAGS:=-DNDEBUG $(BITSFLAGS) $(if $(USE_IMAGEMAGICK), -DUSE_MAGICK $(shell Magick-config --cflags --cppflags), $(PPMFLAGS) -Wall -Os) 
-LDFLAGS:=-lm $(if $(USE_IMAGEMAGICK), $(shell Magick-config --ldflags --libs))
+use_imagemagick:=$(subst 0,,$(IMAGEMAGICK))
+
+#
+# Compiler flags
+#
+
+DEBUG_CFLAGS:=$(if $(subst 0,,$(DEBUG)),-DDEBUG,-DNDEBUG)
+IMAGEMAGICK_CFLAGS:=$(if $(use_imagemagick),-DUSE_MAGICK $(shell Magick-config --cflags --cppflags),)
+IMAGEMAGICK_LDFLAGS:=$(if $(use_imagemagick),$(shell Magick-config --ldflags --libs),)
+FFTW_CFLAGS:=$(if $(subst 0,,$(FFTW)),-DUSE_FFTW,)
+PRECISION_CFLAGS:=$(if $(subst SINGLE,,$(COLORS)),,-DALE_COLORS=SINGLE)\
+                  $(if $(subst DOUBLE,,$(COLORS)),,-DALE_COLORS=DOUBLE)\
+                  $(if $(subst HALF,,$(COLORS)),,-DALE_COLORS=HALF)\
+                  $(if $(subst SINGLE,,$(COORDINATES)),,-DALE_COORDINATES=SINGLE)\
+                  $(if $(subst DOUBLE,,$(COORDINATES)),,-DALE_COORDINATES=DOUBLE)
+FFTW_LDFLAGS:=$(if $(subst 0,,$(FFTW)),-lfftw3,)
+
+CFLAGS:= $(DEBUG_CFLAGS) $(FFTW_CFLAGS) $(PRECISION_CFLAGS) \
+         $(if $(use_imagemagick),$(IMAGEMAGICK_CFLAGS),-Wall -O2) 
+LDFLAGS:=$(if $(use_imagemagick),$(IMAGEMAGICK_LDFLAGS)) $(FFTW_LDFLAGS) -lm
 
 #
 # We're using 'ale-phony' because we're using make for configuration,
@@ -47,12 +65,12 @@ all: ale-phony
 clean:
 	rm -f ale
 
-ale-phony: ale.cc align.cc image_rw.cc *.h render/*.h render/ipc/*.h
-	g++ -o ale $(CFLAGS) ale.cc align.cc image_rw.cc $(LDFLAGS)
+ale-phony: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h
+	g++ -o ale $(CFLAGS) ale.cc d2.cc $(LDFLAGS)
 
-# XXX: This approach to building a Windows binary is probably very dependent on
-# the build configuration.  The above target may be a better place to start for
-# Windows users.
+# The following approach to building a Windows binary is probably very
+# dependent on the host platform configuration.  The above target may be a
+# better place to start for Windows users.
 
-ale.exe: ale.cc align.cc image_rw.cc *.h render/*.h render/ipc/*.h
-	i586-mingw32msvc-g++ -Wall $(BITSFLAGS) $(PPMFLAGS) -DNDEBUG -o ale.exe -Os ale.cc align.cc image_rw.cc -lm 
+ale.exe: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h
+	i586-mingw32msvc-g++ -Wall $(PRECISION_CFLAGS) $(DEBUG_CFLAGS) -o ale.exe -O2 ale.cc d2.cc -lm 

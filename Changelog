@@ -1,16 +1,103 @@
-0.5.1-patch3
+0.6.0
 
-o	Fix memory leak in render/combine.h:get_image().
+o	Add a generalized, but rudimentary, implementation of Steve Mann's
+	notion of 'certainty'.  For more details, see
+	http://wearcam.org/comparametrics.pdf
 
-0.5.1-patch2
+o	Make stdin filter height and width independent of each other.
 
-o	Fix offset calculation in d2/render/ipc.h.  This fixes IP rendering on
-	image mosaics extending up or to the left.
+o	In the Irani-Peleg renderer, skip frames that fail to reach the match
+	threshold.
 
-0.5.1-patch1
+o	Convert some operations on pixels and points into vector syntax 
+	through C++ operator overloading.
 
-o	Use most significant bits from input files when ImageMagick has a
-	higher MaxRGB than ALE has CHANNEL_MAX.
+o	Add command-line options to select plain or raw PNM/PPM formats.  Remove
+	makefile variable PLAIN.
+
+o	Add command-line options to select 8/16 bits per channel.  Remove
+	makefile variable BITS.
+
+o	Revise the device configuration xvp610_320x240 to use a new
+	filter, reflecting driver updates (see the relevant web page
+	http://auricle.dyndns.org/xvp610/ ) and support for non-linear
+	colorspace point-spread functions.
+
+o	In the Irani-Peleg renderer, use a discrete Fourier transform to
+	ensure that each (point-spread function, backprojection kernel) pair
+	satisfies condition (9) from theorem 4.1 in the source paper.
+
+o	Add a point-spread function rasterizer.  
+
+o	Extend the --replace option to support drizzling.
+
+o	Add support for exposure registration (i.e., matching of exposure
+	between different frames).
+
+o	Change -Os to -O2 in the Makefile, since -Os no longer achieves speedup
+	in the most critical codepaths.
+
+o	Add command-line support for summation of point-spread functions.
+
+o	Add a polymorphic point-spread function type psf and convert all
+	external interfaces of ipc.h and usm.h (formerly hf-enhance.h) to use
+	this type.  
+
+o	Fix memory leak in d2/render/combine.h:get_image().  (This fix is also
+	included in a patch for 0.5.1.)
+
+o	Modify the USM renderer to write output when incremental output is
+	enabled.
+
+o	In the USM renderer, now only defined pixel values contribute to the
+	mask.  Also, undefined values are no longer masked.
+
+o	Update e-mail address information.
+
+o	Modify the Irani-Peleg calibration script into a general point-spread
+	function calibration script, using a new built-in point-spread function
+	evaluation module to rate candidates.
+
+o	Irani-Peleg and USM (High-frequency enhancement) renderers now
+	use the same point-spread function configurations.  New options --ips,
+	--usm, --lpsf, --nlpsf, and --device subsume and extend the
+	functionality provided by options --ip, --ipc, and --hf-enhance.
+
+o	Add support for convolutions in non-linear colorspace.  This feature
+	is enabled and configured by the command-line option --nlpsf.  (See
+	also the item above.)
+
+o	Linearize channel values within internal data structures so that most 
+	ALE operations are performed on linear data.  Steve Mann discusses the
+	use of linear representations in image processing, e.g. in his paper
+	http://wearcam.org/comparametrics.pdf .  We assume a simple power-law
+	response by default.
+
+o	Modify the image class to use a floating-point data type for 
+	storing pixels.
+
+o	Modify the README to remove information covered in the User Manual.
+
+o	Revise identifiers and comments in d2/render/ipc.h to better reflect
+	the terminology used in the source paper by Irani and Peleg.
+
+o	Consoldiate code for computing the position and dimensions of a pixel in a
+	new coordinate system, and use this new abstraction to reduce the code
+	size of d2/render/ipc.h and d2/render/drizzle.h (Irani-Peleg and
+	drizzling code, respectively).
+
+o	Change several instances of 'double', 'float', and 'my_real' to
+	specialized floating-point types 'ale_real', 'ale_pos', 'ale_sreal',
+	and 'ale_accum'.
+
+o	Fix offset calculation in d2/render/ipc.h.  This is necessary for
+	Irani-Peleg rendering of image mosaics extending upwards or to the
+	left of the original frame.  (This fix is also included in a patch for
+	0.5.1.)
+
+o	Move classes treating snapshots as two-dimensional data to directory
+	'd2' and create an associated C++ namespace.  We can't use '2d' to
+	label the namespace, because the C++ grammar won't allow it.
 
 0.5.1
 

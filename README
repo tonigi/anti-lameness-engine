@@ -1,361 +1,180 @@
-ALE version 0.5.1
-=================
-
-
-Overview
---------
-
-ALE is designed to render high-fidelity images of real scenes based on digital
-camera and scanner samples.  
-
-This README discusses downloading, compilation, and the command-line interface,
-including a description of program options.  More detailed documentation can be
-found on the ALE web site; see the end of the README for URLs.
-
-
-Downloading a binary
---------------------
-
-	Windows
-	-------
-
-	Download ale-x_x_x-win32.zip, unzip, and execute ale.exe.  Note that 
-	ALE takes arguments on the command line, so you may need to open a 
-	command prompt window to use ALE successfully.  Typing 'ale.exe' with 
-	no arguments will print a usage message.  
-
-	This build does not use ImageMagick for handling files, so only PPM
-	formats are currently supported.  If you want support for files other
-	than PPM, try compiling from source; otherwise, convert the input files
-	to PPM if necessary (e.g. with ImageMagick's command-line utilities,
-	available from http://www.imagemagick.org/ ).
-
-	
-	Other Platforms
-	---------------
-
-	No binaries provided.  Compile from source.
-
-
-Compiling from source
----------------------
-
-GCC version 3.2.3 with C++ support and GNU Make 3.80 are known to build ALE
-successfully.  Older versions of GCC may fail to compile this version of ALE.
-
-To compile from source, download the tarball into a directory, expand it with
-'tar xzf ale-x.x.x.tar.gz', enter the untarred directory, and type 
-
-	make [OPTIONS]
-
-where [OPTIONS] contains zero or more of the compilation options listed below.
-The makefile may need some tweaking on Windows systems (e.g. you may want to
-write the output to 'ale.exe' or something).
-
-
-Compilation options
--------------------
-
-IMAGEMAGICK=0	Disable ImageMagick support.  [default]
-IMAGEMAGICK=1	Enable ImageMagick support.  
-BITS=8		Use 8 bits per channel (24 bit color).  [default]
-BITS=16		Use 16 bits per channel (48 bit color).
-PLAIN=0		Output PPM files in raw (binary) format. [default]
-PLAIN=1		Output PPM files in plain (ASCII) format.
-
-Note: The PLAIN option is ignored when ImageMagick support is enabled.
-
-
-Compilation option descriptions
--------------------------------
-
-
-IMAGEMAGICK:
-
-ImageMagick support allows ALE to make use of the file-handling capabilities of
-ImageMagick.  This includes reading and writing a variety of file formats,
-including, among many others, PNG and JPEG, two formats commonly used in web
-publishing, as well as common interchange formats, such as PPM and TIFF.  As an
-added bonus, it also allows URL specification of input files.
-
-
-BITS:
-
-Using 8 bits per color channel (24 bit color) is adequate for most
-applications, but performing certain postprocessing operations on 8-bit output
-can cause visible color banding and other artifacts.  In such cases, using 16
-bits per color channel (BITS=16) may be desirable.  
-
-In order to take advantage of this added color depth, it is necessary to use
-postprocessing tools capable of handling more than 8 bits per channel, such as
-the NetPBM command-line tools and the interactive editor CinePaint (formerly
-known as Film Gimp); see the following URLs for more information.
-
-http://netpbm.sourceforge.net/
-http://cinepaint.sourceforge.net/
-
-
-PLAIN:
-
-By default, ALE's internal file handler always outputs raw (binary) format PPM
-files.  To output plain (ASCII) format instead, specify PLAIN=1.  This option
-may be useful when outputting 16-bit files to be handled by older programs, as
-the PPM specification did not support a 16-bit raw format prior to April 2000.
-Note that plain PPM files can be about triple the size of raw PPM files.  This
-option has no effect when ImageMagick support is enabled.
-
-
-Using ALE
----------
-
-Usage: ale [<options>] <original-frame> [<supplemental-frame> ...] <output-file>
-   or: ale --version
-
-ALE merges supplemental frames with an original frame to produce a single
-output file result.  Unless ALE has been compiled with the ImageMagick option,
-all files must be in PPM format.  The merge is produced incrementally, and the
-output file is updated as the process progresses.  Options are described in the
-next section.
-
-NOTE:  When handling large images, it is generally advisable to use the Monte
-Carlo alignment option (e.g. --mc 10), since calculating transformations for
-a large number of pixels can take a long time.
-
-
-Options
--------
-
-Alignment channel options:
---align-all       Align images using all color channels
---align-green     Align images using the green channel
---align-sum       Align images using a sum of channels [default]
-
-Transformation options:
---translation     Only adjust the position of images
---euclidean       Adjust the position and orientation of images [default]
---projective      Use projective transformations.  Best quality, but slow.
-
-Image extents:
---extend          Increase image extents to accommodate all pixel data.
---no-extend       Don't increase extents; crop to original frame. [default]
-
-Alignment following:
---identity        Frames align closely with the original frame.  [default]
---follow          Frames align closely with their immediate predecessor.
-
-Transformation file operations:
---trans-load=x    Load initial transformation settings from file x
---trans-save=x    Save final transformation data in file x
-
-Tunable parameters:
---scale=x         Scale images by the factor x (where x is at least 1.0)
---hf-enhance=x    Enhance high frequency details by factor x.  (0.0 is default)
---metric=x        Set the error metric exponent.                 (2 is default)
---threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)
---perturb-upper=x Perturbation upper bound in pixels/degrees  (32.0 is default)
---perturb-lower=x Perturbation lower bound in pixels/degrees  (.125 is default)
---rot-upper=x     Rotation-specific perturbation upper bound  (32.0 is default)
---lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (1 is def.)
-
-Drizzling:
---drizzle-diam=x  Drizzle with input pixel diameter x (where 0 < x <= 1).
---drizzle-only    If drizzling, output black for pixels with no drizzle data.
-
-Irani-Peleg image reconstruction:
---ip <d> <i>      Solve for a box filter with diameter <d> over <i> iterations.
---ipc <c> <i>     Solve for device config <c> over <i> iterations.
-                     Available device configs:
-                        xvp610_320x240
-                        stdin
- 
-Monte Carlo alignment:
---mc <x>          Align using, on average, x% of available pixels (0 < x < 100)
---no-mc           Align using all pixels.  [default]
- 
-File output options:
---inc             Produce incremental output.  [default]
---no-inc          Don't produce incremental output.
-
-Pixel replacement:
---replace         Replace overlapping areas rather than merging.
---no-replace      Do not replace.  [default]
-
-
-Option Descriptions
--------------------
-
-
-Transformations:
-
-ALE supports general projective transformations, the 'correct' type of
-transformation to use with images obtained from digital cameras.  By default,
-however, only euclidean transformations (i.e. rotation and translation) are
-used.  To use general projective transformations, specify the option
-'--projective'.  Note that alignment can take a long time when this option is
-used.
-
-
-Image extents:
-
-By default, pixels falling outside of the region of the original frame are
-discarded (--no-extend).  To increase spatial extents and accommodate all pixel
-data, use the --extend option.  This option may be useful in providing
-additional constraints for alignment.  
-
-
-Alignment following:
-
-The --follow option should be used when adjacent frames are more closely
-aligned with each other than with the original frame.  The --identity option
-should be used when the reverse holds.  These flags have no effect when
-alignment is disabled.  (See notes on "Perturbation bounds" below for
-information on disabling alignment.)  
-
-
-Transformation data files:
-
-Transformation data may be loaded from a file to determine the initial
-transformations used in alignment, or saved to a file once alignment is
-complete.  Note that projective transformation data will not be used when
-performing Euclidean alignment.  On the other hand, Euclidean transformation
-data can be used to set the initial values for projective alignment.  When
-loading transformation data, it may also be useful to reduce the perturbation
-upper bound.  
-
-ALE versions older than 0.4.1 will not correctly read transformation files
-written with this version of ALE.
-
-
-Perturbation bounds:
-
-No perturbation smaller than perturb-lower or larger than perturb-upper will be
-used in alignment.  Also, no rotational perturbation larger than rot-upper will
-be used.  All perturbations are powers of two.  Alignment can be disabled by
-setting perturb-upper to zero and leaving perturb-lower at its default value.
-
-
-Level-of-detail:
-
-Alignment may be performed on images with reduced level of detail.  By default,
-the level-of-detail scale factor for a perturbation p is max(1, 2/p).  In
-general, the level-of-detail scale factor is the largest power of 2 not
-exceeding max(1, (2^lod-max)/p).
-
-
-Error metric:
-
-The error metric for pixel components a and b is (abs(a-b)^x), where x is the
-error metric exponent.  Larger exponents will cause the alignment process to be
-more influenced by smaller image details.  
-
-
-Threshold:
-
-If a supplemental frame does not meet the minimum match threshold, it will not
-contribute to the final output and ALE will display the message 'no match'.
-Match values should be be at least 0 and no larger than 100.
-
-
-Scaling:
-
-If a scaling argument is given, ALE will internally scale all input
-frames by the scale factor, resulting in an output file of this larger
-scale.  
-
-When dealing with scaled images, perturbation bounds measured in units of
-pixels refer to scaled pixels.  All other measurements specified in pixels
-(e.g. drizzling diameters and filter diameters for Irani-Peleg iterative image
-reconstruction) refer to pixels in the original unscaled image.
-
-
-High-frequency Enhancement:
-
-ALE's high-frequency enhancement filter can be used to emphasize small features
-and edges.  Enhancement occurs on the final rendered output after all inputs
-have been processed, but before Irani-Peleg image reconstruction.  Larger
-positive numbers imply greater enhancement.
-
-
-Drizzling:
-
-The diameter of drizzled pixels is specified by --drizzle-diam=x, where x is
-specified in units of the distance between pixels (e.g. a value of 1 indicates
-that each pixel's footprint should end where the next footprint begins).
-
---drizzle-only indicates that the standard rendering approach should not be
-used as a fallback where no drizzle data is available, and that a black
-background should be used instead.
-
-For more information about drizzling, see the paper by Hook and Fruchter,
-"Variable-Pixel Linear Combination", or the following URL:
-
-http://www.cv.nrao.edu/adass/adassVI/hookr.html
-
-
-Irani-Peleg Image reconstruction:
-
-To iterate using a box filter as the projection and backprojection function,
-specify --ip <d> <i>, where <d> is the diameter of the filter in units of the
-distance between pixels (e.g. a diameter of 3 implies a filter support of nine
-pixels) and <i> is the number of iterations to run.
-
-To iterate using a custom filter, specify --ip <c> <i>, where <c> is the name
-of the custom filter and <i> is the number of iterations to run.  The stdin 
-custom filter supports a wide range of filters based on user input.
-
-A rudimentary script for calibrating filters for devices with unknown
-projection functions has been included as render/ipc/ale-calibrate.  The script
-must be modified to include filenames of sample frames from the device.
-
-For more information on the backprojection technique of Irani and Peleg, on
-which this feature is based, see their paper, "Improving Resolution by Image
-Registration", at
-
-ftp://ftp.wisdom.weizmann.ac.il/pub/irani/PAPERS/SR_CVGIP91.pdf
-
-
-Monte Carlo alignment:
-
-Monte Carlo alignment uses a random subset of pixels to determine image
-alignment, possibly reducing alignment time significantly.  The expected size
-of the random subset is specified as a percentage of all available pixels.
-
- 
-File output options:
-
-By default (--inc), the output file is written after the original frame is
-loaded and after each supplemental frame has been aligned, as well as after
-each step of Irani-Peleg iterative image reconstruction.  
-
-To suppress incremental output, specify the --no-inc option, in which case
-output will only occur after all rendering steps are complete.
-
- 
-Pixel replacement:
-
---replace indicates that each new frame should replace the corresponding region
-of the accumulated image instead of being merged with existing data.  This
-option was originally suggested by Jeff Treece for use in stabilization of
-video streams.  His approach to stabilization is outlined below.
-
-If 0.ppm, 1.ppm, ..., 9.ppm represent frames from an unstabilized video stream,
-then the following sequence of commands may result in a stabilized sequence:
-
-ale --replace         0.ppm 1.ppm 1.stable.ppm
-ale --replace  1.stable.ppm 2.ppm 2.stable.ppm
-ale --replace  2.stable.ppm 3.ppm 3.stable.ppm
-.
-.
-.
-ale --replace  8.stable.ppm 9.ppm 9.stable.ppm
-
-The resulting stabilized sequence would be:
-
-0.ppm, 1.stable.ppm, 2.stable.ppm, ..., 9.stable.ppm.
+========================
+ALE version 0.6.0 README
+========================
+
+This README discusses downloading, extraction, and compilation of ALE.
+Documentation about the command-line interface and program options can be found
+on the ALE web site; see the end of the README for relevant URLs.
+
+Subsections:
+
+	+ Windows Binaries
+		- URLs
+		- Extraction and Use
+	+ Compiling from source
+		- URLs
+		- Build prerequisites
+		- Extraction and Building
+	+ Compilation options
+		- ImageMagick Support
+		- Color Data Precision
+		- Coordinate Data Precision
+		- FFTW Support
+		- Assertions
+	+ Further Documentation
+	+ URLs
+	+ Contact
+
+
+Windows Binaries
+================
 
 
 URLs
 ----
+
+http://auricle.dyndns.org/ALE/download/ale-0_6_0-win32.zip
+
+
+Extraction and Use
+------------------
+
+The zip file available at the above URL is an archive containing the ALE
+executable; a zip archival utility can be used to extract the executable from
+the archive.
+
+Once extracted, since ALE is a command-line program, it may be necessary to
+open a command prompt window to use ALE successfully.  For more information
+about command-line usage and options, see the User Manual at the URL given at
+the bottom of this file.
+
+Note that the Windows binaries available on the ALE website read and write only
+PPM-formatted image files.  However, separate conversion tools can be used to
+convert between other formats and PPM (e.g. ImageMagick's command-line
+utilities, available from http://www.imagemagick.org/ ).
+
+
+Compiling from source
+=====================
+
+
+URLs
+----
+
+http://auricle.dyndns.org/ALE/download/ale-0.6.0.tar.gz
+
+
+Build prerequisites
+-------------------
+
+GCC version 3.2.3 with C++ support and GNU Make 3.80 are known to build ALE
+successfully.  Older versions of GCC may fail to compile some versions of ALE.
+
+
+Extraction and Installation
+---------------------------
+
+Download the source archive file from the URL indicated above, and invoke:
+
+	tar xzf ale-0.6.0.tar.gz
+	cd ale-0.6.0
+	make [OPTIONS]
+
+where the text '[OPTIONS]' is replaced by zero or more of the compilation
+options listed below.  (The makefile may need to be modified for successful
+compilation on Windows systems.)
+
+
+Compilation options
+===================
+
+All compilation options are of the form OPTION=VALUE.  Default options are
+denoted by '*'.
+
+
+ImageMagick Support
+-------------------
+
+Enabling ImageMagick support allows ALE to make use of the file-handling
+capabilities of ImageMagick ( http://imagemagick.org/ ).  This includes reading
+and writing a variety of file formats, including, among many others, PNG and
+JPEG (two formats commonly used in web publishing) as well as common
+interchange formats such as PPM and TIFF.
+
+IMAGEMAGICK=0 *        Disable ImageMagick support.
+IMAGEMAGICK=1          Enable ImageMagick support.  
+
+
+Color Data Precision
+--------------------
+
+ALE's internal data structures store each color channel within a pixel as
+floating-point data; similarly, arithmetic operations on color channels are
+performed in floating point.  The three available data-type configurations are
+listed below, with typical data sizes indicated in parentheses.  Note that the
+required runtime for COLORS=HALF configurations can be several times that of
+COLORS=SINGLE configurations.
+
+                       Storage                Arithmetic
+                       -------------------    -------------------
+COLORS=SINGLE *        C++ float  (32-bit)    C++ float  (32-bit)
+COLORS=DOUBLE          C++ double (64-bit)    C++ double (64-bit)
+COLORS=HALF            Custom     (16-bit)    C++ float  (32-bit)
+
+Note: COLORS=HALF can be very computationally expensive.
+
+
+Coordinate Data Precision
+-------------------------
+
+In general, coordinate transformations used by ALE produce results outside of
+the set of integers; hence, coordinates are treated as floating-point data.
+The two available data-type configurations are listed below, with typical data
+sizes indicated in parentheses.
+
+COORDINATES=SINGLE *   C++ float  (32-bit)
+COORDINATES=DOUBLE     C++ double (64-bit)
+
+
+FFTW Support
+------------
+
+For Irani-Peleg rendering, ALE computes a discrete Fourier transform of the
+estimated point-spread function.  Since the area in which an estimated
+point-spread function is non-zero is usually much smaller than the size of an
+input frame, the efficiency of this operation is unlikely to be important.
+Hence, ALE uses a relatively inefficient built-in transform by default.  To use
+FFTW instead of the built-in transform, specify FFTW=1.  This option requires
+FFTW version 3 libraries and header files to be installed.  For more details on
+FFTW, see http://fftw.org/
+
+FFTW=0 *               Use a built-in discrete Fourier transform.
+FFTW=1                 Use the FFTW3 discrete Fourier transform.
+
+
+Assertions
+----------
+
+Finding bugs within ALE, or within custom modifications to ALE, can be
+simplified by enabling run-time assertions.  These checks enforce conditions
+believed to be necessary or desirable for correct program operation.  If a
+condition is not satisfied, ALE will abort and display a message indicating the
+failed assertion.
+
+DEBUG=0 *              Disable assertions.
+DEBUG=1                Enable assertions.
+
+
+Further Documentation
+=====================
+
+For information about command-line usage and program options, see the on-line
+user manual, available at the URL indicated in the next section.  A technical
+description of ALE operation is also available.  
+
+
+URLs
+====
 
 Home Page		http://auricle.dyndns.org/ALE/
 User Manual		http://auricle.dyndns.org/ALE/user/
@@ -363,6 +182,7 @@ Technical Description   http://auricle.dyndns.org/ALE/tech/
 
 
 Contact
--------
+=======
 
-David Hilvert <dhilvert@ugcs.caltech.edu>
+David Hilvert <dhilvert@auricle.dyndns.org>,
+              <dhilvert@ugcs.caltech.edu>
