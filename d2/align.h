@@ -155,6 +155,16 @@ private:
 	static transformation default_initial_alignment;
 
 	/*
+	 * Projective group behavior
+	 *
+	 * 0. Perturb in output coordinates.
+	 *
+	 * 1. Perturb in source coordinates
+	 */
+
+	static int perturb_type;
+
+	/*
 	 * Helper variables for new --follow semantics (as of 0.5.0).
 	 *
 	 * These variables implement delta following.  The change between the
@@ -165,6 +175,7 @@ private:
 	 */
 
 	static int is_default, old_is_default;
+	static int old_lod;
 	static transformation old_initial_alignment;
 	static transformation old_final_alignment;
 
@@ -208,7 +219,9 @@ private:
 	 */
 
 	static ale_pos perturb_lower;
+	static int perturb_lower_percent;
 	static ale_pos perturb_upper;
+	static int perturb_upper_percent;
 
 	/*
 	 * Maximum level-of-detail scale factor is 2^lod_max/perturb.
@@ -743,13 +756,56 @@ private:
 
 	/*
 	 * Align frame m against the reference.
+	 *
+	 * XXX: the transformation class currently combines ordinary
+	 * transformations with scaling.  This is somewhat convenient for
+	 * some things, but can also be confusing.  This method, _align(), is
+	 * one case where special care must be taken to ensure that the scale
+	 * is always set correctly (by using the 'rescale' method).
 	 */
 	static ale_accum _align(int m, int local_gs) {
-		ale_pos perturb = pow(2, floor(log(perturb_upper) / log(2)));
+
+		/*
+		 * Open the input frame.
+		 */
+
+		const image *input_frame = image_rw::open(m);
+
+		/*
+		 * Local upper/lower data, possibly dependent on image
+		 * dimensions.
+		 */
+
+		ale_pos local_lower, local_upper;
+
+		/*
+		 * Select the minimum dimension as the reference.
+		 */
+
+		ale_pos reference_size = input_frame->height();
+		if (input_frame->width() < reference_size)
+			reference_size = input_frame->width();
+
+		if (perturb_lower_percent)
+			local_lower = perturb_lower
+				    * reference_size
+				    * 0.01
+				    * scale_factor;
+		else
+			local_lower = perturb_lower;
+
+		if (perturb_upper_percent)
+			local_upper = perturb_upper
+				    * reference_size
+				    * 0.01
+				    * scale_factor;
+		else
+			local_upper = perturb_upper;
+
+		ale_pos perturb = pow(2, floor(log(local_upper) / log(2)));
 		transformation offset;
 		ale_accum here;
 		int lod;
-		const image *input_frame = image_rw::open(m);
 
 		if (_keep) {
 			kept_t[latest] = latest_t;
@@ -833,10 +889,6 @@ private:
 			/*
 			 * Implement new delta --follow semantics.
 			 *
-			 * XXX: we assume that the lod for the old initial
-			 * alignment is equal to the lod for the new initial
-			 * alignment, both being equal to the variable 'lod'.
-			 *
 			 * If we have a transformation T such that
 			 *
 			 * 	prev_final == T(prev_init)
@@ -852,7 +904,14 @@ private:
 			 * Where ^-1 is the inverse operator.
 			 */
 
+			/*
+			 * Ensure that the lod for the old initial and final
+			 * alignments are equal to the lod for the new initial
+			 * alignment.
+			 */
+
 			old_final_alignment.rescale (1 / pow(2, lod));
+			old_initial_alignment.rescale(1 / pow(2, lod - old_lod));
 
 			if (alignment_class == 0) {
 				/*
@@ -903,6 +962,7 @@ private:
 		}
 
 		old_initial_alignment = offset;
+		old_lod = lod;
 		offset = new_offset;
 
 		ale_pos _mc_arg = _mc * pow(2, 2 * lod);
@@ -941,7 +1001,7 @@ private:
 		 * Translational global search step
 		 */
 
-		if (perturb >= perturb_lower && local_gs != 0) {
+		if (perturb >= local_lower && local_gs != 0) {
 			
 			transformation lowest_t = offset;
 			ale_accum lowest_v = here;
@@ -1050,7 +1110,7 @@ private:
 		 * Perturbation adjustment loop.  
 		 */
 
-		while (perturb >= perturb_lower) {
+		while (perturb >= local_lower) {
 
 			ale_pos adj_s;
 
@@ -1120,7 +1180,12 @@ private:
 
 					test_t = offset;
 
-					test_t.gpt_modify(j, i, adj_s);
+					if (perturb_type == 0)
+						test_t.gpt_modify(j, i, adj_s);
+					else if (perturb_type == 1)
+						test_t.gr_modify(j, i, adj_s);
+					else
+						assert(0);
 
 					test_d = diff(si, test_t, _mc_arg, local_ax_count);
 
@@ -1174,10 +1239,11 @@ private:
 					/* 
 					 * We're about to work with images
 					 * twice as large, so rescale the 
-					 * transform.
+					 * transforms.
 					 */
 
 					offset.rescale(2);
+					default_initial_alignment.rescale(2);
 
 					/*
 					 * Work with images twice as large
@@ -1203,6 +1269,7 @@ private:
 
 		if (lod > 0) {
 			offset.rescale(pow(2, lod));
+			default_initial_alignment.rescale(pow(2, lod));
 		}
 
 		/*
@@ -1613,6 +1680,20 @@ public:
 	}
 
 	/*
+	 * Perturb output coordinates.
+	 */
+	static void perturb_output() {
+		perturb_type = 0;
+	}
+
+	/*
+	 * Perturb source coordinates.
+	 */
+	static void perturb_source() {
+		perturb_type = 1;
+	}
+
+	/*
 	 * Frames under threshold align optimally
 	 */
 	static void fail_optimal() {
@@ -1670,12 +1751,14 @@ public:
 	 * Perturbation lower and upper bounds.
 	 */
 
-	static void set_perturb_lower(ale_pos pl) {
+	static void set_perturb_lower(ale_pos pl, int plp) {
 		perturb_lower = pl;
+		perturb_lower_percent = plp;
 	}
 
-	static void set_perturb_upper(ale_pos pu) {
+	static void set_perturb_upper(ale_pos pu, int pup) {
 		perturb_upper = pu;
+		perturb_upper_percent = pup;
 	}
 
 	/*

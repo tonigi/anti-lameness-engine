@@ -108,19 +108,25 @@ protected:
 
 public:
 	/*
-	 * Check for excluded regions.
+	 * Check for excluded regions.  (Applies an offset to spatial
+	 * coordinates internally.)
 	 */
-	static int is_excluded(int i, int j, int f) {
+	static int is_excluded(point offset, int i, int j, int f) {
+
 		for (unsigned int param = 0; param < rx_count; param++)
-			if (i >= rx_parameters[6 * param + 0]
-			 && i <= rx_parameters[6 * param + 1]
-			 && j >= rx_parameters[6 * param + 2]
-			 && j <= rx_parameters[6 * param + 3]
+			if (i + offset[0] >= rx_parameters[6 * param + 0]
+			 && i + offset[0] <= rx_parameters[6 * param + 1]
+			 && j + offset[1] >= rx_parameters[6 * param + 2]
+			 && j + offset[1] <= rx_parameters[6 * param + 3]
 			 && f >= rx_parameters[6 * param + 4]
 			 && f <= rx_parameters[6 * param + 5])
 				return 1;
 
 		return 0;
+	}
+
+	int is_excluded(int i, int j, int f) {
+		return is_excluded(get_image()->offset(), i, j, f);
 	}
 
 	static int render_count() {

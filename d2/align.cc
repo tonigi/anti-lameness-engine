@@ -54,19 +54,30 @@ int align::latest = -1;
 
 int align::alignment_class = 1;
 int align::default_initial_alignment_type = 0;
+int align::perturb_type = 0;
 transformation align::default_initial_alignment;
 int align::is_default = 1;
 int align::old_is_default;
 int align::is_fail_default = 0;
 transformation align::old_initial_alignment;
 transformation align::old_final_alignment;
+int align::old_lod;
 int align::channel_alignment_type = 2;
 float align::metric_exponent = 2;
 float align::match_threshold = 0;
-ale_pos align::perturb_lower = 0.125;
-ale_pos align::perturb_upper = 32;
 
 /*
+ * Upper/lower bounds
+ */
+
+ale_pos align::perturb_lower = 0.125;
+int align::perturb_lower_percent = 0;
+ale_pos align::perturb_upper = 14;
+int align::perturb_upper_percent = 1;
+
+/*
+ * XXX: These empirical observations may have been based on buggy code.
+ * 
  * Empirically, it's okay to use a level-of-detail equal to twice the
  * resolution of the perturbation, so we set the default lod_max to 1, as
  * 2^1==2.  lod_max of zero seems okay also, but lower values seem to cause

@@ -35,6 +35,8 @@ private:
 	 */
 	int honor_exclusion;
 	scaled_filter *f;
+	mutable point _offset;
+	mutable int have_offset;
 
 public:
 
@@ -60,9 +62,12 @@ public:
 	 * Set the parameters for filtering.
 	 */
 	void set_parameters(transformation t, const image *im, point offset) const {
+		have_offset = 1;
+		_offset = offset;
 		f->set_parameters(t, im, offset);
 	}
 	void set_parameters(transformation t, transformation s, const image *im) const {
+		have_offset = 0;
 		f->set_parameters(t, s, im);
 	}
 
@@ -73,10 +78,17 @@ public:
 	 */
 	void filtered(int i, int j, int frame, pixel *result, pixel *weight) const {
 
+		/*
+		 * We need a valid offset in order to determine exclusion
+		 * regions.
+		 */
+
+		assert (have_offset || !honor_exclusion);
+
 		*result = pixel(0, 0, 0);
 		*weight = pixel(0, 0, 0);
 		
-		if (honor_exclusion && render::is_excluded(i, j, frame))
+		if (honor_exclusion && render::is_excluded(_offset, i, j, frame))
 			return;
 
 		f->filtered(i, j, result, weight);

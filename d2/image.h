@@ -644,10 +644,10 @@ public:
 
 	/*
 	 * Extend the image area to the top, bottom, left, and right,
-	 * initializing the new image areas with black pixels.
+	 * initializing the new image areas with black pixels.  Negative values
+	 * shrink the image.
 	 */
-	virtual void extend(unsigned int top, unsigned int bottom, 
-			unsigned int left, unsigned int right) = 0;
+	virtual void extend(int top, int bottom, int left, int right) = 0;
 
 	/*
 	 * Clone 

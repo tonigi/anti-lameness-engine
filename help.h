@@ -210,8 +210,10 @@ public:
 			HEADER_SPACE
 			"--metric=x        Set the alignment error metric exponent.       (2 is default)\n"
 			"--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)\n"
-			"--perturb-upper=x Perturbation upper bound in pixels/degrees  (32.0 is default)\n"
+			"--perturb-upper=x Perturbation upper bound in pixels/degrees   (14%% is default)\n"
+			"                     ('x%%' uses a fraction of the smallest image dimension.)\n"
 			"--perturb-lower=x Perturbation lower bound in pixels/degrees  (.125 is default)\n"
+			"                     ('x%%' uses a fraction of the smallest image dimension.)\n"
 			"--rot-upper=x     Rotation-specific perturbation upper bound  (32.0 is default)\n"
 			"--bda-mult=x      Barrel distortion adjustment multiplier   (0.0001 is default)\n"
 			"--bda-rate=x      Barrel distortion rate of change maximum  (0.0004 is default)\n"   
@@ -244,6 +246,11 @@ public:
 			"                           this option is not supported.  To use this option,\n"
 			"                           first re-build with POSIX=1.\n"
 #endif
+			BETWEEN_SECTIONS
+			"Perturbation Type [experimental]:\n"
+			HEADER_SPACE
+			"--perturb-output  Apply perturbations in output image coordinates. [default]\n"
+			"--perturb-source  Apply perturbations in source image coordinates.\n"
 			BETWEEN_SECTIONS
 			"Global searching [experimental]:\n"
 			HEADER_SPACE

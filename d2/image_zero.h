@@ -189,8 +189,7 @@ public:
 	 * Extend the image area to the top, bottom, left, and right,
 	 * initializing the new image areas with black pixels.
 	 */
-	virtual void extend(unsigned int top, unsigned int bottom, 
-			unsigned int left, unsigned int right) {
+	virtual void extend(int top, int bottom, int left, int right) {
 		_dimy += top + bottom;
 		_dimx += left + right;
 		_offset[0] -= top;

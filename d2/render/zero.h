@@ -61,6 +61,7 @@ public:
 
 			if (is_extend())
 				increase_extents(t);
+			decrease_extents(t);
 
 			image_rw::close(0);
 		} else if (align::match(get_step())) {

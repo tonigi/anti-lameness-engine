@@ -554,6 +554,32 @@ public:
 	}
 
 	/*
+	 * Modify a projective transform according to the group operation.
+	 */
+	void gr_modify(int i1, int i2, ale_pos diff) {
+		assert (_is_projective);
+		assert (i1 == 0 || i1 == 1);
+
+		point diff_vector = (i1 == 0) 
+			          ? point(diff, 0)
+				  : point(0, diff);
+
+		transformation t = *this;
+
+		t.resultant_memo = 0;
+		t.resultant_inverse_memo = 0;
+		t.input_height = (unsigned int) scaled_height();
+		t.input_width  = (unsigned int) scaled_width();
+		t.scale_factor = 1;
+		t.bdcnum = 0;
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
+		x[i2] = t.transform_scaled(t.scaled_inverse_transform(x[i2]) + diff_vector);
+	}
+
+	/*
 	 * Modify all projective parameters at once.
 	 */
 	void gpt_set(point x[4]) {

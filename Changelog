@@ -1,3 +1,23 @@
+0.7.1-patch1
+
+o	Add support for --perturb-{upper,lower}=x%, where the value x% is
+	specified as a percentage of the smallest image dimension.  Use of
+	percentages to specify bounds was suggested by Jeff Epler.
+
+o	In render::is_excluded(), add the offset before checking exclusion
+	regions.
+
+o	Add code to shrink the accumulated image in d2/render/incremental.h,
+	so that superfluously large undefined areas are never present.  This
+	may improve operation of '--gs inner' in some cases.
+
+o	In d2::align::_align(), rescale default_initial_alignment in parallel
+	with the current transformation, so that it can be used again, if
+	necessary.
+
+o	Add experimental options --perturb-source and --perturb-output, which
+	allow some refinement of the manner in which perturbation occurs.
+
 0.7.1
 
 o	Fix --visp segfault when not using last: filters.

@@ -213,8 +213,11 @@ public:
 	 * Extend the image area to the top, bottom, left, and right,
 	 * initializing the new image areas with black pixels.
 	 */
-	void extend(unsigned int top, unsigned int bottom, 
-			unsigned int left, unsigned int right) {
+	void extend(int top, int bottom, int left, int right) {
+		/*
+		 * Bayer-patterned images should always represent inputs,
+		 * which should not ever be extended.
+		 */
 		assert(0);
 	}
 

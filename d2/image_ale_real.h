@@ -91,10 +91,10 @@ public:
 
 	/*
 	 * Extend the image area to the top, bottom, left, and right,
-	 * initializing the new image areas with black pixels.
+	 * initializing the new image areas with black pixels.  Negative values
+	 * shrink the image.
 	 */
-	void extend(unsigned int top, unsigned int bottom, 
-			unsigned int left, unsigned int right) {
+	void extend(int top, int bottom, int left, int right) {
 
 		image_ale_real *is = new image_ale_real (
 			height() + top  + bottom,
@@ -102,8 +102,24 @@ public:
 
 		assert(is);
 
-		for (unsigned int i = 0; i < height(); i++)
-		for (unsigned int j = 0; j <  width(); j++) 
+		unsigned int min_i = (-top > 0)
+			      ? -top
+			      : 0;
+
+		unsigned int min_j = (-left > 0)
+			      ? -left
+			      : 0;
+
+		unsigned int max_i = (height() < is->height() - top)
+			      ? height()
+			      : is->height() - top;
+
+		unsigned int max_j = (width() < is->width() - left)
+			      ? width()
+			      : is->width() - left;
+
+		for (unsigned int i = min_i; i < max_i; i++)
+		for (unsigned int j = min_j; j < max_j; j++) 
 			is->pix(i + top, j + left)
 				= get_pixel(i, j);
 

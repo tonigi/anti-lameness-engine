@@ -64,9 +64,9 @@
  * Version Information
  */
 
-char *short_version = "0.7.1";
+char *short_version = "0.7.1-patch1";
 
-char *version = "ALE Version:      0.7.1\n"
+char *version = "ALE Version:      0.7.1-patch1\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else
@@ -403,6 +403,10 @@ int main(int argc, const char *argv[]){
 			d2::align::initial_default_identity();
 		} else if (!strcmp(argv[i], "--follow")) {
 			d2::align::initial_default_follow();
+		} else if (!strcmp(argv[i], "--perturb-output")) {
+			d2::align::perturb_output();
+		} else if (!strcmp(argv[i], "--perturb-source")) {
+			d2::align::perturb_source();
 		} else if (!strcmp(argv[i], "--fail-optimal")) {
 			d2::align::fail_optimal();
 		} else if (!strcmp(argv[i], "--fail-default")) {
@@ -725,22 +729,32 @@ int main(int argc, const char *argv[]){
 			// drizzle_radius /= 2;
 		} else if (!strncmp(argv[i], "--perturb-upper=", strlen("--perturb-upper="))) {
 			double perturb_upper;
-			sscanf(argv[i] + strlen("--perturb-upper="), "%lf", &perturb_upper);
-			d2::align::set_perturb_upper(perturb_upper);
+			int characters;
+			sscanf(argv[i] + strlen("--perturb-upper="), "%lf%n", &perturb_upper,
+			                                                      &characters);
+			if (*(argv[i] + strlen("--perturb-upper=") + characters) == '%')
+				d2::align::set_perturb_upper(perturb_upper, 1);
+			else
+				d2::align::set_perturb_upper(perturb_upper, 0);
+		} else if (!strncmp(argv[i], "--perturb-lower=", strlen("--perturb-lower="))) {
+			double perturb_lower;
+			int characters;
+			sscanf(argv[i] + strlen("--perturb-lower="), "%lf%n", &perturb_lower,
+			                                                      &characters);
+			if (*(argv[i] + strlen("--perturb-lower=") + characters) == '%')
+				d2::align::set_perturb_lower(perturb_lower, 1);
+			else
+				d2::align::set_perturb_lower(perturb_lower, 0);
 		} else if (!strncmp(argv[i], "--stepsize=", strlen("--stepsize="))) {
 			double perturb_lower;
 			fprintf(stderr, "\n\n*** Warning: --stepsize is deprecated.  "
 					"Use --perturb-lower instead. ***\n\n\n");
 			sscanf(argv[i] + strlen("--stepsize="), "%lf", &perturb_lower);
-			d2::align::set_perturb_lower(perturb_lower);
+			d2::align::set_perturb_lower(perturb_lower, 0);
 		} else if (!strncmp(argv[i], "--hf-enhance=", strlen("--hf-enhance="))) {
 			fprintf(stderr, "\n\n*** Error: --hf-enhance=<x> is no longer supported.  "
 					"Use --usm <x> instead ***\n\n");
 			exit(1);
-		} else if (!strncmp(argv[i], "--perturb-lower=", strlen("--perturb-lower="))) {
-			double perturb_lower;
-			sscanf(argv[i] + strlen("--perturb-lower="), "%lf", &perturb_lower);
-			d2::align::set_perturb_lower(perturb_lower);
 		} else if (!strncmp(argv[i], "--rot-upper=", strlen("--rot-upper="))) {
 			double rot_max;
 			sscanf(argv[i] + strlen("--rot-upper="), "%lf", &rot_max);

@@ -89,8 +89,71 @@ protected:
 			}
 		}
 
-		extend_offset_i -= extend_top;
-		extend_offset_j -= extend_left;
+		accum_image->extend(extend_top, extend_bottom, 
+			extend_left, extend_right);
+		accum_weight->extend(extend_top, extend_bottom, 
+			extend_left, extend_right);
+	}	
+
+	/*
+	 * Decrease extents of image and weight according to a new image to be
+	 * merged.
+	 */
+
+	void decrease_extents(transformation t) {
+
+		assert (accum_weight != NULL);
+		assert (accum_image  != NULL);
+
+		ale_pos extend_offset_i = accum_image->offset()[0];
+		ale_pos extend_offset_j = accum_image->offset()[1];
+
+		assert (accum_weight->offset()[0] == extend_offset_i);
+		assert (accum_weight->offset()[1] == extend_offset_j);
+
+		int extend_top = 0;
+		int extend_bottom = 0;
+		int extend_left = 0;
+		int extend_right = 0;
+
+		ale_pos height = t.unscaled_height() - 1, width = t.unscaled_width() - 1;
+
+		point p[8];
+
+		p[0] = t.transform_unscaled(point(   0    ,   0    ));
+		p[1] = t.transform_unscaled(point(height  ,   0    ));
+		p[2] = t.transform_unscaled(point(height  , width  ));
+		p[3] = t.transform_unscaled(point(   0    , width  ));
+		p[4] = t.transform_unscaled(point(height/2,   0    ));
+		p[5] = t.transform_unscaled(point(height/2, width  ));
+		p[6] = t.transform_unscaled(point(   0    , width/2));
+		p[7] = t.transform_unscaled(point(height  , width/2));
+
+		point min = p[0], max = p[0];
+
+		for (int n = 0; n < 8; n++) {
+			if (p[n][0] < min[0]) {
+				min[0] = p[n][0];
+			}
+			if (p[n][0] > max[0]) {
+				max[0] = p[n][0];
+			}
+			if (p[n][1] < min[1]) {
+				min[1] = p[n][1];
+			}
+			if (p[n][1] > max[1]) {
+				max[1] = p[n][1];
+			}
+		}
+
+		if (floor(min[0]) > extend_offset_i)
+			extend_top = (int) ceil(extend_offset_i - floor(min[0]));
+		if (floor(min[1]) > extend_offset_j)
+			extend_left = (int) ceil(extend_offset_j - floor(min[1]));
+		if (ceil(max[0]) < accum_image->height() + extend_offset_i)
+			extend_bottom = (int) ceil(ceil(max[0]) - (accum_image->height() + extend_offset_i));
+		if (ceil(max[1]) < accum_image->width() + extend_offset_j)
+			extend_right = (int) ceil(ceil(max[1]) - (accum_image->width() + extend_offset_j));
 
 		accum_image->extend(extend_top, extend_bottom, 
 			extend_left, extend_right);
@@ -243,13 +306,15 @@ protected:
 	void
 	_merge(int frame, const image *delta, transformation t) {
 
+		point offset = accum_image->offset();
+
 		assert (accum_image != NULL);
 		assert (delta != NULL);
 		assert (accum_weight != NULL);
 
 		const filter::ssfe *_ssfe = inv->ssfe();
 
-		_ssfe->set_parameters(t, delta, accum_image->offset());
+		_ssfe->set_parameters(t, delta, offset);
 
 		for (unsigned int i = 0; i < accum_image->height(); i++)
 		for (unsigned int j = 0; j < accum_image->width(); j++) {
@@ -337,6 +402,7 @@ public:
 
 			if (is_extend())
 				increase_extents(t);
+			decrease_extents(t);
 
 			_merge(0, im, t);
 
