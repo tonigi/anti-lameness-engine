@@ -786,10 +786,10 @@ class scene {
 			for (int v = 0; v < 3; v++) {
 				*t->vertices[v] += n;
 
-				if (scene_error() > err) {
+				if (!(scene_error() < err)) {
 					*t->vertices[v] -= 2 * n;
 
-					if (scene_error() > err)
+					if (!(scene_error() < err))
 						*t->vertices[v] += n;
 					else 
 						improved = 1;
