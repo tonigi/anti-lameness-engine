@@ -213,78 +213,6 @@ class scene {
 				neighbors[v]->traversal_clear();
 		}
 
-		/*
-		 * Traverse the sub-graph of triangles around a given vertex,
-		 * and return an aggregate result for a given function
-		 *
-		 * TYPE is one of:
-		 *
-		 * 	0 returns the sum
-		 * 	1 returns the maximum
-		 *
-		 * STARTING_NODE should be left at 1 when this function is
-		 * called externally.
-		 */
-		ale_accum traverse_around_vertex(point *vertex, ale_accum (triangle::*fp)(), int type, 
-				int starting_node = 1) {
-
-			/*
-			 * Check whether we've already visited this node.
-			 */
-
-			if (traversal_color == 1) {
-				return 0;
-			}
-
-			/*
-			 * Mark that we've visited this node.
-			 */
-
-			traversal_color = 1;
-
-
-			/*
-			 * Perform the aggregation operation.
-			 */
-
-			ale_accum aggregate = (this->*fp)();
-
-			for (int v = 0; v < 3; v++)
-			if  (neighbors[v]) {
-				ale_accum new_value = neighbors[v]->traverse_sum_around_vertex(vertex, fp, 0);
-				switch (type) {
-				case 0:
-					/*
-					 * Sum
-					 */
-					aggregate += new_value;
-					break;
-				case 1:
-					/*
-					 * Maximum
-					 */
-					if (new_value > aggregate)
-						aggregate = new_value;
-					break;
-				default:
-					assert(0);
-				}
-			}
-
-			/*
-			 * Clean up traversal colors.
-			 */
-
-			if (starting_node)
-				traversal_clear();
-
-			/*
-			 * Return the aggregate.
-			 */
-
-			return aggregate;
-		}
-
 		void write_tree(int print_vertices = 0, int level = 0) {
 			for (int i = 0; i < level; i++)
 				fprintf(stderr, " ");
@@ -380,6 +308,85 @@ class scene {
 					return v;
 
 			return -1;
+		}
+
+		/*
+		 * Traverse the sub-graph of triangles around a given vertex,
+		 * and return an aggregate result for a given function
+		 *
+		 * TYPE is one of:
+		 *
+		 * 	0 returns the sum
+		 * 	1 returns the maximum (where the minimum result is zero)
+		 *
+		 * STARTING_NODE should be left at its default value of 1 when
+		 * this function is called externally.
+		 */
+		ale_accum traverse_around_vertex(point *vertex, ale_accum (triangle::*fp)(), int type, 
+				int starting_node = 1) {
+
+			/*
+			 * Check whether we've already visited this node.
+			 */
+
+			if (traversal_color == 1) {
+				return 0;
+			}
+
+			/*
+			 * Check whether this node contains the given vertex.
+			 */
+
+			if (!vertex_ref_maybe(vertex))
+				return 0;
+
+			/*
+			 * Mark that we've visited this node.
+			 */
+
+			traversal_color = 1;
+
+
+			/*
+			 * Perform the aggregation operation.
+			 */
+
+			ale_accum aggregate = (this->*fp)();
+
+			for (int v = 0; v < 3; v++)
+			if  (neighbors[v]) {
+				ale_accum new_value = neighbors[v]->traverse_around_vertex(vertex, fp, type, 0);
+				switch (type) {
+				case 0:
+					/*
+					 * Sum
+					 */
+					aggregate += new_value;
+					break;
+				case 1:
+					/*
+					 * Maximum
+					 */
+					if (new_value > aggregate)
+						aggregate = new_value;
+					break;
+				default:
+					assert(0);
+				}
+			}
+
+			/*
+			 * Clean up traversal colors.
+			 */
+
+			if (starting_node)
+				traversal_clear();
+
+			/*
+			 * Return the aggregate.
+			 */
+
+			return aggregate;
 		}
 
 		/*
@@ -1025,56 +1032,59 @@ class scene {
 			 * Evaluate the error at the current position.
 			 */
 
-			color_neighbors_negative();
-			lowest_error = accumulate_neighbor_error();
+//			color_neighbors_negative();
+//			lowest_error = accumulate_neighbor_error();
 
 			/*
 			 * Test modifications to the current position.
 			 */
 
-			for (int v = 0; v < 3; v++)
-			for (int axis = 0; axis < 3; axis++)
-			for (int dir = -1; dir <= 1; dir += 2) {
+			for (int v = 0; v < 3; v++) {
+				lowest_error = traverse_around_vertex(vertices[v], &reference_error, 0);
+				for (int axis = 0; axis < 3; axis++)
+				for (int dir = -1; dir <= 1; dir += 2) {
 
-				/*
-				 * Adjust the vertex under consideration
-				 */
+					/*
+					 * Adjust the vertex under consideration
+					 */
 
-				*vertices[v] = best_vertices[v] + point::unit(axis) * step * dir;
+					*vertices[v] = best_vertices[v] + point::unit(axis) * step * dir;
 
-				/*
-				 * Eliminate from consideration any change that increases to more than
-				 * a given amount the angle between the normals of adjacent triangles.
-				 */
+					/*
+					 * Eliminate from consideration any change that increases to more than
+					 * a given amount the angle between the normals of adjacent triangles.
+					 */
 
-				if (max_neighbor_angle_2() > M_PI / 3) {
-					*vertices[v] = best_vertices[v];
-					continue;
+					if (max_neighbor_angle_2() > M_PI / 3) {
+						*vertices[v] = best_vertices[v];
+						continue;
+					}
+
+					/*
+					 * Recalculate the color
+					 */
+
+					recolor();
+
+					/*
+					 * Check the error
+					 */
+
+//					color_neighbors_negative();
+//					ale_accum error = accumulate_neighbor_error();
+					ale_accum error = traverse_around_vertex(vertices[v], &reference_error, 0);
+					if (error < lowest_error) {
+						lowest_error = error;
+						improved = 1;
+						best_vertices[v] = *vertices[v];
+						break;
+					} else {
+						*vertices[v] = best_vertices[v];
+					}
+
+					if (!finite(error))
+						fprintf(stderr, "dir %d, error %e\n", dir, error);
 				}
-
-				/*
-				 * Recalculate the color
-				 */
-
-				recolor();
-
-				/*
-				 * Check the error
-				 */
-
-				color_neighbors_negative();
-				ale_accum error = accumulate_neighbor_error();
-				if (error < lowest_error) {
-					lowest_error = error;
-					improved = 1;
-					best_vertices[v] = *vertices[v];
-					break;
-				} else {
-					*vertices[v] = best_vertices[v];
-				}
-
-				if (!finite(error))
-					fprintf(stderr, "dir %d, error %e\n", dir, error);
 			}
 
 			return improved;
