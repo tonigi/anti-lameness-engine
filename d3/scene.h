@@ -38,7 +38,8 @@ class scene {
 		d2::pixel weight;
 		point *vertices[3];
 		struct triangle *neighbors[3];
-		point *division_vertex;
+		int division_vertex;
+		point *division_new_vertex;
 		struct triangle *children[2];
 
 		triangle() {
@@ -53,10 +54,110 @@ class scene {
 			neighbors[1] = NULL;
 			neighbors[2] = NULL;
 
-			division_vertex = NULL;
+			division_new_vertex = NULL;
 
 			children[0] = NULL;
 			children[1] = NULL;
+		}
+
+		int self_ref_from_neighbor(int n) {
+			triangle *t = neighbors[n];
+
+			for (int i = 0; i < 3; i++) {
+				if (t->neighbors[i] == this)
+					return i;
+			}
+
+			assert(0);
+
+			return -1;
+		}
+
+
+		/*
+		 * Handle the internal data details of splitting.
+		 */
+		void split_internals(int v, point *nv) {
+			assert (children[0] == NULL);
+			assert (children[1] == NULL);
+			assert (division_new_vertex == NULL);
+
+			division_vertex = v;
+			division_new_vertex = nv;
+
+			children[0] = new triangle(*this);
+			children[1] = new triangle(*this);
+
+			for (int c = 0; c < 2; c++) {
+				children[c]->vertices[(division_vertex + c + 1) % 3] = division_new_vertex;
+				children[c]->neighbors[(division_vertex + c + 2) % 3] = children[(c + 1) % 2];
+				children[c]->children[0] = NULL;
+				children[c]->children[1] = NULL;
+				children[c]->division_new_vertex = NULL;
+			}
+
+		}
+
+		void split(int v, point nv) {
+			point *nvp = new point(nv);
+
+			split_internals(v, nvp);
+
+			if (!neighbors[v])
+				return;
+
+			int self_ref = self_ref_from_neighbor(v);
+
+			neighbors[v]->split_internals(self_ref, nvp);
+
+			children[0]->neighbors[v] = neighbors[v]->children[1];
+			children[1]->neighbors[v] = neighbors[v]->children[0];
+
+			neighbors[v]->children[0]->neighbors[self_ref] = children[1];
+			neighbors[v]->children[1]->neighbors[self_ref] = children[0];
+		}
+
+		void unsplit_internals() {
+			assert(children[0]);
+			assert(children[1]);
+
+			delete children[0];
+			delete children[1];
+
+			division_new_vertex = NULL;
+			children[0] = NULL;
+			children[1] = NULL;
+		}
+
+		void unsplit() {
+			if (!division_new_vertex) {
+				assert (!children[0]);
+				assert (!children[1]);
+				return;
+			}
+
+			assert(children[0]);
+			assert(children[1]);
+
+			children[0]->unsplit();
+			children[1]->unsplit();
+
+			assert(division_new_vertex);
+
+			delete division_new_vertex;
+
+			unsplit_internals();
+
+			if (!neighbors[division_vertex])
+				return;
+
+			assert(neighbors[division_vertex]->children[0]);
+			assert(neighbors[division_vertex]->children[1]);
+
+			neighbors[division_vertex]->children[0]->unsplit();
+			neighbors[division_vertex]->children[1]->unsplit();
+
+			neighbors[division_vertex]->unsplit_internals();
 		}
 	};
 
@@ -119,7 +220,7 @@ class scene {
 		int height = (int) floor(_pt.scaled_height());
 		int width  = (int) floor(_pt.scaled_width());
 		
-		if (t->division_vertex) {
+		if (t->division_new_vertex) {
 			zbuffer(_pt, zbuf, t->children[0]);
 			zbuffer(_pt, zbuf, t->children[1]);
 			return;
