@@ -759,8 +759,8 @@ class scene {
 
 			ale_accum step = (vertices[0]->lengthto(*vertices[1])
 				        + vertices[1]->lengthto(*vertices[2])
-//					+ vertices[2]->lengthto(*vertices[0])) / 21;
-					+ vertices[2]->lengthto(*vertices[0])) / 3;
+					+ vertices[2]->lengthto(*vertices[0])) / 21;
+//					+ vertices[2]->lengthto(*vertices[0])) / 3;
 
 			/*
 			 * There are three possibilities for each triangle visited:
@@ -806,6 +806,12 @@ class scene {
 
 				for (int v = 0; v < 3; v++)
 					*vertices[v] = orig_vertices[v] + _normal * step * dir;
+
+				/*
+				 * Recalculate the color
+				 */
+
+				recolor();
 
 				/*
 				 * Check the error
