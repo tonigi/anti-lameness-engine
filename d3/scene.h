@@ -60,6 +60,9 @@ class scene {
 		}
 	};
 
+	/*
+	 * Use a pair of trees to store the triangles.
+	 */
 	static struct triangle *triangle_head[2];
 
 	/*
@@ -94,6 +97,9 @@ class scene {
 
 	static struct lod *cl;
 
+	/*
+	 * Z-buffer initialization function.
+	 */
 	static triangle **init_zbuf(pt _pt) {
 		triangle **result = (triangle **) calloc((int) floor(_pt.scaled_width()) *
 				(int) floor(_pt.scaled_height()), sizeof(triangle *));
@@ -221,25 +227,52 @@ class scene {
 	}
 
 	/*
-	 * Color a 3D scene using value averaging.
+	 * Color a 3D scene using value averaging.  This is intended for
+	 * producing low level-of-detail output.  Better results for higher
+	 * resolution cases could be obtained by using an Irani-Peleg style
+	 * backprojection approach.
 	 */
 	static void color_average() {
 		/*
 		 * Iterate over all frames
 		 */
 		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+
+			d2::image *im = cl->reference[n];
+			ale_pos sf = cl->sf;
+
 			/*
 			 * Z-buffer to map points to triangles
 			 */
 			pt _pt = align::projective(n);
+			_pt.scale(sf);
+			assert (im->width() == (unsigned int) floor(_pt.unscaled_width()));
+			assert (im->height() == (unsigned int) floor(_pt.unscaled_height()));
 			triangle **zbuf = init_zbuf(_pt);
 			zbuffer(_pt, zbuf, triangle_head[0]);
 			zbuffer(_pt, zbuf, triangle_head[1]);
 
 			/*
-			 * Iterate over all triangles
+			 * Iterate over all points in the frame.
 			 */
-			assert(0);
+			for (unsigned int i = 0; i < im->height(); i++)
+			for (unsigned int j = 0; j < im->width();  j++) {
+				triangle *t = zbuf[i * im->width() + j];
+
+				/*
+				 * Check for points without associated triangles.
+				 */
+				if (!t)
+					continue;
+
+				/*
+				 * Set new color and weight.
+				 */
+				t->color = (t->color * t->weight + im->get_pixel(i, j)) / (t->weight + d2::pixel(1, 1, 1));
+				t->weight = t->weight + d2::pixel(1, 1, 1);
+			}
+
+			free(zbuf);
 		}
 	}
 
@@ -319,15 +352,13 @@ public:
 
 		triangle_head[0]->neighbors[0] = triangle_head[1];
 
-		triangle_head[0]->color = cl->reference[0]->avg_channel_magnitude();
-
 		triangle_head[1]->vertices[0] = new point(max[0], max[1], 0);
 		triangle_head[1]->vertices[1] = new point(min[0], max[1], 0);
 		triangle_head[1]->vertices[2] = new point(max[0], min[1], 0);
 
 		triangle_head[1]->neighbors[0] = triangle_head[0];
 
-		triangle_head[1]->color = cl->reference[0]->avg_channel_magnitude();
+		color_average();
 	}
 
 	/*

@@ -36,7 +36,8 @@ struct pt {
 private:
 	d2::transformation t;
 	et euclidean;
-	ale_real view_angle;
+	ale_real view_angle;		/* XXX: should be ale_pos */
+	ale_pos scale_factor;
 	
 public:	
 
@@ -44,10 +45,18 @@ public:
 	 * Constructor
 	 */
 
-	pt(d2::transformation t, et e, ale_real va) {
+	pt(d2::transformation t, et e, ale_real va, ale_pos sf = 1) {
 		this->t = t;
 		euclidean = e;
 		view_angle = va;
+		scale_factor = sf;
+	}
+
+	/*
+	 * Modify scale factor
+	 */
+	void scale(ale_pos sf) {
+		scale_factor = sf;
 	}
 
 	/*
@@ -83,6 +92,26 @@ public:
 		p[1] += w / 2;
 
 		return p;
+	}
+
+	/*
+	 * Width and height
+	 */
+
+	ale_pos scaled_width() {
+		return t.scaled_width() * scale_factor;
+	}
+
+	ale_pos scaled_height() {
+		return t.scaled_height() * scale_factor;
+	}
+
+	ale_pos unscaled_width() {
+		return t.unscaled_width() * scale_factor;
+	}
+
+	ale_pos unscaled_height() {
+		return t.unscaled_height() * scale_factor;
 	}
 
 	/*
