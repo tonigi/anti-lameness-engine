@@ -57,7 +57,7 @@ public:
 	}
 
 	virtual ~combine() {
-		if (this->output_image)
+		if (output_image)
 			delete output_image;
 	}
 
@@ -75,9 +75,9 @@ public:
 		assert (default_image->height() == partial_image->height());
 
 		if (output_image)
-			delete output_image;
+			return output_image;
 
-		image *output_image = new image(default_image->height(),
+		output_image = new image(default_image->height(),
 				default_image->width(), 3);
 
 		const image_weights *partial_weight = partial->get_defined();
@@ -108,6 +108,10 @@ public:
 	 */
 
 	virtual void sync(int n) {
+		if (output_image) {
+			delete output_image;
+			output_image = NULL;
+		}
 		_default->sync(n);
 		partial->sync(n);
 	}

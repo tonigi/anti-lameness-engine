@@ -1,3 +1,7 @@
+0.5.1-patch3
+
+o	Fix memory leak in render/combine.h:get_image().
+
 0.5.1-patch2
 
 o	Fix offset calculation in d2/render/ipc.h.  This fixes IP rendering on
