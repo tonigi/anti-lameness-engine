@@ -211,6 +211,8 @@ class scene {
 
 		/*
 		 * Split a triangle between the given vertex and the opposite edge's midpoint.
+		 *
+		 * XXX: it might be better to use an angle bisector.
 		 */
 
 		void split(int v) {
