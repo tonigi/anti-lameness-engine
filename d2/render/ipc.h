@@ -596,15 +596,18 @@ protected:
 				 * confidence is uniform].
 				 */
 
+				// Ordinary certainty
+				// pixel conf = real->exp().confidence(comp_lreal);
+
 				// One-sided certainty
 				// pixel conf = real->exp().one_sided_confidence(comp_lreal, bpv);
 				      // conf = real->exp().one_sided_confidence(comp_real, bpv);
 				      
-				// Ordinary certainty
-				// pixel conf = real->exp().confidence(comp_lreal);
-
 				// Estimate-based certainty
-				pixel conf = real->exp().confidence(comp_simu);
+				// pixel conf = real->exp().confidence(comp_simu);
+					
+				// One-sided estimate-based certainty
+				pixel conf = real->exp().one_sided_confidence(comp_simu, bpv);
 					
 				/*
 				 * If a color is bayer-interpolated, then we have no confidence in its
