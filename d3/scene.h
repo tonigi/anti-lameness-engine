@@ -767,16 +767,19 @@ class scene {
 			}
 
 			/*
-			 * Determine the cross product of two triangle edges
+			 * Base displacement on the cross product of two
+			 * triangle edges
 			 */
 
 			point n = t->vertices[0]->xproduct(*t->vertices[1], *t->vertices[2]);
+			      n = n / sqrt(n.norm()) / 10;
 
 			/*
 			 * Determine the initial error
 			 */
 
 			ale_accum err = scene_error();
+			ale_accum temp_err;
 
 			/*
 			 * Iterate over vertices, checking the effects of
@@ -784,17 +787,26 @@ class scene {
 			 */
 
 			for (int v = 0; v < 3; v++) {
+
 				*t->vertices[v] += n;
+				temp_err = scene_error();
 
-				if (!(scene_error() < err)) {
-					*t->vertices[v] -= 2 * n;
-
-					if (!(scene_error() < err))
-						*t->vertices[v] += n;
-					else 
-						improved = 1;
-				} else
+				if (temp_err < err) {
+					err = temp_err;
 					improved = 1;
+					continue;
+				}
+
+				*t->vertices[v] -= 2 * n;
+				temp_err = scene_error();
+
+				if (temp_err < err) {
+					err = temp_err;
+					improved = 1;
+					continue;
+				}
+
+				*t->vertices[v] += n;
 			}
 
 			while(t->parent && t == t->parent->children[1]) {
@@ -1081,9 +1093,10 @@ public:
 				increase_lod();
 				density_test_split();
 				density_test_unsplit();
-				color_average();
 				count = 0;
 			}
+
+			color_average();
 
 			count++;
 			improved = 0;

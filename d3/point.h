@@ -134,11 +134,19 @@ public:
 		return point(x[0] * d, x[1] * d, x[2] * d);
 	}
 
+	ale_pos normsq() const {
+		return x[0] * x[0] + x[1] * x[1] + x[2] * x[2];
+	}
+
+	ale_pos norm() const {
+		return sqrt(normsq());
+	}
+
 	ale_pos lengthtosq(point p) const {
 		point diff = operator-(p);
-
-		return diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2];
+		return diff.normsq();
 	}
+
 	ale_pos lengthto(point p) const {
 		return sqrt(lengthtosq(p));
 	}
@@ -165,12 +173,15 @@ public:
 	 * Determine the cross product
 	 */
 	point xproduct(point p, point q) {
-		p -= *this;
-		q -= *this;
+		point pp = p;
+		point qq = q;
 
-		return point(p[1] * q[2] - p[2] * q[1],
-		             p[2] * q[0] - p[0] * q[2],
-			     p[0] * q[1] - p[1] * q[0]);
+		pp -= *this;
+		qq -= *this;
+
+		return point(pp[1] * qq[2] - pp[2] * qq[1],
+		             pp[2] * qq[0] - pp[0] * qq[2],
+			     pp[0] * qq[1] - pp[1] * qq[0]);
 	}
 };
 
