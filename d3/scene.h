@@ -27,6 +27,13 @@
 
 #include "point.h"
 
+/*
+ * PLANAR_SUBDIVISION_COUNT must be exactly pow(4, PLANAR_SUBDIVISION_DEPTH)
+ */
+
+#define PLANAR_SUBDIVISION_DEPTH 0
+#define PLANAR_SUBDIVISION_COUNT 1
+
 class scene {
 
 	/*
@@ -36,11 +43,11 @@ class scene {
 	struct triangle {
 
 		/*
-		 * Stats and auxiliary variables
+		 * Stats and auxiliaries for this element
 		 */
 
-		d2::pixel color;
-		d2::pixel weight;
+		d2::pixel color[PLANAR_SUBDIVISION_COUNT];
+		d2::pixel weight[PLANAR_SUBDIVISION_COUNT];
 		d2::pixel aux_stat;
 		void *aux_var;
 
@@ -61,8 +68,18 @@ class scene {
 		 */
 
 		triangle() {
-			color = d2::pixel(0, 0, 0);
-			weight = d2::pixel(0, 0, 0);
+
+			/*
+			 * Ensure that the (COUNT, DEPTH) relationship holds for planar elements.
+			 */
+
+			assert ((int) PLANAR_SUBDIVISION_COUNT == (int) pow(4, PLANAR_SUBDIVISION_DEPTH));
+
+			for (int sde = 0; sde < PLANAR_SUBDIVISION_COUNT; sde++) {
+				color[sde] = d2::pixel(0, 0, 0);
+				weight[sde] = d2::pixel(0, 0, 0);
+			}
+
 			aux_var = NULL;
 
 			vertices[0] = NULL;
@@ -121,8 +138,10 @@ class scene {
 			if (children[1])
 				children[1]->init_color_counters();
 
-			color = d2::pixel(0, 0, 0);
-			weight = d2::pixel(0, 0, 0);
+			for (int sde = 0; sde < PLANAR_SUBDIVISION_COUNT; sde++) {
+				color[sde] = d2::pixel(0, 0, 0);
+				weight[sde] = d2::pixel(0, 0, 0);
+			}
 		}
 
 		void init_aux_stats(d2::pixel value = d2::pixel(0, 0, 0)) {
