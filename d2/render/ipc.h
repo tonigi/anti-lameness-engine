@@ -204,10 +204,11 @@ protected:
 		for (unsigned int ii = 0; ii < lsimulated->height(); ii++)
 		for (unsigned int jj = 0; jj < lsimulated->width(); jj++) {
 			pixel weight = lsim_weights->get_pixel(ii, jj);
+			const ale_real weight_floor = 0.00001;
 
-			if (weight[0] > 0.1
-			 && weight[1] > 0.1 
-			 && weight[2] > 0.1)
+			if (weight[0] > weight_floor
+			 && weight[1] > weight_floor
+			 && weight[2] > weight_floor)
 				lsimulated->pix(ii, jj)
 					/= weight;
 			else
@@ -290,10 +291,11 @@ protected:
 		for (unsigned int ii = 0; ii < nlsimulated->height(); ii++)
 		for (unsigned int jj = 0; jj < nlsimulated->width(); jj++) {
 			pixel weight = nlsim_weights->get_pixel(ii, jj);
+			ale_real weight_floor = 0.00001;
 
-			if (weight[0] > 0.1
-			 && weight[1] > 0.1 
-			 && weight[2] > 0.1)
+			if (weight[0] > weight_floor
+			 && weight[1] > weight_floor
+			 && weight[2] > weight_floor)
 				nlsimulated->pix(ii, jj)
 					/= weight;
 			else
@@ -594,8 +596,15 @@ protected:
 				 * confidence is uniform].
 				 */
 
-				pixel conf = real->exp().one_sided_confidence(comp_lreal, bpv);
+				// One-sided certainty
+				// pixel conf = real->exp().one_sided_confidence(comp_lreal, bpv);
 				      // conf = real->exp().one_sided_confidence(comp_real, bpv);
+				      
+				// Ordinary certainty
+				// pixel conf = real->exp().confidence(comp_lreal);
+
+				// Estimate-based certainty
+				pixel conf = real->exp().confidence(comp_simu);
 					
 				/*
 				 * If a color is bayer-interpolated, then we have no confidence in its
@@ -755,9 +764,11 @@ protected:
 				pixel ccpix = correction_count ->get_pixel(i, j);
 				pixel  apix = approximation    ->get_pixel(i, j);
 
-				if (ccpix[0] < 0.01
-				 || ccpix[1] < 0.01
-				 || ccpix[2] < 0.01)
+				const ale_real cc_floor = 0.00001;
+
+				if (ccpix[0] < cc_floor
+				 || ccpix[1] < cc_floor
+				 || ccpix[2] < cc_floor)
 					continue;
 
 				pixel new_value = cpix / ccpix + apix;
@@ -853,6 +864,9 @@ public:
 		ui::get()->ip_start();
                 done = 1;
                 approximation = optimizations::get_ip_working_image(input->get_image());
+		fprintf(stderr, "\n\napproximation offset: [%f %f] \n\n", 
+				approximation->offset()[0],
+				approximation->offset()[1]);
                 _ip();
 		ui::get()->ip_done();
 

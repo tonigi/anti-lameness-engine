@@ -132,8 +132,17 @@ public:
 			 && j + offset[1] >= rx_parameters[6 * param + 2]
 			 && j + offset[1] <= rx_parameters[6 * param + 3]
 			 && f >= rx_parameters[6 * param + 4]
-			 && f <= rx_parameters[6 * param + 5])
+			 && f <= rx_parameters[6 * param + 5]) {
+				fprintf(stderr, "[%f %f %f %f %f %f | %f %f]",
+					rx_parameters[6 * param + 0],
+					rx_parameters[6 * param + 1],
+					rx_parameters[6 * param + 2],
+					rx_parameters[6 * param + 3],
+					rx_parameters[6 * param + 4],
+					rx_parameters[6 * param + 5],
+					i + offset[0], j + offset[1]);
 				return 1;
+			}
 
 		return 0;
 	}
