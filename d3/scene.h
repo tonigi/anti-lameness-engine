@@ -31,8 +31,8 @@
  * PLANAR_SUBDIVISION_COUNT must be exactly pow(4, PLANAR_SUBDIVISION_DEPTH)
  */
 
-#define PLANAR_SUBDIVISION_DEPTH 1
-#define PLANAR_SUBDIVISION_COUNT 4
+#define PLANAR_SUBDIVISION_DEPTH 2
+#define PLANAR_SUBDIVISION_COUNT 16 
 
 class scene {
 
@@ -526,7 +526,7 @@ class scene {
 				if (digit == 3)
 					result = 2 * centroid() - result;
 
-				multiplier *= 4;
+				multiplier *= 2;
 				e /= 4;
 			}
 
@@ -592,8 +592,13 @@ class scene {
 		ale_accum reference_error() {
 			assert(!children[0] && !children[1]);
 
-			d2::pixel error(0, 0, 0);
-			d2::pixel divisor(0, 0, 0);
+			ale_accum error = 0;
+			ale_accum divisor = 0;
+
+			char *frame_list = (char *)aux_var;
+
+			if (!frame_list)
+				return 0;
 
 			/*
 			 * Iterate over all elements
@@ -635,12 +640,12 @@ class scene {
 
 					for (int k = 0; k < 3; k++) {
 						error += pow(ca[k] - cb[k], 2);
-						weight += pow(ca[k] > cb[k] ? ca[k] : cb[k], 2);
+						divisor += pow(ca[k] > cb[k] ? ca[k] : cb[k], 2);
 					}
 				}
 			}
 
-			error /= weight;
+			error /= divisor;
 
 			return error;
 
@@ -650,9 +655,21 @@ class scene {
 		 * Recolor, assuming that visibility remains constant.
 		 */
 		void recolor() {
-			assert(!children[0] && !children[1]);
+			// assert(!children[0] && !children[1]);
+			if (children[0])
+				children[0]->recolor();
+			if (children[1])
+				children[1]->recolor();
+
+			if (children[0] || children[1])
+				return;
 
 			init_color_counters();
+
+			char *frame_list = (char *)aux_var;
+
+			if (!frame_list)
+				return;
 
 			/*
 			 * Iterate over all elements
@@ -692,7 +709,7 @@ class scene {
 						continue;
 
 					color += cl->reference[n]->get_bl(mapped_centroid.xy());
-					weight += pixel(1, 1, 1);
+					weight += d2::pixel(1, 1, 1);
 				}
 
 				color /= weight;
@@ -742,7 +759,8 @@ class scene {
 
 			ale_accum step = (vertices[0]->lengthto(*vertices[1])
 				        + vertices[1]->lengthto(*vertices[2])
-					+ vertices[2]->lengthto(*vertices[0])) / 21;
+//					+ vertices[2]->lengthto(*vertices[0])) / 21;
+					+ vertices[2]->lengthto(*vertices[0])) / 3;
 
 			/*
 			 * There are three possibilities for each triangle visited:
@@ -761,7 +779,6 @@ class scene {
 			int best = 0;
 			ale_accum lowest_error = +0;
 			lowest_error = +1 / lowest_error;
-			ale_accum divisors[3];
 
 			assert (lowest_error > 0);
 			assert (isinf(lowest_error) == 1);
@@ -780,7 +797,7 @@ class scene {
 				 * a given amount the angle between the normals of adjacent triangles.
 				 */
 
-				if (max_neighbor_angle_2(step * dir) > M_PI / 4)
+				if (max_neighbor_angle_2(step * dir) > M_PI / 2)
 					continue;
 
 				/*
@@ -794,7 +811,8 @@ class scene {
 				 * Check the error
 				 */
 
-				if (reference_error() < lowest_error) {
+				ale_accum error = reference_error();
+				if (error < lowest_error) {
 					lowest_error = error;
 					best = dir;
 				}
@@ -1527,6 +1545,16 @@ public:
 			fprintf(stderr, "color averaging...\n");
 
 			color_average();
+			
+			fprintf(stderr, "using recolor() to recolor elements...\n");
+
+			determine_visibility();
+
+			triangle_head[0]->recolor();
+			triangle_head[1]->recolor();
+
+			triangle_head[0]->free_aux_vars();
+			triangle_head[1]->free_aux_vars();
 
 			/*
 			 * Write output incrementally, if desired.
