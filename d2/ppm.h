@@ -36,9 +36,9 @@
 struct extended_t {
 	int is_extended;
 	int black_level;
-	float aperture; /* 1 == f/1.0, 1.4 == f/1.4, etc. */
-	float shutter;  /* 1 == 1 sec, 0.5 == 1/2 sec, etc. */
-	float gain;     /* 1 == ISO 100, 2 == ISO 200, etc. */
+	ale_real aperture; /* 1 == f/1.0, 1.4 == f/1.4, etc. */
+	ale_real shutter;  /* 1 == 1 sec, 0.5 == 1/2 sec, etc. */
+	ale_real gain;     /* 1 == ISO 100, 2 == ISO 200, etc. */
 
 	extended_t() {
 		is_extended = 0;
@@ -63,7 +63,7 @@ static inline void error_ppm(const char *filename) {
 static inline int digest_comment(FILE *f, const char *filename, extended_t *extended) {
 	int next = '#';
 	int value;
-	float fvalue;
+	double fvalue;
 
 	while (next != '\n' && next != '\r' && next != EOF) {
 		while (next == ' ' || next == '\t' || next == '#') {
@@ -80,13 +80,13 @@ static inline int digest_comment(FILE *f, const char *filename, extended_t *exte
 
 		if (extended->is_extended && fscanf(f, "Black-level: %d", &value) == 1)
 			extended->black_level = value;
-		else if (extended->is_extended && fscanf(f, "ISO: %f", &fvalue) == 1)
+		else if (extended->is_extended && fscanf(f, "ISO: %lf", &fvalue) == 1)
 			extended->gain = fvalue / 100;
-		else if (extended->is_extended && fscanf(f, "Gain: %f", &fvalue) == 1)
+		else if (extended->is_extended && fscanf(f, "Gain: %lf", &fvalue) == 1)
 			extended->gain = fvalue;
-		else if (extended->is_extended && fscanf(f, "Aperture: %f", &fvalue) == 1)
+		else if (extended->is_extended && fscanf(f, "Aperture: %lf", &fvalue) == 1)
 			extended->aperture = fvalue;
-		else if (extended->is_extended && fscanf(f, "Shutter: %f", &fvalue) == 1)
+		else if (extended->is_extended && fscanf(f, "Shutter: %lf", &fvalue) == 1)
 			extended->shutter = fvalue;
 		else if (next != '\n' && next != '\r' && next != EOF)
 			next = fgetc(f);
@@ -137,7 +137,7 @@ static inline int is_eppm(const char *filename) {
 	return 1;
 }
 
-static inline image *read_ppm(const char *filename, exposure *e, unsigned int bayer) {
+static inline image *read_ppm(const char *filename, exposure *e, unsigned int bayer, int init_reference_gain = 0) {
 	unsigned int i, j, k;
 	image *im;
 	unsigned char m1, m2, val;
@@ -270,6 +270,19 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 		}
 
 		im->set_pixel(i, j, e->linearize(p));
+	}
+
+	/* Handle exposure and gain */
+
+	if (extended.is_extended) {
+		double combined_gain = (1 / pow(extended.aperture, 2))
+			             * extended.shutter
+			             * extended.gain;
+		if (init_reference_gain)
+			exposure::set_gain_reference(combined_gain);
+		else
+			e->set_gain_multiplier(exposure::get_gain_reference()
+					     / combined_gain);
 	}
 
 	/* Done */

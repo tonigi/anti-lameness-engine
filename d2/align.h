@@ -130,6 +130,8 @@ private:
 	 * 0. Preserve the original exposure of images.
 	 *
 	 * 1. Match exposure between images.
+	 *
+	 * 2. Use only image metadata for registering exposure.
 	 */
 
 	static int _exp_register;
@@ -623,9 +625,22 @@ private:
 	 * regarding what seems to work w.r.t. certainty.  Using certainty in the
 	 * first pass seems to result in worse alignment, while not using certainty
 	 * in the second pass results in incorrect determination of exposure.
+	 *
+	 * [Note that this may have been due to a bug in certainty determination
+	 * within this function.]
 	 */
 	static void set_exposure_ratio(unsigned int m, struct scale_cluster c,
 			transformation t, int ax_count, int pass_number) {
+
+		if (_exp_register == 2) {
+			/*
+			 * Use metadata only.
+			 */
+			ale_real gain_multiplier = image_rw::exp(m).get_gain_multiplier();
+			pixel multiplier = pixel(gain_multiplier, gain_multiplier, gain_multiplier);
+
+			image_rw::exp(m).set_multiplier(multiplier);
+		}
 
 		pixel_accum ratio_sum, weight_sum;
 		pixel_accum asum, bsum;
@@ -1464,7 +1479,7 @@ private:
 		 * Post-alignment exposure adjustment
 		 */
 
-		if (_exp_register) {
+		if (_exp_register == 1) {
 			ui::get()->exposure_2();
 			set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count, 1);
 		}
@@ -1849,6 +1864,13 @@ public:
 	 */
 	static void exp_register() {
 		_exp_register = 1;
+	}
+
+	/*
+	 * Register exposure only based on metadata
+	 */
+	static void exp_meta_only() {
+		_exp_register = 2;
 	}
 
 	/*

@@ -126,12 +126,12 @@ public:
 	 * Read an image from a file
 	 */
 	static image *read_image(const char *filename, exposure *exp, char *name = "file", 
-			unsigned int bayer = IMAGE_BAYER_DEFAULT) {
+			unsigned int bayer = IMAGE_BAYER_DEFAULT, int init_reference_gain = 0) {
 		if (bayer == IMAGE_BAYER_DEFAULT)
 			bayer = bayer_default;
 
 		if (is_eppm(filename)) {
-			return read_ppm(filename, exp, bayer);
+			return read_ppm(filename, exp, bayer, init_reference_gain);
 		}
 
 #ifdef USE_MAGICK
@@ -478,7 +478,7 @@ public:
 			files_open[n] = 1;
 		} else {
 
-			image *i = read_image(filenames[n], input_exposure[n], "file", bayer(n));
+			image *i = read_image(filenames[n], input_exposure[n], "file", bayer(n), (n == 0));
 
 			images[n] = i;
 			files_open[n] = 1;
@@ -492,7 +492,7 @@ public:
 		if (files_open[n])
 			return images[n]->clone(name);
 		else {
-			image *i = read_image(filenames[n], input_exposure[n], name, bayer(n));
+			image *i = read_image(filenames[n], input_exposure[n], name, bayer(n), (n == 0));
 			return i;
 		}
 	}

@@ -434,6 +434,7 @@ public:
 			HEADER_SPACE
 			"--exp-register    Register exposure between frames.  [default]\n"
 			"--exp-noregister  Assume uniform exposure across all frames.\n"
+			"--exp-meta-only   Use only image metadata for registering exposure.\n"
 			BETWEEN_SECTIONS
 			"Range extension (see --hq for defaults):\n"
 			HEADER_SPACE

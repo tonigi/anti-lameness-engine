@@ -916,6 +916,9 @@ int main(int argc, const char *argv[]){
 		} else if (!strcmp(argv[i], "--exp-noregister")) {
 			exposure_register = 0;
 			d2::align::exp_noregister();
+		} else if (!strcmp(argv[i], "--exp-meta-only")) {
+			exposure_register = 2;
+			d2::align::exp_meta_only();
 		} else if (!strcmp(argv[i], "--drizzle-only")) {
 			unsupported::discontinued("--drizzle-only", "--dchain box:1");
 		} else if (!strcmp(argv[i], "--inc")) {
@@ -1352,7 +1355,7 @@ int main(int argc, const char *argv[]){
 				ochain[0] = new d2::ipc( ochain[0], ip_iterations,
 						inc, response[psf_linear],
 						response[psf_nonlinear],
-						exposure_register);
+						(exposure_register == 1));
 			}
 
 			/*

@@ -38,6 +38,8 @@ class exposure {
 private:
 	static float confidence_exponent;
 	pixel _multiplier;
+	ale_real _gain_multiplier;
+	static ale_real _gain_reference;
 
 public:
 	/*
@@ -133,6 +135,22 @@ public:
 		this->_multiplier = _multiplier;
 	}
 
+	void set_gain_multiplier(ale_real g) {
+		_gain_multiplier = g;
+	}
+
+	ale_real get_gain_multiplier() {
+		return _gain_multiplier;
+	}
+
+	static void set_gain_reference(ale_real r) {
+		_gain_reference = r;
+	}
+
+	static ale_real get_gain_reference() {
+		return _gain_reference;
+	}
+
 	pixel get_multiplier() const {
 		return _multiplier;
 	}
@@ -201,6 +219,7 @@ public:
 	exposure() {
 		listener_head = NULL;
 		_multiplier = pixel(1, 1, 1);
+		_gain_multiplier = 1;
 	}
 };
 
