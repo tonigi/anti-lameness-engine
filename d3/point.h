@@ -74,8 +74,16 @@ public:
 		return result;
 	}
 
+	point operator+(point p) const {
+		return point(x[0] + p[0], x[1] + p[1], x[2] + p[2]);
+	}
+
 	point operator-(point p) const {
 		return point(x[0] - p[0], x[1] - p[1], x[2] - p[2]);
+	}
+
+	point operator/(ale_pos r) {
+		return point(x[0] / r, x[1] / r, x[2] / r);
 	}
 
 	point operator /=(ale_real r) {

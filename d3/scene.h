@@ -78,6 +78,17 @@ class scene {
 			children[1] = NULL;
 		}
 
+		void write_tree(int level = 0) {
+			for (int i = 0; i < level; i++)
+				fprintf(stderr, " ");
+			fprintf(stderr, "%p (%p %p %p)\n", this, neighbors[0], neighbors[1], neighbors[2]);
+
+			if (children[0])
+				children[0]->write_tree(level + 1);
+			if (children[1])
+				children[1]->write_tree(level + 1);
+		}
+
 		/*
 		 * Statistic initialization
 		 */
@@ -110,6 +121,8 @@ class scene {
 		int self_ref_from_neighbor(int n) {
 			triangle *t = neighbors[n];
 
+			assert (t);
+
 			for (int i = 0; i < 3; i++) {
 				if (t->neighbors[i] == this)
 					return i;
@@ -135,21 +148,35 @@ class scene {
 			children[0] = new triangle(*this);
 			children[1] = new triangle(*this);
 
+			assert (children[0]);
+			assert (children[1]);
+
 			for (int c = 0; c < 2; c++) {
 				children[c]->parent = this;
-				children[c]->vertices[(division_vertex + c + 1) % 3] = division_new_vertex;
-				children[c]->neighbors[(division_vertex + c + 2) % 3] = children[(c + 1) % 2];
+				children[c]->vertices[(division_vertex + 1 + c) % 3] = division_new_vertex;
+				children[c]->neighbors[(division_vertex + 2 - c) % 3] = children[(c + 1) % 2];
 				children[c]->children[0] = NULL;
 				children[c]->children[1] = NULL;
 				children[c]->division_new_vertex = NULL;
 			}
-
 		}
 
 		void split(int v, point nv) {
 			point *nvp = new point(nv);
 
+			assert (nvp);
+
 			split_internals(v, nvp);
+
+			for (int i = 0; i < 2; i++) {
+				int vv = (v + 1 + i) % 3;
+				if (!neighbors[vv])
+					continue;
+
+				int self_ref = self_ref_from_neighbor(vv);
+
+				neighbors[vv]->neighbors[self_ref] = children[i];
+			}
 
 			if (!neighbors[v])
 				return;
@@ -163,6 +190,41 @@ class scene {
 
 			neighbors[v]->children[0]->neighbors[self_ref] = children[1];
 			neighbors[v]->children[1]->neighbors[self_ref] = children[0];
+		}
+
+		/*
+		 * Split a triangle between the given vertex and the opposite edge's midpoint.
+		 */
+
+		void split(int v) {
+			split(v, (*vertices[(v + 1) % 3] + *vertices[(v + 2) % 3]) / 2);
+		}
+
+
+		/*
+		 * Split a triangle at a random vertex among those with largest
+		 * angle.
+		 */
+		void split() {
+			ale_pos angles[3] = { vertices[0]->anglebetw(*vertices[1], *vertices[2]),
+				              vertices[1]->anglebetw(*vertices[0], *vertices[2]),
+					      vertices[2]->anglebetw(*vertices[0], *vertices[1]) };
+
+			for (int v = 0; v < 3; v++)
+			if  (angles[v] > angles[(v + 1) % 3]
+			  && angles[v] > angles[(v + 2) % 3]) {
+				split(v);
+				return;
+			}
+
+			for (int v = 0; v < 3; v++)
+			if  (angles[v] < angles[(v + 1) % 3]
+			  && angles[v] < angles[(v + 2) % 3]) {
+				split((v + 1 + rand() % 2) % 3);
+				return;
+			}
+
+			split(rand() % 3);
 		}
 
 		void unsplit_internals() {
@@ -194,6 +256,11 @@ class scene {
 
 			delete division_new_vertex;
 
+			for (int i = 0; i < 2; i++) {
+				int vv = (division_vertex + 1 + i) % 3;
+				neighbors[vv] = children[i]->neighbors[vv];
+			}
+
 			unsplit_internals();
 
 			if (!neighbors[division_vertex])
@@ -209,8 +276,8 @@ class scene {
 		}
 
 		int split_on_aux() {
+
 			if (children[0] && children[1]) {
-				assert(aux_stat == d2::pixel(0, 0, 0));
 				return children[0]->split_on_aux()
 				    || children[1]->split_on_aux();
 			}
@@ -236,6 +303,7 @@ class scene {
 
 			return 0;
 		}
+
 	};
 
 	/*
@@ -298,6 +366,8 @@ class scene {
 		int width  = (int) floor(_pt.scaled_width());
 		
 		if (t->division_new_vertex) {
+			assert (t->children[0]);
+			assert (t->children[1]);
 			zbuffer(_pt, zbuf, t->children[0]);
 			zbuffer(_pt, zbuf, t->children[1]);
 			return;
@@ -469,10 +539,15 @@ class scene {
 	 */
 	static void density_test(int split) {
 
-		ale_pos scale = (split ? 1 : 2);
+		fprintf(stderr, "density test start\n");
+		triangle_head[0]->write_tree();
+		triangle_head[1]->write_tree();
 
-		triangle_head[0]->init_aux_stats();
-		triangle_head[1]->init_aux_stats();
+		ale_pos scale = (split ? 1 : 2);
+		d2::pixel init_value = d2::pixel(1, 1, 1) * (ale_real) (split ? 1 : 0);
+
+		triangle_head[0]->init_aux_stats(init_value);
+		triangle_head[1]->init_aux_stats(init_value);
 
 		/*
 		 * Iterate over all frames
@@ -488,6 +563,7 @@ class scene {
 			_pt.scale(scale * sf / _pt.scale_2d());
 			unsigned int height = (unsigned int) _pt.scaled_height();
 			unsigned int width  = (unsigned int) _pt.scaled_width();
+			fprintf(stderr, "[h=%d w=%d] ", height, width);
 			triangle **zbuf = init_zbuf(_pt);
 			zbuffer(_pt, zbuf, triangle_head[0]);
 			zbuffer(_pt, zbuf, triangle_head[1]);
@@ -504,6 +580,18 @@ class scene {
 				 */
 				if (!t)
 					continue;
+
+				/*
+				 * Check for triangles that have already been eliminated.
+				 */
+				if (t->aux_stat == d2::pixel(-1, -1, -1))
+					continue;
+
+				/*
+				 * Mark the triangle as under consideration
+				 */
+
+				t->aux_stat = d2::pixel(0, 0, 0);
 
 				/*
 				 * Check that at least three points in the
@@ -537,6 +625,14 @@ class scene {
 
 		if (!split && (triangle_head[0]->unsplit_on_aux() || triangle_head[1]->unsplit_on_aux()))
 			density_test(split);
+	}
+
+	static void density_test_split() {
+		density_test(1);
+	}
+
+	static void density_test_unsplit() {
+		density_test(0);
 	}
 
 public:
@@ -770,6 +866,9 @@ public:
 
 		while(reduce_lod());
 
+		density_test_split();
+		density_test_unsplit();
+
 		while ((improved /*&& count < 40*/) || cl->next) {
 
 			/*
@@ -800,6 +899,8 @@ public:
 				fprintf(stderr, ".");
 				assert (cl->next);
 				increase_lod();
+				density_test_split();
+				density_test_unsplit();
 				count = 0;
 			}
 
