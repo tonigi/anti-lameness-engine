@@ -532,6 +532,10 @@ public:
 	static double angle_of(unsigned int n) {
 		return _init_angle;
 	}
+
+	static pt projective(unsigned int n) {
+		return pt(d2::align::of(n), of(n), angle_of(n));
+	}
 };
 
 #endif
