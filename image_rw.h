@@ -73,7 +73,7 @@ static inline image *read_image(char *filename)
 	image *im;
 	const PixelPacket *p;
 
-	int i, j;
+	unsigned int i, j;
 
 	GetExceptionInfo(&exception);
 	image_info = CloneImageInfo((ImageInfo *) NULL);
@@ -99,9 +99,9 @@ static inline image *read_image(char *filename)
 			exit(1);
 	
 		for (j = 0; j < mi->columns; j++) {
-			set_pixel_component(im, i, j, 0, p->red);
-			set_pixel_component(im, i, j, 1, p->green);
-			set_pixel_component(im, i, j, 2, p->blue);
+			im->set_pixel_component(i, j, 0, p->red);
+			im->set_pixel_component(i, j, 1, p->green);
+			im->set_pixel_component(i, j, 2, p->blue);
 			p++;
 		}
 	}
@@ -133,7 +133,7 @@ static inline void write_image(char *filename, image *im) {
 	ImageInfo *image_info;
 	PixelPacket *p;
 
-	int i, j;
+	unsigned int i, j;
 
 	GetExceptionInfo(&exception);
 	image_info = CloneImageInfo((ImageInfo *) NULL);
@@ -144,8 +144,8 @@ static inline void write_image(char *filename, image *im) {
 		MagickError(ResourceLimitError,
 			"Unable to display image", "MemoryAllocationFailed");
 
-	mi->columns = width(im);
-	mi->rows = height(im);
+	mi->columns = im->width();
+	mi->rows = im->height();
 	mi->depth = 8;
 
 	for (i = 0; i < mi->rows; i++) {
@@ -153,9 +153,9 @@ static inline void write_image(char *filename, image *im) {
 		if (p == NULL)
 			break;
 		for (j = 0; j < mi->columns; j++) {
-			p->red = get_pixel_component(im, i, j, 0);
-			p->green = get_pixel_component(im, i, j, 1);
-			p->blue = get_pixel_component(im, i, j, 2);
+			p->red = im->get_pixel_component(i, j, 0);
+			p->green = im->get_pixel_component(i, j, 1);
+			p->blue = im->get_pixel_component(i, j, 2);
 			p->red |= p->red << 8;
 			p->green |= p->green << 8;
 			p->blue |= p->blue << 8;

@@ -20,6 +20,11 @@
 #include "gpt.h"
 #include <stdio.h>
 
+#define TFILE_VERSION     2
+#define TFILE_VERSION_MAX 2
+
+static int tfile_version = 0;
+
 struct tload_t {
 	char *filename;
 	FILE *file;
@@ -35,7 +40,8 @@ static inline struct tload_t *tload_new(char *filename) {
 	struct tload_t *result = NULL;
 
 	if (file) {
-		result = malloc(sizeof(struct tload_t));
+		result = (struct tload_t *) 
+			malloc(sizeof(struct tload_t));
 		result->filename = filename;
 		result->file = file;
 	}
@@ -48,10 +54,15 @@ static inline struct tsave_t *tsave_new(char *filename) {
 	struct tsave_t *result = NULL;
 
 	if (file) {
-		result = malloc(sizeof(struct tsave_t));
+		result = (struct tsave_t *) 
+			malloc(sizeof(struct tsave_t));
 		result->filename = filename;
 		result->file = file;
 	}
+
+	fprintf(file, "# created by ALE transformation file handler version %d\n", 
+			TFILE_VERSION);
+	fprintf(file, "V %d\n", TFILE_VERSION);
 
 	fclose(file);
 	
@@ -68,29 +79,25 @@ static inline void tsave_delete(struct tsave_t *victim) {
 	free(victim);
 }
 
-static inline struct gpt tload_next(struct tload_t *this, int w, int h, int lod, int is_p) {
-	struct gpt result;
+static inline transformation tload_next(struct tload_t *t, int lod, int is_p, 
+		transformation default_transform) {
+
+	transformation result = default_transform;
 
 	/*
-	 * Default results
+	 * Scale default initial transform for lod
 	 */
 
-	result.eu[0] = 0;
-	result.eu[1] = 0;
-	result.eu[2] = 0;
+	result.rescale (1 / pow(2, lod));
 
-//	result.x[0][0] = 0;               result.x[1][0] = 0;
-//	result.x[0][1] = w / pow(2, lod); result.x[1][1] = 0;
-//	result.x[0][2] = w / pow(2, lod); result.x[1][2] = h / pow(2, lod);
-//	result.x[0][3] = 0;               result.x[1][3] = h / pow(2, lod);
+	/*
+	 * Read each line of the file until we find a transformation.
+	 */
 
-	result.input_width = w / pow(2, lod);
-	result.input_height = h / pow(2, lod);
-
-	while (this && !feof(this->file)) {
+	while (t && !feof(t->file)) {
 		char line[1024];
 
-		fgets(line, 1024, this->file);
+		fgets(line, 1024, t->file);
 
 		if (strlen(line) >= 1023) {
 			fprintf(stderr, 
@@ -105,10 +112,28 @@ static inline struct gpt tload_next(struct tload_t *this, int w, int h, int lod,
 			case '#':
 				/* Comment or whitespace */
 				break;
+			case 'V':
+			case 'v':
+				/* Version number */
+				{
+					int count = sscanf(line, "V %d", &tfile_version); 
+					
+					if (count < 1) {
+						fprintf(stderr, "Error in transformation "
+								"file version command.\n");
+						exit(1);
+					} else if (tfile_version > TFILE_VERSION_MAX) {
+						fprintf(stderr, "Unsupported transformation "
+								"file version %d\n", 
+								tfile_version);
+						exit(1);
+					}
+
+					break;
+				}
 			case 'D':
 			case 'd':
 				/* Default transformation */
-				result = eu_resultant(result);
 				return result;
 			case 'P':
 			case 'p':
@@ -117,19 +142,19 @@ static inline struct gpt tload_next(struct tload_t *this, int w, int h, int lod,
 					fprintf(stderr, "\ntrans-load: warning: "
 						"Ignoring projective data for euclidean "
 						"transformation.\n");
-					result = eu_resultant(result);
 					return result;
 				} else {
 					double width, height;
 					int count, i;
+					point x[4];
 
 					count = sscanf(line, "P %lf %lf " 
 							MR MR MR MR MR MR MR MR,
 							&width, &height,
-							&result.x[0][0], &result.x[1][0], 
-							&result.x[0][1], &result.x[1][1],
-							&result.x[0][2], &result.x[1][2], 
-							&result.x[0][3], &result.x[1][3]);
+							&x[0][1], &x[0][0], 
+							&x[1][1], &x[1][0],
+							&x[2][1], &x[2][0], 
+							&x[3][1], &x[3][0]);
 
 					if (count < 10) 
 						fprintf(stderr, "\ntrans-load: warning:"
@@ -137,13 +162,27 @@ static inline struct gpt tload_next(struct tload_t *this, int w, int h, int lod,
 
 					for (i = 0; i < count - 2; i++) {
 						double factor = (i % 2)
-							? (result.input_width / width)
-							: (result.input_height / height);
+							? (result.width() / width)
+							: (result.height() / height);
 							
-						result.x[i % 2][i / 2] *= factor;
+						x[i / 2][i % 2] *= factor;
 					}
 
-					result = gpt_resultant(result);
+					if (tfile_version < 1) {
+						/*
+						 * Accommodate older versions
+						 * of tfile.
+						 */
+						for (i = 0; i < 4; i++) {
+							my_real y = x[i][0];
+							  x[i][0] = x[i][1];
+							  x[i][1] = y;
+						}
+						result.gpt_v0_set(x);
+					} else {
+						result.gpt_set(x);
+					}
+
 					return result;
 				}
 				break;
@@ -153,11 +192,19 @@ static inline struct gpt tload_next(struct tload_t *this, int w, int h, int lod,
 				{
 					double width, height;
 					int count, i;
+					my_real eu[3];
 
 					count = sscanf(line, "E %lf %lf " MR MR MR,
 							&width, &height,
-							&result.eu[0], &result.eu[1], 
-							&result.eu[2]);
+							&eu[1], &eu[0], 
+							&eu[2]);
+
+					if (tfile_version < 2) {
+						double t = eu[0];
+						   eu[0] = eu[1];
+						   eu[1] = t;
+					}
+
 
 					if (count < 5) 
 						fprintf(stderr, "\ntrans-load: warning:"
@@ -165,13 +212,18 @@ static inline struct gpt tload_next(struct tload_t *this, int w, int h, int lod,
 
 					for (i = 0; (i < count - 2) && (i < 2); i++) {
 						double factor = (i % 2)
-							? (result.input_width / width)
-							: (result.input_height / height);
+							? (result.width() / width)
+							: (result.height() / height);
 							
-						result.eu[i] *= factor;
+						eu[i] *= factor;
 					}
 
-					result = eu_resultant(result);
+					if (tfile_version < 1) {
+						result.eu_v0_set(eu);
+					} else {		
+						result.eu_set(eu);
+					}
+
 					return result;
 				}
 				break;
@@ -183,64 +235,61 @@ static inline struct gpt tload_next(struct tload_t *this, int w, int h, int lod,
 		}
 	}
 
-	result = eu_resultant(result);
-
 	return result;
 }
 
-static inline void tsave_next(struct tsave_t *this, struct gpt offset, int is_projective) {
-	if (this != NULL) {
-		this->file = fopen(this->filename, "a");
+static inline void tsave_next(struct tsave_t *t, transformation offset, int is_projective) {
+	if (t != NULL) {
+		t->file = fopen(t->filename, "a");
 		
 		if (is_projective) {
 			int i, j;
 
-			fprintf(this->file, "P ");
-			fprintf(this->file, "%f %f ", offset.input_width, offset.input_height);
+			fprintf(t->file, "P ");
+			fprintf(t->file, "%f %f ", offset.width(), offset.height());
 			for (i = 0; i < 4; i++)
-				for (j = 0; j < 2; j++)
-					fprintf(this->file, "%f ", offset.x[j][i]);
+				for (j = 1; j >= 0; j--)
+					fprintf(t->file, "%f ", offset.gpt_get(i, j));
 		} else {
-			int i;
-		
-			fprintf(this->file, "E ");
-			fprintf(this->file, "%f %f ", offset.input_width, offset.input_height);
-			for (i = 0; i < 3; i++) 
-				fprintf(this->file, "%f ", offset.eu[i]);
+			fprintf(t->file, "E ");
+			fprintf(t->file, "%f %f ", offset.width(), offset.height());
+			fprintf(t->file, "%f ",    offset.eu_get(1));
+			fprintf(t->file, "%f ",    offset.eu_get(0));
+			fprintf(t->file, "%f ",    offset.eu_get(2));
 		}
 
-		fprintf(this->file, "\n");
+		fprintf(t->file, "\n");
 
-		fclose(this->file);
+		fclose(t->file);
 	}
 }
 
-static inline void tsave_target(struct tsave_t *this, char *filename) {
-	if (this != NULL) {
-		this->file = fopen(this->filename, "a");
+static inline void tsave_target(struct tsave_t *t, char *filename) {
+	if (t != NULL) {
+		t->file = fopen(t->filename, "a");
 
-		fprintf(this->file, "# Comment: Target output file is %s\n", filename);
+		fprintf(t->file, "# Comment: Target output file is %s\n", filename);
 		
-		fclose(this->file);
+		fclose(t->file);
 	}
 }
 
-static inline void tsave_orig(struct tsave_t *this, char *filename) {
-	if (this != NULL) {
-		this->file = fopen(this->filename, "a");
+static inline void tsave_orig(struct tsave_t *t, char *filename) {
+	if (t != NULL) {
+		t->file = fopen(t->filename, "a");
 
-		fprintf(this->file, "# Comment: Original frame is %s\n", filename);
+		fprintf(t->file, "# Comment: Original frame is %s\n", filename);
 		
-		fclose(this->file);
+		fclose(t->file);
 	}
 }
 
-static inline void tsave_info(struct tsave_t *this, char *filename) {
-	if (this != NULL) {
-		this->file = fopen(this->filename, "a");
+static inline void tsave_info(struct tsave_t *t, char *filename) {
+	if (t != NULL) {
+		t->file = fopen(t->filename, "a");
 
-		fprintf(this->file, "# Comment: Encountered file %s\n", filename);
+		fprintf(t->file, "# Comment: Supplemental frame %s\n", filename);
 		
-		fclose(this->file);
+		fclose(t->file);
 	}
 }

@@ -84,16 +84,17 @@ static inline image *read_ppm(char *filename) {
 
 	/* Make a new image */
 
-	im = new_image(h, w, 3);
+	im = new image(h, w, 3);
+	assert (im);
 
 	/* Pixels */
 
-	for (i = 0; i < height(im); i++)
-		for (j = 0; j < width(im); j++)
-			for (k = 0; k < 3; k++) {
-				fscanf(f, "%c", &val);
-				set_pixel_component(im, i, j, k, val);
-			}
+	for (i = 0; i < im->height(); i++)
+	for (j = 0; j < im->width();  j++)
+	for (k = 0; k < im->depth();  k++) {
+		fscanf(f, "%c", &val);
+		im->set_pixel_component(i, j, k, val);
+	}
 
 	/* Done */
 
@@ -118,11 +119,11 @@ static inline void write_ppm(char *filename, image *im) {
 
 	/* Width */
 
-	fprintf(f, "%d ", width(im));
+	fprintf(f, "%d ", im->width());
 
 	/* Height */
 
-	fprintf(f, "%d ", height(im));
+	fprintf(f, "%d ", im->height());
 
 	/* Maximum component value */
 
@@ -130,10 +131,10 @@ static inline void write_ppm(char *filename, image *im) {
 
 	/* Pixels */
 
-	for (i = 0; i < height(im); i++)
-		for (j = 0; j < width(im); j++)
-			for (k = 0; k < 3; k++)
-				fprintf(f, "%c", get_pixel_component(im, i, j, k));
+	for (i = 0; i < im->height(); i++)
+	for (j = 0; j < im->width();  j++)
+	for (k = 0; k < im->depth();  k++)
+		fprintf(f, "%c", im->get_pixel_component(i, j, k));
 
 	/* Done */
 

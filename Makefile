@@ -17,7 +17,6 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 CFLAGS:=-DNDEBUG $(if $(IMAGEMAGICK), -DUSE_MAGICK $(shell Magick-config --cflags --cppflags), -Wall -Os)
-
 LDFLAGS:=-lm $(if $(IMAGEMAGICK), $(shell Magick-config --ldflags --libs))
 
 #
@@ -32,10 +31,10 @@ clean:
 	rm -f ale
 
 ale-phony: ale.c *.h
-	gcc -o ale $(CFLAGS) ale.c $(LDFLAGS)
+	g++ -o ale $(CFLAGS) ale.c $(LDFLAGS)
 
 # XXX: this isn't even remotely portable.  It's how I make the Windows
 # binary, though, so I might as well put it here.
 
 ale.exe: ale.c *.h
-	i586-mingw32msvc-gcc -Wall -DNDEBUG -o ale.exe -Os ale.c -lm 
+	i586-mingw32msvc-g++ -Wall -DNDEBUG -o ale.exe -Os ale.c -lm 

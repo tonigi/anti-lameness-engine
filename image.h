@@ -25,146 +25,256 @@
 #include <assert.h>
 #include <math.h>
 
-typedef struct {
-	unsigned int dimx, dimy, depth;
-	unsigned char *p;
-	double apm_memo;
-} image;
+template <class colorT>
+class image_base {
+private:
+	unsigned int _dimx, _dimy, _depth;
+	colorT *_p;
+	int _apm_memo;
+	double _apm;
+public:
+	image_base (unsigned int dimy, unsigned int dimx, unsigned int depth) {
+		_dimx = dimx;
+		_dimy = dimy;
+		_depth = depth;
+		_apm_memo = 0;
 
-static inline image *new_image(unsigned int dimy, unsigned int dimx, unsigned int depth) {
-	image *im = (image *) malloc(sizeof(image));
+		_p = (colorT *) calloc(dimx * dimy * depth, sizeof(colorT));
 
-	assert(im);
+		assert (_p);
 
-	im->dimx = dimx;
-	im->dimy = dimy;
-	im->depth = depth;
-	im->p = (unsigned char *) calloc(dimx * dimy * depth, sizeof(unsigned char));
-	im->apm_memo = -1;
+		if (!_p) {
+			fprintf(stderr, "Could not allocate memory for image data.\n");
+			exit(1);
+		}
+	}
 
-	assert (im->p);
+	~image_base() {
+		free(_p);
+	}
 
-	return im;
+	unsigned int width() {
+		return _dimx;
+	}
+
+	unsigned int height() {
+		return _dimy;
+	}
+
+	unsigned int depth() {
+		return _depth;
+	}
+
+	colorT get_pixel_component(unsigned int y, unsigned int x, 
+			unsigned int color) {
+
+		assert (x < _dimx);
+		assert (y < _dimy);
+		assert (color < _depth);
+
+		return _p[y * _dimx * _depth + x * _depth + color];
+	}
+
+	void set_pixel_component(unsigned int y, unsigned int x, 
+			unsigned int color, colorT value) {
+
+		assert (x < _dimx);
+		assert (y < _dimy);
+		assert (color < _depth);
+
+		/* XXX: We could do much better than this. */
+		_apm_memo = 0;
+
+		_p[y * _dimx * _depth + x * _depth + color] = value;
+	}
+
+	/*
+	 * Get a color value at a given position using bilinear interpolation between the
+	 * four nearest pixels.
+	 */
+	colorT get_bl_component(double y, double x, unsigned int color) {
+
+		assert (y >= 0);
+		assert (x >= 0);
+		assert (y <= _dimy - 1);
+		assert (x <= _dimx - 1);
+		assert (color < _depth);
+
+		int lx = (int) floor(x);
+		int hx = (int) floor(x) + 1;
+		int ly = (int) floor(y);
+		int hy = (int) floor(y) + 1;
+
+		return 
+		(colorT) ((hx - x) 
+			* (hy - y)
+			* get_pixel_component(ly, lx, color)
+
+			+ (hx - x) 
+			* (y - ly)
+			* get_pixel_component(hy % _dimy, lx, color)
+
+			+ (x - lx) 
+			* (y - ly)
+			* get_pixel_component(hy % _dimy, hx % _dimx, color)
+
+			+ (x - lx) 
+			* (hy - y)
+			* get_pixel_component(ly, hx % _dimx, color));
+
+	}
+
+	/*
+	 * Scale by some factor
+	 */
+	void scale(double f) {
+
+		image_base<colorT> *is = new image_base<colorT> (
+			(int) floor(height() * f), 
+			(int) floor(width()  * f), depth());
+
+		assert(is);
+
+		unsigned int i, j, k;
+
+		for (i = 0; i < is->height(); i++)
+		for (j = 0; j < is->width(); j++) 
+		for (k = 0; k < is->depth(); k++)
+			is->set_pixel_component(i, j, k,
+				get_bl_component(
+					(i/f <= height() - 1) 
+						? (i/f) 
+					        : (height() - 1), 
+					(j/f <= width() - 1)
+						? (j/f) 
+						: (width() - 1), k));
+
+		free(_p);
+
+		_p = is->_p;
+		_dimx = is->_dimx;
+		_dimy = is->_dimy;
+		_depth = is->_depth;
+		_apm_memo = 0;
+
+		is->_p = NULL;
+
+		delete is;
+	}
+
+	/*
+	 * Extend the image area to the top, bottom, left, and right,
+	 * initializing the new image areas with black pixels.
+	 */
+	void extend(unsigned int top, unsigned int bottom, 
+			unsigned int left, unsigned int right) {
+
+		image_base<colorT> *is = new image_base<colorT> (
+			height() + top  + bottom,
+			 width() + left + right , depth());
+
+		assert(is);
+
+		unsigned int i, j, k;
+
+		for (i = 0; i < height(); i++)
+		for (j = 0; j <  width(); j++) 
+		for (k = 0; k <  depth(); k++)
+			is->set_pixel_component(i + top, j + left, k,
+				get_pixel_component(i, j, k));
+
+		free(_p);
+
+		_p = is->_p;
+		_dimx = is->_dimx;
+		_dimy = is->_dimy;
+		_depth = is->_depth;
+		_apm_memo = 0;
+
+		is->_p = NULL;
+
+		delete is;
+	}
+
+
+	/*
+	 * Clone 
+	 */
+	image_base<colorT> *clone() {
+		image_base<colorT> *ic = new image_base<colorT>(
+			height(), width(), depth());
+
+		assert(ic);
+
+		unsigned int i, j, k;
+
+		for (i = 0; i < height(); i++)
+		for (j = 0; j < width();  j++)
+		for (k = 0; k < depth();  k++)
+			ic->set_pixel_component(i, j, k,
+				get_pixel_component(i, j, k));
+
+		ic->_apm_memo = _apm_memo;
+
+		return ic;
+	}
+
+
+	/*
+	 * Calculate the average (mean) magnitude of a pixel (where magnitude
+	 * is defined as the mean of the channel values).
+	 */
+	double avg_pixel_magnitude() {
+		unsigned int i, j, k;
+
+		if (_apm_memo)
+			return _apm;
+
+		_apm_memo = 1;
+		_apm = 0;
+
+		for (i = 0; i < _dimy;  i++)
+		for (j = 0; j < _dimx;  j++)
+		for (k = 0; k < _depth; k++)
+			_apm += get_pixel_component(i, j, k);
+
+		_apm /= (_dimy * _dimx * _depth);
+
+		return _apm;
+	}
+
+};
+
+typedef image_base<unsigned char> image;
+
+static inline image *new_image(unsigned int dimy, unsigned int dimx, 
+		unsigned int depth) {
+	image *result = new image(dimy, dimx, depth);
+	
+	assert(result);
+
+	if (result == NULL) {
+		fprintf(stderr, "Unable to allocate memory for image.\n");
+		exit(1);
+	}
+
+	return result;
 }
 
-static inline void image_final(image *im) {
-	free(im->p);
-}
+typedef image_base<double> image_weights;
 
-static inline unsigned int width(image *im) {
-	return im->dimx;
-}
+static inline image_weights *new_image_weights(unsigned int dimy, unsigned int dimx, 
+		unsigned int depth) {
+	image_weights *result = new image_weights(dimy, dimx, depth);
+	
+	assert(result);
 
-static inline unsigned int height(image *im) {
-	return im->dimy;
-}
+	if (result == NULL) {
+		fprintf(stderr, "Unable to allocate memory for image.\n");
+		exit(1);
+	}
 
-static inline unsigned char get_pixel_component(image *im, unsigned int y, unsigned int x, unsigned int color) {
-	assert (x < im->dimx);
-	assert (y < im->dimy);
-	assert (color < im->depth);
-	return im->p[y * im->dimx * im->depth + x * im->depth + color];
-}
-
-static inline void set_pixel_component(image *im, unsigned int y, unsigned int x, unsigned int color, unsigned char value) {
-	assert (x < im->dimx);
-	assert (y < im->dimy);
-	assert (color < im->depth);
-
-	/* XXX: We could do much better than this. */
-	im->apm_memo = -1;
-
-	im->p[y * im->dimx * im->depth + x * im->depth + color] = value;
-}
-
-/*
- * Get a color value at a given position using bilinear interpolation between the
- * four nearest pixels.
- */
-static inline unsigned char get_bl_component(image *im, double y, double x, unsigned int color) {
-	int lx = (int) floor(x);
-	int hx = (int) floor(x) + 1;
-	int ly = (int) floor(y);
-	int hy = (int) floor(y) + 1;
-
-	assert (y >= 0);
-	assert (x >= 0);
-	assert (y <= im->dimy - 1);
-	assert (x <= im->dimx - 1);
-	assert (color < im->depth);
-
-	return (int) ((hx - x) * (hy - y)
-			       * get_pixel_component(im, ly, lx, color)
-		    + (hx - x) * (y - ly)
-			       * get_pixel_component(im, hy % im->dimy, lx, color)
-		    + (x - lx) * (y - ly)
-			       * get_pixel_component(im, hy % im->dimy, hx % im->dimx, color)
-		    + (x - lx) * (hy - y)
-			       * get_pixel_component(im, ly, hx % im->dimx, color));
-}
-
-/*
- * Scale an image by some factor
- */
-static inline void scale(image *im, double f) {
-	image *is = new_image((int) floor(height(im) * f), 
-			      (int) floor(width(im) * f), im->depth);
-
-	unsigned int i, j, k;
-
-	for (i = 0; i < height(is); i++)
-		for (j = 0; j < width(is); j++) 
-			for (k = 0; k < is->depth; k++)
-				set_pixel_component(is, i, j, k,
-					get_bl_component(im, (i/f <= height(im) - 1) ? (i/f) : (height(im) - 1), 
-							     (j/f <= width(im) - 1)  ? (j/f) : (width(im) - 1), k));
-
-	free(im->p);
-
-	im->p = is->p;
-	im->dimx = is->dimx;
-	im->dimy = is->dimy;
-	im->depth = is->depth;
-	im->apm_memo = -1;
-
-	free(is);
-}
-
-/*
- * Clone an image
- */
-static inline image *clone(image *im) {
-	image *ic = new_image(height(im), width(im), im->depth);
-
-	unsigned int i, j, k;
-
-	for (i = 0; i < height(ic); i++)
-		for (j = 0; j < width(ic); j++)
-			for (k = 0; k < ic->depth; k++)
-				set_pixel_component(ic, i, j, k,
-					get_pixel_component(im, i, j, k));
-
-	ic->apm_memo = im->apm_memo;
-
-	return ic;
-}
-
-static inline double avg_pixel_magnitude(image *im) {
-	unsigned int i, j, k;
-
-	if (im->apm_memo >= 0)
-		return im->apm_memo;
-
-	im->apm_memo = 0;
-
-	for (i = 0; i < im->dimy; i++)
-		for (j = 0; j < im->dimx; j++)
-			for (k = 0; k < im->depth; k++)
-				im->apm_memo += get_pixel_component(im, i, j, k);
-
-	im->apm_memo /= (im->dimy * im->dimx * im->depth);
-
-	return im->apm_memo;
+	return result;
 }
 
 #endif

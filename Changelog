@@ -1,3 +1,36 @@
+0.4.1
+
+o	Change language to C++.
+
+o	Code cleanup in ale.c, image.h, and gpt.h.
+
+o	Separate into a number of subsections the option descriptions in the
+	README 
+
+o	Add URL information to README
+
+o	Add an experimental drizzling implementation.  Research on drizzling
+	by Richard Hook and Andrew Fruch was brought to the attention of 
+	the author by Dan Kaminsky.
+
+o	Add an option to use the previous frame's final transformation as the
+	default alignment.
+
+o	Change pixel weight data type so that more than 255 images can
+	be merged.
+
+o	Add support for increased spatial extents.  Research on increased
+	spatial extents by Steve Mann was brought to the attention of the
+	author by Dan Egnor.
+
+o	Modify the transformation algorithm to use transformations from the
+	domain of the input image to the range of the target image.  This
+	change is reflected in transformation files.  Maintain support for
+	old transformation file versions, however.
+
+o	Add version information to transformation files and update the version
+	from 0 to 2.
+
 0.4.0p1
 
 o	Merge a bugfix from Debian ALE package version 0.4.0-1.  Without this
