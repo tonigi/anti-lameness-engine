@@ -75,9 +75,9 @@ class scene {
 
 			assert ((int) PLANAR_SUBDIVISION_COUNT == (int) pow(4, PLANAR_SUBDIVISION_DEPTH));
 
-			for (int sde = 0; sde < PLANAR_SUBDIVISION_COUNT; sde++) {
-				color[sde] = d2::pixel(0, 0, 0);
-				weight[sde] = d2::pixel(0, 0, 0);
+			for (int sti = 0; sti < PLANAR_SUBDIVISION_COUNT; sti++) {
+				color[sti] = d2::pixel(0, 0, 0);
+				weight[sti] = d2::pixel(0, 0, 0);
 			}
 
 			aux_var = NULL;
@@ -138,9 +138,9 @@ class scene {
 			if (children[1])
 				children[1]->init_color_counters();
 
-			for (int sde = 0; sde < PLANAR_SUBDIVISION_COUNT; sde++) {
-				color[sde] = d2::pixel(0, 0, 0);
-				weight[sde] = d2::pixel(0, 0, 0);
+			for (int sti = 0; sti < PLANAR_SUBDIVISION_COUNT; sti++) {
+				color[sti] = d2::pixel(0, 0, 0);
+				weight[sti] = d2::pixel(0, 0, 0);
 			}
 		}
 
@@ -573,8 +573,9 @@ class scene {
 					if (!cl->reference[n]->in_bounds(mapped_centroid.xy()))
 						continue;
 
+					int sti = subtriangle_index(_pt, mapped_centroid, this);
 					d2::pixel c1 = cl->reference[n]->get_bl(mapped_centroid.xy());
-					d2::pixel c2 = color;
+					d2::pixel c2 = color[sti];
 
 					error += (c1 - c2).normsq();
 
@@ -654,7 +655,7 @@ class scene {
 	 * P is a set of triangle vertex points mapped into image space.
 	 * TEST_POINT is a test point at distance 1 from a camera.
 	 */
-	 int is_interior(point p[3], point test_point) {
+	 static int is_interior(point p[3], point test_point) {
 
 		int lower[2] = {0, 0};
 		int upper[2] = {0, 0};
@@ -679,6 +680,27 @@ class scene {
 			return 0;
 
 		return 1;
+	}
+
+	/*
+	 * Return a subtriangle index for a given position.
+	 */
+
+	static int subtriangle_index(pt _pt, d2::point test_point, triangle *t) {
+		point p[3];
+
+		for (int v = 0; v < 3; v++)
+			p[v] = _pt.scaled_transform(*t->vertices[v]);
+
+		assert (is_interior(p, point(test_point[0], test_point[1], 1)));
+
+		assert (PLANAR_SUBDIVISION_DEPTH == 0);
+
+		return 0;
+	}
+
+	static int subtriangle_index(pt _pt, point test_point, triangle *t) {
+		return subtriangle_index(_pt, test_point.xy(), t);
 	}
 
 	/*
@@ -864,8 +886,10 @@ class scene {
 				/*
 				 * Set new color and weight.
 				 */
-				t->color = (t->color * t->weight + im->get_pixel(i, j)) / (t->weight + d2::pixel(1, 1, 1));
-				t->weight = t->weight + d2::pixel(1, 1, 1);
+				int sti = subtriangle_index(_pt, d2::point(i, j), t);
+				t->color[sti] = (t->color[sti] * t->weight[sti] + im->get_pixel(i, j)) 
+					      / (t->weight[sti] + d2::pixel(1, 1, 1));
+				t->weight[sti] = t->weight[sti] + d2::pixel(1, 1, 1);
 			}
 
 			free(zbuf);
@@ -1218,8 +1242,11 @@ public:
 
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++)
-		if (zbuf[i * im->width() + j])
-			im->pix(i, j) = zbuf[i * im->width() + j]->color;
+		if (zbuf[i * im->width() + j]) {
+			triangle *t = zbuf[i * im->width() + j];
+			int sti = subtriangle_index(_pt, d2::point(i, j), t);
+			im->pix(i, j) = t->color[sti];
+		}
 
 		free(zbuf);
 
