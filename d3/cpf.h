@@ -49,6 +49,11 @@ class cpf {
 			error("Could not get integer.");
 	}
 
+	static void get_double(double *d) {
+		if (fscanf(load_f, " %lf", d) != 1)
+			error("Could not get double.");
+	}
+
 	static void get_new_line() {
 		int next_character = 0;
 
@@ -62,16 +67,41 @@ class cpf {
 			error("Incompatible version number.");
 	}
 
+	/*
+	 * Type A control point record
+	 *
+	 * A <frame 0 coord 0> <frame 0 coord 1> ... <frame n coord 1>
+	 */
 	static point get_type_a() {
+		get_new_line();
 		return point::undefined();
 	}
 
+	/*
+	 * Type B control point record
+	 *
+	 * B <coord 0> <coord 1> <coord 2>
+	 */
 	static point get_type_b() {
-		return point::undefined();
+		double d[3];
+
+		get_double(&d[0]);
+		get_double(&d[1]);
+		get_double(&d[2]);
+
+		get_new_line();
+
+		return point(d[0], d[1], d[2]);
 	}
 
+	/*
+	 * Type C control point record
+	 *
+	 * C <type A data> <type B data>
+	 */
 	static point get_type_c() {
-		return point::undefined();
+		get_type_a();
+		return get_type_b();
 	}
 
 public:
