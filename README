@@ -33,7 +33,7 @@ Downloading a binary
 	No binaries provided.  Compile from source.
 
 
-Compiling from source (version 0.3.0)
+Compiling from source (version 0.3.x)
 -------------------------------------
 
 You will need GCC and a make utility (GNU Make will do fine).  To compile from
@@ -44,7 +44,7 @@ makefile may need some tweaking on Windows systems (e.g. you may want to write
 the output to 'ale.exe' or something.
 
 
-Using ALE (version 0.3.0)
+Using ALE (version 0.3.x)
 -------------------------
 
 Usage: ale [<options>] <input-files> ... <output-file>
@@ -59,7 +59,7 @@ produced incrementally, and you can inspect the output file as the process
 progresses.  Options are described in the next section.
 
 
-Options (version 0.3.0)
+Options (version 0.3.2)
 -----------------------
 
 Scaling options:

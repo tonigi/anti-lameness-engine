@@ -30,7 +30,7 @@
 #include <time.h>
 #include <math.h>
 
-char *version = "0.3.1"
+char *version = "0.3.2"
 #ifdef USE_MAGICK
 		" (File handler: ImageMagick)";
 #else
@@ -504,7 +504,7 @@ int main(int argc, char *argv[]){
 
 	if (display_image) {
 
-		if (res_scale != 1) {
+		if (res_scale != 1 && hf_enhance != 0) {
 
 			image *pptarget = clone(display_image);
 						    

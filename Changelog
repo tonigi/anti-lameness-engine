@@ -1,3 +1,8 @@
+0.3.2
+
+o	Don't filter high frequencies if we're not enhancing them.  This improves 
+	efficiency, but should not affect output.
+
 0.3.1
 
 o	Output average match statistic.
