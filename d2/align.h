@@ -647,7 +647,6 @@ private:
 			return;
 		}
 
-		pixel_accum ratio_sum, weight_sum;
 		pixel_accum asum, bsum;
 
 		point offset = c.accum->offset();
