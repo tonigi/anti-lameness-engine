@@ -30,13 +30,22 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-char *version = "0.1.2"
+char *version = "0.2.0"
 #ifdef USE_MAGICK
 		" (File handler: ImageMagick)";
 #else
 		" (File handler: PPM binary)";
 #endif
 
+/*
+ * Real-valued type.
+ */
+
+typedef double my_real;
+
+/*
+ * Various character arrays with atavistic names.
+ */
 
 image *display_image, *input_image, *weight_image;
 
@@ -44,17 +53,142 @@ image *display_image, *input_image, *weight_image;
  * Global flags
  */
 
-static int use_rotation = 1;
+static int transform_code = 1;
 static int align_code = 2;
 static double metric = 2;
 static double match_threshold = 0;
 static double minimum_stepsize = 0.125;
 
 /*
+ * Structure to describe a general projective transformation
+ *
+ * Member names roughly correspond to a typical treatment of projective
+ * transformations from:
+ *
+ *	Heckbert, Paul.  "Projective Mappings for Image Warping."  Excerpted 
+ *		from his Master's Thesis (UC Berkeley, 1989).  1995.
+ *
+ * http://www.cs.cmu.edu/afs/cs/project/classes-ph/862.95/www/notes/proj.ps
+ *
+ * For convenience, Heckbert's 'x' and 'y' are noted here numerically by '0'
+ * and '1', respectively.  Thus, 'x0' is denoted 'x[0][0]'; 'y0' is 'x[1][0]'.
+ *
+ * eu[i] are the parameters for euclidean transformations.
+ *
+ */
+struct gpt {
+	my_real input_width, input_height;
+
+	my_real x[2][4];
+
+	my_real eu[3];
+
+	my_real a, b, c, d, e, f, g, h;
+};
+
+/*
+ * Calculate resultant values for a general projective transformation given
+ * that we are transforming from a unit square to a specified arbitrary
+ * quadrilateral.  Follow the calculations outlined in the document by Paul
+ * Heckbert cited above.
+ */
+inline struct gpt gpt_resultant(struct gpt io) {
+	my_real delta_01 = io.x[0][1] - io.x[0][2];
+	my_real delta_02 = io.x[0][3] - io.x[0][2];
+	my_real sigma_0  = io.x[0][0] - io.x[0][1] + io.x[0][2] - io.x[0][3];
+	my_real delta_11 = io.x[1][1] - io.x[1][2];
+	my_real delta_12 = io.x[1][3] - io.x[1][2];
+	my_real sigma_1  = io.x[1][0] - io.x[1][1] + io.x[1][2] - io.x[1][3];
+
+	io.g = (sigma_0  * delta_12 - sigma_1  * delta_02)
+	     / (delta_01 * delta_12 - delta_11 * delta_02)
+	     / io.input_width;
+
+	io.h = (delta_01 * sigma_1  - delta_11 * sigma_0 )
+	     / (delta_01 * delta_12 - delta_11 * delta_02)
+	     / io.input_height;
+
+	io.a = (io.x[0][1] - io.x[0][0] + io.g * io.x[0][1])
+	     / io.input_width;
+	io.b = (io.x[0][3] - io.x[0][0] + io.h * io.x[0][3])
+	     / io.input_height;
+	io.c = io.x[0][0];
+
+	io.d = (io.x[1][1] - io.x[1][0] + io.g * io.x[1][1])
+	     / io.input_width;
+	io.e = (io.x[1][3] - io.x[1][0] + io.h * io.x[1][3])
+	     / io.input_height;
+	io.f = io.x[1][0];
+
+	return io;
+}
+
+/*
+ * Calculate resultant values for a euclidean transformation.
+ */
+inline struct gpt eu_resultant(struct gpt io) {
+	int i;
+	
+	io.x[0][0] = 0;              io.x[1][0] = 0;
+	io.x[0][1] = io.input_width; io.x[1][1] = 0;
+	io.x[0][2] = io.input_width; io.x[1][2] = io.input_height;
+	io.x[0][3] = 0;              io.x[1][3] = io.input_height;
+
+	/*
+	 * Rotate
+	 */
+
+	{
+		my_real theta = io.eu[2] * M_PI / 180;
+
+		for (i = 0; i < 4; i++) {
+			int x[2];
+
+			x[0] = (io.x[0][i] - io.input_width/2)  * cos(theta)
+			     + (io.x[1][i] - io.input_height/2) * sin(theta)
+			     + io.input_width/2;
+			x[1] = (io.x[1][i] - io.input_height/2) * cos(theta)
+			     - (io.x[0][i] - io.input_width/2)  * sin(theta)
+			     + io.input_height/2;
+			
+			io.x[0][i] = x[0];
+			io.x[1][i] = x[1];
+		}
+	}
+
+	/*
+	 * Translate
+	 */
+
+	for (i = 0; i < 4; i++) {
+		io.x[0][i] += io.eu[0];
+		io.x[1][i] += io.eu[1];
+	}
+
+	return gpt_resultant(io);
+}
+
+/*
+ * Calculate a euclidean transform modified in the indicated manner.
+ */
+inline struct gpt eu_modify(struct gpt io, int i1, my_real diff) {
+	io.eu[i1] += diff;
+	return io;
+}
+
+/*
+ * Calculate a general projective transform modified in the indicated manner.
+ */
+inline struct gpt gpt_modify (struct gpt io, int i1, int i2, my_real diff) {
+	io.x[i1][i2] += diff;
+	return io;
+}
+
+/*
  * Not-quite-symmetric difference function.  Determines the difference in areas
  * where the arrays overlap.  Uses the first array's notion of pixel positions.
  */
-inline double diff(image *a, image *b, double xoff, double yoff, double theta) {
+inline double diff(image *a, image *b, struct gpt t) {
 	float result = 0;
 	float divisor = 0;
 	float apm_a = (float) avg_pixel_magnitude(a);
@@ -66,33 +200,24 @@ inline double diff(image *a, image *b, double xoff, double yoff, double theta) {
 		for (j = 0; j < width(a); j++) {
 
 			/*
-			 * Translate
+			 * Transform
 			 */
 
-			float ti = i - yoff;
-			float tj = j - xoff;
+			my_real ti = (t.a * i + t.b * j + t.c)
+				   / (t.g * i + t.h * j + 1  );
 
-			/*
-			 * Rotate
-			 */
-
-			float rti = (ti - height(b)/2) * cos(theta)
-				   + (tj - width(b)/2)  * sin(theta)
-				   + height(b)/2;
-
-			float rtj = (tj - width(b)/2)  * cos(theta)
-				   - (ti - height(b)/2) * sin(theta)
-				   + width(b)/2;
+			my_real tj = (t.d * i + t.e * j + t.f)
+				   / (t.g * i + t.h * j + 1  );
 
 			/*
 			 * Check that the transformed coordinates are within
 			 * the boundaries of array b.
 			 */
 
-			if (rti >= 0
-			 && rti <= height(b) - 1
-			 && rtj >= 0
-			 && rtj <= width(b) - 1){ 
+			if (ti >= 0
+			 && ti <= height(b) - 1
+			 && tj >= 0
+			 && tj <= width(b) - 1){ 
 
 				if (align_code == 0) {
 					/*
@@ -101,7 +226,7 @@ inline double diff(image *a, image *b, double xoff, double yoff, double theta) {
 
 					for (k = 0; k < 3; k++) {
 						float achan = get_pixel_component(a, i, j, k) / apm_a;
-						float bchan = get_bl_component(b, rti, rtj, k) / apm_b;
+						float bchan = get_bl_component(b, ti, tj, k) / apm_b;
 
 						result += pow(fabs(achan - bchan), metric);
 						divisor += pow(achan > bchan ? achan : bchan, metric);
@@ -112,7 +237,7 @@ inline double diff(image *a, image *b, double xoff, double yoff, double theta) {
 					 */
 
 					float achan = get_pixel_component(a, i, j, 1) / apm_a;
-					float bchan = get_bl_component(b, rti, rtj, 1) / apm_b;
+					float bchan = get_bl_component(b, ti, tj, 1) / apm_b;
 
 					result += pow(fabs(achan - bchan), metric);
 					divisor += pow(achan > bchan ? achan : bchan, metric);
@@ -126,7 +251,7 @@ inline double diff(image *a, image *b, double xoff, double yoff, double theta) {
 
 					for (k = 0; k < 3; k++) {
 						asum += get_pixel_component(a, i, j, k) / apm_a;
-						bsum += get_bl_component(b, rti, rtj, k) / apm_b;
+						bsum += get_bl_component(b, ti, tj, k) / apm_b;
 					}
 
 					result += pow(fabs(asum - bsum), metric);
@@ -143,40 +268,31 @@ inline double diff(image *a, image *b, double xoff, double yoff, double theta) {
  * offset.
  */
 inline void
-merge(image *target, image *delta, double xoff, double yoff, double theta) {
+merge(image *target, image *delta, struct gpt t) {
 	int i, j, k;
 
 	for (i = 0; i < height(target); i++)
 		for (j = 0; j < width(target); j++) {
 
 			/*
-			 * Translate
+			 * Transform
 			 */
 
-			double ti = i - yoff;
-			double tj = j - xoff;
+			my_real ti = (t.a * i + t.b * j + t.c)
+				   / (t.g * i + t.h * j + 1  );
 
-			/*
-			 * Rotate
-			 */
-
-			double rti = (ti - height(delta)/2) * cos(theta)
-				   + (tj - width(delta)/2)  * sin(theta)
-				   + height(delta)/2;
-
-			double rtj = (tj - width(delta)/2)  * cos(theta)
-				   - (ti - height(delta)/2) * sin(theta)
-				   + width(delta)/2;
+			my_real tj = (t.d * i + t.e * j + t.f)
+				   / (t.g * i + t.h * j + 1  );
 
 			/*
 			 * Check that the transformed coordinates are within
 			 * the boundaries of the delta frame.
 			 */
 
-			if (rti >= 0
-			 && rti <= height(delta) - 1
-			 && rtj >= 0
-			 && rtj <= width(delta) - 1){ 
+			if (ti >= 0
+			 && ti <= height(delta) - 1
+			 && tj >= 0
+			 && tj <= width(delta) - 1){ 
 
 				/*
 				 * Determine and update merging weight at this pixel
@@ -192,7 +308,7 @@ merge(image *target, image *delta, double xoff, double yoff, double theta) {
 				for (k = 0; k < 3; k++)
 					set_pixel_component(target, i, j, k,
 						(weight * get_pixel_component(target, i, j, k)
-					     +   get_bl_component(delta, rti, rtj, k)) / (weight + 1));
+					     +   get_bl_component(delta, ti, tj, k)) / (weight + 1));
 			}
 		}
 }
@@ -203,9 +319,9 @@ merge(image *target, image *delta, double xoff, double yoff, double theta) {
  */
 inline void update() {
 	double perturb = 32;
-	double xoff = 0, yoff = 0, theta = 0;
-	double here = diff(display_image, input_image, 0, 0, 0);
-	int last = -1;
+	int w = width(input_image), h = height(input_image);
+	struct gpt offset;
+	double here;
 	int lod;
 
 	/*
@@ -216,6 +332,15 @@ inline void update() {
 	int step;
 	image **display_scales = (image **) malloc(steps * sizeof(image *));
 	image **input_scales = (image **) malloc(steps * sizeof(image *));
+
+	/*
+	 * Level-of-detail difference.  Use a level of detail 2^lod_diff finer
+	 * than the adjustment resolution.  Empirically, it's okay to use a
+	 * level-of-detail equal to twice the resolution of the perturbation,
+	 * so we set lod_diff to 1, as 2^1==2.
+	 */
+
+	const int lod_diff = 1;
 
 	/*
 	 * Prepare multiple levels of detail.
@@ -232,62 +357,113 @@ inline void update() {
 	}
 
 	/*
-	 * Simulated annealing perturbation adjustment loop.  Empirically, it's
-	 * okay to use a level-of-detail equal to twice the resolution of the
-	 * perturbation, so we take two pixel steps in each direction until we
-	 * run out of levels of detail, at which point we use the perturbation
-	 * size as the pixel step size.
+	 * Initialize variables used in the main loop.
 	 */
 
-	lod = steps - 2;
+	lod = (steps - 1) - lod_diff;
+
+	offset.eu[0] = 0;
+	offset.eu[1] = 0;
+	offset.eu[2] = 0;
+
+	offset.x[0][0] = 0;               offset.x[1][0] = 0;
+	offset.x[0][1] = w / pow(2, lod); offset.x[1][1] = 0;
+	offset.x[0][2] = w / pow(2, lod); offset.x[1][2] = h / pow(2, lod);
+	offset.x[0][3] = 0;               offset.x[1][3] = h / pow(2, lod);
+
+	offset.input_width = w / pow(2, lod);
+	offset.input_height = h / pow(2, lod);
+
+	offset = gpt_resultant(offset);
+
+	here = diff(display_scales[lod], input_scales[lod], offset);
+
+	/*
+	 * Simulated annealing perturbation adjustment loop.  
+	 */
+
 	while (perturb >= minimum_stepsize) {
 
 		image *di = display_scales[lod];
 		image *ii = input_scales[lod];
 
-		double perturb_radians = (2 * M_PI / 360) * perturb;
-		double perturb_pixels = (perturb > 1) ? 2 : perturb;	/* XXX: magic value 2 */
-		double theta_p_perturb = theta + perturb_radians;
-		double theta_m_perturb = theta - perturb_radians;
-		double xoff_p_perturb = xoff + perturb_pixels;
-		double xoff_m_perturb = xoff - perturb_pixels;
-		double yoff_p_perturb = yoff + perturb_pixels;
-		double yoff_m_perturb = yoff - perturb_pixels;
+		double adj_p = (perturb >= pow(2, lod_diff)) 
+			     ? pow(2, lod_diff) : perturb;
+		double adj_s;
 
-		double test = 0;
+		struct gpt test_t;
+		double test_d;
+		double old_here = here;
 
-		if (last != 1 && (test = diff(di, ii, xoff, yoff_m_perturb, theta)) < here) {
-			yoff = yoff_m_perturb;
-			here = test;
-			last = 0;
-		} else if (last != 0 && (test = diff(di, ii, xoff, yoff_p_perturb, theta)) < here) {
-			yoff = yoff_p_perturb;
-			here = test;
-			last = 1;
-		} else if (last != 3 && (test = diff(di, ii, xoff_m_perturb, yoff, theta)) < here) {
-			xoff = xoff_m_perturb;
-			here = test;
-			last = 2;
-		} else if (last != 2 && (test = diff(di, ii, xoff_p_perturb, yoff, theta)) < here) {
-			xoff = xoff_p_perturb;
-			here = test;
-			last = 3;
-		} else if (last != 5 && (test = diff(di, ii, xoff, yoff, theta_p_perturb)) < here) {
-			theta = theta_p_perturb;
-			here = test;
-			last = 4;
-		} else if (last != 4 && (test = diff(di, ii, xoff, yoff, theta_m_perturb)) < here) {
-			theta = theta_m_perturb;
-			here = test;
-			last = 5;
-		} else {
+		int i, j;
+
+		if (transform_code < 2 && transform_code >= 0) {
+
+			/* 
+			 * Translational or euclidean transformation
+			 */
+
+			for (i = 0; i < 2 + transform_code; i++)
+			for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+					
+				test_t = eu_resultant(
+					eu_modify(offset, i, adj_s));
+				test_d = diff(di, ii, test_t);
+
+				if (test_d < here) {
+					here = test_d;
+					offset = test_t;
+					goto done;
+				}
+			}
+done:
+		
+		} else if (transform_code == 2) {
+
+			/*
+			 * Projective transformation
+			 */
+
+			for (i = 0; i < 4; i++)
+			for (j = 0; j < 2; j++)
+			for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+
+				test_t = gpt_resultant(
+					gpt_modify(offset, j, i, adj_s));
+				test_d = diff(di, ii, test_t);
+
+				if (test_d < here) {
+					here = test_d;
+					offset = test_t;
+					adj_s += 3 * adj_p;
+				}
+			}
+
+		} else assert(0);
+
+		if (here >= old_here) {
 			perturb *= 0.5;
-			last = -1;
 
 			if (lod > 0) {
+				int i, j;
+
+				for (i = 0; i < 2; i++)
+					for (j = 0; j < 4; j++)
+						offset.x[i][j] *= 2;
+
+				for (i = 0; i < 2; i++)
+					offset.eu[i] *= 2;
+
+				offset.input_width *= 2;
+				offset.input_height *= 2;
+
+				offset = gpt_resultant(offset);
+
 				lod--;
-				xoff *= 2;
-				yoff *= 2;
+
+				if (perturb >= minimum_stepsize)
+					here = diff(display_scales[lod], 
+						input_scales[lod], offset);
 			}
 
 			/*
@@ -295,9 +471,7 @@ inline void update() {
 			 */
 
 			fprintf(stderr, ".");
-
 		}
-
 	}
 
 	/*
@@ -317,7 +491,7 @@ inline void update() {
 	 */
 
 	if ((1 - here) * 100 > match_threshold) {
-		merge (display_image, input_image, xoff, yoff, theta);
+		merge (display_image, input_image, offset);
 		fprintf(stderr, " okay (%f%% match)", (1 - here) * 100);
 	} else {
 		fprintf(stderr, " no match (%f%% match)", (1 - here) * 100);
@@ -359,10 +533,12 @@ int main(int argc, char *argv[]){
 			align_code = 1;
 		} else if (!strcmp(argv[i], "--align-sum")) {
 			align_code = 2;
-		} else if (!strcmp(argv[i], "--rotation")) {
-			use_rotation = 1;
-		} else if (!strcmp(argv[i], "--no-rotation")) {
-			use_rotation = 0;
+		} else if (!strcmp(argv[i], "--translation")) {
+			transform_code = 0;
+		} else if (!strcmp(argv[i], "--euclidean")) {
+			transform_code = 1;
+		} else if (!strcmp(argv[i], "--projective")) {
+			transform_code = 2;
 		} else if (!strncmp(argv[i], "--metric=", strlen("--metric="))) {
 			sscanf(argv[i] + strlen("--metric="), "%lf", &metric);
 		} else if (!strncmp(argv[i], "--threshold=", strlen("--threshold="))) {
@@ -416,21 +592,30 @@ int main(int argc, char *argv[]){
 
 	if (display_image == NULL) {
 		fprintf(stderr, 
+			"\n"
 			"Usage: %s [<options>] <input-files> ... <output-file>\n"
 			"   or: %s --version\n"
-			"\n"
-			"Options:\n"
-			"--scale2	Scale input images up by 2\n"
-			"--scale4	Scale input images up by 4\n"
-			"--scale8	Scale input images up by 8\n"
-			"--align-all	Align images using all color channels\n"
-			"--align-green	Align images using the green channel\n"
-			"--align-sum	Align images using a sum of channels [default]\n"
-			"--rotation	Make rotational adjustments to images [default]\n"
-			"--no-rotation	Don't make rotational adjustments to images\n"
-			"--metric=x	Set the error metric exponent (2 is default)\n"
+			"\n\n"
+			"Scaling options:\n\n"
+			"--scale2       Scale input images up by 2\n"
+			"--scale4       Scale input images up by 4\n"
+			"--scale8       Scale input images up by 8\n"
+			"\n\n"
+			"Alignment channel options:\n\n"
+			"--align-all    Align images using all color channels\n"
+			"--align-green  Align images using the green channel\n"
+			"--align-sum    Align images using a sum of channels [default]\n"
+			"\n\n"
+			"Transformation options:\n\n"
+			"--translation  Only adjust the position of images\n"
+			"--euclidean    Adjust the position and orientation of images [default]\n"
+			"--projective   Use projective transformations.  Best quality, but slow.\n"
+			"\n\n"
+			"Tunable parameters:\n\n"
+			"--metric=x     Set the error metric exponent (2 is default)\n"
 			"--threshold=x  Min. match threshold; a perfect match is 100.  (0 is default)\n"
-			"--stepsize=x	Min. correction step, in pixels or degrees (0.125 is default)\n",
+			"--stepsize=x   Min. correction step, in pixels or degrees (0.125 is default)\n"
+			"\n",
 			argv[0], argv[0]);
 		return 1;
 	} else {

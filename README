@@ -33,7 +33,7 @@ Downloading a binary
 	No binaries provided.  Compile from source.
 
 
-Compiling from source (version 0.1.2)
+Compiling from source (version 0.2.0)
 -------------------------------------
 
 You will need GCC and a make utility (GNU Make will do fine).  To compile from
@@ -44,11 +44,11 @@ makefile may need some tweaking on Windows systems (e.g. you may want to write
 the output to 'ale.exe' or something.
 
 
-Using ALE (version 0.1.2)
+Using ALE (version 0.2.0)
 -------------------------
 
-Usage: ./ale [<options>] <input-files> ... <output-file>
-   or: ./ale --version
+Usage: ale [<options>] <input-files> ... <output-file>
+   or: ale --version
 
 This program clips several supplemental frames against an original frame and
 merges the results into a single output file result.  The first input file is
@@ -59,25 +59,48 @@ produced incrementally, and you can inspect the output file as the process
 progresses.  Options are described in the next section.
 
 
-Options (version 0.1.2)
+Options (version 0.2.0)
 -----------------------
 
-Options:
---scale2	Scale input images up by 2
---scale4	Scale input images up by 4
---scale8	Scale input images up by 8
---align-all	Align images using all color channels
---align-green	Align images using the green channel
---align-sum	Align images using a sum of all channels [default]
---rotation	Make rotational adjustments to images [default]
---no-rotation	Don't make rotational adjustments to images
---metric=x	Set the error metric exponent (2 is default)
---threshold=x   Min. match threshold; a perfect match is 100.  (0 is default)
---stepsize=x	Min. correction step, in pixels or degrees (0.125 default)
+Scaling options:
+
+--scale2       Scale input images up by 2
+--scale4       Scale input images up by 4
+--scale8       Scale input images up by 8
+
+
+Alignment channel options:
+
+--align-all    Align images using all color channels
+--align-green  Align images using the green channel
+--align-sum    Align images using a sum of channels [default]
+
+
+Transformation options:
+
+--translation  Only adjust the position of images
+--euclidean    Adjust the position and orientation of images [default]
+--projective   Use projective transformations.  Best quality, but slow.
+
+
+Tunable parameters:
+
+--metric=x     Set the error metric exponent (2 is default)
+--threshold=x  Min. match threshold; a perfect match is 100.  (0 is default)
+--stepsize=x   Min. correction step, in pixels or degrees (0.125 is default)
+
 
 If a scaling argument is given, the program will internally scale all input
 frames up by 2, 4, or 8, respectively, resulting in an output file of this
 larger scale.  
+
+As of version 0.2.0, ALE supports general projective transformations.  This is
+the 'correct' type of transformation to use with images obtained from digital
+cameras.  However, the default behavior is to only use euclidean
+transformations (i.e. rotation and translation).  This is the same default
+behavior used in ALE 0.1.x.  To use general projective transformations, specify
+the option '--projective'.  Note that alignment can take a fairly long time
+when this option is used.
 
 The error metric for pixel components a and b is (abs(a-b)^x),
 where x is the error metric exponent.  Larger exponents will cause the
