@@ -63,7 +63,7 @@ static inline void error_ppm(const char *filename) {
 static inline int digest_comment(FILE *f, const char *filename, extended_t *extended) {
 	int next = '#';
 	int value;
-	double fvalue;
+	double fvalue, fvalue2;
 
 	while (next != '\n' && next != '\r' && next != EOF) {
 		while (next == ' ' || next == '\t' || next == '#') {
@@ -78,6 +78,8 @@ static inline int digest_comment(FILE *f, const char *filename, extended_t *exte
 			exit(1);
 		}
 
+		fvalue2 = 1;
+
 		if (extended->is_extended && fscanf(f, "Black-level: %d", &value) == 1)
 			extended->black_level = value;
 		else if (extended->is_extended && fscanf(f, "ISO: %lf", &fvalue) == 1)
@@ -86,8 +88,8 @@ static inline int digest_comment(FILE *f, const char *filename, extended_t *exte
 			extended->gain = fvalue;
 		else if (extended->is_extended && fscanf(f, "Aperture: %lf", &fvalue) == 1)
 			extended->aperture = fvalue;
-		else if (extended->is_extended && fscanf(f, "Shutter: %lf", &fvalue) == 1)
-			extended->shutter = fvalue;
+		else if (extended->is_extended && fscanf(f, "Shutter: %lf/%lf", &fvalue, &fvalue2) > 0)
+			extended->shutter = fvalue / fvalue2;
 		else if (next != '\n' && next != '\r' && next != EOF)
 			next = fgetc(f);
 
