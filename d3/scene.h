@@ -366,6 +366,10 @@ class scene {
 			point b = _pt.scaled_transform(*vertices[1]);
 			point c = _pt.scaled_transform(*vertices[2]);
 
+			a[2] = 0;
+			b[2] = 0;
+			c[2] = 0;
+
 			return 0.5 
 			     * a.lengthto(b) 
 			     * a.lengthto(c)
@@ -380,6 +384,36 @@ class scene {
 
 		point centroid() {
 			return (*vertices[0] + *vertices[1] + *vertices[2]) / 3;
+		}
+
+		/*
+		 * Return the maximum angle formed with a neighbor triangle.
+		 */
+		ale_pos max_neighbor_angle(ale_pos displacement = 0) {
+
+			ale_pos max_angle = 0;
+
+			point _normal = normal();
+
+			for (int n = 0; n < 3; n++) {
+				if (neighbors[n] == NULL)
+					continue;
+
+				int srfn = self_ref_from_neighbor(n);
+
+				point a = *neighbors[n]->vertices[srfn];
+				point b = *neighbors[n]->vertices[(srfn + 1) % 3] + displacement * _normal;
+				point c = *neighbors[n]->vertices[(srfn + 2) % 3] + displacement * _normal;
+
+				point unscaled_dnn = a.xproduct(b, c);
+
+				ale_pos angle = point(0, 0, 0).anglebetw(unscaled_dnn, _normal);
+
+				if (angle > max_angle)
+					max_angle = angle;
+			}
+
+			return max_angle;
 		}
 
 		/*
@@ -407,12 +441,12 @@ class scene {
 			/*
 			 * As a basis for determining the step size for
 			 * adjustment, determine the average distance between
-			 * vertices.
+			 * vertices and divide it by a constant.
 			 */
 
 			ale_accum step = (vertices[0]->lengthto(*vertices[1])
 				        + vertices[1]->lengthto(*vertices[2])
-					+ vertices[2]->lengthto(*vertices[0])) / 3;
+					+ vertices[2]->lengthto(*vertices[0])) / 21;
 
 			/*
 			 * There are three possibilities for each triangle visited:
@@ -428,9 +462,10 @@ class scene {
 			 * error is selected.
 			 */
 
-			int best = -1;
+			int best = 0;
 			ale_accum lowest_error = +0;
 			lowest_error = +1 / lowest_error;
+			ale_accum divisors[3];
 
 			assert (lowest_error > 0);
 			assert (isinf(lowest_error) == 1);
@@ -441,6 +476,18 @@ class scene {
 				ale_accum divisor = 0;
 
 				point adjusted_centroid = centroid() + normal() * (step * dir);
+
+				/*
+				 * Eliminate from consideration any change that increases to more than
+				 * a given amount the angle between the normals of adjacent triangles.
+				 */
+
+				if (max_neighbor_angle(step * dir) > M_PI / 12)
+					continue;
+
+				/*
+				 * Iterate through all frames.
+				 */
 
 				for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
 					if (!frame_list[n])
@@ -471,7 +518,16 @@ class scene {
 					lowest_error = error;
 					best = dir;
 				}
+
+				divisors[dir + 1] = divisor;
 			}
+
+			/*
+			 * Don't move triangles out of the view pyramid of any
+			 * frame.
+			 */
+			if (divisors[best + 1] < divisors[1])
+				best = 0;
 
 			for (int v = 0; v < 3; v++)
 				(*vertices[v]) += normal() * (step * best);
@@ -736,10 +792,7 @@ class scene {
 	 */
 	static int density_test(int split) {
 
-		// triangle_head[0]->write_tree(1);
-		// triangle_head[1]->write_tree(1);
-
-		ale_pos scale = (split ? 1 : 2);
+		ale_pos scale = (split ? 1 : 1);
 		d2::pixel init_value = d2::pixel(1, 1, 1) * (ale_real) (split ? 1 : 0);
 
 		triangle_head[0]->init_aux_stats(init_value);
@@ -795,9 +848,9 @@ class scene {
 
 				ale_pos area = t->compute_area(_pt);
 
-				if (area < 4 && split)
+				if (area < 3 && split)
 					t->aux_stat = d2::pixel(-1, -1, -1);
-				else if (area < 4 && !split && t->parent)
+				else if (area < 1 && !split && t->parent)
 					t->parent->aux_stat = d2::pixel(-1, -1, -1);
 			}
 
@@ -814,12 +867,12 @@ class scene {
 		return 0;
 	}
 
-	static void density_test_split() {
-		while(density_test(1));
+	static int density_test_split() {
+		return density_test(1);
 	}
 
-	static void density_test_unsplit() {
-		while(density_test(0));
+	static int density_test_unsplit() {
+		return density_test(0);
 	}
 
 	/*
@@ -976,8 +1029,8 @@ public:
 		triangle_head[0]->neighbors[0] = triangle_head[1];
 
 		triangle_head[1]->vertices[0] = new point(max[0], max[1], 0);
-		triangle_head[1]->vertices[1] = new point(min[0], max[1], 0);
-		triangle_head[1]->vertices[2] = new point(max[0], min[1], 0);
+		triangle_head[1]->vertices[1] = triangle_head[0]->vertices[2];
+		triangle_head[1]->vertices[2] = triangle_head[0]->vertices[1];
 
 		triangle_head[1]->neighbors[0] = triangle_head[0];
 
@@ -1132,17 +1185,15 @@ public:
 
 		while(reduce_lod());
 
-		density_test_split();
-		density_test_unsplit();
-		color_average();
-
 		while ((improved /*&& count < 40*/) || cl->next) {
+
+			color_average();
 
 			/*
 			 * Write output incrementally, if desired.
 			 */
 
-			if (inc_bit)
+			if (inc_bit && (!improved || !(rand() % 100)))
 			for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
 				if (d_out[i] != NULL) {
 					const d2::image *im = depth(i);
@@ -1156,22 +1207,31 @@ public:
 					delete im;
 				}
 			}
+			
+			if (density_test_unsplit())
+				continue;
 
+			if (density_test_split() && !density_test_unsplit())
+				continue;
+
+//			triangle_head[0]->write_tree(1);
+//			triangle_head[1]->write_tree(1);
+			
 			/*
 			 * Increase LOD if no improvements were achieved in the
 			 * most recent pass at the previous LOD.
 			 */
 
-			if (!improved) {
+			if (!improved /* || count > 40 */) {
+//				triangle_head[0]->write_tree(1);
+//				triangle_head[1]->write_tree(1);
 				fprintf(stderr, ".");
 				assert (cl->next);
 				increase_lod();
-				density_test_split();
-				density_test_unsplit();
 				count = 0;
+				improved = 1;
+				continue;
 			}
-
-			color_average();
 
 			count++;
 			improved = 0;
