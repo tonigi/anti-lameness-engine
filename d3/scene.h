@@ -37,6 +37,38 @@
 class scene {
 
 	/*
+	 * Structure to hold input frame information for a given level of
+	 * detail.
+	 */
+	struct lod {
+
+		/*
+		 * Reference image for each frame.
+		 */
+
+		d2::image **reference;
+
+		/*
+		 * Scale factor
+		 */
+
+		double sf;
+
+		/*
+		 * Next element
+		 */
+
+		struct lod *next;
+
+	};
+
+	/*
+	 * Current level-of-detail
+	 */
+
+	static struct lod *cl;
+
+	/*
 	 * Structure to hold a subdivisible triangle.
 	 */
 
@@ -474,6 +506,33 @@ class scene {
 			return (*vertices[0] + *vertices[1] + *vertices[2]) / 3;
 		}
 
+		point element_centroid(int e) {
+			point result = centroid();
+
+			/*
+			 * Adjust the position, starting with the least
+			 * significant digits.
+			 */
+			ale_pos multiplier = pow(2, -PLANAR_SUBDIVISION_DEPTH);
+			for (int d = 0; d < PLANAR_SUBDIVISION_DEPTH; d++) {
+				int digit = e % 4;
+
+				for (int v = 0; v < 3; v++)
+				if  (digit == v) {
+					point offset = *vertices[v] - centroid();
+					result += offset * multiplier;
+				}
+
+				if (digit == 3)
+					result = 2 * centroid() - result;
+
+				multiplier *= 4;
+				e /= 4;
+			}
+
+			return result;
+		}
+
 		/*
 		 * Return the maximum angle formed with a neighbor triangle.
 		 * Searches two neighbors deep.
@@ -524,6 +583,123 @@ class scene {
 			}
 
 			return max_angle;
+		}
+
+		/*
+		 * Calculate the error between the model and the reference
+		 * images.
+		 */
+		ale_accum reference_error() {
+			assert(!children[0] && !children[1]);
+
+			d2::pixel error(0, 0, 0);
+			d2::pixel divisor(0, 0, 0);
+
+			/*
+			 * Iterate over all elements
+			 */
+
+			for (unsigned int e = 0; e < PLANAR_SUBDIVISION_COUNT; e++) {
+
+				/*
+				 * For all input frames from which this
+				 * triangle is visible, determine the color at
+				 * the projected element centroid, and accumulate
+				 * the difference.
+				 */
+
+				point centroid = element_centroid(e);
+
+				for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+					if (!frame_list[n])
+						continue;
+
+					pt _pt = align::projective(n);
+					_pt.scale(cl->sf / _pt.scale_2d());
+
+					/*
+					 * Map the centroid into image space.
+					 */
+
+					point mapped_centroid = _pt.scaled_transform(centroid);
+
+					/*
+					 * Check the bounds
+					 */
+
+					if (!cl->reference[n]->in_bounds(mapped_centroid.xy()))
+						continue;
+
+					d2::pixel ca = color[e];
+					d2::pixel cb = cl->reference[n]->get_bl(mapped_centroid.xy());
+
+					for (int k = 0; k < 3; k++) {
+						error += pow(ca[k] - cb[k], 2);
+						weight += pow(ca[k] > cb[k] ? ca[k] : cb[k], 2);
+					}
+				}
+			}
+
+			error /= weight;
+
+			return error;
+
+		}
+
+		/*
+		 * Recolor, assuming that visibility remains constant.
+		 */
+		void recolor() {
+			assert(!children[0] && !children[1]);
+
+			init_color_counters();
+
+			/*
+			 * Iterate over all elements
+			 */
+
+			for (unsigned int e = 0; e < PLANAR_SUBDIVISION_COUNT; e++) {
+				d2::pixel color = d2::pixel(0, 0, 0);
+				d2::pixel weight = d2::pixel(0, 0, 0);
+
+				/*
+				 * For all input frames from which this
+				 * triangle is visible, determine the color at
+				 * the projected element centroid.  Average all
+				 * such colors.
+				 */
+
+				point centroid = element_centroid(e);
+
+				for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+					if (!frame_list[n])
+						continue;
+
+					pt _pt = align::projective(n);
+					_pt.scale(cl->sf / _pt.scale_2d());
+
+					/*
+					 * Map the centroid into image space.
+					 */
+
+					point mapped_centroid = _pt.scaled_transform(centroid);
+
+					/*
+					 * Check the bounds
+					 */
+
+					if (!cl->reference[n]->in_bounds(mapped_centroid.xy()))
+						continue;
+
+					color += cl->reference[n]->get_bl(mapped_centroid.xy());
+					weight += pixel(1, 1, 1);
+				}
+
+				color /= weight;
+
+				this->color[e] = color;
+				this->weight[e] = weight;
+			}
 		}
 
 		/*
@@ -590,70 +766,42 @@ class scene {
 			assert (lowest_error > 0);
 			assert (isinf(lowest_error) == 1);
 
+			point _normal = normal();
+
+			point orig_vertices[3] = {*vertices[0], *vertices[1], *vertices[2]};
+
 			for (int dir = 1; dir >= -1; dir--) {
 
-				ale_accum error = 0;
-				ale_accum divisor = 0;
-
-				point adjusted_centroid = centroid() + normal() * (step * dir);
+				for (int v = 0; v < 3; v++)
+					*vertices[v] = orig_vertices[v];
 
 				/*
 				 * Eliminate from consideration any change that increases to more than
 				 * a given amount the angle between the normals of adjacent triangles.
 				 */
 
-//				if (max_neighbor_angle_2(step * dir) > 0)
-//					continue;
 				if (max_neighbor_angle_2(step * dir) > M_PI / 4)
 					continue;
 
 				/*
-				 * Iterate through all frames.
+				 * Adjust the vertices
 				 */
 
-				for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
-					if (!frame_list[n])
-						continue;
-					
-					pt _pt = align::projective(n);
-					_pt.scale(cl->sf / _pt.scale_2d());
+				for (int v = 0; v < 3; v++)
+					*vertices[v] = orig_vertices[v] + _normal * step * dir;
 
-					point mapped_centroid = _pt.scaled_transform(adjusted_centroid);
+				/*
+				 * Check the error
+				 */
 
-					if (!cl->reference[n]->in_bounds(mapped_centroid.xy()))
-						continue;
-
-					int sti = subtriangle_index(_pt, mapped_centroid, this, normal() * step * dir);
-					d2::pixel c1 = cl->reference[n]->get_bl(mapped_centroid.xy());
-					d2::pixel c2 = color[sti];
-
-					error += (c1 - c2).normsq();
-
-					if (c1.normsq() > c2.normsq()) 
-						divisor += c1.normsq();
-					else
-						divisor += c2.normsq();
-				}
-
-				error /= divisor;
-
-				if (error < lowest_error) {
+				if (reference_error() < lowest_error) {
 					lowest_error = error;
 					best = dir;
 				}
-
-				divisors[dir + 1] = divisor;
 			}
 
-			/*
-			 * Don't move triangles out of the view pyramid of any
-			 * frame.
-			 */
-			if (divisors[best + 1] < divisors[1])
-				best = 0;
-
 			for (int v = 0; v < 3; v++)
-				(*vertices[v]) += normal() * (step * best);
+				(*vertices[v]) = orig_vertices[v] + _normal * (step * best);
 
 			if (best != 0)
 				return 1;
@@ -666,38 +814,6 @@ class scene {
 	 * Use a pair of trees to store the triangles.
 	 */
 	static struct triangle *triangle_head[2];
-
-	/*
-	 * Structure to hold input frame information for a given level of
-	 * detail.
-	 */
-	struct lod {
-
-		/*
-		 * Reference image for each frame.
-		 */
-
-		d2::image **reference;
-
-		/*
-		 * Scale factor
-		 */
-
-		double sf;
-
-		/*
-		 * Next element
-		 */
-
-		struct lod *next;
-
-	};
-
-	/*
-	 * Current level-of-detail
-	 */
-
-	static struct lod *cl;
 
 	/*
 	 * Upper/lower test for interiority.
