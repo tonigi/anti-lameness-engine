@@ -1,5 +1,5 @@
-// Copyright 2003, 2004 David Hilvert <dhilvert@auricle.dyndns.org>,
-//                                    <dhilvert@ugcs.caltech.edu>
+// Copyright 2003, 2004, 2005 David Hilvert <dhilvert@auricle.dyndns.org>,
+//                                          <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
 
@@ -31,8 +31,8 @@
  * PLANAR_SUBDIVISION_COUNT must be exactly pow(4, PLANAR_SUBDIVISION_DEPTH)
  */
 
-#define PLANAR_SUBDIVISION_DEPTH 0
-#define PLANAR_SUBDIVISION_COUNT 1
+#define PLANAR_SUBDIVISION_DEPTH 1
+#define PLANAR_SUBDIVISION_COUNT 4
 
 class scene {
 
@@ -573,7 +573,7 @@ class scene {
 					if (!cl->reference[n]->in_bounds(mapped_centroid.xy()))
 						continue;
 
-					int sti = subtriangle_index(_pt, mapped_centroid, this);
+					int sti = subtriangle_index(_pt, mapped_centroid, this, normal() * step * dir);
 					d2::pixel c1 = cl->reference[n]->get_bl(mapped_centroid.xy());
 					d2::pixel c2 = color[sti];
 
@@ -655,7 +655,7 @@ class scene {
 	 * P is a set of triangle vertex points mapped into image space.
 	 * TEST_POINT is a test point at distance 1 from a camera.
 	 */
-	 static int is_interior(point p[3], point test_point) {
+	 static int is_interior(point p[3], point test_point, int print_on_failure = 0) {
 
 		int lower[2] = {0, 0};
 		int upper[2] = {0, 0};
@@ -665,7 +665,9 @@ class scene {
 			point nv = p[(v + 1) % 3];
 
 			for (int d = 0; d < 2; d++)
-			if ((test_point[d] - cv[d]) * (test_point[d] - nv[d]) < 0) {
+			if ((test_point[d] - cv[d]) * (test_point[d] - nv[d]) <= 0
+			 && nv[d] - cv[d] != 0) {
+
 				int e = (d + 1) % 2;
 				ale_pos travel = (test_point[d] - cv[d]) / (nv[d] - cv[d]);
 				ale_pos intersect = cv[e] + travel * (nv[e] - cv[e]);
@@ -676,8 +678,18 @@ class scene {
 			}
 		}
 
-		if (!lower[0] || !upper[0] || !lower[1] || !upper[1])
+		if (!lower[0] || !upper[0] || !lower[1] || !upper[1]) {
+			if (print_on_failure && 0) {
+				 fprintf(stderr, "is_interior({{%f, %f}, {%f, %f}, {%f, %f}}, {%f, %f})",
+						 p[0][0], p[0][1],
+						 p[1][0], p[1][1],
+						 p[2][0], p[2][1],
+						 test_point[0], test_point[1]);
+				fprintf(stderr, " = 0\n");
+			}
+
 			return 0;
+		}
 
 		return 1;
 	}
@@ -686,20 +698,52 @@ class scene {
 	 * Return a subtriangle index for a given position.
 	 */
 
-	static int subtriangle_index(pt _pt, d2::point test_point, triangle *t) {
+	static int subtriangle_index(pt _pt, d2::point test_point, point p_w[3], int depth, int prefix) {
+		point p_i[3];
+
+		for (int v = 0; v < 3; v++)
+			p_i[v] = _pt.scaled_transform(p_w[v]);
+
+		if (!is_interior(p_i, point(test_point[0], test_point[1], 1), 1)) {
+			/*
+			 * XXX: Error condition ... what should we do here?
+			 */
+			// assert(0);
+			return prefix;
+		}
+
+		if (depth == 0)
+			return prefix;
+
+		point hp_w[3];
+		point hp_i[3];
+
+		for (int v = 0; v < 3; v++)
+			hp_w[v] = (p_w[(v + 1) % 3] + p_w[(v + 2) % 3]) / 2;
+
+		for (int v = 0; v < 3; v++)
+			hp_i[v] = _pt.scaled_transform(hp_w[v]);
+
+		for (int v = 0; v < 3; v++) {
+			point arg_array[3] = {p_i[v], hp_i[(v + 2) % 3], hp_i[(v + 1) % 3]};
+
+			if (is_interior(arg_array, point(test_point[0], test_point[1], 1)))
+				return subtriangle_index(_pt, test_point, arg_array, depth - 1, prefix * 4 + v);
+		}
+
+		return subtriangle_index(_pt, test_point, hp_w, depth - 1, prefix * 4 + 3);
+	}
+
+	static int subtriangle_index(pt _pt, d2::point test_point, triangle *t, point triangle_offset = point(0, 0, 0)) {
 		point p[3];
 
 		for (int v = 0; v < 3; v++)
-			p[v] = _pt.scaled_transform(*t->vertices[v]);
+			p[v] = *t->vertices[v] + triangle_offset;
 
-		assert (is_interior(p, point(test_point[0], test_point[1], 1)));
-
-		assert (PLANAR_SUBDIVISION_DEPTH == 0);
-
-		return 0;
+		return subtriangle_index(_pt, test_point, p, PLANAR_SUBDIVISION_DEPTH, 0);
 	}
 
-	static int subtriangle_index(pt _pt, point test_point, triangle *t) {
+	static int subtriangle_index(pt _pt, point test_point, triangle *t, point triangle_offset = point(0, 0, 0)) {
 		return subtriangle_index(_pt, test_point.xy(), t);
 	}
 
