@@ -36,12 +36,13 @@ class scene {
 	struct triangle {
 
 		/*
-		 * Stats
+		 * Stats and auxiliary variables
 		 */
 
 		d2::pixel color;
 		d2::pixel weight;
 		d2::pixel aux_stat;
+		void *aux_var;
 
 		/*
 		 * Connectivity
@@ -61,6 +62,7 @@ class scene {
 		triangle() {
 			color = d2::pixel(0, 0, 0);
 			weight = d2::pixel(0, 0, 0);
+			aux_var = NULL;
 
 			vertices[0] = NULL;
 			vertices[1] = NULL;
@@ -127,21 +129,45 @@ class scene {
 			aux_stat = value;
 		}
 
+		void free_aux_vars() {
+			if (children[0])
+				children[0]->free_aux_vars();
+			if (children[1])
+				children[1]->free_aux_vars();
+
+			free(aux_var);
+			aux_var = NULL;
+		}
+		
 
 		/*
 		 * Get the neighbor link from a given neighbor that references
 		 * the 'this' object.
 		 */
 
-		int self_ref_from_neighbor(int n) {
+		int self_ref_from_neighbor(int n) const {
 			triangle *t = neighbors[n];
 
 			assert (t);
 
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < 3; i++)
 				if (t->neighbors[i] == this)
 					return i;
-			}
+
+			fprintf(stderr, "error in %p\n", this);
+			assert(0);
+
+			return -1;
+		}
+
+		/*
+		 * Get a reference to a given vertex.
+		 */
+
+		int vertex_ref(point *p) const {
+			for (int v = 0; v < 3; v++)
+				if (vertices[v] == p)
+					return v;
 
 			fprintf(stderr, "error in %p\n", this);
 			assert(0);
@@ -594,69 +620,6 @@ class scene {
 	}
 
 	/*
-	 * Measure the error between reference images and the scene.
-	 */
-	static ale_accum scene_error() {
-
-		ale_accum error = 0;
-		ale_accum max_est = 0;
-
-		/*
-		 * Iterate over all frames
-		 */
-		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
-
-			ale_pos sf = cl->sf;
-
-			/*
-			 * Z-buffer to map points to triangles
-			 */
-			pt _pt = align::projective(n);
-			_pt.scale(sf / _pt.scale_2d());
-			unsigned int height = (unsigned int) floor(_pt.scaled_height());
-			unsigned int width  = (unsigned int) floor(_pt.scaled_width());
-			triangle **zbuf = init_zbuf(_pt);
-			zbuffer(_pt, zbuf, triangle_head[0]);
-			zbuffer(_pt, zbuf, triangle_head[1]);
-
-			/*
-			 * Iterate over all points in the frame.
-			 */
-			for (unsigned int i = 0; i < height; i++)
-			for (unsigned int j = 0; j < width;  j++) {
-				triangle *t = zbuf[i * width + j];
-
-				/*
-				 * Check for points without associated triangles.
-				 */
-				if (!t)
-					continue;
-
-				/*
-				 * Calculate the difference.
-				 */
-
-				d2::pixel ref = cl->reference[n]->pix(i, j);
-				d2::pixel scn = t->color;
-				d2::pixel diff = ref - scn;
-
-				for (int k = 0; k < 3; k++) {
-					error += diff[k] * diff[k];
-
-					if (ref[k] > scn[k])
-						max_est += ref[k] * ref[k];
-					else
-						max_est += scn[k] * scn[k];
-				}
-			}
-
-			free(zbuf);
-		}
-
-		return sqrt(error / max_est);
-	}
-
-	/*
 	 * Test the density of the mesh for correct sampling in
 	 * color_average(), and split (or unsplit) triangles if necessary,
 	 * continuing until no more operations can be performed.  
@@ -750,78 +713,75 @@ class scene {
 	}
 
 	/*
+	 * Determine triangle visibility.
+	 */
+	static void determine_visibility() {
+		/*
+		 * Iterate over all frames
+		 */
+		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+
+			d2::image *im = cl->reference[n];
+			ale_pos sf = cl->sf;
+
+			/*
+			 * Z-buffer to map points to triangles
+			 */
+			pt _pt = align::projective(n);
+			_pt.scale(sf / _pt.scale_2d());
+			assert (im->width() == (unsigned int) floor(_pt.scaled_width()));
+			assert (im->height() == (unsigned int) floor(_pt.scaled_height()));
+			triangle **zbuf = init_zbuf(_pt);
+			zbuffer(_pt, zbuf, triangle_head[0]);
+			zbuffer(_pt, zbuf, triangle_head[1]);
+
+			/*
+			 * Iterate over all points in the frame, adding this frame
+			 * to the list of frames including the associated triangle.
+			 */
+			for (unsigned int i = 0; i < im->height(); i++)
+			for (unsigned int j = 0; j < im->width();  j++) {
+				triangle *t = zbuf[i * im->width() + j];
+
+				/*
+				 * Check for points without associated triangles.
+				 */
+				if (!t)
+					continue;
+
+				/*
+				 * Add this frame to the list of frames in which this
+				 * triangle is visible, or start a new list if none exists
+				 * yet.
+				 */
+
+
+				if (t->aux_var == NULL)
+					t->aux_var = calloc(d2::image_rw::count(), sizeof(char));
+
+				char *aux_var = (char *) t->aux_var;
+
+				assert (aux_var);
+
+				aux_var[n] = 1;
+			}
+
+			free(zbuf);
+		}
+	}
+
+	/*
 	 * Adjust vertices to minimize scene error.  Return 
 	 * non-zero if improvements are made.
 	 */
 	static int adjust_vertices() {
-		int improved = 0;
+		/*
+		 * Determine the visibility of triangles from frames.
+		 */
 
-		triangle *t = triangle_head[0];
+		determine_visibility();
 
-		while (t) {
-
-			while (t->division_new_vertex) {
-				assert (t->children[0]);
-				assert (t->children[1]);
-				t = t->children[0];
-			}
-
-			/*
-			 * Base displacement on the cross product of two
-			 * triangle edges
-			 */
-
-			point n = t->vertices[0]->xproduct(*t->vertices[1], *t->vertices[2]);
-			      n = n / sqrt(n.norm()) / 10;
-
-			/*
-			 * Determine the initial error
-			 */
-
-			ale_accum err = scene_error();
-			ale_accum temp_err;
-
-			/*
-			 * Iterate over vertices, checking the effects of
-			 * changes on the scene error.
-			 */
-
-			for (int v = 0; v < 3; v++) {
-
-				*t->vertices[v] += n;
-				temp_err = scene_error();
-
-				if (temp_err < err) {
-					err = temp_err;
-					improved = 1;
-					continue;
-				}
-
-				*t->vertices[v] -= 2 * n;
-				temp_err = scene_error();
-
-				if (temp_err < err) {
-					err = temp_err;
-					improved = 1;
-					continue;
-				}
-
-				*t->vertices[v] += n;
-			}
-
-			while(t->parent && t == t->parent->children[1]) {
-				t = t->parent;
-			}
-
-			if (t->parent == NULL && t == triangle_head[0])
-				t = triangle_head[1];
-			else if (t->parent == NULL)
-				t = NULL;
-			else if (t == t->parent->children[0])
-				t = t->parent->children[1];
-		}
-
-		return improved;
+		return 0;
 	}
 
 public:
