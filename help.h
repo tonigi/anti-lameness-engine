@@ -304,7 +304,7 @@ public:
 			BETWEEN_SECTIONS
 			"Bayer pattern:\n"
 			HEADER_SPACE
-			"--bayer <b>       Set default bayer pattern to <b>, one of:\n"
+			"--bayer <b>       Set the bayer pattern to <b>, one of:\n"
 			"                    (clockwise from top left pixel)\n"
 			"                      rgbg      Red-green-blue-green\n"
 			"                      gbgr      Green-blue-green-red\n"
