@@ -79,9 +79,8 @@ public:
 		 * Add an offset so that the upper-left corner is the origin.
 		 */
 
-		ale_pos offset = sqrt(w*w + h*h) / 2;
-		p[0] += offset;
-		p[1] += offset;
+		p[0] += h / 2;
+		p[1] += w / 2;
 
 		return p;
 	}
