@@ -253,6 +253,14 @@ class scene {
 		}
 
 		/*
+		 * Calculate area.
+		 */
+
+		ale_accum area() {
+			return 0.5 * vertices[0]->xproduct(*vertices[1], *vertices[2]).norm();
+		}
+
+		/*
 		 * Get the neighbor link from a given neighbor that references
 		 * the 'this' object.
 		 */
@@ -843,7 +851,7 @@ class scene {
 
 			for (int n = 0; n < 3; n++)
 			if  (neighbors[n]) {
-				ale_accum neighbor_error = neighbors[n]->accumulate_neighbor_error();
+				ale_accum neighbor_error = neighbors[n]->accumulate_neighbor_error() * neighbors[n]->area();
 				if (finite(neighbor_error)) {
 					error += neighbors[n]->accumulate_neighbor_error();
 					error_count++;
@@ -910,36 +918,45 @@ class scene {
 			 * error is selected.
 			 */
 
-			int best = 0;
+			int improved = 0;
 			ale_accum lowest_error = +0;
 			lowest_error = +1 / lowest_error;
 
 			assert (lowest_error > 0);
 			assert (isinf(lowest_error) == 1);
 
-			point _normal = normal();
+			point best_vertices[3] = {*vertices[0], *vertices[1], *vertices[2]};
 
-			point orig_vertices[3] = {*vertices[0], *vertices[1], *vertices[2]};
+			/*
+			 * Evaluate the error at the current position.
+			 */
 
-			for (int dir = 1; dir >= -1; dir--) {
+			color_neighbors_negative();
+			lowest_error = accumulate_neighbor_error();
 
-				for (int v = 0; v < 3; v++)
-					*vertices[v] = orig_vertices[v];
+			/*
+			 * Test modifications to the current position.
+			 */
+
+			for (int v = 0; v < 3; v++)
+			for (int axis = 0; axis < 3; axis++)
+			for (int dir = -1; dir <= 1; dir += 2) {
+
+				/*
+				 * Adjust the vertex under consideration
+				 */
+
+				*vertices[v] = best_vertices[v] + point::unit(axis) * step * dir;
 
 				/*
 				 * Eliminate from consideration any change that increases to more than
 				 * a given amount the angle between the normals of adjacent triangles.
 				 */
 
-				if (max_neighbor_angle_2(step * dir) > M_PI / 3)
+				if (max_neighbor_angle_2() > M_PI / 3) {
+					*vertices[v] = best_vertices[v];
 					continue;
-
-				/*
-				 * Adjust the vertices
-				 */
-
-				for (int v = 0; v < 3; v++)
-					*vertices[v] = orig_vertices[v] + _normal * step * dir;
+				}
 
 				/*
 				 * Recalculate the color
@@ -955,20 +972,18 @@ class scene {
 				ale_accum error = accumulate_neighbor_error();
 				if (error < lowest_error) {
 					lowest_error = error;
-					best = dir;
+					improved = 1;
+					best_vertices[v] = *vertices[v];
+					break;
+				} else {
+					*vertices[v] = best_vertices[v];
 				}
 
 				if (!finite(error))
 					fprintf(stderr, "dir %d, error %e\n", dir, error);
 			}
 
-			for (int v = 0; v < 3; v++)
-				(*vertices[v]) = orig_vertices[v] + _normal * (step * best);
-
-			if (best != 0)
-				return 1;
-
-			return 0;
+			return improved;
 		}
 	};
 

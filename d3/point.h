@@ -47,6 +47,17 @@ public:
 		x[2] = p[2];
 	}
 
+	static point unit(int dimension) {
+		if (dimension == 0)
+			return point(1, 0, 0);
+		if (dimension == 1)
+			return point(0, 1, 0);
+		if (dimension == 2)
+			return point(0, 0, 1);
+
+		assert(0);
+	}
+
 	/*
 	 * Z-values of zero are almost never the right thing to do, but
 	 * for cases when they are ...
