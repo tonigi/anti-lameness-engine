@@ -194,6 +194,13 @@ public:
 		             pp[2] * qq[0] - pp[0] * qq[2],
 			     pp[0] * qq[1] - pp[1] * qq[0]);
 	}
+
+	/*
+	 * Determine the dot product
+	 */
+	ale_pos dproduct(const point &p) {
+		return x[0] * p[0] + x[1] * p[1] + x[2] * p[2];
+	}
 };
 
 inline point operator*(const point &p, double d) {
