@@ -853,9 +853,6 @@ public:
 		ui::get()->ip_start();
                 done = 1;
                 approximation = optimizations::get_ip_working_image(input->get_image());
-		fprintf(stderr, "\n\napproximation offset: [%f %f] \n\n", 
-				approximation->offset()[0],
-				approximation->offset()[1]);
                 _ip();
 		ui::get()->ip_done();
 
