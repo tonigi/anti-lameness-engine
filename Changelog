@@ -13,9 +13,8 @@ o	Perform Irani-Peleg updating separately by channel instead of
 	using vector operations.  This allows divide-by-zero and other
 	conditions to be localized to particular channels.
 
-o	Modify the Irani-Peleg renderer to use estimate-based certainty
-	instead of one-sided certainty.  This seems to improve noise
-	characteristics significantly.
+o	Modify the Irani-Peleg renderer to use estimate-based certainty.  This
+	seems to improve noise characteristics significantly.
 
 o	Write the results of tonal registration as a comment in the 
 	transformation data file.
