@@ -793,6 +793,21 @@ static inline void tsave_info(struct tsave_t *t, const char *filename) {
 }
 
 /*
+ * Write information to a transformation data file indicating the tonal
+ * registration multiplier.
+ */
+
+static inline void tsave_trm(struct tsave_t *t, ale_real r, ale_real g, ale_real b) {
+       if (t != NULL) {
+               t->file = fopen(t->filename, "a");
+
+               fprintf(t->file, "# Comment: Exposure [r=%f g=%f b=%f]\n", r, g, b);
+
+               fclose(t->file);
+       }
+}
+
+/*
  * Destroy a tload_t transformation data file structure.
  */
 

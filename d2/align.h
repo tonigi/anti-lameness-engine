@@ -1539,6 +1539,13 @@ private:
 			latest_ok = 0;
 			ui::get()->alignment_no_match();
 		}
+ 
+                /*
+                 * Write the tonal registration multiplier as a comment.
+                 */
+ 
+                pixel trm = image_rw::exp(m).get_multiplier();
+                tsave_trm(tsave, trm[0], trm[1], trm[2]);
 
 		/*
 		 * Save the transformation information
