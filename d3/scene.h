@@ -37,6 +37,52 @@
 class scene {
 
 	/*
+	 * Ray-Triangle intersection utility function
+	 */
+	point rt_intersect(point r, point vertices[3]) {
+		point a = v[0];
+		point b = v[1];
+		point c = v[2];
+		point d = a - b;
+		point e = a - c;
+
+		ale_pos m[3][3] = {
+			{ r[0], r[1], r[2] },
+			{ d[0], d[1], d[2] },
+			{ e[0], e[1], e[2] }
+		};
+
+		ale_pos m_det = r[0] * d[1] * e[2] 
+			      + r[1] * d[2] * e[0]
+			      + r[2] * d[0] * e[1]
+			      - e[0] * d[1] * r[2]
+			      - d[0] * r[1] * e[2]
+			      - r[0] * e[1] * d[2];
+
+		ale_pos m_inverse_t[3][3] = {
+			{
+				(d[1] * e[2] - d[2] * e[1]) / m_det,
+				(d[2] * e[0] - d[0] * e[2]) / m_det,
+				(d[0] * e[1] - d[1] * e[0]) / m_det
+			}, {
+				(e[1] * r[2] - e[2] * r[1]) / m_det,
+				(e[2] * r[0] - e[0] * r[2]) / m_det,
+				(e[0] * r[1] - e[1] * r[0]) / m_det,
+			}, {
+				(r[1] * d[2] - r[2] * d[1]) / m_det,
+				(r[2] * d[0] - r[0] * d[2]) / m_det,
+				(r[0] * d[1] - r[1] * d[0]) / m_det,
+			}
+		};
+
+		point k(a[0] * m[0][0] + a[1] * m[0][1] + a[2] * m[0][2],
+		        a[0] * m[1][0] + a[1] * m[1][1] + a[2] * m[1][2],
+			a[0] * m[2][0] + a[1] * m[2][1] + a[2] * m[2][2]);
+
+		return k * r;
+	}
+
+	/*
 	 * Structure to hold input frame information for a given level of
 	 * detail.
 	 */
@@ -710,6 +756,7 @@ class scene {
 
 					color += cl->reference[n]->get_bl(mapped_centroid.xy());
 					weight += d2::pixel(1, 1, 1);
+					color = weight * (mapped_centroid.xy()[1] / cl->reference[n]->width());
 				}
 
 				color /= weight;
@@ -797,8 +844,8 @@ class scene {
 				 * a given amount the angle between the normals of adjacent triangles.
 				 */
 
-				if (max_neighbor_angle_2(step * dir) > M_PI / 2)
-					continue;
+//				if (max_neighbor_angle_2(step * dir) > M_PI / 3)
+//					continue;
 
 				/*
 				 * Adjust the vertices
@@ -875,7 +922,7 @@ class scene {
 		}
 
 		if (!lower[0] || !upper[0] || !lower[1] || !upper[1]) {
-			if (print_on_failure) {
+			if (print_on_failure && 0) {
 				 fprintf(stderr, "is_interior({{%f, %f}, {%f, %f}, {%f, %f}}, {%f, %f})",
 						 p[0][0], p[0][1],
 						 p[1][0], p[1][1],
@@ -1546,23 +1593,23 @@ public:
 
 		while(reduce_lod());
 
-		while ((improved && count < 10) || cl->next) {
+		for (;;) {
 
-			fprintf(stderr, "unsplitting ...\n");
+			// fprintf(stderr, "unsplitting ...\n");
 
-			if (density_test_unsplit())
+//			if (density_test_unsplit())
+//				continue;
+
+			// fprintf(stderr, "splitting/unsplitting ...\n");
+
+			if (density_test_split())
 				continue;
 
-			fprintf(stderr, "splitting/unsplitting ...\n");
-
-			if (density_test_split() && !density_test_unsplit())
-				continue;
-
-			fprintf(stderr, "color averaging...\n");
+			// fprintf(stderr, "color averaging...\n");
 
 			color_average();
 			
-			fprintf(stderr, "using recolor() to recolor elements...\n");
+			// fprintf(stderr, "using recolor() to recolor elements...\n");
 
 			determine_visibility();
 
@@ -1578,7 +1625,7 @@ public:
 
 			if (inc_bit && (!improved || !(rand() % 2)))
 			for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
-				fprintf(stderr, "writing image...\n");
+				// fprintf(stderr, "writing image...\n");
 				if (d_out[i] != NULL) {
 					const d2::image *im = depth(i);
 					d2::image_rw::write_image(d_out[i], im, exp_out, 1, 1);
@@ -1600,11 +1647,14 @@ public:
 			 * most recent pass at the previous LOD.
 			 */
 
-			if (!improved || count > 40 ) {
+			if (!improved || count > 40) {
 //				triangle_head[0]->write_tree(1);
 //				triangle_head[1]->write_tree(1);
 				fprintf(stderr, ".");
-				assert (cl->next);
+
+				if (!cl->next)
+					break;
+				
 				fprintf(stderr, "increasing LOD ...\n");
 				increase_lod();
 				count = 0;
@@ -1619,7 +1669,7 @@ public:
 			 * Try improving the result by moving existing vertices.
 			 */
 
-			fprintf(stderr, "adjusting vertices [disabled] ...\n");
+			// fprintf(stderr, "adjusting vertices ...\n");
 
 			improved |= adjust_vertices();
 		}
