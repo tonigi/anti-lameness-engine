@@ -158,7 +158,7 @@ public:
 		for (int head = 0; head < 2; head++) {
 			triangle_head[head] = new triangle;
 			assert(triangle_head[head]);
-			if (!triangle_head[0] || !triangle_head[1])
+			if (!triangle_head[head])
 				ui::get()->memory_error("triangular approximation of 3D scene");
 		}
 
