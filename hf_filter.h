@@ -145,6 +145,7 @@ public:
 	}
 
 	virtual int operator()() {
+		input->operator()();
 		fprintf(stderr, "Enhancing high frequencies");
 		done = 1;
 		done_image = input->get_image()->clone();

@@ -40,7 +40,7 @@
  * Version Information
  */
 
-char *version = "0.4.5"
+char *version = "0.4.6"
 #ifdef USE_MAGICK
 		" (File handler: ImageMagick)";
 #else

@@ -1,4 +1,4 @@
-ALE version 0.4.5
+ALE version 0.4.6
 =================
 
 
@@ -62,7 +62,7 @@ produced incrementally, and the output file is updated as the process
 progresses.  Options are described in the next section.
 
 
-Options (version 0.4.5)
+Options (version 0.4.6)
 -----------------------
 
 
@@ -131,7 +131,7 @@ File output options:
 --no-inc          Don't produce incremental output.
 
 
-Option Descriptions (version 0.4.5)
+Option Descriptions (version 0.4.6)
 -----------------------------------
 
 

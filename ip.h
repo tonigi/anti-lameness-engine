@@ -309,6 +309,7 @@ public:
         }
 
         virtual int operator()() {
+		input->operator()();
                 fprintf(stderr, "Iterating Irani-Peleg");
                 done = 1;
                 done_image = input->get_image()->clone();

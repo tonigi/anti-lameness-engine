@@ -246,7 +246,10 @@ public:
 			if (i == 0) {
 				const image *im = image_rw::open(0);
 
-				drizzle_image = image_rw::copy(0);
+				// drizzle_image = image_rw::copy(0);
+				drizzle_image = new_image(im->height(), im->width(), 3);
+				drizzle_image->scale(scale_factor);
+
 				drizzle_weight = new_image_weights(drizzle_image->height(),
 						drizzle_image->width(), 1);
 

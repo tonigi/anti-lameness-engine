@@ -1,3 +1,13 @@
+0.4.6
+
+o	Allow --ip and --hf-enhance to be used together.
+
+o	Initialize the drizzled image to be uniformly black.  This fixes
+	a bug introduced in 0.4.2.
+
+o	Allocate the correct size image for drizzling.  This fixes a bug
+	introduced in 0.4.5.
+
 0.4.5
 
 o	Ensure correct transformation scaling and difference calculation after
