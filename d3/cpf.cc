@@ -1,4 +1,4 @@
-// Copyright 2003 David Hilvert <dhilvert@auricle.dyndns.org>, 
+// Copyright 2005 David Hilvert <dhilvert@auricle.dyndns.org>,
 //                              <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
@@ -19,18 +19,15 @@
 */
 
 /*
- * Top-level header file for classes treating scenes as three-dimensional data.
+ * d3/cpf.cc: Control point file handler static variables.
  */
 
-#include "time.h"
-#include "d2.h"
+#include "cpf.h"
 
-namespace d3 {
+FILE *cpf::load_f;
+FILE *cpf::save_f;
+int cpf::load_version;
 
-#include "d3/align.h"
-#include "d3/et.h"
-#include "d3/point.h"
-#include "d3/cpf.h"
-#include "d3/scene.h"
-	
-}
+const char *cpf::load_n;
+const char *cpf::save_n;
+int cpf::save_version;
