@@ -22,35 +22,12 @@
 
 #include "my_real.h"
 #include "image.h"
+#include "point.h"
 #include <math.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-
-/*
- * Structure to describe a point
- */
-class point {
-private:	
-	my_real x[2];
-
-public:
-	point() {
-	}
-
-	point(my_real x0, my_real x1) {
-		x[0] = x0;
-		x[1] = x1;
-	}
-
-	my_real &operator[](int i) {
-		assert (i >= 0);
-		assert (i < 2);
-
-		return x[i];
-	}
-};
 
 /*
  * Structure to describe a transformation of euclidean or projective kind.
@@ -68,125 +45,214 @@ public:
  *
  * eu[i] are the parameters for euclidean transformations.
  *
+ * We consider points to be transformed as homogeneous coordinate vectors
+ * multiplied on the right of the transformation matrix, and so we consider the
+ * transformation matrix as
+ *
+ *	-       -
+ * 	| a b c |
+ *	| d e f |
+ * 	| g h i |
+ *	-       -
+ *
+ * where element i is always equal to 1.
+ *
  */
 struct transformation {
 private:
 	my_real input_height, input_width;
 	point x[4];
 	my_real eu[3];
-	my_real a, b, c, d, e, f, g, h;
+	my_real a, b, c, d, e, f, g, h;			// matrix
 	my_real _a, _b, _c, _d, _e, _f, _g, _h;		// matrix inverse
 	int is_projective;
-	int gpt_resultant_memo;
-	int gpt_resultant_inverse_memo;
+	int resultant_memo;
+	int resultant_inverse_memo;
 
 	/*
-	 * Calculate resultant matrix values for a general projective
-	 * transformation given that we are mapping from the source domain of
-	 * dimension (input_height * input_width) to a specified arbitrary
-	 * quadrilateral.  Follow the calculations outlined in the document by
-	 * Paul Heckbert cited above for the case in which the source domain is
-	 * a unit square, and then divide to correct for the scale factor in
-	 * each dimension.
+	 * Calculate resultant matrix values.
 	 */
-	void gpt_resultant() {
-
-		assert (is_projective);
+	void resultant() {
 
 		/*
 		 * If we already know the answers, don't bother calculating 
 		 * them again.
 		 */
 
-		if (gpt_resultant_memo)
+		if (resultant_memo)
 			return;
 
-		/*
-		 * Perform calculations as outlined in Heckbert.
-		 */
+		if (is_projective) {
 
-		my_real delta_01 = x[1][0] - x[2][0];
-		my_real delta_02 = x[3][0] - x[2][0];
-		my_real sigma_0  = x[0][0] - x[1][0] + x[2][0] - x[3][0];
-		my_real delta_11 = x[1][1] - x[2][1];                   
-		my_real delta_12 = x[3][1] - x[2][1];                   
-		my_real sigma_1  = x[0][1] - x[1][1] + x[2][1] - x[3][1];
+			/*
+			 * Calculate resultant matrix values for a general
+			 * projective transformation given that we are mapping
+			 * from the source domain of dimension (input_height *
+			 * input_width) to a specified arbitrary quadrilateral.
+			 * Follow the calculations outlined in the document by
+			 * Paul Heckbert cited above for the case in which the
+			 * source domain is a unit square and then divide to
+			 * correct for the scale factor in each dimension.
+			 */
 
-		g = (sigma_0  * delta_12 - sigma_1  * delta_02)
-		  / (delta_01 * delta_12 - delta_11 * delta_02);
+			/*
+			 * First, perform calculations as outlined in Heckbert.
+			 */
 
-		h = (delta_01 * sigma_1  - delta_11 * sigma_0 )
-		  / (delta_01 * delta_12 - delta_11 * delta_02);
+			my_real delta_01 = x[1][0] - x[2][0];
+			my_real delta_02 = x[3][0] - x[2][0];
+			my_real sigma_0  = x[0][0] - x[1][0] + x[2][0] - x[3][0];
+			my_real delta_11 = x[1][1] - x[2][1];                   
+			my_real delta_12 = x[3][1] - x[2][1];                   
+			my_real sigma_1  = x[0][1] - x[1][1] + x[2][1] - x[3][1];
 
-		a = (x[1][0] - x[0][0] + g * x[1][0]);
-		b = (x[3][0] - x[0][0] + h * x[3][0]);
-		c =  x[0][0];                       
-                                                    
-		d = (x[1][1] - x[0][1] + g * x[1][1]);
-		e = (x[3][1] - x[0][1] + h * x[3][1]);
-		f =  x[0][1];
+			g = (sigma_0  * delta_12 - sigma_1  * delta_02)
+			  / (delta_01 * delta_12 - delta_11 * delta_02);
 
-		/* 
-		 * We want to transform from a rectangle of the width and
-		 * height of our image.
-		 */
+			h = (delta_01 * sigma_1  - delta_11 * sigma_0 )
+			  / (delta_01 * delta_12 - delta_11 * delta_02);
 
-		a /= input_height;
-		b /= input_width;
-		d /= input_height;
-		e /= input_width;
-		g /= input_height;
-		h /= input_width;
+			a = (x[1][0] - x[0][0] + g * x[1][0]);
+			b = (x[3][0] - x[0][0] + h * x[3][0]);
+			c =  x[0][0];                       
+							    
+			d = (x[1][1] - x[0][1] + g * x[1][1]);
+			e = (x[3][1] - x[0][1] + h * x[3][1]);
+			f =  x[0][1];
 
-		gpt_resultant_memo = 1;
+			/* 
+			 * Finish by scaling so that our transformation maps
+			 * from a rectangle of width and height matching the
+			 * width and height of the input image.
+			 */
+
+			a /= input_height;
+			b /= input_width;
+			d /= input_height;
+			e /= input_width;
+			g /= input_height;
+			h /= input_width;
+
+		} else {
+
+			/*
+			 * Calculate matrix values for a euclidean
+			 * transformation.  
+			 *
+			 * We want to translate the image center by (eu[0],
+			 * eu[1]) and rotate the image about the center by
+			 * eu[2] degrees.  This is equivalent to the following
+			 * sequence of affine transformations applied to the
+			 * point to be transformed:
+			 *
+			 * translate by (-h/2, -w/2)
+			 * rotate    by eu[2] degrees about the origin
+			 * translate by (h/2, w/2)
+			 * translate by (eu[0], eu[1])
+			 *
+			 * The matrix assigned below represents the result of
+			 * combining all of these transformations.  Matrix
+			 * elements g and h are always zero in an affine
+			 * transformation.
+			 */ 
+			
+			my_real theta = eu[2] * M_PI / 180;
+
+			a = cos(theta);
+			b = sin(theta);
+			c = 0.5 * (input_height * (1 - a) - input_width * b) + eu[0];
+			d = -b;
+			e = a;
+			f = 0.5 * (input_height * b + input_width * (1 - a)) + eu[1];
+			g = 0;
+			h = 0;
+		} 
+
+		resultant_memo = 1;
 	}
 
 	/*
-	 * Calculate the matrix values of the inverse transform
-	 * 
-	 * We assume a matrix of the following form to describe a projective
-	 * transformation, and take the inverse of the matrix to obtain the
-	 * inverse transform:
-	 *
-	 *	-       -
-	 * 	| a b c |
-	 *	| d e f |
-	 * 	| g h i |
-	 *	-       -
-	 *
-	 * In the input matrix, i == 1.
+	 * Calculate the inverse transform matrix values.
 	 */
-	void gpt_resultant_inverse () {
-
-		assert (is_projective);
+	void resultant_inverse () {
 
 		/*
 		 * If we already know the answers, don't bother calculating 
 		 * them again.
 		 */
 
-		if (gpt_resultant_inverse_memo) {
-
-			// I think this is always true.
-			assert (gpt_resultant_memo);
-
+		if (resultant_inverse_memo)
 			return;
+
+		if (is_projective) {
+
+			resultant();
+
+			/*
+			 * For projective transformations, we calculate
+			 * the inverse of the forward transformation 
+			 * matrix.
+			 */
+
+			my_real scale = a * e - b * d;
+
+			_a = (e * 1 - f * h) / scale;
+			_b = (h * c - 1 * b) / scale;
+			_c = (b * f - c * e) / scale;
+			_d = (f * g - d * 1) / scale;
+			_e = (1 * a - g * c) / scale;
+			_f = (c * d - a * f) / scale;
+			_g = (d * h - e * g) / scale;
+			_h = (g * b - h * a) / scale;
+
+		} else {
+
+			/*
+			 * In cursory trials, using an explicit matrix inverse
+			 * with Euclidean transformations can result in
+			 * different (and at least in some cases worse)
+			 * alignment characteristics than the method employed
+			 * below, which doesn't appear to yield appreciably
+			 * worse performance than an explicit matrix inverse.
+			 *
+			 * For Euclidean transformations, we invert the
+			 * constituent transformations of the forward
+			 * transformation and apply them in reverse order:
+			 *
+			 * translate by (-eu[0], -eu[1]) 
+			 * translate by (-h/2, -w/2) 
+			 * rotate    by -eu[2] degrees about the origin
+			 * translate by (h/2, w/2)
+			 *
+			 * The matrix assigned below represents the result of
+			 * combining all of these transformations.  Matrix
+			 * elements g and h are always zero in an affine
+			 * transformation.
+			 */ 
+
+			if (!resultant_memo) {
+				my_real theta = eu[2] * M_PI / 180;
+
+				a = cos(theta);
+				b = sin(theta);
+			}
+
+			_a = a;
+			_b = -b;
+			_c = (-eu[0] - input_height/2) * a 
+			   - (-eu[1] - input_width/2) * b
+			   + input_height/2;
+			_d = b;
+			_e = a;
+			_f = (-eu[0] - input_height/2) * b 
+			   + (-eu[1] - input_width/2) * a
+			   + input_width/2;
+			_g = 0;
+			_h = 0;
+
 		}
 
-		gpt_resultant();
-
-		my_real scale = a * e - b * d;
-
-		_a = (e * 1 - f * h) / scale;
-		_b = (h * c - 1 * b) / scale;
-		_c = (b * f - c * e) / scale;
-		_d = (f * g - d * 1) / scale;
-		_e = (1 * a - g * c) / scale;
-		_f = (c * d - a * f) / scale;
-		_g = (d * h - e * g) / scale;
-		_h = (g * b - h * a) / scale;
-
-		gpt_resultant_inverse_memo = 1;
+		resultant_inverse_memo = 1;
 	}
 
 public:	
@@ -204,119 +270,19 @@ public:
 	       return input_height;
 	}
 
-	
-	/*
-	 * Calculate projective transformation parameters from a euclidean
-	 * transformation.
-	 */
-	void eu_to_gpt() {
-		int i;
-		my_real theta = eu[2] * M_PI / 180;
-
-		assert(!is_projective);
-		
-		x[0][0] = 0;            x[0][1] = 0;
-		x[1][0] = input_height; x[1][1] = 0;
-		x[2][0] = input_height; x[2][1] = input_width;
-		x[3][0] = 0;            x[3][1] = input_width;
-
-		/*
-		 * Rotate and translate the quadrilateral we are 
-		 * projecting into.
-		 */
-
-		for (i = 0; i < 4; i++) {
-			double new_x[2];
-
-			/*
-			 * Rotate
-			 */
-
-			new_x[0] = (x[i][0] - input_height/2) * cos(theta)
-				 + (x[i][1] - input_width/2)  * sin(theta)
-				 + input_height/2;
-			new_x[1] = (x[i][1] - input_width/2)  * cos(theta)
-				 - (x[i][0] - input_height/2) * sin(theta)
-				 + input_width/2;
-
-			/*
-			 * Translate
-			 */
-
-			x[i][0] = new_x[0] + eu[0];
-			x[i][1] = new_x[1] + eu[1];
-
-		}
-
-		is_projective = 1;
-	}
-
-	/*
-	 * Calculate euclidean identity transform for a given image.
-	 */
-	static struct transformation eu_identity(image *i) {
-		struct transformation r;
-
-		r.eu[0] = 0;
-		r.eu[1] = 0;
-		r.eu[2] = 0;
-		r.input_width = i->width();
-		r.input_height = i->height();
-		r.is_projective = 0;
-		r.gpt_resultant_memo = 0;
-		r.gpt_resultant_inverse_memo = 0;
-
-		return r;
-	}
-
-	/*
-	 * Calculate projective identity transform for a given image.
-	 */
-	static transformation gpt_identity(image *i) {
-		struct transformation r = eu_identity(i);
-
-		r.eu_to_gpt();
-
-		return r;
-	}
-
 	/*
 	 * Transform point p.
 	 */
 	struct point transform(struct point p) {
 		struct point result;
 
-		if (is_projective) {
+		resultant();
 
-			gpt_resultant();
+		result[0] = (a * p[0] + b * p[1] + c)
+			  / (g * p[0] + h * p[1] + 1);
+		result[1] = (d * p[0] + e * p[1] + f)
+			  / (g * p[0] + h * p[1] + 1);
 
-			result[0] = (a * p[0] + b * p[1] + c)
-			          / (g * p[0] + h * p[1] + 1);
-			result[1] = (d * p[0] + e * p[1] + f)
-				  / (g * p[0] + h * p[1] + 1);
-
-		} else {
-			my_real theta = eu[2] * M_PI / 180;
-
-			/*
-			 * Rotate
-			 */
-
-			result[0] = (p[0] - input_height/2) * cos(theta)
-				  + (p[1] - input_width/2)  * sin(theta)
-				  + input_height/2;
-			result[1] = (p[1] - input_width/2)  * cos(theta)
-				  - (p[0] - input_height/2) * sin(theta)
-				  + input_width/2;
-
-			/*
-			 * Translate
-			 */
-
-			result[0] += eu[0];
-			result[1] += eu[1];
-
-		}	
 		return result;
 	}
 
@@ -331,58 +297,91 @@ public:
 	 * Map point p using the inverse of the transform.
 	 */
 	struct point inverse_transform(struct point p) {
-
 		struct point result;
 
-		if (is_projective) {
+		resultant_inverse();
 
-			gpt_resultant_inverse();
-
-			result[0] = (_a * p[0] + _b * p[1] + _c)
-			          / (_g * p[0] + _h * p[1] +  1);
-			result[1] = (_d * p[0] + _e * p[1] + _f)
-				  / (_g * p[0] + _h * p[1] +  1);
-
-		} else {
-
-			my_real theta = eu[2] * M_PI / 180;
-			point t;
-
-			/*
-			 * Translate
-			 */
-
-			t[0] = p[0] - eu[0];
-			t[1] = p[1] - eu[1];
-
-			/*
-			 * Rotate
-			 */
-
-			result[0] = (t[0] - input_height/2) * cos(-theta)
-				  + (t[1] - input_width/2)  * sin(-theta)
-				  + input_height/2;
-			result[1] = (t[1] - input_width/2)  * cos(-theta)
-				  - (t[0] - input_height/2) * sin(-theta)
-				  + input_width/2;
-
-		}
+		result[0] = (_a * p[0] + _b * p[1] + _c)
+			  / (_g * p[0] + _h * p[1] +  1);
+		result[1] = (_d * p[0] + _e * p[1] + _f)
+			  / (_g * p[0] + _h * p[1] +  1);
 
 		return result;
+	}
+
+	
+	/*
+	 * Calculate projective transformation parameters from a euclidean
+	 * transformation.
+	 */
+	void eu_to_gpt() {
+
+		assert(!is_projective);
+
+		x[0] = transform( point(      0      ,      0      ) );
+		x[1] = transform( point( input_height,      0      ) );
+		x[2] = transform( point( input_height, input_width ) );
+		x[3] = transform( point(      0      , input_width ) );
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
+		is_projective = 1;
+	}
+
+	/*
+	 * Calculate euclidean identity transform for a given image.
+	 */
+	static struct transformation eu_identity(const image *i) {
+		struct transformation r;
+
+		r.resultant_memo = 0;
+		r.resultant_inverse_memo = 0;
+
+		r.eu[0] = 0;
+		r.eu[1] = 0;
+		r.eu[2] = 0;
+		r.input_width = i->width();
+		r.input_height = i->height();
+
+		r.is_projective = 0;
+
+		return r;
+	}
+
+	/*
+	 * Calculate projective identity transform for a given image.
+	 */
+	static transformation gpt_identity(const image *i) {
+		struct transformation r = eu_identity(i);
+
+		r.eu_to_gpt();
+
+		return r;
 	}
 
 	/*
 	 * Modify a euclidean transform in the indicated manner.
 	 */
 	void eu_modify(int i1, my_real diff) {
+
 		assert(!is_projective);
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
 		eu[i1] += diff;
+
 	}
 
 	/*
 	 * Modify all euclidean parameters at once.
 	 */
 	void eu_set(my_real eu[3]) {
+		
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
 		for (int i = 0; i < 3; i++)
 			this->eu[i] = eu[i];
 
@@ -390,6 +389,7 @@ public:
 			is_projective = 0;
 			eu_to_gpt();
 		}
+
 	}
 
 	/*
@@ -406,19 +406,29 @@ public:
 	 * Modify a projective transform in the indicated manner.
 	 */
 	void gpt_modify(int i1, int i2, my_real diff) {
-		is_projective = 1;
-		gpt_resultant_memo = 0;
-		gpt_resultant_inverse_memo = 0;
+
+		assert (is_projective);
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
 		x[i2][i1] += diff;
+
 	}
 
 	/*
 	 * Modify all projective parameters at once.
 	 */
 	void gpt_set(point x[4]) {
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
 		is_projective = 1;
+
 		for (int i = 0; i < 4; i++)
 			this->x[i] = x[i];
+
 	}
 
 	/*
@@ -447,10 +457,11 @@ public:
 	 * Rescale a transform with a given factor.
 	 */
 	void rescale(double factor) {
-		if (is_projective) {
 
-			gpt_resultant_inverse_memo = 0;
-			gpt_resultant_memo = 0;
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
+		if (is_projective) {
 
 			for (int i = 0; i < 4; i++)
 			for (int j = 0; j < 2; j++)
@@ -473,10 +484,13 @@ public:
 	 * If we are using a projective transform, we may need to change the
 	 * corner points to reflect a different image size.
 	 */
-	void rescale(image *im) {
+	void rescale(const image *im) {
 
 		int new_height = im->height();
 		int new_width  = im->width();
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
 
 		if (is_projective) {
 
@@ -515,8 +529,6 @@ public:
 			x[2] = _y;
 			x[3] = _z;
 
-			gpt_resultant_memo = 0;
-			gpt_resultant_inverse_memo = 0;
 		}
 
 		input_height = new_height;
@@ -563,16 +575,16 @@ public:
 		  /  input_height;
 		f =  x[0][1];
 
-		gpt_resultant_memo = 1;
-		gpt_resultant_inverse_memo = 0;
+		resultant_memo = 1;
+		resultant_inverse_memo = 0;
 
 		this->x[0] = inverse_transform( point(      0      ,      0      ) );
 		this->x[1] = inverse_transform( point( input_height,      0      ) );
 		this->x[2] = inverse_transform( point( input_height, input_width ) );
 		this->x[3] = inverse_transform( point(      0      , input_width ) );
 
-		gpt_resultant_memo = 0;
-		gpt_resultant_inverse_memo = 0;
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
 	}
 
 	/*
@@ -580,6 +592,12 @@ public:
 	 * from version 0 of the transformation file.
 	 */
 	void eu_v0_set(my_real eu[3]) {
+
+		/*
+		 * This is slightly modified code from version
+		 * 0.4.0p1.
+		 */
+
 		int i;
 		
 		x[0][0] = 0;              x[0][1] = 0;
@@ -643,7 +661,11 @@ public:
 		if (center_left_image[1] > center_image[1])
 			this->eu[2] = this->eu[2] + 180;
 
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
 		is_projective = 0;
+
 	}
 
 };

@@ -24,11 +24,13 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
+#include "point.h"
 
 template <class colorT>
 class image_base {
 private:
 	unsigned int _dimx, _dimy, _depth;
+	point _offset;
 	colorT *_p;
 	int _apm_memo;
 	double _apm;
@@ -36,6 +38,7 @@ public:
 	image_base (unsigned int dimy, unsigned int dimx, unsigned int depth) {
 		_dimx = dimx;
 		_dimy = dimy;
+		_offset = point(0, 0);
 		_depth = depth;
 		_apm_memo = 0;
 
@@ -53,20 +56,24 @@ public:
 		free(_p);
 	}
 
-	unsigned int width() {
+	point offset() const {
+		return _offset;
+	}
+
+	unsigned int width() const {
 		return _dimx;
 	}
 
-	unsigned int height() {
+	unsigned int height() const {
 		return _dimy;
 	}
 
-	unsigned int depth() {
+	unsigned int depth() const {
 		return _depth;
 	}
 
 	colorT get_pixel_component(unsigned int y, unsigned int x, 
-			unsigned int color) {
+			unsigned int color) const {
 
 		assert (x < _dimx);
 		assert (y < _dimy);
@@ -92,7 +99,7 @@ public:
 	 * Get a color value at a given position using bilinear interpolation between the
 	 * four nearest pixels.
 	 */
-	colorT get_bl_component(double y, double x, unsigned int color) {
+	colorT get_bl_component(double y, double x, unsigned int color) const {
 
 		assert (y >= 0);
 		assert (x >= 0);
@@ -191,6 +198,9 @@ public:
 		_depth = is->_depth;
 		_apm_memo = 0;
 
+		_offset[0] -= top;
+		_offset[1] -= left;
+
 		is->_p = NULL;
 
 		delete is;
@@ -200,7 +210,7 @@ public:
 	/*
 	 * Clone 
 	 */
-	image_base<colorT> *clone() {
+	image_base<colorT> *clone() const {
 		image_base<colorT> *ic = new image_base<colorT>(
 			height(), width(), depth());
 
@@ -224,21 +234,25 @@ public:
 	 * Calculate the average (mean) magnitude of a pixel (where magnitude
 	 * is defined as the mean of the channel values).
 	 */
-	double avg_pixel_magnitude() {
+	double avg_pixel_magnitude() const {
 		unsigned int i, j, k;
+
+		image_base<colorT> *rw_ptr;
+		
+		rw_ptr = (image_base<colorT> *) this;
 
 		if (_apm_memo)
 			return _apm;
 
-		_apm_memo = 1;
-		_apm = 0;
+		rw_ptr->_apm_memo = 1;
+		rw_ptr->_apm = 0;
 
 		for (i = 0; i < _dimy;  i++)
 		for (j = 0; j < _dimx;  j++)
 		for (k = 0; k < _depth; k++)
-			_apm += get_pixel_component(i, j, k);
+			rw_ptr->_apm += get_pixel_component(i, j, k);
 
-		_apm /= (_dimy * _dimx * _depth);
+		rw_ptr->_apm /= (_dimy * _dimx * _depth);
 
 		return _apm;
 	}

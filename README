@@ -1,4 +1,4 @@
-ALE version 0.4.1
+ALE version 0.4.2
 =================
 
 
@@ -62,7 +62,7 @@ produced incrementally, and the output file is updated as the process
 progresses.  Options are described in the next section.
 
 
-Options (version 0.4.1)
+Options (version 0.4.2)
 -----------------------
 
 
@@ -108,13 +108,18 @@ Tunable parameters:
 --perturb-lower=x Min. correction step, in pixels or degrees (.125 is default)
 
 
-Drizzling [very experimental]:
+Drizzling:
 
---drizzle-diam=x  Drizzle with input pixel diameter x (between 0 and 1).
+--drizzle-diam=x  Drizzle with input pixel diameter x (where 0 < x <= 1).
 --drizzle-only    If drizzling, output black for pixels with no drizzle data.
 
+ 
+Image reconstruction:
+  
+--ip <d> <i>      Irani-Peleg solve with pixel diameter <d> for <i> iterations.
 
-Option Descriptions (version 0.4.1)
+
+Option Descriptions (version 0.4.2)
 -----------------------------------
 
 
@@ -130,11 +135,10 @@ used.
 
 Image extents:
 
-By default, pixels falling outside of the region of the original frame are 
-discarded (--no-extend).  To increase spatial extents and accommodate all
-pixel data, use the --extend option.  This option may be useful in providing
-additional constraints for alignment or -- in combination with the --follow
-option described in the next section -- creating panoramic images.
+By default, pixels falling outside of the region of the original frame are
+discarded (--no-extend).  To increase spatial extents and accommodate all pixel
+data, use the --extend option.  This option may be useful in providing
+additional constraints for alignment.  
 
 
 Transformation defaults:
@@ -163,12 +167,8 @@ the other hand, euclidean transformation data can be used to set the initial
 values for projective alignment.  When loading transformation data, it may also
 be useful to reduce the perturbation upper bound.  
 
-Transformation files now contain information about the version of file handler
-they were created with, currently version 2.  ALE versions older than 0.4.1
-read and write version 0 transformation files but, due to changes in the
-transformation algorithm, will not correctly read files written with newer
-versions of ALE.  On the other hand, new versions of ALE can still read the old
-version 0 transformation files.
+ALE versions older than 0.4.1 will not correctly read transformation files
+written with this version of ALE.
 
 
 Perturbation bounds:
@@ -178,6 +178,8 @@ be made in aligning images.  Note that correction steps larger than 2 are
 performed on images with a reduced level of detail and that all correction step
 sizes are some power of two.  If the interval [perturb-lower, perturb-upper]
 does not contain a power of two, no correction will be performed.
+
+Using a lower bound larger than 2 may trigger a bug.
 
 
 Error metric:
@@ -191,7 +193,7 @@ Threshold:
 
 If a supplemental frame does not meet the minimum match threshold, it will not
 contribute to the final output and ALE will display the message 'no match'.
-Match values should be in the interval [0,100].
+Match values should be be at least 0 and no larger than 100.
 
 
 Scaling:
@@ -203,30 +205,39 @@ scale.
 
 High-frequency Enhancement:
 
-As of version 0.3.1, ALE supports a high-frequency enhancement argument.
-Enhancement occurs on the final output of the alignment and merging algorithms
-after all inputs have been processed.  As of version 0.4.0, it is possible to
-use this feature with unscaled images, and the filter response has been
-normalized so that the response for images scaled by n is now (4/n)^2 times
-what it was in 0.3.x.  
+ALE's high-frequency enhancement filter can be used in some cases to emphasize
+edges realistically.  However, use of this option may also emphasize noise or
+aliases, and may produce unrealistic contrast.  Enhancement occurs on the final
+rendered output after all inputs have been processed, but before Irani-Peleg
+image reconstruction.  Larger positive numbers imply greater enhancement.
 
 
-Drizzling [very experimental]:
+Drizzling:
 
-Drizzling may preserve image details better than the standard ALE rendering
-approach.  The currently implemented drizzling code is very experimental.
+ALE's drizzle renderer may preserve image details better than the standard ALE
+rendering approach, but may produce unrealistically speckled or mottled output
+when used in conjunction with the --scale argument.  The diameter of drizzled
+pixels is specified by --drizzle-diam=x, and --drizzle-only indicates that the
+standard rendering approach should not be used as a fallback where no drizzle
+data is available.
 
-The --drizzle-diam=x argument indicates that drizzling should be used and that
-the length of each side of the reduced source pixel footprint is x (between 0
-and 1) where the distance between pixel centers is 1.  
+For more information about drizzling, see the paper by Hook and Fruchter,
+"Variable-Pixel Linear Combination", or the following URL:
 
-When the scale factor is 1.0, --drizzle-diam=1 should correspond roughly to the
-standard ALE rendering approach, but may perform better in circumstances where
-zooming or motion along the optical axis is involved.
+http://www.cv.nrao.edu/adass/adassVI/hookr.html
 
-If --drizzle-diam is used in combination with --drizzle-only, pixels receiving
-no drizzle data will not be assigned data from the standard rendering approach,
-but will instead be rendered as black pixels.
+
+Image reconstruction (based on Irani-Peleg):
+
+ALE's backprojection-based image reconstruction may provide realistic emphasis
+of edges in scaled images.  However, this option is sensitive to the chosen
+diameter, and small diameters can cause speckled output.  The results of image
+reconstruction are written just prior to program termination.
+
+For more information on the backprojection technique of Irani and Peleg, see
+their paper, "Improving Resolution by Image Registration", at
+
+ftp://ftp.wisdom.weizmann.ac.il/pub/irani/PAPERS/SR_CVGIP91.pdf
 
 
 URLs

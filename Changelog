@@ -1,3 +1,22 @@
+0.4.2
+
+o	Implement an image reconstruction option based on the work of Irani and
+	Peleg.
+
+o	Clean up source; move rendering and alignment functions into separate
+	files.
+
+o	Change valid drizzling diameter interval to (0,1].
+
+o	Modify PPM file reader to correctly handle comments in PPM files; this
+	resolves a bug pointed out by Benjamin Hill.
+
+o	Add missing typecast to resolve compile warning under GCC 3.2.
+
+o	Make changes to gpt.h that may reduce the Euclidean alignment time.
+
+o	Move ale.c to ale.cc to follow one of the many C++ naming conventions.
+
 0.4.1
 
 o	Change language to C++.
@@ -10,7 +29,7 @@ o	Separate into a number of subsections the option descriptions in the
 o	Add URL information to README
 
 o	Add an experimental drizzling implementation.  Research on drizzling
-	by Richard Hook and Andrew Fruch was brought to the attention of 
+	by Richard Hook and Andrew Fruchter was brought to the attention of 
 	the author by Dan Kaminsky.
 
 o	Add an option to use the previous frame's final transformation as the

@@ -30,11 +30,11 @@ all: ale-phony
 clean:
 	rm -f ale
 
-ale-phony: ale.c *.h
-	g++ -o ale $(CFLAGS) ale.c $(LDFLAGS)
+ale-phony: ale.cc align.cc image_rw.cc *.h
+	g++ -o ale $(CFLAGS) ale.cc align.cc image_rw.cc $(LDFLAGS)
 
 # XXX: this isn't even remotely portable.  It's how I make the Windows
 # binary, though, so I might as well put it here.
 
-ale.exe: ale.c *.h
-	i586-mingw32msvc-g++ -Wall -DNDEBUG -o ale.exe -Os ale.c -lm 
+ale.exe: ale.cc align.cc image_rw.cc *.h
+	i586-mingw32msvc-g++ -Wall -DNDEBUG -o ale.exe -Os ale.cc align.cc image_rw.cc -lm 

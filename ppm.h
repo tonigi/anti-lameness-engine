@@ -24,14 +24,56 @@
 #include <assert.h>
 #include "image.h"
 
-static inline void error_ppm(char *filename) {
+static inline void error_ppm(const char *filename) {
 	fprintf(stderr, 
 		"\n'%s' doesn't look like a binary PPM file.\n", 
 		filename);
 	exit(1);
 }
 
-static inline image *read_ppm(char *filename) {
+static inline void eat_comments(FILE *f, const char *filename) {
+#if 0
+
+	/*
+	 * %[] is apparently not compatible with WINE 20021007.
+	 */
+
+	char comment[2];
+
+	while (fscanf(f, " %1[#]", comment)) {
+		int a = 0;
+		while (a != '\n') {
+			if (feof(f))
+				error_ppm(filename);
+			a = fgetc(f);
+		}
+	}
+#else
+
+	/*
+	 * ... so we try a different approach.
+	 */
+
+	int next = ' ';
+
+	while (next == ' ' || next == '\n' || next == '\t' || next == '#') {
+		next = fgetc(f);
+		if (next == '#')
+			while (next != '\n' && next != EOF)
+				next = fgetc(f);
+		if (feof(f))
+			error_ppm(filename);
+	}
+
+	if (ungetc(next, f) == EOF) {
+		assert(0);
+		fprintf(stderr, "Unable to ungetc().");
+		exit(1);
+	}
+#endif
+}
+
+static inline image *read_ppm(const char *filename) {
 	unsigned int i, j, k;
 	image *im;
 	char m1, m2, val;
@@ -47,6 +89,7 @@ static inline image *read_ppm(char *filename) {
 
 	/* Magic */
 
+	eat_comments(f, filename);	/* XXX - should we eat comments here? */
 	n = fscanf(f, "%c%c", &m1, &m2);
 	assert(n == 2 && m1 == 'P' && m2 == '6');
 
@@ -55,7 +98,8 @@ static inline image *read_ppm(char *filename) {
 
 	/* Width */
 
-	n = fscanf(f, "%d", &w);
+	eat_comments(f, filename);
+	n = fscanf(f, " %d", &w);
 	assert(n == 1);
 
 	if (n != 1)
@@ -63,6 +107,7 @@ static inline image *read_ppm(char *filename) {
 
 	/* Height */
 
+	eat_comments(f, filename);
 	n = fscanf(f, "%d", &h);
 	assert(n == 1);
 
@@ -71,6 +116,7 @@ static inline image *read_ppm(char *filename) {
 
 	/* Maximum component value */
 
+	eat_comments(f, filename);
 	n = fscanf(f, "%d", &mcv);
 	assert(n == 1);
 	assert(mcv == 255);
@@ -103,7 +149,7 @@ static inline image *read_ppm(char *filename) {
 	return im;
 }
 
-static inline void write_ppm(char *filename, image *im) {
+static inline void write_ppm(const char *filename, const image *im) {
 	unsigned int i, j, k;
 	FILE *f = fopen(filename, "w");
 	assert(f);

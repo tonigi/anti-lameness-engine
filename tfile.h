@@ -17,8 +17,12 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef __tfile_h__
+#define __tfile_h__
+
 #include "gpt.h"
 #include <stdio.h>
+#include <string.h>
 
 #define TFILE_VERSION     2
 #define TFILE_VERSION_MAX 2
@@ -26,16 +30,16 @@
 static int tfile_version = 0;
 
 struct tload_t {
-	char *filename;
+	const char *filename;
 	FILE *file;
 };
 
 struct tsave_t {
-	char *filename;
+	const char *filename;
 	FILE *file;
 };
 
-static inline struct tload_t *tload_new(char *filename) {
+static inline struct tload_t *tload_new(const char *filename) {
 	FILE *file = fopen (filename, "r");
 	struct tload_t *result = NULL;
 
@@ -49,7 +53,7 @@ static inline struct tload_t *tload_new(char *filename) {
 	return result;
 }
 
-static inline struct tsave_t *tsave_new(char *filename) {
+static inline struct tsave_t *tsave_new(const char *filename) {
 	FILE *file = fopen (filename, "w");
 	struct tsave_t *result = NULL;
 
@@ -264,7 +268,7 @@ static inline void tsave_next(struct tsave_t *t, transformation offset, int is_p
 	}
 }
 
-static inline void tsave_target(struct tsave_t *t, char *filename) {
+static inline void tsave_target(struct tsave_t *t, const char *filename) {
 	if (t != NULL) {
 		t->file = fopen(t->filename, "a");
 
@@ -274,7 +278,7 @@ static inline void tsave_target(struct tsave_t *t, char *filename) {
 	}
 }
 
-static inline void tsave_orig(struct tsave_t *t, char *filename) {
+static inline void tsave_orig(struct tsave_t *t, const char *filename) {
 	if (t != NULL) {
 		t->file = fopen(t->filename, "a");
 
@@ -284,7 +288,7 @@ static inline void tsave_orig(struct tsave_t *t, char *filename) {
 	}
 }
 
-static inline void tsave_info(struct tsave_t *t, char *filename) {
+static inline void tsave_info(struct tsave_t *t, const char *filename) {
 	if (t != NULL) {
 		t->file = fopen(t->filename, "a");
 
@@ -293,3 +297,5 @@ static inline void tsave_info(struct tsave_t *t, char *filename) {
 		fclose(t->file);
 	}
 }
+
+#endif
