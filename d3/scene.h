@@ -599,6 +599,71 @@ class scene {
 	}
 
 	/*
+	 * Measure the error between reference images and the scene.
+	 */
+	static ale_accum scene_error() {
+
+		ale_accum error = 0;
+		ale_accum max_est = 0;
+
+		/*
+		 * Iterate over all frames
+		 */
+		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+
+			ale_pos sf = cl->sf;
+
+			/*
+			 * Z-buffer to map points to triangles
+			 */
+			pt _pt = align::projective(n);
+			_pt.scale(sf / _pt.scale_2d());
+			unsigned int height = (unsigned int) floor(_pt.scaled_height());
+			unsigned int width  = (unsigned int) floor(_pt.scaled_width());
+			triangle **zbuf = init_zbuf(_pt);
+			zbuffer(_pt, zbuf, triangle_head[0]);
+			zbuffer(_pt, zbuf, triangle_head[1]);
+
+			fprintf(stderr, "[w=%u h=%u] ", width, height);
+
+			/*
+			 * Iterate over all points in the frame.
+			 */
+			for (unsigned int i = 0; i < height; i++)
+			for (unsigned int j = 0; j < width;  j++) {
+				triangle *t = zbuf[i * width + j];
+
+				/*
+				 * Check for points without associated triangles.
+				 */
+				if (!t)
+					continue;
+
+				/*
+				 * Calculate the difference.
+				 */
+
+				d2::pixel ref = cl->reference[n]->pix(i, j);
+				d2::pixel scn = t->color;
+				d2::pixel diff = ref - scn;
+
+				for (int k = 0; k < 3; k++) {
+					error += diff[k] * diff[k];
+
+					if (ref[k] > scn[k])
+						max_est += ref[k] * ref[k];
+					else
+						max_est += scn[k] * scn[k];
+				}
+			}
+
+			free(zbuf);
+		}
+
+		return sqrt(error / max_est);
+	}
+
+	/*
 	 * Test the density of the mesh for correct sampling in
 	 * color_average(), and split (or unsplit) triangles if necessary,
 	 * continuing until no more operations can be performed.  
@@ -629,17 +694,16 @@ class scene {
 			unsigned int height = (unsigned int) floor(_pt.scaled_height());
 			unsigned int width  = (unsigned int) floor(_pt.scaled_width());
 			triangle **zbuf = init_zbuf(_pt);
-			assert (zbuf);
 			zbuffer(_pt, zbuf, triangle_head[0]);
 			zbuffer(_pt, zbuf, triangle_head[1]);
 
 			fprintf(stderr, "[w=%u h=%u] ", width, height);
 
 			/*
-			 * Iterate over all non-border points in the frame.
+			 * Iterate over all points in the frame.
 			 */
-			for (unsigned int i = 1; i < height - 1; i++)
-			for (unsigned int j = 1; j < width  - 1; j++) {
+			for (unsigned int i = 0; i < height; i++)
+			for (unsigned int j = 0; j < width;  j++) {
 				triangle *t = zbuf[i * width + j];
 
 				/*
