@@ -60,6 +60,13 @@ public:
 	}
 
 	/*
+	 * Get the 2D scale factor
+	 */
+	ale_pos scale_2d() {
+		return t.scale_factor();
+	}
+
+	/*
 	 * Transform point p.
 	 */
 	struct point generic_transform(struct point p, ale_pos w, ale_pos h) {

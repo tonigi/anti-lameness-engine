@@ -34,13 +34,29 @@ class scene {
 	 */
 
 	struct triangle {
+
+		/*
+		 * Stats
+		 */
+
 		d2::pixel color;
 		d2::pixel weight;
+		d2::pixel aux_stat;
+
+		/*
+		 * Connectivity
+		 */
+
 		point *vertices[3];
 		struct triangle *neighbors[3];
+		struct triangle *parent;
 		int division_vertex;
 		point *division_new_vertex;
 		struct triangle *children[2];
+
+		/*
+		 * Constructor
+		 */
 
 		triangle() {
 			color = d2::pixel(0, 0, 0);
@@ -54,11 +70,42 @@ class scene {
 			neighbors[1] = NULL;
 			neighbors[2] = NULL;
 
+			parent = NULL;
+
 			division_new_vertex = NULL;
 
 			children[0] = NULL;
 			children[1] = NULL;
 		}
+
+		/*
+		 * Statistic initialization
+		 */
+
+		void init_color_counters() {
+			if (children[0])
+				children[0]->init_color_counters();
+			if (children[1])
+				children[1]->init_color_counters();
+
+			color = d2::pixel(0, 0, 0);
+			weight = d2::pixel(0, 0, 0);
+		}
+
+		void init_aux_stats(d2::pixel value = d2::pixel(0, 0, 0)) {
+			if (children[0])
+				children[0]->reset_aux_stat(value);
+			if (children[1])
+				children[1]->reset_aux_stat(value);
+
+			aux_stat = value;
+		}
+
+
+		/*
+		 * Get the neighbor link from a given neighbor that references
+		 * the 'this' object.
+		 */
 
 		int self_ref_from_neighbor(int n) {
 			triangle *t = neighbors[n];
@@ -89,6 +136,7 @@ class scene {
 			children[1] = new triangle(*this);
 
 			for (int c = 0; c < 2; c++) {
+				children[c]->parent = this;
 				children[c]->vertices[(division_vertex + c + 1) % 3] = division_new_vertex;
 				children[c]->neighbors[(division_vertex + c + 2) % 3] = children[(c + 1) % 2];
 				children[c]->children[0] = NULL;
@@ -334,6 +382,14 @@ class scene {
 	 * backprojection approach.
 	 */
 	static void color_average() {
+
+		/*
+		 * Initialize color counters
+		 */
+
+		triangle_head[0]->init_color_counters();
+		triangle_head[1]->init_color_counters();
+
 		/*
 		 * Iterate over all frames
 		 */
@@ -346,9 +402,9 @@ class scene {
 			 * Z-buffer to map points to triangles
 			 */
 			pt _pt = align::projective(n);
-			_pt.scale(sf);
-			assert (im->width() == (unsigned int) floor(_pt.unscaled_width()));
-			assert (im->height() == (unsigned int) floor(_pt.unscaled_height()));
+			_pt.scale(sf / _pt.scale_2d());
+			assert (im->width() == (unsigned int) floor(_pt.scaled_width()));
+			assert (im->height() == (unsigned int) floor(_pt.scaled_height()));
 			triangle **zbuf = init_zbuf(_pt);
 			zbuffer(_pt, zbuf, triangle_head[0]);
 			zbuffer(_pt, zbuf, triangle_head[1]);
@@ -375,6 +431,81 @@ class scene {
 
 			free(zbuf);
 		}
+	}
+
+	/*
+	 * Test the density of the mesh for correct sampling in
+	 * color_average(), and split (or unsplit) triangles if necessary,
+	 * continuing until no more operations can be performed.  
+	 */
+	static void density_test(int split) {
+
+		ale_pos scale = (split ? 1 : 2);
+
+		triangle_head[0]->init_aux_stats();
+		triangle_head[1]->init_aux_stats();
+
+		/*
+		 * Iterate over all frames
+		 */
+		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+
+			ale_pos sf = cl->sf;
+
+			/*
+			 * Z-buffer to map points to triangles
+			 */
+			pt _pt = align::projective(n);
+			_pt.scale(scale * sf / _pt.scale_2d());
+			triangle **zbuf = init_zbuf(_pt);
+			zbuffer(_pt, zbuf, triangle_head[0]);
+			zbuffer(_pt, zbuf, triangle_head[1]);
+
+			/*
+			 * Iterate over all non-border points in the frame.
+			 */
+			for (unsigned int i = 1; i < _pt.scaled_height() - 1; i++)
+			for (unsigned int j = 1; j < _pt.scaled_width()  - 1; j++) {
+				triangle *t = zbuf[i * _pt.scaled_width() + j];
+
+				/*
+				 * Check for points without associated triangles.
+				 */
+				if (!t)
+					continue;
+
+				/*
+				 * Check that at least three points in the
+				 * neighboring eight are associated with the
+				 * same triangle.  
+				 */
+
+				int count = 0;
+
+				for (int ii = -1; ii <= 1; ii++)
+				for (int jj = -1; jj <= 1; jj++)
+				if (zbuf[(i + ii) * _pt.scaled_width() + (j + jj)] == t)
+					count++;
+
+				/*
+				 * Since we revisit the original point, the
+				 * final sum should be four.
+				 */
+
+				if (count < 4 && split)
+					t->aux_stat = d2::pixel(-1, -1, -1);
+				else if (count < 4 && !split && t->parent)
+					t->parent->aux_stat = d2::pixel(-1, -1, -1);
+			}
+
+			free(zbuf);
+		}
+
+		if (split && (triangle_head[0]->split_on_aux() || triangle_head[1]->split_on_aux()))
+			density_test(split);
+
+		if (!split && (triangle_head[0]->unsplit_on_aux() || triangle_head[1]->unsplit_on_aux()))
+			density_test(split);
 	}
 
 public:
