@@ -31,8 +31,8 @@
  * PLANAR_SUBDIVISION_COUNT must be exactly pow(4, PLANAR_SUBDIVISION_DEPTH)
  */
 
-#define PLANAR_SUBDIVISION_DEPTH 2
-#define PLANAR_SUBDIVISION_COUNT 16
+#define PLANAR_SUBDIVISION_DEPTH 1
+#define PLANAR_SUBDIVISION_COUNT 4
 
 class scene {
 
@@ -739,6 +739,22 @@ class scene {
 		}
 
 		/*
+		 * Return the maximum internal angle of a triangle.
+		 */
+		ale_accum max_internal_angle() {
+			ale_pos max_angle = 0;
+
+			for (int v = 0; v < 3; v++) {
+				ale_pos angle = vertices[v]->anglebetw(*vertices[(v + 1) % 3], *vertices[(v + 2) % 3]);
+
+				if (angle > max_angle)
+					max_angle = angle;
+			}
+
+			return max_angle;
+		}
+
+		/*
 		 * Return the maximum angle formed with a neighbor triangle.
 		 * Searches two neighbors deep.
 		 */
@@ -1097,6 +1113,16 @@ class scene {
 					
 					ale_accum max_angle = traverse_around_vertex(vertices[v], &triangle::max_neighbor_angle, 1);
 					if (max_angle > M_PI / 1.5) {
+						*vertices[v] = best_vertices[v];
+						continue;
+					}
+
+					/*
+					 * Limit internal angle sizes.
+					 */
+
+					max_angle = traverse_around_vertex(vertices[v], &triangle::max_internal_angle, 1);
+					if (max_angle > M_PI / 1) {
 						*vertices[v] = best_vertices[v];
 						continue;
 					}
