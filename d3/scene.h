@@ -34,12 +34,15 @@ class scene {
 	 */
 
 	struct triangle {
+		d2::pixel color;
 		point *vertices[3];
 		struct triangle *neighbors[3];
 		point *division_vertex;
 		struct triangle *children[2];
 
 		triangle() {
+			color = d2::pixel(0, 0, 0);
+
 			vertices[0] = NULL;
 			vertices[1] = NULL;
 			vertices[2] = NULL;
@@ -165,11 +168,15 @@ public:
 
 		triangle_head[0]->neighbors[0] = triangle_head[1];
 
+		triangle_head[0]->color = cl->reference[0]->avg_channel_magnitude();
+
 		triangle_head[1]->vertices[0] = new point(max[0], max[1]);
 		triangle_head[1]->vertices[1] = new point(min[0], max[1]);
 		triangle_head[1]->vertices[2] = new point(max[0], min[1]);
 
 		triangle_head[1]->neighbors[0] = triangle_head[0];
+
+		triangle_head[1]->color = cl->reference[0]->avg_channel_magnitude();
 	}
 
 	/*
