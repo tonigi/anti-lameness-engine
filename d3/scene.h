@@ -141,6 +141,12 @@ class scene {
 		void *aux_var;
 
 		/*
+		 * Color for traversal.
+		 */
+
+		char traversal_color;
+
+		/*
 		 * Connectivity
 		 */
 
@@ -189,6 +195,69 @@ class scene {
 
 			children[0] = NULL;
 			children[1] = NULL;
+
+			traversal_color = 0;
+		}
+
+		/*
+		 * Clear a traversed connected sub-graph to zero.
+		 */
+		void traversal_clear() {
+			if (traversal_color == 0)
+				return;
+
+			traversal_color = 0;
+
+			for (int v = 0; v < 3; v++)
+			if  (neighbors[v])
+				neighbors[v]->traversal_clear();
+		}
+
+		/*
+		 * Traverse the sub-graph of triangles around a given vertex,
+		 * and sum over a given function.
+		 *
+		 * STARTING_NODE should be left at 1 if called externally.
+		 */
+		ale_accum traverse_sum_around_vertex(point *vertex, ale_accum (foo::*fp)(), int starting_node = 1) {
+
+			/*
+			 * Check whether we've already visited this node.
+			 */
+
+			if (traversal_color == 1) {
+				return 0;
+			}
+
+			/*
+			 * Mark that we've visited this node.
+			 */
+
+			traversal_color = 1;
+
+
+			/*
+			 * Perform summation.
+			 */
+
+			ale_accum sum = this->*fp();
+
+			for (int v = 0; v < 3; v++)
+			if  (neighbors[v])
+				sum += neighbors[v]->traverse_sum_around_vertex(vertex, fp, 0);
+
+			/*
+			 * Clean up traversal colors.
+			 */
+
+			if (starting_node)
+				traversal_clear();
+
+			/*
+			 * Return the sum.
+			 */
+
+			return sum;
 		}
 
 		void write_tree(int print_vertices = 0, int level = 0) {
@@ -851,7 +920,7 @@ class scene {
 
 			for (int n = 0; n < 3; n++)
 			if  (neighbors[n]) {
-				ale_accum neighbor_error = neighbors[n]->accumulate_neighbor_error() * neighbors[n]->area();
+				ale_accum neighbor_error = neighbors[n]->accumulate_neighbor_error();
 				if (finite(neighbor_error)) {
 					error += neighbors[n]->accumulate_neighbor_error();
 					error_count++;
@@ -953,7 +1022,7 @@ class scene {
 				 * a given amount the angle between the normals of adjacent triangles.
 				 */
 
-				if (max_neighbor_angle_2() > M_PI / 3) {
+				if (max_neighbor_angle_2() > M_PI / 6) {
 					*vertices[v] = best_vertices[v];
 					continue;
 				}
