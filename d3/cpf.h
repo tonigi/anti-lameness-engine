@@ -121,11 +121,11 @@ class cpf {
 
 		/*
 		 * For each point, adjust the depth along the view ray to
-		 * minimize the distance from the centroid of the other points.
+		 * minimize the distance from the centroid of the points.
 		 */
 
 		ale_pos diff_bound = 0.01;
-		ale_pos min_diff = diff_bound;
+		ale_pos max_diff = diff_bound;
 		do {
 		for (int i = 0; i < n; i++) {
 
@@ -143,12 +143,12 @@ class cpf {
 
 			ale_pos diff = points[i].lengthto(new_point);
 
-			if (diff < min_diff)
-				min_diff = diff;
+			if (diff > max_diff)
+				max_diff = diff;
 
 			points[i] = new_point;
 
-		}} while (min_diff > diff_bound);
+		}} while (max_diff > diff_bound);
 
 		return calculate_centroid(points, n);
 	}
