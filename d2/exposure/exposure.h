@@ -226,7 +226,7 @@ public:
 
 	exposure() {
 		listener_head = NULL;
-		_multiplier = pixel(1, 1, 1);
+		_multiplier = default_multiplier;
 		_gain_multiplier = 1;
 	}
 };
