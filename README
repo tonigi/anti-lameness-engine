@@ -33,7 +33,7 @@ Downloading a binary
 	No binaries provided.  Compile from source.
 
 
-Compiling from source (version 0.2.0)
+Compiling from source (version 0.3.0)
 -------------------------------------
 
 You will need GCC and a make utility (GNU Make will do fine).  To compile from
@@ -44,7 +44,7 @@ makefile may need some tweaking on Windows systems (e.g. you may want to write
 the output to 'ale.exe' or something.
 
 
-Using ALE (version 0.2.0)
+Using ALE (version 0.3.0)
 -------------------------
 
 Usage: ale [<options>] <input-files> ... <output-file>
@@ -59,35 +59,42 @@ produced incrementally, and you can inspect the output file as the process
 progresses.  Options are described in the next section.
 
 
-Options (version 0.2.0)
+Options (version 0.3.0)
 -----------------------
 
 Scaling options:
 
---scale2       Scale input images up by 2
---scale4       Scale input images up by 4
---scale8       Scale input images up by 8
+--scale2          Scale input images up by 2
+--scale4          Scale input images up by 4
+--scale8          Scale input images up by 8
 
 
 Alignment channel options:
 
---align-all    Align images using all color channels
---align-green  Align images using the green channel
---align-sum    Align images using a sum of channels [default]
+--align-all       Align images using all color channels
+--align-green     Align images using the green channel
+--align-sum       Align images using a sum of channels [default]
 
 
 Transformation options:
 
---translation  Only adjust the position of images
---euclidean    Adjust the position and orientation of images [default]
---projective   Use projective transformations.  Best quality, but slow.
+--translation     Only adjust the position of images
+--euclidean       Adjust the position and orientation of images [default]
+--projective      Use projective transformations.  Best quality, but slow.
+
+
+Transformation file operations:
+
+--trans-load=x    Load initial transformation settings from file x
+--trans-save=x    Save final transformation data in file x
 
 
 Tunable parameters:
 
---metric=x     Set the error metric exponent (2 is default)
---threshold=x  Min. match threshold; a perfect match is 100.  (0 is default)
---stepsize=x   Min. correction step, in pixels or degrees (0.125 is default)
+--metric=x        Set the error metric exponent (2 is default)
+--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)
+--perturb-upper=x Max. correction step, in pixels or degrees (32.0 is default)
+--perturb-lower=x Min. correction step, in pixels or degrees (.125 is default)
 
 
 If a scaling argument is given, the program will internally scale all input
@@ -102,17 +109,27 @@ behavior used in ALE 0.1.x.  To use general projective transformations, specify
 the option '--projective'.  Note that alignment can take a fairly long time
 when this option is used.
 
-The error metric for pixel components a and b is (abs(a-b)^x),
-where x is the error metric exponent.  Larger exponents will cause the
-alignment process to be more influenced by smaller image details.  
+The error metric for pixel components a and b is (abs(a-b)^x), where x is the
+error metric exponent.  Larger exponents will cause the alignment process to be
+more influenced by smaller image details.  
 
 If a supplemental frame does not meet the minimum match threshold, it will be
 discarded, and will not contribute to the final output (in this case, the
 program will display the message 'no match').  Match values should be in the
 interval [0,100].
 
-No correction smaller than the step size (--stepsize=x) will be made in
-aligning images.
+As of version 0.3.0, it is possible to load and save transformation data.  Note
+that projective transformation data will be ignored when performing euclidean
+alignment.  On the other hand, euclidean transformation data can be used to set
+the initial values for projective alignment.  When loading transformation data,
+it may also be useful to reduce the perturbation upper bound.  
+
+No correction step smaller than perturb-lower will be made in aligning images,
+and no correction step larger than the perturb-upper will be made in aligning
+images.  Note that correction steps larger than 2 are performed on images with
+a reduced level of detail and that all correction step sizes are some power of
+two.  If the interval [perturb-lower, perturb-upper] does not contain a power of
+two, no correction will be performed.
 
 
 Contact

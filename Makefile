@@ -16,7 +16,7 @@
 #  along with Anti-Lamenessing Engine; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-CFLAGS:=-DNDEBUG $(if $(IMAGEMAGICK), -DUSE_MAGICK $(shell Magick-config --cflags --cppflags), -Wall -O3)
+CFLAGS:=-DNDEBUG $(if $(IMAGEMAGICK), -DUSE_MAGICK $(shell Magick-config --cflags --cppflags), -Wall -Os)
 
 LDFLAGS:=-lm $(if $(IMAGEMAGICK), $(shell Magick-config --ldflags --libs))
 
@@ -38,4 +38,4 @@ ale-phony: ale.c *.h
 # binary, though, so I might as well put it here.
 
 ale.exe: ale.c *.h
-	i586-mingw32msvc-gcc -Wall -DNDEBUG -o ale.exe -O3 ale.c -lm 
+	i586-mingw32msvc-gcc -Wall -DNDEBUG -o ale.exe -Os ale.c -lm 

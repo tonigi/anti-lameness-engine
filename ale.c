@@ -19,6 +19,9 @@
 
 #include "image.h"
 #include "image_rw.h"
+#include "gpt.h"
+#include "my_real.h"
+#include "tfile.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -26,22 +29,12 @@
 #include <time.h>
 #include <math.h>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
-char *version = "0.2.0"
+char *version = "0.3.0"
 #ifdef USE_MAGICK
 		" (File handler: ImageMagick)";
 #else
 		" (File handler: PPM binary)";
 #endif
-
-/*
- * Real-valued type.
- */
-
-typedef double my_real;
 
 /*
  * Various character arrays with atavistic names.
@@ -57,132 +50,10 @@ static int transform_code = 1;
 static int align_code = 2;
 static double metric = 2;
 static double match_threshold = 0;
-static double minimum_stepsize = 0.125;
-
-/*
- * Structure to describe a general projective transformation
- *
- * Member names roughly correspond to a typical treatment of projective
- * transformations from:
- *
- *	Heckbert, Paul.  "Projective Mappings for Image Warping."  Excerpted 
- *		from his Master's Thesis (UC Berkeley, 1989).  1995.
- *
- * http://www.cs.cmu.edu/afs/cs/project/classes-ph/862.95/www/notes/proj.ps
- *
- * For convenience, Heckbert's 'x' and 'y' are noted here numerically by '0'
- * and '1', respectively.  Thus, 'x0' is denoted 'x[0][0]'; 'y0' is 'x[1][0]'.
- *
- * eu[i] are the parameters for euclidean transformations.
- *
- */
-struct gpt {
-	my_real input_width, input_height;
-
-	my_real x[2][4];
-
-	my_real eu[3];
-
-	my_real a, b, c, d, e, f, g, h;
-};
-
-/*
- * Calculate resultant values for a general projective transformation given
- * that we are transforming from a unit square to a specified arbitrary
- * quadrilateral.  Follow the calculations outlined in the document by Paul
- * Heckbert cited above.
- */
-inline struct gpt gpt_resultant(struct gpt io) {
-	my_real delta_01 = io.x[0][1] - io.x[0][2];
-	my_real delta_02 = io.x[0][3] - io.x[0][2];
-	my_real sigma_0  = io.x[0][0] - io.x[0][1] + io.x[0][2] - io.x[0][3];
-	my_real delta_11 = io.x[1][1] - io.x[1][2];
-	my_real delta_12 = io.x[1][3] - io.x[1][2];
-	my_real sigma_1  = io.x[1][0] - io.x[1][1] + io.x[1][2] - io.x[1][3];
-
-	io.g = (sigma_0  * delta_12 - sigma_1  * delta_02)
-	     / (delta_01 * delta_12 - delta_11 * delta_02)
-	     / io.input_width;
-
-	io.h = (delta_01 * sigma_1  - delta_11 * sigma_0 )
-	     / (delta_01 * delta_12 - delta_11 * delta_02)
-	     / io.input_height;
-
-	io.a = (io.x[0][1] - io.x[0][0] + io.g * io.x[0][1])
-	     / io.input_width;
-	io.b = (io.x[0][3] - io.x[0][0] + io.h * io.x[0][3])
-	     / io.input_height;
-	io.c = io.x[0][0];
-
-	io.d = (io.x[1][1] - io.x[1][0] + io.g * io.x[1][1])
-	     / io.input_width;
-	io.e = (io.x[1][3] - io.x[1][0] + io.h * io.x[1][3])
-	     / io.input_height;
-	io.f = io.x[1][0];
-
-	return io;
-}
-
-/*
- * Calculate resultant values for a euclidean transformation.
- */
-inline struct gpt eu_resultant(struct gpt io) {
-	int i;
-	
-	io.x[0][0] = 0;              io.x[1][0] = 0;
-	io.x[0][1] = io.input_width; io.x[1][1] = 0;
-	io.x[0][2] = io.input_width; io.x[1][2] = io.input_height;
-	io.x[0][3] = 0;              io.x[1][3] = io.input_height;
-
-	/*
-	 * Rotate
-	 */
-
-	{
-		my_real theta = io.eu[2] * M_PI / 180;
-
-		for (i = 0; i < 4; i++) {
-			int x[2];
-
-			x[0] = (io.x[0][i] - io.input_width/2)  * cos(theta)
-			     + (io.x[1][i] - io.input_height/2) * sin(theta)
-			     + io.input_width/2;
-			x[1] = (io.x[1][i] - io.input_height/2) * cos(theta)
-			     - (io.x[0][i] - io.input_width/2)  * sin(theta)
-			     + io.input_height/2;
-			
-			io.x[0][i] = x[0];
-			io.x[1][i] = x[1];
-		}
-	}
-
-	/*
-	 * Translate
-	 */
-
-	for (i = 0; i < 4; i++) {
-		io.x[0][i] += io.eu[0];
-		io.x[1][i] += io.eu[1];
-	}
-
-	return gpt_resultant(io);
-}
-
-/*
- * Calculate a euclidean transform modified in the indicated manner.
- */
-inline struct gpt eu_modify(struct gpt io, int i1, my_real diff) {
-	io.eu[i1] += diff;
-	return io;
-}
-
-/*
- * Calculate a general projective transform modified in the indicated manner.
- */
-inline struct gpt gpt_modify (struct gpt io, int i1, int i2, my_real diff) {
-	io.x[i1][i2] += diff;
-	return io;
-}
+static double perturb_lower = 0.125;
+static double perturb_upper = 32;
+static struct tload_t *tload = NULL;
+static struct tsave_t *tsave = NULL;
 
 /*
  * Not-quite-symmetric difference function.  Determines the difference in areas
@@ -318,7 +189,7 @@ merge(image *target, image *delta, struct gpt t) {
  * Update an accumulated image with a new input image.
  */
 inline void update() {
-	double perturb = 32;
+	double perturb = pow(2, floor(log(perturb_upper) / log(2)));
 	int w = width(input_image), h = height(input_image);
 	struct gpt offset;
 	double here;
@@ -328,7 +199,7 @@ inline void update() {
 	 * Determine how many whole-pixel adjustment steps will occur
 	 */
 
-	int steps = (int) (log(perturb) / log(2)) + 1;
+	int steps = (perturb >= 1) ? (int) (log(perturb) / log(2)) + 1 : 1;
 	int step;
 	image **display_scales = (image **) malloc(steps * sizeof(image *));
 	image **input_scales = (image **) malloc(steps * sizeof(image *));
@@ -361,20 +232,9 @@ inline void update() {
 	 */
 
 	lod = (steps - 1) - lod_diff;
+	lod = (lod < 0) ? 0 : lod;
 
-	offset.eu[0] = 0;
-	offset.eu[1] = 0;
-	offset.eu[2] = 0;
-
-	offset.x[0][0] = 0;               offset.x[1][0] = 0;
-	offset.x[0][1] = w / pow(2, lod); offset.x[1][1] = 0;
-	offset.x[0][2] = w / pow(2, lod); offset.x[1][2] = h / pow(2, lod);
-	offset.x[0][3] = 0;               offset.x[1][3] = h / pow(2, lod);
-
-	offset.input_width = w / pow(2, lod);
-	offset.input_height = h / pow(2, lod);
-
-	offset = gpt_resultant(offset);
+	offset = tload_next(tload, w, h, lod, transform_code == 2);
 
 	here = diff(display_scales[lod], input_scales[lod], offset);
 
@@ -382,7 +242,7 @@ inline void update() {
 	 * Simulated annealing perturbation adjustment loop.  
 	 */
 
-	while (perturb >= minimum_stepsize) {
+	while (perturb >= perturb_lower) {
 
 		image *di = display_scales[lod];
 		image *ii = input_scales[lod];
@@ -405,7 +265,7 @@ inline void update() {
 
 			for (i = 0; i < 2 + transform_code; i++)
 			for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
-					
+
 				test_t = eu_resultant(
 					eu_modify(offset, i, adj_s));
 				test_d = diff(di, ii, test_t);
@@ -441,7 +301,7 @@ done:
 
 		} else assert(0);
 
-		if (here >= old_here) {
+		if (!(here < old_here)) {
 			perturb *= 0.5;
 
 			if (lod > 0) {
@@ -461,7 +321,7 @@ done:
 
 				lod--;
 
-				if (perturb >= minimum_stepsize)
+				if (perturb >= perturb_lower)
 					here = diff(display_scales[lod], 
 						input_scales[lod], offset);
 			}
@@ -485,6 +345,12 @@ done:
 	}
 	free(display_scales);
 	free(input_scales);
+
+	/*
+	 * Save the transformation information
+	 */
+
+	tsave_next(tsave, offset, transform_code == 2);
 
 	/*
 	 * Ensure that the match meets the threshold.
@@ -543,14 +409,28 @@ int main(int argc, char *argv[]){
 			sscanf(argv[i] + strlen("--metric="), "%lf", &metric);
 		} else if (!strncmp(argv[i], "--threshold=", strlen("--threshold="))) {
 			sscanf(argv[i] + strlen("--threshold="), "%lf", &match_threshold);
+		} else if (!strncmp(argv[i], "--perturb-upper=", strlen("--perturb-upper="))) {
+			sscanf(argv[i] + strlen("--perturb-upper="), "%lf", &perturb_upper);
 		} else if (!strncmp(argv[i], "--stepsize=", strlen("--stepsize="))) {
-			sscanf(argv[i] + strlen("--stepsize="), "%lf", &minimum_stepsize);
+			fprintf(stderr, "\n\n*** Warning: --stepsize is deprecated.  "
+					"Use --perturb-lower instead. ***\n\n\n");
+			sscanf(argv[i] + strlen("--stepsize="), "%lf", &perturb_lower);
+		} else if (!strncmp(argv[i], "--perturb-lower=", strlen("--perturb-lower="))) {
+			sscanf(argv[i] + strlen("--perturb-lower="), "%lf", &perturb_lower);
+		} else if (!strncmp(argv[i], "--trans-load=", strlen("--trans-load="))) {
+			tload_delete(tload);
+			tload = tload_new(argv[i] + strlen("--trans-load="));
+		} else if (!strncmp(argv[i], "--trans-save=", strlen("--trans-save="))) {
+			tsave_delete(tsave);
+			tsave = tsave_new(argv[i] + strlen("--trans-save="));
 		} else if (display_image == NULL) {
 
 			/* 
 			 * First file argument.  Print general file information as well
 			 * as information specific to this argument.
 			 */
+
+			tsave_info(tsave, argv[argc - 1]);
 
 			fprintf(stderr, "Output file will be '%s'.\n", 
 					argv[argc - 1]);
@@ -569,6 +449,8 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, ".\n");
 
 		} else {
+
+			tsave_info (tsave, argv[i]);
 
 			fprintf(stderr, "Merging supplemental frame '%s'", 
 					argv[i]);
@@ -597,28 +479,35 @@ int main(int argc, char *argv[]){
 			"   or: %s --version\n"
 			"\n\n"
 			"Scaling options:\n\n"
-			"--scale2       Scale input images up by 2\n"
-			"--scale4       Scale input images up by 4\n"
-			"--scale8       Scale input images up by 8\n"
+			"--scale2          Scale input images up by 2\n"
+			"--scale4          Scale input images up by 4\n"
+			"--scale8          Scale input images up by 8\n"
 			"\n\n"
 			"Alignment channel options:\n\n"
-			"--align-all    Align images using all color channels\n"
-			"--align-green  Align images using the green channel\n"
-			"--align-sum    Align images using a sum of channels [default]\n"
+			"--align-all       Align images using all color channels\n"
+			"--align-green     Align images using the green channel\n"
+			"--align-sum       Align images using a sum of channels [default]\n"
 			"\n\n"
 			"Transformation options:\n\n"
-			"--translation  Only adjust the position of images\n"
-			"--euclidean    Adjust the position and orientation of images [default]\n"
-			"--projective   Use projective transformations.  Best quality, but slow.\n"
+			"--translation     Only adjust the position of images\n"
+			"--euclidean       Adjust the position and orientation of images [default]\n"
+			"--projective      Use projective transformations.  Best quality, but slow.\n"
+			"\n\n"
+			"Transformation file operations:\n\n"
+			"--trans-load=x    Load initial transformation settings from file x\n"
+			"--trans-save=x    Save final transformation data in file x\n"
 			"\n\n"
 			"Tunable parameters:\n\n"
-			"--metric=x     Set the error metric exponent (2 is default)\n"
-			"--threshold=x  Min. match threshold; a perfect match is 100.  (0 is default)\n"
-			"--stepsize=x   Min. correction step, in pixels or degrees (0.125 is default)\n"
+			"--metric=x        Set the error metric exponent (2 is default)\n"
+			"--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)\n"
+			"--perturb-upper=x Max. correction step, in pixels or degrees (32.0 is default)\n"
+			"--perturb-lower=x Min. correction step, in pixels or degrees (0.125 is default)\n"
 			"\n",
 			argv[0], argv[0]);
 		return 1;
 	} else {
+		tsave_delete(tsave);
+		tload_delete(tload);
 		fprintf(stderr, "Done.\n");
 	}
 

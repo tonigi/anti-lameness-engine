@@ -1,3 +1,15 @@
+0.3.0
+
+o	Add support for loading and saving transformation data.
+
+o	Add an option to set the upper bound on correction steps.
+
+o	Modify Makefile to compile with size optimization, since this 
+	appears to improve speed characteristics in some cases.
+
+o	Move transformation data structure and related functions to 
+	a separate header file.
+
 0.2.0
 
 o	Add support for general projective transformations, and change/add
