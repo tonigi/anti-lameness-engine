@@ -1,27 +1,38 @@
-0.7.0-patch1
+0.7.1
 
-o	Add rudimentary support for the ov7620 sensor (raw, linear modes
-	only).  (PSFs are not yet refined.)
+o	Fix --visp segfault when not using last: filters.
 
-o	Add global search option --gs, which should remedy an alignment
-	problem reported by Bert Douglas.  For documentation, use --ha.
+o	Add help mode --hA to display all help pages.
 
-o	Change transformation::eu_{get,set,modify}() so that external values
-	are interpreted in the context of transformations between scaled
-	images, while internal values represent transformations between 
-	unscaled images.
+o	Add circular point-spread function option "circle=<diameter>".
 
-o	Ensure that eu[] parameters are properly scaled when read and written.
+o	Add support for the ov7620 sensor (raw, linear modes only).  (Updated
+	from 0.7.0-patch1 to specify a linear PSF.)
 
-o	Fix order-of-operations bug in d2::image::scale_by_half()
+o	Add global search option --gs to fix an alignment problem reported by
+	Bert Douglas.  (Also included in 0.7.0-patch1.)
+
+o	Change transformation::eu_{get,set,modify}() so that externally
+	visible values are interpreted in the context of transformations
+	between scaled images, while internal values represent transformations
+	between unscaled images.  (Bugfix for 0.7.0.  Also included in
+	0.7.0-patch1.)
+
+o	d2/tfile.h: Ensure that eu[] parameters are properly scaled when read
+	and written.  (Bugfix for 0.7.0. Also included in 0.7.0-patch1.)
+
+o	Fix order-of-operations bug in d2::image::scale_by_half().  (Bugfix
+	for 0.7.0 and earlier versions.  Also included in 0.7.0-patch1.)
 
 o	Scale alignment weights for reduced level-of-detail in d2::align().
+	(Also included in 0.7.0-patch1.)
 
 o	For reduced level-of-detail alignment reference images, filter
-	using alignment weights.
+	using alignment weights.  (Also included in 0.7.0-patch1.)
 
 o	Add speed optimizations for filtering in the Euclidean case, but
-	leave these disabled, since they are not safe.
+	leave these disabled, since they are not safe.  (Also included
+	in 0.7.0-patch1.)
 
 0.7.0
 

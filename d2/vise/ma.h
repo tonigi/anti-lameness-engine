@@ -131,11 +131,11 @@ public:
 
 		image *rendered = new image_ale_real(new_height, new_width, 3);
 
-		const image *replace_image = NULL;
-		if (replace)
+		if (replace) {
+			const image *replace_image = NULL;
 			replace_image = image_rw::open(frame_number);
-
-		scf->set_parameters(t, s, replace_image);
+			scf->set_parameters(t, s, replace_image);
+		}
 
 		for (unsigned int i = 0; i < rendered->height(); i++)
 		for (unsigned int j = 0; j < rendered->width();  j++) {

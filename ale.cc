@@ -64,9 +64,9 @@
  * Version Information
  */
 
-char *short_version = "0.7.0-patch1";
+char *short_version = "0.7.1";
 
-char *version = "ALE Version:      0.7.0-patch1\n"
+char *version = "ALE Version:      0.7.1\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else
@@ -166,28 +166,54 @@ int main(int argc, const char *argv[]){
 		return 0;
 	} else if (arg_count(argc, argv, "--hu") > 0) {
 		hi.usage();
+		exit(1);
 	} else if (arg_count(argc, argv, "--hq") > 0) {
 		hi.defaults();
+		exit(1);
 	} else if (arg_count(argc, argv, "--hf") > 0) {
 		hi.file();
+		exit(1);
 	} else if (arg_count(argc, argv, "--he") > 0) {
 		hi.exclusion();
+		exit(1);
 	} else if (arg_count(argc, argv, "--ha") > 0) {
 		hi.alignment();
+		exit(1);
 	} else if (arg_count(argc, argv, "--hr") > 0) {
 		hi.rendering();
+		exit(1);
 	} else if (arg_count(argc, argv, "--hx") > 0) {
 		hi.exposure();
+		exit(1);
 	} else if (arg_count(argc, argv, "--ht") > 0) {
 		hi.tdf();
+		exit(1);
 	} else if (arg_count(argc, argv, "--hl") > 0) {
 		hi.filtering();
+		exit(1);
 	} else if (arg_count(argc, argv, "--hd") > 0) {
 		hi.device();
+		exit(1);
 	} else if (arg_count(argc, argv, "--hv") > 0) {
 		hi.visp();
+		exit(1);
 	} else if (arg_count(argc, argv, "--hz") > 0) {
 		hi.undocumented();
+		exit(1);
+	} else if (arg_count(argc, argv, "--hA") > 0) {
+                hi.usage();
+                hi.defaults();
+                hi.file();
+                hi.exclusion();
+                hi.alignment();
+                hi.rendering();
+                hi.exposure();
+                hi.tdf();
+                hi.filtering();
+                hi.device();
+                hi.visp();
+                hi.undocumented();
+		exit(1);
 	}
 
 	/*
@@ -674,7 +700,7 @@ int main(int argc, const char *argv[]){
 		} else if (!strncmp(argv[i], "--visp-scale=", strlen("--visp-scale="))) {
 			sscanf(argv[i] + strlen("--visp-scale="), "%lf", &vise_scale_factor);
 			if (vise_scale_factor <= 0.0) {
-				fprintf(stderr, "\n\n*** Error: VISE scale "
+				fprintf(stderr, "\n\n*** Error: VISP scale "
 						"must be greater than zero. ***\n\n\n");
 				exit(1);
 			}
@@ -777,13 +803,17 @@ int main(int argc, const char *argv[]){
 			/*
 			 * Apply implication logic.
 			 */
-
+#if 0
+			/*
+			 * XXX: if this is really desired, it must be moved above render_init().
+			 */
 			if (extend == 0 && vise_count != 0) {
-				implication::changed("VISE requires increased image extents.",
+				implication::changed("VISP requires increased image extents.",
 				                     "Image extension is now enabled.",
 						     "--extend");
 				extend = 1;
 			}
+#endif
 
 			if (cx_parameter != 0 && !exposure_register) {
 				implication::changed("Certainty-based rendering requires exposure registration.",
@@ -813,7 +843,7 @@ int main(int argc, const char *argv[]){
 					input_exposure = new xvp610_320x240::exposure[argc - i - 1];
 					view_angle = xvp610_320x240::view_angle();
 				} else if (!strcmp(device, "ov7620_raw_linear")) {
-					device_response[psf_linear] = NULL;
+					device_response[psf_linear] = new ov7620_raw_linear::lpsf();
 					device_response[psf_nonlinear] = NULL;
 					input_exposure = new ov7620_raw_linear::exposure[argc - i - 1];
 					d2::image_rw::set_default_bayer(IMAGE_BAYER_BGRG);
@@ -920,6 +950,23 @@ int main(int argc, const char *argv[]){
 
 						response[n] = new d2::box(box_diameter / 2);
 
+					} else if (!strncmp(psf[n], "circle=", strlen("circle="))) {
+
+						/*
+						 * Circular filter
+						 */
+
+						double diameter;
+
+						if (sscanf(psf[n] + strlen("circle="), "%lf", &diameter)
+								!= 1) {
+							fprintf(stderr, "\n\n*** Error: circle= takes a "
+									"numerical argument ***\n\n");
+							exit(1);
+						}
+
+						response[n] = new d2::circle(diameter / 2);
+
 					} else {
 						fprintf(stderr, "Unknown point-spread function %s.\n\n", psf[n]);
 						exit(1);
@@ -975,8 +1022,10 @@ int main(int argc, const char *argv[]){
 			 * There should be at least two file arguments.
 			 */
 
-			if (i >= argc - 1)
+			if (i >= argc - 1) {
 				hi.usage();
+				exit(1);
+			}
 
 			d2::image_rw::init(argc - i - 1, argv + i, argv[argc - 1], input_exposure, output_exposure);
 			ochain_names[0] = argv[argc - 1];
@@ -1181,5 +1230,6 @@ int main(int argc, const char *argv[]){
 	 */
 
 	hi.usage();
+	exit(1);
 }
 

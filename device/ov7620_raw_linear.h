@@ -24,60 +24,14 @@
 #include "../d2.h"
 
 /*
- * Device module for the IBM PC Camera Pro (IBM VGA Camera Model XVP610; FCC ID
- * KSX-X9902).
+ * Device module for the OmniView OV7620 chip.
  *
  * This module is designed for use with the Linux 2.6.x driver patched with
  * code available at:
  *
- * http://auricle.dyndns.org/xvp610/
+ * http://auricle.dyndns.org/ov7620/
  *
  */
-
-/*
- * PSF Data
- */
-
-#define LPSF_ROWS 3
-#define LPSF_COLS 3
-
-static const ale_real ov7620_raw_linear_lpsf_calibrated_response[LPSF_ROWS][LPSF_COLS][3] = {
-	{
-		{ 1.6, 4.8, 3.2 },
-		{ 6.4, 6.4, 8 },
-		{ 0, 0, 0 }
-	}, {
-		{ 1.6, -6.4, -1.6 },
-		{ 58.4, 61.6, 80.8 },
-		{ 0, 0, 0 }
-	}, {
-		{ -1.6, -1.6, -1.6 },
-		{ 0, 0, 0 },
-		{ 0, 0, 0 }
-	}
-};
-
-#define NLPSF_ROWS 1
-#define NLPSF_COLS 5
-
-static const ale_real ov7620_raw_linear_nlpsf_calibrated_response[NLPSF_ROWS][NLPSF_COLS][3] = {
-	{
-#if 0
-		/* Filter 12 */
-		{ -2.9, -4.9, -2.7 },
-		{ -11.4, -5.4, -9.1 },
-		{ 40.9, 39.4, 34.2 },
-		{ -3.8, -3, -3.6 },
-		{ -4.1, -4.5, -3.2 }
-#endif
-		/* Filter 11 */
-		{ -6.1, -4.9, -5.9 },
-		{ -8.2, -5.4, -5.9 },
-		{ 36.1, 34.6, 31 },
-		{ -3.8, -3,  -3.6 },
-		{ -4.1, -4.5, -3.2 }
-	}
-};
 
 class ov7620_raw_linear {
 public:
@@ -88,21 +42,16 @@ public:
 
 	class lpsf : public d2::box {
 	public:
-		lpsf() : d2::box (0.5) {
-			fprintf(stderr, "\n\n*** Error: Undefined device-specific response. ***\n\n");
-			exit(1);
-		}
-	};
+		/*
+		 * A box filter of diameter ~0.6325 results in an optical fill
+		 * factor of 40%.  Experimentation shows that filters of about 
+		 * this size perform well with this sensor, and the fill factor
+		 * value matches data available on the web about this sensor:
+		 *
+		 * http://www.stanford.edu/class/ee109/reference/camera/DS-OV7620-1.3.pdf
+		 */
 
-	/*
-	 * Non-linear colorspace PSF
-	 */
-
-	class nlpsf : public d2::psf_template<NLPSF_ROWS, NLPSF_COLS> {
-	public:
-		nlpsf() : d2::psf_template<NLPSF_ROWS, NLPSF_COLS> (1, 10, ov7620_raw_linear_nlpsf_calibrated_response) {
-			fprintf(stderr, "\n\n*** Error: Undefined device-specific response. ***\n\n");
-			exit(1);
+		lpsf() : d2::box (0.3162) {
 		}
 	};
 

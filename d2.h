@@ -89,6 +89,7 @@ namespace d2 {
 #include "d2/render/psf/psf.h"
 #include "d2/render/psf/psf_template.h"
 #include "d2/render/psf/box.h"	
+#include "d2/render/psf/circle.h"	
 #include "d2/render/psf/sum.h"
 #include "d2/render/psf/stdin.h"	
 #include "d2/render/psf/stdin_vg.h"	

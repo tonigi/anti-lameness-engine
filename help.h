@@ -66,21 +66,21 @@ public:
 			BETWEEN_SECTIONS
 			"Help options:\n"
 			HEADER_SPACE
-			"--hu              Usage help (this message).\n"
+			"--hu              Usage (this message).\n"
 			"--hq              Default settings.\n"
-			"--hf              Image file help.\n"
-			"--he              Exclusion regions help.\n"
-			"--ha              Alignment help (not exposure-related).\n"
-			"--hr              Rendering help (not exposure-related).\n"
-			"--hx              Exposure help.\n"
-			"--ht              Transformation data file help.\n"
-			"--hl              Filtering help (PSFs, rendering chains).\n"
-			"--hd              Device help.\n"
-			"--hv              Video stream processing help (Experimental).\n"
-			"--hz              Undocumented option help.\n"
+			"--hf              Image files.\n"
+			"--he              Exclusion regions.\n"
+			"--ha              Alignment (not exposure-related).\n"
+			"--hr              Rendering (not exposure-related).\n"
+			"--hx              Exposure.\n"
+			"--ht              Transformation data files.\n"
+			"--hl              Filtering (PSFs, rendering chains).\n"
+			"--hd              Devices.\n"
+			"--hv              Video stream processing (Experimental).\n"
+			"--hz              Undocumented options.\n"
+			"--hA              Concatenate all help pages.\n"
 			"\n",
 			invocation, invocation, invocation);
-		exit(1);
 	}
 
 	void defaults() {
@@ -141,7 +141,6 @@ public:
 			"   --cx 0.7\n"
 			"\n"
 		       );
-		exit(1);
 	}
 	
 	void file() {
@@ -170,7 +169,6 @@ public:
 			"--no-inc          Don't produce incremental output.\n"
 			"\n"
 		       );
-		exit(1);
 	}
 	void alignment() {
 		banner("Alignment");
@@ -219,11 +217,11 @@ public:
 			"--bda-rate=x      Barrel distortion rate of change maximum  (0.0004 is default)\n"   
 			"--lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (1 is def.)\n"
 			BETWEEN_SECTIONS
-			"Alignment weight map [experimental]:\n"
+			"Alignment weight map:\n"
 			HEADER_SPACE
 			"--wm <f> <x> <y>  Use weight map image <f> at offset (<x>, <y>)\n"
 			BETWEEN_SECTIONS
-			"Frequency-based alignment [experimental]:\n"
+			"Frequency-based alignment:\n"
 			HEADER_SPACE
 			"--fl <h> <v> <a>  High-pass filters: horizontal <h>, vertical <v>, average <a>.\n"
 			"                     Values should fall between 0 (pass all) and 1 (pass none).\n"
@@ -236,7 +234,7 @@ public:
 #endif
 			"--flshow <o>      Write high-pass filtered data to file <o>.\n"
 			BETWEEN_SECTIONS
-			"Algorithmic alignment weighting [experimental]:\n"
+			"Algorithmic alignment weighting:\n"
 			HEADER_SPACE
 			"--wmx <e> <r> <d> Write reference <r>, definition <d>, execute `<e> <f> <d>`,\n"
 			"                  read weights <r> back.\n"
@@ -247,17 +245,16 @@ public:
 			"                           first re-build with POSIX=1.\n"
 #endif
 			BETWEEN_SECTIONS
-			"Global searching [experimental and undocumented]:\n"
+			"Global searching [experimental]:\n"
 			HEADER_SPACE
 			"--gs <type>       Set global search to <type>, one of:\n"
-			"                     default   Alignment default [default]\n"
+			"                     local     Local alignment only [default]\n"
 			"                     inner     Alignment reference image inner region\n"
 			"                     outer     Alignment reference image outer region\n"
 			"                     all       Union of inner and outer\n"
 			"                     central   inner if below threshold or better; else, outer.\n"
 			"\n"
 		       );
-		exit(1);
 	}
 
 	void rendering() {
@@ -290,7 +287,7 @@ public:
 			"                     (See also --device, --nlpsf, and --lpsf.)\n"
 #endif
 			BETWEEN_SECTIONS
-			"Bayer pattern [experimental]:\n"
+			"Bayer pattern:\n"
 			HEADER_SPACE
 			"--bayer <b>       Set default bayer pattern to <b>, one of:\n"
 			"                    (clockwise from top left pixel)\n"
@@ -302,7 +299,6 @@ public:
 			"                  Default is none or device-specific.\n"
 			"\n"
 		);
-		exit(1);
 	}
 	void filtering() {
 		banner("Filtering");
@@ -314,6 +310,7 @@ public:
 			"--nlpsf <p>       Set non-linear colorspace point-spread function to <p>\n"
 			"                     Available point-spread functions:\n"
 			"                        box=<diameter>\n"
+			"                        circle=<diameter>\n"
 			"                        stdin\n"
 			"                        stdin_vg\n"
 			"                        <p>+<p> (summation)\n"
@@ -365,7 +362,6 @@ public:
 			"                     afilter        internal (approximates triangle:2)\n"
 			"\n"
 			);
-		exit(1);
 	}
 	void device() {
 		banner("Device");
@@ -377,10 +373,9 @@ public:
 			"                     Available devices:\n"
 			"                        xvp610_320x240\n"
 			"                        xvp610_640x480\n"
-			"                        ov7620_raw_linear [experimental and undocumented]\n"
+			"                        ov7620_raw_linear\n"
 			"\n"
 		       );
-		exit(1);
 	}
 	void exclusion() {
 		banner("Exclusion");
@@ -395,7 +390,6 @@ public:
 			"                     using unscaled rendering spatial coordinates.\n"
 			"\n"
 		       );
-		exit(1);
 	}
 	void exposure() {
 		banner("Exposure");
@@ -421,7 +415,6 @@ public:
 			"--exp-noextend    Restrict to the original frame's range.\n"
 			"\n"
 		       );
-		exit(1);
 	}
 	void tdf() {
 		banner("Transformation data files");
@@ -479,7 +472,6 @@ public:
 			"E 640 480 100 0 0\n"
 			"\n"
 			);
-		exit(1);
 	}
 	void visp() {
 		banner("Video stream processing");
@@ -500,7 +492,6 @@ public:
 			"--visp-scale=<x>  Use scale <x> for VISP output.  (default is 1.0)\n"
 			"--exshow          For single-invariant chains, show --ex regions dimmed.\n"
 			"\n");
-		exit(1);
 	}
 	void undocumented() {
 		banner("Undocumented");
@@ -519,7 +510,6 @@ public:
 			"--ptcalc\n"
 			"\n"
 			);
-		exit(1);
 	}
 };
 

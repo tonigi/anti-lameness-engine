@@ -260,11 +260,10 @@ private:
 	/*
 	 * Global search parameter
 	 *
-	 * 0.  Alignment default.
-	 *
+	 * 0.  Local:   Local search only.
 	 * 1.  Inner:   Alignment reference image inner region
 	 * 2.  Outer:   Alignment reference image outer region
-	 * 3.  All:     Union of inner and outer
+	 * 3.  All:     Alignment reference image inner and outer regions.
 	 * 4.  Central: Inner if possible; else, best of inner and outer.
 	 */
 
@@ -1833,7 +1832,7 @@ public:
 	 * Set the global search type.
 	 */
 	static void gs(const char *type) {
-		if (!strcmp(type, "default")) {
+		if (!strcmp(type, "local")) {
 			_gs = 0;
 		} else if (!strcmp(type, "inner")) {
 			_gs = 1;

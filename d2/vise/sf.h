@@ -67,6 +67,7 @@ public:
 		if (typeid(*r) == typeid(incremental)
 		 && ((incremental *)r)->get_invariant()->is_last()) {
 			scf = ((incremental *)r)->get_invariant()->ssfe()->get_scaled_filter();
+			assert(scf);
 			if (scf->is_coarse() && scf->get_filter()->support() >= 1) {
 				replace = 1;
 				replace_ex = ((incremental *)r)->get_invariant()->ssfe()->ex_is_honored();
@@ -87,10 +88,11 @@ public:
 		image *rendered = new image_ale_real(new_height, new_width, 3);
 
 		const image *replace_image = NULL;
-		if (replace)
+		
+		if (replace) {
 			replace_image = image_rw::open(frame_number);
-
-		scf->set_parameters(t, s, replace_image);
+			scf->set_parameters(t, s, replace_image);
+		}
 
 		for (unsigned int i = 0; i < rendered->height(); i++)
 		for (unsigned int j = 0; j < rendered->width();  j++) {
