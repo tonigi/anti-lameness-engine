@@ -260,6 +260,7 @@ public:
 			"                     outer     Alignment reference image outer region\n"
 			"                     all       Union of inner and outer\n"
 			"                     central   inner if below threshold or better; else, outer.\n"
+			"--gs-mo <x>       Set <x> pixel min. overlap for global search. (16 is default)\n"
 			"\n"
 		       );
 	}

@@ -94,5 +94,6 @@ int align::match_count = 0;
 
 ale_pos align::_mc = 0;
 int align::_gs = 0;
+unsigned int align::_gs_mo = 16;
 int *align::ax_parameters = NULL;
 int align::ax_count = 0;

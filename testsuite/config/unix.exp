@@ -1,0 +1,287 @@
+###
+### Tool initialization file.  For more information, see:
+###
+### http://www.gnu.org/software/dejagnu/manual/
+###
+
+###
+### Run parameters
+###
+
+set KEEP_TEMPORARIES 0
+
+###
+### Useful global variables 
+###
+
+# 
+# Directory and extension names
+# 
+
+set svg_dir svg
+set svg_temp_ext temp.svg
+set output_ext output.ppm
+set png_tempdir temp.png
+set ppm_tempdir temp.ppm
+set trans_tempdir temp.t
+
+#
+# Path id counter
+#
+
+set path_id 10
+
+###
+### Helper routines
+###
+
+#
+# Delete temporaries
+#
+
+proc ale_cleanup {} {
+	global ppm_tempdir
+	global png_tempdir
+	global svg_temp_ext
+	global output_ext
+
+	exec find testsuite \( -name $ppm_tempdir -o -name $png_tempdir \) -type d -print0 | xargs -0 rm -rf
+	exec find testsuite -name "*.$svg_temp_ext" -print0 | xargs -r -0 rm
+	exec find testsuite -name "*.$output_ext" -print0 | xargs -r -0 rm
+}
+
+###
+### Standard DejaGnu procedures
+###
+
+#
+# Actions to take before exit
+#
+
+proc ale_exit {} {
+
+	global KEEP_TEMPORARIES
+
+	if $KEEP_TEMPORARIES {
+		return
+	}
+
+	#
+	# Delete temporaries if KEEP_TEMPORARIES is not set
+	#
+
+	ale_cleanup
+}
+
+#
+# Display and return the version and path of the program being run.
+#
+
+proc ale_version {} {
+	global ALE
+	clone_output "\nProgram tested: [which $ALE]\n\nProgram Version:\n\n[exec $ALE --version]\n"
+}
+
+###
+### SVG file creation routines (based on inkscape file output [http://www.inkscape.org])
+###
+
+proc svg_header {svg_file width height} {
+	puts $svg_file "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"
+	puts $svg_file {
+		<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN"
+		"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+		<svg
+		   id="svg1"
+		   sodipodi:version="0.32"
+		   inkscape:version="0.39"
+		   xmlns="http://www.w3.org/2000/svg"
+		   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+		   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+		   xmlns:xlink="http://www.w3.org/1999/xlink"
+		   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+		   xmlns:cc="http://web.resource.org/cc/"
+		   xmlns:dc="http://purl.org/dc/elements/1.1/"
+	}
+
+        puts $svg_file "width=\"${width}in\""
+	puts $svg_file "height=\"${height}in\""
+
+	puts $svg_file {
+		   sodipodi:docbase="/var/www/digicam/download/ale-0.7.2-pre1/testsuite/svg"
+		   sodipodi:docname="ellipse.svg">
+		  <defs
+		     id="defs3" />
+		  <sodipodi:namedview
+		     id="base"
+		     pagecolor="#ffffff"
+		     bordercolor="#666666"
+		     borderopacity="1.0"
+		     inkscape:pageopacity="0.0"
+		     inkscape:pageshadow="2"
+		     inkscape:zoom="0.43415836"
+		     inkscape:cx="305.25953"
+		     inkscape:cy="417.84947"
+		     inkscape:window-width="640"
+		     inkscape:window-height="527"
+		     showborder="true"
+		     inkscape:window-x="0"
+		     inkscape:window-y="19" />
+		  <metadata
+		     id="metadata4">
+		    <rdf:RDF
+		       id="RDF5">
+		      <cc:Work
+			 rdf:about=""
+			 id="Work6">
+			<dc:format
+			   id="format7">image/svg+xml</dc:format>
+			<dc:type
+			   id="type9"
+			   rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+		      </cc:Work>
+		    </rdf:RDF>
+		  </metadata>
+	}
+}
+
+proc svg_footer {svg_file} {
+	puts $svg_file {
+		</svg>
+	}
+}
+
+proc svg_open {name width height} {
+	global svg_dir
+	global srcdir
+	global subdir
+	global svg_temp_ext
+
+	exec mkdir -p $srcdir/$subdir/$svg_dir
+	
+	set svg $srcdir/$subdir/$svg_dir/$name.$svg_temp_ext
+	set svg_file [open $svg "w"]
+
+	svg_header $svg_file $width $height
+
+	return $svg_file
+}
+
+proc svg_close {svg_file} {
+	svg_footer $svg_file
+	close $svg_file
+}
+
+proc svg_ellipse {svg_file px py rx ry {sc "#000000"} {fc "#000000"} {so 1.0} {fo 1.0} } {
+	global path_id
+
+	puts $svg_file "<path sodipodi:type=\"arc\""
+	puts $svg_file "style=\"fill:$fc;fill-opacity:$fo;fill-rule:evenodd;stroke:$sc;stroke-width:1.0000000pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:$so;\""
+	puts $svg_file "id=\"path$path_id\""
+	puts $svg_file "sodipodi:cx=\"${px}in\""
+	puts $svg_file "sodipodi:cy=\"${py}in\""
+	puts $svg_file "sodipodi:rx=\"${rx}in\""
+	puts $svg_file "sodipodi:ry=\"${ry}in\""
+	puts $svg_file {
+		     d="M 273.51771 102.24803 A 112.28622 43.187008 0 1 0 48.945274,102.24803 A 112.28622 43.187008 0 1 0 273.51771 102.24803 z"
+		     />
+	}
+
+	incr path_id
+}
+
+proc svg_circle {svg_file px py r {sc "#000000"} {fc "#000000"} {so 1.0} {fo 1.0} } {
+	svg_ellipse $svg_file $px $py $r $r $sc $fc $so $fo
+}
+
+###
+### File readers and converters
+###
+
+proc svg_file {name} {
+	global svg_dir
+	global srcdir
+	global subdir
+	global svg_temp_ext
+	set svg_base $srcdir/$subdir/$svg_dir/$name
+
+	if [file exists $svg_base.$svg_temp_ext] {
+		return $svg_base.$svg_temp_ext
+	} elseif [file exists $svg_base.svg] {
+		return $svg_base.svg
+	} else {
+		error "Cannot find SVG file for name \"$svg_base\"."
+	}
+
+	return $svg
+}
+
+proc png_file {name {bg "white"} } {
+	global png_tempdir
+	global srcdir
+	global subdir
+	set png $srcdir/$subdir/$png_tempdir/$name-$bg.png
+
+	if ([file exists $png]) {
+		return $png
+	}
+
+	exec mkdir -p $srcdir/$subdir/$png_tempdir
+	exec inkscape --export-dpi=1 -b $bg -f [svg_file $name] -e $png
+
+	if (![file exists $png]) {
+		error "Could not create $png."
+	}
+
+	return $png
+}
+
+proc ppm_file {name {bg "white"} } {
+	global ppm_tempdir
+	global srcdir
+	global subdir
+	set ppm $srcdir/$subdir/$ppm_tempdir/$name-$bg.ppm
+
+	if ([file exists $ppm]) {
+		return $ppm
+	}
+
+	exec mkdir -p $srcdir/$subdir/$ppm_tempdir
+	exec pngtopnm [png_file $name $bg] > $ppm
+
+	if (![file exists $ppm]) {
+		error "Could not create $ppm."
+	}
+
+	return $ppm
+}
+
+proc trans_file {name} {
+	global trans_tempdir
+	global srcdir
+	global subdir
+	set result $srcdir/$subdir/$trans_tempdir/$name.t
+
+	exec mkdir -p $srcdir/$subdir/$trans_tempdir
+
+	return $result
+}
+
+
+proc out_file {name} {
+	global ppm_tempdir
+	global srcdir
+	global subdir
+	global output_ext
+	set result $srcdir/$subdir/$ppm_tempdir/$name.$output_ext
+
+	exec mkdir -p $srcdir/$subdir/$ppm_tempdir
+
+	return $result
+}
+
+###
+### Clean up before running anything
+###
+
+ale_cleanup

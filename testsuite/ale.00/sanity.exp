@@ -1,0 +1,75 @@
+###
+### Test environment sanity check.  For more information, see:
+###
+### http://www.gnu.org/software/dejagnu/manual/
+###
+
+###
+### Import globals (XXX: is this necessary?)
+###
+
+global ALE
+
+###
+### Tests
+###
+
+#
+# ALE version: response and assertions check
+#
+
+set test "ALE version response"
+set result [exec $ALE --version]
+if [regexp ".*ALE Version.*" $result] {
+	pass "$test";
+} else {
+	fail "$test";
+	clone_output "$result";
+}
+
+set test "ALE assertions enabled"
+if [regexp ".*Assertions: *Enabled" $result] {
+	pass "$test";
+} else {
+	fail "$test";
+}
+
+#
+# PPM files: availability (initial and second access)
+#
+
+set test "PPM file availability"
+if [file exists [ppm_file ellipse]] {
+	pass "$test"
+} else {
+	fail "$test"
+}
+
+set test "PPM file availability (re-access)"
+if [file exists [ppm_file ellipse]] {
+	pass "$test"
+} else {
+	fail "$test"
+}
+
+#
+# SVG file construction: completion and validity
+#
+
+set test "SVG file construction"
+
+set test_file [svg_open $test-1 300 200]
+svg_ellipse $test_file 150 100 100 50
+svg_close $test_file
+
+if [file exists [svg_file $test-1]] {
+	pass "$test (completion)"
+} else {
+	fail "$test (completion)"
+}
+
+if [file exists [png_file $test-1]] {
+	pass "$test (validity)"
+} else {
+	fail "$test (validity)"
+}

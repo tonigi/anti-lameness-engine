@@ -64,8 +64,14 @@ LDFLAGS:=$(if $(use_imagemagick),$(IMAGEMAGICK_LDFLAGS)) $(FFTW_LDFLAGS) -lm
 
 all: ale-phony
 
+# ale: ale-phony
+#	@echo "Finished making ALE."
+
 clean:
 	rm -f ale
+	rm -f ale.sum ale.log
+	find testsuite -name "*temp.*" | xargs rm -rf
+	find testsuite -name "*.output.*" | xargs rm -rf
 
 ale-phony: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h
 	g++ -o ale $(CFLAGS) ale.cc d2.cc $(LDFLAGS)
@@ -76,3 +82,12 @@ ale-phony: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h
 
 ale.exe: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h
 	i586-mingw32msvc-g++ -Wall $(PRECISION_CFLAGS) $(DEBUG_CFLAGS) -o ale.exe -O2 ale.cc d2.cc -lm 
+
+#
+# The following rules may require additional software to be installed.
+#
+
+ALE=./ale
+
+check: # $(ALE)
+	runtest --tool ale ALE=$(ALE) --srcdir ./testsuite

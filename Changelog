@@ -1,3 +1,16 @@
+0.7.1-patch2
+
+o	Add a new option --gs-mo to establish a minimum overlap area for
+	global searches.  In combination with --exp-noregister, this may allow
+	more of Derrick Brashear's historical USGS contour map image sets to
+	align successfully.
+
+o	Allow the scale factor to be explicitly set to one.
+
+o	Print version information to stdout instead of stderr.
+
+o	Add a rudimentary test suite.
+
 0.7.1-patch1
 
 o	Add support for --perturb-{upper,lower}=x%, where the value x% is

@@ -283,6 +283,12 @@ private:
 	static int _gs;
 
 	/*
+	 * Minimum overlap for global searches
+	 */
+
+	static unsigned int _gs_mo;
+
+	/*
 	 * Exclusion regions
 	 */
 
@@ -302,8 +308,68 @@ private:
 	};
 
 	/*
+	 * Overlap function.  Determines the number of pixels in areas where
+	 * the arrays overlap.  Uses the reference array's notion of pixel
+	 * positions.
+	 */
+	static unsigned int overlap(struct scale_cluster c, transformation t, int ax_count) {
+		assert (reference_image);
+
+		unsigned int result = 0;
+
+		point offset = c.accum->offset();
+
+		for (unsigned int i = 0; i < c.accum->height(); i++)
+		for (unsigned int j = 0; j < c.accum->width();  j++) {
+
+			int ax_ok = 1;
+
+			for (int idx = 0; idx < ax_count; idx++)
+				if (i + offset[0] >= c.ax_parameters[idx * 4 + 0]
+				 && i + offset[0] <= c.ax_parameters[idx * 4 + 1]
+				 && j + offset[1] >= c.ax_parameters[idx * 4 + 2]
+				 && j + offset[1] <= c.ax_parameters[idx * 4 + 3])
+					ax_ok = 0;
+
+			if (ax_ok == 0)
+				continue;
+
+			/*
+			 * Transform
+			 */
+
+			struct point q;
+
+			q = t.scaled_inverse_transform(
+				point(i + offset[0], j + offset[1]));
+
+			ale_pos ti = q[0];
+			ale_pos tj = q[1];
+
+			/*
+			 * Check that the transformed coordinates are within
+			 * the boundaries of array c.input, and check that the
+			 * weight value in the accumulated array is nonzero,
+			 * unless we know it is nonzero by virtue of the fact
+			 * that it falls within the region of the original
+			 * frame (e.g. when we're not increasing image
+			 * extents).
+			 */
+
+			if (ti >= 0
+			 && ti <= c.input->height() - 1
+			 && tj >= 0
+			 && tj <= c.input->width() - 1
+			 && c.defined->get_pixel(i, j)[0] != 0)
+				result++;
+		}
+
+		return result;
+	}
+
+	/*
 	 * Not-quite-symmetric difference function.  Determines the difference in areas
-	 * where the arrays overlap.  Uses the first array's notion of pixel positions.
+	 * where the arrays overlap.  Uses the reference array's notion of pixel positions.
 	 *
 	 * For the purposes of determining the difference, this function divides each
 	 * pixel value by the corresponding image's average pixel magnitude, unless we
@@ -1042,8 +1108,10 @@ private:
 					transformation t = offset;
 					t.translate(point(i, j));
 					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+					unsigned int ovl = overlap(si, t, local_ax_count);
 
-					if (v < lowest_v || (!finite(lowest_v) && finite(v))) {
+					if ((v < lowest_v && ovl >= _gs_mo) 
+					 || (!finite(lowest_v) && finite(v))) {
 						lowest_v = v;
 						lowest_t = t;
 					}
@@ -1061,8 +1129,10 @@ private:
 					transformation t = offset;
 					t.translate(point(i, j));
 					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+					unsigned int ovl = overlap(si, t, local_ax_count);
 
-					if (v < lowest_v || (!finite(lowest_v) && finite(v))) {
+					if ((v < lowest_v && ovl >= _gs_mo)
+					 || (!finite(lowest_v) && finite(v))) {
 						lowest_v = v;
 						lowest_t = t;
 					}
@@ -1072,8 +1142,10 @@ private:
 					transformation t = offset;
 					t.translate(point(i, j));
 					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+					unsigned int ovl = overlap(si, t, local_ax_count);
 
-					if (v < lowest_v || (!finite(lowest_v) && finite(v))) {
+					if ((v < lowest_v && ovl >= _gs_mo)
+					 || (!finite(lowest_v) && finite(v))) {
 						lowest_v = v;
 						lowest_t = t;
 					}
@@ -1083,8 +1155,10 @@ private:
 					transformation t = offset;
 					t.translate(point(i, j));
 					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+					unsigned int ovl = overlap(si, t, local_ax_count);
 
-					if (v < lowest_v || (!finite(lowest_v) && finite(v))) {
+					if ((v < lowest_v && ovl >= _gs_mo)
+					 || (!finite(lowest_v) && finite(v))) {
 						lowest_v = v;
 						lowest_t = t;
 					}
@@ -1094,8 +1168,10 @@ private:
 					transformation t = offset;
 					t.translate(point(i, j));
 					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+					unsigned int ovl = overlap(si, t, local_ax_count);
 
-					if (v < lowest_v || (!finite(lowest_v) && finite(v))) {
+					if ((v < lowest_v && ovl >= _gs_mo)
+					 || (!finite(lowest_v) && finite(v))) {
 						lowest_v = v;
 						lowest_t = t;
 					}
@@ -1929,6 +2005,13 @@ public:
 			fprintf(stderr, "\n\n\n*** Error: bad global search type. ***\n\n\n");
 			exit(1);
 		}
+	}
+
+	/*
+	 * Set the minimum overlap for global searching
+	 */
+	static void gs_mo(unsigned int value) {
+		_gs_mo = value;
 	}
 
 	/*

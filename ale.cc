@@ -64,9 +64,9 @@
  * Version Information
  */
 
-char *short_version = "0.7.1-patch1";
+char *short_version = "0.7.1-patch2";
 
-char *version = "ALE Version:      0.7.1-patch1\n"
+char *version = "ALE Version:      0.7.1-patch2\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else
@@ -161,7 +161,7 @@ int main(int argc, const char *argv[]){
 		 * Output the version
 		 */
 
-		fprintf(stderr, "%s", version);
+		fprintf(stdout, "%s", version);
 
 		return 0;
 	} else if (arg_count(argc, argv, "--hu") > 0) {
@@ -422,6 +422,17 @@ int main(int argc, const char *argv[]){
 				not_enough("--gs");
 
 			d2::align::gs(argv[i+1]);
+			i += 1;
+
+		} else if (!strcmp(argv[i], "--gs-mo")) {
+			if (i + 1 >= argc)
+				not_enough("--gs-mo");
+
+			unsigned int mo_parameter;
+			if (sscanf(argv[i+1], "%u", &mo_parameter) != 1)
+				bad_arg("--gs-mo");
+
+			d2::align::gs_mo(mo_parameter);
 			i += 1;
 
 		} else if (!strcmp(argv[i], "--mc")) {
@@ -710,9 +721,9 @@ int main(int argc, const char *argv[]){
 			}
 		} else if (!strncmp(argv[i], "--scale=", strlen("--scale="))) {
 			sscanf(argv[i] + strlen("--scale="), "%lf", &scale_factor);
-			if (scale_factor <= 1.0) {
+			if (scale_factor < 1.0) {
 				fprintf(stderr, "\n\n*** Error: Scale "
-						"must be greater than one. ***\n\n\n");
+						"must be at least one. ***\n\n\n");
 				exit(1);
 			}
 		} else if (!strncmp(argv[i], "--metric=", strlen("--metric="))) {
