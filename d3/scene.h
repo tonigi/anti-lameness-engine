@@ -215,11 +215,18 @@ class scene {
 
 		/*
 		 * Traverse the sub-graph of triangles around a given vertex,
-		 * and sum over a given function.
+		 * and return an aggregate result for a given function
 		 *
-		 * STARTING_NODE should be left at 1 if called externally.
+		 * TYPE is one of:
+		 *
+		 * 	0 returns the sum
+		 * 	1 returns the maximum
+		 *
+		 * STARTING_NODE should be left at 1 when this function is
+		 * called externally.
 		 */
-		ale_accum traverse_sum_around_vertex(point *vertex, ale_accum (foo::*fp)(), int starting_node = 1) {
+		ale_accum traverse_around_vertex(point *vertex, ale_accum (triangle::*fp)(), int type, 
+				int starting_node = 1) {
 
 			/*
 			 * Check whether we've already visited this node.
@@ -237,14 +244,32 @@ class scene {
 
 
 			/*
-			 * Perform summation.
+			 * Perform the aggregation operation.
 			 */
 
-			ale_accum sum = this->*fp();
+			ale_accum aggregate = (this->*fp)();
 
 			for (int v = 0; v < 3; v++)
-			if  (neighbors[v])
-				sum += neighbors[v]->traverse_sum_around_vertex(vertex, fp, 0);
+			if  (neighbors[v]) {
+				ale_accum new_value = neighbors[v]->traverse_sum_around_vertex(vertex, fp, 0);
+				switch (type) {
+				case 0:
+					/*
+					 * Sum
+					 */
+					aggregate += new_value;
+					break;
+				case 1:
+					/*
+					 * Maximum
+					 */
+					if (new_value > aggregate)
+						aggregate = new_value;
+					break;
+				default:
+					assert(0);
+				}
+			}
 
 			/*
 			 * Clean up traversal colors.
@@ -254,10 +279,10 @@ class scene {
 				traversal_clear();
 
 			/*
-			 * Return the sum.
+			 * Return the aggregate.
 			 */
 
-			return sum;
+			return aggregate;
 		}
 
 		void write_tree(int print_vertices = 0, int level = 0) {
@@ -1022,7 +1047,7 @@ class scene {
 				 * a given amount the angle between the normals of adjacent triangles.
 				 */
 
-				if (max_neighbor_angle_2() > M_PI / 6) {
+				if (max_neighbor_angle_2() > M_PI / 3) {
 					*vertices[v] = best_vertices[v];
 					continue;
 				}
