@@ -582,11 +582,6 @@ class scene {
 				if (!t)
 					continue;
 
-				point pp = _pt.scaled_transform(*t->vertices[0]);
-				point aa = _pt.inverse_transform_scaled(point(i, j, pp[2]));
-				if (i * im->width() + j < 100)
-					fprintf(stderr, "\n%d: (%u %u %f) --> (%f %f %f) ", i * im->width() + j, i, j, pp[2], aa[0], aa[1], aa[2]);
-
 				/*
 				 * Set new color and weight.
 				 */
@@ -623,8 +618,6 @@ class scene {
 			triangle **zbuf = init_zbuf(_pt);
 			zbuffer(_pt, zbuf, triangle_head[0]);
 			zbuffer(_pt, zbuf, triangle_head[1]);
-
-			fprintf(stderr, "[w=%u h=%u] ", width, height);
 
 			/*
 			 * Iterate over all points in the frame.
@@ -696,8 +689,6 @@ class scene {
 			triangle **zbuf = init_zbuf(_pt);
 			zbuffer(_pt, zbuf, triangle_head[0]);
 			zbuffer(_pt, zbuf, triangle_head[1]);
-
-			fprintf(stderr, "[w=%u h=%u] ", width, height);
 
 			/*
 			 * Iterate over all points in the frame.
