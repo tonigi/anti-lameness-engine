@@ -207,6 +207,34 @@ class scene {
 
 			neighbors[division_vertex]->unsplit_internals();
 		}
+
+		int split_on_aux() {
+			if (children[0] && children[1]) {
+				assert(aux_stat == d2::pixel(0, 0, 0));
+				return children[0]->split_on_aux()
+				    || children[1]->split_on_aux();
+			}
+
+			assert (!children[0] && !children[1] && !division_new_vertex);
+
+			if (aux_stat != d2::pixel(0, 0, 0)) 
+				return 0;
+
+			split();
+			return 1;
+		}
+
+		int unsplit_on_aux() {
+			if (aux_stat != d2::pixel(0, 0, 0)) {
+				unsplit();
+				return 1;
+			} else if (children[0] && children[1]) {
+				return children[0]->unsplit_on_aux()
+				    || children[1]->umsplit_on_aux();
+			}
+
+			return 0;
+		}
 	};
 
 	/*
