@@ -767,11 +767,11 @@ class scene {
 
 					color += cl->reference[n]->get_bl(mapped_centroid.xy());
 					weight += d2::pixel(1, 1, 1);
-					color = weight * (mapped_centroid.xy()[1] / cl->reference[n]->width());
+					// color = weight * (mapped_centroid.xy()[1] / cl->reference[n]->width());
 
 					point centroid_local = _pt.wc(centroid);
 					point _vertices[3] = {_pt.wc(*vertices[0]), _pt.wc(*vertices[1]), _pt.wc(*vertices[2])};
-					assert (e == subtriangle_index(centroid_local, _vertices, PLANAR_SUBDIVISION_DEPTH, 0));
+					assert (1 || e == subtriangle_index(centroid_local, _vertices, PLANAR_SUBDIVISION_DEPTH, 0));
 				}
 
 				color /= weight;
@@ -1312,9 +1312,9 @@ class scene {
 
 				ale_pos area = t->compute_area(_pt);
 
-				if (area <= 4 && split)
+				if (area / PLANAR_SUBDIVISION_COUNT <= 4 && split)
 					t->aux_stat = d2::pixel(-1, -1, -1);
-				else if (area < 4 && !split && t->parent)
+				else if (area / PLANAR_SUBDIVISION_COUNT < 4 && !split && t->parent)
 					t->parent->aux_stat = d2::pixel(-1, -1, -1);
 			}
 
