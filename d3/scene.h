@@ -364,113 +364,123 @@ class scene {
 	static void zbuffer(pt _pt, triangle **zbuf, triangle *t) {
 		int height = (int) floor(_pt.scaled_height());
 		int width  = (int) floor(_pt.scaled_width());
-		
-		if (t->division_new_vertex) {
-			assert (t->children[0]);
-			assert (t->children[1]);
-			zbuffer(_pt, zbuf, t->children[0]);
-			zbuffer(_pt, zbuf, t->children[1]);
-			return;
-		}
 
-		/*
-		 * Map the points of the triangle into the image space.
-		 */
+		while (t) {
 
-		point p[3];
-
-		for (int v = 0; v < 3; v++)
-			p[v] = _pt.scaled_transform(*t->vertices[v]);
-
-		/*
-		 * Determine the bounding box of the transformed vertices.
-		 */
-
-		point max = p[0], min = p[0];
-
-		for (int v = 1; v < 3; v++)
-		for (int d = 0; d < 2; d++) {
-			if (max[d] < p[v][d])
-				max[d] = p[v][d];
-			if (min[d] > p[v][d])
-				min[d] = p[v][d];
-		}
-
-		/*
-		 * Intersect the bounding box with the image boundary.
-		 *
-		 * XXX: this may include additional points
-		 *
-		 * XXX: this is horribly verbose
-		 */
-
-		if (min[0] >= height)
-			min[0] = height - 1;
-		if (min[1] >= width)
-			min[1] = width - 1;
-		if (max[0] >= height)
-			max[0] = height - 1;
-		if (max[1] >= width)
-			max[1] = width - 1;
-		if (max[0] < 0)
-			max[0] = 0;
-		if (max[1] < 0)
-			max[1] = 0;
-		if (min[0] < 0)
-			min[0] = 0;
-		if (min[1] < 0)
-			min[1] = 0;
-
-		/*
-		 * Iterate over all points in the bounding box.
-		 */
-
-		for (int i = (int) floor(min[0]); i <= (int) ceil(max[0]); i++)
-		for (int j = (int) floor(min[1]); j <= (int) ceil(max[1]); j++) {
-
-			triangle **zbuf_tri = zbuf + width * i + j;
-
-			/*
-			 * Simple test for depth
-			 *
-			 * XXX: this doesn't work correctly in all cases.
-			 */
-
-			if (*zbuf_tri && _pt.scaled_transform(*(*zbuf_tri)->vertices[0])[2] > p[0][2])
-				continue;
-			
-			/*
-			 * Test for interiority
-			 */
-
-			int lower[2] = {0, 0};
-			int upper[2] = {0, 0};
-
-			for (int v = 0; v < 3; v++) {
-				point cv = p[v];
-				point nv = p[(v + 1) % 3];
-				point test_point = point(i, j, 1);
-
-				for (int d = 0; d < 2; d++)
-				if ((test_point[d] - cv[d]) * (test_point[d] - nv[d]) < 0) {
-					int e = (d + 1) % 2;
-					ale_pos travel = (test_point[d] - cv[d]) / (nv[d] - cv[d]);
-					ale_pos intersect = cv[e] + travel * (nv[e] - cv[e]);
-					if (intersect <= test_point[e]) 
-						lower[e] = 1;
-					if (intersect >= test_point[e])
-						upper[e] = 1;
-				}
+			while (t->division_new_vertex) {
+				assert (t->children[0]);
+				assert (t->children[1]);
+				t = t->children[0];
 			}
 
-			if (!lower[0] || !upper[0] || !lower[1] || !upper[1])
-				continue;
-
 			/*
-			 * Assign a new triangle to the zbuffer
+			 * Map the points of the triangle into the image space.
 			 */
 
-			*zbuf_tri = t;
+			point p[3];
+
+			for (int v = 0; v < 3; v++)
+				p[v] = _pt.scaled_transform(*t->vertices[v]);
+
+			/*
+			 * Determine the bounding box of the transformed vertices.
+			 */
+
+			point max = p[0], min = p[0];
+
+			for (int v = 1; v < 3; v++)
+			for (int d = 0; d < 2; d++) {
+				if (max[d] < p[v][d])
+					max[d] = p[v][d];
+				if (min[d] > p[v][d])
+					min[d] = p[v][d];
+			}
+
+			/*
+			 * Intersect the bounding box with the image boundary.
+			 *
+			 * XXX: this may include additional points
+			 *
+			 * XXX: this is horribly verbose
+			 */
+
+			if (min[0] >= height)
+				min[0] = height - 1;
+			if (min[1] >= width)
+				min[1] = width - 1;
+			if (max[0] >= height)
+				max[0] = height - 1;
+			if (max[1] >= width)
+				max[1] = width - 1;
+			if (max[0] < 0)
+				max[0] = 0;
+			if (max[1] < 0)
+				max[1] = 0;
+			if (min[0] < 0)
+				min[0] = 0;
+			if (min[1] < 0)
+				min[1] = 0;
+
+			/*
+			 * Iterate over all points in the bounding box.
+			 */
+
+			for (int i = (int) floor(min[0]); i <= (int) ceil(max[0]); i++)
+			for (int j = (int) floor(min[1]); j <= (int) ceil(max[1]); j++) {
+
+				triangle **zbuf_tri = zbuf + width * i + j;
+
+				/*
+				 * Simple test for depth
+				 *
+				 * XXX: this doesn't work correctly in all cases.
+				 */
+
+				if (*zbuf_tri && _pt.scaled_transform(*(*zbuf_tri)->vertices[0])[2] > p[0][2])
+					continue;
+				
+				/*
+				 * Test for interiority
+				 */
+
+				int lower[2] = {0, 0};
+				int upper[2] = {0, 0};
+
+				for (int v = 0; v < 3; v++) {
+					point cv = p[v];
+					point nv = p[(v + 1) % 3];
+					point test_point = point(i, j, 1);
+
+					for (int d = 0; d < 2; d++)
+					if ((test_point[d] - cv[d]) * (test_point[d] - nv[d]) < 0) {
+						int e = (d + 1) % 2;
+						ale_pos travel = (test_point[d] - cv[d]) / (nv[d] - cv[d]);
+						ale_pos intersect = cv[e] + travel * (nv[e] - cv[e]);
+						if (intersect <= test_point[e]) 
+							lower[e] = 1;
+						if (intersect >= test_point[e])
+							upper[e] = 1;
+					}
+				}
+
+				if (!lower[0] || !upper[0] || !lower[1] || !upper[1])
+					continue;
+
+				/*
+				 * Assign a new triangle to the zbuffer
+				 */
+
+				*zbuf_tri = t;
+			}
+
+			while(t->parent && t == t->parent->children[1]) {
+				t = t->parent;
+			}
+
+			if (t->parent == NULL)
+				t = NULL;
+			else if (t == t->parent->children[0])
+				t = t->parent->children[1];
 		}
 	}
 
@@ -537,7 +547,7 @@ class scene {
 	 * color_average(), and split (or unsplit) triangles if necessary,
 	 * continuing until no more operations can be performed.  
 	 */
-	static void density_test(int split) {
+	static int density_test(int split) {
 
 		fprintf(stderr, "density test start\n");
 		triangle_head[0]->write_tree();
@@ -565,6 +575,7 @@ class scene {
 			unsigned int width  = (unsigned int) _pt.scaled_width();
 			fprintf(stderr, "[h=%d w=%d] ", height, width);
 			triangle **zbuf = init_zbuf(_pt);
+			assert (zbuf);
 			zbuffer(_pt, zbuf, triangle_head[0]);
 			zbuffer(_pt, zbuf, triangle_head[1]);
 
@@ -620,19 +631,22 @@ class scene {
 			free(zbuf);
 		}
 
-		if (split && (triangle_head[0]->split_on_aux() || triangle_head[1]->split_on_aux()))
-			density_test(split);
+		if (split)
+			return (triangle_head[0]->split_on_aux() || triangle_head[1]->split_on_aux());
+		if (!split)
+			return (triangle_head[0]->unsplit_on_aux() || triangle_head[1]->unsplit_on_aux());
 
-		if (!split && (triangle_head[0]->unsplit_on_aux() || triangle_head[1]->unsplit_on_aux()))
-			density_test(split);
+		assert(0);
+
+		return 0;
 	}
 
 	static void density_test_split() {
-		density_test(1);
+		while(density_test(1));
 	}
 
 	static void density_test_unsplit() {
-		density_test(0);
+		while(density_test(0));
 	}
 
 public:
