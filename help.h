@@ -259,7 +259,7 @@ public:
 			"--perturb-output  Apply perturbations in output image coordinates. [default]\n"
 			"--perturb-source  Apply perturbations in source image coordinates.\n"
 			BETWEEN_SECTIONS
-			"Global searching [experimental]:\n"
+			"Global searching:\n"
 			HEADER_SPACE
 			"--gs <type>       Set global search to <type>, one of:\n"
 			"                     local     Local alignment only [default]\n"
