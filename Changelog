@@ -1,13 +1,29 @@
+0.4.0
+
+o	Add support for general scaling parameters (i.e. all scale 
+	factors >= 1.0).  --scale2, --scale4, and --scale8 are now deprecated, 
+	and replaced with a more general --scale=x argument.
+
+o	Support enhancement of high frequencies even when the scale factor is 
+	1.0.
+
+o	Modify the high-frequency filter algorithm to support filtering near
+	the border of an image.
+
+o	Modify the high-frequency filter function so that the response is now
+	(4/n)^2 times what it used to be, where n is the scale factor.  
+
 0.3.2
 
-o	Don't filter high frequencies if we're not enhancing them.  This improves 
-	efficiency, but should not affect output.
+o	Don't filter high frequencies if we're not enhancing them.  This 
+	improves efficiency, but should not affect output.
 
 0.3.1
 
 o	Output average match statistic.
 
-o	Update informational output to transformation files to include original frame.
+o	Update informational output to transformation files to include original 
+	frame.
 
 o	Add support for post-enhancement of high-frequency details.
 

@@ -27,50 +27,65 @@
 
 #include "image.h"
 
+#define FILTER_SCALE 2.5
+
 /* 
  * High frequency filter function
  */
 static inline int hf_filter(double factor, int i, int j, int k, image *im) {
 
-	double filter_radius = (factor - 1) / 2;
-	double fr_ceil = ceil(filter_radius);
-	double fr_frac = 1 - (fr_ceil - filter_radius);
+	double filter_radius; 
+	double adj_factor;
+	double filter_dimension[4];
+	int fr_ceil[4];
+	double fr_frac[4];
 	double result;
 	int ii, jj;
+	int d;
 
-	result = get_pixel_component(im, i, j, k) * factor * factor;
+	filter_radius = ((FILTER_SCALE * factor) - 1) / 2;
 
-	if (i - fr_ceil < 0
-         || j - fr_ceil < 0
-	 || i + fr_ceil >= height(im)
-	 || j + fr_ceil >= width(im))
-		return 0;
+	filter_dimension[0] = (i - filter_radius < 0) ? i : filter_radius;
+	filter_dimension[1] = (j - filter_radius < 0) ? j : filter_radius;
+	filter_dimension[2] = (i + filter_radius > height(im) - 1)
+			    ? (height(im) - i - 1) : filter_radius;
+	filter_dimension[3] = (j + filter_radius > width(im) - 1)
+			    ? (width(im) - j - 1) : filter_radius;
 
-	result -= fr_frac * fr_frac * get_pixel_component(im, i - fr_ceil, j - fr_ceil, k);
-	result -= fr_frac * fr_frac * get_pixel_component(im, i + fr_ceil, j - fr_ceil, k);
-	result -= fr_frac * fr_frac * get_pixel_component(im, i + fr_ceil, j + fr_ceil, k);
-	result -= fr_frac * fr_frac * get_pixel_component(im, i - fr_ceil, j + fr_ceil, k);
-
-	for (jj = j - fr_ceil + 1; jj <= j + fr_ceil - 1; jj++) {
-		result -= fr_frac * get_pixel_component(im, i - fr_ceil, jj, k);
-		result -= fr_frac * get_pixel_component(im, i + fr_ceil, jj, k);
+	for (d = 0; d < 4; d++) {
+		fr_ceil[d] = ceil(filter_dimension[d]);
+		fr_frac[d] = 1 - (fr_ceil[d] - filter_dimension[d]);
 	}
 
-	for (ii = i - fr_ceil + 1; ii <= i + fr_ceil - 1; ii++) {
-		result -= fr_frac * get_pixel_component(im, ii, j - fr_ceil, k);
-		result -= fr_frac * get_pixel_component(im, ii, j + fr_ceil, k);
+	adj_factor = (filter_dimension[0] + filter_dimension[2] + 1)
+		   * (filter_dimension[1] + filter_dimension[3] + 1);
+
+	result = adj_factor * get_pixel_component(im, i, j, k);
+
+	result -= fr_frac[0] * fr_frac[1] 
+		* get_pixel_component(im, i - fr_ceil[0], j - fr_ceil[1], k);
+	result -= fr_frac[2] * fr_frac[1] 
+		* get_pixel_component(im, i + fr_ceil[2], j - fr_ceil[1], k);
+	result -= fr_frac[2] * fr_frac[3] 
+		* get_pixel_component(im, i + fr_ceil[2], j + fr_ceil[3], k);
+	result -= fr_frac[0] * fr_frac[3] 
+		* get_pixel_component(im, i - fr_ceil[0], j + fr_ceil[3], k);
+
+	for (jj = j - fr_ceil[1] + 1; jj <= j + fr_ceil[3] - 1; jj++) {
+		result -= fr_frac[0] * get_pixel_component(im, i - fr_ceil[0], jj, k);
+		result -= fr_frac[2] * get_pixel_component(im, i + fr_ceil[2], jj, k);
 	}
 
-	for (ii = i - fr_ceil + 1; ii <= i + fr_ceil - 1; ii++)
-		for (jj = j - fr_ceil + 1; jj <= j + fr_ceil - 1; jj++)
+	for (ii = i - fr_ceil[0] + 1; ii <= i + fr_ceil[2] - 1; ii++) {
+		result -= fr_frac[1] * get_pixel_component(im, ii, j - fr_ceil[1], k);
+		result -= fr_frac[3] * get_pixel_component(im, ii, j + fr_ceil[3], k);
+	}
+
+	for (ii = i - fr_ceil[0] + 1; ii <= i + fr_ceil[2] - 1; ii++)
+		for (jj = j - fr_ceil[1] + 1; jj <= j + fr_ceil[3] - 1; jj++)
 			result -= get_pixel_component(im, ii, jj, k);
 
-// 	if (result > 255)
-// 		return 255;
-// 	if (result < -255)
-// 		return -255;
-
-	return result;
+	return result / adj_factor;
 }
 
 #endif

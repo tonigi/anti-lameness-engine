@@ -33,7 +33,7 @@ Downloading a binary
 	No binaries provided.  Compile from source.
 
 
-Compiling from source (version 0.3.x)
+Compiling from source (version 0.4.x)
 -------------------------------------
 
 You will need GCC and a make utility (GNU Make will do fine).  To compile from
@@ -44,7 +44,7 @@ makefile may need some tweaking on Windows systems (e.g. you may want to write
 the output to 'ale.exe' or something.
 
 
-Using ALE (version 0.3.x)
+Using ALE (version 0.4.x)
 -------------------------
 
 Usage: ale [<options>] <input-files> ... <output-file>
@@ -59,16 +59,8 @@ produced incrementally, and you can inspect the output file as the process
 progresses.  Options are described in the next section.
 
 
-Options (version 0.3.2)
+Options (version 0.4.x)
 -----------------------
-
-Scaling options:
-
---scale2          Scale input images up by 2
---scale4          Scale input images up by 4
---scale8          Scale input images up by 8
---hf-enhance=n    Post-enhance high freq. details by factor n. (0.0 is default)
-
 
 
 Alignment channel options:
@@ -93,6 +85,8 @@ Transformation file operations:
 
 Tunable parameters:
 
+--scale=x         Scale input images by the factor x (where x is at least 1.0)
+--hf-enhance=x    Post-enhance high freq. details by factor x. (0.0 is default)
 --metric=x        Set the error metric exponent (2 is default)
 --threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)
 --perturb-upper=x Max. correction step, in pixels or degrees (32.0 is default)
@@ -100,14 +94,15 @@ Tunable parameters:
 
 
 If a scaling argument is given, the program will internally scale all input
-frames up by 2, 4, or 8, respectively, resulting in an output file of this
-larger scale.  
+frames by the scale factor, resulting in an output file of this larger
+scale.  
 
-As of version 0.3.1, ALE supports a high-frequency post-enhancement argument
-that is applied to internally scaled images.  Enhancement occurs on the final
-output of the alignment and merging algorithms after all inputs have been
-processed.  By default, no enhacement occurs.  This is a fairly experimental
-feature designed to enhance fine details.
+As of version 0.3.1, ALE supports a high-frequency post-enhancement argument.
+Enhancement occurs on the final output of the alignment and merging algorithms
+after all inputs have been processed.  As of version 0.4.0, it is possible to
+use this feature with unscaled images, and the filter response has been
+normalized so that the response for images scaled by n is now (4/n)^2 times
+what it was in 0.3.x. 
 
 As of version 0.2.0, ALE supports general projective transformations.  This is
 the 'correct' type of transformation to use with images obtained from digital

@@ -30,7 +30,7 @@
 #include <time.h>
 #include <math.h>
 
-char *version = "0.3.2"
+char *version = "0.4.0"
 #ifdef USE_MAGICK
 		" (File handler: ImageMagick)";
 #else
@@ -198,7 +198,7 @@ void filter(image *target, image *source, double res_scale, double hf_enhance) {
 	for (i = 0; i < height(target); i++)
 		for (j = 0; j < width(target); j++) 
 			for (k = 0; k < 3; k++) {
-				int result = 0.01*hf_enhance*hf_filter(res_scale*2.5,i,j,k, source)
+				int result = hf_enhance * hf_filter(res_scale, i, j, k, source)
 					   + get_pixel_component(source, i, j, k);
 
 				if (result < 0)
@@ -418,10 +418,16 @@ int main(int argc, char *argv[]){
 
 		if (!strcmp(argv[i], "--scale2")) {
 			res_scale = 2;
+			fprintf(stderr, "\n\n*** Warning: --scale2 is deprecated.  "
+					"Use --scale=2 instead. ***\n\n\n");
 		} else if (!strcmp(argv[i], "--scale4")) {
 			res_scale = 4;
+			fprintf(stderr, "\n\n*** Warning: --scale4 is deprecated.  "
+					"Use --scale=4 instead. ***\n\n\n");
 		} else if (!strcmp(argv[i], "--scale8")) {
 			res_scale = 8;
+			fprintf(stderr, "\n\n*** Warning: --scale8 is deprecated.  "
+					"Use --scale=8 instead. ***\n\n\n");
 		} else if (!strcmp(argv[i], "--align-all")) {
 			align_code = 0;
 		} else if (!strcmp(argv[i], "--align-green")) {
@@ -434,6 +440,12 @@ int main(int argc, char *argv[]){
 			transform_code = 1;
 		} else if (!strcmp(argv[i], "--projective")) {
 			transform_code = 2;
+		} else if (!strncmp(argv[i], "--scale=", strlen("--scale="))) {
+			sscanf(argv[i] + strlen("--scale="), "%lf", &res_scale);
+			if (res_scale < 1.0) {
+				fprintf(stderr, "\n\n*** Warning: Ignoring scale value "
+						"smaller than 1.0 ***\n\n\n");
+			}
 		} else if (!strncmp(argv[i], "--metric=", strlen("--metric="))) {
 			sscanf(argv[i] + strlen("--metric="), "%lf", &metric);
 		} else if (!strncmp(argv[i], "--threshold=", strlen("--threshold="))) {
@@ -504,7 +516,7 @@ int main(int argc, char *argv[]){
 
 	if (display_image) {
 
-		if (res_scale != 1 && hf_enhance != 0) {
+		if (hf_enhance != 0) {
 
 			image *pptarget = clone(display_image);
 						    
@@ -532,12 +544,6 @@ int main(int argc, char *argv[]){
 			"Usage: %s [<options>] <input-files> ... <output-file>\n"
 			"   or: %s --version\n"
 			"\n\n"
-			"Scaling options:\n\n"
-			"--scale2          Scale input images up by 2\n"
-			"--scale4          Scale input images up by 4\n"
-			"--scale8          Scale input images up by 8\n"
-			"--hf-enhance=n    Post-enhance high freq. details by factor n. (0.0 is default)\n"
-			"\n\n"
 			"Alignment channel options:\n\n"
 			"--align-all       Align images using all color channels\n"
 			"--align-green     Align images using the green channel\n"
@@ -553,6 +559,8 @@ int main(int argc, char *argv[]){
 			"--trans-save=x    Save final transformation data in file x\n"
 			"\n\n"
 			"Tunable parameters:\n\n"
+			"--scale=x         Scale input images by the factor x (where x is at least 1.0)\n"
+			"--hf-enhance=x    Post-enhance high freq. details by factor x. (0.0 is default)\n"
 			"--metric=x        Set the error metric exponent (2 is default)\n"
 			"--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)\n"
 			"--perturb-upper=x Max. correction step, in pixels or degrees (32.0 is default)\n"
