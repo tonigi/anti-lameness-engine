@@ -49,6 +49,7 @@ class scene {
 		 */
 
 		point *vertices[3];
+		char external_vertices[3];
 		struct triangle *neighbors[3];
 		struct triangle *parent;
 		int division_vertex;
@@ -67,6 +68,10 @@ class scene {
 			vertices[0] = NULL;
 			vertices[1] = NULL;
 			vertices[2] = NULL;
+
+			external_vertices[0] = 1;
+			external_vertices[1] = 1;
+			external_vertices[2] = 1;
 
 			neighbors[0] = NULL;
 			neighbors[1] = NULL;
@@ -200,6 +205,8 @@ class scene {
 				children[c]->children[0] = NULL;
 				children[c]->children[1] = NULL;
 				children[c]->division_new_vertex = NULL;
+				children[c]->external_vertices[(division_vertex + 1 + c) % 3] 
+					= neighbors[division_vertex] ? 0 : 1;
 			}
 
 			for (int i = 0; i < 2; i++) {
@@ -248,12 +255,24 @@ class scene {
 
 		/*
 		 * Split a triangle at a random vertex among those with largest
-		 * angle.
+		 * angle (averaged with any neighbor's opposite angle).
 		 */
 		void split() {
-			ale_pos angles[3] = { vertices[0]->anglebetw(*vertices[1], *vertices[2]),
-				              vertices[1]->anglebetw(*vertices[0], *vertices[2]),
-					      vertices[2]->anglebetw(*vertices[0], *vertices[1]) };
+			
+			ale_pos angles[3]; 
+
+			for (int v = 0; v < 3; v++) {
+				angles[v] = vertices[v]->anglebetw(*vertices[(v + 1) % 3],
+						                   *vertices[(v + 2) % 3]);
+				if (neighbors[v]) {
+					int self_ref = self_ref_from_neighbor(v);
+					point **nvs = neighbors[v]->vertices;
+					angles[v] = (angles[v]
+					           + nvs[self_ref]->anglebetw(*nvs[(self_ref + 1) % 3],
+							                      *nvs[(self_ref + 2) % 3])) / 2;
+				}
+			}
+				
 
 			for (int v = 0; v < 3; v++)
 			if  (angles[v] > angles[(v + 1) % 3]
@@ -379,7 +398,7 @@ class scene {
 		point normal() {
 			point unscaled_normal = vertices[0]->xproduct(*vertices[1], *vertices[2]);
 
-			return (unscaled_normal / unscaled_normal.norm());
+			return (unscaled_normal / fabs(unscaled_normal.norm()));
 		}
 
 		point centroid() {
@@ -388,8 +407,9 @@ class scene {
 
 		/*
 		 * Return the maximum angle formed with a neighbor triangle.
+		 * Searches two neighbors deep.
 		 */
-		ale_pos max_neighbor_angle(ale_pos displacement = 0) {
+		ale_pos max_neighbor_angle_2(ale_pos displacement = 0) {
 
 			ale_pos max_angle = 0;
 
@@ -411,6 +431,27 @@ class scene {
 
 				if (angle > max_angle)
 					max_angle = angle;
+
+				/*
+				 * Second level of neighbors
+				 */
+
+				for (int m = 0; m < 2; m++) {
+					if (neighbors[n]->neighbors[(m + srfn + 1) % 3] == NULL)
+						continue;
+					int srfn2 = neighbors[n]->self_ref_from_neighbor((m + srfn + 1) % 3);
+
+					point a = *neighbors[n]->neighbors[m]->vertices[srfn2];
+					point b = *neighbors[n]->neighbors[m]->vertices[(srfn2 + 1) % 3] + (1 - m) * displacement * _normal;
+					point c = *neighbors[n]->neighbors[m]->vertices[(srfn2 + 2) % 3] + m * displacement * _normal;;
+
+					point unscaled_dnn2 = a.xproduct(b, c);
+
+					ale_pos angle = point(0, 0, 0).anglebetw(unscaled_dnn, unscaled_dnn2);
+
+					if (angle > max_angle)
+						max_angle = angle;
+				}
 			}
 
 			return max_angle;
@@ -426,6 +467,16 @@ class scene {
 				return children[0]->adjust_vertices()
 				     | children[1]->adjust_vertices();
 			}
+
+			/*
+			 * Don't allow triangles to move if they contain
+			 * external points.
+			 */
+
+			if (external_vertices[0]
+			 || external_vertices[1]
+			 || external_vertices[2])
+				return 0;
 
 			/*
 			 * Get the list of frames in which this triangle appears.  If
@@ -482,7 +533,9 @@ class scene {
 				 * a given amount the angle between the normals of adjacent triangles.
 				 */
 
-				if (max_neighbor_angle(step * dir) > M_PI / 12)
+//				if (max_neighbor_angle_2(step * dir) > 0)
+//					continue;
+				if (max_neighbor_angle_2(step * dir) > M_PI / 4)
 					continue;
 
 				/*
@@ -848,7 +901,7 @@ class scene {
 
 				ale_pos area = t->compute_area(_pt);
 
-				if (area < 3 && split)
+				if (area <= 2 && split)
 					t->aux_stat = d2::pixel(-1, -1, -1);
 				else if (area < 1 && !split && t->parent)
 					t->parent->aux_stat = d2::pixel(-1, -1, -1);
