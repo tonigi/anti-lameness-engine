@@ -58,6 +58,20 @@ public:
 		assert(0);
 	}
 
+	static point undefined() {
+		double a = 0;
+
+		point p(0, 0, 0);
+
+		return p / a;
+	}
+
+	int defined() {
+		return (!isnan(x[0])
+		     && !isnan(x[1])
+		     && !isnan(x[2]));
+	}
+
 	/*
 	 * Z-values of zero are almost never the right thing to do, but
 	 * for cases when they are ...
