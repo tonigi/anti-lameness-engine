@@ -640,9 +640,9 @@ private:
 			pixel multiplier = pixel(gain_multiplier, gain_multiplier, gain_multiplier);
 
 			image_rw::exp(m).set_multiplier(multiplier);
-			ui::get()->exp_multiplier(new_multiplier[0],
-					          new_multiplier[1],
-						  new_multiplier[2]);
+			ui::get()->exp_multiplier(multiplier[0],
+					          multiplier[1],
+						  multiplier[2]);
 
 			return;
 		}
