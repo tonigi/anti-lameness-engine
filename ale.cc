@@ -43,7 +43,7 @@
  * Version Information
  */
 
-char *version = "0.4.7"
+char *version = "0.4.8"
 #ifdef USE_MAGICK
 		" (File handler: ImageMagick)";
 #else
@@ -95,8 +95,10 @@ inline void usage(const char *argv0) {
 		"--hf-enhance=x    Enhance high frequency details by factor x. (0.0 is default)\n"
 		"--metric=x        Set the error metric exponent (2 is default)\n"
 		"--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)\n"
-		"--perturb-upper=x Max. correction step, in pixels or degrees (32.0 is default)\n"
-		"--perturb-lower=x Min. correction step, in pixels or degrees (0.125 is default)\n"
+		"--perturb-upper=x Perturbation upper bound in pixels/degrees  (32.0 is default)\n"
+		"--perturb-lower=x Perturbation lower bound in pixels/degrees  (.125 is default)\n"
+		"--rot-upper=x     Rotation-specific perturbation upper bound  (32.0 is default)\n"
+		"--lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (1 is def.)\n"
 		BETWEEN_SECTIONS
 		"Drizzling:\n"
 		HEADER_SPACE
@@ -296,6 +298,14 @@ int main(int argc, const char *argv[]){
 			double perturb_lower;
 			sscanf(argv[i] + strlen("--perturb-lower="), "%lf", &perturb_lower);
 			align::set_perturb_lower(perturb_lower);
+		} else if (!strncmp(argv[i], "--rot-upper=", strlen("--rot-upper="))) {
+			double rot_max;
+			sscanf(argv[i] + strlen("--rot-upper="), "%lf", &rot_max);
+			align::set_rot_max((int) floor(rot_max));
+		} else if (!strncmp(argv[i], "--lod-max=", strlen("--lod-max="))) {
+			double lod_max;
+			sscanf(argv[i] + strlen("--lod-max="), "%lf", &lod_max);
+			align::set_lod_max((int) floor(lod_max));
 		} else if (!strncmp(argv[i], "--trans-load=", strlen("--trans-load="))) {
 			tload_delete(tload);
 			tload = tload_new(argv[i] + strlen("--trans-load="));
@@ -377,18 +387,18 @@ int main(int argc, const char *argv[]){
 				if (!strcmp(ipc_config, "xvp610_320x240"))
 					_render = new ipc<xvp610_320x240>(
 						_render, scale_factor, 
-						ip_iterations);
+						ip_iterations, inc);
 				else if (!strcmp(ipc_config, "stdin"))
 					_render = new ipc<ipc_stdin>(
 						_render, scale_factor,
-						ip_iterations);
+						ip_iterations, inc);
 				else {
 					fprintf(stderr, "Unknown device configuration %s.\n\n", ipc_config);
 					exit(1);
 				}
 			} else if (ip_iterations != 0) {
 				_render = new ipc<box>(_render, scale_factor,
-						ip_iterations);
+						ip_iterations, inc);
 				((ipc<box> *) _render)->module()->radius(ip_radius);
 			}
 
@@ -434,6 +444,10 @@ int main(int argc, const char *argv[]){
 
 			/*
 			 * Do any post-processing and output final image
+			 *
+			 * XXX: note that Irani-Peleg currently returns zero
+			 * for _render->sync(), since it writes output internally
+			 * when inc != 0.
 			 */
 
 			if (_render->sync() || !inc)

@@ -1,4 +1,4 @@
-ALE version 0.4.7
+ALE version 0.4.8
 =================
 
 
@@ -38,7 +38,7 @@ Downloading a binary
 	No binaries provided.  Compile from source.
 
 
-Compiling from source (version 0.4.7)
+Compiling from source (version 0.4.8)
 -------------------------------------
 
 GCC version 3.2.3 with C++ support and GNU Make 3.80 are known to build ALE
@@ -64,7 +64,7 @@ produced incrementally, and the output file is updated as the process
 progresses.  Options are described in the next section.
 
 
-Options (version 0.4.7)
+Options (version 0.4.8)
 -----------------------
 
 Alignment channel options:
@@ -94,8 +94,10 @@ Tunable parameters:
 --hf-enhance=x    Enhance high frequency details by factor x. (0.0 is default)
 --metric=x        Set the error metric exponent (2 is default)
 --threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)
---perturb-upper=x Max. correction step, in pixels or degrees (32.0 is default)
---perturb-lower=x Min. correction step, in pixels or degrees (.125 is default)
+--perturb-upper=x Perturbation upper bound in pixels/degrees  (32.0 is default)
+--perturb-lower=x Perturbation lower bound in pixels/degrees  (.125 is default)
+--rot-upper=x     Rotation-specific perturbation upper bound  (32.0 is default)
+--lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (1 is def.)
 
 Drizzling:
 --drizzle-diam=x  Drizzle with input pixel diameter x (where 0 < x <= 1).
@@ -121,7 +123,7 @@ Video Stabilization options: [Experimental]
 --no-replace      Do not replace.  [default]
 
 
-Option Descriptions (version 0.4.7)
+Option Descriptions (version 0.4.8)
 -----------------------------------
 
 
@@ -175,11 +177,18 @@ written with this version of ALE.
 
 Perturbation bounds:
 
-No correction step smaller than perturb-lower or larger than perturb-upper will
-be made in aligning images.  Note that correction steps larger than 2 are
-performed on images with a reduced level of detail and that all correction step
-sizes are some power of two.  If the interval [perturb-lower, perturb-upper]
-does not contain a power of two, no correction will be performed.
+No perturbation smaller than perturb-lower or larger than perturb-upper will be
+used in alignment.  Also, no rotational perturbation larger than rot-upper will
+be used.  All perturbations are powers of two.  Alignment can be disabled by
+setting perturb-upper to zero and leaving perturb-lower at its default value.
+
+
+Level-of-detail:
+
+Alignment may be performed on images with reduced level of detail.  By default,
+the level-of-detail scale factor for a perturbation p is max(1, 2/p).  In
+general, the level-of-detail scale factor is the largest power of 2 not
+exceeding max(1, (2^lod-max)/p).
 
 
 Error metric:
@@ -231,8 +240,9 @@ Irani-Peleg Image reconstruction:
 
 ALE's backprojection-based image reconstruction may provide realistic emphasis
 of edges in both scaled and unscaled images.  However, this option is sensitive
-to the chosen diameter, and small diameters can cause speckled output.  The
-results of image reconstruction are written just prior to program termination.
+to the chosen diameter, and small diameters can cause speckled output.
+Intermediate results of image reconstruction are normally written after each
+iteration is complete, but this behavior can be disabled by specifying --no-inc.
 
 A rudimentary script for calibrating devices with unknown projection functions
 has been included as ipc/ale-calibrate.
@@ -264,9 +274,10 @@ File output options:
 
 ALE normally produces incremental output of the merging or drizzling process.
 In this case, the output file is written after the original frame is loaded and
-after each supplemental frame has been aligned.  To suppress incremental output, 
-specify the --no-inc option, in which case output will only occur after all
-rendering steps are complete.
+after each supplemental frame has been aligned.  Also, the Irani-Peleg renderer
+normally produces incremental output after each iteration.  To suppress
+incremental output, specify the --no-inc option, in which case output will only
+occur after all rendering steps are complete.
 
  
 Video stabilization options:

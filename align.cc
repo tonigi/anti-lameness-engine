@@ -27,6 +27,17 @@ double align::metric_exponent = 2;
 double align::match_threshold = 0;
 double align::perturb_lower = 0.125;
 double align::perturb_upper = 32;
+
+/*
+ * Empirically, it's okay to use a level-of-detail equal to twice the
+ * resolution of the perturbation, so we set the default lod_max to 1, as
+ * 2^1==2.  lod_max of zero seems okay also, but lower values seem to cause
+ * problems.
+ */
+
+int align::lod_max = 1;
+
+double align::rot_max = 32.0;
 double align::match_sum = 0;
 int align::match_count = 0;
 

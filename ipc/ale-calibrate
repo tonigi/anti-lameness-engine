@@ -82,10 +82,10 @@ $exponent = 2;
 # Random temporary files (which are not currently deleted by this script)
 #
 
-$output1 = "/tmp/garbage1.png";
-$output2 = "/tmp/garbage2.png";
-$temp_file = "/tmp/ale-foo";
-$result_file = "/tmp/ale-results";
+$output1 = "/tmp/ale1-$$.png";
+$output2 = "/tmp/ale2-$$.png";
+$temp_file = "/tmp/ale-$$-input";
+$result_file = "/tmp/ale-$$-results";
 
 #
 # Initialize a box filter. 

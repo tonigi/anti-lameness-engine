@@ -32,6 +32,7 @@ template <class Response>
 class ipc : public render {
 
         int done;
+	int inc;
         image *done_image;
         render *input;
         double scale_factor;
@@ -306,6 +307,9 @@ class ipc : public render {
 
                         delete correction;
 
+			if (inc)
+				image_rw::output(done_image);
+
                         fprintf(stderr, ".");
 
                 }
@@ -313,9 +317,10 @@ class ipc : public render {
 
 public:
 
-        ipc(render *input, double scale_factor, unsigned int iterations) {
+        ipc(render *input, double scale_factor, unsigned int iterations, int _inc) {
                 this->input = input;
                 done = 0;
+		inc = _inc;
                 this->scale_factor = scale_factor;
                 this->iterations = iterations;
         }
@@ -344,7 +349,7 @@ public:
 
 		fprintf(stderr, "\n");
 
-                return 1;
+                return 0;
         }
 
 	Response *module() {

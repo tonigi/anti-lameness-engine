@@ -154,6 +154,18 @@ private:
 	static double perturb_upper;
 
 	/*
+	 * Maximum level-of-detail scale factor is 2^lod_max/perturb.
+	 */
+
+	static int lod_max;
+
+	/*
+	 * Maximum rotational perturbation
+	 */
+
+	static double rot_max;
+
+	/*
 	 * Alignment match sum
 	 */
 
@@ -340,6 +352,25 @@ private:
 			double mc_max = (floor(2*u) * (1 + floor(2*u)) + 2*u)
 				      / (2 + 2 * floor(2*u) - 2*u);
 
+			/*
+			 * Reseed the random number generator;  we want the
+			 * same set of pixels to be used when comparing two
+			 * alignment options.  If we wanted to avoid bias from
+			 * repeatedly utilizing the same seed, we could seed
+			 * with the number of the frame most recently aligned:
+			 *
+			 * 	srand(latest);
+			 *
+			 * However, in cursory tests, it seems okay to just use
+			 * the default seed of 1, and so we do this, since it
+			 * is simpler; both of these approaches to reseeding
+			 * achieve better results than not reseeding.  (1 is
+			 * the default seed according to the GNU Manual Page
+			 * for rand(3).)
+			 */
+
+			srand(1);
+
 			for(index = -1 + (int) ceil((mc_max+1) 
 						  * ( (1 + ((double) rand()) ) 
 						    / (1 + ((double) RAND_MAX)) ));
@@ -440,10 +471,18 @@ private:
 		int lod;
 
 		/*
-		 * Determine how many whole-pixel adjustment steps will occur
+		 * Maximum level-of-detail.  Use a level of detail at most
+		 * 2^lod_diff finer than the adjustment resolution.  lod_diff
+		 * is a synonym for lod_max.
 		 */
 
-		int steps = (perturb >= 1) ? (int) (log(perturb) / log(2)) + 1 : 1;
+		const int lod_diff = lod_max;
+
+		/*
+		 * Determine how many levels of detail should be prepared.
+		 */
+
+		int steps = (perturb > pow(2, lod_max)) ? (int) (log(perturb) / log(2)) - lod_max + 1 : 1;
 		int step;
 		image **accum_scales = (image **) malloc(steps * sizeof(image *));
 		image **input_scales = (image **) malloc(steps * sizeof(image *));
@@ -457,15 +496,6 @@ private:
 			fprintf(stderr, "Couldn't allocate memory for alignment.\n");
 			exit(1);
 		}
-
-		/*
-		 * Level-of-detail difference.  Use a level of detail 2^lod_diff finer
-		 * than the adjustment resolution.  Empirically, it's okay to use a
-		 * level-of-detail equal to twice the resolution of the perturbation,
-		 * so we set lod_diff to 1, as 2^1==2.
-		 */
-
-		const int lod_diff = 1;
 
 		/*
 		 * Prepare multiple levels of detail.
@@ -492,8 +522,7 @@ private:
 		 * Initialize variables used in the main loop.
 		 */
 
-		lod = (steps - 1) - lod_diff;
-		lod = (lod < 0) ? 0 : lod;
+		lod = (steps - 1);
 
 		/*
 		 * Initialize the default initial transform
@@ -532,8 +561,17 @@ private:
 		image *ai = accum_scales[lod];
 		image *ii = input_scales[lod];
 		image_weights *di = defined_scales[lod];
+
+		/*
+		 * Positional adjustment value
+		 */
+
 		double adj_p = (perturb >= pow(2, lod_diff))
 			     ? pow(2, lod_diff) : perturb;
+
+		/*
+		 * Current difference (error) value
+		 */
 
 		here = diff(ai, ii, di, offset, _mc_arg);
 
@@ -545,11 +583,15 @@ private:
 
 			double adj_s;
 
+			/*
+			 * Orientational adjustment value
+			 */
+
+			double adj_o = perturb;
+
 			transformation test_t;
 			double test_d;
 			double old_here = here;
-
-			int i, j;
 
 			if (alignment_class < 2 && alignment_class >= 0) {
 
@@ -557,12 +599,28 @@ private:
 				 * Translational or euclidean transformation
 				 */
 
-				for (i = 0; i < 2 + alignment_class; i++)
+				for (int i = 0; i < 2; i++)
 				for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
 
 					test_t = offset;
 
 					test_t.eu_modify(i, adj_s);
+
+					test_d = diff(ai, ii, di, test_t, _mc_arg);
+
+					if (test_d < here) {
+						here = test_d;
+						offset = test_t;
+						goto done;
+					}
+				}
+
+				if (alignment_class == 1 && adj_o < rot_max)
+				for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
+
+					test_t = offset;
+
+					test_t.eu_modify(2, adj_s);
 
 					test_d = diff(ai, ii, di, test_t, _mc_arg);
 
@@ -579,8 +637,8 @@ private:
 				 * Projective transformation
 				 */
 
-				for (i = 0; i < 4; i++)
-				for (j = 0; j < 2; j++)
+				for (int i = 0; i < 4; i++)
+				for (int j = 0; j < 2; j++)
 				for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
 
 					test_t = offset;
@@ -849,6 +907,27 @@ public:
 
 	static void set_perturb_upper(double pu) {
 		perturb_upper = pu;
+	}
+
+	/*
+	 * Maximum rotational perturbation.
+	 */
+
+	static void set_rot_max(int rm) {
+
+		/*
+		 * Obtain the largest power of two not larger than rm.
+		 */
+
+		rot_max = pow(2, floor(log(rm) / log(2)));
+	}
+
+	/*
+	 * Level-of-detail
+	 */
+
+	static void set_lod_max(int lm) {
+		lod_max = lm;
 	}
 
 	/*

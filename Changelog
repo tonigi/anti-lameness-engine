@@ -1,3 +1,24 @@
+0.4.8
+
+o	Modify Irani-Peleg renderer to produce incremental output.
+
+o	Modify Monte Carlo alignment so that the same set of accumulated image
+	pixels is examined when comparing two transformations.
+
+o	Add an option for additional upper-bound constraint of rotational
+	perturbation.  Jeff Epler had noted that the
+	perturb-upper/perturb-lower options alone may not be suited to working
+	with sets of higher-resolution images.  
+
+o	Resolve a bug introduced in version 0.1.1 which had limited rotational
+	perturbation to 2 degrees.
+
+o	Add an option to adjust the maximum level of detail used.  The default
+	maximum is 2/perturb, which matches the default for previous versions
+	of ALE.
+
+o	Modify names of temporary files used in the calibration script.
+
 0.4.7
 
 o	Add a replacement option suggested by Jeff Treece.  This option can
