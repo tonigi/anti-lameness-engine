@@ -199,6 +199,15 @@ class scene {
 			return -1;
 		}
 
+		/*
+		 * Get the angle at a given vertex
+		 */
+
+		ale_pos vertex_angle(int v) {
+			return vertices[v]->anglebetw(*vertices[(v + 1) % 3],
+						      *vertices[(v + 2) % 3]);
+		}
+
 
 		/*
 		 * Handle the internal data details of splitting.
@@ -271,7 +280,47 @@ class scene {
 			split(v, (*vertices[(v + 1) % 3] + *vertices[(v + 2) % 3]) / 2);
 		}
 
+		/*
+		 * Split a number of triangles so as to establish a lower bound
+		 * on the size of newly-created angles.
+		 */
 
+		void split() {
+
+			int v;
+			double angle_lbound = 59 * M_PI / 180;
+
+			for (v = 0; v < 3; v++)
+				if (vertex_angle(v) >= angle_lbound)
+					break;
+
+			assert (v < 3);
+			assert (v >= 0);
+
+			if (!neighbors[v]) {
+				split(v);
+				return;
+			}
+
+			while (neighbors[v]->vertex_angle(self_ref_from_neighbor(v)) 
+			     < angle_lbound) {
+
+				neighbors[v]->split();
+
+				/*
+				 * Check to see whether this triangle has been split as a
+				 * consequence.
+				 */
+
+				if (division_new_vertex)
+					return;
+
+			}
+
+			split(v);
+		}
+
+#if 0
 		/*
 		 * Split a triangle at a random vertex among those with largest
 		 * angle (averaged with any neighbor's opposite angle).
@@ -309,6 +358,7 @@ class scene {
 
 			split(rand() % 3);
 		}
+#endif
 
 		void unsplit_internals() {
 			assert(children[0]);
