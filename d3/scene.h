@@ -1003,9 +1003,9 @@ class scene {
 
 				ale_pos area = t->compute_area(_pt);
 
-				if (area <= 2 && split)
+				if (area <= 4 && split)
 					t->aux_stat = d2::pixel(-1, -1, -1);
-				else if (area < 1 && !split && t->parent)
+				else if (area < 4 && !split && t->parent)
 					t->parent->aux_stat = d2::pixel(-1, -1, -1);
 			}
 
