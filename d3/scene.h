@@ -31,8 +31,8 @@
  * PLANAR_SUBDIVISION_COUNT must be exactly pow(4, PLANAR_SUBDIVISION_DEPTH)
  */
 
-#define PLANAR_SUBDIVISION_DEPTH 3
-#define PLANAR_SUBDIVISION_COUNT 64
+#define PLANAR_SUBDIVISION_DEPTH 2
+#define PLANAR_SUBDIVISION_COUNT 16
 
 class scene {
 
@@ -818,12 +818,12 @@ class scene {
 		 */
 		double accumulate_neighbor_error() {
 
-			if (color[0][0] >= 0)
+			if (!(color[0][0] < 0))
 				return 0;
 
 			recolor();
 
-			assert (color[0][0] >= 0);
+			assert (!(color[0][0] < 0));
 
 			double error = reference_error();
 
@@ -932,7 +932,8 @@ class scene {
 				 * Check the error
 				 */
 
-				ale_accum error = reference_error();
+				color_neighbors_negative();
+				ale_accum error = accumulate_neighbor_error();
 				if (error < lowest_error) {
 					lowest_error = error;
 					best = dir;
