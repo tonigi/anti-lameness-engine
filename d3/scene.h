@@ -1018,42 +1018,18 @@ class scene {
 	 */
 
 	static int subtriangle_index(pt _pt, d2::point test_point, point p_w[3], int depth, int prefix) {
-		point p_i[3];
-
-		for (int v = 0; v < 3; v++)
-			p_i[v] = _pt.wp_scaled(p_w[v]);
+		point p_c[3];
 
 		if (depth == 0)
 			return prefix;
 
-		if (!is_interior(p_i, point(test_point[0], test_point[1], 1), 1)) {
-			/*
-			 * XXX: Error condition ... what should we do here?
-			 */
-			// assert(0);
-			return prefix;
-		}
-
-		point hp_w[3];
-		point hp_i[3];
-
 		for (int v = 0; v < 3; v++)
-			hp_w[v] = (p_w[(v + 1) % 3] + p_w[(v + 2) % 3]) / 2;
+			p_c[v] = _pt.wc(p_w[v]);
 
-		for (int v = 0; v < 3; v++)
-			hp_i[v] = _pt.wp_scaled(hp_w[v]);
+		point r_c = _pt.pc_scaled(point(test_point[0], test_point[1], 1));
 
-		for (int v = 0; v < 3; v++) {
-			point arg_array_i[3] = {p_i[v], hp_i[(v + 2) % 3], hp_i[(v + 1) % 3]};
-			point arg_array_w[3] = {p_w[v], hp_w[(v + 2) % 3], hp_w[(v + 1) % 3]};
+		return subtriangle_index(r_c, p_c, depth, prefix);
 
-			int interior_t = is_interior(arg_array_i, point(test_point[0], test_point[1], 1));
-
-			if (interior_t)
-				return subtriangle_index(_pt, test_point, arg_array_w, depth - 1, prefix * 4 + v);
-		}
-
-		return subtriangle_index(_pt, test_point, hp_w, depth - 1, prefix * 4 + 3);
 	}
 
 	static int subtriangle_index(pt _pt, d2::point test_point, triangle *t, point triangle_offset = point(0, 0, 0)) {
