@@ -367,10 +367,11 @@ public:
 				continue;
 
 			/*
-			 * Assign the color value;
+			 * Assign the color value and depth
 			 */
 
 			im->pix(i, j) = t->color;
+			*depth = p[0][2];
 		}
 	}
 
