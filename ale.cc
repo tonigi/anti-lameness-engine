@@ -34,9 +34,17 @@
 #include <math.h>
 
 /*
+ * Types
+ */
+
+#include "ale_pos.h"
+#include "ale_real.h"
+
+/*
  * Interface files
  */
 
+#include "ui/ui.h"
 #include "unsupported.h"
 #include "implication.h"
 
@@ -144,10 +152,8 @@ unsigned int arg_prefix_count(int argc, const char *argv[], const char *pfix) {
 void *local_realloc(void *ptr, size_t size) {
 	void *new_ptr = realloc(ptr, size);
 
-	if (new_ptr == NULL) {
-		fprintf(stderr, "\n\n*** Unable to allocate memory in main() ***\n\n");
-		exit(1);
-	}
+	if (new_ptr == NULL)
+		ui::get()->memory_error_location("main()");
 
 	return new_ptr;
 }
@@ -156,16 +162,14 @@ void *local_realloc(void *ptr, size_t size) {
  * Not enough arguments function.
  */
 void not_enough(const char *opt_name) {
-	fprintf(stderr, "\n\n*** Not enough arguments for %s ***\n\n", opt_name);
-	exit(1);
+	ui::get()->cli_not_enough(opt_name);
 }
 
 /*
  * Bad argument function
  */
 void bad_arg(const char *opt_name) {
-	fprintf(stderr, "\n\n*** Bad argument to %s ***\n\n", opt_name);
-	exit(1);
+	ui::get()->cli_bad_arg(opt_name);
 }
 
 /*
@@ -234,6 +238,8 @@ int main(int argc, const char *argv[]){
 			hi.filtering(), found_help = 1;
 		if (!strcmp(argv[i], "--hd") || all)
 			hi.device(), found_help = 1;
+		if (!strcmp(argv[i], "--hi") || all)
+			hi.interface(), found_help = 1;
 		if (!strcmp(argv[i], "--hv") || all)
 			hi.visp(), found_help = 1;
 		if (!strcmp(argv[i], "--h3") || all)
@@ -357,10 +363,8 @@ int main(int argc, const char *argv[]){
 	 * Handle default settings
 	 */
 
-	if (arg_prefix_count(argc, argv, "--q") > 1) {
-		fprintf(stderr, "\n\n*** Error: more than one default setting option --q* was specified. ***\n\n");
-		exit(1);
-	}
+	if (arg_prefix_count(argc, argv, "--q") > 1)
+		ui::get()->error("more than one default setting option --q* was specified");
 
 	if (arg_count(argc, argv, "--q0")) {
 		ochain_types[0] = "fine:box:1,triangle:2";
@@ -518,15 +522,11 @@ int main(int argc, const char *argv[]){
 				d3_depth = (const char **) calloc(d3_count, sizeof(char *));
 			}
 
-			if (sscanf(argv[i+1], "%d", &frame_no) != 1) {
-				fprintf(stderr, "\n\n*** --3dv argument 0 must be an integer  ***\n\n");
-				exit(1);
-			}
+			if (sscanf(argv[i+1], "%d", &frame_no) != 1)
+				ui::get()->error("--3dv argument 0 must be an integer");
 
-			if (frame_no >= d3_count) {
-				fprintf(stderr, "\n\n*** --3dv argument 0 is too large ***\n\n");
-				exit(1);
-			}
+			if (frame_no >= d3_count)
+				ui::get()->error("--3dv argument 0 is too large");
 
 			if (d3_output[frame_no] != NULL) {
 				unsupported::fornow ("Writing a single 3D view to more than one output file");
@@ -569,15 +569,11 @@ int main(int argc, const char *argv[]){
 				d3_depth = (const char **) calloc(d3_count, sizeof(char *));
 			}
 
-			if (sscanf(argv[i+1], "%d", &frame_no) != 1) {
-				fprintf(stderr, "\n\n*** --3dd argument 0 must be an integer  ***\n\n");
-				exit(1);
-			}
+			if (sscanf(argv[i+1], "%d", &frame_no) != 1)
+				ui::get()->error("--3dd argument 0 must be an integer");
 
-			if (frame_no >= d3_count) {
-				fprintf(stderr, "\n\n*** --3dd argument 0 is too large ***\n\n");
-				exit(1);
-			}
+			if (frame_no >= d3_count)
+				ui::get()->error("--3dd argument 0 is too large");
 
 			if (d3_depth[frame_no] != NULL) {
 				unsupported::fornow ("Writing a single frame's depth info to more than one output file");
@@ -595,6 +591,10 @@ int main(int argc, const char *argv[]){
 			sscanf(argv[i+1], "%lf", &va_parameter);
 			i += 1;
 			user_view_angle = va_parameter * M_PI / 180;
+		} else if (!strcmp(argv[i], "--ui=stream")) {
+			ui::set_stream();
+		} else if (!strcmp(argv[i], "--ui=tty")) {
+			ui::set_tty();
 		} else if (!strcmp(argv[i], "--mc")) {
 			if (i + 1 >= argc)
 				not_enough("--mc");
@@ -605,49 +605,41 @@ int main(int argc, const char *argv[]){
 			i += 1;
 			d2::align::mc(mc_parameter);
 
+		} else if (!strcmp(argv[i], "--cw")) {
+			d2::align::certainty_weighted(1);
+		} else if (!strcmp(argv[i], "--no-cw")) {
+			d2::align::certainty_weighted(0);
 		} else if (!strcmp(argv[i], "--wm")) {
-			if (wm_filename != NULL) {
-				fprintf(stderr, "\n\n*** Only one weight map can be specified ***\n\n\n");
-				exit(1);
-			}
+			if (wm_filename != NULL)
+				ui::get()->error("only one weight map can be specified");
 
 			if (i + 3 >= argc)
 				not_enough("--wm");
 			wm_filename = argv[i+1];
 
-			if (sscanf(argv[i+2], "%d", &wm_offsetx) != 1) {
-				fprintf(stderr, "\n\n*** --wm x-argument must be an integer ***\n\n\n");
-				exit(1);
-			}
-			if (sscanf(argv[i+3], "%d", &wm_offsety) != 1) {
-				fprintf(stderr, "\n\n*** --wm y-argument must be an integer ***\n\n\n");
-				exit(1);
-			}
+			if (sscanf(argv[i+2], "%d", &wm_offsetx) != 1)
+				ui::get()->error("--wm x-argument must be an integer");
+
+			if (sscanf(argv[i+3], "%d", &wm_offsety) != 1)
+				ui::get()->error("--wm y-argument must be an integer");
+
 			i += 3;
 
 		} else if (!strcmp(argv[i], "--fl")) {
 			if (i + 3 >= argc)
 				not_enough("--fl");
 			double h, v, a;
-			if (sscanf(argv[i+1], "%lf", &h) != 1) {
-				fprintf(stderr, "\n\n*** --fl h-argument must be numerical ***\n\n\n");
-				exit(1);
-			}
-			if (sscanf(argv[i+2], "%lf", &v) != 1) {
-				fprintf(stderr, "\n\n*** --fl v-argument must be numerical ***\n\n\n");
-				exit(1);
-			}
-			if (sscanf(argv[i+3], "%lf", &a) != 1) {
-				fprintf(stderr, "\n\n*** --fl a-argument must be numerical ***\n\n\n");
-				exit(1);
-			}
+			if (sscanf(argv[i+1], "%lf", &h) != 1) 
+				ui::get()->error("--fl h-argument must be numerical");
+			if (sscanf(argv[i+2], "%lf", &v) != 1)
+				ui::get()->error("--fl v-argument must be numerical");
+			if (sscanf(argv[i+3], "%lf", &a) != 1)
+				ui::get()->error("--fl a-argument must be numerical");
 			i += 3;
 #ifdef USE_FFTW
 			d2::align::set_frequency_cut(h, v, a);
 #else
-			fprintf(stderr, "\n\n*** Error: --fl is not supported                  ***");
-			fprintf(stderr,   "\n*** Hint:  rebuild ALE with FFTW=1                ***\n\n\n");
-			exit(1);
+			ui::get()->error_hint("--fl is not supported", "rebuild ALE with FFTW=1");
 #endif
 		} else if (!strcmp(argv[i], "--wmx")) {
 			if (i + 3 >= argc)
@@ -655,8 +647,7 @@ int main(int argc, const char *argv[]){
 #ifdef USE_UNIX
 			d2::align::set_wmx(argv[i+1], argv[i+2], argv[i+3]);
 #else
-			fprintf(stderr, "\n\n*** Error: --wmx is not supported                 ***");
-			fprintf(stderr,   "\n*** Hint:  rebuild ALE with POSIX=1               ***");
+			ui::get()->error_hint("--wmx is not supported", "rebuild ALE with POSIX=1");
 #endif
 			i += 3;
 		} else if (!strcmp(argv[i], "--flshow")) {
@@ -690,6 +681,73 @@ int main(int argc, const char *argv[]){
 			 */
 
 			ex_count++;
+			i += 6;
+		} else if (!strcmp(argv[i], "--crop")) {
+			if (i + 6 >= argc)
+				not_enough("--crop");
+
+			ex_parameters = (int *) local_realloc(ex_parameters, (ex_count + 4) * 6 * sizeof(int));
+			int crop_args[6];
+
+			for (int param = 0; param < 6; param++)
+			if  (sscanf(argv[i + param + 1], "%d", &(crop_args[param])) != 1)
+				bad_arg("--crop");
+
+			/*
+			 * Construct exclusion regions from the crop area,
+			 * swapping x and y, since their internal meanings
+			 * differ from their external meanings.
+			 */
+
+			/*
+			 * Exclusion region 1: low x
+			 */
+
+			ex_parameters[6 * ex_count + 0] = INT_MIN;
+			ex_parameters[6 * ex_count + 1] = crop_args[2] - 1;
+			ex_parameters[6 * ex_count + 2] = INT_MIN;
+			ex_parameters[6 * ex_count + 3] = INT_MAX;
+			ex_parameters[6 * ex_count + 4] = crop_args[4];
+			ex_parameters[6 * ex_count + 5] = crop_args[5];
+
+			/*
+			 * Exclusion region 2: low y
+			 */
+
+			ex_parameters[6 * ex_count + 6] = INT_MIN;
+			ex_parameters[6 * ex_count + 7] = INT_MAX;
+			ex_parameters[6 * ex_count + 8] = INT_MIN;
+			ex_parameters[6 * ex_count + 9] = crop_args[0] - 1;
+			ex_parameters[6 * ex_count + 10] = crop_args[4];
+			ex_parameters[6 * ex_count + 11] = crop_args[5];
+
+			/*
+			 * Exclusion region 3: high y
+			 */
+
+			ex_parameters[6 * ex_count + 12] = INT_MIN;
+			ex_parameters[6 * ex_count + 13] = INT_MAX;
+			ex_parameters[6 * ex_count + 14] = crop_args[1] + 1;
+			ex_parameters[6 * ex_count + 15] = INT_MAX;
+			ex_parameters[6 * ex_count + 16] = crop_args[4];
+			ex_parameters[6 * ex_count + 17] = crop_args[5];
+
+			/*
+			 * Exclusion region 4: high x
+			 */
+
+			ex_parameters[6 * ex_count + 18] = crop_args[3] + 1;
+			ex_parameters[6 * ex_count + 19] = INT_MAX;
+			ex_parameters[6 * ex_count + 20] = INT_MIN;
+			ex_parameters[6 * ex_count + 21] = INT_MAX;
+			ex_parameters[6 * ex_count + 22] = crop_args[4];
+			ex_parameters[6 * ex_count + 23] = crop_args[5];
+
+			/*
+			 * Increment counters
+			 */
+
+			ex_count += 4;
 			i += 6;
 		} else if (!strcmp(argv[i], "--exshow")) {
 			ex_show = 1;
@@ -758,9 +816,7 @@ int main(int argc, const char *argv[]){
 		} else if (!strcmp(argv[i], "--no-cx")) {
 			cx_parameter = 0;
 		} else if (!strcmp(argv[i], "--ip")) {
-			fprintf(stderr, "\n\n*** Error: --ip <r> <i> is no longer supported. ***\n"
-					    "*** Use --lpsf box=<r> --ips <i> instead.        ***\n\n");
-			exit(1);
+			unsupported::discontinued("--ip <r> <i>", "--lpsf box=<r> --ips <i>");
 		} else if (!strcmp(argv[i], "--bayer")) {
 			if (i + 1 >= argc)
 				not_enough("--bayer");
@@ -834,11 +890,10 @@ int main(int argc, const char *argv[]){
 			if (i + 1 >= argc)
 				not_enough("--ipr");
 
-			if (sscanf(argv[i+1], "%d", &ip_iterations) != 1) {
-				fprintf(stderr, "\n\n*** --ipr requires an integer argument ***\n\n");
-				exit(1);
-			}
-			fprintf(stderr, "\n\n*** Warning: --ipr is deprecated.  Use --ips instead ***\n\n");
+			if (sscanf(argv[i+1], "%d", &ip_iterations) != 1)
+				ui::get()->error("--ipr requires an integer argument");
+
+			ui::get()->warn("--ipr is deprecated.  Use --ips instead");
 			i++;
 
 		} else if (!strcmp(argv[i], "--ips")) {
@@ -846,16 +901,11 @@ int main(int argc, const char *argv[]){
 			if (i + 1 >= argc)
 				not_enough("--ips");
 
-			if (sscanf(argv[i+1], "%d", &ip_iterations) != 1) {
-				fprintf(stderr, "\n\n*** --ips requires an integer argument ***\n\n");
-				exit(1);
-			}
+			if (sscanf(argv[i+1], "%d", &ip_iterations) != 1)
+				ui::get()->error("--ips requires an integer argument");
 			i++;
 		} else if (!strcmp(argv[i], "--ipc")) {
-			fprintf(stderr, "\n\n*** Error: --ipc <c> <i> is no longer supported. ***\n"
-					    "*** Use either: --ips <i> --lpsf <c>              ***\n"
-					    "***         or: --ips <i> --device <c>           ***\n\n");
-			exit(1);
+			unsupported::discontinued("--ipc <c> <i>", "--ips <i> --lpsf <c>", "--ips <i> --device <c>");
 		} else if (!strcmp(argv[i], "--exp-extend")) {
 			d2::image_rw::exp_scale();
 		} else if (!strcmp(argv[i], "--exp-noextend")) {
@@ -873,19 +923,25 @@ int main(int argc, const char *argv[]){
 		} else if (!strcmp(argv[i], "--no-inc")) {
 			inc = 0;
 		} else if (!strncmp(argv[i], "--visp-scale=", strlen("--visp-scale="))) {
+
 			sscanf(argv[i] + strlen("--visp-scale="), "%lf", &vise_scale_factor);
-			if (vise_scale_factor <= 0.0) {
-				fprintf(stderr, "\n\n*** Error: VISP scale "
-						"must be greater than zero. ***\n\n\n");
-				exit(1);
-			}
+
+			if (vise_scale_factor <= 0.0)
+				ui::get()->error("VISP scale must be greater than zero");
+
+			if (!finite(vise_scale_factor))
+				ui::get()->error("VISP scale must be finite");
+
 		} else if (!strncmp(argv[i], "--scale=", strlen("--scale="))) {
+
 			sscanf(argv[i] + strlen("--scale="), "%lf", &scale_factor);
-			if (scale_factor < 1.0) {
-				fprintf(stderr, "\n\n*** Error: Scale "
-						"must be at least one. ***\n\n\n");
-				exit(1);
-			}
+
+			if (scale_factor <= 0)
+				ui::get()->error("Scale factor must be greater than zero");
+
+			if (!finite(scale_factor))
+				ui::get()->error("Scale factor must be finite");
+
 		} else if (!strncmp(argv[i], "--metric=", strlen("--metric="))) {
 			double metric;
 			sscanf(argv[i] + strlen("--metric="), "%lf", &metric);
@@ -918,14 +974,11 @@ int main(int argc, const char *argv[]){
 				d2::align::set_perturb_lower(perturb_lower, 0);
 		} else if (!strncmp(argv[i], "--stepsize=", strlen("--stepsize="))) {
 			double perturb_lower;
-			fprintf(stderr, "\n\n*** Warning: --stepsize is deprecated.  "
-					"Use --perturb-lower instead. ***\n\n\n");
+			ui::get()->warn("--stepsize is deprecated.  Use --perturb-lower instead");
 			sscanf(argv[i] + strlen("--stepsize="), "%lf", &perturb_lower);
 			d2::align::set_perturb_lower(perturb_lower, 0);
 		} else if (!strncmp(argv[i], "--hf-enhance=", strlen("--hf-enhance="))) {
-			fprintf(stderr, "\n\n*** Error: --hf-enhance=<x> is no longer supported.  "
-					"Use --usm <x> instead ***\n\n");
-			exit(1);
+			unsupported::discontinued("--hf-enhance=<x>");
 		} else if (!strncmp(argv[i], "--rot-upper=", strlen("--rot-upper="))) {
 			double rot_max;
 			sscanf(argv[i] + strlen("--rot-upper="), "%lf", &rot_max);
@@ -956,12 +1009,10 @@ int main(int argc, const char *argv[]){
 			 * Trap illegal options and end-of-option indicators.
 			 */
 
-			if (!strcmp(argv[i], "--")) {
+			if (!strcmp(argv[i], "--"))
 				i++;
-			} else if (!strncmp(argv[i], "--", strlen("--"))) {
-				fprintf(stderr, "\n\n*** Error: illegal option %s ***\n", argv[i]);
-				exit(1);
-			}
+			else if (!strncmp(argv[i], "--", strlen("--")))
+				ui::get()->illegal_option(argv[i]);
 
 			/*
 			 * Apply implication logic.
@@ -973,6 +1024,10 @@ int main(int argc, const char *argv[]){
 						     "--extend");
 				extend = 1;
 			}
+
+			if (psf_match && ex_count)
+				unsupported::fornow("PSF calibration with exclusion regions.");
+
 			
 			if (d3_output != NULL && ip_iterations != 0) 
 				unsupported::fornow("3D modeling with Irani-Peleg rendering");
@@ -1086,8 +1141,7 @@ int main(int argc, const char *argv[]){
 					d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
 					view_angle = canon_300d_raw_linear_50mm_1_4_1_4::view_angle();
 				} else {
-					fprintf(stderr, "\n\n*** Error: Unknown device %s ***\n\n", device);
-					exit(1);
+					ui::get()->unknown_device(device);
 				}
 			} else {
 				for (int ii = 0; ii < argc - i - 1; ii++)
@@ -1302,18 +1356,21 @@ int main(int argc, const char *argv[]){
 			 * Handle the original frame.
 			 */
 
-			fprintf(stderr, "Reading original frame '%s'", argv[i]);
+			ui::get()->original_frame_start(argv[i]);
 
 			for (int opt = 0; opt < oc_count; opt++) {
+				ui::get()->set_orender_current(opt);
 				ochain[opt]->sync(0);
-				if  (inc)
+				if  (inc) {
+					ui::get()->writing_output(opt);
 					d2::image_rw::write_image(ochain_names[opt], 
 						ochain[opt]->get_image(0));
+				}
 			}
 
 			d2::vise_core::frame_queue_add(0);
 
-			fprintf(stderr, ".\n");
+			ui::get()->original_frame_done();
 
 			/*
 			 * Handle supplemental frames.
@@ -1323,8 +1380,7 @@ int main(int argc, const char *argv[]){
 
 				const char *name = d2::image_rw::name(j);
 
-				fprintf(stderr, "Merging supplemental frame '%s'", 
-						name);
+				ui::get()->supplemental_frame_start(name);
 
 				/*
 				 * Write comment information about the
@@ -1335,15 +1391,18 @@ int main(int argc, const char *argv[]){
 				tsave_info (tsave, name);
 
 				for (int opt = 0; opt < oc_count; opt++) {
+					ui::get()->set_orender_current(opt);
 					ochain[opt]->sync(j);
-					if (inc)
+					if (inc) {
+						ui::get()->writing_output(opt);
 						d2::image_rw::write_image(ochain_names[opt], 
 							ochain[opt]->get_image(j));
+					}
 				}
 
 				d2::vise_core::frame_queue_add(j);
 
-				fprintf(stderr, ".\n");
+				ui::get()->supplemental_frame_done();
 			}
 
 			/*
@@ -1425,7 +1484,7 @@ int main(int argc, const char *argv[]){
 			 * Output a summary match statistic.
 			 */
 
-			fprintf(stderr, "Done (%f%% average match).\n", (double) d2::align::match_summary());
+			ui::get()->ale_done((double) d2::align::match_summary());
 
 			/*
 			 * We're done.

@@ -48,6 +48,13 @@ public:
 	}
 
 	/*
+	 * confidence accessor
+	 */
+	static float get_confidence() {
+		return confidence_exponent;
+	}
+
+	/*
 	 * Event listener interface
 	 */
 
@@ -131,6 +138,8 @@ public:
 	}
 
 	virtual ale_real confidence(unsigned int k, ale_real input) const {
+		ale_real confidence_floor = 0.001;
+
 		if (confidence_exponent == 0)
 			return 1;
 
@@ -138,13 +147,13 @@ public:
 					                 / _multiplier[k], 2));
 
 		if (unexponentiated < 0) 
-			return 0.001;
+			return confidence_floor;
 
 		ale_real exponentiated =  pow(unexponentiated, 
 				              confidence_exponent);
 
-		if (exponentiated < 0.001 || !finite(exponentiated))
-			return 0.001;
+		if (exponentiated < confidence_floor || !finite(exponentiated))
+			return confidence_floor;
 
 		return exponentiated;
 	}

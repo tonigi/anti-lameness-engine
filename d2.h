@@ -33,6 +33,7 @@
 #include "ale_real.h"
 #include "ale_accum.h"
 #include "ale_pos.h"
+#include "ui/ui.h"
 
 
 #include <iostream>

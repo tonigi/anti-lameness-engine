@@ -1,3 +1,47 @@
+0.7.4-pre1
+
+o	Modify d2::align to use unscaled input images when the scale factor
+	is larger than 1.0, or when a scaled_filter interpolant is being used.
+
+o	Modify d2::image::scale() to allow scale factors in the interval 
+	(0, 1), and modify the command-line interface and help text to reflect
+	this change.  --scale= now accepts all finite positive values.
+
+o	Add user interface options --ui=stream and --ui=tty.  The latter
+	includes more detailed status output when terminal width information
+	can be obtained, and is the new default.
+
+o	Move certain user interface elements to the source subdirectory ui/.
+
+o	Modify d2::render::ipc::_ip_frame_correct() so that exposure
+	re-estimation uses a ratio of weighted sums instead of a weighted
+	average of ratios.
+
+o	Modify d2::align::set_exposure_ratio() so that alignment 
+	weights and certainty values are taken into consideration.  
+
+o	Add a --cw option to weight alignment error by certainty values,
+	as suggested by Gregory Maxwell.  This allows the contributions of
+	pixels at maxval to be diminished, which could increase alignment
+	success in some cases.
+
+o	Replace functions d2::incremental::{increase,decrease}_extents()
+	with new functions that take exclusion regions into account.  The new
+	functions should also fix a boundary-calculation bug reported by
+	Gregory Maxwell.
+
+o	Modify d2/render/ipc.h to handle exclusion regions more effectively.
+
+o	Add --crop argument, which excludes the spatial complement of a
+	specified area over a specified set of frames.  Gregory Maxwell notes
+	several advantages of internal over external crops, including
+	preserving knowledge of position in the uncropped frame, which among
+	other benefits allows natural handling of Bayer patterns.
+
+o	Modify rx_parameters in d2/render.h to use the ale_pos data type
+	instead of int.  This allows exclusion regions to be calculated
+	more accurately.
+
 0.7.3
 
 o	Add incremental 3D reconstruction output.

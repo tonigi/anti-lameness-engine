@@ -1,4 +1,4 @@
-// Copyright 2004 David Hilvert <dhilvert@auricle.dyndns.org>, 
+// Copyright 2004 David Hilvert <dhilvert@auricle.dyndns.org>,
 //                              <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
@@ -18,17 +18,34 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "render.h"
+#ifndef __ui_wo_h__
+#define __ui_wo_h__
+
+#include "ui.h"
 
 /*
- * See align.h for details on these variables.
+ * Write-once user interface.
  */
 
-unsigned int render::rx_count;
-ale_pos *render::rx_parameters;
-int render::rx_show;
-render *render::directory[ACTIVE_RENDERER_COUNT];
-int render::directory_length;
-int render::extend;
-double render::scale_factor;
-double render::wt = 0.8;
+class ui_wo : public ui {
+private:
+	void printf(char *format, ...) {
+		va_list ap;
+		va_start(ap, format);
+		vfprintf(ui_stream, format, ap);
+		va_end(ap);
+	}
+
+	void update() {
+		if (status.code == status.FRAME_DONE
+		 || status.code == status.SET_DONE) {
+			printf(".\n");
+		}
+	}
+
+public:
+	ui_wo() {
+	}
+};
+
+#endif

@@ -76,6 +76,7 @@ public:
 			"--ht              Transformation data files.\n"
 			"--hl              Filtering (PSFs, rendering chains).\n"
 			"--hd              Devices.\n"
+			"--hi              User Interfaces.\n"
 			"--hv              Video stream processing (Experimental).\n"
 			"--h3              3D Modeling (Very Experimental).\n"
 			"--hz              Undocumented options.\n"
@@ -220,11 +221,16 @@ public:
 			"--bda-rate=x      Barrel distortion rate of change maximum  (0.0004 is default)\n"   
 			"--lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (1 is def.)\n"
 			BETWEEN_SECTIONS
-			"Alignment weight map:\n"
+			"Certainty-weighted alignment:\n"
+			HEADER_SPACE
+			"--cw              Weight alignment error by certainty.\n"
+			"--no-cw           Don't weight alignment error by certainty. [default]\n"
+			BETWEEN_SECTIONS
+			"Alignment weight maps:\n"
 			HEADER_SPACE
 			"--wm <f> <x> <y>  Use weight map image <f> at offset (<x>, <y>)\n"
 			BETWEEN_SECTIONS
-			"Frequency-based alignment:\n"
+			"Frequency-weighted alignment:\n"
 			HEADER_SPACE
 			"--fl <h> <v> <a>  High-pass filters: horizontal <h>, vertical <v>, average <a>.\n"
 			"                     Values should fall between 0 (pass all) and 1 (pass none).\n"
@@ -282,7 +288,7 @@ public:
 			BETWEEN_SECTIONS
 			"Tunable parameters:\n"
 			HEADER_SPACE
-			"--scale=x         Scale images by the factor x.         (where x is at least 1)\n"
+			"--scale=x         Scale images by the factor x, where x > 0.            (x > 0)\n"
 			"--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)\n"
 			BETWEEN_SECTIONS
 			"Irani-Peleg iterative solver (see --hq for defaults):\n"
@@ -404,6 +410,10 @@ public:
 			"                     vertical, and frame limits:\n"
 			"                         <xmin> <xmax> <ymin> <ymax> <fmin> <fmax>\n"
 			"                     using unscaled rendering spatial coordinates.\n"
+			"--crop <args>     Exclude the spatial complement of an area over a\n"
+			"                  specified set of frames.  <args> are:\n"
+			"                         <xmin> <xmax> <ymin> <ymax> <fmin> <fmax>\n"
+			"                     using unscaled rendering spatial coordinates.\n"
 			"\n"
 		       );
 	}
@@ -507,6 +517,23 @@ public:
 			"                     <suffix> is an output file suffix\n"
 			"--visp-scale=<x>  Use scale <x> for VISP output.  (default is 1.0)\n"
 			"--exshow          For single-invariant chains, show --ex regions dimmed.\n"
+			"\n");
+	}
+	void interface() {
+		banner("User Interface");
+		fprintf(help_stream, 
+			BETWEEN_SECTIONS
+			"User Interfaces:\n"
+			HEADER_SPACE
+			"--ui=<type>       Set user interface to <type>, one of:\n"
+			"                     stream\n"
+			"                     tty [default]\n"
+#ifndef USE_IOCTL
+			"\n"
+			"                     NOTE: since ALE was compiled without ioctl support,\n"
+			"                     --ui=tty will behave identically to --ui=stream.\n"
+			"                     For additional output, recompile with IOCTL=1.\n"
+#endif
 			"\n");
 	}
 	void d3() {

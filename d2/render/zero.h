@@ -59,15 +59,13 @@ public:
 			accum_weight = new image_zero(accum_image->height(),
 					accum_image->width(), accum_image->depth());
 
-			if (is_extend())
-				increase_extents(t);
-			decrease_extents(t);
+			set_extents_by_map(0, t);
 
 			image_rw::close(0);
 		} else if (align::match(get_step())) {
 			transformation t = align::of(get_step());
 			if (is_extend())
-				increase_extents(t);
+				increase_extents_by_map(get_step(), t);
 		}
 	}
 

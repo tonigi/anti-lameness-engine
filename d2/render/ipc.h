@@ -122,7 +122,7 @@ protected:
 	 * pixels.  
 	 */
 
-	void _ip_frame_simulate(image *approximation, 
+	void _ip_frame_simulate(int frame_num, image *approximation, 
 			image *lsimulated, image *nlsimulated, 
 			transformation t, const raster *lresponse, 
 			const raster *nlresponse, const exposure &exp) {
@@ -142,6 +142,9 @@ protected:
 
                 for (unsigned int i = 0; i < approximation->height(); i++)
                 for (unsigned int j = 0; j < approximation->width();  j++) {
+
+			if (is_excluded(approximation->offset(), i, j, frame_num))
+				continue;
 
 			/*
 			 * Obtain the position Q and dimensions D of
@@ -325,7 +328,7 @@ protected:
 	 * densities.
 	 */
 
-	void _ip_frame_correct(image *approximation, image *c, 
+	void _ip_frame_correct(int frame_num, image *approximation, image *c, 
 			image *cc, const image *real, image *lsimulated, 
 			image *nlsimulated, transformation t, 
 			const backprojector *lresponse, 
@@ -364,6 +367,10 @@ protected:
 
 			for (unsigned int i = 0; i < new_lreal->height(); i++)
 			for (unsigned int j = 0; j < new_lreal->width();  j++) {
+
+				if (is_excluded(approximation->offset(), i, j, frame_num))
+					continue;
+
 
 				/*
 				 * Convenient variables for expressing the boundaries
@@ -431,48 +438,67 @@ protected:
 				new_lreal->set_pixel(i, j, real->exp().linearize(
 							new_lreal->get_pixel(i, j)));
 
-			/*
-			 * Perform exposure adjustment.
-			 */
+			lreal = new_lreal;
+		}
 
-			if (exposure_register) {
+		/*
+		 * Perform exposure adjustment.
+		 *
+		 * XXX: it would be cleaner to remove the 'nlsimulated' term
+		 * from the following test, but, empirically, this causes
+		 * problems with raw Bayer pattern data, so we leave this as-is
+		 * for now.
+		 */
 
-				pixel ec;
+		if (exposure_register && nlsimulated) {
+
+			pixel ec;
 
 #if 0
-				ec = lsimulated->avg_channel_magnitude()
-				   / new_lreal->avg_channel_magnitude();
-#else
+			ec = lsimulated->avg_channel_magnitude()
+			   / lreal->avg_channel_magnitude();
+#elsif 0
+			pixel_accum ratio_sum;
+			pixel_accum weight_sum;
 
-				pixel_accum ratio_sum;
-				pixel_accum weight_sum;
+			for (unsigned int i = 0; i < lreal->height(); i++)
+			for (unsigned int j = 0; j < lreal->width(); j++) {
+				pixel s = lsimulated->get_pixel(i, j);
+				pixel r = lreal->get_pixel(i, j);
+				pixel confidence = real->exp().confidence(r);
 
-				for (unsigned int i = 0; i < new_lreal->height(); i++)
-				for (unsigned int j = 0; j < new_lreal->width(); j++) {
-					pixel s = lsimulated->get_pixel(i, j);
-					pixel r = new_lreal->get_pixel(i, j);
-					pixel confidence = real->exp().confidence(r);
-
-					if (s[0] > 0.001 
-					 && s[1] > 0.001
-					 && s[2] > 0.001
-					 && r[0] > 0.001
-					 && r[1] > 0.001
-					 && r[2] > 0.001) {
-						ratio_sum += confidence * s / r;
-						weight_sum += confidence;
-					}
+				if (s[0] > 0.001 
+				 && s[1] > 0.001
+				 && s[2] > 0.001
+				 && r[0] > 0.001
+				 && r[1] > 0.001
+				 && r[2] > 0.001) {
+					ratio_sum += confidence * s / r;
+					weight_sum += confidence;
 				}
+			}
 
-				ec = ratio_sum / weight_sum;
+			ec = ratio_sum / weight_sum;
+#else
+			pixel_accum ssum, rsum;
+
+			for (unsigned int i = 0; i < lreal->height(); i++)
+			for (unsigned int j = 0; j < lreal->width(); j++) {
+				pixel s = lsimulated->get_pixel(i, j);
+				pixel r = lreal->get_pixel(i, j);
+				pixel confidence = real->exp().confidence(r)
+					         * real->exp().confidence(s);
+
+				ssum += confidence * s;
+				rsum += confidence * r;
+			}
+
+			ec = ssum / rsum;
 
 #endif
 
-				real->exp().set_multiplier(
-					real->exp().get_multiplier() * ec);
-			}
-
-			lreal = new_lreal;
+			real->exp().set_multiplier(
+				real->exp().get_multiplier() * ec);
 		}
 
 
@@ -609,7 +635,7 @@ protected:
 	 * count CC for affected pixels in C.
 	 */
 
-	virtual void _ip_frame(image *c, image *cc, const image *real, 
+	virtual void _ip_frame(int frame_num, image *c, image *cc, const image *real, 
 			transformation t, const raster *f, const backprojector *b,
 			const raster *nlf, const backprojector *nlb) {
 
@@ -634,13 +660,13 @@ protected:
 		 * Create simulated frames with forward projection.
 		 */
 
-		_ip_frame_simulate(approximation, lsimulated, nlsimulated, t, f, nlf, real->exp());
+		_ip_frame_simulate(frame_num, approximation, lsimulated, nlsimulated, t, f, nlf, real->exp());
 
 		/*
 		 * Update the correction array using backprojection.
 		 */
 
-		_ip_frame_correct(approximation, c, cc, real, lsimulated, nlsimulated, t, b, nlb);
+		_ip_frame_correct(frame_num, approximation, c, cc, real, lsimulated, nlsimulated, t, b, nlb);
 
 		/*
 		 * Finalize data structures.
@@ -705,10 +731,12 @@ protected:
 				if (!align::match(m))
 					continue;
 
+				ui::get()->ip_frame_start(m);
+
 				transformation t = align::of(m);
 				const image *real = image_rw::open(m);
 
-                                _ip_frame(correction, correction_count, real,
+                                _ip_frame(m, correction, correction_count, real,
 					t, f[m], b[m], nlf, nlb);
 
 				image_rw::close(m);
@@ -717,6 +745,8 @@ protected:
 			/*
 			 * Update the approximation.
 			 */
+
+			ui::get()->ip_update();
 
 			for (unsigned int i = 0; i < approximation->height(); i++)
 			for (unsigned int j = 0; j < approximation->width();  j++) {
@@ -761,10 +791,12 @@ protected:
                         delete correction;
 			delete correction_count;
 
-			if (inc)
+			if (inc) {
+				ui::get()->ip_write();
 				image_rw::output(approximation);
+			}
 
-                        fprintf(stderr, ".");
+			ui::get()->ip_step_done();
 
                 }
 
@@ -818,12 +850,11 @@ public:
 
         virtual int sync() {
 		input->sync();
-                fprintf(stderr, "Iterating Irani-Peleg");
+		ui::get()->ip_start();
                 done = 1;
                 approximation = optimizations::get_ip_working_image(input->get_image());
                 _ip();
-
-		fprintf(stderr, "\n");
+		ui::get()->ip_done();
 
                 return 0;
         }

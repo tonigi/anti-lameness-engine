@@ -1,4 +1,4 @@
-// Copyright 2004 David Hilvert <dhilvert@auricle.dyndns.org>, 
+// Copyright 2004 David Hilvert <dhilvert@auricle.dyndns.org>,
 //                              <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
@@ -18,17 +18,30 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "render.h"
+#ifndef __util_h__
+#define __util_h__
+
+#ifdef USE_IOCTL
+#include <sys/ioctl.h>
+#endif
 
 /*
- * See align.h for details on these variables.
+ * Returns the terminal width if possible.  Else, returns
+ * -1.  Based on the function 'determine_screen_width'
+ * in wget 1.9.1.
  */
+static inline int get_terminal_width (FILE *tty_file) {
+	int error_code = -1;
 
-unsigned int render::rx_count;
-ale_pos *render::rx_parameters;
-int render::rx_show;
-render *render::directory[ACTIVE_RENDERER_COUNT];
-int render::directory_length;
-int render::extend;
-double render::scale_factor;
-double render::wt = 0.8;
+#if defined USE_IOCTL && defined TIOCGWINSZ
+	struct winsize wsz;
+
+	if(ioctl(fileno(tty_file), TIOCGWINSZ, &wsz) < 0)
+		return error_code;
+
+	return wsz.ws_col;
+#else
+	return error_code;
+#endif
+}
+#endif

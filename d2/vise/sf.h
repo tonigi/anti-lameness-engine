@@ -56,7 +56,7 @@ public:
 		int replace_ex = 0;  // If image regions are being replaced, are we honoring exclusion regions?
 		unsigned int rx_count = render::get_rx_count();
 		const filter::scaled_filter *scf = NULL;
-		const int *rx_parameters = render::get_rx_parameters();
+		const ale_pos *rx_parameters = render::get_rx_parameters();
 		int rx_show = render::is_rx_show();
 
 		/*

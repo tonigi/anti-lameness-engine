@@ -38,11 +38,12 @@ protected:
 	invariant *inv;
 
 	/*
-	 * Increase extents of image and weight according to a new image to be
-	 * merged.
+	 * Set extents of image and weight according to a new image to be
+	 * merged.  This function should remove only superfluous undefined
+	 * areas.
 	 */
 
-	void increase_extents(transformation t) {
+	void set_extents_by_map(unsigned int frame_num, transformation t) {
 
 		assert (accum_weight != NULL);
 		assert (accum_image  != NULL);
@@ -58,36 +59,49 @@ protected:
 		int extend_left = 0;
 		int extend_right = 0;
 
-		ale_pos height = t.unscaled_height() - 1, width = t.unscaled_width() - 1;
+		double zero = 0;
+		double infinity = 1 / zero;
+		
+		assert (!finite(infinity));
+		assert (!isnan(infinity));
+		assert (infinity > 0);
 
-		point p[8];
+		point min, max;
 
-		p[0] = t.transform_unscaled(point(   0    ,   0    ));
-		p[1] = t.transform_unscaled(point(height  ,   0    ));
-		p[2] = t.transform_unscaled(point(height  , width  ));
-		p[3] = t.transform_unscaled(point(   0    , width  ));
-		p[4] = t.transform_unscaled(point(height/2,   0    ));
-		p[5] = t.transform_unscaled(point(height/2, width  ));
-		p[6] = t.transform_unscaled(point(   0    , width/2));
-		p[7] = t.transform_unscaled(point(height  , width/2));
+		min[0] = min[1] = infinity;
+		max[0] = max[1] = -infinity;
 
-		for (int n = 0; n < 8; n++) {
+		for (unsigned int i = 0; i < t.unscaled_height(); i++)
+		for (unsigned int j = 0; j < t.unscaled_width(); j++) {
+			point p = t.transform_unscaled(point(i, j));
 
-			if (p[n][0] < extend_offset_i - extend_top) {
-				extend_top = (int) ceil(-p[n][0] + extend_offset_i);
+			if (is_excluded(accum_image->offset(), p, frame_num))
+				continue;
+
+			if (p[0] < min[0]) {
+				min[0] = p[0];
 			}
-			if (p[n][0] > accum_image->height() + extend_offset_i + extend_bottom) {
-				extend_bottom = (int) ceil(p[n][0] - accum_image->height() -
-						extend_offset_i);
+			if (p[0] > max[0]) {
+				max[0] = p[0];
 			}
-			if (p[n][1] < extend_offset_j - extend_left) {
-				extend_left = (int) ceil(-p[n][1] + extend_offset_j);
+			if (p[1] < min[1]) {
+				min[1] = p[1];
 			}
-			if (p[n][1] > accum_image->width() + extend_offset_j + extend_right) {
-				extend_right = (int) ceil(p[n][1] - accum_image->width() - 
-						extend_offset_j);
+			if (p[1] > max[1]) {
+				max[1] = p[1];
 			}
 		}
+
+		if (!finite(max[0])
+		 || !finite(max[1])
+		 || !finite(min[0])
+		 || !finite(min[1]))
+			return;
+
+		extend_top = (int) ceil(extend_offset_i - floor(min[0]));
+		extend_left = (int) ceil(extend_offset_j - floor(min[1]));
+		extend_bottom = (int) ceil(ceil(max[0]) - (accum_image->height() - 1 + extend_offset_i));
+		extend_right = (int) ceil(ceil(max[1]) - (accum_image->width() - 1 + extend_offset_j));
 
 		accum_image->extend(extend_top, extend_bottom, 
 			extend_left, extend_right);
@@ -95,12 +109,7 @@ protected:
 			extend_left, extend_right);
 	}	
 
-	/*
-	 * Decrease extents of image and weight according to a new image to be
-	 * merged.
-	 */
-
-	void decrease_extents(transformation t) {
+	void increase_extents_by_map(unsigned int frame_num, transformation t) {
 
 		assert (accum_weight != NULL);
 		assert (accum_image  != NULL);
@@ -116,44 +125,53 @@ protected:
 		int extend_left = 0;
 		int extend_right = 0;
 
-		ale_pos height = t.unscaled_height() - 1, width = t.unscaled_width() - 1;
+		double zero = 0;
+		double infinity = 1 / zero;
+		
+		assert (!finite(infinity));
+		assert (!isnan(infinity));
+		assert (infinity > 0);
 
-		point p[8];
+		point min, max;
 
-		p[0] = t.transform_unscaled(point(   0    ,   0    ));
-		p[1] = t.transform_unscaled(point(height  ,   0    ));
-		p[2] = t.transform_unscaled(point(height  , width  ));
-		p[3] = t.transform_unscaled(point(   0    , width  ));
-		p[4] = t.transform_unscaled(point(height/2,   0    ));
-		p[5] = t.transform_unscaled(point(height/2, width  ));
-		p[6] = t.transform_unscaled(point(   0    , width/2));
-		p[7] = t.transform_unscaled(point(height  , width/2));
+		min[0] = min[1] = infinity;
+		max[0] = max[1] = -infinity;
 
-		point min = p[0], max = p[0];
+		for (unsigned int i = 0; i < t.unscaled_height(); i++)
+		for (unsigned int j = 0; j < t.unscaled_width(); j++) {
+			point p = t.transform_unscaled(point(i, j));
 
-		for (int n = 0; n < 8; n++) {
-			if (p[n][0] < min[0]) {
-				min[0] = p[n][0];
+			if (is_excluded(point(0, 0), p, frame_num))
+				continue;
+
+			if (p[0] < min[0]) {
+				min[0] = p[0];
 			}
-			if (p[n][0] > max[0]) {
-				max[0] = p[n][0];
+			if (p[0] > max[0]) {
+				max[0] = p[0];
 			}
-			if (p[n][1] < min[1]) {
-				min[1] = p[n][1];
+			if (p[1] < min[1]) {
+				min[1] = p[1];
 			}
-			if (p[n][1] > max[1]) {
-				max[1] = p[n][1];
+			if (p[1] > max[1]) {
+				max[1] = p[1];
 			}
 		}
 
-		if (floor(min[0]) > extend_offset_i)
+		if (!finite(max[0])
+		 || !finite(max[1])
+		 || !finite(min[0])
+		 || !finite(min[1]))
+			return;
+
+		if (ceil(min[0]) < extend_offset_i)
 			extend_top = (int) ceil(extend_offset_i - floor(min[0]));
-		if (floor(min[1]) > extend_offset_j)
+		if (ceil(min[1]) < extend_offset_j)
 			extend_left = (int) ceil(extend_offset_j - floor(min[1]));
-		if (ceil(max[0]) < accum_image->height() + extend_offset_i)
-			extend_bottom = (int) ceil(ceil(max[0]) - (accum_image->height() + extend_offset_i));
-		if (ceil(max[1]) < accum_image->width() + extend_offset_j)
-			extend_right = (int) ceil(ceil(max[1]) - (accum_image->width() + extend_offset_j));
+		if (floor(max[0]) > accum_image->height() - 1 + extend_offset_i)
+			extend_bottom = (int) ceil(ceil(max[0]) - (accum_image->height() - 1 + extend_offset_i));
+		if (floor(max[1]) > accum_image->width() - 1 + extend_offset_j)
+			extend_right = (int) ceil(ceil(max[1]) - (accum_image->width() - 1 + extend_offset_j));
 
 		accum_image->extend(extend_top, extend_bottom, 
 			extend_left, extend_right);
@@ -188,15 +206,17 @@ protected:
 		for (unsigned int k = 0; k < 3; k++) {
 
 			/*
-			 * Cases independent of the old pixel value and weight for which
-			 * the update can be ignored.   XXX: the first bound is
-			 * arbitrary.
+			 * Cases independent of the old pixel value and weight
+			 * for which the update can be ignored.   XXX: the
+			 * first bound should probably be less than or equal to
+			 * the certainty floor.
 			 */
 
 			if (fabs(new_weight[k]) < 0.001
 			 || (!inv->is_avg()
-			  && new_weight[k] < render::get_wt()))
+			  && new_weight[k] < render::get_wt())) {
 				continue;
+			}
 
 			/*
 			 * Cases independent of the old pixel value and weight for which
@@ -273,7 +293,7 @@ protected:
 
 			ale_real updated_weight = old_weight + new_weight[k];
 
-			if (fabs(updated_weight) < 0.0001) {
+			if (fabs(updated_weight) < 0.001) {
 				/*
 				 * XXX: Give up.  Because of the way we
 				 * represent weights and values, we can't
@@ -384,33 +404,23 @@ public:
 			transformation t = align::of(0);
 
 			const image *im = image_rw::open(0);
-			
-			/*
-			 * XXX: This approach to trimming pixels is probably a
-			 * bit too aggressive.  If it is changed, be sure to
-			 * also change the corresponding lines in
-			 * incremental.h.
-			 */
 
-			unsigned int trim_size = (int) ceil(get_scale_factor()) - 1;
+			ui::get()->rendering();
 
-			accum_image = new image_ale_real((int) floor(im->height() * get_scale_factor()) - trim_size,
-							 (int) floor(im->width()  * get_scale_factor()) - trim_size, 3);
+			accum_image = new image_ale_real(1, 1, 3);
 
-			accum_weight = new image_ale_real(accum_image->height(),
-					accum_image->width(), accum_image->depth());
+			accum_weight = new image_ale_real(1, 1, 3);
 
-			if (is_extend())
-				increase_extents(t);
-			decrease_extents(t);
+			set_extents_by_map(0, t);
 
 			_merge(0, im, t);
 
 			image_rw::close(0);
 		} else if (align::match(get_step())) {
 			transformation t = align::of(get_step());
+			ui::get()->rendering();
 			if (is_extend())
-				increase_extents(t);
+				increase_extents_by_map(get_step(), t);
 			const image *im = image_rw::open(get_step());
 			_merge(get_step(), im, t);
 			image_rw::close(get_step());

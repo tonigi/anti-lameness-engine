@@ -44,11 +44,16 @@ public:
 	/*
 	 * Describe an option that is no longer supported.
 	 */
-	static void discontinued(const char *description, const char *alternative) {
+	static void discontinued(const char *description, const char *alternative = NULL, const char *alternative2 = NULL) {
 		fprintf(stderr, "\n\n");
 		fprintf(stderr, "Error: %s is no longer supported.\n", description);
-		if (alternative)
+
+		if (alternative && alternative2) {
+			fprintf(stderr, "  Use either: %s\n", alternative);
+			fprintf(stderr, "          or: %s\n", alternative2);
+		} else if (alternative)
 			fprintf(stderr, "  Use: %s\n", alternative);
+
 		fprintf(stderr, "\n");
 
 		exit(1);

@@ -95,9 +95,15 @@ private:
 
 	/*
 	 * Consolidated alignment weights
+	 *
+	 * The final value of alignment_weights_const is the canonical weight
+	 * set.  If alignment_weights_const is set but alignment_weights is
+	 * not, then the memory is not ours, and the object should not be
+	 * modified or deleted.
 	 */
 
 	static image *alignment_weights;
+	static const image *alignment_weights_const;
 
 	/*
 	 * Latest transformation.
@@ -271,6 +277,16 @@ private:
 	static ale_pos _mc;
 
 	/*
+	 * Certainty weight flag
+	 *
+	 * 0. Don't use certainty weights for alignment.
+	 *
+	 * 1. Use certainty weights for alignment.
+	 */
+
+	static int certainty_weights;
+
+	/*
 	 * Global search parameter
 	 *
 	 * 0.  Local:   Local search only.
@@ -301,10 +317,12 @@ private:
 
 	struct scale_cluster {
 		const image *accum;
-		const image *input;
 		const image *defined;
 		const image *aweight;
 		const int   *ax_parameters;
+
+		ale_pos input_scale;
+		const image *input;
 	};
 
 	/*
@@ -340,7 +358,10 @@ private:
 
 			struct point q;
 
-			q = t.scaled_inverse_transform(
+			q = (c.input_scale < 1.0 && interpolant == NULL)
+			  ? t.scaled_inverse_transform(
+				point(i + offset[0], j + offset[1]))
+			  : t.unscaled_inverse_transform(
 				point(i + offset[0], j + offset[1]));
 
 			ale_pos ti = q[0];
@@ -399,9 +420,9 @@ private:
 			interpolant->set_parameters(t, c.input, offset);
 
 		/*
-		 * We always the same code for exhaustive and Monte Carlo pixel
-		 * sampling, setting _mc_arg = 1 when all pixels are to be
-		 * sampled.
+		 * We always use the same code for exhaustive and Monte Carlo
+		 * pixel sampling, setting _mc_arg = 1 when all pixels are to
+		 * be sampled.
 		 */
 
 		if (_mc_arg <= 0 || _mc_arg >= 1)
@@ -495,7 +516,10 @@ private:
 
 			struct point q;
 
-			q = t.scaled_inverse_transform(
+			q = (c.input_scale < 1.0 && interpolant == NULL)
+			  ? t.scaled_inverse_transform(
+				point(i + offset[0], j + offset[1]))
+			  : t.unscaled_inverse_transform(
 				point(i + offset[0], j + offset[1]));
 
 			ale_pos ti = q[0];
@@ -523,20 +547,22 @@ private:
 
 				if (interpolant != NULL)
 					interpolant->filtered(i, j, &pb, &weight);
-				else
-					pb = c.input->get_bl(point(ti, tj));
+				else {
+					pixel result[2];
+					c.input->get_bl(point(ti, tj), result);
+					pb = result[0];
+					weight = result[1];
+				}
 
 				/*
-				 * Get per-channel alignment weight
+				 * Handle certainty.
 				 */
 
-				pixel aweight;
+				if (certainty_weights == 0)
+					weight = pixel(1, 1, 1);
 
 				if (c.aweight != NULL)
-					aweight = c.aweight->get_pixel(i, j);
-				else
-					aweight = pixel(1, 1, 1);
-
+					weight *= c.aweight->get_pixel(i, j);
 
 				/*
 				 * Determine alignment type.
@@ -552,8 +578,8 @@ private:
 						ale_real achan = pa[k];
 						ale_real bchan = pb[k];
 
-						result += aweight[k] * pow(fabs(achan - bchan), metric_exponent);
-						divisor += aweight[k] * pow(achan > bchan ? achan : bchan, metric_exponent);
+						result += weight[k] * pow(fabs(achan - bchan), metric_exponent);
+						divisor += weight[k] * pow(achan > bchan ? achan : bchan, metric_exponent);
 					}
 				} else if (channel_alignment_type == 1) {
 					/*
@@ -563,8 +589,8 @@ private:
 					ale_real achan = pa[1];
 					ale_real bchan = pb[1];
 
-					result += aweight[1] * pow(fabs(achan - bchan), metric_exponent);
-					divisor += aweight[1] * pow(achan > bchan ? achan : bchan, metric_exponent);
+					result += weight[1] * pow(fabs(achan - bchan), metric_exponent);
+					divisor += weight[1] * pow(achan > bchan ? achan : bchan, metric_exponent);
 				} else if (channel_alignment_type == 2) {
 					/*
 					 * Align based on the sum of all channels.
@@ -577,7 +603,7 @@ private:
 					for (k = 0; k < 3; k++) {
 						asum += pa[k];
 						bsum += pb[k];
-						wsum += aweight[k] / 3;
+						wsum += weight[k] / 3;
 					}
 
 					result += wsum * pow(fabs(asum - bsum), metric_exponent);
@@ -590,11 +616,19 @@ private:
 
 	/*
 	 * Adjust exposure for an aligned frame B against reference A.
+	 *
+	 * Expects full-LOD images.
+	 *
+	 * This function is a bit of a mess, as it reflects rather ad-hoc rules
+	 * regarding what seems to work w.r.t. certainty.  Using certainty in the
+	 * first pass seems to result in worse alignment, while not using certainty
+	 * in the second pass results in incorrect determination of exposure.
 	 */
 	static void set_exposure_ratio(unsigned int m, struct scale_cluster c,
-			transformation t, int ax_count) {
+			transformation t, int ax_count, int pass_number) {
 
-		pixel_accum asum(0, 0, 0), bsum(0, 0, 0);
+		pixel_accum ratio_sum, weight_sum;
+		pixel_accum asum, bsum;
 
 		point offset = c.accum->offset();
 
@@ -621,7 +655,10 @@ private:
 
 			struct point q;
 
-			q = t.scaled_inverse_transform(
+			q = (c.input_scale < 1.0 && interpolant == NULL)
+			  ? t.scaled_inverse_transform(
+				point(i + offset[0], j + offset[1]))
+			  : t.unscaled_inverse_transform(
 				point(i + offset[0], j + offset[1]));
 
 			/*
@@ -639,15 +676,47 @@ private:
 			 && q[1] >= 0
 			 && q[1] <= c.input->width() - 1
 			 && c.defined->get_pixel(i, j).minabs_norm() != 0) { 
-				asum += c.accum->get_pixel(i, j);
-				bsum += c.input->get_bl(q);
+				pixel a = c.accum->get_pixel(i, j);
+				pixel b = c.input->get_bl(q);
+
+#if 0
+				pixel weight = (c.aweight
+					      ? c.aweight->get_pixel(i, j)
+					      : pixel(1, 1, 1))
+					     * (certainty_weights
+					      ? image_rw::exp(m).confidence(b)
+					      : pixel(1, 1, 1));
+#else
+				pixel weight = (c.aweight
+					      ? c.aweight->get_pixel(i, j)
+					      : pixel(1, 1, 1))
+					     * ((!certainty_weights && !pass_number)
+					      ? c.defined->get_pixel(i, j)
+					      : pixel(1, 1, 1))
+					     * (!pass_number
+					      ? image_rw::exp(m).confidence(b)
+					      : pixel(1, 1, 1));
+#endif
+
+				asum += a * weight;
+				bsum += b * weight;
 			}
 		}
 
 		// std::cerr << (asum / bsum) << " ";
+		
+		pixel_accum new_multiplier;
 
-		image_rw::exp(m).set_multiplier((asum / bsum)
-				* image_rw::exp(m).get_multiplier());
+		new_multiplier = asum / bsum * image_rw::exp(m).get_multiplier();
+
+		if (finite(new_multiplier[0])
+		 && finite(new_multiplier[1])
+		 && finite(new_multiplier[2])) {
+			image_rw::exp(m).set_multiplier(new_multiplier);
+			ui::get()->exp_multiplier(new_multiplier[0],
+					          new_multiplier[1],
+						  new_multiplier[2]);
+		}
 	}
 
 	static void halve_ax_parameters(int local_ax_count, struct scale_cluster *scale_clusters) {
@@ -658,10 +727,8 @@ private:
 		assert (ax_parameter_scales_old);
 		assert (ax_parameter_scales_new);
 
-		if (!ax_parameter_scales_new)  {
-			fprintf(stderr, "Unable to allocate memory for exclusion regions.\n");
-			exit(1);
-		}
+		if (!ax_parameter_scales_new)
+			ui::get()->memory_error("exclusion regions");
 
 		for (int idx = 0; idx < local_ax_count; idx++) {
 			ax_parameter_scales_new[idx * 4 + 0] = ax_parameter_scales_old[idx * 4 + 0] / 2;
@@ -680,10 +747,8 @@ private:
 
 		assert (ax_parameter_scales_0);
 
-		if (!ax_parameter_scales_0)  {
-			fprintf(stderr, "Unable to allocate memory for exclusion regions.\n");
-			exit(1);
-		}
+		if (!ax_parameter_scales_0)
+			ui::get()->memory_error("exclusion regions");
 
 		*local_ax_count = 0;
 
@@ -758,10 +823,8 @@ private:
 
 		assert (scale_clusters);
 
-		if (!scale_clusters) {
-			fprintf(stderr, "Couldn't allocate memory for alignment.\n");
-			exit(1);
-		}
+		if (!scale_clusters)
+			ui::get()->memory_error("alignment");
 
 		/*
 		 * Prepare images for the highest level of detail.  
@@ -769,23 +832,35 @@ private:
 
 		scale_clusters[0].accum = reference_image;
 
-		if (scale_factor > 1.0)
+		ui::get()->constructing_lod_clusters(0.0);
+		scale_clusters[0].input_scale = scale_factor;
+		if (scale_factor < 1.0 && interpolant == NULL)
 			scale_clusters[0].input = input_frame->scale(scale_factor, "alignment");
-		else 
+		else
 			scale_clusters[0].input = input_frame;
 
 		scale_clusters[0].defined = reference_defined;
-		scale_clusters[0].aweight = alignment_weights;
+		scale_clusters[0].aweight = alignment_weights_const;
 
 		/*
 		 * Prepare reduced-detail images.
 		 */
 
 		for (unsigned int step = 1; step < steps; step++) {
+			ui::get()->constructing_lod_clusters(step);
 			scale_clusters[step].accum = prepare_lod(scale_clusters[step - 1].accum, scale_clusters[step - 1].aweight);
-			scale_clusters[step].input = prepare_lod(scale_clusters[step - 1].input);
 			scale_clusters[step].defined = prepare_lod_def(scale_clusters[step - 1].defined);
 			scale_clusters[step].aweight = prepare_lod(scale_clusters[step - 1].aweight);
+
+			double sf = scale_clusters[step - 1].input_scale / 2;
+			scale_clusters[step].input_scale = sf;
+
+			if (sf >= 1.0 || interpolant != NULL)
+				scale_clusters[step].input = scale_clusters[step - 1].input;
+			else if (sf > 0.5)
+				scale_clusters[step].input = scale_clusters[step - 1].input->scale(sf, "alignment");
+			else
+				scale_clusters[step].input = scale_clusters[step - 1].input->scale(0.5, "alignment");
 		}
 
 		/*
@@ -803,16 +878,18 @@ private:
 	static void final_clusters(struct scale_cluster *scale_clusters, ale_real scale_factor,
 			unsigned int steps) {
 
-		if (scale_factor > 1.0)
+		if (scale_clusters[0].input_scale < 1.0)
 			delete scale_clusters[0].input;
 
 		free((void *)scale_clusters[0].ax_parameters);
 
 		for (unsigned int step = 1; step < steps; step++) {
 			delete scale_clusters[step].accum;
-			delete scale_clusters[step].input;
 			delete scale_clusters[step].defined;
 			delete scale_clusters[step].aweight;
+
+			if (scale_clusters[step].input_scale < 1.0)
+				delete scale_clusters[step].input;
 
 			free((void *)scale_clusters[step].ax_parameters);
 		}
@@ -835,6 +912,8 @@ private:
 		 * Open the input frame.
 		 */
 
+
+		ui::get()->loading_file();
 		const image *input_frame = image_rw::open(m);
 
 		/*
@@ -868,7 +947,24 @@ private:
 		else
 			local_upper = perturb_upper;
 
-		ale_pos perturb = pow(2, floor(log(local_upper) / log(2)));
+		local_upper = pow(2, floor(log(local_upper) / log(2)));
+
+		/*
+		 * Logarithms aren't exact, so we divide repeatedly to discover
+		 * how many steps will occur, and pass this information to the
+		 * user interface.
+		 */
+
+		int step_count = 0;
+		double step_variable = local_upper;
+		while (step_variable >= local_lower) {
+			step_variable /= 2;
+			step_count++;
+		}
+
+		ui::get()->set_perturb_steps(step_count);
+
+		ale_pos perturb = local_upper;
 		transformation offset;
 		ale_accum here;
 		int lod;
@@ -892,12 +988,13 @@ private:
 
 		unsigned int steps = (perturb > pow(2, lod_max)) 
 			           ? (unsigned int) (log(perturb) / log(2)) - lod_max + 1 : 1;
-		int local_ax_count;
+
 
 		/*
 		 * Prepare multiple levels of detail.
 		 */
 
+		int local_ax_count;
 		struct scale_cluster *scale_clusters = init_clusters(m,
 				scale_factor, input_frame, steps,
 				&local_ax_count);
@@ -1045,14 +1142,21 @@ private:
 		 * Pre-alignment exposure adjustment
 		 */
 
-		if (_exp_register)
-			set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count);
+		if (_exp_register) {
+			ui::get()->exposure_1();
+			transformation o = offset;
+			for (int k = lod; k > 0; k--)
+				o.rescale(2);
+			set_exposure_ratio(m, scale_clusters[0], o, local_ax_count, 1);
+		}
 
 		/*
 		 * Current difference (error) value
 		 */
 
+		ui::get()->prematching();
 		here = diff(si, offset, _mc_arg, local_ax_count);
+		ui::get()->set_match(here);
 
 		/*
 		 * Current and modified barrel distortion parameters
@@ -1068,6 +1172,8 @@ private:
 		 */
 
 		if (perturb >= local_lower && local_gs != 0) {
+			
+			ui::get()->aligning(perturb, lod);
 			
 			transformation lowest_t = offset;
 			ale_accum lowest_v = here;
@@ -1180,6 +1286,8 @@ private:
 
 			offset = lowest_t;
 			here = lowest_v;
+
+			ui::get()->set_match(here);
 		}
 
 		/*
@@ -1187,6 +1295,8 @@ private:
 		 */
 
 		while (perturb >= local_lower) {
+
+			ui::get()->aligning(perturb, lod);
 
 			ale_pos adj_s;
 
@@ -1339,8 +1449,10 @@ private:
 				 * Announce that we've dropped a perturbation level.
 				 */
 
-				fprintf(stderr, ".");
+				ui::get()->alignment_perturbation_level(perturb, lod);
 			}
+
+			ui::get()->set_match(here);
 		}
 
 		if (lod > 0) {
@@ -1352,14 +1464,18 @@ private:
 		 * Post-alignment exposure adjustment
 		 */
 
-		if (_exp_register)
-			set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count);
+		if (_exp_register) {
+			ui::get()->exposure_2();
+			set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count, 0);
+		}
 
 		/*
 		 * Recalculate error
 		 */
 
+		ui::get()->postmatching();
 		here = diff(scale_clusters[0], offset, _mc, local_ax_count);
+		ui::get()->set_match(here);
 
 		/*
 		 * Free the level-of-detail structures
@@ -1384,7 +1500,7 @@ private:
 			latest_ok = 1;
 			default_initial_alignment = offset;
 			old_final_alignment = offset;
-			fprintf(stderr, " okay (%f%% match)", (double) (1 - here) * 100);
+			ui::get()->alignment_match_ok();
 		} else if (local_gs == 4) {
 
 			/*
@@ -1408,7 +1524,8 @@ private:
 			if (is_fail_default)
 				offset = default_initial_alignment;
 
-			fprintf(stderr, " no match (%f%% match)", (double) (1 - here) * 100);
+			ui::get()->set_match(here);
+			ui::get()->alignment_no_match();
 		
 		} else if (local_gs == -1) {
 			
@@ -1420,7 +1537,7 @@ private:
 			if (is_fail_default)
 				offset = default_initial_alignment;
 			latest_ok = 0;
-			fprintf(stderr, " no match (%f%% match)", (double) (1 - here) * 100);
+			ui::get()->alignment_no_match();
 		}
 
 		/*
@@ -1468,10 +1585,13 @@ private:
 	 * Reset alignment weights
 	 */
 	static void reset_weights() {
-		if (alignment_weights != NULL) {
+
+		alignment_weights_const = NULL;
+
+		if (alignment_weights != NULL)
 			delete alignment_weights;
-			alignment_weights = NULL;
-		}
+
+		alignment_weights = NULL;
 	}
 
 	/*
@@ -1522,6 +1642,28 @@ private:
 	}
 
 	/*
+	 * Update alignment weights with an internal weight map, reflecting a
+	 * summation of certainty values.  Use existing memory structures if
+	 * possible.  This function updates alignment_weights_const; hence, it
+	 * should not be called prior to any functions that modify the
+	 * alignment_weights structure.
+	 */
+	static void imap_update() {
+		if (alignment_weights == NULL) {
+			alignment_weights_const = reference_defined;
+		} else {
+			int rows = reference_image->height();
+			int cols = reference_image->width();
+
+			for (int i = 0; i < rows; i++)
+			for (int j = 0; j < cols; j++)
+				alignment_weights->pix(i, j) *= reference_defined->get_pixel(i, j);
+
+			alignment_weights_const = alignment_weights;
+		}
+	}
+
+	/*
 	 * Update alignment weights with algorithmic weights
 	 */
 	static void wmx_update() {
@@ -1543,24 +1685,18 @@ private:
 		int exit_status = 1;
 		if (!fork()) {
 			execlp(wmx_exec, wmx_exec, wmx_file, wmx_defs, NULL);
-
-			fprintf(stderr, "\n\n*** An error occurred while running `%s %s`. ***\n\n\n", wmx_exec, wmx_file);
-			exit(1);
+			ui::get()->exec_failure(wmx_exec, wmx_file, wmx_defs);
 		}
 
 		wait(&exit_status);
 
-		if (exit_status) {
-			fprintf(stderr, "\n\n*** Could not fork in d2::align.  ***\n\n\n");
-			exit(1);
-		}
+		if (exit_status)
+			ui::get()->fork_failure("d2::align");
 
 		image *wmx_weights = image_rw::read_image(wmx_file, exp_def);
 
-		if (wmx_weights->height() != rows || wmx_weights->width() != cols) {
-			fprintf(stderr, "\n\n*** Error: algorithmic weighting must not change image size. ***\n\n\n");
-			exit(1);
-		}
+		if (wmx_weights->height() != rows || wmx_weights->width() != cols)
+			ui::get()->error("algorithmic weighting must not change image size");
 
 		if (alignment_weights == NULL)
 			alignment_weights = wmx_weights;
@@ -1660,11 +1796,8 @@ private:
 				assert (kept_t);
 				assert (kept_ok);
 
-				if (!kept_t || !kept_ok) {
-					fprintf(stderr, 
-					   "Couldn't allocate memory for alignment\n");
-					exit(1);
-				}
+				if (!kept_t || !kept_ok)
+					ui::get()->memory_error("alignment");
 
 				kept_ok[0] = 1;
 				kept_t[0] = result;
@@ -1681,7 +1814,9 @@ private:
 		for (int i = latest + 1; i <= n; i++) {
 			assert (reference != NULL);
 
+			ui::get()->set_arender_current();
 			reference->sync(i - 1);
+			ui::get()->clear_arender_current();
 			reference_image = reference->get_image();
 			reference_defined = reference->get_defined();
 
@@ -1689,6 +1824,9 @@ private:
 			fw_update();
 			wmx_update();
 			map_update();
+
+			if (certainty_weights)
+				imap_update();  /* Must be called after all other _updates */
 
 			assert (reference_image != NULL);
 			assert (reference_defined != NULL);
@@ -1988,6 +2126,13 @@ public:
 	}
 
 	/*
+	 * Set the certainty-weighted flag.
+	 */
+	static void certainty_weighted(int flag) {
+		certainty_weights = flag;
+	}
+
+	/*
 	 * Set the global search type.
 	 */
 	static void gs(const char *type) {
@@ -2002,8 +2147,7 @@ public:
 		} else if (!strcmp(type, "central")) {
 			_gs = 4;
 		} else {
-			fprintf(stderr, "\n\n\n*** Error: bad global search type. ***\n\n\n");
-			exit(1);
+			ui::get()->error("bad global search type");
 		}
 	}
 

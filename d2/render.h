@@ -41,7 +41,7 @@
 class render {
 private:
 	static unsigned int rx_count;
-	static int *rx_parameters;
+	static ale_pos *rx_parameters;
 	static int rx_show;
 	static render *directory[ACTIVE_RENDERER_COUNT];
 	static int directory_length;
@@ -111,6 +111,19 @@ public:
 	 * Check for excluded regions.  (Applies an offset to spatial
 	 * coordinates internally.)
 	 */
+	static int is_excluded(point offset, point p, int f) {
+
+		for (unsigned int param = 0; param < rx_count; param++)
+			if (p[0] + offset[0] >= rx_parameters[6 * param + 0]
+			 && p[0] + offset[0] <= rx_parameters[6 * param + 1]
+			 && p[1] + offset[1] >= rx_parameters[6 * param + 2]
+			 && p[1] + offset[1] <= rx_parameters[6 * param + 3]
+			 && f >= rx_parameters[6 * param + 4]
+			 && f <= rx_parameters[6 * param + 5])
+				return 1;
+
+		return 0;
+	}
 	static int is_excluded(point offset, int i, int j, int f) {
 
 		for (unsigned int param = 0; param < rx_count; param++)
@@ -144,21 +157,15 @@ public:
 		extend = _extend;
 		scale_factor = _scale_factor;
 
-		rx_parameters = (int *) malloc(rx_count * 6 * sizeof(int));
+		rx_parameters = (ale_pos *) malloc(rx_count * 6 * sizeof(ale_pos));
 
 		for (unsigned int param = 0; param < rx_count; param++) {
-			rx_parameters[param * 6 + 0] = (int)
-				floor(_rx_parameters[param * 6 + 0] * scale_factor);
-			rx_parameters[param * 6 + 1] = (int)
-				ceil (_rx_parameters[param * 6 + 1] * scale_factor);
-			rx_parameters[param * 6 + 2] = (int)
-				floor(_rx_parameters[param * 6 + 2] * scale_factor);
-			rx_parameters[param * 6 + 3] = (int)
-				ceil (_rx_parameters[param * 6 + 3] * scale_factor);
-			rx_parameters[param * 6 + 4] =
-				      _rx_parameters[param * 6 + 4];
-			rx_parameters[param * 6 + 5] =
-				      _rx_parameters[param * 6 + 5];
+			rx_parameters[param * 6 + 0] = _rx_parameters[param * 6 + 0] * scale_factor;
+			rx_parameters[param * 6 + 1] = _rx_parameters[param * 6 + 1] * scale_factor;
+			rx_parameters[param * 6 + 2] = _rx_parameters[param * 6 + 2] * scale_factor;
+			rx_parameters[param * 6 + 3] = _rx_parameters[param * 6 + 3] * scale_factor;
+			rx_parameters[param * 6 + 4] = _rx_parameters[param * 6 + 4];
+			rx_parameters[param * 6 + 5] = _rx_parameters[param * 6 + 5];
 		}
 	}
 
@@ -178,7 +185,7 @@ public:
 		return rx_count;
 	}
 
-	static const int *get_rx_parameters() {
+	static const ale_pos *get_rx_parameters() {
 		return rx_parameters;
 	}
 

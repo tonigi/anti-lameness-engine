@@ -57,7 +57,7 @@ public:
 		int replace_ex = 0;
 		const filter::scaled_filter *scf = NULL;
 		unsigned int rx_count = render::get_rx_count();
-		const int *rx_parameters = render::get_rx_parameters();
+		const ale_pos *rx_parameters = render::get_rx_parameters();
 		int rx_show = render::is_rx_show();
 
 		/*

@@ -25,6 +25,7 @@ IMAGEMAGICK=0
 FFTW=0
 DEBUG=0
 POSIX=1
+IOCTL=0
 COLORS=SINGLE
 COORDINATES=SINGLE
 OPTIMIZATIONS=1
@@ -44,6 +45,7 @@ IMAGEMAGICK_CFLAGS:=$(if $(use_imagemagick),-DUSE_MAGICK $(shell Magick-config -
 IMAGEMAGICK_LDFLAGS:=$(if $(use_imagemagick),$(shell Magick-config --ldflags --libs),)
 FFTW_CFLAGS:=$(if $(subst 0,,$(FFTW)),-DUSE_FFTW,)
 POSIX_CFLAGS:=$(if $(subst 0,,$(POSIX)),-DUSE_UNIX,)
+IOCTL_CFLAGS:=$(if $(subst 0,,$(IOCTL)),-DUSE_IOCTL,)
 PRECISION_CFLAGS:=$(if $(subst SINGLE,,$(COLORS)),,-DALE_COLORS=SINGLE)\
                   $(if $(subst DOUBLE,,$(COLORS)),,-DALE_COLORS=DOUBLE)\
                   $(if $(subst HALF,,$(COLORS)),,-DALE_COLORS=HALF)\
@@ -54,7 +56,7 @@ OPTIMIZATION_CFLAGS:=-DOPTIMIZATIONS=$(OPTIMIZATIONS)
 
 CFLAGS:= $(POSIX_CFLAGS) $(DEBUG_CFLAGS) $(FFTW_CFLAGS) $(PRECISION_CFLAGS) \
          $(if $(use_imagemagick),$(IMAGEMAGICK_CFLAGS),-Wall -O2) \
-	 $(OPTIMIZATION_CFLAGS)
+	 $(OPTIMIZATION_CFLAGS) $(IOCTL_CFLAGS)
 
 LDFLAGS:=$(if $(use_imagemagick),$(IMAGEMAGICK_LDFLAGS)) $(FFTW_LDFLAGS) -lm
 
@@ -78,15 +80,15 @@ clean:
 	find testsuite -name "*temp.*" | xargs rm -rf
 	find testsuite -name "*.output.*" | xargs rm -rf
 
-ale-phony: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h d3.cc d3/*.h
-	g++ -o ale $(CFLAGS) ale.cc d3.cc d2.cc $(LDFLAGS)
+ale-phony: ale.cc ui/ui.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h d3.cc d3/*.h
+	g++ -o ale $(CFLAGS) ale.cc ui/ui.cc d3.cc d2.cc $(LDFLAGS)
 
 # The following approach to building a Windows binary is probably very
 # dependent on the host platform configuration.  The above target may be a
 # better place to start for Windows users.
 
-ale.exe: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h d3.cc d3/*.h
-	i586-mingw32msvc-g++ -Wall $(OPTIMIZATION_CFLAGS) $(PRECISION_CFLAGS) $(DEBUG_CFLAGS) -o ale.exe -O2 ale.cc d3.cc d2.cc -lm 
+ale.exe: ale.cc ui/ui.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h d3.cc d3/*.h
+	i586-mingw32msvc-g++ -Wall $(OPTIMIZATION_CFLAGS) $(PRECISION_CFLAGS) $(DEBUG_CFLAGS) -o ale.exe -O2 ale.cc ui/ui.cc d3.cc d2.cc -lm 
 
 #
 # The following rules may require additional software to be installed.

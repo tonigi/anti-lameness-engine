@@ -18,17 +18,35 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "render.h"
+#include "ui.h"
+#include "ui_wo.h"
+#include "ui_tty.h"
 
 /*
- * See align.h for details on these variables.
+ * See ui.h for details on these variables.
  */
 
-unsigned int render::rx_count;
-ale_pos *render::rx_parameters;
-int render::rx_show;
-render *render::directory[ACTIVE_RENDERER_COUNT];
-int render::directory_length;
-int render::extend;
-double render::scale_factor;
-double render::wt = 0.8;
+ui *ui::singleton = NULL;
+int ui::type = 1;   /* TTY is default */
+
+ui *ui::get() {
+	if (singleton == NULL) {
+		switch (type) {
+		case 0:
+			singleton = new ui_wo();
+			break;
+		case 1:
+			try {
+				singleton = new ui_tty();
+			} catch (...) {
+				singleton = new ui_wo();
+			}
+			break;
+		default:
+			assert(0);
+		}
+	}
+
+	return singleton;
+}
+	

@@ -350,36 +350,6 @@ public:
 	virtual image *scale_generator(int height, int width, int depth, char *name) const = 0;
 
 	/*
-	 * Return an image scaled by some factor >= 1.0
-	 */
-	image *scale(ale_pos f, char *name) const {
-
-		/*
-		 * Assertion:
-		 *
-		 * This is not a good way to scale down images, and we probably
-		 * don't want to scale images by a factor of 1.0.
-		 */
-		assert (f > 1.0);
-
-		image *is = scale_generator(
-			(int) floor(height() * f), 
-			(int) floor(width()  * f), depth(), name);
-
-		assert(is);
-
-		unsigned int i, j, k;
-
-		for (i = 0; i < is->height(); i++)
-		for (j = 0; j < is->width(); j++) 
-		for (k = 0; k < is->depth(); k++)
-			is->set_pixel(i, j,
-				get_scaled_bl(point(i, j), f));
-
-		return is;
-	}
-
-	/*
 	 * Scale by half.  We use the following filter:
 	 *
 	 * 	1/16	1/8	1/16
@@ -582,6 +552,45 @@ public:
 		is->_offset = point(_offset[0] * f, _offset[1] * f);
 
 		return is;
+	}
+
+	/*
+	 * Return an image scaled by some factor != 1.0, using bilinear
+	 * interpolation.
+	 */
+	image *scale(ale_pos f, char *name) const {
+
+		/*
+		 * We probably don't want to scale images by a factor of 1.0,
+		 * or by non-positive values.
+		 */
+		assert (f != 1.0 && f > 0);
+
+		if (f > 1.0) {
+			image *is = scale_generator(
+				(int) floor(height() * f), 
+				(int) floor(width()  * f), depth(), name);
+
+			assert(is);
+
+			unsigned int i, j, k;
+
+			for (i = 0; i < is->height(); i++)
+			for (j = 0; j < is->width(); j++) 
+			for (k = 0; k < is->depth(); k++)
+				is->set_pixel(i, j,
+					get_scaled_bl(point(i, j), f));
+
+			return is;
+		} else if (f == 0.5) {
+			return scale_by_half(name);
+		} else {
+			image *is = scale(2*f, name);
+			image *result = is->scale(0.5, name);
+			delete is;
+			return result;
+		}
+
 	}
 
 	/*
