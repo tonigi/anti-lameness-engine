@@ -569,6 +569,8 @@ class scene {
 		void unsplit_internals() {
 			assert(children[0]);
 			assert(children[1]);
+			assert(division_vertex >= 0);
+			assert(division_vertex <  3);
 
 			for (int i = 0; i < 2; i++) {
 				int vv = (division_vertex + 1 + i) % 3;
