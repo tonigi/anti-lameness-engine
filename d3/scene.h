@@ -298,16 +298,28 @@ public:
 
 		/*
 		 * Intersect the bounding box with the image boundary.
+		 *
+		 * XXX: this may include additional points
+		 *
+		 * XXX: this is horribly verbose
 		 */
 
-		if (max[0] >= im->height())
-			max[0] = im->height() - 1;
 		if (min[0] >= im->height())
 			min[0] = im->height() - 1;
+		if (min[1] >= im->width())
+			min[1] = im->width() - 1;
+		if (max[0] >= im->height())
+			max[0] = im->height() - 1;
+		if (max[1] >= im->width())
+			max[1] = im->width() - 1;
 		if (max[0] < 0)
 			max[0] = 0;
+		if (max[1] < 0)
+			max[1] = 0;
 		if (min[0] < 0)
 			min[0] = 0;
+		if (min[1] < 0)
+			min[1] = 0;
 
 		/*
 		 * Iterate over all points in the bounding box.
@@ -340,19 +352,19 @@ public:
 				point test_point = point(i, j, 1);
 
 				for (int d = 0; d < 2; d++)
-				if ((test_point[d] - cv[d]) * (i - nv[d]) < 0) {
+				if ((test_point[d] - cv[d]) * (test_point[d] - nv[d]) < 0) {
 					int e = (d + 1) % 2;
-					ale_pos travel = (i - cv[d]) / (nv[d] - cv[d]);
+					ale_pos travel = (test_point[d] - cv[d]) / (nv[d] - cv[d]);
 					ale_pos intersect = cv[e] + travel * (nv[e] - cv[e]);
-					if (intersect <= j) 
+					if (intersect <= test_point[e]) 
 						lower[e] = 1;
-					if (intersect >= j)
+					if (intersect >= test_point[e])
 						upper[e] = 1;
 				}
 			}
 
 			if (!lower[0] || !upper[0] || !lower[1] || !upper[1])
-				return;
+				continue;
 
 			/*
 			 * Assign the color value;
@@ -376,6 +388,8 @@ public:
 		fill_with_values(align::projective(n), im, zbuf, triangle_head[0]);
 		fill_with_values(align::projective(n), im, zbuf, triangle_head[1]);
 
+		free(zbuf);
+
 		return im;
 	}
 
@@ -395,7 +409,9 @@ public:
 
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++)
-			im->pix(i, j) = d2::pixel(1, 1, 1) * zbuf[i * im->width() + 1];
+			im->pix(i, j) = d2::pixel(1, 1, 1) * zbuf[i * im->width() + j];
+
+		free(zbuf);
 
 		return im;
 	}
