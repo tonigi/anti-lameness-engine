@@ -371,6 +371,101 @@ class scene {
 			     * a.lengthto(c)
 			     * sin(a.anglebetw(b, c));
 		}
+
+		point normal() {
+			point unscaled_normal = vertices[0]->xproduct(*vertices[1], *vertices[2]);
+
+			return (unscaled_normal / unscaled_normal.norm());
+		}
+
+		point centroid() {
+			return (*vertices[0] + *vertices[1] + *vertices[2]) / 3;
+		}
+
+		/*
+		 * Adjust vertices according to mapped frames.
+		 *
+		 * Return non-zero if an adjustment is made.
+		 */
+		int adjust_vertices() {
+			if (children[0] && children[1]) {
+				return children[0]->adjust_vertices()
+				     | children[1]->adjust_vertices();
+			}
+
+			/*
+			 * Get the list of frames in which this triangle appears.
+			 */
+
+			char *frame_list = (char *)aux_var;
+			assert (frame_list);
+
+			/*
+			 * As a basis for determining the step size for
+			 * adjustment, determine the average distance between
+			 * vertices.
+			 */
+
+			ale_accum step = (vertices[0]->lengthto(*vertices[1])
+				        + vertices[1]->lengthto(*vertices[2])
+					+ vertices[2]->lengthto(*vertices[0])) / 3;
+
+			/*
+			 * There are three possibilities for each triangle visited:
+			 *
+			 * Vertices are moved a step in the direction of the normal
+			 * Vertices remain in place
+			 * Vertices are moved a step against the direction of the normal.
+			 *
+			 * Try each possibility, and determine the sum-of-squares error
+			 * over all frames in which the triangle appears, mapping the triangle
+			 * centroid and using bilinear interpolation between reference frame 
+			 * pixels to determine error.  The position with least sum-of-squares
+			 * error is selected.
+			 */
+
+			int best = -1;
+			ale_accum lowest_error = +0;
+			lowest_error = +1 / lowest_error;
+
+			assert (lowest_error > 0);
+			assert (isinf(lowest_error) == 1);
+
+			for (int dir = 1; dir >= -1; dir--) {
+
+				ale_accum error = 0;
+
+				point adjusted_centroid = centroid() + normal() * (step * dir);
+
+				for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+					if (!frame_list[n])
+						continue;
+					
+					pt _pt = align::projective(n);
+					_pt.scale(cl->sf / _pt.scale_2d());
+
+					point mapped_centroid = _pt.scaled_transform(adjusted_centroid);
+
+					if (!cl->reference[n]->in_bounds(mapped_centroid.xy()))
+						continue;
+
+					error += (cl->reference[n]->get_bl(mapped_centroid.xy()) - color).normsq();
+				}
+
+				if (error < lowest_error) {
+					lowest_error = error;
+					best = dir;
+				}
+			}
+
+			for (int v = 0; v < 3; v++)
+				(*vertices[v]) += normal() * (step * best);
+
+			if (best != 0)
+				return 1;
+
+			return 0;
+		}
 	};
 
 	/*
@@ -781,7 +876,7 @@ class scene {
 
 		determine_visibility();
 
-		return 0;
+		return (triangle_head[0]->adjust_vertices() | triangle_head[1]->adjust_vertices());
 	}
 
 public:
