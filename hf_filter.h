@@ -140,12 +140,12 @@ public:
 		return input->get_defined();
 	}
 
-	virtual void operator()(int n) {
-		input->operator()(n);
+	virtual void sync(int n) {
+		input->sync(n);
 	}
 
-	virtual int operator()() {
-		input->operator()();
+	virtual int sync() {
+		input->sync();
 		fprintf(stderr, "Enhancing high frequencies");
 		done = 1;
 		done_image = input->get_image()->clone();

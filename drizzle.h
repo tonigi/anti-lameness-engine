@@ -240,7 +240,7 @@ public:
 	 * Perform rendering steps requiring no frames beyond frame N.
 	 */
 
-	virtual void operator()(int n) {
+	virtual void sync(int n) {
 		assert (step >= -1);
 		for (int i = step + 1; i <= n; i++) {
 			if (i == 0) {

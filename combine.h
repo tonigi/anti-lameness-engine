@@ -103,9 +103,9 @@ public:
 	 * Perform rendering steps requiring no frames beyond frame N.
 	 */
 
-	virtual void operator()(int n) {
-		_default->operator()(n);
-		partial->operator()(n);
+	virtual void sync(int n) {
+		_default->sync(n);
+		partial->sync(n);
 	}
 
 };

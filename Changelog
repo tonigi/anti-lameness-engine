@@ -1,6 +1,27 @@
+0.4.7
+
+o	Add a replacement option suggested by Jeff Treece.  This option can
+	be used to facilitate video stabilization.
+
+o	Irani-Peleg: add support for configurable modules, including 
+	a module that reads its configuration data from standard input
+	and a module calibrated for an IBM (Xirlink) XVP610 in 320x240
+	mode.  A rudimentary script for calibrating devices with unknown
+	projection functions has been included as ipc/ale-calibrate.
+
+o	Irani-Peleg: don't truncate correction values in backprojection.
+
+o	Irani-Peleg: don't multiply the weight function by a scale correction
+	factor in backprojection.
+
+o	Rename render::operator()() to render::sync().  Update subclasses
+	accordingly.
+
 0.4.6
 
-o	Allow --ip and --hf-enhance to be used together.
+o	Allow --ip and --hf-enhance to be used together.  [Modify
+	ip::operator() and hf_filter::operator() so that multiple
+	post-processing filters can be used.]
 
 o	Initialize the drizzled image to be uniformly black.  This fixes
 	a bug introduced in 0.4.2.

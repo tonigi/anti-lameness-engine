@@ -689,7 +689,7 @@ private:
 			if (i > 0)  {
 				assert (reference != NULL);
 
-				reference->operator()(i - 1);
+				reference->sync(i - 1);
 				reference_image = reference->get_image();
 				reference_defined = reference->get_defined();
 

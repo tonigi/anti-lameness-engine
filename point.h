@@ -38,6 +38,13 @@ public:
 		x[1] = x1;
 	}
 
+	const my_real &operator[](int i) const {
+		assert (i >= 0);
+		assert (i < 2);
+
+		return x[i];
+	}
+
 	my_real &operator[](int i) {
 		assert (i >= 0);
 		assert (i < 2);

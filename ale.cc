@@ -28,7 +28,10 @@
 #include "merge.h"
 #include "drizzle.h"
 #include "hf_filter.h"
-#include "ip.h"
+#include "ipc.h"
+#include "ipc/xvp610_320x240.h"
+#include "ipc/box.h"
+#include "ipc/stdin.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -40,7 +43,7 @@
  * Version Information
  */
 
-char *version = "0.4.6"
+char *version = "0.4.7"
 #ifdef USE_MAGICK
 		" (File handler: ImageMagick)";
 #else
@@ -100,9 +103,13 @@ inline void usage(const char *argv0) {
 		"--drizzle-diam=x  Drizzle with input pixel diameter x (where 0 < x <= 1).\n"
 		"--drizzle-only    If drizzling, output black for pixels with no drizzle data.\n"
 		BETWEEN_SECTIONS
-		"Image reconstruction:\n"
+		"Irani-Peleg image reconstruction:\n"
 		HEADER_SPACE
-		"--ip <d> <i>      Irani-Peleg solve with pixel diameter <d> for <i> iterations.\n"
+		"--ip <d> <i>      Solve for a box filter with diameter <d> over <i> iterations.\n"
+		"--ipc <c> <i>     Solve for device config <c> over <i> iterations.\n"
+		"                     Available device configs:\n"
+		"                        xvp610_320x240\n"
+		"                        stdin\n"
 		BETWEEN_SECTIONS
 		"Monte Carlo alignment:\n"
 		HEADER_SPACE
@@ -113,6 +120,11 @@ inline void usage(const char *argv0) {
 		HEADER_SPACE
 		"--inc             Produce incremental image output.  [default]\n"
 		"--no-inc          Don't produce incremental image output.\n"
+		BETWEEN_SECTIONS
+		"Video stabilization options: [Experimental]\n"
+		HEADER_SPACE
+		"--replace         Replace frame areas rather than merging.\n"
+		"--no-replace      Do not replace.  [default]\n"
 		"\n",
 		argv0, argv0);
 	exit(1);
@@ -159,7 +171,9 @@ int main(int argc, const char *argv[]){
 	struct tsave_t *tsave = NULL;
 	int ip_iterations = 0;
 	double ip_radius = 0;
+	const char *ipc_config = NULL;
 	int inc = 1;
+	int replace = 0;
 
 	/* 
 	 * Iterate through arguments until we reach the first file 
@@ -228,12 +242,26 @@ int main(int argc, const char *argv[]){
 				fprintf(stderr, "\n\n*** Not enough arguments for IP-solve ***\n\n\n");
 				exit(1);
 			}
+		} else if (!strcmp(argv[i], "--ipc")) {
+			if (i + 2 < argc) {
+				ipc_config = argv[i+1];
+				sscanf(argv[i+2], "%d", &ip_iterations);
+				i += 2;
+				align::keep();
+			} else {
+				fprintf(stderr, "\n\n*** Not enough arguments for IP-solve ***\n\n\n");
+				exit(1);
+			}
 		} else if (!strcmp(argv[i], "--drizzle-only")) {
 			drizzle_only = 1;
 		} else if (!strcmp(argv[i], "--inc")) {
 			inc = 1;
 		} else if (!strcmp(argv[i], "--no-inc")) {
 			inc = 0;
+		} else if (!strcmp(argv[i], "--replace")) {
+			replace = 1;
+		} else if (!strcmp(argv[i], "--no-replace")) {
+			replace = 0;
 		} else if (!strncmp(argv[i], "--scale=", strlen("--scale="))) {
 			sscanf(argv[i] + strlen("--scale="), "%lf", &scale_factor);
 			if (scale_factor < 1.0) {
@@ -306,7 +334,12 @@ int main(int argc, const char *argv[]){
 			 * Create merge renderer.
 			 */
 
-			merge *_merge = new merge(extend, scale_factor);
+			render *_merge;
+			
+			if (replace == 0)
+				_merge = new merge<0>(extend, scale_factor);
+			else
+				_merge = new merge<1>(extend, scale_factor);
 
 			/*
 			 * Use merged renderings as reference images in
@@ -340,9 +373,24 @@ int main(int argc, const char *argv[]){
 			if (hf_enhance != 0)
 				_render = new hf_filter(_render, scale_factor, hf_enhance);
 
-			if (ip_iterations != 0)
-				_render = new ip(_render, scale_factor,
-						ip_radius, ip_iterations);
+			if (ip_iterations != 0 && ipc_config) {
+				if (!strcmp(ipc_config, "xvp610_320x240"))
+					_render = new ipc<xvp610_320x240>(
+						_render, scale_factor, 
+						ip_iterations);
+				else if (!strcmp(ipc_config, "stdin"))
+					_render = new ipc<ipc_stdin>(
+						_render, scale_factor,
+						ip_iterations);
+				else {
+					fprintf(stderr, "Unknown device configuration %s.\n\n", ipc_config);
+					exit(1);
+				}
+			} else if (ip_iterations != 0) {
+				_render = new ipc<box>(_render, scale_factor,
+						ip_iterations);
+				((ipc<box> *) _render)->module()->radius(ip_radius);
+			}
 
 			/*
 			 * Handle the original frame.
@@ -350,7 +398,7 @@ int main(int argc, const char *argv[]){
 
 			fprintf(stderr, "Reading original frame '%s'", argv[i]);
 
-			_render->operator()(0);
+			_render->sync(0);
 
 			if (inc)
 				image_rw::output(_render->get_image());
@@ -376,7 +424,7 @@ int main(int argc, const char *argv[]){
 
 				tsave_info (tsave, name);
 
-				_render->operator()(j);
+				_render->sync(j);
 
 				if (inc)
 					image_rw::output(_render->get_image());
@@ -388,7 +436,7 @@ int main(int argc, const char *argv[]){
 			 * Do any post-processing and output final image
 			 */
 
-			if (_render->operator()() || !inc)
+			if (_render->sync() || !inc)
 				image_rw::output(_render->get_image());
 
 			/*

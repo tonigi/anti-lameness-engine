@@ -28,6 +28,7 @@
 #include "image.h"
 #include "point.h"
 
+template <int replace>
 class merge : public render {
 private:
 	image *accum_image;
@@ -135,7 +136,14 @@ private:
 					 * Determine and update merging weight at this pixel
 					 */
 
-					double weight = accum_weight->get_pixel_component(i, j, 0);
+					double weight;
+
+					if (replace) {
+						weight = 0;
+					} else {
+						weight = accum_weight->get_pixel_component(i, j, 0);
+					}
+
 					accum_weight->set_pixel_component(i, j, 0, weight + 1);
 
 					/*
@@ -188,7 +196,7 @@ public:
 	 * Perform rendering steps requiring no frames beyond frame N.
 	 */
 
-	virtual void operator()(int n) {
+	virtual void sync(int n) {
 		assert (step >= -1);
 		for (int i = step + 1; i <= n; i++) {
 			if (i == 0) {

@@ -1,0 +1,191 @@
+#!/usr/bin/perl -w
+
+# This script attempts to calibrate a filter under ALE for characteristics of a
+# specific device.  It uses the stdin IPC device to configure the filter.
+#
+# The initial filter tested is the box filter, and individual elements
+# of the filter are increased or decreased to determine the effects of
+# such changes.  When the change increases the match with the desired
+# output, it is kept.  Otherwise, the change is backed out.
+#
+# The magnitude of change tested is determined by an increment variable,
+# which starts at a user-defined value and is halved until it is smaller
+# than 0.1 (an arbitrary value which could easily be changed).
+#
+# For every increment value, all elements are tested with positive and negative
+# changes of this magnitude.  If an element fails to offer any error
+# improvement on a given pass, it is skipped on all future passes for the same
+# increment value.
+#
+# Passes at a given increment value continue until all elements are skipped, at
+# which point the magnitude is halved.
+#
+# It may be a good idea to use this script with relatively small images, as
+# large images may require a long time to process.
+
+#
+# Remove these two lines to run the script.
+#
+
+print "Edit this script to set relevant parameters for calibration.\n";
+exit 1;
+
+#
+# The diameter of the filter, in pixels
+#
+
+$diam = 3;
+
+#
+# The number of projection/backprojection cycles to run.
+#
+
+$ip_iters = 3;
+
+#
+# Filter columns and rows.
+#
+
+$cols = 5;
+$rows = 5;
+
+#
+# These are the files used for calibration
+#
+# inputs: input images.
+#
+# tfile: transformation file indicating the proper transformations for the
+# input images.
+#
+# comparison: file indicating the desired final output of ALE 
+#
+
+$inputs = "*.ppm";
+$tfile = "b.t";
+$comparison = "c-align.png";
+
+#
+# Factor (>= 1) by which to scale each of the input images.
+#
+
+$scale = 5;
+
+#
+# Error metric exponent.  Traditionally two.  Increasing this value
+# emphasizes worst-case error; decreasing this value emphasizes 
+# typical-case error.
+#
+
+$exponent = 2;
+
+#
+# Random temporary files (which are not currently deleted by this script)
+#
+
+$output1 = "/tmp/garbage1.png";
+$output2 = "/tmp/garbage2.png";
+$temp_file = "/tmp/ale-foo";
+$result_file = "/tmp/ale-results";
+
+#
+# Initialize a box filter. 
+#
+
+@filter = (((1.0) x $rows) x $cols) x 3;
+
+#
+# Alternatively, something like this can be used:
+#
+# @filter = (
+# 	1, 1, 1,
+#	1, 1, 1,
+# 	3, 4, 5.3,
+# 	.
+#	.
+#	.
+#)
+#
+
+#
+# When modifying the filter, we start by modifying each element by this
+# amount.  We halve the amount until we reach a value smaller than 0.1. 
+#
+
+$increment = 0.8;
+
+#
+# This array indicates the last direction tried for each index.  Since we
+# haven't tried anything yet, initialize this to +1 for all indices.
+#
+#    +1 ==> positive change
+#    -1 ==> negative change
+#
+
+@last_dir = (((1.0) x $cols) x $rows) x 3;
+
+#
+# Obtain the match value associated with the current filter.
+#
+
+sub foo {
+	`echo $diam > $temp_file`;
+	`echo $rows >> $temp_file`;
+	`echo $cols >> $temp_file`;
+	foreach $elem (@filter) {
+		`echo $elem >> $temp_file`;
+	}
+
+	`ale --no-inc --mc 1 --scale=$scale --ipc stdin $ip_iters --projective --perturb-upper=0 --trans-load=$tfile $inputs $output1 < $temp_file 2> /dev/null`;
+	`ale --no-inc --metric=$exponent --align-all --perturb-upper=0 $output1 $comparison $output2 2> $result_file`;
+
+	$data = `cat $result_file`;
+
+	$data =~ /(\d+\.\d+)%/ or die "Couldn't get match value.\n";
+
+	print "Match: " . $1 . "\n";
+
+	$_ = $1;
+}
+
+$curval = foo();
+
+while ($increment >= 0.1) {
+	$changed = 0;
+
+	for $i (0 .. $rows - 1) {
+	for $j (0 .. $cols - 1) {
+	for $k (0 .. 2) {
+		$index = $k + 3 * ($j + $cols * $i);
+		print "Testing element: " . $index . "\n";
+
+		next if $skip[$index];
+
+		$dir_incr = $increment * $last_dir[$index];
+
+		$filter[$index] += $dir_incr;
+		$newval = foo();
+		if ($newval > $curval) {
+			$changed = 1;
+			$curval = $newval;
+			print "Filter: " . "@filter\n";
+		} else {
+			$filter[$index] -= 2 * $dir_incr;
+			$newval = foo();
+			if ($newval > $curval) {
+				$changed = 1;
+				$curval = $newval;
+				print "Filter: " . "@filter\n";
+				$last_dir[$index] *= -1;
+			} else {
+				$filter[$index] += $dir_incr;
+				$skip[$index] = 1;
+			}
+		}
+	}}}
+
+	if ($changed == 0) {
+		@skip = ();
+		$increment /= 2;
+		print "Increment: $increment\n";
+	}
+}

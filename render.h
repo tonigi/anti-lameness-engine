@@ -48,14 +48,14 @@ public:
 	 * Perform rendering steps requiring no frames beyond frame N.
 	 */
 
-	virtual void operator()(int n) = 0;
+	virtual void sync(int n) = 0;
 
 	/*
 	 * Perform any final rendering steps.  Return a non-zero value if
 	 * anything changed.
 	 */
 
-	virtual int operator()() {
+	virtual int sync() {
 		return 0;
 	}
 

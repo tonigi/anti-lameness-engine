@@ -1,4 +1,4 @@
-// Copyright 2002 David Hilvert <dhilvert@ugcs.caltech.edu>
+// Copyright 2003 David Hilvert <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
 
@@ -17,8 +17,8 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef __ip_h__
-#define __ip_h__
+#ifndef __ipc_h__
+#define __ipc_h__
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,14 +28,16 @@
 #include "image.h"
 #include "render.h"
 
-class ip : public render {
+template <class Response>
+class ipc : public render {
 
         int done;
         image *done_image;
         render *input;
         double scale_factor;
-        double radius;
         unsigned int iterations;
+
+	Response response;
 
 	/* 
 	 * Adjust correction array C based on the difference between the
@@ -50,7 +52,7 @@ class ip : public render {
                 image *forward = image_rw::copy(m);
                 image_weights *iw = new image_weights(
                                 im->height(),
-                                im->width(), 1);
+                                im->width(), 3);
 
 		/*
 		 * First, calculate the simulated projected image.
@@ -59,6 +61,8 @@ class ip : public render {
                 for (unsigned int i = 0; i < done_image->height(); i++)
                 for (unsigned int j = 0; j < done_image->width();  j++) {
 
+			// fprintf(stderr, "(%d, %d)\n", i, j);
+			
                         /*
                          * Here we more-or-less cut-and-paste-and-modify the
                          * drizzling code from drizzle.h.  Surely there's a more
@@ -91,48 +95,67 @@ class ip : public render {
                         double ti = q[0] / scale_factor;
                         double tj = q[1] / scale_factor;
 
-                        for (int ii = (int) floor(ti - di - radius);
-                                ii <= ceil(ti + di + radius); ii++)
-                        for (int jj = (int) floor(tj - dj - radius);
-                                jj <= ceil(tj + dj + radius); jj++) {
+                        for (int ii = (int) floor(ti - di + response.min_i());
+                                ii <= ceil(ti + di + response.max_i()); ii++)
+                        for (int jj = (int) floor(tj - dj + response.min_j());
+                                jj <= ceil(tj + dj + response.max_j()); jj++) {
 
-                                my_real top = (ti - di < ii - radius)
-                                            ? (ii - radius)
-                                            : (ti - di);
-                                my_real bot = (ti + di > ii + radius)
-                                            ? (ii + radius)
-                                            : (ti + di);
-                                my_real lef = (tj - dj < jj - radius)
-                                            ? (jj - radius)
-                                            : (tj - dj);
-                                my_real rig = (tj + dj > jj + radius)
-                                            ? (jj + radius)
-                                            : (tj + dj);
+                                my_real top = ti - di;
+                                my_real bot = ti + di;
+                                my_real lef = tj - dj;
+                                my_real rig = tj + dj;
 
-                                if (top < bot
-                                 && lef < rig
-                                 && ii >= (int) 0
+                                if (ii >= (int) 0
                                  && ii < (int) im->height()
                                  && jj >= (int) 0
                                  && jj < (int) im->width()) {
 
-                                        double weight = iw->get_pixel_component(ii, jj, 0);
-                                        double thisw  = (bot - top) * (rig - lef);
+					point p_array[4] = {
+						point(top - ii, lef - jj),
+						point(top - ii, rig - jj),
+						point(bot - ii, rig - jj),
+						point(bot - ii, lef - jj)
+					};
 
-                                        iw->set_pixel_component(ii, jj, 0, weight + thisw);
+					class Response::ipc_result r = response(p_array, i, j);
 
-                                        for (int k = 0; k < 3; k++)
-                                                forward->set_pixel_component(ii, jj, k,
-							(int)((weight 
-							       * forward->get_pixel_component(
-							       		ii, jj, k)
-							     + thisw 
-							       * done_image->get_pixel_component(
-                                                                         i, j, k))
-                                                        / (weight + thisw)));
+                                        for (int k_in = 0; k_in < 3; k_in++) {
+					int k_out = k_in;
+
+						if (r(k_in, k_out) != 0) {
+
+							double w_old = iw->get_pixel_component(ii, jj, k_out);
+							double w_new = w_old + fabs(r(k_in, k_out));
+
+							iw->set_pixel_component(ii, jj, k_out, w_new);
+
+							// if (k_out == 0)
+								// fprintf(stderr, "(%d, %d, %.3lf, %.3lf)\n", 
+								// 	ii, jj, (double) r(k_in, k_out), w_new);
+							double new_value = 
+								(w_old * forward->get_pixel_component(
+										ii, jj, k_out)
+							       + (r(k_in, k_out) 
+								      * done_image->get_pixel_component(
+										i, j, k_in)))
+							     / w_new;
+
+							// fprintf(stderr, "%lf\n", new_value);
+
+							if (new_value > 255)
+								new_value = 255;
+							if (new_value < 0)
+								new_value = 0;
+
+							forward->set_pixel_component(ii, jj, k_out,
+								(int) new_value);
+						}
+					}
                                 }
                         }
                 }
+
+		// write_ppm("ale-internal-debug-ipc.ppm", forward);
 
 		/*
 		 * Now calculate the differences between the simulated
@@ -144,7 +167,7 @@ class ip : public render {
                 for (unsigned int i = 0; i < done_image->height(); i++)
                 for (unsigned int j = 0; j < done_image->width();  j++) {
 
-			// fprintf(stderr, "(%d, %d)\n", i, j);
+			// fprintf(stderr, "[%d, %d]\n", i, j);
 
                         /*
                          * Here we more-or-less cut-and-paste-and-modify the
@@ -178,55 +201,59 @@ class ip : public render {
                         double ti = q[0] / scale_factor;
                         double tj = q[1] / scale_factor;
 
-                        for (int ii = (int) floor(ti - di - radius);
-                                ii <= ceil(ti + di + radius); ii++)
-                        for (int jj = (int) floor(tj - dj - radius);
-                                jj <= ceil(tj + dj + radius); jj++) {
+                        for (int ii = (int) floor(ti - di - response.max_i());
+                                ii <= ceil(ti + di - response.min_i()); ii++)
+                        for (int jj = (int) floor(tj - dj - response.max_j());
+                                jj <= ceil(tj + dj - response.min_j()); jj++) {
 
-                                my_real top = (ti - di < ii - radius)
-                                            ? (ii - radius)
-                                            : (ti - di);
-                                my_real bot = (ti + di > ii + radius)
-                                            ? (ii + radius)
-                                            : (ti + di);
-                                my_real lef = (tj - dj < jj - radius)
-                                            ? (jj - radius)
-                                            : (tj - dj);
-                                my_real rig = (tj + dj > jj + radius)
-                                            ? (jj + radius)
-                                            : (tj + dj);
+                                my_real top = ti - di;
+                                my_real bot = ti + di;
+                                my_real lef = tj - dj;
+                                my_real rig = tj + dj;
 
-                                if (top < bot
-                                 && lef < rig
-                                 && ii >= 0
+                                if (ii >= (int) 0
                                  && ii < (int) im->height()
-                                 && jj >= 0
+                                 && jj >= (int) 0
                                  && jj < (int) im->width()) {
 
-                                        double weight = c->get_pixel_component(
-                                                        i, j, 3);
-                                        double thisw  = (bot - top) * (rig - lef)
-                                                      / (di * dj);
-                                        c->set_pixel_component(
-                                                        i, j, 3,
-                                                        weight + thisw);
+					point p_array[4] = {
+						point(top - ii, lef - jj),
+						point(top - ii, rig - jj),
+						point(bot - ii, rig - jj),
+						point(bot - ii, lef - jj)
+					};
 
-					// fprintf(stderr, "[%d, %d, %lf]\n", ii, jj, thisw);
+					struct Response::ipc_result r = response(p_array, i, j);
 
-                                        for (int k = 0; k < 3; k++)
-                                                c->set_pixel_component(i, j, k,
-                                                        (int) ((weight
-                                                                * c->get_pixel_component(
-                                                                        i, j, k)
-                                                              + thisw
-                                                                * (im->get_pixel_component(
-									ii, jj, k)
-                                                                 - forward->get_pixel_component(
-									 ii, jj, k)))
-                                                        / (weight + thisw)));
+                                        for (int k_in = 0; k_in < 3; k_in++) {
+					int k_out = k_in;
+
+						if (r(k_in, k_out) != 0) {
+
+							double w_old = c->get_pixel_component(i, j, k_in + 3);
+							double w_new = w_old + fabs(r(k_in, k_out));
+
+							// fprintf(stderr, "[%d, %d, %d, %lf]\n", 
+							//         ii, jj, r(k_in, k_out), w_new);
+
+							c->set_pixel_component(i, j, k_in + 3, w_new);
+
+							c->set_pixel_component(i, j, k_in, 
+								((w_old 
+								 * c->get_pixel_component(i, j, k_in)
+								+ r(k_in, k_out)
+								  * (im->get_pixel_component(ii, jj, k_out)
+								   - forward->get_pixel_component(ii, jj, k_out)))
+								 / w_new));
+
+							// fprintf(stderr, "[%lf]\n", c->get_pixel_component(
+							//			i, j, k_in));
+						}
+					}
                                 }
                         }
                 }
+
 
                 image_rw::close(m);
                 delete iw;
@@ -245,7 +272,7 @@ class ip : public render {
                         image_weights *correction = new image_weights(
                                         done_image->height(),
                                         done_image->width(),
-                                        done_image->depth() + 1);
+                                        done_image->depth() * 2);
 
                         for (int m = 0; m < image_rw::count(); m++)
                                 _ip_frame(correction, m);
@@ -260,6 +287,8 @@ class ip : public render {
 					//		correction->get_pixel_component(
 					//			i, j, 3));
 
+				// fprintf(stderr, "[%lf]\n", correction->get_pixel_component(i, j, k));
+				
 				double new_value = 
 					correction->get_pixel_component(
 						i, j, k)
@@ -284,32 +313,30 @@ class ip : public render {
 
 public:
 
-        ip(render *input, double scale_factor, double radius, unsigned int
-                        iterations) {
+        ipc(render *input, double scale_factor, unsigned int iterations) {
                 this->input = input;
                 done = 0;
                 this->scale_factor = scale_factor;
-                this->radius = radius;
                 this->iterations = iterations;
         }
 
-        virtual const image *get_image() {
+        const image *get_image() {
                 if (done)
                         return done_image;
                 else
                         return input->get_image();
         }
 
-        virtual const image_weights *get_defined() {
+        const image_weights *get_defined() {
                 return input->get_defined();
         }
 
-        virtual void operator()(int n) {
-                input->operator()(n);
+        void sync(int n) {
+                input->sync(n);
         }
 
-        virtual int operator()() {
-		input->operator()();
+        int sync() {
+		input->sync();
                 fprintf(stderr, "Iterating Irani-Peleg");
                 done = 1;
                 done_image = input->get_image()->clone();
@@ -319,6 +346,14 @@ public:
 
                 return 1;
         }
+
+	Response *module() {
+		return &response;
+	}
+
+	virtual ~ipc() {
+	}
+
 };
 
 #endif

@@ -16,7 +16,7 @@
 #  along with Anti-Lamenessing Engine; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-CFLAGS:=-DNDEBUG $(if $(IMAGEMAGICK), -DUSE_MAGICK $(shell Magick-config --cflags --cppflags), -Wall -Os)
+CFLAGS:=-DNDEBUG $(if $(IMAGEMAGICK), -DUSE_MAGICK $(shell Magick-config --cflags --cppflags), -Wall -Os) 
 LDFLAGS:=-lm $(if $(IMAGEMAGICK), $(shell Magick-config --ldflags --libs))
 
 #

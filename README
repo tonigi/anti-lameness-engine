@@ -1,4 +1,4 @@
-ALE version 0.4.6
+ALE version 0.4.7
 =================
 
 
@@ -38,15 +38,17 @@ Downloading a binary
 	No binaries provided.  Compile from source.
 
 
-Compiling from source (version 0.4.x)
+Compiling from source (version 0.4.7)
 -------------------------------------
 
-You will need GCC (with C++ support) and a make utility (GNU Make will do
-fine).  To compile from source, download the tarball into a directory, expand
-it with 'tar xzf ale-x.x.x.tar.gz', enter the unzipped directory, and type
-either 'make' or 'make IMAGEMAGICK=1', depending on whether ImageMagick support
-is desired.  The makefile may need some tweaking on Windows systems (e.g. you
-may want to write the output to 'ale.exe' or something.
+GCC version 3.2.3 with C++ support and GNU Make 3.80 are known to build ALE
+successfully.  Older versions of GCC may fail to compile this version of ALE.
+
+To compile from source, download the tarball into a directory, expand it with
+'tar xzf ale-x.x.x.tar.gz', enter the untarred directory, and type either
+'make' or 'make IMAGEMAGICK=1', depending on whether ImageMagick support is
+desired.  The makefile may need some tweaking on Windows systems (e.g. you may
+want to write the output to 'ale.exe' or something).
 
 
 Using ALE (version 0.4.x)
@@ -62,44 +64,32 @@ produced incrementally, and the output file is updated as the process
 progresses.  Options are described in the next section.
 
 
-Options (version 0.4.6)
+Options (version 0.4.7)
 -----------------------
 
-
 Alignment channel options:
-
 --align-all       Align images using all color channels
 --align-green     Align images using the green channel
 --align-sum       Align images using a sum of channels [default]
 
-
 Transformation options:
-
 --translation     Only adjust the position of images
 --euclidean       Adjust the position and orientation of images [default]
 --projective      Use projective transformations.  Best quality, but slow.
 
-
 Image extents:
-
 --extend          Increase output image extents to accommodate all pixel data.
 --no-extend       Don't increase extents; crop to original frame. [default]
 
-
 Transformation defaults:
-
 --identity        Default alignment begins with identity transform. [default]
 --follow          Default alignment begins with the previous frame's transform.
 
-
 Transformation file operations:
-
 --trans-load=x    Load initial transformation settings from file x
 --trans-save=x    Save final transformation data in file x
 
-
 Tunable parameters:
-
 --scale=x         Scale images by the factor x (where x is at least 1.0)
 --hf-enhance=x    Enhance high frequency details by factor x. (0.0 is default)
 --metric=x        Set the error metric exponent (2 is default)
@@ -107,31 +97,31 @@ Tunable parameters:
 --perturb-upper=x Max. correction step, in pixels or degrees (32.0 is default)
 --perturb-lower=x Min. correction step, in pixels or degrees (.125 is default)
 
-
 Drizzling:
-
 --drizzle-diam=x  Drizzle with input pixel diameter x (where 0 < x <= 1).
 --drizzle-only    If drizzling, output black for pixels with no drizzle data.
 
- 
-Image reconstruction:
-  
---ip <d> <i>      Irani-Peleg solve with pixel diameter <d> for <i> iterations.
-
+Irani-Peleg image reconstruction:
+--ip <d> <i>      Solve for a box filter with diameter <d> over <i> iterations.
+--ipc <c> <i>     Solve for device config <c> over <i> iterations.
+                     Available device configs:
+                        xvp610_320x240
+                        stdin
  
 Monte Carlo alignment:
- 
 --mc <x>          Align using, on average, x% of available pixels (0 < x < 100)
 --no-mc           Align using all pixels.  [default]
  
- 
 File output options:
- 
 --inc             Produce incremental output.  [default]
 --no-inc          Don't produce incremental output.
 
+Video Stabilization options: [Experimental]
+--replace         Replace frame areas rather than merging.
+--no-replace      Do not replace.  [default]
 
-Option Descriptions (version 0.4.6)
+
+Option Descriptions (version 0.4.7)
 -----------------------------------
 
 
@@ -237,15 +227,19 @@ For more information about drizzling, see the paper by Hook and Fruchter,
 http://www.cv.nrao.edu/adass/adassVI/hookr.html
 
 
-Image reconstruction (based on Irani-Peleg):
+Irani-Peleg Image reconstruction:
 
 ALE's backprojection-based image reconstruction may provide realistic emphasis
-of edges in scaled images.  However, this option is sensitive to the chosen
-diameter, and small diameters can cause speckled output.  The results of image
-reconstruction are written just prior to program termination.
+of edges in both scaled and unscaled images.  However, this option is sensitive
+to the chosen diameter, and small diameters can cause speckled output.  The
+results of image reconstruction are written just prior to program termination.
 
-For more information on the backprojection technique of Irani and Peleg, see
-their paper, "Improving Resolution by Image Registration", at
+A rudimentary script for calibrating devices with unknown projection functions
+has been included as ipc/ale-calibrate.
+
+For more information on the backprojection technique of Irani and Peleg, on
+which this feature is based, see their paper, "Improving Resolution by Image
+Registration", at
 
 ftp://ftp.wisdom.weizmann.ac.il/pub/irani/PAPERS/SR_CVGIP91.pdf
 
@@ -273,7 +267,26 @@ In this case, the output file is written after the original frame is loaded and
 after each supplemental frame has been aligned.  To suppress incremental output, 
 specify the --no-inc option, in which case output will only occur after all
 rendering steps are complete.
+
  
+Video stabilization options:
+
+--replace indicates that each new frame should replace the corresponding region
+of the accumulated image instead of being merged with existing data.  If 0.ppm,
+1.ppm, ..., 9.ppm represent frames from an unstabilized video stream, then the
+following sequence of commands may result in a stabilized sequence:
+
+ale        0.ppm 1.ppm 1.stable.ppm
+ale 1.stable.ppm 2.ppm 2.stable.ppm
+ale 2.stable.ppm 3.ppm 3.stable.ppm
+.
+.
+.
+ale 8.stable.ppm 9.ppm 9.stable.ppm
+
+Jeff Treece suggested the replacement option and reports success using the
+stabilization approach outlined above.
+
 
 URLs
 ----
