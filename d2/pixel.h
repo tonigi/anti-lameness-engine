@@ -191,7 +191,7 @@ public:
 	}
 
 	int operator!=(const pixel &p) {
-		return !operator!=(p);
+		return !operator==(p);
 	}
 };
 
