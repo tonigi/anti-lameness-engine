@@ -1452,13 +1452,14 @@ int main(int argc, const char *argv[]){
 
 					if (d3_depth[i] != NULL) {
 						const d2::image *im = d3::scene::depth(i);
-
 						d2::image_rw::write_image(d3_depth[i], im, output_exposure, 1, 1);
+						delete im;
 					}
 
 					if (d3_output[i] != NULL) {
 						const d2::image *im = d3::scene::view(i);
 						d2::image_rw::write_image(d3_output[i], im, output_exposure);
+						delete im;
 					}
 				}
 
