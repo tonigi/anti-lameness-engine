@@ -35,6 +35,7 @@ class scene {
 
 	struct triangle {
 		d2::pixel color;
+		d2::pixel weight;
 		point *vertices[3];
 		struct triangle *neighbors[3];
 		point *division_vertex;
@@ -42,6 +43,7 @@ class scene {
 
 		triangle() {
 			color = d2::pixel(0, 0, 0);
+			weight = d2::pixel(0, 0, 0);
 
 			vertices[0] = NULL;
 			vertices[1] = NULL;
@@ -91,6 +93,155 @@ class scene {
 	 */
 
 	static struct lod *cl;
+
+	static triangle **init_zbuf(pt _pt) {
+		triangle **result = (triangle **) calloc((int) floor(_pt.scaled_width()) *
+				(int) floor(_pt.scaled_height()), sizeof(triangle *));
+
+		assert(result);
+
+		if (!result)
+			ui::get()->memory_error("Z-buffer");
+
+		return result;
+	}
+
+	/*
+	 * Z-buffer to determine the closest triangle.
+	 */
+	static void zbuffer(pt _pt, triangle **zbuf, triangle *t) {
+		int height = (int) floor(_pt.scaled_height());
+		int width  = (int) floor(_pt.scaled_width());
+		
+		if (t->division_vertex) {
+			zbuffer(_pt, zbuf, t->children[0]);
+			zbuffer(_pt, zbuf, t->children[1]);
+			return;
+		}
+
+		/*
+		 * Map the points of the triangle into the image space.
+		 */
+
+		point p[3];
+
+		for (int v = 0; v < 3; v++)
+			p[v] = _pt.scaled_transform(*t->vertices[v]);
+
+		/*
+		 * Determine the bounding box of the transformed vertices.
+		 */
+
+		point max = p[0], min = p[0];
+
+		for (int v = 1; v < 3; v++)
+		for (int d = 0; d < 2; d++) {
+			if (max[d] < p[v][d])
+				max[d] = p[v][d];
+			if (min[d] > p[v][d])
+				min[d] = p[v][d];
+		}
+
+		/*
+		 * Intersect the bounding box with the image boundary.
+		 *
+		 * XXX: this may include additional points
+		 *
+		 * XXX: this is horribly verbose
+		 */
+
+		if (min[0] >= height)
+			min[0] = height - 1;
+		if (min[1] >= width)
+			min[1] = width - 1;
+		if (max[0] >= height)
+			max[0] = height - 1;
+		if (max[1] >= width)
+			max[1] = width - 1;
+		if (max[0] < 0)
+			max[0] = 0;
+		if (max[1] < 0)
+			max[1] = 0;
+		if (min[0] < 0)
+			min[0] = 0;
+		if (min[1] < 0)
+			min[1] = 0;
+
+		/*
+		 * Iterate over all points in the bounding box.
+		 */
+
+		for (int i = (int) floor(min[0]); i <= (int) ceil(max[0]); i++)
+		for (int j = (int) floor(min[1]); j <= (int) ceil(max[1]); j++) {
+
+			triangle **zbuf_tri = zbuf + width * i + j;
+
+			/*
+			 * Simple test for depth
+			 *
+			 * XXX: this doesn't work correctly in all cases.
+			 */
+
+			if (*zbuf_tri && _pt.scaled_transform(*(*zbuf_tri)->vertices[0])[2] > p[0][2])
+				continue;
+			
+			/*
+			 * Test for interiority
+			 */
+
+			int lower[2] = {0, 0};
+			int upper[2] = {0, 0};
+
+			for (int v = 0; v < 3; v++) {
+				point cv = p[v];
+				point nv = p[(v + 1) % 3];
+				point test_point = point(i, j, 1);
+
+				for (int d = 0; d < 2; d++)
+				if ((test_point[d] - cv[d]) * (test_point[d] - nv[d]) < 0) {
+					int e = (d + 1) % 2;
+					ale_pos travel = (test_point[d] - cv[d]) / (nv[d] - cv[d]);
+					ale_pos intersect = cv[e] + travel * (nv[e] - cv[e]);
+					if (intersect <= test_point[e]) 
+						lower[e] = 1;
+					if (intersect >= test_point[e])
+						upper[e] = 1;
+				}
+			}
+
+			if (!lower[0] || !upper[0] || !lower[1] || !upper[1])
+				continue;
+
+			/*
+			 * Assign a new triangle to the zbuffer
+			 */
+
+			*zbuf_tri = t;
+		}
+	}
+
+	/*
+	 * Color a 3D scene using value averaging.
+	 */
+	static void color_average() {
+		/*
+		 * Iterate over all frames
+		 */
+		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+			/*
+			 * Z-buffer to map points to triangles
+			 */
+			pt _pt = align::projective(n);
+			triangle **zbuf = init_zbuf(_pt);
+			zbuffer(_pt, zbuf, triangle_head[0]);
+			zbuffer(_pt, zbuf, triangle_head[1]);
+
+			/*
+			 * Iterate over all triangles
+			 */
+			assert(0);
+		}
+	}
 
 public:
 	/*
@@ -258,136 +409,21 @@ public:
 		cl = nl;
 	}
 
-	static void init_zbuf(ale_pos *zbuf, unsigned int size) {
-		for (unsigned int i = 0; i < size; i++) {
-			zbuf[i] = 0;
-			zbuf[i] = 0 / zbuf[i];
-			assert(isnan(zbuf[i]));
-		}
-	}
-
-	static void fill_with_values(pt _pt, d2::image *im, ale_pos *zbuf, triangle *t) {
-		if (t->division_vertex) {
-			fill_with_values(_pt, im, zbuf, t->children[0]);
-			fill_with_values(_pt, im, zbuf, t->children[1]);
-			return;
-		}
-
-		/*
-		 * Map the points of the triangle into the image space.
-		 */
-
-		point p[3];
-
-		for (int v = 0; v < 3; v++)
-			p[v] = _pt.scaled_transform(*t->vertices[v]);
-
-		/*
-		 * Determine the bounding box of the transformed vertices.
-		 */
-
-		point max = p[0], min = p[0];
-
-		for (int v = 1; v < 3; v++)
-		for (int d = 0; d < 2; d++) {
-			if (max[d] < p[v][d])
-				max[d] = p[v][d];
-			if (min[d] > p[v][d])
-				min[d] = p[v][d];
-		}
-
-		/*
-		 * Intersect the bounding box with the image boundary.
-		 *
-		 * XXX: this may include additional points
-		 *
-		 * XXX: this is horribly verbose
-		 */
-
-		if (min[0] >= im->height())
-			min[0] = im->height() - 1;
-		if (min[1] >= im->width())
-			min[1] = im->width() - 1;
-		if (max[0] >= im->height())
-			max[0] = im->height() - 1;
-		if (max[1] >= im->width())
-			max[1] = im->width() - 1;
-		if (max[0] < 0)
-			max[0] = 0;
-		if (max[1] < 0)
-			max[1] = 0;
-		if (min[0] < 0)
-			min[0] = 0;
-		if (min[1] < 0)
-			min[1] = 0;
-
-		/*
-		 * Iterate over all points in the bounding box.
-		 */
-
-		for (int i = (int) floor(min[0]); i <= (int) ceil(max[0]); i++)
-		for (int j = (int) floor(min[1]); j <= (int) ceil(max[1]); j++) {
-
-			ale_real *depth = zbuf + im->width() * i + j;
-
-			/*
-			 * Simple test for depth
-			 *
-			 * XXX: this doesn't work correctly in all cases.
-			 */
-
-			if (*depth > p[0][2])
-				continue;
-			
-			/*
-			 * Test for interiority
-			 */
-
-			int lower[2] = {0, 0};
-			int upper[2] = {0, 0};
-
-			for (int v = 0; v < 3; v++) {
-				point cv = p[v];
-				point nv = p[(v + 1) % 3];
-				point test_point = point(i, j, 1);
-
-				for (int d = 0; d < 2; d++)
-				if ((test_point[d] - cv[d]) * (test_point[d] - nv[d]) < 0) {
-					int e = (d + 1) % 2;
-					ale_pos travel = (test_point[d] - cv[d]) / (nv[d] - cv[d]);
-					ale_pos intersect = cv[e] + travel * (nv[e] - cv[e]);
-					if (intersect <= test_point[e]) 
-						lower[e] = 1;
-					if (intersect >= test_point[e])
-						upper[e] = 1;
-				}
-			}
-
-			if (!lower[0] || !upper[0] || !lower[1] || !upper[1])
-				continue;
-
-			/*
-			 * Assign the color value and depth
-			 */
-
-			im->pix(i, j) = t->color;
-			*depth = p[0][2];
-		}
-	}
-
 	static const d2::image *view(unsigned int n) {
 		assert (n < d2::image_rw::count());
 
 		d2::image *im = new d2::image_ale_real((int) floor(d2::align::of(n).scaled_height()),
 				               (int) floor(d2::align::of(n).scaled_width()), 3);
 
-		ale_pos *zbuf = (ale_pos *) malloc(im->height() * im->width()
-				* sizeof(ale_pos));
+		triangle **zbuf = init_zbuf(align::projective(n));
 
-		init_zbuf(zbuf, im->height() * im->width());
+		zbuffer(align::projective(n), zbuf, triangle_head[0]);
+		zbuffer(align::projective(n), zbuf, triangle_head[1]);
 
-		fill_with_values(align::projective(n), im, zbuf, triangle_head[0]);
-		fill_with_values(align::projective(n), im, zbuf, triangle_head[1]);
+		for (unsigned int i = 0; i < im->height(); i++)
+		for (unsigned int j = 0; j < im->width();  j++)
+		if (zbuf[i * im->width() + j])
+			im->pix(i, j) = zbuf[i * im->width() + j]->color;
 
 		free(zbuf);
 
@@ -400,17 +436,17 @@ public:
 		d2::image *im = new d2::image_ale_real((int) floor(d2::align::of(n).scaled_height()),
 				               (int) floor(d2::align::of(n).scaled_width()), 3);
 
-		ale_real *zbuf = (ale_real *) malloc(im->height() * im->width()
-				* sizeof(ale_real));
+		pt _pt = align::projective(n);
 
-		init_zbuf(zbuf, im->height() * im->width());
+		triangle **zbuf = init_zbuf(align::projective(n));
 
-		fill_with_values(align::projective(n), im, zbuf, triangle_head[0]);
-		fill_with_values(align::projective(n), im, zbuf, triangle_head[1]);
+		zbuffer(_pt, zbuf, triangle_head[0]);
+		zbuffer(_pt, zbuf, triangle_head[1]);
 
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++)
-			im->pix(i, j) = d2::pixel(1, 1, 1) * zbuf[i * im->width() + j];
+		if (zbuf[i * im->width() + j])
+			im->pix(i, j) = d2::pixel(1, 1, 1) * _pt.scaled_transform(*zbuf[i * im->width() + j]->vertices[0])[2];
 
 		free(zbuf);
 
