@@ -39,6 +39,41 @@ class cpf {
 	static const char *save_n;
 	static int save_version;
 
+	static void error(const char *message) {
+		fprintf(stderr, "cpf: Error: %s", message);
+		exit(1);
+	}
+
+	static void get_integer(int *i) {
+		if(fscanf(load_f, " %d", i) != 1)
+			error("Could not get integer.");
+	}
+
+	static void get_new_line() {
+		int next_character = 0;
+
+		while (next_character != EOF
+		    && next_character != '\n')
+			next_character = fgetc(load_f);
+	}
+
+	static void check_version(int v) {
+		if (v > CPF_VERSION_MAX)
+			error("Incompatible version number.");
+	}
+
+	static point get_type_a() {
+		return point::undefined();
+	}
+
+	static point get_type_b() {
+		return point::undefined();
+	}
+
+	static point get_type_c() {
+		return point::undefined();
+	}
+
 public:
 	static void init_loadfile(const char *filename) {
 		load_n = filename;
@@ -65,8 +100,38 @@ public:
 	}
 
 	static point get() {
-		assert(0);
-		return point(0, 0, 0);
+		while (load_f && !feof(load_f)) {
+			int command_char;
+
+			command_char = fgetc(load_f);
+
+			switch (command_char) {
+				case EOF:
+					return point::undefined();
+				case '#':
+				case ' ':
+				case '\n':
+				case '\r':
+				case '\t':
+					break;
+				case 'V':
+					get_integer(&load_version);
+					check_version(load_version);
+				        break;
+				case 'A':
+					return get_type_a();
+				case 'B':
+					return get_type_b();
+				case 'C':
+					return get_type_c();
+				default:
+					error("Unrecognized command");
+			}
+
+			get_new_line();
+		}
+
+		return point::undefined();
 	}
 
 	static void set(point p) {
