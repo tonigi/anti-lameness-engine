@@ -914,11 +914,11 @@ class scene {
 			return 1;
 
 		if (print_on_failure && 0) {
-			 fprintf(stderr, "is_interior_v({{%f, %f}, {%f, %f}, {%f, %f}}, {%f, %f})",
-					 p[0][0], p[0][1],
-					 p[1][0], p[1][1],
-					 p[2][0], p[2][1],
-					 r[0], r[1]);
+			 fprintf(stderr, "is_interior_c({{%f, %f}, {%f, %f}, {%f, %f}}, {%f, %f})",
+					 p_c[0][0], p_c[0][1],
+					 p_c[1][0], p_c[1][1],
+					 p_c[2][0], p_c[2][1],
+					 r_c[0], r_c[1]);
 			fprintf(stderr, " = 0\n");
 		}
 
@@ -983,13 +983,12 @@ class scene {
 	 * R_C is the endpoint of a ray whose tail is at zero.
 	 * P_C are the vertex coordinates.
 	 */
-#if 0
 	static int subtriangle_index(point r_c, point p_c[3], int depth, int prefix) {
 
 		if (depth == 0)
 			return prefix;
 
-		if (!is_interior(p_i, point(test_point[0], test_point[1], 1), 1)) {
+		if (!is_interior_c(p_c, r_c, 1)) {
 			/*
 			 * XXX: Error condition ... what should we do here?
 			 */
@@ -997,28 +996,22 @@ class scene {
 			return prefix;
 		}
 
-		point hp_w[3];
-		point hp_i[3];
+		point hp_c[3];
 
 		for (int v = 0; v < 3; v++)
-			hp_w[v] = (p_w[(v + 1) % 3] + p_w[(v + 2) % 3]) / 2;
-
-		for (int v = 0; v < 3; v++)
-			hp_i[v] = _pt.wp_scaled(hp_w[v]);
+			hp_c[v] = (p_c[(v + 1) % 3] + p_c[(v + 2) % 3]) / 2;
 
 		for (int v = 0; v < 3; v++) {
-			point arg_array_i[3] = {p_i[v], hp_i[(v + 2) % 3], hp_i[(v + 1) % 3]};
-			point arg_array_w[3] = {p_w[v], hp_w[(v + 2) % 3], hp_w[(v + 1) % 3]};
+			point arg_array_c[3] = {p_c[v], hp_c[(v + 2) % 3], hp_c[(v + 1) % 3]};
 
-			int interior_t = is_interior(arg_array_i, point(test_point[0], test_point[1], 1));
+			int interior_t = is_interior_c(arg_array_c, r_c);
 
 			if (interior_t)
-				return subtriangle_index(_pt, test_point, arg_array_w, depth - 1, prefix * 4 + v);
+				return subtriangle_index(r_c, arg_array_c, depth - 1, prefix * 4 + v);
 		}
 
-		return subtriangle_index(_pt, test_point, hp_w, depth - 1, prefix * 4 + 3);
+		return subtriangle_index(r_c, hp_c, depth - 1, prefix * 4 + 3);
 	}
-#endif
 
 	/*
 	 * Return a subtriangle index for a given position.
