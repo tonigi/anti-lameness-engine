@@ -978,7 +978,7 @@ public:
 	}
 
 	/*
-	 * Evaluate the interframe cost at for a given location.
+	 * Evaluate the interframe cost for a given location.
 	 *
 	 * m is remote, n is local
 	 *
