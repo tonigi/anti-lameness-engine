@@ -426,7 +426,7 @@ public:
 	 *
 	 * 	(b) Attempting to subdivide triangles by adding new vertices and
 	 * 	moving these in a direction perpendicular to the surface normal
-	 * 	of the corresponding triangle's surface normal.
+	 * 	of the corresponding triangle.
 	 *
 	 * When neither of these approaches results in improvement, then the
 	 * level of detail can be increased.
@@ -435,15 +435,16 @@ public:
 		int max_depth = 2;
 		int improved = 1;
 		int count = 0;
-		// time_t start_seconds, cur_seconds, max_seconds = 1200;
 
 		assert (max_depth > 0);
-
-		// time(&start_seconds);
 
 		while(reduce_lod());
 
 		while ((improved /*&& count < 40*/) || cl->next) {
+
+			/*
+			 * Write output incrementally, if desired.
+			 */
 
 			if (inc_bit)
 			for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
@@ -460,32 +461,28 @@ public:
 				}
 			}
 
-			if (!improved/* || count >= 40*/) {
-				// fprintf(stderr, "scale factor: %f\n", cl->sf);
+			/*
+			 * Increase LOD if no improvements were achieved in the
+			 * most recent pass at the previous LOD.
+			 */
+
+			if (!improved) {
 				fprintf(stderr, ".");
 				assert (cl->next);
-
 				increase_lod();
 				count = 0;
-
-#if 0
-				if (cl->sf >= 0.125) {
-					while (cl->next)
-						increase_lod();
-					count = 100000;
-					improved = 0;
-					continue;
-				}
-#endif
 			}
 
 			count++;
 			improved = 0;
 
-			// time (&cur_seconds);
+			/*
+			 * Try improving the result by moving existing vertices.
+			 */
 
-			// if (cur_seconds - start_seconds > max_seconds)
-			//	continue;
+			/*
+			 * Try improving the result by adding a vertex.
+			 */
 
 		}
 	}
