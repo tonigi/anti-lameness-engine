@@ -36,10 +36,16 @@
 struct extended_t {
 	int is_extended;
 	int black_level;
+	float aperture; /* 1 == f/1.0, 1.4 == f/1.4, etc. */
+	float shutter;  /* 1 == 1 sec, 0.5 == 1/2 sec, etc. */
+	float gain;     /* 1 == ISO 100, 2 == ISO 200, etc. */
 
 	extended_t() {
 		is_extended = 0;
 		black_level = 0;
+		aperture = 1;
+		shutter = 1;
+		gain = 1;
 	}
 };
 
@@ -57,6 +63,7 @@ static inline void error_ppm(const char *filename) {
 static inline int digest_comment(FILE *f, const char *filename, extended_t *extended) {
 	int next = '#';
 	int value;
+	float fvalue;
 
 	while (next != '\n' && next != '\r' && next != EOF) {
 		while (next == ' ' || next == '\t' || next == '#') {
@@ -73,6 +80,14 @@ static inline int digest_comment(FILE *f, const char *filename, extended_t *exte
 
 		if (extended->is_extended && fscanf(f, "Black-level: %d", &value) == 1)
 			extended->black_level = value;
+		else if (extended->is_extended && fscanf(f, "ISO: %f", &fvalue) == 1)
+			extended->gain = fvalue / 100;
+		else if (extended->is_extended && fscanf(f, "Gain: %f", &fvalue) == 1)
+			extended->gain = fvalue;
+		else if (extended->is_extended && fscanf(f, "Aperture: %f", &fvalue) == 1)
+			extended->aperture = fvalue;
+		else if (extended->is_extended && fscanf(f, "Shutter: %f", &fvalue) == 1)
+			extended->shutter = fvalue;
 		else if (next != '\n' && next != '\r' && next != EOF)
 			next = fgetc(f);
 
