@@ -110,9 +110,8 @@ public:
 		 * Subtract offset
 		 */
 
-		ale_pos offset = sqrt(w*w + h*h) / 2;
-		p[0] -= offset;
-		p[1] -= offset;
+		p[0] -= h / 2;
+		p[1] -= w / 2;
 
 		/*
 		 * Scale x and y
