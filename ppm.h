@@ -79,7 +79,7 @@ static inline image *read_ppm(const char *filename) {
 	char m1, m2, val;
 	int w, h, mcv;
 	int n;
-	FILE *f = fopen(filename, "r");
+	FILE *f = fopen(filename, "rb");
 	assert(f);
 
 	if (f == NULL) {
@@ -151,7 +151,7 @@ static inline image *read_ppm(const char *filename) {
 
 static inline void write_ppm(const char *filename, const image *im) {
 	unsigned int i, j, k;
-	FILE *f = fopen(filename, "w");
+	FILE *f = fopen(filename, "wb");
 	assert(f);
 
 	if (f == NULL) {

@@ -140,6 +140,8 @@ class ip : public render {
                 for (unsigned int i = 0; i < done_image->height(); i++)
                 for (unsigned int j = 0; j < done_image->width();  j++) {
 
+			// fprintf(stderr, "(%d, %d)\n", i, j);
+
                         /*
                          * Here we more-or-less cut-and-paste-and-modify the
                          * code from above.  Surely there's a more elegant way
@@ -205,6 +207,8 @@ class ip : public render {
                                                         i, j, 3,
                                                         weight + thisw);
 
+					// fprintf(stderr, "[%d, %d, %lf]\n", ii, jj, thisw);
+
                                         for (int k = 0; k < 3; k++)
                                                 c->set_pixel_component(i, j, k,
                                                         (int) ((weight
@@ -242,8 +246,14 @@ class ip : public render {
 
 
 			for (unsigned int i = 0; i < done_image->height(); i++)
-			for (unsigned int j = 0; j < done_image->width();  j++)
+			for (unsigned int j = 0; j < done_image->width();  j++) 
 			for (unsigned int k = 0; k < done_image->depth();  k++) {
+
+				// if (k == 0)
+					// fprintf(stderr, "(%d, %d, %lf)\n", i, j, 
+					//		correction->get_pixel_component(
+					//			i, j, 3));
+
 				double new_value = 
 					correction->get_pixel_component(
 						i, j, k)
@@ -262,6 +272,7 @@ class ip : public render {
                         delete correction;
 
                         fprintf(stderr, ".");
+
                 }
         }
 
@@ -296,7 +307,8 @@ public:
                 done = 1;
                 done_image = input->get_image()->clone();
                 _ip();
-                fprintf(stderr, ".\n");
+
+		fprintf(stderr, "\n");
 
                 return 1;
         }

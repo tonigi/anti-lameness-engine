@@ -304,20 +304,39 @@ private:
 			int index_max = a->height() * a->width();
 			
 			/*
-			 * We have USE/ALL, or (# pixels to use)/(# pixels
-			 * total).  We want SKIP/USE.
+			 * We use a random process for which the expected
+			 * number of sampled pixels is +/- .000003 from mc_arg
+			 * in the range [.005,.995] for an image with 100,000
+			 * pixels.  (The actual number may still deviate from
+			 * the expected number by more than this amount,
+			 * however.)  The method is as follows:
+			 *
+			 * We have mc_arg == USE/ALL, or (expected # pixels to
+			 * use)/(# total pixels).  We derive from this
+			 * SKIP/USE.
 			 *
 			 * SKIP/USE == (SKIP/ALL)/(USE/ALL) == (1 - (USE/ALL))/(USE/ALL)
 			 *
-			 * Once we have SKIP/USE, we know the typical number of
-			 * pixels to skip in each iteration.  Since we're
-			 * drawing from a uniform distribution, and the
-			 * smallest number of pixels we skip is zero, the
-			 * maximum number of pixels to skip is twice the
-			 * typical number.
+			 * Once we have SKIP/USE, we know the expected number
+			 * of pixels to skip in each iteration.  We use a random
+			 * selection process that provides SKIP/USE close to
+			 * this calculated value.
+			 *
+			 * If we can draw uniformly to select the number of
+			 * pixels to skip, we do.  In this case, the maximum
+			 * number of pixels to skip is twice the expected
+			 * number.
+			 *
+			 * If we cannot draw uniformly, we still assign equal
+			 * probability to each of the integer values in the
+			 * interval [0, 2 * (SKIP/USE)], but assign an unequal
+			 * amount to the integer value ceil(2 * SKIP/USE) + 1.
 			 */
 
-			double mc_max = 2 * (1 - _mc_arg) / _mc_arg;
+			double u = (1 - _mc_arg) / _mc_arg;
+
+			double mc_max = (floor(2*u) * (1 + floor(2*u)) + 2*u)
+				      / (2 + 2 * floor(2*u) - 2*u);
 
 			for(index = -1 + (int) ceil((mc_max+1) 
 						  * ( (1 + ((double) rand()) ) 
@@ -405,8 +424,6 @@ private:
 				}
 			}
 		}
-
-
 
 		return pow(result / divisor, 1/metric_exponent);
 	}

@@ -1,3 +1,12 @@
+0.4.4
+
+o	Modify the Monte Carlo pixel selection algorithm so that the expected
+	number of sampled pixels more closely matches the specified number in
+	typical cases.
+
+o	Specify the binary mode flag to fopen() calls in the PPM file handler.
+	This change resolves a bug discovered by Benjamin Hill.
+
 0.4.3
 
 o	Add support for Monte Carlo alignment of images, in which only a
