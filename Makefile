@@ -69,19 +69,20 @@ all: ale-phony
 
 clean:
 	rm -f ale
+	rm -f ale.exe
 	rm -f ale.sum ale.log
 	find testsuite -name "*temp.*" | xargs rm -rf
 	find testsuite -name "*.output.*" | xargs rm -rf
 
-ale-phony: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h
-	g++ -o ale $(CFLAGS) ale.cc d2.cc $(LDFLAGS)
+ale-phony: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h d3.cc d3/*.h
+	g++ -o ale $(CFLAGS) ale.cc d3.cc d2.cc $(LDFLAGS)
 
 # The following approach to building a Windows binary is probably very
 # dependent on the host platform configuration.  The above target may be a
 # better place to start for Windows users.
 
-ale.exe: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h
-	i586-mingw32msvc-g++ -Wall $(PRECISION_CFLAGS) $(DEBUG_CFLAGS) -o ale.exe -O2 ale.cc d2.cc -lm 
+ale.exe: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h d3.cc d3/*.h
+	i586-mingw32msvc-g++ -Wall $(PRECISION_CFLAGS) $(DEBUG_CFLAGS) -o ale.exe -O2 ale.cc d3.cc d2.cc -lm 
 
 #
 # The following rules may require additional software to be installed.

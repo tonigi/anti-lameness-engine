@@ -47,12 +47,19 @@
 #include "d2.h"
 
 /*
+ * 3D include files
+ */
+
+#include "d3.h"
+
+/*
  * Device configuration files
  */
 
 #include "device/xvp610_320x240.h"
 #include "device/xvp610_640x480.h"
 #include "device/ov7620_raw_linear.h"
+#include "device/canon_300d_raw_linear.h"
 
 /*
  * Help files
@@ -64,9 +71,9 @@
  * Version Information
  */
 
-char *short_version = "0.7.1-patch2";
+char *short_version = "0.7.2";
 
-char *version = "ALE Version:      0.7.1-patch2\n"
+char *version = "ALE Version:      0.7.2\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else
@@ -197,6 +204,9 @@ int main(int argc, const char *argv[]){
 	} else if (arg_count(argc, argv, "--hv") > 0) {
 		hi.visp();
 		exit(1);
+	} else if (arg_count(argc, argv, "--h3") > 0) {
+		hi.d3();
+		exit(1);
 	} else if (arg_count(argc, argv, "--hz") > 0) {
 		hi.undocumented();
 		exit(1);
@@ -259,7 +269,7 @@ int main(int argc, const char *argv[]){
 	}
 
 	/*
-	 * Flags
+	 * Flags and variables
 	 */
 
 	double scale_factor = 1;
@@ -293,6 +303,9 @@ int main(int argc, const char *argv[]){
 	int oc_count = 0;
 	const char **visp = NULL;
 	int vise_count = 0;
+	const char **d3_output = NULL;
+	const char **d3_depth = NULL;
+	unsigned int d3_count = 0;
 
 	/*
 	 * dchain is ochain[0].
@@ -434,6 +447,109 @@ int main(int argc, const char *argv[]){
 
 			d2::align::gs_mo(mo_parameter);
 			i += 1;
+
+		} else if (!strcmp(argv[i], "--3dv")) {
+			d2::align::keep();
+
+			unsigned int frame_no;
+
+			/*
+			 * Unsupported configurations
+			 */
+
+			if (ip_iterations)
+				unsupported::fornow("3D modeling with Irani-Peleg rendering");
+
+#if 0
+			if (usm_multiplier)
+				unsupported::fornow("3D modeling with unsharp mask");
+#endif
+
+			/*
+			 * Check for argument availability
+			 */
+
+			if (i + 2 >= argc) 
+				not_enough("--3dv");
+
+			/*
+			 * Initialize if necessary
+			 */
+
+			if (d3_output == NULL) {
+				d3_count  = argc - (i + 2) - 1;
+				d3_output = (const char **) calloc(d3_count, sizeof(char *));
+				d3_depth = (const char **) calloc(d3_count, sizeof(char *));
+			}
+
+			if (sscanf(argv[i+1], "%d", &frame_no) != 1) {
+				fprintf(stderr, "\n\n*** --3dv argument 0 must be an integer  ***\n\n");
+				exit(1);
+			}
+
+			if (frame_no >= d3_count) {
+				fprintf(stderr, "\n\n*** --3dv argument 0 is too large ***\n\n");
+				exit(1);
+			}
+
+			if (d3_output[frame_no] != NULL) {
+				unsupported::fornow ("Writing a single 3D view to more than one output file");
+			}
+
+			d3_output[frame_no] = argv[i+2];
+
+			i+=2;
+		} else if (!strcmp(argv[i], "--3dd")) {
+			d2::align::keep();
+
+			unsigned int frame_no;
+
+			/*
+			 * Unsupported configurations
+			 */
+
+			if (ip_iterations)
+				unsupported::fornow("3D modeling with Irani-Peleg rendering");
+
+#if 0
+			if (usm_multiplier)
+				unsupported::fornow("3D modeling with unsharp mask");
+#endif
+
+			/*
+			 * Check for argument availability
+			 */
+
+			if (i + 2 >= argc)
+				not_enough("--3dd");
+
+			/*
+			 * Initialize if necessary
+			 */
+
+			if (d3_output == NULL) {
+				d3_count  = argc - (i + 2) - 1;
+				d3_output = (const char **) calloc(d3_count, sizeof(char *));
+				d3_depth = (const char **) calloc(d3_count, sizeof(char *));
+			}
+
+			if (sscanf(argv[i+1], "%d", &frame_no) != 1) {
+				fprintf(stderr, "\n\n*** --3dd argument 0 must be an integer  ***\n\n");
+				exit(1);
+			}
+
+			if (frame_no >= d3_count) {
+				fprintf(stderr, "\n\n*** --3dd argument 0 is too large ***\n\n");
+				exit(1);
+			}
+
+			if (d3_depth[frame_no] != NULL) {
+				unsupported::fornow ("Writing a single frame's depth info to more than one output file");
+			}
+
+			d3_depth[frame_no] = argv[i+2];
+
+			i+=2;
 
 		} else if (!strcmp(argv[i], "--mc")) {
 			if (i + 1 >= argc)
@@ -804,10 +920,44 @@ int main(int argc, const char *argv[]){
 			}
 
 			/*
-			 * Set exclusion regions
+			 * Apply implication logic.
+			 */
+
+			if (extend == 0 && vise_count != 0) {
+				implication::changed("VISP requires increased image extents.",
+				                     "Image extension is now enabled.",
+						     "--extend");
+				extend = 1;
+			}
+			
+			if (d3_output != NULL && ip_iterations != 0) 
+				unsupported::fornow("3D modeling with Irani-Peleg rendering");
+
+			if (extend == 0 && d3_output != NULL) {
+				implication::changed("3D modeling requires increased image extents.",
+				                     "Image extension is now enabled.",
+						     "--extend");
+				extend = 1;
+			}
+
+			if (cx_parameter != 0 && !exposure_register) {
+				implication::changed("Certainty-based rendering requires exposure registration.",
+				                     "Exposure registration is now enabled.",
+						     "--exp-register");
+				d2::align::exp_register();
+				exposure_register = 1;
+			}
+
+			/*
+			 * Set alignment class exclusion region static variables
 			 */
 
 			d2::align::set_exclusion(ex_parameters, ex_count);
+
+			/*
+			 * Initialize renderer class statics.
+			 */
+
 			d2::render::render_init(ex_count, ex_parameters, ex_show, extend, scale_factor);
 
 			/*
@@ -823,29 +973,6 @@ int main(int argc, const char *argv[]){
 
 			if (ip_iterations > 0 || psf_match || vise_count > 0) {
 				d2::align::keep();
-			}
-
-			/*
-			 * Apply implication logic.
-			 */
-#if 0
-			/*
-			 * XXX: if this is really desired, it must be moved above render_init().
-			 */
-			if (extend == 0 && vise_count != 0) {
-				implication::changed("VISP requires increased image extents.",
-				                     "Image extension is now enabled.",
-						     "--extend");
-				extend = 1;
-			}
-#endif
-
-			if (cx_parameter != 0 && !exposure_register) {
-				implication::changed("Certainty-based rendering requires exposure registration.",
-				                     "Exposure registration is now enabled.",
-						     "--exp-register");
-				d2::align::exp_register();
-				exposure_register = 1;
 			}
 
 			/*
@@ -872,6 +999,11 @@ int main(int argc, const char *argv[]){
 					device_response[psf_nonlinear] = NULL;
 					input_exposure = new ov7620_raw_linear::exposure[argc - i - 1];
 					d2::image_rw::set_default_bayer(IMAGE_BAYER_BGRG);
+				} else if (!strcmp(device, "canon_300d_raw_linear")) {
+					device_response[psf_linear] = new canon_300d_raw_linear::lpsf();
+					device_response[psf_nonlinear] = NULL;
+					input_exposure = new canon_300d_raw_linear::exposure[argc - i - 1];
+					d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
 				} else {
 					fprintf(stderr, "\n\n*** Error: Unknown device %s ***\n\n", device);
 					exit(1);
@@ -1221,6 +1353,52 @@ int main(int argc, const char *argv[]){
 			if  (ochain[opt]->sync() || !inc)
 				d2::image_rw::write_image(ochain_names[opt], ochain[opt]->get_image());
 
+			/*
+			 * Perform any 3D tasks
+			 */
+
+			if (d3_count > 0) {
+
+				fprintf(stderr, "Initializing view angle to %f radians", view_angle);
+				d3::align::init_angle(view_angle);
+				fprintf(stderr, ".\n");
+
+				fprintf(stderr, "Initializing 3D alignment from 2D alignment");
+				d3::align::init_from_d2();
+				fprintf(stderr, ".\n");
+
+				fprintf(stderr, "Initializing 3D scene from 2D scene");
+				d3::scene::init_from_d2();
+				fprintf(stderr, ".\n");
+
+				fprintf(stderr, "Reducing cost in 3D scene");
+				d3::scene::reduce_cost_to_search_depth(2);
+				fprintf(stderr, ".\n");
+
+				for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
+					assert (i < d3_count);
+
+					if (d3_depth[i] != NULL) {
+						const d2::image *im = d3::scene::depth(i);
+
+						d2::image_rw::write_image(d3_depth[i], im, output_exposure, 1, 1);
+					}
+
+					if (d3_output[i] != NULL) {
+						const d2::image *im = d3::scene::view(i);
+						d2::image_rw::write_image(d3_output[i], im, output_exposure);
+					}
+				}
+
+				for (unsigned int i = d2::image_rw::count(); i < d3_count; i++) {
+					if (d3_depth[i] != NULL) {
+						fprintf(stderr, "\n\n*** Frame number for --3dd too high. ***\n\n");
+					}
+					if (d3_output[i] != NULL) {
+						fprintf(stderr, "\n\n*** Frame number for --3dv too high. ***\n\n");
+					}
+				}
+			}
 
 			/*
 			 * Destroy the image file handler

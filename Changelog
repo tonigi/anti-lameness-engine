@@ -1,35 +1,47 @@
-0.7.1-patch2
+0.7.2
+
+o	Add cost-minimizing code to reconstruct 3D scenes from 2D inputs.
+	(This code is currently very experimental.)
+
+o	Add rudimentary device support for raw, linear files from the Canon
+	EOS 300D (Digital Rebel) SLR.  CRW files may not be directly usable
+	under all configurations; in cases where they are not, Dave Coffin's
+	dcraw program, with arguments -d -4, will produce a raw, linear PPM
+	file.  See http://www.cybercom.net/~dcoffin/dcraw/
 
 o	Add a new option --gs-mo to establish a minimum overlap area for
-	global searches.  In combination with --exp-noregister, this may allow
-	more of Derrick Brashear's historical USGS contour map image sets to
-	align successfully.
+	global searches.  This may allow more of Derrick Brashear's historical
+	USGS contour map image sets to align successfully.  (from
+	0.7.1-patch2)
 
-o	Allow the scale factor to be explicitly set to one.
+o	Allow the scale factor to be explicitly set to one. (from
+	0.7.1-patch2)
 
-o	Print version information to stdout instead of stderr.
+o	Print version information to stdout instead of stderr. (from
+	0.7.1-patch2)
 
-o	Add a rudimentary test suite.
-
-0.7.1-patch1
+o	Add a rudimentary test suite. (from 0.7.1-patch2)
 
 o	Add support for --perturb-{upper,lower}=x%, where the value x% is
 	specified as a percentage of the smallest image dimension.  Use of
-	percentages to specify bounds was suggested by Jeff Epler.
+	percentages to specify bounds was suggested by Jeff Epler. (from 
+	0.7.1-patch1)
 
 o	In render::is_excluded(), add the offset before checking exclusion
-	regions.
+	regions. (from 0.7.1-patch1)
 
 o	Add code to shrink the accumulated image in d2/render/incremental.h,
 	so that superfluously large undefined areas are never present.  This
-	may improve operation of '--gs inner' in some cases.
+	may improve operation of '--gs inner' in some cases. (from
+	0.7.1-patch1)
 
 o	In d2::align::_align(), rescale default_initial_alignment in parallel
 	with the current transformation, so that it can be used again, if
-	necessary.
+	necessary. (from 0.7.1-patch1)
 
 o	Add experimental options --perturb-source and --perturb-output, which
 	allow some refinement of the manner in which perturbation occurs.
+	(from 0.7.1-patch1)
 
 0.7.1
 

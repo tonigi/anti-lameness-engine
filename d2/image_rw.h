@@ -278,7 +278,7 @@ public:
 	/*
 	 * Write an image to a file
 	 */
-	static void write_image(const char *filename, const image *im, exposure *exp = output_exposure, int rezero = 0) {
+	static void write_image(const char *filename, const image *im, exposure *exp = output_exposure, int rezero = 0, int exp_scale_override = 0) {
 #ifdef USE_MAGICK
 		
 		/*
@@ -341,7 +341,7 @@ public:
 		ale_real minval = (rezero ? im->minval() : 0);
 		pixel minval_pixel(minval, minval, minval);
 
-		if (exposure_scale) {
+		if (exposure_scale || exp_scale_override) {
 			ale_real new_maxval = im->maxval();
 
 			if (new_maxval > maxval)
@@ -393,7 +393,7 @@ public:
 		DestroyImage(mi);
 		DestroyImageInfo(image_info);
 #else
-		write_ppm(filename, im, exp, mcv, ppm_type == 2, rezero, exposure_scale);
+		write_ppm(filename, im, exp, mcv, ppm_type == 2, rezero, exposure_scale || exp_scale_override);
 #endif
 	}
 

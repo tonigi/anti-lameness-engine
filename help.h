@@ -77,6 +77,7 @@ public:
 			"--hl              Filtering (PSFs, rendering chains).\n"
 			"--hd              Devices.\n"
 			"--hv              Video stream processing (Experimental).\n"
+			"--h3              3D Modeling (Very Experimental).\n"
 			"--hz              Undocumented options.\n"
 			"--hA              Concatenate all help pages.\n"
 			"\n",
@@ -281,7 +282,7 @@ public:
 			BETWEEN_SECTIONS
 			"Tunable parameters:\n"
 			HEADER_SPACE
-			"--scale=x         Scale images by the factor x      (where x is greater than 1)\n"
+			"--scale=x         Scale images by the factor x.         (where x is at least 1)\n"
 			"--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)\n"
 			BETWEEN_SECTIONS
 			"Irani-Peleg iterative solver (see --hq for defaults):\n"
@@ -382,6 +383,7 @@ public:
 			"                        xvp610_320x240\n"
 			"                        xvp610_640x480\n"
 			"                        ov7620_raw_linear\n"
+			"                        canon_300d_raw_linear\n"
 			"\n"
 		       );
 	}
@@ -499,6 +501,15 @@ public:
 			"                     <suffix> is an output file suffix\n"
 			"--visp-scale=<x>  Use scale <x> for VISP output.  (default is 1.0)\n"
 			"--exshow          For single-invariant chains, show --ex regions dimmed.\n"
+			"\n");
+	}
+	void d3() {
+		banner("3D Modeling (very experimental)");
+		fprintf(help_stream,
+			BETWEEN_SECTIONS
+			"3D Modeling:\n"
+			"--3dv <n> <o>     Render file <o> from a 3D model using the <n>th frame view.\n"
+			"--3dd <n> <o>     Render 3D depth information <o> for the view from frame <n>.\n"
 			"\n");
 	}
 	void undocumented() {
