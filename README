@@ -1,5 +1,5 @@
 ========================
-ALE version 0.7.3 README
+ALE version 0.8.0 README
 ========================
 
 This README discusses downloading, extraction, and compilation of ALE.
@@ -21,10 +21,11 @@ Subsections:
 		- Coordinate Data Precision
 		- FFTW Support
 		- POSIX Support
+		- IOCTL Support
 		- Assertions
 	+ Further Documentation
 	+ URLs
-	+ Contact
+	+ Mailing List
 
 
 Windows Binaries
@@ -34,7 +35,7 @@ Windows Binaries
 URLs
 ----
 
-http://auricle.dyndns.org/ALE/download/ale-0_7_3-win32.zip
+http://auricle.dyndns.org/ALE/download/ale-0_8_0-win32.zip
 
 
 Extraction and Use
@@ -62,7 +63,7 @@ Compiling from source
 URLs
 ----
 
-http://auricle.dyndns.org/ALE/download/ale-0.7.3.tar.gz
+http://auricle.dyndns.org/ALE/download/ale-0.8.0.tar.gz
 
 
 Build prerequisites
@@ -77,8 +78,8 @@ Extraction and Installation
 
 Download the source archive file from the URL indicated above, and invoke:
 
-	tar xzf ale-0.7.3.tar.gz
-	cd ale-0.7.3
+	tar xzf ale-0.8.0.tar.gz
+	cd ale-0.8.0
 	make [OPTIONS]
 
 where the text '[OPTIONS]' is replaced by zero or more of the compilation
@@ -168,6 +169,17 @@ POSIX=0                Do not use POSIX fork() and execlp()
 POSIX=1 *              Use POSIX fork() and execlp()
 
 
+IOCTL Support
+-------------
+
+This build option is required to obtain additional output from --ui=tty.  If
+TIOCGWINSZ is not defined in <sys/ioctl.h>, however, additional output will not
+be provided even if IOCTL=1 is specified at build time.
+
+IOCTL=0 *		Do not use ioctl()
+IOCTL=1			Use ioctl()
+
+
 Assertions
 ----------
 
@@ -198,7 +210,13 @@ Technical Description   http://auricle.dyndns.org/ALE/tech/
 Mailing list archive	http://ventricle.dyndns.org/pipermail/ale/
 
 
-Author
-======
+Mailing List
+============
 
-David Hilvert <dhilvert@auricle.dyndns.org>, <dhilvert@ugcs.caltech.edu>
+Bug reports, feature requests, patch and release announcements, and related
+discussion can be sent to ale@ventricle.dyndns.org.  Archives of past postings
+and subscription information are available at the URLs indicated below.
+
+Posting address		ale@ventricle.dyndns.org
+Subscription info	http://ventricle.dyndns.org/cgi-bin/mailman/listinfo/ale
+Archives		http://ventricle.dyndns.org/pipermail/ale/
