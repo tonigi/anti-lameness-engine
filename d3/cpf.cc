@@ -24,10 +24,10 @@
 
 #include "cpf.h"
 
-FILE *cpf::load_f;
-FILE *cpf::save_f;
-int cpf::load_version;
+FILE *cpf::load_f = NULL;
+FILE *cpf::save_f = NULL;
+int cpf::load_version = -1;
 
-const char *cpf::load_n;
-const char *cpf::save_n;
-int cpf::save_version;
+const char *cpf::load_n = NULL;
+const char *cpf::save_n = NULL;
+int cpf::save_version = 0;
