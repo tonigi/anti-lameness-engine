@@ -1,0 +1,52 @@
+ALE is the Anti-Lamenessing Engine
+
+This is a program designed to produce relatively alias-free images from digital
+camera samples.  Much of it could be applied to images from any source, as long
+as they are in PPM binary format.  
+
+Downloading a binary
+--------------------
+
+	Windows
+	-------
+
+	Download ale-x_x_x-win32.zip, unzip, and execute ale.exe.  Note that 
+	ALE takes arguments on the command line, so you may need to open a 
+	command prompt window to use ALE successfully.  Typing 'ale.exe' with 
+	no arguments will print a usage message.
+
+	
+	Other Platforms
+	---------------
+
+	No binaries provided.  Compile from source.
+
+
+Compiling from source
+---------------------
+
+You will need GCC and a make utility (GNU Make will do fine).  To compile from
+source, download the tarball into a directory, expand it with 'tar xzf
+ale-x.x.x.tar.gz', enter the unzipped directory, and type 'make'.  The makefile
+may need some tweaking on Windows systems (e.g. you may want to write the output
+to 'ale.exe' or something.
+
+
+Using ALE
+---------
+
+Usage: ale [--scale2] [--scale4] [--scale8] <input-files> ... <output-file>
+
+This program clips several supplemental frames against an original frame and
+merges the results into a single output file result.  The first input file is
+considered the original frame, and subsequent input files are considered
+supplemental frames.  All files must be in PPM binary (as opposed to ascii)
+format.  The merge is produced incrementally, and you can inspect the output
+file as the process progresses.  If a scaling argument is given, the program
+will internally scale all input frames up by 2, 4, or 8, respectively,
+resulting in an output file of this larger scale.
+
+Contact
+-------
+
+David Hilvert <dhilvert@ugcs.caltech.edu>
