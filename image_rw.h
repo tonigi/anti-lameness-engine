@@ -197,12 +197,18 @@ private:
 	 * See if a file works with stat().
 	 */
 	static void try_stat(const char *filename) {
+#if 0
 		struct stat s;
+		/*
+		 * Removed in ALE 0.4.5
+		 */
+
 		if (stat(filename, &s)) {
 			fprintf(stderr, "Error trying to stat file '%s'.\n", 
 					filename);
 			exit(1);
 		}
+#endif
 	}
 
 	/*
@@ -214,7 +220,6 @@ private:
 	static const char *output_filename;
 	static const image **images;
 	static int *files_open;
-	static double scale_factor;
 
 	static int latest_close_num;
 	static const image *latest_close;
@@ -230,7 +235,7 @@ public:
 	 * freed.
 	 */
 	static void init(int _filename_count, const char **_filenames, 
-			const char *_output_filename, double _scale_factor){
+			const char *_output_filename){
 		assert (_filename_count > 0);
 
 		init_image();
@@ -238,7 +243,6 @@ public:
 		filenames = _filenames;
 		filename_count = _filename_count;
 		output_filename = _output_filename;
-		scale_factor = _scale_factor;
 
 		images = (const image **)malloc(filename_count * sizeof(image *));
 		files_open = (int *)calloc(filename_count, sizeof(int));
@@ -251,9 +255,16 @@ public:
 			exit(1);
 		}
 
+#if 0
+
+		/*
+		 * Removed in 0.4.5
+		 */
+
 		for (int i = 0; i < filename_count; i++) {
 			try_stat(filenames[i]);
 		}
+#endif
 
 		fprintf(stderr, "Output file will be '%s'.\n", 
 				output_filename);
@@ -299,8 +310,6 @@ public:
 		} else {
 			image *i = read_image(filenames[n]);
 
-			i->scale(scale_factor);
-
 			images[n] = i;
 			files_open[n] = 1;
 		}
@@ -315,7 +324,6 @@ public:
 			return images[n]->clone();
 		else {
 			image *i = read_image(filenames[n]);
-			i->scale(scale_factor);
 			return i;
 		}
 	}

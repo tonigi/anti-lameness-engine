@@ -183,9 +183,9 @@ private:
 				if (top < bot 
 				 && lef < rig 
 				 && ii >= 0
-				 && ii * scale_factor < delta->height()
+				 && ii < (int) delta->height()
 				 && jj >= 0
-				 && jj * scale_factor < delta->width()) {
+				 && jj < (int) delta->width()) {
 
 					double weight = drizzle_weight->get_pixel_component(i, j, 0);
 					double thisw  = (bot - top) * (rig - lef) / (di * dj);
@@ -196,10 +196,7 @@ private:
 						drizzle_image->set_pixel_component(i, j, k, 
 							(int) ((weight * drizzle_image->get_pixel_component(
 								i, j, k) + thisw
-								 * delta->get_pixel_component(
-									 (int) (ii * scale_factor), 
-									 (int) (jj * scale_factor), 
-									 k))
+								 * delta->get_pixel_component(ii, jj, k))
 							/ (weight + thisw)));
 				}
 			}
@@ -253,7 +250,7 @@ public:
 				drizzle_weight = new_image_weights(drizzle_image->height(),
 						drizzle_image->width(), 1);
 
-				_drizzle(im, transformation::eu_identity(im));
+				_drizzle(im, transformation::eu_identity(im, scale_factor));
 
 				image_rw::close(0);
 			} else if (align::match(i)) {

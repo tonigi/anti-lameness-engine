@@ -332,7 +332,7 @@ public:
 	/*
 	 * Calculate euclidean identity transform for a given image.
 	 */
-	static struct transformation eu_identity(const image *i) {
+	static struct transformation eu_identity(const image *i, double scale_factor) {
 		struct transformation r;
 
 		r.resultant_memo = 0;
@@ -341,8 +341,8 @@ public:
 		r.eu[0] = 0;
 		r.eu[1] = 0;
 		r.eu[2] = 0;
-		r.input_width = i->width();
-		r.input_height = i->height();
+		r.input_width = i->width() * scale_factor;
+		r.input_height = i->height() * scale_factor;
 
 		r.is_projective = 0;
 
@@ -352,8 +352,8 @@ public:
 	/*
 	 * Calculate projective identity transform for a given image.
 	 */
-	static transformation gpt_identity(const image *i) {
-		struct transformation r = eu_identity(i);
+	static transformation gpt_identity(const image *i, double scale_factor) {
+		struct transformation r = eu_identity(i, scale_factor);
 
 		r.eu_to_gpt();
 
@@ -484,10 +484,10 @@ public:
 	 * If we are using a projective transform, we may need to change the
 	 * corner points to reflect a different image size.
 	 */
-	void rescale(const image *im) {
+	void rescale(const image *im, double scale_factor) {
 
-		int new_height = im->height();
-		int new_width  = im->width();
+		int new_height = (int) (im->height() * scale_factor);
+		int new_width  = (int) (im->width() * scale_factor);
 
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;

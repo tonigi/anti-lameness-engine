@@ -38,6 +38,8 @@ private:
 	 * Private data members
 	 */
 
+	static double scale_factor;
+
 	/*
 	 * Keep data older than latest
 	 */
@@ -191,7 +193,7 @@ private:
 	 * all pixels.
 	 *
 	 */
-	static double diff(image *a, image *b, transformation t, double _mc_arg) {
+	static double diff(image *a, image *b, image_weights *d, transformation t, double _mc_arg) {
 		assert (reference_image);
 		float result = 0;
 		float divisor = 0;
@@ -225,7 +227,7 @@ private:
 				 */
 
 				struct point q;
-				struct point offset = reference_image->offset();
+				struct point offset = a->offset();
 
 				q = t.inverse_transform(
 					point(i + offset[0], j + offset[1]));
@@ -248,11 +250,11 @@ private:
 				 && tj >= 0
 				 && tj <= b->width() - 1
 				 && (extend == 0
-				  || (i >= -offset[0]
-				   && j >= -offset[1] 
-				   && i <  -offset[0] + extend_orig_height
-				   && j <  -offset[1] + extend_orig_width)
-				  || reference_defined->get_pixel_component(i, j, 0) != 0)) { 
+				  // || (i >= -offset[0]
+				  //  && j >= -offset[1] 
+				  //  && i <  -offset[0] + extend_orig_height
+				  //  && j <  -offset[1] + extend_orig_width)
+				  || d->get_pixel_component(i, j, 0) != 0)) { 
 
 					if (channel_alignment_type == 0) {
 						/*
@@ -354,7 +356,7 @@ private:
 				 */
 
 				struct point q;
-				struct point offset = reference_image->offset();
+				struct point offset = a->offset();
 
 				q = t.inverse_transform(
 					point(i + offset[0], j + offset[1]));
@@ -377,11 +379,11 @@ private:
 				 && tj >= 0
 				 && tj <= b->width() - 1
 				 && (extend == 0
-				  || (i >= -offset[0]
-				   && j >= -offset[1] 
-				   && i <  -offset[0] + extend_orig_height
-				   && j <  -offset[1] + extend_orig_width)
-				  || reference_defined->get_pixel_component(i, j, 0) != 0)) { 
+				  // || (i >= -offset[0]
+				  //  && j >= -offset[1] 
+				  //  && i <  -offset[0] + extend_orig_height
+				  //  && j <  -offset[1] + extend_orig_width)
+				  || d->get_pixel_component(i, j, 0) != 0)) { 
 
 					if (channel_alignment_type == 0) {
 						/*
@@ -445,11 +447,13 @@ private:
 		int step;
 		image **accum_scales = (image **) malloc(steps * sizeof(image *));
 		image **input_scales = (image **) malloc(steps * sizeof(image *));
+		image_weights **defined_scales = (image_weights **) malloc(steps * sizeof(image_weights *));
 
 		assert (accum_scales);
 		assert (input_scales);
+		assert (defined_scales);
 
-		if (!accum_scales || !input_scales) {
+		if (!accum_scales || !input_scales || !defined_scales) {
 			fprintf(stderr, "Couldn't allocate memory for alignment.\n");
 			exit(1);
 		}
@@ -468,13 +472,20 @@ private:
 		 */
 
 		accum_scales[0] = reference_image->clone();
+		if (extend)
+			defined_scales[0] = reference_defined->clone();
 		input_scales[0] = input_frame->clone();
+		input_scales[0]->scale(scale_factor);
 		
 		for (step = 1; step < steps; step++) {
 			accum_scales[step] = accum_scales[step - 1]->clone();
-			accum_scales[step]->scale(0.5);
+			accum_scales[step]->scale_by_half();
 			input_scales[step] = input_scales[step - 1]->clone();
-			input_scales[step]->scale(0.5);
+			input_scales[step]->scale_by_half();
+			if (extend) {
+				defined_scales[step] = defined_scales[step - 1]->clone();
+				defined_scales[step]->defined_scale_by_half();
+			}
 		}
 
 		/*
@@ -495,16 +506,22 @@ private:
 			 */
 
 			default_initial_alignment = (alignment_class == 2)
-					  ?  transformation::gpt_identity(input_frame)
-					  :  transformation:: eu_identity(input_frame);
+					  ?  transformation::gpt_identity(input_frame, scale_factor)
+					  :  transformation:: eu_identity(input_frame, scale_factor);
 
 		else if (default_initial_alignment_type == 1)
 
 			/*
 			 * Follow previous transformation
+			 *
+			 * NB: (input_frame, scale_factor) is used as an
+			 * idiom to mean "the current input scaled by the given
+			 * factor".  Hence, we are 'rescaling' according to the
+			 * new input frame dimensions; the scale factor merely
+			 * adjusts these dimensions.
 			 */
 
-			default_initial_alignment.rescale(input_frame);
+			default_initial_alignment.rescale(input_frame, scale_factor);
 
 		else
 			assert(0);
@@ -514,10 +531,11 @@ private:
 		double _mc_arg = _mc * pow(2, 2 * lod);
 		image *ai = accum_scales[lod];
 		image *ii = input_scales[lod];
+		image_weights *di = defined_scales[lod];
 		double adj_p = (perturb >= pow(2, lod_diff))
 			     ? pow(2, lod_diff) : perturb;
 
-		here = diff(ai, ii, offset, _mc_arg);
+		here = diff(ai, ii, di, offset, _mc_arg);
 
 		/*
 		 * Simulated annealing perturbation adjustment loop.  
@@ -546,7 +564,7 @@ private:
 
 					test_t.eu_modify(i, adj_s);
 
-					test_d = diff(ai, ii, test_t, _mc_arg);
+					test_d = diff(ai, ii, di, test_t, _mc_arg);
 
 					if (test_d < here) {
 						here = test_d;
@@ -569,7 +587,7 @@ private:
 
 					test_t.gpt_modify(j, i, adj_s);
 
-					test_d = diff(ai, ii, test_t, _mc_arg);
+					test_d = diff(ai, ii, di, test_t, _mc_arg);
 
 					if (test_d < here) {
 						here = test_d;
@@ -601,10 +619,10 @@ private:
 					lod--;
 					ai = accum_scales[lod];
 					ii = input_scales[lod];
+					di = defined_scales[lod];
 					_mc_arg /= 4;
 
-					if (perturb >= perturb_lower)
-						here = diff(ai, ii, offset, _mc_arg);
+					here = diff(ai, ii, di, offset, _mc_arg);
 
 				} else {
 					adj_p = perturb;
@@ -618,15 +636,23 @@ private:
 			}
 		}
 
+		if (lod > 0) {
+			offset.rescale(pow(2, lod));
+			here = diff(accum_scales[0], input_scales[0], defined_scales[0], offset, _mc);
+		}
+
 		/*
 		 * Free the level-of-detail structures
 		 */
 		for (step = 0; step < steps; step++) {
 			delete accum_scales[step];
 			delete input_scales[step];
+			if (extend)
+				delete defined_scales[step];
 		}
 		free(accum_scales);
 		free(input_scales);
+		free(defined_scales);
 
 		/*
 		 * Save the transformation information
@@ -682,9 +708,9 @@ private:
 
 				default_initial_alignment = (alignment_class == 2)
 						  ? transformation
-							:: gpt_identity(reference_image)
+							:: gpt_identity(reference_image, scale_factor)
 						  : transformation
-							::  eu_identity(reference_image);
+							::  eu_identity(reference_image, scale_factor);
 
 				if (_keep > 0) {
 					kept_t = (transformation *) malloc(image_rw::count()
@@ -826,6 +852,13 @@ public:
 	}
 
 	/*
+	 * Set the scale factor
+	 */
+	static void set_scale(double s) {
+		scale_factor = s;
+	}
+
+	/*
 	 * Set reference rendering to align against
 	 */
 	static void set_reference(render *r) {
@@ -884,7 +917,7 @@ public:
 		if (n == 0) {
 			const image *i = image_rw::open(n);
 			transformation result = 
-				transformation::eu_identity(i);
+				transformation::eu_identity(i, scale_factor);
 			image_rw::close(n);
 			return result;
 		} else if (n == latest)

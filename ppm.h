@@ -135,12 +135,18 @@ static inline image *read_ppm(const char *filename) {
 
 	/* Pixels */
 
+#if 1
 	for (i = 0; i < im->height(); i++)
 	for (j = 0; j < im->width();  j++)
 	for (k = 0; k < im->depth();  k++) {
 		fscanf(f, "%c", &val);
 		im->set_pixel_component(i, j, k, val);
 	}
+#else
+	/* 15% improvement in speed; tested for ALE 0.4.5  */
+
+	fread(im->get_pixel_array(), 1, im->height() * im->width() * im->depth(), f);
+#endif
 
 	/* Done */
 

@@ -95,6 +95,16 @@ public:
 		_p[y * _dimx * _depth + x * _depth + color] = value;
 	}
 
+#if 0
+
+	/* Tested for ALE 0.4.5 */
+
+	unsigned char *get_pixel_array() {
+		_apm_memo = 0;
+		return _p;
+	}
+#endif
+
 	/*
 	 * Get a color value at a given position using bilinear interpolation between the
 	 * four nearest pixels.
@@ -132,9 +142,33 @@ public:
 	}
 
 	/*
-	 * Scale by some factor
+	 * Get a color value at a given position using bilinear interpolation between the
+	 * four nearest pixels.
+	 */
+	colorT get_scaled_bl_component(double y, double x, unsigned int color, double f) const {
+		return get_bl_component(
+			(y/f <= height() - 1) 
+				? (y/f) 
+				: (height() - 1), 
+			(x/f <= width() - 1)
+				? (x/f) 
+				: (width() - 1), color);
+	}
+
+	/*
+	 * Scale by some factor >= 1.0.
 	 */
 	void scale(double f) {
+
+		if (f == 1.0)
+			return;
+
+		/*
+		 * Assertion:
+		 *
+		 * This is not a good way to scale down images.  
+		 */
+		assert (f > 1.0);
 
 		image_base<colorT> *is = new image_base<colorT> (
 			(int) floor(height() * f), 
@@ -148,13 +182,7 @@ public:
 		for (j = 0; j < is->width(); j++) 
 		for (k = 0; k < is->depth(); k++)
 			is->set_pixel_component(i, j, k,
-				get_bl_component(
-					(i/f <= height() - 1) 
-						? (i/f) 
-					        : (height() - 1), 
-					(j/f <= width() - 1)
-						? (j/f) 
-						: (width() - 1), k));
+				get_scaled_bl_component(i, j, k, f));
 
 		free(_p);
 
@@ -163,6 +191,187 @@ public:
 		_dimy = is->_dimy;
 		_depth = is->_depth;
 		_apm_memo = 0;
+		_offset = point(_offset[0] * f, _offset[1] * f);
+
+		is->_p = NULL;
+
+		delete is;
+	}
+
+	/*
+	 * Scale by half.  We use the following filter:
+	 *
+	 * 	1/16	1/8	1/16
+	 * 	1/8	1/4	1/8
+	 * 	1/16	1/8	1/16
+	 *
+	 * At the edges, these values are normalized so that the sum of
+	 * contributing pixels is 1.
+	 */
+	void scale_by_half() {
+		double f = 0.5;
+
+		image_base<colorT> *is = new image_base<colorT> (
+			(int) floor(height() * f), 
+			(int) floor(width()  * f), depth());
+
+		assert(is);
+
+		unsigned int i, j, k;
+
+		for (i = 0; i < is->height(); i++)
+		for (j = 0; j < is->width(); j++) 
+		for (k = 0; k < is->depth(); k++)
+
+			is->set_pixel_component(i, j, k, (int) 
+
+			      ( ( (i > 0 && j > 0) 
+				    ? get_pixel_component(2 * i - 1, 2 * j - 1, k) * 0.0625
+				    : 0
+				+ (i > 0)
+				    ? get_pixel_component(2 * i - 1, 2 * j, k) * 0.125
+				    : 0
+				+ (i > 0 && j < is->width() - 1)
+				    ? get_pixel_component(2 * i - 1, 2 * j + 1, k) * 0.0625
+				    : 0
+				+ (j > 0)
+				    ? get_pixel_component(2 * i, 2 * j - 1, k) * 0.125
+				    : 0
+				+ get_pixel_component(2 * i, 2 * j, k) * 0.25
+				+ (j < is->width() - 1)
+				    ? get_pixel_component(2 * i, 2 * j + 1, k) * 0.125
+				    : 0
+				+ (i < is->height() - 1 && j > 0)
+				    ? get_pixel_component(2 * i + 1, 2 * j - 1, k) * 0.0625
+				    : 0
+				+ (i < is->height() - 1)
+				    ? get_pixel_component(2 * i + 1, 2 * j, k) * 0.125
+				    : 0
+				+ (i < is->height() && j < is->width() - 1)
+				    ? get_pixel_component(2 * i + 1, 2 * j + 1, k) * 0.0625 
+				    : 0 ) 
+
+			     /
+
+				( (i > 0 && j > 0) 
+				    ? 0.0625
+				    : 0
+				+ (i > 0)
+				    ? 0.125
+				    : 0
+				+ (i > 0 && j < is->width() - 1)
+				    ? 0.0625
+				    : 0
+				+ (j > 0)
+				    ? 0.125
+				    : 0
+				+ 0.25
+				+ (j < is->width() - 1)
+				    ? 0.125
+				    : 0
+				+ (i < is->height() - 1 && j > 0)
+				    ? 0.0625
+				    : 0
+				+ (i < is->height() - 1)
+				    ? 0.125
+				    : 0
+				+ (i < is->height() && j < is->width() - 1)
+				    ? 0.0625
+				    : 0 ) ) );
+
+		free(_p);
+
+		_p = is->_p;
+		_dimx = is->_dimx;
+		_dimy = is->_dimy;
+		_depth = is->_depth;
+		_apm_memo = 0;
+		_offset = point(_offset[0] * f, _offset[1] * f);
+
+		is->_p = NULL;
+
+		delete is;
+	}
+
+	/*
+	 * Scale an image definition array by 1/2.
+	 *
+	 * ALE considers an image definition array as a special kind of image
+	 * weight array (typedefs of which should appear below the definition
+	 * of this class).  ALE uses nonzero pixel values to mean 'defined' and
+	 * zero values to mean 'undefined'.  Through this interpretation, the
+	 * image weight array implementation that ALE uses allows image weight
+	 * arrays to also serve as image definition arrays.
+	 *
+	 * Whereas scaling of image weight arrays is not generally obvious in
+	 * either purpose or method, ALE requires that image definition arrays
+	 * be scalable, and the method we implement here is a fairly obvious
+	 * one.  In particular, if any source pixel contributing to the value of 
+	 * a scaled target pixel has an undefined value, then the scaled target
+	 * pixel is undefined (zero).  Otherwise, it is defined (non-zero).
+	 * 
+	 * Since there are many possible ways of implementing this function, we
+	 * choose an easy way and simply multiply the numerical values of the
+	 * source pixels to obtain the value of the scaled target pixel.
+	 *
+	 * XXX: we consider all pixels within a 9-pixel square to contribute.
+	 * There are other approaches.  For example, edge pixels could be
+	 * considered to have six contributing pixels and corner pixels four
+	 * contributing pixels.  To use this convention, change the ': 0' text
+	 * in the code below to ': 1'.
+	 */
+
+	void defined_scale_by_half() {
+		double f = 0.5;
+
+		image_base<colorT> *is = new image_base<colorT> (
+			(int) floor(height() * f), 
+			(int) floor(width()  * f), depth());
+
+		assert(is);
+
+		unsigned int i, j, k;
+
+		for (i = 0; i < is->height(); i++)
+		for (j = 0; j < is->width(); j++) 
+		for (k = 0; k < is->depth(); k++)
+
+			is->set_pixel_component(i, j, k,
+
+				( (i > 0 && j > 0) 
+				    ? get_pixel_component(2 * i - 1, 2 * j - 1, k)
+				    : 0
+				* (i > 0)
+				    ? get_pixel_component(2 * i - 1, 2 * j, k)
+				    : 0
+				* (i > 0 && j < is->width() - 1)
+				    ? get_pixel_component(2 * i - 1, 2 * j + 1, k)
+				    : 0
+				* (j > 0)
+				    ? get_pixel_component(2 * i, 2 * j - 1, k)
+				    : 0
+				* get_pixel_component(2 * i, 2 * j, k)
+				* (j < is->width() - 1)
+				    ? get_pixel_component(2 * i, 2 * j + 1, k)
+				    : 0
+				* (i < is->height() - 1 && j > 0)
+				    ? get_pixel_component(2 * i + 1, 2 * j - 1, k)
+				    : 0
+				* (i < is->height() - 1)
+				    ? get_pixel_component(2 * i + 1, 2 * j, k)
+				    : 0
+				* (i < is->height() && j < is->width() - 1)
+				    ? get_pixel_component(2 * i + 1, 2 * j + 1, k)
+				    : 0 ) );
+
+		free(_p);
+
+		_p = is->_p;
+		_dimx = is->_dimx;
+		_dimy = is->_dimy;
+		_depth = is->_depth;
+		_apm_memo = 0;
+		_offset = point(_offset[0] * f, _offset[1] * f);
 
 		is->_p = NULL;
 
@@ -225,6 +434,8 @@ public:
 				get_pixel_component(i, j, k));
 
 		ic->_apm_memo = _apm_memo;
+		ic->_apm = _apm;
+		ic->_offset = _offset;
 
 		return ic;
 	}

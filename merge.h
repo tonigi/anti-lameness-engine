@@ -34,6 +34,7 @@ private:
 	image_weights *accum_weight;
 	int step;
 	int extend;
+	double scale_factor;
 
 	/*
 	 * Increase extents of image and weight according to a new image to be
@@ -126,9 +127,9 @@ private:
 				 */
 
 				if (ti >= 0
-				 && ti <= delta->height() - 1
+				 && ti <= delta->height() * scale_factor - 1
 				 && tj >= 0
-				 && tj <= delta->width() - 1){ 
+				 && tj <= delta->width() * scale_factor - 1){ 
 
 					/*
 					 * Determine and update merging weight at this pixel
@@ -144,7 +145,9 @@ private:
 					for (k = 0; k < 3; k++)
 						accum_image->set_pixel_component(i, j, k, (unsigned char)
 							((weight * accum_image->get_pixel_component(i, j, k)
-						     +   delta->get_bl_component(ti, tj, k)) / (weight + 1)));
+						     +   delta->get_scaled_bl_component(
+							     ti, tj, k, scale_factor)) 
+							 / (weight + 1)));
 				}
 			}
 	}
@@ -154,9 +157,10 @@ public:
 	/*
 	 * Constructor
 	 */
-	merge(int extend) {
+	merge(int extend, double scale_factor) {
 		step = -1;
 		this->extend = extend;
+		this->scale_factor = scale_factor;
 		accum_weight = NULL;
 		accum_image = NULL;
 	}
@@ -191,10 +195,12 @@ public:
 				const image *im = image_rw::open(0);
 
 				accum_image = image_rw::copy(0);
+				accum_image->scale(scale_factor);
+
 				accum_weight = new_image_weights(accum_image->height(),
 						accum_image->width(), 1);
 
-				_merge(im, transformation::eu_identity(im));
+				_merge(im, transformation::eu_identity(im, scale_factor));
 
 				image_rw::close(0);
 			} else if (align::match(i)) {

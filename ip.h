@@ -37,6 +37,11 @@ class ip : public render {
         double radius;
         unsigned int iterations;
 
+	/* 
+	 * Adjust correction array C based on the difference between the
+	 * simulated projected image and actual image M. 
+	 */
+
         void _ip_frame(image_weights *c, int m) {
 
                 transformation t = align::of(m);
@@ -46,6 +51,10 @@ class ip : public render {
                 image_weights *iw = new image_weights(
                                 im->height(),
                                 im->width(), 1);
+
+		/*
+		 * First, calculate the simulated projected image.
+		 */
 
                 for (unsigned int i = 0; i < done_image->height(); i++)
                 for (unsigned int j = 0; j < done_image->width();  j++) {
@@ -102,33 +111,21 @@ class ip : public render {
 
                                 if (top < bot
                                  && lef < rig
-                                 && ii >= 0
-                                 && ii * scale_factor < im->height()
-                                 && jj >= 0
-                                 && jj * scale_factor < im->width()) {
+                                 && ii >= (int) 0
+                                 && ii < (int) im->height()
+                                 && jj >= (int) 0
+                                 && jj < (int) im->width()) {
 
-                                        double weight = iw->get_pixel_component(
-                                                        (int)(ii * scale_factor),
-                                                        (int)(jj * scale_factor),
-                                                        0);
+                                        double weight = iw->get_pixel_component(ii, jj, 0);
                                         double thisw  = (bot - top) * (rig - lef);
 
-                                        iw->set_pixel_component(
-                                                        (int)(ii * scale_factor),
-                                                        (int)(jj * scale_factor),
-                                                        0,
-                                                        weight + thisw);
+                                        iw->set_pixel_component(ii, jj, 0, weight + thisw);
 
                                         for (int k = 0; k < 3; k++)
-                                                forward->set_pixel_component(
-							(int)(ii * scale_factor),
-                                                        (int)(jj * scale_factor),
-							k, 
+                                                forward->set_pixel_component(ii, jj, k,
 							(int)((weight 
 							       * forward->get_pixel_component(
-									(int)(ii * scale_factor),
-									(int)(jj * scale_factor),
-									k)
+							       		ii, jj, k)
 							     + thisw 
 							       * done_image->get_pixel_component(
                                                                          i, j, k))
@@ -136,6 +133,13 @@ class ip : public render {
                                 }
                         }
                 }
+
+		/*
+		 * Now calculate the differences between the simulated
+		 * image and the actual image, and add this difference, 
+		 * for each pixel, to the corresponding pixel in the
+		 * correction array C.
+		 */
 
                 for (unsigned int i = 0; i < done_image->height(); i++)
                 for (unsigned int j = 0; j < done_image->width();  j++) {
@@ -195,9 +199,9 @@ class ip : public render {
                                 if (top < bot
                                  && lef < rig
                                  && ii >= 0
-                                 && ii * scale_factor < im->height()
+                                 && ii < (int) im->height()
                                  && jj >= 0
-                                 && jj * scale_factor < im->width()) {
+                                 && jj < (int) im->width()) {
 
                                         double weight = c->get_pixel_component(
                                                         i, j, 3);
@@ -216,13 +220,9 @@ class ip : public render {
                                                                         i, j, k)
                                                               + thisw
                                                                 * (im->get_pixel_component(
-                                                                        (int)(ii * scale_factor),
-                                                                        (int)(jj * scale_factor),
-                                                                        k)
+									ii, jj, k)
                                                                  - forward->get_pixel_component(
-                                                                         (int)(ii * scale_factor),
-                                                                         (int)(jj * scale_factor),
-                                                                         k)))
+									 ii, jj, k)))
                                                         / (weight + thisw)));
                                 }
                         }
@@ -232,6 +232,12 @@ class ip : public render {
                 delete iw;
                 delete forward;
         }
+
+	/*
+	 * Iterate _ip_frame() over all frames, and update DONE_IMAGE after
+	 * corrections from all frames have been summed.  Repeat for the number
+	 * of iterations specified by the user.
+	 */
 
         void _ip() {
                 for (unsigned int n = 0; n < iterations; n++) {

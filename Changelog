@@ -1,3 +1,36 @@
+0.4.5
+
+o	Ensure correct transformation scaling and difference calculation after
+	alignment is complete, even if alignment terminates with a reduced
+	level of detail (i.e. perturb-lower > 2).
+
+o	Separate the scale() function into two cases: scale() is reserved for
+	scale factors greater than or equal to one, as in user-specified
+	scaling; and scale_by_half() is used for the scale factor 0.5, needed
+	to provide multiple levels of detail in alignment.  Modify the
+	scale_by_half() case to reflect source pixel values more fairly.  (This
+	change affects alignment behavior at reduced levels of detail.)
+
+o	Reduce whitespace in usage() message.
+
+o	Modify align::diff() to use correctly scaled image offset values.
+	(Bugfix for alignment with --extend.)
+
+o	Modify align.h so that the image definition array is correctly scaled
+	for all levels of detail.  (Bugfix for alignment with --extend.)
+
+o	Modify image.h to correctly handle image offset values.  (Bugfix
+	for --extend operation.)
+
+o	Remove call to stat() in image_rw.h.  This improves OS independence,
+	and apparently also allows URL-specification of images when compiled
+	with ImageMagick support.
+
+o	Modify image file handler interface so that input files are not scaled.
+	Perform scaling, when necessary, outside of the file handler.  Since
+	unscaled data is needed by the drizzling and Irani-Peleg code, this
+	fixes bugs in those modules.  
+
 0.4.4
 
 o	Modify the Monte Carlo pixel selection algorithm so that the expected

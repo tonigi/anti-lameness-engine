@@ -1,5 +1,7 @@
 #include "align.h"
 
+double align::scale_factor;
+
 int align::_keep = 0;
 transformation *align::kept_t = NULL;
 int *align::kept_ok = NULL;

@@ -40,7 +40,7 @@
  * Version Information
  */
 
-char *version = "0.4.4"
+char *version = "0.4.5"
 #ifdef USE_MAGICK
 		" (File handler: ImageMagick)";
 #else
@@ -52,58 +52,73 @@ char *version = "0.4.4"
  * Describe how to use this program
  */
 inline void usage(const char *argv0) {
+#define BETWEEN_SECTIONS "\n"
+#define HEADER_SPACE ""
 	fprintf(stderr, 
 		"\n"
 		"Usage: %s [<options>] <original-frame> [<supplemental-frame> ...] <output-file>\n"
 		"   or: %s --version\n"
-		"\n\n"
-		"Alignment channel options:\n\n"
+		BETWEEN_SECTIONS
+		"Alignment channel options:\n"
+		HEADER_SPACE
 		"--align-all       Align images using all color channels\n"
 		"--align-green     Align images using the green channel\n"
 		"--align-sum       Align images using a sum of channels [default]\n"
-		"\n\n"
-		"Transformation options:\n\n"
+		BETWEEN_SECTIONS
+		"Transformation options:\n"
+		HEADER_SPACE
 		"--translation     Only adjust the position of images\n"
 		"--euclidean       Adjust the position and orientation of images [default]\n"
 		"--projective      Use projective transformations.  Best quality, but slow.\n"
-		"\n\n"
-		"Image extents:\n\n"
+		BETWEEN_SECTIONS
+		"Image extents:\n"
+		HEADER_SPACE
 		"--extend          Increase image extents to accommodate all pixel data.\n"
 		"--no-extend       Don't increase extents; crop to original frame. [default]\n"
-		"\n\n"
-		"Transformation defaults:\n\n"
+		BETWEEN_SECTIONS
+		"Transformation defaults:\n"
+		HEADER_SPACE
 		"--identity        Default alignment begins with identity transform. [default]\n"
 		"--follow          Default alignment begins with the previous frame's transform.\n"
-		"\n\n"
-		"Transformation file operations:\n\n"
+		BETWEEN_SECTIONS
+		"Transformation file operations:\n"
+		HEADER_SPACE
 		"--trans-load=x    Load initial transformation settings from file x\n"
 		"--trans-save=x    Save final transformation data in file x\n"
-		"\n\n"
-		"Tunable parameters:\n\n"
+		BETWEEN_SECTIONS
+		"Tunable parameters:\n"
+		HEADER_SPACE
 		"--scale=x         Scale images by the factor x (where x is at least 1.0)\n"
 		"--hf-enhance=x    Enhance high frequency details by factor x. (0.0 is default)\n"
 		"--metric=x        Set the error metric exponent (2 is default)\n"
 		"--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)\n"
 		"--perturb-upper=x Max. correction step, in pixels or degrees (32.0 is default)\n"
 		"--perturb-lower=x Min. correction step, in pixels or degrees (0.125 is default)\n"
-		"\n\n"
-		"Drizzling:\n\n"
+		BETWEEN_SECTIONS
+		"Drizzling:\n"
+		HEADER_SPACE
 		"--drizzle-diam=x  Drizzle with input pixel diameter x (where 0 < x <= 1).\n"
 		"--drizzle-only    If drizzling, output black for pixels with no drizzle data.\n"
-		"\n\n"
-		"Image reconstruction:\n\n"
+		BETWEEN_SECTIONS
+		"Image reconstruction:\n"
+		HEADER_SPACE
 		"--ip <d> <i>      Irani-Peleg solve with pixel diameter <d> for <i> iterations.\n"
-		"\n\n"
-		"Monte Carlo alignment:\n\n"
+		BETWEEN_SECTIONS
+		"Monte Carlo alignment:\n"
+		HEADER_SPACE
 		"--mc <x>          Align using, on average, x%% of available pixels (0 < x < 100)\n"
 		"--no-mc           Align using all pixels.  [default]\n"
-		"\n\n"
-		"File output options:\n\n"
+		BETWEEN_SECTIONS
+		"File output options:\n"
+		HEADER_SPACE
 		"--inc             Produce incremental image output.  [default]\n"
 		"--no-inc          Don't produce incremental image output.\n"
 		"\n",
 		argv0, argv0);
 	exit(1);
+
+#undef BETWEEN_SECTIONS
+#undef HEADER_SPACE
 }
 
 /*
@@ -224,6 +239,7 @@ int main(int argc, const char *argv[]){
 			if (scale_factor < 1.0) {
 				fprintf(stderr, "\n\n*** Warning: Ignoring scale value "
 						"smaller than 1.0 ***\n\n\n");
+				scale_factor = 1.0;
 			}
 		} else if (!strncmp(argv[i], "--metric=", strlen("--metric="))) {
 			double metric;
@@ -275,8 +291,7 @@ int main(int argc, const char *argv[]){
 			if (i >= argc - 1)
 				usage(argv[0]);
 
-			image_rw::init(argc - i - 1, argv + i, argv[argc - 1], 
-					scale_factor);
+			image_rw::init(argc - i - 1, argv + i, argv[argc - 1]);
 
 			/*
 			 * Write comment information about original frame and
@@ -291,7 +306,7 @@ int main(int argc, const char *argv[]){
 			 * Create merge renderer.
 			 */
 
-			merge *_merge = new merge(extend);
+			merge *_merge = new merge(extend, scale_factor);
 
 			/*
 			 * Use merged renderings as reference images in
@@ -299,6 +314,12 @@ int main(int argc, const char *argv[]){
 			 */
 
 			align::set_reference(_merge);
+
+			/*
+			 * Tell the alignment class about the scale factor.
+			 */
+
+			align::set_scale(scale_factor);
 
 			/*
 			 * Configure the output renderer.

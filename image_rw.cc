@@ -24,7 +24,6 @@ const char *image_rw::output_filename = NULL;
 const char **image_rw::filenames = NULL;
 const image **image_rw::images = NULL;
 int *image_rw::files_open;
-double image_rw::scale_factor;
 
 int image_rw::latest_close_num = -1;
 const image *image_rw::latest_close = NULL;

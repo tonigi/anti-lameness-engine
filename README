@@ -1,4 +1,4 @@
-ALE version 0.4.4
+ALE version 0.4.5
 =================
 
 
@@ -62,7 +62,7 @@ produced incrementally, and the output file is updated as the process
 progresses.  Options are described in the next section.
 
 
-Options (version 0.4.4)
+Options (version 0.4.5)
 -----------------------
 
 
@@ -131,7 +131,7 @@ File output options:
 --no-inc          Don't produce incremental output.
 
 
-Option Descriptions (version 0.4.4)
+Option Descriptions (version 0.4.5)
 -----------------------------------
 
 
@@ -190,8 +190,6 @@ be made in aligning images.  Note that correction steps larger than 2 are
 performed on images with a reduced level of detail and that all correction step
 sizes are some power of two.  If the interval [perturb-lower, perturb-upper]
 does not contain a power of two, no correction will be performed.
-
-Using a lower bound larger than 2 may trigger a bug.
 
 
 Error metric:
