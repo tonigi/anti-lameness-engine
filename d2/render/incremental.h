@@ -205,14 +205,16 @@ protected:
 		 */
 		for (unsigned int k = 0; k < 3; k++) {
 
+			const double min_weight = 0.001;
+
 			/*
 			 * Cases independent of the old pixel value and weight
 			 * for which the update can be ignored.   XXX: the
-			 * first bound should probably be less than or equal to
-			 * the certainty floor.
+			 * minimum weight used here should probably be less
+			 * than or equal to the certainty floor.
 			 */
 
-			if (fabs(new_weight[k]) < 0.001
+			if (fabs(new_weight[k]) < min_weight
 			 || (!inv->is_avg()
 			  && new_weight[k] < render::get_wt())) {
 				continue;
@@ -293,7 +295,7 @@ protected:
 
 			ale_real updated_weight = old_weight + new_weight[k];
 
-			if (fabs(updated_weight) < 0.001) {
+			if (fabs(updated_weight) < min_weight) {
 				/*
 				 * XXX: Give up.  Because of the way we
 				 * represent weights and values, we can't

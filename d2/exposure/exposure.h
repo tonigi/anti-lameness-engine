@@ -137,8 +137,8 @@ public:
 		return _multiplier;
 	}
 
-	virtual ale_real confidence(unsigned int k, ale_real input) const {
-		ale_real confidence_floor = 0.001;
+	virtual ale_real confidence(unsigned int k, ale_real input, 
+			ale_real confidence_floor = 0.001) const {
 
 		if (confidence_exponent == 0)
 			return 1;
@@ -162,12 +162,13 @@ public:
 	 * This is a very hackish confidence function.  It's zero at the
 	 * extremes of camera response and maximal at the center.
 	 */
-	virtual pixel confidence(pixel input) const {
+	virtual pixel confidence(pixel input, 
+			ale_real confidence_floor = 0.001) const {
 
 		if (confidence_exponent) {
-			return pixel(confidence(0, input[0]),
-				     confidence(1, input[1]),
-				     confidence(2, input[2]));
+			return pixel(confidence(0, input[0], confidence_floor),
+				     confidence(1, input[1], confidence_floor),
+				     confidence(2, input[2], confidence_floor));
 		} else {
 			return pixel(1, 1, 1);
 		}

@@ -1301,10 +1301,17 @@ private:
 			ale_pos adj_s;
 
 			/*
-			 * Orientational adjustment value
+			 * Orientational adjustment value in degrees.
+			 *
+			 * Since rotational perturbation is now specified as an
+			 * arclength, we have to convert.
 			 */
 
-			ale_pos adj_o = perturb;
+			ale_pos adj_o = 2 * perturb 
+				          / sqrt(pow(scale_clusters[0].input->height(), 2)
+					       + pow(scale_clusters[0].input->width(),  2))
+					  * 180
+					  / M_PI;
 
 			/*
 			 * Barrel distortion adjustment value

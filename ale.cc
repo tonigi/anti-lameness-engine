@@ -83,9 +83,9 @@
  * Version Information
  */
 
-char *short_version = "0.7.3";
+char *short_version = "0.7.4-pre4";
 
-char *version = "ALE Version:      0.7.3\n"
+char *version = "ALE Version:      0.7.4-pre4\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else
@@ -968,6 +968,9 @@ int main(int argc, const char *argv[]){
 			int characters;
 			sscanf(argv[i] + strlen("--perturb-lower="), "%lf%n", &perturb_lower,
 			                                                      &characters);
+			if (perturb_lower <= 0)
+				ui::get()->error("--perturb-lower= value is non-positive");
+
 			if (*(argv[i] + strlen("--perturb-lower=") + characters) == '%')
 				d2::align::set_perturb_lower(perturb_lower, 1);
 			else

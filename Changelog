@@ -1,10 +1,15 @@
+0.7.4-pre4
+
+o	Modify euclidean alignment so that perturb-upper and perturb-lower
+	apply to rotational arclength.
+
 0.7.4-pre3
 
 o	Fix an index variable bug in d2::image_bayer_ale_real::trigger().
 
 0.7.4-pre2
 
-o	Modify d2::exposure::one_sided_confidence() so that the 'one-sided'
+o	Modify d2::exposure one-sided certainty so that the 'one-sided'
 	condition only applies to bright (>50%) areas.  Applying it to dark
 	areas has no clear benefit, and an experiment by Gregory Maxwell
 	demonstrates that doing so can exacerbate noise.
