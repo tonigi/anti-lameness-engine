@@ -293,35 +293,6 @@ class scene {
 		}
 
 		/*
-		 * Color all neighbors (containing at least one of the given
-		 * set of vertices) with a negative color.
-		 */
-		void color_neighbors_negative(point *vertices[3] = NULL, ale_real neg_color = 0) {
-
-			if (vertices == NULL)
-				vertices = this->vertices;
-
-			if (neg_color == 0)
-				neg_color = -((ale_real) (rand() % 1000));
-
-			if (color[0][0] == neg_color)
-				return;
-
-			if (!vertex_ref_maybe(vertices[0])
-			 && !vertex_ref_maybe(vertices[1])
-			 && !vertex_ref_maybe(vertices[2]))
-				return;
-
-			color[0][0] = neg_color;
-
-			for (int n = 0; n < 3; n++) {
-				if (neighbors[n])
-					neighbors[n]->color_neighbors_negative(vertices, neg_color);
-			}
-		}
-		
-
-		/*
 		 * Get the angle at a given vertex
 		 */
 
@@ -812,6 +783,55 @@ class scene {
 				this->color[e] = color;
 				this->weight[e] = weight;
 			}
+		}
+
+		/*
+		 * Color all neighbors (containing at least one of the given
+		 * set of vertices) with a negative color.
+		 */
+		void color_neighbors_negative(point *vertices[3] = NULL, ale_real neg_color = 0) {
+
+			if (vertices == NULL)
+				vertices = this->vertices;
+
+			if (neg_color == 0)
+				neg_color = -((ale_real) (rand() % 1000));
+
+			if (color[0][0] == neg_color)
+				return;
+
+			if (!vertex_ref_maybe(vertices[0])
+			 && !vertex_ref_maybe(vertices[1])
+			 && !vertex_ref_maybe(vertices[2]))
+				return;
+
+			color[0][0] = neg_color;
+
+			for (int n = 0; n < 3; n++) {
+				if (neighbors[n])
+					neighbors[n]->color_neighbors_negative(vertices, neg_color);
+			}
+		}
+
+		/*
+		 * Accumulate error from neighbors identified with negative coloration
+		 */
+		double accumulate_neighbor_error() {
+
+			if (color[0][0] >= 0)
+				return 0;
+
+			recolor();
+
+			assert (color[0][0] >= 0);
+
+			double error = reference_error();
+
+			for (int n = 0; n < 3; n++)
+				if (neighbors[n])
+					error += neighbors[n]->accumulate_neighbor_error();
+
+			return error;
 		}
 
 		/*
