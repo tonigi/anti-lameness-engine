@@ -68,13 +68,46 @@ class cpf {
 	}
 
 	/*
+	 * Solve for a 3D point from a system of projected coordinates.
+	 */
+	static point solve_projected_system(point *points, int n) {
+		assert(0);
+		return point::undefined();
+	}
+
+	/*
 	 * Type A control point record
 	 *
 	 * A <frame 0 coord 0> <frame 0 coord 1> ... <frame n coord 1>
 	 */
 	static point get_type_a() {
+
+		point result;
+
+		/*
+		 * Get the number of frames.
+		 */
+		int n = d2::image_rw::count();
+
+		/*
+		 * Allocate storage for N frames.
+		 */
+		point *coords = new point[n];
+
+		for (int i = 0; i < n; i++)
+		for (int j = 0; j < 2; j++) {
+			double dp;
+			get_double(&dp);
+			coords[i][j] = dp;
+		}
+
 		get_new_line();
-		return point::undefined();
+
+		result = solve_projected_system(coords, n);
+
+		delete[] coords;
+
+		return result;
 	}
 
 	/*
