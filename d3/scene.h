@@ -226,6 +226,7 @@ class scene {
 
 		int unsplit_on_aux() {
 			if (aux_stat != d2::pixel(0, 0, 0)) {
+				assert (children[0] && children[1] && division_new_vertex);
 				unsplit();
 				return 1;
 			} else if (children[0] && children[1]) {
