@@ -59,6 +59,88 @@ public:
 	point operator-(point p) const {
 		return point(x[0] - p[0], x[1] - p[1]);
 	}
+
+	point operator+=(point p) { 
+		(*this) = (*this) + p;
+
+		return *this;
+	}
+
+	point operator-=(point p) { 
+		(*this) = (*this) - p;
+
+		return *this;
+	}
+
+	point mult(ale_real d) const {
+		return point(x[0] * d, x[1] * d);
+	}
+
+	point operator*(point p) const {
+		/*
+		 * element-wise multiplication
+		 */
+		return point(x[0] * p[0], x[1] * p[1]);
+	}
+	
+	point operator *=(ale_real d) {
+		(*this) = mult(d);
+		return *this;
+	}
+
+	point operator/(ale_real d) const {
+		return point(x[0] / d, x[1] / d);
+	}
+
+	ale_pos normsq() const {
+		return x[0] * x[0] + x[1] * x[1];
+	}
+
+	ale_pos norm() const {
+		return sqrt(normsq());
+	}
+
+	ale_pos absmaxnorm() const {
+		ale_pos a = fabs(x[0]);
+		ale_pos b = fabs(x[1]);
+
+		return (a > b) ? a : b;
+	}
+
+	ale_pos lengthtosq(point p) const {
+		point diff = operator-(p);
+
+		return diff[0] * diff[0] + diff[1] * diff[1];
+	}
+	ale_pos lengthto(point p) const {
+		return sqrt(lengthtosq(p));
+	}
+
+	ale_pos anglebetw(point p, point q) {
+		/*
+		 * by the law of cosines, the cosine is equal to:
+		 *
+		 *  	(lengthtosq(p) + lengthtosq(q) - p.lengthtosq(q))
+		 *    / (2 * lengthto(p) * lengthto(q))
+		 */
+
+		ale_pos to_p = lengthtosq(p);
+		ale_pos to_q = lengthtosq(q);
+
+		ale_pos cos_of = (to_p + to_q - p.lengthtosq(q))
+			       / (2 * sqrt(to_p) * sqrt(to_q));
+
+		return acos(cos_of);
+	}
 };
 
+inline point operator*(const point &p, double d) {
+	return p.mult(d);
+}
+inline point operator*(double d, const point &p) {
+	return p.mult(d);
+}
+inline point operator*(float d, const point &p) {
+	return p.mult(d);
+}
 #endif

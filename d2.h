@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #include "ale_real.h"
 #include "ale_accum.h"
@@ -46,6 +47,12 @@
 #include <fftw3.h>
 #endif
 
+#ifdef USE_UNIX
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#endif
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -59,28 +66,33 @@ namespace d2 {
 #include "d2/pixel.h"
 #include "d2/spixel.h"
 #include "d2/pixel_accum.h"
+#include "d2/exposure/exposure.h"
+#include "d2/exposure/exposure_default.h"
+#include "d2/exposure/exposure_linear.h"
+#include "d2/exposure/exposure_boolean.h"
 #include "d2/align.h"
-#include "d2/gpt.h"
+#include "d2/transformation.h"
 #include "d2/image.h"
 #include "d2/image_ale_real.h"
 #include "d2/image_rw.h"
 #include "d2/point.h"
 #include "d2/ppm.h"
 #include "d2/render.h"
+#include "d2/render_parse.h"
 #include "d2/tfile.h"
-#include "d2/exposure/exposure.h"
-#include "d2/exposure/exposure_default.h"
-#include "d2/exposure/exposure_linear.h"
+#include "d2/filter.h"
 #include "d2/render/combine.h"
-#include "d2/render/drizzle.h"
-#include "d2/render/usm.h"
+// #include "d2/render/drizzle.h"
+// #include "d2/render/usm.h"
 #include "d2/render/ipc.h"
-#include "d2/render/merge.h"
+// #include "d2/render/merge.h"
 #include "d2/render/psf/psf.h"
 #include "d2/render/psf/psf_template.h"
 #include "d2/render/psf/box.h"	
 #include "d2/render/psf/sum.h"
 #include "d2/render/psf/stdin.h"	
+#include "d2/render/psf/stdin_vg.h"	
 #include "d2/render/psf/psf_calibrate.h"
+#include "d2/vise_core.h"
 
 }

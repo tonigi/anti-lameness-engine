@@ -28,6 +28,7 @@ int align::_exp_register = 1;
 
 ale_pos align::scale_factor;
 
+transformation align::orig_t;
 int align::_keep = 0;
 transformation *align::kept_t = NULL;
 int *align::kept_ok = NULL;
@@ -35,18 +36,29 @@ int *align::kept_ok = NULL;
 tload_t *align::tload = NULL;
 tsave_t *align::tsave = NULL;
 render *align::reference = NULL;
+filter::scaled_filter *align::interpolant = NULL;
 const image *align::reference_image = NULL;
 const image *align::reference_defined = NULL;
+const image *align::alignment_weights = NULL;
+image *align::frequency_weights = NULL;
+image *align::wmx_weights = NULL;
+const char *align::wmx_file = NULL;
+const char *align::wmx_exec = NULL;
+const char *align::wmx_defs = NULL;
+const char *align::fw_output = NULL;
+double align::horiz_freq_cut = 0;
+double align::vert_freq_cut = 0;
+double align::avg_freq_cut = 0;
 transformation align::latest_t;
 int align::latest_ok;
-int align::latest = 0;
-int align::extend = 0;
+int align::latest = -1;
 
 int align::alignment_class = 1;
 int align::default_initial_alignment_type = 0;
 transformation align::default_initial_alignment;
 int align::is_default = 1;
 int align::old_is_default;
+int align::is_fail_default = 0;
 transformation align::old_initial_alignment;
 transformation align::old_final_alignment;
 int align::channel_alignment_type = 2;
@@ -65,7 +77,11 @@ ale_pos align::perturb_upper = 32;
 int align::lod_max = 1;
 
 ale_pos align::rot_max = 32.0;
+ale_pos align::bda_mult = 0.0001;
+ale_pos align::bda_rate = 0.0004;
 ale_accum align::match_sum = 0;
 int align::match_count = 0;
 
 ale_pos align::_mc = 0;
+int *align::ax_parameters = NULL;
+int align::ax_count = 0;

@@ -303,6 +303,7 @@ public:
 			initialize_response_array(response_arrays[n]);
 		}
 
+#if 0
 		avg_response = (ale_real *)malloc(_filter_dim_i * _filter_dim_j * 3
 				              * sizeof(ale_real));
 					      
@@ -319,6 +320,7 @@ public:
 		}
 
 		initialize_response_array(avg_response);
+#endif
 
 		compute_integrals();
 	}

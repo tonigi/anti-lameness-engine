@@ -26,14 +26,19 @@
 #include "../ipc.h"
 
 class psf_calibrate : public ipc {
+private:
+	double *psf_match_args;
 public:
-	psf_calibrate(render *input, unsigned int iterations, int _inc, psf *lresponse, psf *nlresponse) 
+	psf_calibrate(render *input, unsigned int iterations, int _inc, psf *lresponse, psf *nlresponse,
+			double *psf_match_args) 
 			: ipc(input, iterations, _inc, lresponse, nlresponse, 1) {
 		fprintf(stderr, "\nIPC Calibration module.\n\n");
 		fprintf(stderr, "This module is designed for use with a calibration script.\n\n");
+
+		this->psf_match_args = psf_match_args;
 	}
 
-        virtual void _ip_frame(ale_accum *diff, int m) {
+        void _ip_frame(ale_accum *diff, unsigned long *count, int m) {
 
 		/*
 		 * Get alignment information for frame m.
@@ -141,8 +146,8 @@ public:
 
 				for (int ii = (int) floor(i - 0.5 + nlresponse->min_i());
 					ii <= ceil(i + 0.5 + nlresponse->max_i()); ii++)
-				for (int jj = (int) floor(i - 0.5 + nlresponse->min_j());
-					jj <= ceil(i + 0.5 + nlresponse->max_j()); jj++) {
+				for (int jj = (int) floor(j - 0.5 + nlresponse->min_j());
+					jj <= ceil(j + 0.5 + nlresponse->max_j()); jj++) {
 
 					ale_pos top = i - 0.5;
 					ale_pos bot = i + 0.5;
@@ -157,9 +162,10 @@ public:
 						psf::psf_result r =
 							(*nlresponse)(top - ii, bot - ii,
 								    lef - jj, rig - jj,
-								    nlresponse->select(i, j));
+								    nlresponse->select(ii, jj));
 
 						nlsim_weights->pix(ii, jj) += r.weight();
+
 						nlsimulated->pix(ii, jj) += r(real->exp().unlinearize(simulated->get_pixel(i, j)));
 					}
 				}
@@ -248,7 +254,8 @@ public:
 				 */
 
 				if ((comp_real[k] < 1.0 || comp_simu[k] < 1.0 )
-				 && (comp_real[k] > 0 || comp_simu[k] > 0))
+				 && (comp_real[k] > 0 || comp_simu[k] > 0)
+				 && ((*count) < ULONG_MAX)) {
 
 					/*
 					 * real and simulated are distinguishable
@@ -258,6 +265,8 @@ public:
 					 */
 
 					(*diff) += pow(comp_simu[k] - comp_real[k], 2);
+					(*count)++;
+				}
 
 			}
 		}
@@ -267,7 +276,7 @@ public:
 
 	}
 
-	virtual void _ip() {
+	void _ip() {
 
 		/*
 		 * Input images 0 through count()-2 are frames captured with
@@ -277,14 +286,34 @@ public:
 		 */
 
 		ale_accum diff = 0;
+		unsigned long channel_count = 0;
 
 		approximation = image_rw::copy(image_rw::count() - 1, "PSF_CALIBRATE reference");
 
-		for (int m = 0; m < image_rw::count() - 1; m++) {
-			_ip_frame(&diff, m);
+#if 0
+		fprintf(stderr, "[%f %f %f %f %f %f] ", psf_match_args[0],
+				                        psf_match_args[1],
+							psf_match_args[2],
+							psf_match_args[3],
+							psf_match_args[4],
+							psf_match_args[5]);
+#endif
+
+		for (unsigned int i = 0; i < approximation->height(); i++)
+		for (unsigned int j = 0; j < approximation->width();  j++) {
+			approximation->pix(i, j) *= pixel(psf_match_args[0],
+					                  psf_match_args[1],
+							  psf_match_args[2]);
+			approximation->pix(i, j) += pixel(psf_match_args[3],
+					                  psf_match_args[4],
+							  psf_match_args[5]);
 		}
 
-		diff = pow(diff, 0.5);
+		for (unsigned int m = 0; m < image_rw::count() - 1; m++) {
+			_ip_frame(&diff, &channel_count, m);
+		}
+
+		diff = pow(diff / channel_count, 0.5);
 
 		fprintf(stderr, "\n\nPSF Error:: %e\n\n", (double) diff);
 

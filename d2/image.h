@@ -30,12 +30,24 @@
 #include "pixel.h"
 #include "exposure/exposure.h"
 
+#define IMAGE_BAYER_NONE 0
+
+/*
+ * Do not change these values without inspecting
+ * image_bayer_ale_real::r_*_offset().
+ */
+#define IMAGE_BAYER_RGBG 0x4 /* binary 100 */
+#define IMAGE_BAYER_GBGR 0x5 /* binary 101 */
+#define IMAGE_BAYER_GRGB 0x6 /* binary 110 */
+#define IMAGE_BAYER_BGRG 0x7 /* binary 111 */
+
 class image : protected exposure::listener {
 protected:
 	unsigned int _dimx, _dimy, _depth;
 	point _offset;
 	char *name;
 	mutable exposure *_exp;
+	unsigned int bayer;
 private:
 	/*
 	 * Memoized function variables.  We may want to change these even when
@@ -116,7 +128,9 @@ protected:
 	}
 
 public:
-	image (unsigned int dimy, unsigned int dimx, unsigned int depth, char *name = "anonymous", exposure *_exp = NULL) {
+	image (unsigned int dimy, unsigned int dimx, unsigned int depth, 
+			char *name = "anonymous", exposure *_exp = NULL,
+			unsigned int bayer = IMAGE_BAYER_NONE) {
 
 		assert (depth == 3);
 		_depth = 3;
@@ -129,9 +143,14 @@ public:
 		_accm_memo = 0;
 		this->name = name;
 		this->_exp = _exp;
+		this->bayer = bayer;
 
 		if (_exp != NULL)
 			_exp->add_listener(this, name);
+	}
+
+	unsigned int get_bayer() const {
+		return bayer;
 	}
 
 	exposure &exp() const {
@@ -140,6 +159,11 @@ public:
 
 	point offset() const {
 		return _offset;
+	}
+
+	void set_offset(int i, int j) {
+		_offset[0] = i;
+		_offset[1] = j;
 	}
 
 	unsigned int width() const {
@@ -158,11 +182,15 @@ public:
 
 	virtual const spixel &pix(unsigned int y, unsigned int x) const = 0;
 
-	void set_pixel(unsigned int y, unsigned int x, spixel p) {
+	virtual ale_real &chan(unsigned int y, unsigned int x, unsigned int k) = 0;
+
+	virtual const ale_real &chan(unsigned int y, unsigned int x, unsigned int k) const = 0;
+
+	virtual void set_pixel(unsigned int y, unsigned int x, spixel p) {
 		pix(y, x) = p;
 	}
 	
-	pixel get_pixel(unsigned int y, unsigned int x) const {
+	virtual pixel get_pixel(unsigned int y, unsigned int x) const {
 		return ((const image *)this)->pix(y, x);
 	}
 
@@ -242,25 +270,33 @@ public:
 		 * Take the minimum confidence
 		 */
 
-		result[1] = _exp->confidence(neighbor[0]);
+		if (_exp) {
+			result[1] = _exp->confidence(neighbor[0]);
 
-		for (int n = 1; n < 4; n++)
-			if (factor[n] > 0) {
-				pixel confidence 
-					= _exp->confidence(neighbor[n]);
+			for (int n = 1; n < 4; n++)
+				if (factor[n] > 0) {
+					pixel confidence 
+						= _exp->confidence(neighbor[n]);
 
-				for (int k = 0; k < 3; k++)
-					if (confidence[k] < result[1][k])
-						result[1][k] = confidence[k];
-			}
+					for (int k = 0; k < 3; k++)
+						if (confidence[k] < result[1][k])
+							result[1][k] = confidence[k];
+				}
+		} else {
+			result[1] = pixel(1, 1, 1);
+		}
 #else
 		/*
 		 * Use bilinear interpolation for confidence
 		 */
 
-		result[1] = pixel(0, 0, 0);
-		for (int n = 0; n < 4; n++)
-			result[1] += factor[n] * _exp->confidence(neighbor[n]);
+		if  (_exp) {
+			result[1] = pixel(0, 0, 0);
+			for (int n = 0; n < 4; n++)
+				result[1] += factor[n] * _exp->confidence(neighbor[n]);
+		} else {
+			result[1] = pixel(1, 1, 1);
+		}
 #endif
 	}
 

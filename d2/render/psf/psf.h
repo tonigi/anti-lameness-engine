@@ -139,7 +139,7 @@ public:
 	 * Get the number of varieties supported by this PSF.  These usually
 	 * correspond to different points in the sensor array.
 	 */
-	virtual unsigned int varieties() {
+	virtual unsigned int varieties() const {
 		return 1;
 	}
 
@@ -161,6 +161,7 @@ public:
 	virtual psf_result operator()(float top, float bot, float lef, float
 			rig, unsigned int variety) const = 0;
 
+#if 0
 	/*
 	 * Get the average pixel response.  This function should be overloaded
 	 * for PSFs that support multiple varieties.
@@ -168,6 +169,7 @@ public:
 	virtual psf_result operator()(float top, float bot, float lef, float rig) const {
 		return operator()(top, bot, lef, rig, 0);
 	}
+#endif
 };
 
 #endif

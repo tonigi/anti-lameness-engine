@@ -18,8 +18,14 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef __xvp610_320x240_h__
-#define __xvp610_320x240_h__
+// In some circumstances, a better filter might be this one, used with stdin_vg:
+//
+// 0.16 3 3 3 3 3.2 3.2 4.8 0 3.2 0 3.2 3.2 4.8 1.6 -3.2 1.6 28.8 40 36.8 9.6 16 12.8 3.2 4.44089209850063e-16 1.6 1.6 6.4 1.6 3.2 3.2 3.2 0.8 1 11 1 11 0 -1.6 -1.6 -3.2 -3.2 -3.2 -8 -8 -6.4 1.6 4.8 1.6 12.8 17.6 11.2 28.8 33.6 28.8 3.2 3.2 3.2 -3.2 -3.2 -3.2 -4.8 -6.4 -4.8 0 0 0 0 0 0
+//
+// (atp-16)
+
+#ifndef __xvp610_640x480_h__
+#define __xvp610_640x480_h__
 
 #include "../d2.h"
 
@@ -41,7 +47,7 @@
 #define LPSF_ROWS 3
 #define LPSF_COLS 3
 
-static const ale_real lpsf_calibrated_response[LPSF_ROWS][LPSF_COLS][3] = {
+static const ale_real xvp610_640x480_lpsf_calibrated_response[LPSF_ROWS][LPSF_COLS][3] = {
 	{
 		{ 1.6, 4.8, 3.2 },
 		{ 6.4, 6.4, 8 },
@@ -60,7 +66,7 @@ static const ale_real lpsf_calibrated_response[LPSF_ROWS][LPSF_COLS][3] = {
 #define NLPSF_ROWS 1
 #define NLPSF_COLS 5
 
-static const ale_real nlpsf_calibrated_response[NLPSF_ROWS][NLPSF_COLS][3] = {
+static const ale_real xvp610_640x480_nlpsf_calibrated_response[NLPSF_ROWS][NLPSF_COLS][3] = {
 	{
 #if 0
 		/* Filter 12 */
@@ -79,7 +85,7 @@ static const ale_real nlpsf_calibrated_response[NLPSF_ROWS][NLPSF_COLS][3] = {
 	}
 };
 
-class xvp610_320x240 {
+class xvp610_640x480 {
 public:
 
 	/*
@@ -89,7 +95,7 @@ public:
 #if 0
 	class lpsf : public d2::psf_template<LPSF_ROWS, LPSF_COLS> {
 	public:
-		lpsf() : d2::psf_template<LPSF_ROWS, LPSF_COLS> (3, 3, lpsf_calibrated_response) {
+		lpsf() : d2::psf_template<LPSF_ROWS, LPSF_COLS> (3, 3, xvp610_640x480_lpsf_calibrated_response) {
 		}
 	};
 #else
@@ -109,7 +115,7 @@ public:
 
 	class nlpsf : public d2::psf_template<NLPSF_ROWS, NLPSF_COLS> {
 	public:
-		nlpsf() : d2::psf_template<NLPSF_ROWS, NLPSF_COLS> (1, 5, nlpsf_calibrated_response) {
+		nlpsf() : d2::psf_template<NLPSF_ROWS, NLPSF_COLS> (1, 10, xvp610_640x480_nlpsf_calibrated_response) {
 		}
 	};
 

@@ -24,6 +24,7 @@
 IMAGEMAGICK=0
 FFTW=0
 DEBUG=0
+POSIX=1
 COLORS=SINGLE
 COORDINATES=SINGLE
 
@@ -41,6 +42,7 @@ DEBUG_CFLAGS:=$(if $(subst 0,,$(DEBUG)),-DDEBUG,-DNDEBUG)
 IMAGEMAGICK_CFLAGS:=$(if $(use_imagemagick),-DUSE_MAGICK $(shell Magick-config --cflags --cppflags),)
 IMAGEMAGICK_LDFLAGS:=$(if $(use_imagemagick),$(shell Magick-config --ldflags --libs),)
 FFTW_CFLAGS:=$(if $(subst 0,,$(FFTW)),-DUSE_FFTW,)
+POSIX_CFLAGS:=$(if $(subst 0,,$(POSIX)),-DUSE_UNIX,)
 PRECISION_CFLAGS:=$(if $(subst SINGLE,,$(COLORS)),,-DALE_COLORS=SINGLE)\
                   $(if $(subst DOUBLE,,$(COLORS)),,-DALE_COLORS=DOUBLE)\
                   $(if $(subst HALF,,$(COLORS)),,-DALE_COLORS=HALF)\
@@ -48,7 +50,7 @@ PRECISION_CFLAGS:=$(if $(subst SINGLE,,$(COLORS)),,-DALE_COLORS=SINGLE)\
                   $(if $(subst DOUBLE,,$(COORDINATES)),,-DALE_COORDINATES=DOUBLE)
 FFTW_LDFLAGS:=$(if $(subst 0,,$(FFTW)),-lfftw3,)
 
-CFLAGS:= $(DEBUG_CFLAGS) $(FFTW_CFLAGS) $(PRECISION_CFLAGS) \
+CFLAGS:= $(POSIX_CFLAGS) $(DEBUG_CFLAGS) $(FFTW_CFLAGS) $(PRECISION_CFLAGS) \
          $(if $(use_imagemagick),$(IMAGEMAGICK_CFLAGS),-Wall -O2) 
 LDFLAGS:=$(if $(use_imagemagick),$(IMAGEMAGICK_LDFLAGS)) $(FFTW_LDFLAGS) -lm
 

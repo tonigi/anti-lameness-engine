@@ -36,9 +36,13 @@ protected:
 	unsigned int _filter_dim_j;
 	unsigned int num_arrays;
 	ale_real **response_arrays;
+#if 0
 	ale_real *avg_response;
+#endif
 	pixel *response_integrals;
+#if 0
 	pixel avg_integral;
+#endif
 public:
 
 	/*
@@ -69,6 +73,7 @@ public:
 		
 		return response_arrays[n][i * _filter_dim_j * 3 + j * 3 + k];
 	}
+#if 0
 	ale_real element(unsigned int i, unsigned int j, unsigned int k) {
 		assert (i < _filter_dim_i);
 		assert (j < _filter_dim_j);
@@ -76,6 +81,7 @@ public:
 		
 		return avg_response[i * _filter_dim_j * 3 + j * 3 + k];
 	}
+#endif
 
 	/*
 	 * Response function
@@ -161,12 +167,14 @@ public:
 		return generic_response(response_array, top, bot, lef, rig);
 	}
 
+#if 0
 	/*
 	 * Get the average pixel response.
 	 */
 	psf_result operator()(float top, float bot, float lef, float rig) const {
 		return generic_response(avg_response, top, bot, lef, rig);
 	}
+#endif
 
 protected:
 	/*
@@ -196,7 +204,9 @@ protected:
 		for (unsigned int n = 0; n < num_arrays; n++)
 			response_integrals[n] = integrate(response_arrays[n]);
 		
+#if 0
 		avg_integral = integrate(avg_response);
+#endif
 	}
 
 public:
@@ -208,9 +218,11 @@ public:
 		assert (response_integrals != NULL);
 		return response_integrals[n];
 	}
+#if 0
 	pixel integral() const {
 		return avg_integral;
 	}
+#endif
 
 	raster () {
 		response_integrals = NULL;
@@ -225,7 +237,9 @@ public:
 		for (unsigned int n = 0; n < num_arrays; n++)
 			free(response_arrays[n]);
 		free(response_arrays);
+#if 0
 		free(avg_response);
+#endif
 
 		if (response_integrals)
 			delete response_integrals;

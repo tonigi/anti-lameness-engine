@@ -477,15 +477,6 @@ protected:
 
 
 		/*
-		 * Integrate over the backprojection kernel.
-		 */
-
-		pixel integral;
-
-		for (unsigned int n = 0; n < lresponse->varieties(); n++)
-			integral += lresponse->integral(n);
-
-		/*
 		 * Iterate over all pixels in the approximation.
 		 */
 
@@ -530,10 +521,12 @@ protected:
 				 || jj >= (int) lreal->width())
 					continue;
 
+				unsigned int selection = lresponse->select(ii, jj);
+
 				class backprojector::psf_result r =
 					(*lresponse)(top - ii, bot - ii,
 						    lef - jj, rig - jj,
-						    lresponse->select(ii, jj));
+						    selection);
 
 
 				/*
@@ -577,6 +570,17 @@ protected:
 
 				pixel conf = real->exp().one_sided_confidence(comp_lreal, bpv);
 				      // conf = real->exp().one_sided_confidence(comp_real, bpv);
+					
+				/*
+				 * If a color is bayer-interpolated, then we have no confidence in its
+				 * value.
+				 */
+
+				if (real->get_bayer() != IMAGE_BAYER_NONE) {
+					int color = ((image_bayer_ale_real *)real)->bayer_color(ii, jj);
+					conf[(color + 1) % 3] = 0;
+					conf[(color + 2) % 3] = 0;
+				}
 
 				/*
 				 * Error calculation
@@ -590,7 +594,8 @@ protected:
 				 * each frame's correction equally.
 				 */
 
-				cc->pix(i, j) += conf * (r.weight() / integral);
+				cc->pix(i, j) += conf * r.weight() 
+					       / lresponse->integral(selection);
 			}
                 }
 
@@ -660,7 +665,7 @@ protected:
 		raster **f = (raster **) malloc(image_rw::count() * sizeof(raster *));
 		backprojector **b = (backprojector **) malloc(image_rw::count() * sizeof(backprojector *));
 
-		for (int m = 0; m < image_rw::count(); m++) {
+		for (unsigned int m = 0; m < image_rw::count(); m++) {
 
 			if (!align::match(m))
 				continue;
@@ -695,7 +700,7 @@ protected:
 			 * Iterate over all frames
 			 */
 
-                        for (int m = 0; m < image_rw::count(); m++) {
+                        for (unsigned int m = 0; m < image_rw::count(); m++) {
 
 				if (!align::match(m))
 					continue;
@@ -763,7 +768,7 @@ protected:
 
                 }
 
-		for (int m = 0; m < image_rw::count(); m++) {
+		for (unsigned int m = 0; m < image_rw::count(); m++) {
 
 			if (!align::match(m))
 				continue;
@@ -803,8 +808,13 @@ public:
         }
 
         void sync(int n) {
+		render::sync(n);
                 input->sync(n);
         }
+
+	void step() {
+		return;
+	}
 
         virtual int sync() {
 		input->sync();

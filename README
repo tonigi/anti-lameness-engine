@@ -1,5 +1,5 @@
 ========================
-ALE version 0.6.0 README
+ALE version 0.7.0 README
 ========================
 
 This README discusses downloading, extraction, and compilation of ALE.
@@ -20,6 +20,7 @@ Subsections:
 		- Color Data Precision
 		- Coordinate Data Precision
 		- FFTW Support
+		- POSIX Support
 		- Assertions
 	+ Further Documentation
 	+ URLs
@@ -33,7 +34,7 @@ Windows Binaries
 URLs
 ----
 
-http://auricle.dyndns.org/ALE/download/ale-0_6_0-win32.zip
+http://auricle.dyndns.org/ALE/download/ale-0_7_0-win32.zip
 
 
 Extraction and Use
@@ -61,7 +62,7 @@ Compiling from source
 URLs
 ----
 
-http://auricle.dyndns.org/ALE/download/ale-0.6.0.tar.gz
+http://auricle.dyndns.org/ALE/download/ale-0.7.0.tar.gz
 
 
 Build prerequisites
@@ -76,8 +77,8 @@ Extraction and Installation
 
 Download the source archive file from the URL indicated above, and invoke:
 
-	tar xzf ale-0.6.0.tar.gz
-	cd ale-0.6.0
+	tar xzf ale-0.7.0.tar.gz
+	cd ale-0.7.0
 	make [OPTIONS]
 
 where the text '[OPTIONS]' is replaced by zero or more of the compilation
@@ -99,7 +100,9 @@ Enabling ImageMagick support allows ALE to make use of the file-handling
 capabilities of ImageMagick ( http://imagemagick.org/ ).  This includes reading
 and writing a variety of file formats, including, among many others, PNG and
 JPEG (two formats commonly used in web publishing) as well as common
-interchange formats such as PPM and TIFF.
+interchange formats such as PPM and TIFF.  ImageMagick 6.0.1-2 is known to work
+with this version of ALE; some older versions of ImageMagick may cause compile
+or link errors.
 
 IMAGEMAGICK=0 *        Disable ImageMagick support.
 IMAGEMAGICK=1          Enable ImageMagick support.  
@@ -148,8 +151,21 @@ FFTW instead of the built-in transform, specify FFTW=1.  This option requires
 FFTW version 3 libraries and header files to be installed.  For more details on
 FFTW, see http://fftw.org/
 
+This build option is required in order to use the --fl option.
+
 FFTW=0 *               Use a built-in discrete Fourier transform.
 FFTW=1                 Use the FFTW3 discrete Fourier transform.
+
+
+POSIX Support
+-------------
+
+This build option is required in order to use the --wmx option.  If
+POSIX=1 is specified, it is expected that fork() and execlp() calls
+are available.
+
+POSIX=0                Do not use POSIX fork() and execlp()
+POSIX=1 *              Use POSIX fork() and execlp()
 
 
 Assertions
@@ -179,10 +195,10 @@ URLs
 Home Page		http://auricle.dyndns.org/ALE/
 User Manual		http://auricle.dyndns.org/ALE/user/
 Technical Description   http://auricle.dyndns.org/ALE/tech/
+Mailing list archive	http://ventricle.dyndns.org/pipermail/ale/
 
 
-Contact
-=======
+Author
+======
 
-David Hilvert <dhilvert@auricle.dyndns.org>,
-              <dhilvert@ugcs.caltech.edu>
+David Hilvert <dhilvert@auricle.dyndns.org>, <dhilvert@ugcs.caltech.edu>

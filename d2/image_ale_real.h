@@ -74,6 +74,14 @@ public:
 		return _p[y * _dimx + x];
 	}
 
+	ale_real &chan(unsigned int y, unsigned int x, unsigned int k) {
+		return pix(y, x)[k];
+	}
+
+	const ale_real &chan(unsigned int y, unsigned int x, unsigned int k) const {
+		return pix(y, x)[k];
+	}
+
 	/*
 	 * Make a new image suitable for receiving scaled values.
 	 */

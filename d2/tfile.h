@@ -23,21 +23,23 @@
  */
 
 /*
- * This version of ALE reads transformation data file versions 0, 1, and 2, and
- * writes version 2 transformation data files.  Data file versions 1 and 2 are
- * identified by a version command "V 1" or "V 2", respectively.  Data file
- * version 0 is identified by having no version command.
+ * This version of ALE reads transformation data file versions 0, 1, 2, and 3,
+ * and writes version 2 and 3 transformation data files.  Data file versions 1
+ * and higher are identified by a version command "V x", where x is the version
+ * number, prior to any transformation command.  Data file version 0 is
+ * identified by having no version command.
  */
 
 #ifndef __tfile_h__
 #define __tfile_h__
 
-#include "gpt.h"
+#include "transformation.h"
 
-#define TFILE_VERSION     2
-#define TFILE_VERSION_MAX 2
+#define TFILE_VERSION     3
+#define TFILE_VERSION_MAX 3
 
-static int tfile_version = 0;
+extern int tfile_input_version;
+extern int tfile_output_version;
 
 /*
  * Structure to describe a transformation data file to load data from.
@@ -54,6 +56,8 @@ struct tload_t {
 
 struct tsave_t {
 	const char *filename;
+	const char *target;
+	const char *orig;
 	FILE *file;
 };
 
@@ -66,57 +70,302 @@ static inline struct tload_t *tload_new(const char *filename) {
 	FILE *file = fopen (filename, "r");
 	struct tload_t *result = NULL;
 
-	if (file) {
-		result = (struct tload_t *) 
-			malloc(sizeof(struct tload_t));
-		result->filename = filename;
-		result->file = file;
+	if (!file) {
+		fprintf(stderr, "tload: Error: could not open transformation data file '%s'.", filename);
+		exit(1);
 	}
+
+	result = (struct tload_t *) 
+		malloc(sizeof(struct tload_t));
+	result->filename = filename;
+	result->file = file;
 
 	return result;
 }
 
 /*
- * Create a new tsave_t transformation data file structure, used for
- * writing data to transformation data files.
+ * Load the first transformation from a transformation data file associated with
+ * transformation data file structure T, or return the default transformation
+ * if no transformation is available.
+ *
+ * 	T is a pointer to the tload_t transformation data file structure.
+ *
+ * 	IS_P is nonzero if a projective transformation is expected.
+ *
+ * 	DEFAULT_TRANSFORM is the default transformation result.
+ *
+ *	IS_DEFAULT is used to signal a non-default transformation result.
  */
 
-static inline struct tsave_t *tsave_new(const char *filename) {
-	FILE *file = fopen (filename, "w");
-	struct tsave_t *result = NULL;
+static inline transformation tload_first(struct tload_t *t, int is_p, 
+		transformation default_transform, int *is_default) {
 
-	if (file) {
-		result = (struct tsave_t *) 
-			malloc(sizeof(struct tsave_t));
-		result->filename = filename;
-		result->file = file;
+	transformation result = default_transform;
+
+	*is_default = 1;
+
+	/*
+	 * If there is no file, return the default.
+	 */
+
+	if (t == NULL)
+		return result;
+
+	/*
+	 * Search through the initial part of the file to determine 
+	 * its version.
+	 */
+
+	/*
+	 * Skip comments
+	 */
+
+	int first_character;
+
+	first_character = fgetc(t->file);
+
+	while (first_character == ' '
+	    || first_character == 0xa
+	    || first_character == 0xd
+	    || first_character == '\t'
+	    || first_character == '#') {
+		ungetc(first_character, t->file);
+		char line[1024];
+		fgets(line, 1024, t->file);
+		if (strlen(line) >= 1023) {
+			fprintf(stderr, 
+				"\ntrans-load: Error: line too long in input file\n");
+			exit(1);
+		}
+
+		first_character = fgetc(t->file);
+	}
+		
+	if (first_character != EOF)
+		ungetc(first_character, t->file);
+
+	/*
+	 * Check for version 0
+	 */
+
+	if (first_character != 'V')
+
+		/*
+		 * Must be version 0.
+		 */
+
+		return result;
+
+	/*
+	 * Obtain version from version command string.
+	 */
+
+	char line[1024];
+	fgets(line, 1024, t->file);
+	if (strlen(line) >= 1023) {
+		fprintf(stderr, 
+			"\ntrans-load: Error: line too long in input file\n");
+		exit(1);
 	}
 
-	fprintf(file, "# created by ALE transformation file handler version %d\n", 
-			TFILE_VERSION);
-	fprintf(file, "V %d\n", TFILE_VERSION);
-
-	fclose(file);
+	int count = sscanf(line, "V %d", &tfile_input_version); 
 	
+	if (count < 1) {
+		fprintf(stderr, "Error in transformation "
+				"file version command.\n");
+		exit(1);
+	} else if (tfile_input_version > TFILE_VERSION_MAX) {
+		fprintf(stderr, "Unsupported transformation "
+				"file version %d\n", 
+				tfile_input_version);
+		exit(1);
+	}
+
+	/*
+	 * Handle versions lower than 3.
+	 */
+
+	if (tfile_input_version < 3)
+
+		/*
+		 * Versions lower than 3 use the default transformation
+		 * for the original frame.
+		 */
+
+		return result;
+
+	/*
+	 * Read each line of the file until we find a transformation
+	 * or EOF.
+	 */
+
+	while (!feof(t->file)) {
+		char line[1024];
+
+		fgets(line, 1024, t->file);
+
+		if (feof(t->file))
+			return result;
+
+		if (strlen(line) >= 1023) {
+			fprintf(stderr, 
+				"\ntrans-load: Error: line too long in input file\n");
+			exit(1);
+		}
+
+		switch (line[0]) {
+			case ' ':
+			case 0xa:
+			case 0xd:
+			case '\t':
+			case '#':
+				/* Comment or whitespace */
+				break;
+			case 'D':
+			case 'd':
+				/* Default transformation */
+				return result;
+			case 'B':
+			case 'b':
+				if (tfile_input_version < 3) {
+					fprintf(stderr, "\ntrans-load: Error: "
+						"Barrel distortion not supported "
+						"for version %d input files.\n"
+						"trans-load: Hint:  Use version 3 "
+						"file syntax.\n", tfile_input_version);
+					exit(1);
+				} else {
+					unsigned int count;
+					unsigned int pos = 0, chars;
+					unsigned int bdc;
+					double dparameters[BARREL_DEGREE];
+					ale_pos parameters[BARREL_DEGREE];
+
+					count = sscanf(line, "B %u%n", &bdc, &chars);
+					pos += chars;
+
+					if (count < 1) {
+						fprintf(stderr, "\ntrans-load: Error: "
+								"Malformed 'B' command.\n");
+						exit(1);
+					}
+
+					if (bdc > result.bd_max()) {
+						fprintf(stderr, "\ntrans-load: Error: "
+								"Barrel distortion degree %d "
+								"is too large.  (Maximum is %d.)\n"
+								"trans-load: Hint:  "
+								"Reduce degree or re-compile "
+								"with BD_DEGREE=%d\n", bdc, BARREL_DEGREE, bdc);
+						exit(1);
+					}
+
+					for (unsigned int d = 0; d < bdc; d++) {
+						count = sscanf(line + pos, "%lf%n", &dparameters[d], &chars);
+						pos += chars;
+
+						if (count < 1) {
+							fprintf(stderr, "\ntrans-load: Error: "
+									"Malformed 'B' command.\n");
+							exit(1);
+						}
+
+						parameters[d] = dparameters[d];
+					}
+
+					result.bd_set(bdc, parameters);
+				}
+				break;
+			case 'P':
+			case 'p':
+				/* Projective transformation data */
+				*is_default = 0;
+				if (is_p == 0) {
+					fprintf(stderr, "\ntrans-load: Error: "
+						"Projective data for euclidean "
+						"transformation.\n"
+						"trans-load: Hint:  "
+						"Use command-line option --projective.\n");
+					exit(1);
+				} else {
+					double width, height, values[8];
+					int count, i;
+					point x[4];
+
+					count = sscanf(line, "P %lf%lf%lf%lf%lf%lf%lf%lf%lf%lf", &width, &height,
+							&values[0], &values[1], &values[2], &values[3],
+							&values[4], &values[5], &values[6], &values[7]);
+				
+					int index = 0;
+					for (int i = 0; i < 4; i++)
+					for (int j = 1; j >= 0; j--) 
+						x[i][j] = values[index++];
+
+					if (count < 10) 
+						fprintf(stderr, "\ntrans-load: warning:"
+								"Missing args for 'P'\n");
+
+					for (i = 0; i < count - 2; i++) {
+						ale_pos factor = (i % 2)
+							? (result.scaled_width() / width)
+							: (result.scaled_height() / height);
+							
+						x[i / 2][i % 2] *= factor;
+					}
+
+					result.gpt_set(x);
+
+					return result;
+				}
+				break;
+			case 'E':
+			case 'e':
+				/* Euclidean transformation data */
+				*is_default = 0;
+				{
+					double width, height;
+					double values[3] = {0, 0, 0};
+					int count, i;
+					ale_pos eu[3];
+
+					count = sscanf(line, "E %lf%lf%lf%lf%lf",
+							&width, &height,
+							&values[0], &values[1], &values[2]);
+
+					eu[1] = values[0];
+					eu[0] = values[1];
+					eu[2] = values[2];
+
+					if (count < 5) 
+						fprintf(stderr, "\ntrans-load: warning:"
+								"Missing args for 'E'\n");
+
+					for (i = 0; (i < count - 2) && (i < 2); i++) {
+						ale_pos factor = (i % 2)
+							? (result.scaled_width() / width)
+							: (result.scaled_height() / height);
+							
+						eu[i] *= factor;
+					}
+
+					result.eu_set(eu);
+
+					return result;
+				}
+				break;
+			default:
+				fprintf(stderr,
+					"\ntrans-load: Error in tload_first: unrecognized command '%s'\n",
+					line);
+				exit(1);
+		}
+	}
+
+	/*
+	 * EOF reached: return default transformation.
+	 */
+
 	return result;
-}
-
-/*
- * Destroy a tload_t transformation data file structure.
- */
-
-static inline void tload_delete(struct tload_t *victim) {
-	if (victim)
-		fclose(victim->file);
-	free(victim);
-}
-
-/*
- * Destroy a tsave_t transformation data file structure.
- */
-
-static inline void tsave_delete(struct tsave_t *victim) {
-	free(victim);
 }
 
 /*
@@ -149,6 +398,9 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 
 		fgets(line, 1024, t->file);
 
+		if (feof(t->file))
+			return result;
+
 		if (strlen(line) >= 1023) {
 			fprintf(stderr, 
 				"\ntrans-load: warning: line too long in input file\n");
@@ -162,38 +414,72 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 			case '#':
 				/* Comment or whitespace */
 				break;
-			case 'V':
-			case 'v':
-				/* Version number */
-				{
-					int count = sscanf(line, "V %d", &tfile_version); 
-					
-					if (count < 1) {
-						fprintf(stderr, "Error in transformation "
-								"file version command.\n");
-						exit(1);
-					} else if (tfile_version > TFILE_VERSION_MAX) {
-						fprintf(stderr, "Unsupported transformation "
-								"file version %d\n", 
-								tfile_version);
-						exit(1);
-					}
-
-					break;
-				}
 			case 'D':
 			case 'd':
 				/* Default transformation */
 				return result;
+			case 'B':
+			case 'b':
+				if (tfile_input_version < 3) {
+					fprintf(stderr, "\ntrans-load: Error: "
+						"Barrel distortion not supported "
+						"for version %d input files.\n"
+						"trans-load: Hint:  Use version 3 "
+						"file syntax.\n", tfile_input_version);
+					exit(1);
+				} else {
+					unsigned int count;
+					unsigned int pos = 0, chars;
+					unsigned int bdc;
+					ale_pos parameters[BARREL_DEGREE];
+					double dparameters[BARREL_DEGREE];
+
+					count = sscanf(line, "B %u%n", &bdc, &chars);
+					pos += chars;
+
+					if (count < 1) {
+						fprintf(stderr, "\ntrans-load: Error: "
+								"Malformed 'B' command.\n");
+						exit(1);
+					}
+
+					if (bdc > result.bd_max()) {
+						fprintf(stderr, "\ntrans-load: Error: "
+								"Barrel distortion degree %d "
+								"is too large.  (Maximum is %d.)\n"
+								"trans-load: Hint:  "
+								"Reduce degree or re-compile "
+								"with BD_DEGREE=%d\n", bdc, BARREL_DEGREE, bdc);
+						exit(1);
+					}
+
+					for (unsigned int d = 0; d < bdc; d++) {
+						count = sscanf(line + pos, "%lf%n", &dparameters[d], &chars);
+						pos += chars;
+
+						if (count < 1) {
+							fprintf(stderr, "\ntrans-load: Error: "
+									"Malformed 'B' command.\n");
+							exit(1);
+						}
+
+						parameters[d] = dparameters[d];
+					}
+
+					result.bd_set(bdc, parameters);
+				}
+				break;
 			case 'P':
 			case 'p':
 				/* Projective transformation data */
 				*is_default = 0;
 				if (is_p == 0) {
-					fprintf(stderr, "\ntrans-load: warning: "
-						"Ignoring projective data for euclidean "
-						"transformation.\n");
-					return result;
+					fprintf(stderr, "\ntrans-load: Error: "
+						"Projective data for euclidean "
+						"transformation.\n"
+						"trans-load: Hint:  "
+						"Use command-line option --projective.\n");
+					exit(1);
 				} else {
 					double width, height, values[8];
 					int count, i;
@@ -214,13 +500,13 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 
 					for (i = 0; i < count - 2; i++) {
 						ale_pos factor = (i % 2)
-							? (result.width() / width)
-							: (result.height() / height);
+							? (result.scaled_width() / width)
+							: (result.scaled_height() / height);
 							
 						x[i / 2][i % 2] *= factor;
 					}
 
-					if (tfile_version < 1) {
+					if (tfile_input_version < 1) {
 						/*
 						 * Accommodate older versions
 						 * of tfile.
@@ -256,7 +542,7 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 					eu[0] = values[1];
 					eu[2] = values[2];
 
-					if (tfile_version < 2) {
+					if (tfile_input_version < 2) {
 						ale_pos t = eu[0];
 						   eu[0] = eu[1];
 						   eu[1] = t;
@@ -269,13 +555,13 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 
 					for (i = 0; (i < count - 2) && (i < 2); i++) {
 						ale_pos factor = (i % 2)
-							? (result.width() / width)
-							: (result.height() / height);
+							? (result.scaled_width() / width)
+							: (result.scaled_height() / height);
 							
 						eu[i] *= factor;
 					}
 
-					if (tfile_version < 1) {
+					if (tfile_input_version < 1) {
 						result.eu_v0_set(eu);
 					} else {		
 						result.eu_set(eu);
@@ -286,13 +572,122 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 				break;
 			default:
 				fprintf(stderr,
-					"\ntrans-load: warning: unrecognized command '%s'\n",
+					"\ntrans-load: Error in tload_next: unrecognized command '%s'\n",
 					line);
-				break;
+				exit(1);
 		}
 	}
 
 	return result;
+}
+
+/*
+ * Create a new tsave_t transformation data file structure, used for
+ * writing data to transformation data files.
+ */
+
+static inline struct tsave_t *tsave_new(const char *filename) {
+	FILE *file = fopen (filename, "w");
+	struct tsave_t *result = NULL;
+
+	if (!file) {
+		fprintf(stderr, "tsave: Error: could not open transformation data file '%s'.", filename);
+		exit(1);
+	}
+
+	result = (struct tsave_t *) 
+		malloc(sizeof(struct tsave_t));
+	result->filename = filename;
+	result->file = file;
+	result->orig = "unknown";
+	result->target = "unknown";
+
+	fprintf(file, "# created by ALE transformation file handler version %d\n", 
+			TFILE_VERSION);
+
+	fclose(file);
+
+	return result;
+}
+
+/*
+ * Save the first transformation to a transformation data file associated with
+ * transformation data file structure T, or do nothing if T is NULL.  This
+ * function also establishes the output file version.
+ *
+ * 	OFFSET is the transformation to be saved.
+ *
+ * 	IS_PROJECTIVE indicates whether to write a projective transformation.
+ *
+ */
+
+static inline void tsave_first(struct tsave_t *t, transformation offset, int is_projective) {
+
+	if (t == NULL)
+		return;
+
+	t->file = fopen(t->filename, "a");
+	
+	/*
+	 * Determine the output version to use.  We use version 3 output syntax only when 
+	 * necessary.  This comprises two cases:
+	 *
+	 *   (i)  an input file is used, and this file uses version 3 syntax.
+	 *   (ii) non-degenerate barrel distortion correction is selected.
+	 *
+	 * (i) can be directly examined.  When (i) does not hold, (ii) can be
+	 * inferred from offset.bd_count(), since this value should be constant
+	 * when (i) does not hold.  XXX: This logic should be reviewed.
+	 */
+
+	if (tfile_input_version == 3 || offset.bd_count() > 0) 
+		tfile_output_version = 3;
+	else
+		tfile_output_version = 2;
+	
+	
+	fprintf(t->file, "# producing transformation file syntax version %d\n", tfile_output_version);
+	fprintf(t->file, "V %d\n", tfile_output_version);
+
+	fprintf(t->file, "# Comment: Target output file is %s\n", t->target);
+	fprintf(t->file, "# Comment: Original frame is %s\n", t->orig);
+
+	if (tfile_output_version < 3) {
+		fclose(t->file);
+		return;
+	}
+
+	if (offset.bd_count() > 0) {
+		assert (tfile_output_version >= 3);
+		unsigned int i;
+
+		fprintf(t->file, "B ");
+		fprintf(t->file, "%u ", offset.bd_count());
+		for (i = 0; i < offset.bd_count(); i++)
+			fprintf(t->file, "%f ", (double) offset.bd_get(i));
+		fprintf(t->file, "\n");
+	}
+
+
+	if (is_projective) {
+		int i, j;
+
+		fprintf(t->file, "P ");
+		fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
+		for (i = 0; i < 4; i++)
+			for (j = 1; j >= 0; j--)
+				fprintf(t->file, "%f ", (double) offset.gpt_get(i, j));
+	} else {
+		fprintf(t->file, "E ");
+		fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
+		fprintf(t->file, "%f ",    (double) offset.eu_get(1));
+		fprintf(t->file, "%f ",    (double) offset.eu_get(0));
+		fprintf(t->file, "%f ",    (double) offset.eu_get(2));
+	}
+
+	fprintf(t->file, "\n");
+
+	fclose(t->file);
 }
 
 /*
@@ -306,29 +701,42 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
  */
 
 static inline void tsave_next(struct tsave_t *t, transformation offset, int is_projective) {
-	if (t != NULL) {
-		t->file = fopen(t->filename, "a");
-		
-		if (is_projective) {
-			int i, j;
 
-			fprintf(t->file, "P ");
-			fprintf(t->file, "%f %f ", (double) offset.width(), (double) offset.height());
-			for (i = 0; i < 4; i++)
-				for (j = 1; j >= 0; j--)
-					fprintf(t->file, "%f ", (double) offset.gpt_get(i, j));
-		} else {
-			fprintf(t->file, "E ");
-			fprintf(t->file, "%f %f ", (double) offset.width(), (double) offset.height());
-			fprintf(t->file, "%f ",    (double) offset.eu_get(1));
-			fprintf(t->file, "%f ",    (double) offset.eu_get(0));
-			fprintf(t->file, "%f ",    (double) offset.eu_get(2));
-		}
+	if (t == NULL)
+		return;
 
+	t->file = fopen(t->filename, "a");
+	
+	if (offset.bd_count() > 0) {
+		assert (tfile_output_version >= 3);
+		unsigned int i;
+
+		fprintf(t->file, "B ");
+		fprintf(t->file, "%u ", offset.bd_count());
+		for (i = 0; i < offset.bd_count(); i++)
+			fprintf(t->file, "%f ", (double) offset.bd_get(i));
 		fprintf(t->file, "\n");
-
-		fclose(t->file);
 	}
+
+	if (is_projective) {
+		int i, j;
+
+		fprintf(t->file, "P ");
+		fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
+		for (i = 0; i < 4; i++)
+			for (j = 1; j >= 0; j--)
+				fprintf(t->file, "%f ", (double) offset.gpt_get(i, j));
+	} else {
+		fprintf(t->file, "E ");
+		fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
+		fprintf(t->file, "%f ",    (double) offset.eu_get(1));
+		fprintf(t->file, "%f ",    (double) offset.eu_get(0));
+		fprintf(t->file, "%f ",    (double) offset.eu_get(2));
+	}
+
+	fprintf(t->file, "\n");
+
+	fclose(t->file);
 }
 
 /*
@@ -337,10 +745,13 @@ static inline void tsave_next(struct tsave_t *t, transformation offset, int is_p
  */
 
 static inline void tsave_target(struct tsave_t *t, const char *filename) {
+	if (t == NULL)
+		return;
+
+	t->target = filename;
 	if (t != NULL) {
 		t->file = fopen(t->filename, "a");
 
-		fprintf(t->file, "# Comment: Target output file is %s\n", filename);
 		
 		fclose(t->file);
 	}
@@ -353,10 +764,13 @@ static inline void tsave_target(struct tsave_t *t, const char *filename) {
  */
 
 static inline void tsave_orig(struct tsave_t *t, const char *filename) {
+	if (t == NULL)
+		return;
+
+	t->orig = filename;
 	if (t != NULL) {
 		t->file = fopen(t->filename, "a");
 
-		fprintf(t->file, "# Comment: Original frame is %s\n", filename);
 		
 		fclose(t->file);
 	}
@@ -376,6 +790,24 @@ static inline void tsave_info(struct tsave_t *t, const char *filename) {
 		
 		fclose(t->file);
 	}
+}
+
+/*
+ * Destroy a tload_t transformation data file structure.
+ */
+
+static inline void tload_delete(struct tload_t *victim) {
+	if (victim)
+		fclose(victim->file);
+	free(victim);
+}
+
+/*
+ * Destroy a tsave_t transformation data file structure.
+ */
+
+static inline void tsave_delete(struct tsave_t *victim) {
+	free(victim);
 }
 
 #endif

@@ -27,6 +27,8 @@
 #define __image_rw_h__
 
 #include "image.h"
+#include "image_ale_real.h"
+#include "image_bayer_ale_real.h"
 #include "ppm.h"
 #include "exposure/exposure.h"
 #include "exposure/exposure_default.h"
@@ -57,6 +59,12 @@ class image_rw {
 	 */
 	static exposure *input_exposure;
 	static exposure *output_exposure;
+	static int exposure_scale;
+
+	/*
+	 * Default bayer pattern
+	 */
+	static unsigned int bayer;
 
 	/*
 	 * Pointer to the output filename
@@ -67,7 +75,7 @@ class image_rw {
 	 * Variables relating to input image files and image data structures.
 	 */
 	static const char **filenames;
-	static int file_count;
+	static unsigned int file_count;
 	static const image **images;
 	static int *files_open;
 
@@ -103,9 +111,10 @@ class image_rw {
 #endif
 	}
 
+public:
 
 	/*
-	 * Private methods to read and write image files
+	 * Methods to read and write image files
 	 */
 
 	/*
@@ -139,7 +148,10 @@ class image_rw {
 		if (mi == (Image *) NULL)
 			exit(1);
 
-		im = new image_ale_real(mi->rows, mi->columns, 3, name, exp);
+		if (bayer == IMAGE_BAYER_NONE)
+			im = new image_ale_real(mi->rows, mi->columns, 3, name, exp);
+		else
+			im = new image_bayer_ale_real(mi->rows, mi->columns, 3, bayer, name, exp);
 
 		for (i = 0; i < mi->rows; i++) {
 			p = AcquireImagePixels(mi, 0, i, mi->columns, 1, &exception);
@@ -165,11 +177,9 @@ class image_rw {
 
 		return im;
 #else
-		return read_ppm(filename, exp);
+		return read_ppm(filename, exp, bayer);
 #endif
 	}
-
-public:
 
 	/*
 	 * Initializer.
@@ -183,7 +193,7 @@ public:
 	 * that is never freed.  OUTPUT_EXPOSURE should be an exposure * that
 	 * is never freed.
 	 */
-	static void init(int _file_count, const char **_filenames, 
+	static void init(unsigned int _file_count, const char **_filenames, 
 			const char *_output_filename, exposure *_input_exposure,
 			exposure *_output_exposure){
 		assert (_file_count > 0);
@@ -230,6 +240,10 @@ public:
 #endif
 	}
 
+	static void set_default_bayer(unsigned int b) {
+		bayer = b;
+	}
+
 	static void depth16() {
 		num_bits = 16;
 		mcv = 65535;
@@ -245,13 +259,12 @@ public:
 		destroy_image();
 	}
 
-	static int count() {
+	static unsigned int count() {
 		assert (file_count > 0);
 		return file_count;
 	}
 
-	static const char *name(int image) {
-		assert (image >= 0);
+	static const char *name(unsigned int image) {
 		assert (image <  file_count);
 
 		return filenames[image];
@@ -265,7 +278,7 @@ public:
 	/*
 	 * Write an image to a file
 	 */
-	static void write_image(const char *filename, const image *im, exposure *exp) {
+	static void write_image(const char *filename, const image *im, exposure *exp = output_exposure, int rezero = 0) {
 #ifdef USE_MAGICK
 		
 		/*
@@ -324,10 +337,16 @@ public:
 		/*
 		 * Automatic exposure adjustment (don't blow out highlights)
 		 */
-		ale_real maxval = im->maxval();
+		ale_real maxval = 1;
+		ale_real minval = (rezero ? im->minval() : 0);
+		pixel minval_pixel(minval, minval, minval);
 
-		if (maxval < 1.0)
-			maxval = 1.0;
+		if (exposure_scale) {
+			ale_real new_maxval = im->maxval();
+
+			if (new_maxval > maxval)
+				maxval = new_maxval;
+		}
 
 		/*
 		 * Write the image
@@ -339,7 +358,10 @@ public:
 				break;
 
 			for (j = 0; j < mi->columns; j++) {
-				pixel unlinearized(exp->unlinearize(im->get_pixel(i, j) / maxval));
+				pixel unlinearized(exp->unlinearize((im->get_pixel(i, j) - minval_pixel) 
+							          / (maxval - minval)));
+
+				unlinearized = unlinearized.clamp();
 
 				p->red = (Quantum) round(unlinearized[0] * MaxRGB);
 				p->green = (Quantum) round(unlinearized[1] * MaxRGB);
@@ -371,13 +393,25 @@ public:
 		DestroyImage(mi);
 		DestroyImageInfo(image_info);
 #else
-		write_ppm(filename, im, exp, mcv, ppm_type == 2);
+		write_ppm(filename, im, exp, mcv, ppm_type == 2, rezero, exposure_scale);
 #endif
 	}
 
 	static void output(const image *i) {
 		assert (file_count > 0);
-		write_image(output_filename, i, output_exposure);
+		write_image(output_name(), i, output_exposure);
+	}
+
+	static void vise_write(const char *p, const char *s, const image *i) {
+		static int count = 0;
+		int length = strlen(p) + strlen(s) + 8;
+		char *output_string = (char *) malloc(length * sizeof(char));
+
+		snprintf(output_string, length, "%s%08d%s", p, count, s);
+
+		write_image(output_string, i, output_exposure);
+
+		count++;
 	}
 
 	static exposure &exp(int n) {
@@ -392,16 +426,23 @@ public:
 		return *output_exposure;
 	}
 
+	static void exp_scale() {
+		exposure_scale = 1;
+	}
+
+	static void exp_noscale() {
+		exposure_scale = 0;
+	}
+
 	static const exposure &const_exp() {
 		return *output_exposure;
 	}
 
-	static const image *open(int n) {
-		assert (n >= 0);
+	static const image *open(unsigned int n) {
 		assert (n <  file_count);
 		assert (!files_open[n]);
 
-		if (n == latest_close_num) {
+		if (latest_close_num >= 0 && n == (unsigned int) latest_close_num) {
 			images[n] = latest_close;
 			latest_close_num = -1;
 			files_open[n] = 1;
@@ -415,8 +456,7 @@ public:
 		return images[n];
 	}
 
-	static image *copy(int n, char *name) {
-		assert (n >= 0);
+	static image *copy(unsigned int n, char *name) {
 		assert (n <  file_count);
 
 		if (files_open[n])
@@ -427,8 +467,7 @@ public:
 		}
 	}
 
-	static void close(int image) {
-		assert (image >= 0);
+	static void close(unsigned int image) {
 		assert (image <  file_count);
 		assert (files_open[image]);
 

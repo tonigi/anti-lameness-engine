@@ -26,6 +26,7 @@
 #define __ppm_h__
 
 #include "image_ale_real.h"
+#include "image_bayer_ale_real.h"
 #include "exposure/exposure.h"
 
 static inline void error_ppm(const char *filename) {
@@ -58,7 +59,7 @@ static inline void eat_comments(FILE *f, const char *filename) {
 	}
 }
 
-static inline image *read_ppm(const char *filename, exposure *e) {
+static inline image *read_ppm(const char *filename, exposure *e, unsigned int bayer) {
 	unsigned int i, j, k;
 	image *im;
 	unsigned char m1, m2, val;
@@ -112,7 +113,10 @@ static inline image *read_ppm(const char *filename, exposure *e) {
 
 	/* Make a new image */
 
-	im = new image_ale_real(h, w, 3, "file", e);
+	if (bayer == IMAGE_BAYER_NONE)
+		im = new image_ale_real(h, w, 3, "file", e);
+	else 
+		im = new image_bayer_ale_real(h, w, 3, bayer, "file", e);
 
 	assert (im);
 
@@ -178,7 +182,8 @@ static inline image *read_ppm(const char *filename, exposure *e) {
 	return im;
 }
 
-static inline void write_ppm(const char *filename, const image *im, exposure *e, unsigned int mcv, int plain) {
+static inline void write_ppm(const char *filename, const image *im, exposure *e, 
+		unsigned int mcv, int plain, int rezero, int exposure_scale) {
 	unsigned int i, j, k;
 	FILE *f = fopen(filename, "wb");
 	assert(f);
@@ -213,18 +218,26 @@ static inline void write_ppm(const char *filename, const image *im, exposure *e,
 
 	/* Automatic exposure adjustment information */
 
-	ale_real maxval = im->maxval();
+	ale_real maxval = 1;
+	ale_real minval = (rezero ? im->minval() : 0);
+	pixel minval_pixel(minval, minval, minval);
 
-	if (maxval < 1.0)
-		maxval = 1.0;
+	if (exposure_scale) {
+		ale_real new_maxval = im->maxval();
+
+		if (new_maxval > maxval)
+			maxval = new_maxval;
+	}
 
 	/* Pixels */
 
 	for (i = 0; i < im->height(); i++)
 	for (j = 0; j < im->width();  j++) {
 
-		pixel exposure_adjust = im->get_pixel(i, j) / maxval;
-		pixel unlinearized = e->unlinearize(exposure_adjust);
+		pixel exposure_adjust = (im->get_pixel(i, j) - minval_pixel)
+			              / (maxval - minval);
+		pixel unlinearized = (e->unlinearize(exposure_adjust)).clamp();
+
 		pixel rescaled = unlinearized * (ale_real) mcv;
 
 		for (k = 0; k < im->depth();  k++) {

@@ -25,7 +25,7 @@
 #ifndef __combine_h__
 #define __combine_h__
 
-#include "../gpt.h"
+#include "../transformation.h"
 #include "../image.h"
 #include "../point.h"
 
@@ -84,7 +84,7 @@ public:
 		for (unsigned int i = 0; i < default_image->height(); i++)
 		for (unsigned int j = 0; j < default_image->width();  j++)
 			output_image->set_pixel(i, j, 
-				(partial_weight->get_pixel(i, j)[0] != 0)
+				(partial_weight->get_pixel(i, j).min_norm() >= render::get_wt())
 				? partial_image->get_pixel(i, j)
 				: default_image->get_pixel(i, j));
 
@@ -97,25 +97,27 @@ public:
 	 */
 
 	virtual const image *get_defined() {
-		unsigned int i, j;
-
-		const image *default_image = _default->get_defined();
-		const image *partial_image = partial->get_defined();
-
-		assert (default_image->width()  == partial_image->width());
-		assert (default_image->height() == partial_image->height());
+		unsigned int i, j, k;
 
 		if (defined_image)
 			return defined_image;
 
-		defined_image = new image_ale_real(default_image->height(),
-				default_image->width(), 1, NULL);
+		const image *partial_weight = partial->get_defined();
+		const image *default_weight = _default->get_defined();
 
-		for (i = 0; i < default_image->height(); i++)
-		for (j = 0; j < default_image->width();  j++)
-			defined_image->set_pixel(i, j, pixel
-				((partial_image->get_pixel(i, j)[0] != 0)
-				|(default_image->get_pixel(i, j)[0] != 0), 0, 0));
+		assert (default_weight->width()  == partial_weight->width());
+		assert (default_weight->height() == partial_weight->height());
+		
+		defined_image = new image_ale_real(default_weight->height(),
+				default_weight->width(), 3, NULL);
+
+		for (i = 0; i < default_weight->height(); i++)
+		for (j = 0; j < default_weight->width();  j++)
+		for (k = 0; k < default_weight->depth();  k++)
+			defined_image->set_pixel(i, j, 
+					(partial_weight->get_pixel(i, j).min_norm() >= render::get_wt())
+					? partial_weight->get_pixel(i, j)
+					: default_weight->get_pixel(i, j));
 
 		return defined_image;
 	}
@@ -125,6 +127,7 @@ public:
 	 */
 
 	virtual void sync(int n) {
+		render::sync(n);
 		if (output_image) {
 			delete output_image;
 			output_image = NULL;
@@ -137,6 +140,16 @@ public:
 		partial->sync(n);
 	}
 
+	virtual void step() {
+	}
+
+	const render *get_default() const {
+		return _default;
+	}
+
+	const render *get_partial() const {
+		return partial;
+	}
 };
 
 #endif

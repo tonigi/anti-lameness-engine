@@ -1,4 +1,4 @@
-// Copyright 2003 David Hilvert <dhilvert@auricle.dyndns.org>, 
+// Copyright 2002 David Hilvert <dhilvert@auricle.dyndns.org>, 
 //                              <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
@@ -18,18 +18,11 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include "tfile.h"
+
 /*
- * Static data translation unit for classes treating scenes as
- * two-dimensional data.
+ * See tfile.h for details on these variables.
  */
 
-#include "d2.h"
-
-namespace d2 {
-	#include "d2/align.cc"
-	#include "d2/render.cc"
-	#include "d2/image_rw.cc"
-	#include "d2/exposure/exposure.cc"
-	#include "d2/vise_core.cc"
-	#include "d2/tfile.cc"
-}
+int tfile_input_version = 0;
+int tfile_output_version = 0;

@@ -1,4 +1,4 @@
-// Copyright 2003 David Hilvert <dhilvert@auricle.dyndns.org>, 
+// Copyright 2004 David Hilvert <dhilvert@auricle.dyndns.org>,
 //                              <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
@@ -19,17 +19,28 @@
 */
 
 /*
- * Static data translation unit for classes treating scenes as
- * two-dimensional data.
+ * exposure_boolean.h: Boolean exposure properties.
  */
 
-#include "d2.h"
+#ifndef __exposure_boolean_h__
+#define __exposure_boolean_h__
 
-namespace d2 {
-	#include "d2/align.cc"
-	#include "d2/render.cc"
-	#include "d2/image_rw.cc"
-	#include "d2/exposure/exposure.cc"
-	#include "d2/vise_core.cc"
-	#include "d2/tfile.cc"
-}
+/*
+ * Boolean exposure.
+ */
+
+class exposure_boolean : public exposure {
+public:
+	pixel linearize(pixel input) const {
+		for (int k = 0; k < 3; k++)
+			input[k] = (input[k] == 0) ? 0 : 1;
+		return input;
+	}
+	pixel unlinearize(pixel input) const {
+		for (int k = 0; k < 3; k++)
+			input[k] = (input[k] == 0) ? 0 : 1;
+		return input;
+	}
+};
+
+#endif

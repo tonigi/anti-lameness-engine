@@ -130,6 +130,25 @@ public:
 		return _multiplier;
 	}
 
+	virtual ale_real confidence(unsigned int k, ale_real input) const {
+		if (confidence_exponent == 0)
+			return 1;
+
+		ale_real unexponentiated = 4 * (0.25 - pow(0.5 - input 
+					                 / _multiplier[k], 2));
+
+		if (unexponentiated < 0) 
+			return 0.001;
+
+		ale_real exponentiated =  pow(unexponentiated, 
+				              confidence_exponent);
+
+		if (exponentiated < 0.001 || !finite(exponentiated))
+			return 0.001;
+
+		return exponentiated;
+	}
+
 	/*
 	 * This is a very hackish confidence function.  It's zero at the
 	 * extremes of camera response and maximal at the center.
@@ -137,21 +156,9 @@ public:
 	virtual pixel confidence(pixel input) const {
 
 		if (confidence_exponent) {
-			pixel result;
-			for (unsigned int k = 0; k < 3; k++) {
-
-				result[k] = (0.25 - pow(0.5 - input[k] / _multiplier[k], 2)) * 4;
-
-				if (result[k] < 0) {
-					result[k] = 0.001;
-				} else {
-					result[k] = pow(result[k], confidence_exponent);
-
-					if (result[k] < 0.001 || !finite(result[k]))
-						result[k] = 0.001;
-				}
-			}
-			return result;
+			return pixel(confidence(0, input[0]),
+				     confidence(1, input[1]),
+				     confidence(2, input[2]));
 		} else {
 			return pixel(1, 1, 1);
 		}

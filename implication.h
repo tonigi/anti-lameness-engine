@@ -1,4 +1,4 @@
-// Copyright 2003 David Hilvert <dhilvert@auricle.dyndns.org>, 
+// Copyright 2004 David Hilvert <dhilvert@auricle.dyndns.org>, 
 //                              <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
@@ -18,18 +18,34 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef __implication_h__
+#define __implication_h__
+
 /*
- * Static data translation unit for classes treating scenes as
- * two-dimensional data.
+ * Information about program implication logic.
  */
+class implication {
+public:
+	/*
+	 * Describe an aspect of implication logic that
+	 * results in a program parameter being changed.
+	 */
+	static void changed(const char *description, const char *changes, const char *option = NULL) {
+		fprintf(stderr, "\n\n");
+		fprintf(stderr, "Program options have been automatically modified to satisfy the following:\n\n");
+		fprintf(stderr, description);
+		fprintf(stderr, "\n\n");
 
-#include "d2.h"
+		fprintf(stderr, "Changes are as follows:\n\n");
+		fprintf(stderr, changes);
+		fprintf(stderr, "\n\n");
 
-namespace d2 {
-	#include "d2/align.cc"
-	#include "d2/render.cc"
-	#include "d2/image_rw.cc"
-	#include "d2/exposure/exposure.cc"
-	#include "d2/vise_core.cc"
-	#include "d2/tfile.cc"
-}
+		if (option) {
+			fprintf(stderr, "This is equivalent to manually setting the following options:\n\n");
+			fprintf(stderr, option);
+			fprintf(stderr, "\n\n");
+		}
+	}
+};
+
+#endif

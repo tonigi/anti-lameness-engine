@@ -45,6 +45,10 @@
 #
 # Remove these two lines to run the script.
 #
+# Note: This script has been manually updated for ALE 0.7.0 from a non-generic
+# working copy, and hence may contain serious bugs.  Bugs may be reported to
+# ale@ventricle.dyndns.org.
+#
 
 print "Edit this script to set relevant parameters for calibration.\n";
 exit 1;
@@ -71,19 +75,16 @@ $nlrows = 0;
 $nlcols = 0;
 
 #
-# These are the files used for calibration
+# These are the input images used for calibration
 #
 # inputs: input images.
 #
 # tfile: transformation file indicating the proper transformations for the
 # input images.
 #
-# comparison: file indicating the desired final output of ALE 
-#
 
 $inputs = "*.ppm";
 $tfile = "b.t";
-$comparison = "c-align.png";
 
 #
 # Factor (>= 1) by which to scale each of the input images.
@@ -92,12 +93,29 @@ $comparison = "c-align.png";
 $scale = 5;
 
 #
+# Comparison images used for calibration.
+# 
+# Either:
+#
+# (a) set $comparison to the known scene data, or
+#
+# (b) set $comparison_inputs for calibration frames taken with the same imaging
+# device (at a larger scale).  $comparison_tfile indicates the alignment of
+# $comparison_inputs.
+#
+
+$comparison = "c-align.png";
+# $comparison_inputs = "comparison/*.ppm";
+# $comparison_tfile = "comparison/b.t";
+
+#
 # Random (but non-uniform) temporary files
 #
 
 $output1 = "/tmp/ale1-$$.png";
 $temp_file = "/tmp/ale-$$-input";
 $result_file = "/tmp/ale-$$-results";
+$comparison = "/tmp/ale-$$-comparison.ppm" if defined $comparison_inputs;
 
 #
 # Initialize a box filter. 
@@ -126,12 +144,22 @@ $result_file = "/tmp/ale-$$-results";
 #
 
 #
+# Affine colorspace parameters
+#
+
+@affine_mul = (1, 1, 1);
+@affine_add = (0, 0, 0);
+
+#
 # When modifying the filter, we start by modifying each element by $increment.
 # We halve the amount until we reach a value smaller than $increment_lower.
+# $a*_multiplier scales the increment for @affine_add and @affine_mul.
 #
 
 $increment = 0.8;
-$increment_lower = 0.1;
+$increment_lower = 0.01;
+$am_multiplier = 0.01;
+$aa_multiplier = 0.01;
 
 #
 # This array indicates the last direction tried for each index.  Since we
@@ -174,9 +202,11 @@ sub foo {
 	}
 
 	if ($nlheight > 0)  {
-		`$invocation --no-inc --mc 1 --scale=$scale --lpsf stdin --nlpsf stdin --psf-match --projective --perturb-upper=0 --trans-load=$tfile $inputs $comparison $output1 < $temp_file 2> $result_file`;
+		`$invocation --dchain triangle:2 --no-inc --mc 1 --ips 4 --lpsf stdin --nlpsf stdin --projective --perturb-upper=0 --trans-load=$comparison_tfile $comparison_inputs $comparison < $temp_file 2> /dev/null` if ($init_comparison && $comparison_inputs);
+		`$invocation --dchain triangle:2 --no-inc --mc 1 --scale=$scale --lpsf stdin --nlpsf stdin --psf-match @affine_mul @affine_add --projective --perturb-upper=0 --trans-load=$tfile $inputs $comparison $output1 < $temp_file 2> $result_file`;
 	} else {
-		`$invocation --no-inc --mc 1 --scale=$scale --lpsf stdin --psf-match --projective --perturb-upper=0 --trans-load=$tfile $inputs $comparison $output1 < $temp_file 2> $result_file`;
+		`$invocation --dchain triangle:2 --no-inc --mc 1 --ips 4 --lpsf stdin --projective --perturb-upper=0 --trans-load=$comparison_tfile $comparison_inputs $comparison < $temp_file 2> /dev/null` if ($init_comparison && $comparison_inputs);
+		`$invocation --dchain triangle:2 --no-inc --mc 1 --scale=$scale --lpsf stdin --psf-match @affine_mul @affine_add --projective --perturb-upper=0 --trans-load=$tfile $inputs $comparison $output1 < $temp_file 2> $result_file`;
 	}
 
 	`rm -f $output1`;

@@ -1,3 +1,72 @@
+0.7.0
+
+o	Add support for algorithmic alignment weights.  This requires 
+	POSIX fork() and execlp(), so add a Makefile variable for POSIX.
+
+o	Add support for frequency-based alignment weights.  Angelo Pesce
+	had initially suggested the related (or more general) idea of
+	edge-based alignment.  Frequencies were chosen because of their
+	conceptual simplicity.  This option requires that FFTW be linked.
+
+o	Add support for specifying per-pixel and per-channel alignment weights
+	by providing an additional weight-map image, as suggested by Bert
+	Douglas.
+
+o	Remove support for USM.
+
+o	Add multiple default settings: q0, q1, q2, qn, qr.
+
+o	Partition help into sections, and add a section for transformation
+	data file help.
+
+o	Add a device type for the XVP610 camera in 640x480 mode.
+
+o	Modify the divisor in d2/render/ipc.h to ensure convergence when
+	using multiple varieties.
+
+o	Add experimental handling for Bayer patterns.
+
+o	Add experimental video stabilization options.
+
+o	Add options to control output range.  By default, use the range of the
+	original frame.
+
+o	For incremental rendering, add general filtering options.  Drizzling
+	options are no longer supported as such, but the help output offers
+	examples of how to emulate old drizzling/merging techniques (roughly).
+
+o	Add options --fail-default and --fail-optimal to select the desired
+	failure mode.  --fail-default uses the default alignment in the case
+	of failure.
+	
+o	Add option --ex, to support exclusion volumes.  Region exclusion was
+	first suggested to the author by Dewayne VanHoozer as a means of
+	solving the 'closed eye problem' in group photography.
+
+o	Add a barrel distortion adjustment multiplier and rate options.
+
+o	In d2/transformation.h, add parameters for barrel distortion correction.
+	In d2/tfile.h, add new barrel distortion command 'B'.  The approach
+	taken is based on that of Helmut Dersch's PanoTools.  (i.e., a
+	polynomial in radial distance is used.)
+
+o	Increment the latest supported transformation file syntax to version
+	3.  This version supports transformation of the original frame, as
+	well as other new features described above.
+
+o	Move d2/gpt.h to d2/transformation.h.
+
+o	In d2::align, add support for original frame transformations.
+
+o	In d2::align::diff() and d2::align::set_exposure_ratio(), treat cases
+	with and without extension identically.
+
+o	Report unrecognized transformation file commands as errors instead of
+	warnings.
+
+o	In the transformation data file handler, report incompatible
+	transformation types as an error instead of as a warning.
+
 0.6.0
 
 o	Add a generalized, but rudimentary, implementation of Steve Mann's

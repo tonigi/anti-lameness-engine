@@ -29,7 +29,7 @@ int image_rw::ppm_type = 0;
 unsigned int image_rw::num_bits = 8;
 unsigned int image_rw::mcv = 255;
 
-int image_rw::file_count = 0;
+unsigned int image_rw::file_count = 0;
 const char *image_rw::output_filename = NULL;
 const char **image_rw::filenames = NULL;
 const image **image_rw::images = NULL;
@@ -40,3 +40,5 @@ const image *image_rw::latest_close = NULL;
 
 exposure *image_rw::input_exposure = NULL;
 exposure *image_rw::output_exposure = NULL;
+unsigned int image_rw::bayer = 0;
+int image_rw::exposure_scale = 0;

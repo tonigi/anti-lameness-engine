@@ -88,6 +88,7 @@ public:
 		return result;
 	}
 
+#if 0
 	/*
 	 * Get the average pixel response.
 	 */
@@ -105,6 +106,7 @@ public:
 
 		return result;
 	}
+#endif
 
 	sum(psf *f1, psf *f2) {
 		this->f1 = f1;

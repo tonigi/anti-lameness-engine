@@ -77,8 +77,8 @@ public:
 		for (unsigned int i = 0; i < t.unscaled_height(); i += (t.unscaled_height() - 1))
 		for (unsigned int j = 0; j < t.unscaled_width();  j += (t.unscaled_width()  - 1)) {
 			point corner = point(i, j);
-			point delta1 = corner - t.inverse_transform(t(corner) + point(1, 0));
-			point delta2 = corner - t.inverse_transform(t(corner) + point(0, 1));
+			point delta1 = corner - t.scaled_inverse_transform(t.transform_scaled(corner) + point(1, 0));
+			point delta2 = corner - t.scaled_inverse_transform(t.transform_scaled(corner) + point(0, 1));
 
 			for (int index = 0; index < 2; index++) {
 				ale_real d1 = fabs(delta1[index]);
@@ -156,6 +156,7 @@ public:
 			}
 		}
 
+#if 0
 		avg_response = (ale_real *)malloc(_filter_dim_i * _filter_dim_j * 3
 				              * sizeof(ale_real));
 					      
@@ -176,6 +177,7 @@ public:
 				avg_response[i * _filter_dim_j * 3 + j * 3 + k]
 					= r.matrix(k, k) / divisor;
 		}
+#endif
 
 		compute_integrals();
 	}

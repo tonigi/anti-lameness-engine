@@ -34,6 +34,13 @@
 #include <math.h>
 
 /*
+ * Interface files
+ */
+
+#include "unsupported.h"
+#include "implication.h"
+
+/*
  * 2D include files
  */
 
@@ -44,12 +51,21 @@
  */
 
 #include "device/xvp610_320x240.h"
+#include "device/xvp610_640x480.h"
+
+/*
+ * Help files
+ */
+
+#include "help.h"
 
 /*
  * Version Information
  */
 
-char *version = "ALE Version:      0.6.0\n"
+char *short_version = "0.7.0";
+
+char *version = "ALE Version:      0.7.0\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else
@@ -73,131 +89,50 @@ char *version = "ALE Version:      0.6.0\n"
 #endif
 ;
 
+/*
+ * Argument counter.
+ *
+ * Counts instances of a given option.
+ */
+unsigned int arg_count(int argc, const char *argv[], const char *arg) {
+	unsigned int count = 0;
+	for (int i = 0; i < argc; i++) {
+		if (!strcmp(argv[i], arg))
+			count++;
+		else if (!strcmp(argv[i], "--"))
+			return count;
+	}
+	return count;
+}
 
 /*
- * Describe how to use this program
+ * Reallocation function
  */
-inline void usage(const char *argv0) {
-#define BETWEEN_SECTIONS "\n"
-#define HEADER_SPACE ""
-	fprintf(stderr, 
-		"\n"
-		"Usage: %s [<options>] <original-frame> [<supplemental-frame> ...] <output-file>\n"
-		"   or: %s --version\n"
-		BETWEEN_SECTIONS
-		"File output options:\n"
-		HEADER_SPACE
-		"--8bpc            Write 8 bit per channel output [default]\n"
-		"--16bpc           Write 16 bit per channel output\n"
-		"\n"
-#ifdef USE_MAGICK
-		"--auto            Determine file type automatically [default]\n"
-		"--raw             Write raw PPM output\n"
-		"--plain           Write plain PPM output\n"
-#else
-		"--raw             Write raw PPM output [default]\n"
-		"--plain           Write plain PPM output\n"
-#endif
-		BETWEEN_SECTIONS
-		"Alignment channel options:\n"
-		HEADER_SPACE
-		"--align-all       Align images using all color channels\n"
-		"--align-green     Align images using the green channel\n"
-		"--align-sum       Align images using a sum of channels [default]\n"
-		BETWEEN_SECTIONS
-		"Transformation options:\n"
-		HEADER_SPACE
-		"--translation     Only adjust the position of images\n"
-		"--euclidean       Adjust the position and orientation of images [default]\n"
-		"--projective      Use projective transformations.  Best quality, but slow.\n"
-		BETWEEN_SECTIONS
-		"Image extents:\n"
-		HEADER_SPACE
-		"--extend          Increase image extents to accommodate all pixel data.\n"
-		"--no-extend       Don't increase extents; crop to original frame. [default]\n"
-		BETWEEN_SECTIONS
-		"Alignment following:\n"
-		HEADER_SPACE
-                "--identity        Frames align closely with the original frame.  [default]\n"
-                "--follow          Frames align closely with their immediate predecessor.\n"
-		BETWEEN_SECTIONS
-		"Transformation file operations:\n"
-		HEADER_SPACE
-		"--trans-load=x    Load initial transformation settings from file x\n"
-		"--trans-save=x    Save final transformation data in file x\n"
-		BETWEEN_SECTIONS
-		"Tunable parameters:\n"
-		HEADER_SPACE
-		"--scale=x         Scale images by the factor x (where x is at least 1.0)\n"
-		"--metric=x        Set the alignment error metric exponent.       (2 is default)\n"
-		"--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)\n"
-		"--perturb-upper=x Perturbation upper bound in pixels/degrees  (32.0 is default)\n"
-		"--perturb-lower=x Perturbation lower bound in pixels/degrees  (.125 is default)\n"
-		"--rot-upper=x     Rotation-specific perturbation upper bound  (32.0 is default)\n"
-		"--lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (1 is def.)\n"
-		BETWEEN_SECTIONS
-		"Drizzling:\n"
-		HEADER_SPACE
-		"--drizzle-diam=x  Drizzle with input pixel diameter x (where x > 0)\n"
-		"--drizzle-only    If drizzling, output black for pixels with no drizzle data.\n"
-		BETWEEN_SECTIONS
-		"Point-spread functions:\n"
-		HEADER_SPACE
-		"--lpsf <p>        Set linear colorspace point-spread function to <p>\n"
-		"--nlpsf <p>       Set non-linear colorspace point-spread function to <p>\n"
-		"                     Available point-spread functions:\n"
-		"                        box=<diameter>\n"
-		"                        stdin\n"
-		"                        <p>+<p> (summation)\n"
-		"                     Default lpsf is either 'box=1.0' or device-specific.\n"
-		"                     Default nlpsf is either disabled or device-specific.\n"
-		"--psf-match       Used by the script ale-psf-calibrate to evaluate PSFs.\n"
-		BETWEEN_SECTIONS
-		"Device (sets point-spread function defaults):\n"
-		HEADER_SPACE
-		"--device <d>      Set the capture device to <d>.\n"
-		"                     Available devices:\n"
-		"                        xvp610_320x240\n"
-		BETWEEN_SECTIONS
-		"Unsharp Mask (was 'High-frequency Enhancement'):\n"
-		HEADER_SPACE
-		"--usm <m>         Apply an unsharp mask with multiplier <m>.\n"
-		"                     (See also --device, --nlpsf, and --lpsf.)\n"
-		BETWEEN_SECTIONS
-		"Irani-Peleg iterative solver:\n"
-		HEADER_SPACE
-		"--ips <i>         Run <i> iterations.  (see also --device, --nlpsf, and --lpsf)\n"
-		BETWEEN_SECTIONS
-		"Monte Carlo alignment:\n"
-		HEADER_SPACE
-		"--mc <x>          Align using, on average, x%% of available pixels (0 < x < 100)\n"
-		"--no-mc           Align using all pixels.  [default]\n"
-		BETWEEN_SECTIONS
-		"Certainty-based rendering [Experimental]:\n"
-		HEADER_SPACE
-		"--cx <x>          Render with certainty exponent <x>\n"
-		"--no-cx           Render with uniform certainty.  [default]\n"
-		BETWEEN_SECTIONS
-		"Exposure options:\n"
-		HEADER_SPACE
-		"--exp-register    Register exposure between frames.  [default]\n"
-		"--exp-noregister  Assume uniform exposure across all frames.\n"
-		BETWEEN_SECTIONS
-		"File output options:\n"
-		HEADER_SPACE
-		"--inc             Produce incremental output.  [default]\n"
-		"--no-inc          Don't produce incremental output.\n"
-		BETWEEN_SECTIONS
-		"Pixel replacement:\n"
-		HEADER_SPACE
-		"--replace         Replace overlapping areas when merging and drizzling.\n"
-		"--no-replace      Do not replace.  [default]\n"
-		"\n",
-		argv0, argv0);
-	exit(1);
+void *local_realloc(void *ptr, size_t size) {
+	void *new_ptr = realloc(ptr, size);
 
-#undef BETWEEN_SECTIONS
-#undef HEADER_SPACE
+	if (new_ptr == NULL) {
+		fprintf(stderr, "\n\n*** Unable to allocate memory in main() ***\n\n");
+		exit(1);
+	}
+
+	return new_ptr;
+}
+
+/*
+ * Not enough arguments function.
+ */
+void not_enough(const char *opt_name) {
+	fprintf(stderr, "\n\n*** Not enough arguments for %s ***\n\n", opt_name);
+	exit(1);
+}
+
+/*
+ * Bad argument function
+ */
+void bad_arg(const char *opt_name) {
+	fprintf(stderr, "\n\n*** Bad argument to %s ***\n\n", opt_name);
+	exit(1);
 }
 
 /*
@@ -215,11 +150,12 @@ inline void usage(const char *argv0) {
 int main(int argc, const char *argv[]){
 
 	/*
-	 * Version information
+	 * Version information and help.
 	 */
+	
+	help hi(argv[0], short_version);
 
-	if (argc == 2 && !strcmp(argv[1], "--version")) {
-
+	if (arg_count(argc, argv, "--version") > 0) {
 		/*
 		 * Output the version
 		 */
@@ -227,13 +163,37 @@ int main(int argc, const char *argv[]){
 		fprintf(stderr, "%s", version);
 
 		return 0;
+	} else if (arg_count(argc, argv, "--hu") > 0) {
+		hi.usage();
+	} else if (arg_count(argc, argv, "--hq") > 0) {
+		hi.defaults();
+	} else if (arg_count(argc, argv, "--hf") > 0) {
+		hi.file();
+	} else if (arg_count(argc, argv, "--he") > 0) {
+		hi.exclusion();
+	} else if (arg_count(argc, argv, "--ha") > 0) {
+		hi.alignment();
+	} else if (arg_count(argc, argv, "--hr") > 0) {
+		hi.rendering();
+	} else if (arg_count(argc, argv, "--hx") > 0) {
+		hi.exposure();
+	} else if (arg_count(argc, argv, "--ht") > 0) {
+		hi.tdf();
+	} else if (arg_count(argc, argv, "--hl") > 0) {
+		hi.filtering();
+	} else if (arg_count(argc, argv, "--hd") > 0) {
+		hi.device();
+	} else if (arg_count(argc, argv, "--hv") > 0) {
+		hi.visp();
+	} else if (arg_count(argc, argv, "--hz") > 0) {
+		hi.undocumented();
 	}
 
 	/*
 	 * Undocumented projective transformation utility
 	 */
 
-	if (argc == 2 && !strcmp(argv[1], "--ptcalc")) {
+	if (arg_count(argc, argv, "--ptcalc") > 0) {
 		fprintf(stderr, "\n\n*** Warning: this feature is not documented ***\n\n");
 		printf("Enter: w h tlx tly blx bly brx bry trx try x y\n\n");
 	
@@ -260,9 +220,13 @@ int main(int argc, const char *argv[]){
 
 		d2::point a(y, x), b;
 
-		b = t(a);
+		b = t.transform_scaled(a);
 
-		printf("Result: (%f, %f)\n", (double) b[1], (double) b[0]);
+		printf("TRANSFORM t(a): (%f, %f)\n", (double) b[1], (double) b[0]);
+
+		b = t.scaled_inverse_transform(a);
+
+		printf("INVERSE t^-1(a): (%f, %f)\n", (double) b[1], (double) b[0]);
 
 		exit(0);
 	}
@@ -272,9 +236,10 @@ int main(int argc, const char *argv[]){
 	 */
 
 	double scale_factor = 1;
+	double vise_scale_factor = 1;
+#if 0
 	double usm_multiplier = 0.0;
-	double drizzle_radius = -1;
-	int drizzle_only = 0;
+#endif
 	int extend = 0;
 	struct d2::tload_t *tload = NULL;
 	struct d2::tsave_t *tsave = NULL;
@@ -283,9 +248,90 @@ int main(int argc, const char *argv[]){
 	const char *psf[psf_N] = {NULL, NULL};
 	const char *device = NULL;
 	int psf_match = 0;
+	double psf_match_args[6];
 	int inc = 1;
-	int replace = 0;
 	int exposure_register = 1;
+	const char *wm_filename = NULL;
+	int wm_offsetx, wm_offsety;
+	double cx_parameter = 0;
+	int *ex_parameters = NULL;
+	int ex_count = 0;
+	int ex_show = 0;
+	d2::render *achain;
+	const char *achain_type = "triangle:2";
+	const char *afilter_type = "internal";
+	d2::render **ochain = NULL;
+	const char **ochain_names = NULL;
+	const char **ochain_types = NULL;
+	int oc_count = 0;
+	const char **visp = NULL;
+	int vise_count = 0;
+
+	/*
+	 * dchain is ochain[0].
+	 */
+
+	ochain = (d2::render **) local_realloc(ochain, 
+				(oc_count + 1) * sizeof(d2::render *));
+	ochain_names = (const char **) local_realloc((void *)ochain_names, 
+				(oc_count + 1) * sizeof(const char *));
+	ochain_types = (const char **) local_realloc((void *)ochain_types, 
+				(oc_count + 1) * sizeof(const char *));
+
+	ochain_types[0] = "sinc*lanc:8";
+
+	oc_count = 1;
+
+	/*
+	 * Handle default settings
+	 */
+
+	if (arg_count(argc, argv, "--q0")) {
+		ochain_types[0] = "fine:box:1,triangle:2";
+		achain_type = "triangle:2";
+		d2::align::mc(0.3);
+		ip_iterations = 0;
+		d2::image_rw::exp_noscale();
+		cx_parameter = 0;
+	} else if (arg_count(argc, argv, "--qn")) {
+		ochain_types[0] = "sinc*lanc:6";
+		achain_type = "sinc*lanc:6";
+		d2::align::mc(0.5);
+		ip_iterations = 0;
+		d2::image_rw::exp_noscale();
+		cx_parameter = 0;
+	} else if (arg_count(argc, argv, "--q1")) {
+		ochain_types[0] = "fine:sinc*lanc:6,sinc*lanc:6";
+		achain_type = "sinc*lanc:6";
+		d2::align::mc(0.5);
+		ip_iterations = 0;
+		d2::image_rw::exp_noscale();
+		cx_parameter = 0;
+	} else if (arg_count(argc, argv, "--q2")) {
+		ochain_types[0] = "sinc*lanc:8";
+		achain_type = "sinc*lanc:8";
+		d2::align::no_mc();
+		ip_iterations = 4;
+		d2::image_rw::exp_noscale();
+		cx_parameter = 0;
+	} else if (arg_count(argc, argv, "--qr")) {
+		ochain_types[0] = "sinc*lanc:8";
+		achain_type = "sinc*lanc:8";
+		d2::align::no_mc();
+		ip_iterations = 6;
+		d2::image_rw::exp_scale();
+		cx_parameter = 0.7;
+	} else {
+		/*
+		 * Same as --q0
+		 */
+		ochain_types[0] = "fine:box:1,triangle:2";
+		achain_type = "triangle:2";
+		d2::align::mc(0.3);
+		ip_iterations = 0;
+		d2::image_rw::exp_noscale();
+		cx_parameter = 0;
+	}
 
 	/* 
 	 * Iterate through arguments until we reach the first file 
@@ -296,7 +342,15 @@ int main(int argc, const char *argv[]){
 	for (int i = 1; i < argc - 1; i++) {
 
 
-		if (!strcmp(argv[i], "--8bpc")) {
+		if (!strcmp(argv[i], "--q0")
+		 || !strcmp(argv[i], "--q1")
+		 || !strcmp(argv[i], "--q2")
+		 || !strcmp(argv[i], "--qr")
+		 || !strcmp(argv[i], "--qn")) {
+		 	/*
+			 * Do nothing.  Defaults have already been set.
+			 */
+		} else if (!strcmp(argv[i], "--8bpc")) {
 			d2::image_rw::depth8();
 		} else if (!strcmp(argv[i], "--16bpc")) {
 			d2::image_rw::depth16();
@@ -322,108 +376,281 @@ int main(int argc, const char *argv[]){
 			d2::align::initial_default_identity();
 		} else if (!strcmp(argv[i], "--follow")) {
 			d2::align::initial_default_follow();
+		} else if (!strcmp(argv[i], "--fail-optimal")) {
+			d2::align::fail_optimal();
+		} else if (!strcmp(argv[i], "--fail-default")) {
+			d2::align::fail_default();
 		} else if (!strcmp(argv[i], "--no-extend")) {
-			d2::align::no_extend();
 			extend = 0;
 		} else if (!strcmp(argv[i], "--extend")) {
-			d2::align::set_extend();
 			extend = 1;
 		} else if (!strcmp(argv[i], "--no-mc")) {
 			d2::align::no_mc();
 		} else if (!strcmp(argv[i], "--mc")) {
+			if (i + 1 >= argc)
+				not_enough("--mc");
+
 			double mc_parameter;
-			if (i + 1 < argc) {
-				sscanf(argv[i+1], "%lf", &mc_parameter);
-				mc_parameter /= 100;
-				i += 1;
-				d2::align::mc(mc_parameter);
-			} else {
-				fprintf(stderr, "\n\n*** Not enough arguments for --mc ***\n\n\n");
+			sscanf(argv[i+1], "%lf", &mc_parameter);
+			mc_parameter /= 100;
+			i += 1;
+			d2::align::mc(mc_parameter);
+
+		} else if (!strcmp(argv[i], "--wm")) {
+			if (wm_filename != NULL) {
+				fprintf(stderr, "\n\n*** Only one weight map can be specified ***\n\n\n");
 				exit(1);
 			}
+
+			if (i + 3 >= argc)
+				not_enough("--wm");
+			wm_filename = argv[i+1];
+
+			if (sscanf(argv[i+2], "%d", &wm_offsetx) != 1) {
+				fprintf(stderr, "\n\n*** --wm x-argument must be an integer ***\n\n\n");
+				exit(1);
+			}
+			if (sscanf(argv[i+3], "%d", &wm_offsety) != 1) {
+				fprintf(stderr, "\n\n*** --wm y-argument must be an integer ***\n\n\n");
+				exit(1);
+			}
+			i += 3;
+
+		} else if (!strcmp(argv[i], "--fl")) {
+			if (i + 3 >= argc)
+				not_enough("--fl");
+			double h, v, a;
+			if (sscanf(argv[i+1], "%lf", &h) != 1) {
+				fprintf(stderr, "\n\n*** --fl h-argument must be numerical ***\n\n\n");
+				exit(1);
+			}
+			if (sscanf(argv[i+2], "%lf", &v) != 1) {
+				fprintf(stderr, "\n\n*** --fl v-argument must be numerical ***\n\n\n");
+				exit(1);
+			}
+			if (sscanf(argv[i+3], "%lf", &a) != 1) {
+				fprintf(stderr, "\n\n*** --fl a-argument must be numerical ***\n\n\n");
+				exit(1);
+			}
+			i += 3;
+#ifdef USE_FFTW
+			d2::align::set_frequency_cut(h, v, a);
+#else
+			fprintf(stderr, "\n\n*** Error: --fl is not supported                  ***");
+			fprintf(stderr,   "\n*** Hint:  rebuild ALE with FFTW=1                ***\n\n\n");
+			exit(1);
+#endif
+		} else if (!strcmp(argv[i], "--wmx")) {
+			if (i + 3 >= argc)
+				not_enough("--wmx");
+#ifdef USE_UNIX
+			d2::align::set_wmx(argv[i+1], argv[i+2], argv[i+3]);
+#else
+			fprintf(stderr, "\n\n*** Error: --wmx is not supported                 ***");
+			fprintf(stderr,   "\n*** Hint:  rebuild ALE with POSIX=1               ***");
+#endif
+			i += 3;
+		} else if (!strcmp(argv[i], "--flshow")) {
+			if (i + 1 >= argc)
+				not_enough("--flshow");
+			d2::align::set_fl_show(argv[i+1]);
+			i++;
+		} else if (!strcmp(argv[i], "--ex")) {
+			if (i + 6 >= argc)
+				not_enough("--ex");
+
+			ex_parameters = (int *) local_realloc(ex_parameters, (ex_count + 1) * 6 * sizeof(int));
+
+			for (int param = 0; param < 6; param++)
+			if  (sscanf(argv[i + param + 1], "%d", &(ex_parameters[6 * ex_count + param])) != 1)
+				bad_arg("--ex");
+
+			/*
+			 * Swap x and y, since their internal meanings differ from their external meanings.
+			 */
+
+			for (int param = 0; param < 2; param++) {
+				int temp = ex_parameters[6 * ex_count + 2 + param];
+				ex_parameters[6 * ex_count + 2 + param] = ex_parameters[6 * ex_count + 0 + param];
+				ex_parameters[6 * ex_count + 0 + param] = temp;
+			}
+
+
+			/*
+			 * Increment counters
+			 */
+
+			ex_count++;
+			i += 6;
+		} else if (!strcmp(argv[i], "--exshow")) {
+			ex_show = 1;
+		} else if (!strcmp(argv[i], "--wt")) {
+			if (i + 1 >= argc)
+				not_enough("--wt");
+
+			double wt;
+
+			if (sscanf(argv[i + 1], "%lf", &wt) != 1)
+				bad_arg("--wt");
+
+			d2::render::set_wt(wt);
+			i++;
+		} else if (!strcmp(argv[i], "--dchain")) {
+			if (i + 1 >= argc)
+				not_enough("--dchain");
+			ochain_types[0] = argv[i+1];
+			i++;
+		} else if (!strcmp(argv[i], "--achain")) {
+			if (i + 1 >= argc)
+				not_enough("--achain");
+			achain_type = argv[i+1];
+			i++;
+		} else if (!strcmp(argv[i], "--afilter")) {
+			if (i + 1 >= argc)
+				not_enough("--afilter");
+			afilter_type = argv[i+1];
+			i++;
+		} else if (!strcmp(argv[i], "--ochain")) {
+			if (i + 2 >= argc)
+				not_enough("--ochain");
+
+			ochain = (d2::render **) local_realloc(ochain, 
+						(oc_count + 1) * sizeof(d2::render *));
+			ochain_names = (const char **) local_realloc((void *)ochain_names, 
+						(oc_count + 1) * sizeof(const char *));
+			ochain_types = (const char **) local_realloc((void *)ochain_types, 
+						(oc_count + 1) * sizeof(const char *));
+
+			ochain_types[oc_count] = argv[i+1];
+			ochain_names[oc_count] = argv[i+2];
+
+			oc_count++;
+			i+=2;
+		} else if (!strcmp(argv[i], "--visp")) {
+			if (i + 5 >= argc)
+				not_enough("--visp");
+
+			visp = (const char **) local_realloc((void *)visp, 4 *
+						(vise_count + 1) * sizeof(const char *));
+
+			for (int param = 0; param < 4; param++)
+				visp[vise_count * 4 + param] = argv[i + 1 + param];
+
+			vise_count++;
+			i+=4;
 		} else if (!strcmp(argv[i], "--cx")) {
-			double cx_parameter;
-			if (i + 1 < argc) {
-				sscanf(argv[i+1], "%lf", &cx_parameter);
-				i += 1;
-				d2::exposure::set_confidence(cx_parameter);
-			} else {
-				fprintf(stderr, "\n\n*** Not enough arguments for --cx ***\n\n\n");
-				exit(1);
-			}
+			
+			if (i + 1 >= argc)
+				not_enough("--cx");
+
+			sscanf(argv[i+1], "%lf", &cx_parameter);
+			i += 1;
+
 		} else if (!strcmp(argv[i], "--no-cx")) {
-			d2::exposure::set_confidence(0);
+			cx_parameter = 0;
 		} else if (!strcmp(argv[i], "--ip")) {
 			fprintf(stderr, "\n\n*** Error: --ip <r> <i> is no longer supported. ***\n"
 					    "*** Use --lpsf box=<r> --ips <i> instead.        ***\n\n");
 			exit(1);
-		} else if (!strcmp(argv[i], "--lpsf")) {
-			if (i + 1 < argc) {
-				psf[psf_linear] = argv[i+1];
-				i++;
-			} else {
-				fprintf(stderr, "\n\n*** Not enough arguments for --lpsf ***\n\n\n");
-				exit(1);
-			}
+		} else if (!strcmp(argv[i], "--bayer")) {
+			if (i + 1 >= argc)
+				not_enough("--bayer");
 
-		} else if (!strcmp(argv[i], "--nlpsf")) {
-			if (i + 1 < argc) {
-				psf[psf_nonlinear] = argv[i+1];
-				i++;
+			/*
+			 * External order is clockwise from top-left.  Internal
+			 * order is counter-clockwise from top-left.
+			 */
+
+			if (!strcmp(argv[i+1], "rgbg")) {
+				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
+			} else if (!strcmp(argv[i+1], "bgrg")) {
+				d2::image_rw::set_default_bayer(IMAGE_BAYER_BGRG);
+			} else if (!strcmp(argv[i+1], "gbgr")) {
+				d2::image_rw::set_default_bayer(IMAGE_BAYER_GRGB);
+			} else if (!strcmp(argv[i+1], "grgb")) {
+				d2::image_rw::set_default_bayer(IMAGE_BAYER_GBGR);
+			} else if (!strcmp(argv[i+1], "none")) {
+				d2::image_rw::set_default_bayer(IMAGE_BAYER_NONE);
 			} else {
-				fprintf(stderr, "\n\n*** Not enough arguments for --nlpsf ***\n\n\n");
-				exit(1);
+				bad_arg("--bayer");
 			}
+			i++;
+		} else if (!strcmp(argv[i], "--lpsf")) {
+			if (i + 1 >= argc)
+				not_enough("--lpsf");
+
+			psf[psf_linear] = argv[i+1];
+			i++;
+		} else if (!strcmp(argv[i], "--nlpsf")) {
+			if (i + 1 >= argc)
+				not_enough("--nlpsf");
+
+			psf[psf_nonlinear] = argv[i+1];
+			i++;
 
 		} else if (!strcmp(argv[i], "--psf-match")) {
+			if (i + 6 >= argc)
+				not_enough("--psf-match");
+
 			psf_match = 1;
-			d2::align::keep();
+
+			for (int index = 0; index < 6; index++) {
+				if (sscanf(argv[i + 1], "%lf", &psf_match_args[index]) != 1)
+					bad_arg("--psf-match");
+				i++;
+			}
+
 		} else if (!strcmp(argv[i], "--device")) {
-			if (i + 1 < argc) {
-				device = argv[i+1];
-				i++;
-			} else {
-				fprintf(stderr, "\n\n*** Not enough arguments for --device ***\n\n\n");
-				exit(1);
-			}
+			if (i + 1 >= argc) 
+				not_enough("--device");
+
+			device = argv[i+1];
+			i++;
+
+#if 0
 		} else if (!strcmp(argv[i], "--usm")) {
-			if (i + 1 < argc) {
-				sscanf(argv[i+1], "%lf", &usm_multiplier);
-				i++;
-			} else {
-				fprintf(stderr, "\n\n*** Not enough arguments for --usm ***\n\n\n");
-				exit(1);
-			}
+
+			if (d3_output != NULL)
+				unsupported::fornow("3D modeling with unsharp mask");
+
+			if (i + 1 >= argc)
+				not_enough("--usm");
+
+			sscanf(argv[i+1], "%lf", &usm_multiplier);
+			i++;
+#endif
+
 		} else if (!strcmp(argv[i], "--ipr")) {
-			if (i + 1 < argc) {
-				if (sscanf(argv[i+1], "%d", &ip_iterations) != 1) {
-					fprintf(stderr, "\n\n*** --ipr requires an integer argument ***\n\n");
-					exit(1);
-				}
-				fprintf(stderr, "\n\n*** Warning: --ipr is deprecated.  Use --ips instead ***\n\n");
-				i++;
-				d2::align::keep();
-			} else {
-				fprintf(stderr, "\n\n*** Not enough arguments for --ipr ***\n\n\n");
+			
+			if (i + 1 >= argc)
+				not_enough("--ipr");
+
+			if (sscanf(argv[i+1], "%d", &ip_iterations) != 1) {
+				fprintf(stderr, "\n\n*** --ipr requires an integer argument ***\n\n");
 				exit(1);
 			}
+			fprintf(stderr, "\n\n*** Warning: --ipr is deprecated.  Use --ips instead ***\n\n");
+			i++;
+
 		} else if (!strcmp(argv[i], "--ips")) {
-			if (i + 1 < argc) {
-				if (sscanf(argv[i+1], "%d", &ip_iterations) != 1) {
-					fprintf(stderr, "\n\n*** --ips requires an integer argument ***\n\n");
-					exit(1);
-				}
-				i++;
-				d2::align::keep();
-			} else {
-				fprintf(stderr, "\n\n*** Not enough arguments for --ips ***\n\n\n");
+
+			if (i + 1 >= argc)
+				not_enough("--ips");
+
+			if (sscanf(argv[i+1], "%d", &ip_iterations) != 1) {
+				fprintf(stderr, "\n\n*** --ips requires an integer argument ***\n\n");
 				exit(1);
 			}
+			i++;
 		} else if (!strcmp(argv[i], "--ipc")) {
 			fprintf(stderr, "\n\n*** Error: --ipc <c> <i> is no longer supported. ***\n"
 					    "*** Use either: --ips <i> --lpsf <c>              ***\n"
 					    "***         or: --ips <i> --device <c>           ***\n\n");
 			exit(1);
+		} else if (!strcmp(argv[i], "--exp-extend")) {
+			d2::image_rw::exp_scale();
+		} else if (!strcmp(argv[i], "--exp-noextend")) {
+			d2::image_rw::exp_noscale();
 		} else if (!strcmp(argv[i], "--exp-register")) {
 			exposure_register = 1;
 			d2::align::exp_register();
@@ -431,20 +658,23 @@ int main(int argc, const char *argv[]){
 			exposure_register = 0;
 			d2::align::exp_noregister();
 		} else if (!strcmp(argv[i], "--drizzle-only")) {
-			drizzle_only = 1;
+			unsupported::discontinued("--drizzle-only", "--dchain box:1");
 		} else if (!strcmp(argv[i], "--inc")) {
 			inc = 1;
 		} else if (!strcmp(argv[i], "--no-inc")) {
 			inc = 0;
-		} else if (!strcmp(argv[i], "--replace")) {
-			replace = 1;
-		} else if (!strcmp(argv[i], "--no-replace")) {
-			replace = 0;
+		} else if (!strncmp(argv[i], "--visp-scale=", strlen("--visp-scale="))) {
+			sscanf(argv[i] + strlen("--visp-scale="), "%lf", &vise_scale_factor);
+			if (vise_scale_factor <= 0.0) {
+				fprintf(stderr, "\n\n*** Error: VISE scale "
+						"must be greater than zero. ***\n\n\n");
+				exit(1);
+			}
 		} else if (!strncmp(argv[i], "--scale=", strlen("--scale="))) {
 			sscanf(argv[i] + strlen("--scale="), "%lf", &scale_factor);
-			if (scale_factor < 1.0) {
+			if (scale_factor <= 1.0) {
 				fprintf(stderr, "\n\n*** Error: Scale "
-						"smaller than 1.0 is not supported ***\n\n\n");
+						"must be greater than one. ***\n\n\n");
 				exit(1);
 			}
 		} else if (!strncmp(argv[i], "--metric=", strlen("--metric="))) {
@@ -456,8 +686,9 @@ int main(int argc, const char *argv[]){
 			sscanf(argv[i] + strlen("--threshold="), "%lf", &match_threshold);
 			d2::align::set_match_threshold(match_threshold);
 		} else if (!strncmp(argv[i], "--drizzle-diam=", strlen("--drizzle-diam="))) {
-			sscanf(argv[i] + strlen("--drizzle-diam="), "%lf", &drizzle_radius);
-			drizzle_radius /= 2;
+			unsupported::discontinued("--drizzle-diam=<x>", "--dchain box:1");
+			// sscanf(argv[i] + strlen("--drizzle-diam="), "%lf", &drizzle_radius);
+			// drizzle_radius /= 2;
 		} else if (!strncmp(argv[i], "--perturb-upper=", strlen("--perturb-upper="))) {
 			double perturb_upper;
 			sscanf(argv[i] + strlen("--perturb-upper="), "%lf", &perturb_upper);
@@ -480,6 +711,14 @@ int main(int argc, const char *argv[]){
 			double rot_max;
 			sscanf(argv[i] + strlen("--rot-upper="), "%lf", &rot_max);
 			d2::align::set_rot_max((int) floor(rot_max));
+		} else if (!strncmp(argv[i], "--bda-mult=", strlen("--bda-mult="))) {
+			double bda_mult;
+			sscanf(argv[i] + strlen("--bda-mult="), "%lf", &bda_mult);
+			d2::align::set_bda_mult(bda_mult);
+		} else if (!strncmp(argv[i], "--bda-rate=", strlen("--bda-rate="))) {
+			double bda_rate;
+			sscanf(argv[i] + strlen("--bda-rate="), "%lf", &bda_rate);
+			d2::align::set_bda_rate(bda_rate);
 		} else if (!strncmp(argv[i], "--lod-max=", strlen("--lod-max="))) {
 			double lod_max;
 			sscanf(argv[i] + strlen("--lod-max="), "%lf", &lod_max);
@@ -495,23 +734,83 @@ int main(int argc, const char *argv[]){
 		} else {
 
 			/*
+			 * Trap illegal options and end-of-option indicators.
+			 */
+
+			if (!strcmp(argv[i], "--")) {
+				i++;
+			} else if (!strncmp(argv[i], "--", strlen("--"))) {
+				fprintf(stderr, "\n\n*** Error: illegal option %s ***\n", argv[i]);
+				exit(1);
+			}
+
+			/*
+			 * Set exclusion regions
+			 */
+
+			d2::align::set_exclusion(ex_parameters, ex_count);
+			d2::render::render_init(ex_count, ex_parameters, ex_show, extend, scale_factor);
+
+			/*
+			 * Set confidence
+			 */
+
+			d2::exposure::set_confidence(cx_parameter);
+
+			/*
+			 * Keep transformations for Irani-Peleg, psf-match, and
+			 * VISE
+			 */
+
+			if (ip_iterations > 0 || psf_match || vise_count > 0) {
+				d2::align::keep();
+			}
+
+			/*
+			 * Apply implication logic.
+			 */
+
+			if (extend == 0 && vise_count != 0) {
+				implication::changed("VISE requires increased image extents.",
+				                     "Image extension is now enabled.",
+						     "--extend");
+				extend = 1;
+			}
+
+			if (cx_parameter != 0 && !exposure_register) {
+				implication::changed("Certainty-based rendering requires exposure registration.",
+				                     "Exposure registration is now enabled.",
+						     "--exp-register");
+				d2::align::exp_register();
+				exposure_register = 1;
+			}
+
+			/*
 			 * Initialize device-specific variables
 		         */
 
 			d2::psf *device_response[psf_N] = { NULL, NULL };
 			d2::exposure *input_exposure = NULL;
+			ale_pos view_angle = 0;
 
 			if (device != NULL) {
-				if (!strcmp(device, "xvp610_320x240")) {
+				if (!strcmp(device, "xvp610_640x480")) {
+					device_response[psf_linear] = new xvp610_640x480::lpsf();
+					device_response[psf_nonlinear] = new xvp610_640x480::nlpsf();
+					input_exposure = new xvp610_640x480::exposure[argc - i - 1];
+					view_angle = xvp610_640x480::view_angle();
+				} else if (!strcmp(device, "xvp610_320x240")) {
 					device_response[psf_linear] = new xvp610_320x240::lpsf();
 					device_response[psf_nonlinear] = new xvp610_320x240::nlpsf();
 					input_exposure = new xvp610_320x240::exposure[argc - i - 1];
+					view_angle = xvp610_320x240::view_angle();
 				} else {
 					fprintf(stderr, "\n\n*** Error: Unknown device %s ***\n\n", device);
 					exit(1);
 				}
 			} else {
 				input_exposure = new d2::exposure_default[argc - i - 1];
+				view_angle = 90 * M_PI / 180;
 			}
 
 			/*
@@ -578,6 +877,19 @@ int main(int argc, const char *argv[]){
 							
 
 						response[n] = new d2::psf_stdin();
+
+					} else if (!strcmp(psf[n], "stdin_vg")) {
+
+						/*
+						 * Standard input filter
+						 */
+
+						fprintf(stderr, "\nInitializing ");
+						fprintf(stderr, (n == 0) ? "linear" : "non-linear");
+						fprintf(stderr, " PSF.\n");
+							
+
+						response[n] = new d2::psf_stdin_vg();
 
 					} else if (!strncmp(psf[n], "box=", strlen("box="))) {
 
@@ -652,9 +964,21 @@ int main(int argc, const char *argv[]){
 			 */
 
 			if (i >= argc - 1)
-				usage(argv[0]);
+				hi.usage();
 
 			d2::image_rw::init(argc - i - 1, argv + i, argv[argc - 1], input_exposure, output_exposure);
+			ochain_names[0] = argv[argc - 1];
+
+ 			/*
+			 * Handle alignment weight map, if necessary
+			 */
+
+			if (wm_filename != NULL) {
+				d2::image *weight_map;
+				weight_map = d2::image_rw::read_image(wm_filename, new d2::exposure_linear());
+				weight_map->set_offset(wm_offsety, wm_offsetx);
+				d2::align::set_alignment_weights(weight_map);
+			}
 
 			/*
 			 * Write comment information about original frame and
@@ -666,22 +990,27 @@ int main(int argc, const char *argv[]){
 			tsave_target(tsave, argv[argc - 1]);
 
 			/*
-			 * Create merge renderer.
+			 * Initialize alignment interpolant.
 			 */
 
-			d2::render *_merge;
+			if (afilter_type != "internal")
+				d2::align::set_interpolant(d2::render_parse::get_SSF(afilter_type));
+
+			/*
+			 * Initialize achain and ochain.
+			 */
+
+			achain = d2::render_parse::get(achain_type);
 			
-			if (replace == 0)
-				_merge = new d2::merge<0>(extend, scale_factor);
-			else
-				_merge = new d2::merge<1>(extend, scale_factor);
+			for (int chain = 0; chain < oc_count; chain++)
+				ochain[chain] = d2::render_parse::get(ochain_types[chain]);
 
 			/*
 			 * Use merged renderings as reference images in
 			 * alignment.
 			 */
 
-			d2::align::set_reference(_merge);
+			d2::align::set_reference(achain);
 
 			/*
 			 * Tell the alignment class about the scale factor.
@@ -690,39 +1019,34 @@ int main(int argc, const char *argv[]){
 			d2::align::set_scale(scale_factor);
 
 			/*
-			 * Configure the output renderer.
+			 * Initialize visp.
 			 */
 
-			d2::render *_render = _merge;
+			d2::vise_core::set_scale(vise_scale_factor);
 
-			if (drizzle_radius > 0) {
-				d2::render *_drizzle;
-				
-				if (replace == 0)
-					_drizzle = new d2::drizzle<0>(extend,
-						drizzle_radius, scale_factor);
-				else
-					_drizzle = new d2::drizzle<1>(extend,
-						drizzle_radius, scale_factor);
-
-				if (drizzle_only)
-					_render = _drizzle;
-				else
-					_render = new d2::combine(_render, _drizzle);
+			for (int opt = 0; opt < vise_count; opt++) {
+				d2::vise_core::add(d2::render_parse::get(visp[opt * 4 + 0]),
+				                   visp[opt * 4 + 1],
+						   visp[opt * 4 + 2],
+						   visp[opt * 4 + 3]);
 			}
 
+			/*
+			 * Initialize non-incremental renderers
+			 */
 
-
+#if 0
 			if (usm_multiplier != 0) {
 
 				/*
 				 * Unsharp Mask renderer
 				 */
 
-				_render = new d2::usm(_render, scale_factor,
+				ochain[0] = new d2::usm(ochain[0], scale_factor,
 						usm_multiplier, inc, response[psf_linear],
 						response[psf_nonlinear], &input_exposure[0]);
 			}
+#endif
 
 			if (psf_match) {
 				
@@ -734,9 +1058,10 @@ int main(int argc, const char *argv[]){
 				 * ale-psf-calibrate.
 				 */
 
-				_render = new d2::psf_calibrate(_render,
+				ochain[0] = new d2::psf_calibrate(ochain[0],
 						1, inc, response[psf_linear],
-						response[psf_nonlinear]);
+						response[psf_nonlinear],
+						psf_match_args);
 
 			} else if (ip_iterations != 0) {
 
@@ -744,7 +1069,7 @@ int main(int argc, const char *argv[]){
 				 * Irani-Peleg renderer
 				 */
 
-				_render = new d2::ipc( _render, ip_iterations,
+				ochain[0] = new d2::ipc( ochain[0], ip_iterations,
 						inc, response[psf_linear],
 						response[psf_nonlinear],
 						exposure_register);
@@ -756,10 +1081,14 @@ int main(int argc, const char *argv[]){
 
 			fprintf(stderr, "Reading original frame '%s'", argv[i]);
 
-			_render->sync(0);
+			for (int opt = 0; opt < oc_count; opt++) {
+				ochain[opt]->sync(0);
+				if  (inc)
+					d2::image_rw::write_image(ochain_names[opt], 
+						ochain[opt]->get_image(0));
+			}
 
-			if (inc)
-				d2::image_rw::output(_render->get_image());
+			d2::vise_core::frame_queue_add(0);
 
 			fprintf(stderr, ".\n");
 
@@ -767,7 +1096,7 @@ int main(int argc, const char *argv[]){
 			 * Handle supplemental frames.
 			 */
 
-			for (int j = 1; j < d2::image_rw::count(); j++) {
+			for (unsigned int j = 1; j < d2::image_rw::count(); j++) {
 
 				const char *name = d2::image_rw::name(j);
 
@@ -782,10 +1111,14 @@ int main(int argc, const char *argv[]){
 
 				tsave_info (tsave, name);
 
-				_render->sync(j);
+				for (int opt = 0; opt < oc_count; opt++) {
+					ochain[opt]->sync(j);
+					if (inc)
+						d2::image_rw::write_image(ochain_names[opt], 
+							ochain[opt]->get_image(j));
+				}
 
-				if (inc)
-					d2::image_rw::output(_render->get_image());
+				d2::vise_core::frame_queue_add(j);
 
 				fprintf(stderr, ".\n");
 			}
@@ -794,12 +1127,14 @@ int main(int argc, const char *argv[]){
 			 * Do any post-processing and output final image
 			 *
 			 * XXX: note that non-incremental renderers currently
-			 * return zero for _render->sync(), since they write
+			 * return zero for ochain[0]->sync(), since they write
 			 * output internally when inc != 0.
 			 */
 
-			if (_render->sync() || !inc)
-				d2::image_rw::output(_render->get_image());
+			for (int opt = 0; opt < oc_count; opt++) 
+			if  (ochain[opt]->sync() || !inc)
+				d2::image_rw::write_image(ochain_names[opt], ochain[opt]->get_image());
+
 
 			/*
 			 * Destroy the image file handler
@@ -833,6 +1168,6 @@ int main(int argc, const char *argv[]){
 	 * If there was no output, the user might need more information.
 	 */
 
-	usage(argv[0]);
+	hi.usage();
 }
 

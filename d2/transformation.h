@@ -19,11 +19,16 @@
 */
 
 /*
- * gpt.h: Represent transformations of projective or Euclidean type.
+ * transformation.h: Represent transformations of the kind q = c(b^-1(p)),
+ * where p is a point in the source coordinate system, q is a point in the
+ * target coordinate system, b^-1 is a transformation correcting barrel
+ * distortion, and c is a transformation of projective or Euclidean type.
+ * (Note that ^-1 in this context indicates the function inverse rather than
+ * the exponential.)
  */
 
-#ifndef __gpt_h__
-#define __gpt_h__
+#ifndef __transformation_h__
+#define __transformation_h__
 
 #include "image.h"
 #include "point.h"
@@ -33,10 +38,35 @@
 #endif
 
 /*
- * Structure to describe a transformation of euclidean or projective kind.
+ * Number of coefficients used in correcting barrel distortion.
+ */
+
+#define BARREL_DEGREE 5
+
+/*
+ * Acceptable error for inverse barrel distortion, measured in scaled output
+ * pixels.
+ */
+
+#define BARREL_INV_ERROR 0.01
+
+/*
+ * transformation: a structure to describe a transformation of kind q =
+ * c(b^-1(p)), where p is a point in the source coordinate system, q is a point
+ * in the target coordinate system, b^-1 is a transformation correcting barrel
+ * distortion, and c is a projective or Euclidean transformation.  (Note that
+ * ^-1 in this case indicates a function inverse, not exponentiation.)  Data
+ * elements are divided into those describing barrel distortion correction and
+ * those describing projective/Euclidean transformations.
  *
- * Member names roughly correspond to a typical treatment of projective
- * transformations from:
+ * Barrel distortion correction estimates barrel distortion using polynomial
+ * functions of distance from the center of an image, following (roughly) the
+ * example set by Helmut Dersch in his PanoTools software:
+ *
+ * 	http://www.path.unimelb.edu.au/~dersch/barrel/barrel.html
+ *
+ * Projective transformation data member names roughly correspond to a typical
+ * treatment of projective transformations from:
  *
  *	Heckbert, Paul.  "Projective Mappings for Image Warping."  Excerpted 
  *		from his Master's Thesis (UC Berkeley, 1989).  1995.
@@ -63,20 +93,22 @@
  */
 struct transformation {
 private:
-	ale_pos input_height, input_width;
+	unsigned int input_height, input_width;
 	point x[4];
 	ale_pos eu[3];
-	ale_pos a, b, c, d, e, f, g, h;			// matrix
-	ale_pos _a, _b, _c, _d, _e, _f, _g, _h;		// matrix inverse
+	mutable ale_pos a, b, c, d, e, f, g, h;			// matrix
+	mutable ale_pos _a, _b, _c, _d, _e, _f, _g, _h;		// matrix inverse
+	ale_pos bdc[BARREL_DEGREE];				// barrel-dist. coeffs.
+	unsigned int bdcnum;					// number of bdcs
 	int is_projective;
-	int resultant_memo;
-	int resultant_inverse_memo;
+	mutable int resultant_memo;
+	mutable int resultant_inverse_memo;
 	ale_pos scale_factor;
 
 	/*
 	 * Calculate resultant matrix values.
 	 */
-	void resultant() {
+	void resultant() const {
 
 		/*
 		 * If we already know the answers, don't bother calculating 
@@ -91,8 +123,8 @@ private:
 			/*
 			 * Calculate resultant matrix values for a general
 			 * projective transformation given that we are mapping
-			 * from the source domain of dimension (input_height *
-			 * input_width) to a specified arbitrary quadrilateral.
+			 * from the source domain of dimension input_height *
+			 * input_width to a specified arbitrary quadrilateral.
 			 * Follow the calculations outlined in the document by
 			 * Paul Heckbert cited above for the case in which the
 			 * source domain is a unit square and then divide to
@@ -162,12 +194,12 @@ private:
 			
 			ale_pos theta = eu[2] * M_PI / 180;
 
-			a = cos(theta);
-			b = sin(theta);
-			c = 0.5 * (input_height * (1 - a) - input_width * b) + eu[0];
+			a = cos(theta) * scale_factor;
+			b = sin(theta) * scale_factor;
+			c = 0.5 * (input_height * (scale_factor - a) - input_width * b) + eu[0] * scale_factor;
 			d = -b;
 			e = a;
-			f = 0.5 * (input_height * b + input_width * (1 - a)) + eu[1];
+			f = 0.5 * (input_height * b + input_width * (scale_factor - a)) + eu[1] * scale_factor;
 			g = 0;
 			h = 0;
 		} 
@@ -178,7 +210,7 @@ private:
 	/*
 	 * Calculate the inverse transform matrix values.
 	 */
-	void resultant_inverse () {
+	void resultant_inverse () const {
 
 		/*
 		 * If we already know the answers, don't bother calculating 
@@ -188,110 +220,138 @@ private:
 		if (resultant_inverse_memo)
 			return;
 
-		if (is_projective) {
+		resultant();
 
-			resultant();
+		/*
+		 * For projective transformations, we calculate
+		 * the inverse of the forward transformation 
+		 * matrix.
+		 */
 
-			/*
-			 * For projective transformations, we calculate
-			 * the inverse of the forward transformation 
-			 * matrix.
-			 */
+		ale_pos scale = a * e - b * d;
 
-			ale_pos scale = a * e - b * d;
-
-			_a = (e * 1 - f * h) / scale;
-			_b = (h * c - 1 * b) / scale;
-			_c = (b * f - c * e) / scale;
-			_d = (f * g - d * 1) / scale;
-			_e = (1 * a - g * c) / scale;
-			_f = (c * d - a * f) / scale;
-			_g = (d * h - e * g) / scale;
-			_h = (g * b - h * a) / scale;
-
-		} else {
-
-			/*
-			 * In cursory trials, using an explicit matrix inverse
-			 * with Euclidean transformations can result in
-			 * different (and at least in some cases worse)
-			 * alignment characteristics than the method employed
-			 * below, which doesn't appear to yield appreciably
-			 * worse performance than an explicit matrix inverse.
-			 *
-			 * For Euclidean transformations, we invert the
-			 * constituent transformations of the forward
-			 * transformation and apply them in reverse order:
-			 *
-			 * translate by (-eu[0], -eu[1]) 
-			 * translate by (-h/2, -w/2) 
-			 * rotate    by -eu[2] degrees about the origin
-			 * translate by (h/2, w/2)
-			 *
-			 * The matrix assigned below represents the result of
-			 * combining all of these transformations.  Matrix
-			 * elements g and h are always zero in an affine
-			 * transformation.
-			 */ 
-
-			if (!resultant_memo) {
-				ale_pos theta = eu[2] * M_PI / 180;
-
-				a = cos(theta);
-				b = sin(theta);
-			}
-
-			_a = a;
-			_b = -b;
-			_c = (-eu[0] - input_height/2) * a 
-			   - (-eu[1] - input_width/2) * b
-			   + input_height/2;
-			_d = b;
-			_e = a;
-			_f = (-eu[0] - input_height/2) * b 
-			   + (-eu[1] - input_width/2) * a
-			   + input_width/2;
-			_g = 0;
-			_h = 0;
-
-		}
+		_a = (e * 1 - f * h) / scale;
+		_b = (h * c - 1 * b) / scale;
+		_c = (b * f - c * e) / scale;
+		_d = (f * g - d * 1) / scale;
+		_e = (1 * a - g * c) / scale;
+		_f = (c * d - a * f) / scale;
+		_g = (d * h - e * g) / scale;
+		_h = (g * b - h * a) / scale;
 
 		resultant_inverse_memo = 1;
 	}
 
 public:	
+
+	/*
+	 * Get scale factor.
+	 */
+
+	ale_pos scale() {
+		return scale_factor;
+	}
+
 	/*
 	 * Get width of input image.
 	 */
-	ale_pos width() {
-		return input_width;
+	ale_pos scaled_width() const {
+		return (input_width * scale_factor);
 	}
 
 	/*
 	 * Get unscaled width of input image.
 	 */
-	unsigned int unscaled_width() {
-		return (unsigned int) (input_width / scale_factor);
+	unsigned int unscaled_width() const {
+		return (unsigned int) input_width;
 	}
 
 	/*
 	 * Get height of input image;
 	 */
-	ale_pos height() {
-	       return input_height;
+	ale_pos scaled_height() const {
+	       return (input_height * scale_factor);
 	}
 
 	/*
 	 * Get unscaled height of input image.
 	 */
-	unsigned int unscaled_height() {
-		return (unsigned int) (input_height / scale_factor);
+	unsigned int unscaled_height() const {
+		return (unsigned int) input_height;
 	}
 
 	/*
-	 * Transform point p.
+	 * Barrel distortion radial component.
 	 */
-	struct point transform(struct point p) {
+	ale_pos bdr(ale_pos r) const {
+		ale_pos s = r;
+		for (unsigned int d = 0; d < bdcnum; d++)
+			s += bdc[d] * (pow(r, d + 2) - r);
+		return s;
+	}
+
+	/*
+	 * Derivative of the barrel distortion radial component.
+	 */
+	ale_pos bdrd(ale_pos r) const {
+		ale_pos s = 1;
+		for (unsigned int d = 0; d < bdcnum; d++)
+			s += bdc[d] * (pow(r, d + 1) - 1);
+		return s;
+	}
+
+	/*
+	 * Barrel distortion.
+	 */
+	struct point bd(struct point p) const {
+		if (bdcnum > 0) {
+			point half_diag = point(unscaled_height(), unscaled_width()) / 2;
+
+			p -= half_diag;
+
+			ale_pos r = p.norm() / half_diag.norm();
+
+			if (r > 0.00001)
+				p *= bdr(r)/r;
+
+			p += half_diag;
+		}
+
+		assert (!isnan(p[0]) && !isnan(p[1]));
+
+		return p;
+	}
+
+	/*
+	 * Barrel distortion inverse.
+	 */
+	struct point bdi(struct point p) const {
+		if (bdcnum > 0) {
+			point half_diag = point(unscaled_height(), unscaled_width()) / 2;
+
+			p -= half_diag;
+
+			ale_pos r = p.norm() / half_diag.norm();
+			ale_pos s = r;
+
+			while (fabs(r - bdr(s)) * half_diag.norm() > BARREL_INV_ERROR)
+				s += (r - bdr(s)) / bdrd(s);
+
+			if (r > 0.0001)
+				p *= s / r;
+
+			p += half_diag;
+		}
+
+		assert (!isnan(p[0]) && !isnan(p[1]));
+		
+		return p;
+	}
+
+	/*
+	 * Projective/Euclidean transformation
+	 */
+	struct point pe(struct point p) const {
 		struct point result;
 
 		resultant();
@@ -305,16 +365,9 @@ public:
 	}
 
 	/*
-	 * operator() is the transformation operator.
+	 * Projective/Euclidean inverse
 	 */
-	struct point operator()(struct point p) {
-		return transform(p);
-	}
-
-	/*
-	 * Map point p using the inverse of the transform.
-	 */
-	struct point inverse_transform(struct point p) {
+	struct point pei(struct point p) const {
 		struct point result;
 
 		resultant_inverse();
@@ -327,29 +380,55 @@ public:
 		return result;
 	}
 
+
 	/*
 	 * Map unscaled point p.
 	 */
-	struct point transform_unscaled(struct point p) {
-		p[0] *= scale_factor;
-		p[1] *= scale_factor;
+	struct point transform_unscaled(struct point p) const {
+		return pe(bdi(p));
+	}
 
+	/*
+	 * Transform point p.
+	 *
+	 * Barrel distortion correction followed by a projective/euclidean
+	 * transformation.
+	 */
+	struct point transform_scaled(struct point p) const {
+		return transform_unscaled(p / scale_factor);
+	}
+
+#if 0
+	/*
+	 * operator() is the transformation operator.
+	 */
+	struct point operator()(struct point p) {
 		return transform(p);
 	}
+#endif
 
 	/*
 	 * Map point p using the inverse of the transform into
 	 * the unscaled image space.
 	 */
-	struct point unscaled_inverse_transform(struct point p) {
-		point q = inverse_transform(p);
+	struct point unscaled_inverse_transform(struct point p) const {
+		return bd(pei(p));
+	}
+	
+	/*
+	 * Map point p using the inverse of the transform.
+	 *
+	 * Projective/euclidean inverse followed by barrel distortion.
+	 */
+	struct point scaled_inverse_transform(struct point p) const {
+		point q = unscaled_inverse_transform(p);
 
-		q[0] /= scale_factor;
-		q[1] /= scale_factor;
+		q[0] *= scale_factor;
+		q[1] *= scale_factor;
 
 		return q;
 	}
-	
+
 	/*
 	 * Calculate projective transformation parameters from a euclidean
 	 * transformation.
@@ -358,10 +437,10 @@ public:
 
 		assert(!is_projective);
 
-		x[0] = transform( point(      0      ,      0      ) );
-		x[1] = transform( point( input_height,      0      ) );
-		x[2] = transform( point( input_height, input_width ) );
-		x[3] = transform( point(      0      , input_width ) );
+		x[0] = transform_unscaled(point(      0      ,      0      ) );
+		x[1] = transform_unscaled(point( input_height,      0      ) );
+		x[2] = transform_unscaled(point( input_height, input_width ) );
+		x[3] = transform_unscaled(point(      0      , input_width ) );
 
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
@@ -381,11 +460,13 @@ public:
 		r.eu[0] = 0;
 		r.eu[1] = 0;
 		r.eu[2] = 0;
-		r.input_width = i ? i->width() * scale_factor : 2;
-		r.input_height = i ? i->height() * scale_factor : 2;
+		r.input_width = i ? i->width() : 2;
+		r.input_height = i ? i->height() : 2;
 		r.scale_factor = scale_factor;
 
 		r.is_projective = 0;
+
+		r.bdcnum = 0;
 
 		return r;
 	}
@@ -495,6 +576,62 @@ public:
 	}
 
 	/*
+	 * Set the specified barrel distortion parameter.
+	 */
+	void bd_set(unsigned int degree, ale_pos value) {
+		assert (degree < bdcnum);
+		bdc[degree] = value;
+	}
+
+	/*
+	 * Set all barrel distortion parameters.
+	 */
+	void bd_set(unsigned int degree, ale_pos values[BARREL_DEGREE]) {
+		assert (degree <= BARREL_DEGREE);
+		bdcnum = degree;
+		for (unsigned int d = 0; d < degree; d++)
+			bdc[d] = values[d];
+	}
+
+	/*
+	 * Get the all barrel distortion parameters.
+	 */
+	void bd_get(ale_pos result[BARREL_DEGREE]) {
+		for (unsigned int d = 0; d < bdcnum; d++)
+			result[d] = bdc[d];
+	}
+
+	/*
+	 * Get the specified barrel distortion parameter.
+	 */
+	ale_pos bd_get(unsigned int degree) {
+		assert (degree < bdcnum);
+		return bdc[degree];
+	}
+
+	/*
+	 * Get the number of barrel distortion parameters.
+	 */
+	unsigned int bd_count() {
+		return bdcnum;
+	}
+
+	/*
+	 * Get the maximum allowable number of barrel distortion parameters.
+	 */
+	unsigned int bd_max() {
+		return BARREL_DEGREE;
+	}
+
+	/*
+	 * Modify the specified barrel distortion parameter.
+	 */
+	void bd_modify(unsigned int degree, ale_pos diff) {
+		assert (degree < bdcnum);
+		bd_set(degree, bd_get(degree) + diff);
+	}
+
+	/*
 	 * Rescale a transform with a given factor.
 	 */
 	void rescale(ale_pos factor) {
@@ -515,9 +652,19 @@ public:
 
 		}
 
-		input_width  *= factor;
-		input_height *= factor;
 		scale_factor *= factor;
+	}
+
+	/*
+	 * Set a new domain.
+	 */
+
+	void set_domain(unsigned int new_height, unsigned int new_width) {
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
+		input_width = new_width;
+		input_height = new_height;
 	}
 
 	/*
@@ -525,8 +672,8 @@ public:
 	 */
 	void set_dimensions(const image *im) {
 
-		int new_height = (int) (im->height() * scale_factor);
-		int new_width  = (int) (im->width() * scale_factor);
+		int new_height = (int) im->height();
+		int new_width  = (int) im->width();
 
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
@@ -560,9 +707,9 @@ public:
 
 			point _x, _y, _z;
 
-			_x = transform(point(new_height,     0    ));
-			_y = transform(point(new_height, new_width));
-			_z = transform(point(    0     , new_width));
+			_x = transform_unscaled(point(new_height,     0    ));
+			_y = transform_unscaled(point(new_height, new_width));
+			_z = transform_unscaled(point(    0     , new_width));
 
 			x[1] = _x;
 			x[2] = _y;
@@ -586,9 +733,9 @@ public:
 		 * image pixel P and two adjacent source pixels.
 		 */
 
-		    (*q) = transform(p);
-		point q0 = transform(point(p[0] + 1, p[1]));
-		point q1 = transform(point(p[0], p[1] + 1));
+		    (*q) = transform_unscaled(p/scale_factor);
+		point q0 = transform_unscaled(point(p[0] + 1, p[1])/scale_factor);
+		point q1 = transform_unscaled(point(p[0], p[1] + 1)/scale_factor);
 
 		/*
 		 * Calculate the distance between source image pixel and
@@ -626,22 +773,52 @@ public:
 
 	/*
 	 * Get the position and dimensions of a pixel P mapped from one
-	 * coordinate system to another, using the forward transformation.  If
-	 * SCALE_FACTOR is not equal to one, multiply by the scale factor to
-	 * obtain scaled coordinates.
+	 * coordinate system to another, using the forward transformation.  
+	 * This function uses unscaled input coordinates.
 	 */
 	void map_area_unscaled(point p, point *q, ale_pos d[2]) {
 
 		/*
-		 * Apply any necessary scaling
+		 * Determine the coordinates in the target frame for the source
+		 * image pixel P and two adjacent source pixels.
 		 */
 
-		if (scale_factor != 1) {
-			p[0] *= scale_factor;
-			p[1] *= scale_factor;
-		}
+		    (*q) = transform_unscaled(p);
+		point q0 = transform_unscaled(point(p[0] + 1, p[1]));
+		point q1 = transform_unscaled(point(p[0], p[1] + 1));
 
-		map_area(p, q, d);
+		/*
+		 * Calculate the distance between source image pixel and
+		 * adjacent source pixels, measured in the coordinate system of
+		 * the target frame.
+		 */
+
+		ale_pos ui = fabs(q0[0] - (*q)[0]);
+		ale_pos uj = fabs(q0[1] - (*q)[1]);
+		ale_pos vi = fabs(q1[0] - (*q)[0]);
+		ale_pos vj = fabs(q1[1] - (*q)[1]);
+
+		/*
+		 * We map the area of the source image pixel P onto the target
+		 * frame as a rectangular area oriented on the target frame's
+		 * axes.  Note that this results in an area that may be the
+		 * wrong shape or orientation.
+		 *
+		 * We define two estimates of the rectangle's dimensions below.
+		 * For rotations of 0, 90, 180, or 270 degrees, max and sum are
+		 * identical.  For other orientations, sum is too large and max
+		 * is too small.  We use the mean of max and sum, which we then
+		 * divide by two to obtain the distance between the center and
+		 * the edge.
+		 */
+
+		ale_pos maxi = (ui > vi) ? ui : vi;
+		ale_pos maxj = (uj > vj) ? uj : vj;
+		ale_pos sumi = ui + vi;
+		ale_pos sumj = uj + vj;
+
+		d[0] = (maxi + sumi) / 4;
+		d[1] = (maxj + sumj) / 4;
 	}
 
 	/*
@@ -658,9 +835,9 @@ public:
 		 * image pixel P and two adjacent source pixels.
 		 */
 
-		    (*q) = inverse_transform(p);
-		point q0 = inverse_transform(point(p[0] + 1, p[1]));
-		point q1 = inverse_transform(point(p[0], p[1] + 1));
+		    (*q) = scaled_inverse_transform(p);
+		point q0 = scaled_inverse_transform(point(p[0] + 1, p[1]));
+		point q1 = scaled_inverse_transform(point(p[0], p[1] + 1));
 
 
 		/*
@@ -728,31 +905,31 @@ public:
 
 		g = (sigma_0  * delta_12 - sigma_1  * delta_02)
 		  / (delta_01 * delta_12 - delta_11 * delta_02)
-		  / input_width;
+		  / (input_width * scale_factor);
 
 		h = (delta_01 * sigma_1  - delta_11 * sigma_0 )
 		  / (delta_01 * delta_12 - delta_11 * delta_02)
-		  / input_height;
+		  / (input_height * scale_factor);
 
 		a = (x[1][0] - x[0][0] + g * x[1][0])
-		  / input_width;                       
+		  / (input_width * scale_factor);                       
 		b = (x[3][0] - x[0][0] + h * x[3][0])
-		  / input_height;
+		  / (input_height * scale_factor);
 		c = x[0][0];
 
 		d = (x[1][1] - x[0][1] + g * x[1][1])
-		  /  input_width;                       
+		  /  (input_width * scale_factor);                       
 		e = (x[3][1] - x[0][1] + h * x[3][1])
-		  /  input_height;
+		  /  (input_height * scale_factor);
 		f =  x[0][1];
 
 		resultant_memo = 1;
 		resultant_inverse_memo = 0;
 
-		this->x[0] = inverse_transform( point(      0      ,      0      ) );
-		this->x[1] = inverse_transform( point( input_height,      0      ) );
-		this->x[2] = inverse_transform( point( input_height, input_width ) );
-		this->x[3] = inverse_transform( point(      0      , input_width ) );
+		this->x[0] = scaled_inverse_transform( point(      0      ,      0      ) );
+		this->x[1] = scaled_inverse_transform( point( (input_height * scale_factor),      0      ) );
+		this->x[2] = scaled_inverse_transform( point( (input_height * scale_factor), (input_width * scale_factor) ) );
+		this->x[3] = scaled_inverse_transform( point(      0      , (input_width * scale_factor) ) );
 
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
@@ -774,9 +951,9 @@ public:
 		int i;
 		
 		x[0][0] = 0;              x[0][1] = 0;
-		x[1][0] = input_width;    x[1][1] = 0;
-		x[2][0] = input_width;    x[2][1] = input_height;
-		x[3][0] = 0;              x[3][1] = input_height;
+		x[1][0] = (input_width * scale_factor);    x[1][1] = 0;
+		x[2][0] = (input_width * scale_factor);    x[2][1] = (input_height * scale_factor);
+		x[3][0] = 0;              x[3][1] = (input_height * scale_factor);
 
 		/*
 		 * Rotate
@@ -787,12 +964,12 @@ public:
 		for (i = 0; i < 4; i++) {
 			ale_pos _x[2];
 
-			_x[0] = (x[i][0] - input_width/2)  * cos(theta)
-			      + (x[i][1] - input_height/2) * sin(theta)
-			      +  input_width/2;
-			_x[1] = (x[i][1] - input_height/2) * cos(theta)
-			      - (x[i][0] - input_width/2)  * sin(theta)
-			      +  input_height/2;
+			_x[0] = (x[i][0] - (input_width * scale_factor)/2)  * cos(theta)
+			      + (x[i][1] - (input_height * scale_factor)/2) * sin(theta)
+			      +  (input_width * scale_factor)/2;
+			_x[1] = (x[i][1] - (input_height * scale_factor)/2) * cos(theta)
+			      - (x[i][0] - (input_width * scale_factor)/2)  * sin(theta)
+			      +  (input_height * scale_factor)/2;
 			
 			x[i][0] = _x[0];
 			x[i][1] = _x[1];
@@ -818,18 +995,18 @@ public:
 			
 		gpt_v0_set(x);
 
-		point center(input_height / 2, input_width / 2);
-		point center_image = transform(center);
+		point center((input_height * scale_factor) / 2, (input_width * scale_factor) / 2);
+		point center_image = transform_unscaled((1/scale_factor)*center);
 
 		this->eu[0] = center_image[0] - center[0];
 		this->eu[1] = center_image[1] - center[1];
 
-		point center_left(input_height / 2, 0);
-		point center_left_image = transform(center_left);
+		point center_left((input_height * scale_factor) / 2, 0);
+		point center_left_image = transform_unscaled((1/scale_factor)*center_left);
 
 		ale_pos displacement = center_image[0] - center_left_image[0];
 
-		this->eu[2] = asin(2 * displacement / input_width) / M_PI * 180;
+		this->eu[2] = asin(2 * displacement / (input_width * scale_factor)) / M_PI * 180;
 
 		if (center_left_image[1] > center_image[1])
 			this->eu[2] = this->eu[2] + 180;

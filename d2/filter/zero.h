@@ -1,4 +1,4 @@
-// Copyright 2003 David Hilvert <dhilvert@auricle.dyndns.org>, 
+// Copyright 2004 David Hilvert <dhilvert@auricle.dyndns.org>,
 //                              <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
@@ -18,18 +18,35 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef __zero_h__
+#define __zero_h__
+
 /*
- * Static data translation unit for classes treating scenes as
- * two-dimensional data.
+ * A zero filter.
  */
 
-#include "d2.h"
+class zero : public filter {
+public:
 
-namespace d2 {
-	#include "d2/align.cc"
-	#include "d2/render.cc"
-	#include "d2/image_rw.cc"
-	#include "d2/exposure/exposure.cc"
-	#include "d2/vise_core.cc"
-	#include "d2/tfile.cc"
-}
+	/*
+	 * Size of filter support, in number of half-cycles to each side of the
+	 * filter center.
+	 */
+	ale_real support() const {
+		return 0;
+	}
+
+	virtual int equals(const filter *f) const {
+		if (typeid(*f) == typeid(*this))
+			return 1;
+		return 0;
+	}
+
+	/*
+	 * Response of filter at point p
+	 */
+	virtual ale_real response(point p) const {
+		return 0;
+	}
+};
+#endif

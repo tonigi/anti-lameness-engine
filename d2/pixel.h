@@ -108,6 +108,81 @@ public:
 	pixel operator/=(ale_real d) {
 		return pixel(x[0] /= d, x[1] /= d, x[2] /= d);
 	}
+
+	pixel clamp() const {
+		pixel result;
+
+		for (int i = 0; i < 3; i++)
+			if (x[i] > 1.0)
+				result[i] = 1.0;
+			else if (x[i] < 0.0)
+				result[i] = 0.0;
+			else
+				result[i] = x[i];
+
+		return result;
+	}
+		
+
+	pixel abs() {
+		return pixel(fabs(x[0]), fabs(x[1]), fabs(x[2]));
+	}
+
+	ale_real normsq() {
+		return x[0] * x[0] + x[1] * x[1] + x[2] * x[2];
+	}
+
+	ale_real norm() {
+		return sqrt(normsq());
+	}
+
+	ale_real lnorm() {
+		return x[0] + x[1] + x[2];
+	}
+
+	ale_real maxabs_norm() {
+		ale_real m = fabs(x[0]);
+		if (fabs(x[1]) > m)
+			m = fabs(x[1]);
+		if (fabs(x[2]) > m)
+			m = fabs(x[2]);
+
+		return m;
+	}
+
+	ale_real minabs_norm() {
+		ale_real m = fabs(x[0]);
+		if (fabs(x[1]) < m)
+			m = fabs(x[1]);
+		if (fabs(x[2]) < m)
+			m = fabs(x[2]);
+
+		return m;
+	}
+
+	ale_real min_norm() {
+		ale_real m = x[0];
+		if (x[1] < m)
+			m = x[1];
+		if (x[2] < m)
+			m = x[2];
+
+		return m;
+	}
+
+	ale_real max_norm() {
+		ale_real m = x[0];
+		if (x[1] > m)
+			m = x[1];
+		if (x[2] > m)
+			m = x[2];
+
+		return m;
+	}
+
+	static pixel zero() {
+		return pixel(0, 0, 0);
+	}
 };
 
 inline pixel operator*(const pixel &p, float d) {

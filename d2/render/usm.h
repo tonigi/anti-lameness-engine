@@ -187,7 +187,11 @@ public:
 	}
 
 	void sync(int n) {
+		render::sync(n);
 		input->sync(n);
+	}
+
+	void step() {
 	}
 
 	int sync() {

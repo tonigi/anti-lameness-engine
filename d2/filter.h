@@ -1,4 +1,4 @@
-// Copyright 2003 David Hilvert <dhilvert@auricle.dyndns.org>, 
+// Copyright 2004 David Hilvert <dhilvert@auricle.dyndns.org>,
 //                              <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
@@ -18,18 +18,33 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef __filternamespace_h__
+#define __filternamespace_h__
+
 /*
- * Static data translation unit for classes treating scenes as
- * two-dimensional data.
+ * Include files from the current namespace
  */
 
-#include "d2.h"
+#include "point.h"
+#include "transformation.h"
+#include "render.h"
+#include "image.h"
+#include "image_ale_real.h"
+#include "image_bayer_ale_real.h"
 
-namespace d2 {
-	#include "d2/align.cc"
-	#include "d2/render.cc"
-	#include "d2/image_rw.cc"
-	#include "d2/exposure/exposure.cc"
-	#include "d2/vise_core.cc"
-	#include "d2/tfile.cc"
-}
+/*
+ * Establish a new namespace for all filtering classes.
+ */
+
+namespace filter {
+#include "filter/filter.h"
+#include "filter/sinc.h"
+#include "filter/lanczos.h"
+#include "filter/triangle.h"
+#include "filter/box.h"
+#include "filter/zero.h"
+#include "filter/mult.h"
+#include "filter/scaled_filter.h"
+#include "filter/ssfe.h"
+};
+#endif
