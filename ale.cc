@@ -925,6 +925,10 @@ int main(int argc, const char *argv[]){
 			inc = 1;
 		} else if (!strcmp(argv[i], "--no-inc")) {
 			inc = 0;
+		} else if (!strncmp(argv[i], "--exp-mult=", strlen("--exp-mult="))) {
+			double exp_c, exp_r, exp_b;
+			sscanf(argv[i] + strlen("--exp-mult="), "%lf,%lf,%lf", &exp_c, &exp_r, &exp_b);
+			d2::exposure::set_default_multiplier(d2::pixel(exp_r * exp_c, exp_c, exp_b * exp_c));
 		} else if (!strncmp(argv[i], "--visp-scale=", strlen("--visp-scale="))) {
 
 			sscanf(argv[i] + strlen("--visp-scale="), "%lf", &vise_scale_factor);

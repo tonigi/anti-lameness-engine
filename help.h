@@ -567,6 +567,10 @@ public:
 			"Projective transformation calculator:\n"
 			HEADER_SPACE
 			"--ptcalc\n"
+			BETWEEN_SECTIONS
+			"Color adjustment:\n"
+			HEADER_SPACE
+			"--exp-mult=c,r,b   Adjust all channels by <c>, red by <r>, and blue by <b>.\n"
 			"\n"
 			);
 	}

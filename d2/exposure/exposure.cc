@@ -22,3 +22,4 @@
 
 float exposure::confidence_exponent = 0.0;
 ale_real exposure::_gain_reference = 1;
+pixel exposure::default_multiplier = pixel(1, 1, 1);
