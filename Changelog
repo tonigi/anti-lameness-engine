@@ -1,30 +1,40 @@
-Change comments are now stored in the darcs repository at
-http://auricle.dyndns.org/darcs/ale.  More information about darcs is
-available from http://www.abridgegame.org/darcs.
+0.8.0
 
-0.7.4-pre5
+o	Add a flag --exp-meta-only which causes tonal registration to be
+	performed only on the basis of exposure metadata (e.g., data encoded
+	as EPPM extended attributes).  This approach was suggested by Gregory
+	Maxwell.
 
-o	Add support for PPM with extended attributes.
+o	Set image offsets in d2/render/combine.h.  This allows Irani-Peleg
+	rendering to work with --crop when the default rendering chain
+	includes more than one rendering invariant.
+
+o	Perform Irani-Peleg updating separately by channel instead of
+	using vector operations.  This allows divide-by-zero and other
+	conditions to be localized to particular channels.
+
+o	Modify the Irani-Peleg renderer to use estimate-based certainty
+	instead of one-sided certainty.  This seems to improve noise
+	characteristics significantly.
+
+o	Write the results of tonal registration as a comment in the 
+	transformation data file.
+
+o	Add support for PPM with extended attributes (EPPM).  Attributes
+	handled specially include black level, shutter speed, aperture, and
+	ISO (or gain).
 
 o	Add experimental cost calculation routines to d3/scene.h.
-
-0.7.4-pre4
 
 o	Modify euclidean alignment so that perturb-upper and perturb-lower
 	apply to rotational arclength.
 
-0.7.4-pre3
-
 o	Fix an index variable bug in d2::image_bayer_ale_real::trigger().
-
-0.7.4-pre2
 
 o	Modify d2::exposure one-sided certainty so that the 'one-sided'
 	condition only applies to bright (>50%) areas.  Applying it to dark
 	areas has no clear benefit, and an experiment by Gregory Maxwell
 	demonstrates that doing so can exacerbate noise.
-
-0.7.4-pre1
 
 o	Modify d2::align to use unscaled input images when the scale factor
 	is larger than 1.0, or when a scaled_filter interpolant is being used.
@@ -35,7 +45,8 @@ o	Modify d2::image::scale() to allow scale factors in the interval
 
 o	Add user interface options --ui=stream and --ui=tty.  The latter
 	includes more detailed status output when terminal width information
-	can be obtained, and is the new default.
+	can be obtained (esp. when IOCTL=1 is set at compile time), and is the
+	new default.
 
 o	Move certain user interface elements to the source subdirectory ui/.
 
@@ -48,8 +59,8 @@ o	Modify d2::align::set_exposure_ratio() so that alignment
 
 o	Add a --cw option to weight alignment error by certainty values,
 	as suggested by Gregory Maxwell.  This allows the contributions of
-	pixels at maxval to be diminished, which could increase alignment
-	success in some cases.
+	pixels at maxval to be diminished, which can increase alignment
+	success in certain cases.
 
 o	Replace functions d2::incremental::{increase,decrease}_extents()
 	with new functions that take exclusion regions into account.  The new
@@ -65,7 +76,7 @@ o	Add --crop argument, which excludes the spatial complement of a
 	other benefits allows natural handling of Bayer patterns.
 
 o	Modify rx_parameters in d2/render.h to use the ale_pos data type
-	instead of int.  This allows exclusion regions to be calculated
+	instead of int.  This should allow exclusion regions to be calculated
 	more accurately.
 
 0.7.3
