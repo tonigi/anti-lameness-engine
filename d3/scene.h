@@ -931,9 +931,12 @@ class scene {
 				 * Set new color and weight.
 				 */
 				int sti = subtriangle_index(_pt, d2::point(i, j), t);
-				t->color[sti] = (t->color[sti] * t->weight[sti] + im->get_pixel(i, j)) 
-					      / (t->weight[sti] + d2::pixel(1, 1, 1));
-				t->weight[sti] = t->weight[sti] + d2::pixel(1, 1, 1);
+//				t->color[sti] = (t->color[sti] * t->weight[sti] + im->get_pixel(i, j)) 
+//					      / (t->weight[sti] + d2::pixel(1, 1, 1));
+//				t->weight[sti] = t->weight[sti] + d2::pixel(1, 1, 1);
+				t->color[sti][n % 3] = (t->color[sti][n % 3] * t->weight[sti][n % 3] + im->get_pixel(i, j)[n % 3]) 
+					      / (t->weight[sti][n % 3] + 1);
+				t->weight[sti][n % 3] = t->weight[sti][n % 3] + 1;
 			}
 
 			free(zbuf);
@@ -1343,7 +1346,19 @@ public:
 
 		while(reduce_lod());
 
-		while ((improved /*&& count < 40*/) || cl->next) {
+		while ((improved && count < 40) || cl->next) {
+
+			fprintf(stderr, "unsplitting ...\n");
+
+			if (density_test_unsplit())
+				continue;
+
+			fprintf(stderr, "splitting/unsplitting ...\n");
+
+			if (density_test_split() && !density_test_unsplit())
+				continue;
+
+			fprintf(stderr, "color averaging...\n");
 
 			color_average();
 
@@ -1353,6 +1368,7 @@ public:
 
 			if (inc_bit && (!improved || !(rand() % 100)))
 			for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
+				fprintf(stderr, "writing image...\n");
 				if (d_out[i] != NULL) {
 					const d2::image *im = depth(i);
 					d2::image_rw::write_image(d_out[i], im, exp_out, 1, 1);
@@ -1366,12 +1382,6 @@ public:
 				}
 			}
 			
-			if (density_test_unsplit())
-				continue;
-
-			if (density_test_split() && !density_test_unsplit())
-				continue;
-
 //			triangle_head[0]->write_tree(1);
 //			triangle_head[1]->write_tree(1);
 			
@@ -1380,11 +1390,12 @@ public:
 			 * most recent pass at the previous LOD.
 			 */
 
-			if (!improved /* || count > 40 */) {
+			if (!improved || count > 40 ) {
 //				triangle_head[0]->write_tree(1);
 //				triangle_head[1]->write_tree(1);
 				fprintf(stderr, ".");
 				assert (cl->next);
+				fprintf(stderr, "increasing LOD ...\n");
 				increase_lod();
 				count = 0;
 				improved = 1;
@@ -1398,8 +1409,15 @@ public:
 			 * Try improving the result by moving existing vertices.
 			 */
 
+			fprintf(stderr, "adjusting vertices [disabled] ...\n");
+
 			improved |= adjust_vertices();
 		}
+
+		fprintf(stderr, "color averaging...\n");
+
+		color_average();
+
 	}
 
 #if 0
