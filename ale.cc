@@ -53,7 +53,7 @@
  * Version Information
  */
 
-char *version = "ALE Version:      0.5.1-patch1\n"
+char *version = "ALE Version:      0.5.1-patch2\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else

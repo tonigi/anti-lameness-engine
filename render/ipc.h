@@ -72,19 +72,13 @@ class ipc : public render {
                 for (unsigned int i = 0; i < done_image->height(); i++)
                 for (unsigned int j = 0; j < done_image->width();  j++) {
 
-			// fprintf(stderr, "(%d, %d)\n", i, j);
-			
                         /*
-                         * Here we more-or-less cut-and-paste-and-modify the
-                         * drizzling code from drizzle.h.  Surely there's a more
-                         * elegant way to do this.
-                         */
+			 * Transform
+			 */
 
-                        point p  = point(i + im->offset()[0], j + im->offset()[1]);
-                        point p0 = p, p1 = p;
-
-                        p0[0]++;
-                        p1[1]++;
+                        point p  = point(i + done_image->offset()[0], j + done_image->offset()[1]);
+			point p0 = point(p[0] + 1, p[1]);
+			point p1 = point(p[0], p[1] + 1);
 
                         point q  = t.inverse_transform(p);
                         point q0 = t.inverse_transform(p0);
@@ -94,6 +88,22 @@ class ipc : public render {
                         double uj = fabs(q0[1] - q[1]);
                         double vi = fabs(q1[0] - q[0]);
                         double vj = fabs(q1[1] - q[1]);
+
+			/*
+			 * We map the area of the approximate image pixel onto
+			 * the simulated frame as a rectangular area oriented
+			 * on the simulated frame's axes.  Note that this
+			 * results in an area that may be the wrong shape or
+			 * orientation.
+			 *
+			 * We define two estimates of the rectangle's
+			 * dimensions below.  For rotations of 0, 90, 180, or
+			 * 270 degrees, max and sum are identical.  For other
+			 * orientations, sum is too large and max is too small.
+			 * We use the mean of max and sum, which we then divide
+			 * by two to obtain the distance between the center and
+			 * the edge.
+			 */
 
                         double maxi = (ui > vi) ? ui : vi;
                         double maxj = (uj > vj) ? uj : vj;
@@ -136,9 +146,6 @@ class ipc : public render {
 
 							iw->set_pixel_component(ii, jj, k_out, w_new);
 
-							// if (k_out == 0)
-								// fprintf(stderr, "(%d, %d, %.3lf, %.3lf)\n", 
-								// 	ii, jj, (double) r(k_in, k_out), w_new);
 							double new_value = 
 								(w_old * forward->get_pixel_component(
 										ii, jj, k_out)
@@ -162,8 +169,6 @@ class ipc : public render {
                         }
                 }
 
-		// write_ppm("ale-internal-debug-ipc.ppm", forward);
-
 		/*
 		 * Now calculate the differences between the simulated
 		 * image and the actual image, and add this difference, 
@@ -174,19 +179,9 @@ class ipc : public render {
                 for (unsigned int i = 0; i < done_image->height(); i++)
                 for (unsigned int j = 0; j < done_image->width();  j++) {
 
-			// fprintf(stderr, "[%d, %d]\n", i, j);
-
-                        /*
-                         * Here we more-or-less cut-and-paste-and-modify the
-                         * code from above.  Surely there's a more elegant way
-                         * to do this.
-                         */
-
-                        point p  = point(i + im->offset()[0], j + im->offset()[1]);
-                        point p0 = p, p1 = p;
-
-                        p0[0]++;
-                        p1[1]++;
+                        point p  = point(i + done_image->offset()[0], j + done_image->offset()[1]);
+			point p0 = point(p[0] + 1, p[1]);
+			point p1 = point(p[0], p[1] + 1);
 
                         point q  = t.inverse_transform(p);
                         point q0 = t.inverse_transform(p0);
@@ -196,6 +191,22 @@ class ipc : public render {
                         double uj = fabs(q0[1] - q[1]);
                         double vi = fabs(q1[0] - q[0]);
                         double vj = fabs(q1[1] - q[1]);
+
+			/*
+			 * We map the area of the approximate image pixel onto
+			 * the simulated (and actual) frame as a rectangular area
+			 * oriented on the simulated frame's axes.  Note that
+			 * this results in an area that may be the wrong shape
+			 * or orientation.
+			 *
+			 * We define two estimates of the rectangle's
+			 * dimensions below.  For rotations of 0, 90, 180, or
+			 * 270 degrees, max and sum are identical.  For other
+			 * orientations, sum is too large and max is too small.
+			 * We use the mean of max and sum, which we then divide
+			 * by two to obtain the distance between the center and
+			 * the edge.
+			 */
 
                         double maxi = (ui > vi) ? ui : vi;
                         double maxj = (uj > vj) ? uj : vj;
@@ -236,9 +247,6 @@ class ipc : public render {
 							double w_old = c->get_pixel_component(i, j, k_in + 3);
 							double w_new = w_old + fabs(r(k_in, k_out));
 
-							// fprintf(stderr, "[%d, %d, %d, %lf]\n", 
-							//         ii, jj, r(k_in, k_out), w_new);
-
 							c->set_pixel_component(i, j, k_in + 3, w_new);
 
 							c->set_pixel_component(i, j, k_in, 
@@ -248,9 +256,6 @@ class ipc : public render {
 								  * (im->get_pixel_component(ii, jj, k_out)
 								   - forward->get_pixel_component(ii, jj, k_out)))
 								 / w_new));
-
-							// fprintf(stderr, "[%lf]\n", c->get_pixel_component(
-							//			i, j, k_in));
 						}
 					}
                                 }

@@ -1,3 +1,8 @@
+0.5.1-patch2
+
+o	Fix offset calculation in d2/render/ipc.h.  This fixes IP rendering on
+	image mosaics extending up or to the left.
+
 0.5.1-patch1
 
 o	Use most significant bits from input files when ImageMagick has a
