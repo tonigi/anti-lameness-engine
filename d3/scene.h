@@ -31,8 +31,8 @@
  * PLANAR_SUBDIVISION_COUNT must be exactly pow(4, PLANAR_SUBDIVISION_DEPTH)
  */
 
-#define PLANAR_SUBDIVISION_DEPTH 2
-#define PLANAR_SUBDIVISION_COUNT 16
+#define PLANAR_SUBDIVISION_DEPTH 3
+#define PLANAR_SUBDIVISION_COUNT 64
 
 class scene {
 
@@ -273,19 +273,24 @@ class scene {
 			return -1;
 		}
 
+		int vertex_ref_maybe(point *p) const {
+			for (int v = 0; v < 3; v++)
+				if (vertices[v] == p)
+					return v;
+
+			return -1;
+		}
+
 		/*
 		 * Get a reference to a given vertex.
 		 */
 
 		int vertex_ref(point *p) const {
-			for (int v = 0; v < 3; v++)
-				if (vertices[v] == p)
-					return v;
+			int maybe = vertex_ref_maybe(p);
 
-			fprintf(stderr, "error in %p\n", this);
-			assert(0);
+			assert (maybe >= 0);
 
-			return -1;
+			return maybe;
 		}
 
 		/*
