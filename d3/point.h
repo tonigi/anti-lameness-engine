@@ -108,10 +108,30 @@ public:
 		return *this;
 	}
 
+	point operator +=(point p) {
+		x[0] += p[0];
+		x[1] += p[1];
+		x[2] += p[2];
+
+		return *this;
+	}
+
+	point operator -=(point p) {
+		x[0] -= p[0];
+		x[1] -= p[1];
+		x[2] -= p[2];
+
+		return *this;
+	}
+
 	int operator !=(point p) {
 		return (x[0] != p[0]
 		     || x[1] != p[1]
 		     || x[2] != p[2]);
+	}
+
+	point mult(ale_real d) const {
+		return point(x[0] * d, x[1] * d, x[2] * d);
 	}
 
 	ale_pos lengthtosq(point p) const {
@@ -139,6 +159,25 @@ public:
 
 		return acos(cos_of);
 	}
+
+
+	/*
+	 * Determine the cross product
+	 */
+	point xproduct(point p, point q) {
+		p -= *this;
+		q -= *this;
+
+		return point(p[1] * q[2] - p[2] * q[1],
+		             p[2] * q[0] - p[0] * q[2],
+			     p[0] * q[1] - p[1] * q[0]);
+	}
 };
 
+inline point operator*(const point &p, double d) {
+	return p.mult(d);
+}
+inline point operator*(double d, const point &p) {
+	return p.mult(d);
+}
 #endif

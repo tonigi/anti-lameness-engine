@@ -758,6 +758,69 @@ class scene {
 		while(density_test(0));
 	}
 
+	/*
+	 * Adjust vertices to minimize scene error.  Return 
+	 * non-zero if improvements are made.
+	 */
+	static int adjust_vertices() {
+		int improved = 0;
+
+		triangle *t = triangle_head[0];
+
+		while (t) {
+
+			while (t->division_new_vertex) {
+				assert (t->children[0]);
+				assert (t->children[1]);
+				t = t->children[0];
+			}
+
+			/*
+			 * Determine the cross product of two triangle edges
+			 */
+
+			point n = t->vertices[0]->xproduct(*t->vertices[1], *t->vertices[2]);
+
+			/*
+			 * Determine the initial error
+			 */
+
+			ale_accum err = scene_error();
+
+			/*
+			 * Iterate over vertices, checking the effects of
+			 * changes on the scene error.
+			 */
+
+			for (int v = 0; v < 3; v++) {
+				*t->vertices[v] += n;
+
+				if (scene_error() > err) {
+					*t->vertices[v] -= 2 * n;
+
+					if (scene_error() > err)
+						*t->vertices[v] += n;
+					else 
+						improved = 1;
+				} else
+					improved = 1;
+			}
+
+			while(t->parent && t == t->parent->children[1]) {
+				t = t->parent;
+			}
+
+			if (t->parent == NULL && t == triangle_head[0])
+				t = triangle_head[1];
+			else if (t->parent == NULL)
+				t = NULL;
+			else if (t == t->parent->children[0])
+				t = t->parent->children[1];
+		}
+
+		return improved;
+	}
+
 public:
 	/*
 	 * Initialize 3D scene from 2D scene, using 2D and 3D alignment
@@ -1038,10 +1101,7 @@ public:
 			 * Try improving the result by moving existing vertices.
 			 */
 
-			/*
-			 * Try improving the result by adding a vertex.
-			 */
-
+			improved |= adjust_vertices();
 		}
 	}
 
