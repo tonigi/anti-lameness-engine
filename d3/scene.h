@@ -128,6 +128,7 @@ class scene {
 					return i;
 			}
 
+			fprintf(stderr, "error in %p\n", this);
 			assert(0);
 
 			return -1;
@@ -159,14 +160,6 @@ class scene {
 				children[c]->children[1] = NULL;
 				children[c]->division_new_vertex = NULL;
 			}
-		}
-
-		void split(int v, point nv) {
-			point *nvp = new point(nv);
-
-			assert (nvp);
-
-			split_internals(v, nvp);
 
 			for (int i = 0; i < 2; i++) {
 				int vv = (v + 1 + i) % 3;
@@ -177,6 +170,15 @@ class scene {
 
 				neighbors[vv]->neighbors[self_ref] = children[i];
 			}
+
+		}
+
+		void split(int v, point nv) {
+			point *nvp = new point(nv);
+
+			assert (nvp);
+
+			split_internals(v, nvp);
 
 			if (!neighbors[v])
 				return;
@@ -231,6 +233,19 @@ class scene {
 			assert(children[0]);
 			assert(children[1]);
 
+			for (int i = 0; i < 2; i++) {
+				int vv = (division_vertex + 1 + i) % 3;
+
+				neighbors[vv] = children[i]->neighbors[vv];
+
+				if (neighbors[vv] == NULL)
+					continue;
+
+				int self_ref = children[i]->self_ref_from_neighbor(vv);
+
+				neighbors[vv]->neighbors[self_ref] = this;
+			}
+
 			delete children[0];
 			delete children[1];
 
@@ -255,11 +270,6 @@ class scene {
 			assert(division_new_vertex);
 
 			delete division_new_vertex;
-
-			for (int i = 0; i < 2; i++) {
-				int vv = (division_vertex + 1 + i) % 3;
-				neighbors[vv] = children[i]->neighbors[vv];
-			}
 
 			unsplit_internals();
 
@@ -397,6 +407,16 @@ class scene {
 			}
 
 			/*
+			 * Expand the bounding box to the closest non-interior
+			 * integral values.
+			 */
+
+			for (int d = 0; d < 2; d++) {
+				max[d] = ceil(max[d]);
+				min[d] = floor(min[d]);
+			}
+
+			/*
 			 * Intersect the bounding box with the image boundary.
 			 *
 			 * XXX: this may include additional points
@@ -425,8 +445,8 @@ class scene {
 			 * Iterate over all points in the bounding box.
 			 */
 
-			for (int i = (int) floor(min[0]); i <= (int) ceil(max[0]); i++)
-			for (int j = (int) floor(min[1]); j <= (int) ceil(max[1]); j++) {
+			for (int i = (int) min[0]; i <= (int) max[0]; i++)
+			for (int j = (int) min[1]; j <= (int) max[1]; j++) {
 
 				triangle **zbuf_tri = zbuf + width * i + j;
 
@@ -549,7 +569,6 @@ class scene {
 	 */
 	static int density_test(int split) {
 
-		fprintf(stderr, "density test start\n");
 		triangle_head[0]->write_tree();
 		triangle_head[1]->write_tree();
 
@@ -573,11 +592,12 @@ class scene {
 			_pt.scale(scale * sf / _pt.scale_2d());
 			unsigned int height = (unsigned int) _pt.scaled_height();
 			unsigned int width  = (unsigned int) _pt.scaled_width();
-			fprintf(stderr, "[h=%d w=%d] ", height, width);
 			triangle **zbuf = init_zbuf(_pt);
 			assert (zbuf);
 			zbuffer(_pt, zbuf, triangle_head[0]);
 			zbuffer(_pt, zbuf, triangle_head[1]);
+
+			fprintf(stderr, "[w=%u h=%u] ", width, height);
 
 			/*
 			 * Iterate over all non-border points in the frame.
@@ -605,8 +625,8 @@ class scene {
 				t->aux_stat = d2::pixel(0, 0, 0);
 
 				/*
-				 * Check that at least three points in the
-				 * neighboring eight are associated with the
+				 * Check that at least one point in the
+				 * neighboring eight is associated with the
 				 * same triangle.  
 				 */
 
@@ -619,12 +639,12 @@ class scene {
 
 				/*
 				 * Since we revisit the original point, the
-				 * final sum should be four.
+				 * final sum should be two.
 				 */
 
-				if (count < 4 && split)
+				if (count < 2 && split)
 					t->aux_stat = d2::pixel(-1, -1, -1);
-				else if (count < 4 && !split && t->parent)
+				else if (count < 2 && !split && t->parent)
 					t->parent->aux_stat = d2::pixel(-1, -1, -1);
 			}
 
@@ -882,6 +902,7 @@ public:
 
 		density_test_split();
 		density_test_unsplit();
+		color_average();
 
 		while ((improved /*&& count < 40*/) || cl->next) {
 
@@ -915,6 +936,7 @@ public:
 				increase_lod();
 				density_test_split();
 				density_test_unsplit();
+				color_average();
 				count = 0;
 			}
 
