@@ -34,7 +34,7 @@
 
 struct pt {
 private:
-	transformation t;
+	d2::transformation t;
 	et euclidean;
 	ale_real view_angle;
 	
@@ -44,7 +44,7 @@ public:
 	 * Constructor
 	 */
 
-	pt(transformation t, et e, ale_real va) {
+	pt(d2::transformation t, et e, ale_real va) {
 		this->t = t;
 		euclidean = e;
 		view_angle = va;
@@ -134,6 +134,8 @@ public:
 		 */
 
 		p = euclidean.inverse_transform(p);
+
+		return p;
 	}
 
 	/*

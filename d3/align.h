@@ -34,6 +34,7 @@
 
 #include "point.h"
 #include "et.h"
+#include "pt.h"
 
 class align {
 	static ale_pos _init_angle;

@@ -158,7 +158,7 @@ public:
 		for (int head = 0; head < 2; head++) {
 			triangle_head[head] = new triangle;
 			assert(triangle_head[head]);
-			if (!triangle_head)
+			if (!triangle_head[0] || !triangle_head[1])
 				ui::get()->memory_error("triangular approximation of 3D scene");
 		}
 
@@ -261,15 +261,15 @@ public:
 	static void init_zbuf(ale_pos *zbuf, unsigned int size) {
 		for (unsigned int i = 0; i < size; i++) {
 			zbuf[i] = 0;
-			zbuf[i] /= 0;
+			zbuf[i] = 0 / zbuf[i];
 			assert(isnan(zbuf[i]));
 		}
 	}
 
-	static void fill_with_values(pt _pt, image *im, ale_pos *zbuf, triangle *t) {
+	static void fill_with_values(pt _pt, d2::image *im, ale_pos *zbuf, triangle *t) {
 		if (t->division_vertex) {
-			fill_with_values(t->children[0]);
-			fill_with_values(t->children[1]);
+			fill_with_values(_pt, im, zbuf, t->children[0]);
+			fill_with_values(_pt, im, zbuf, t->children[1]);
 			return;
 		}
 
@@ -280,7 +280,7 @@ public:
 		point p[3];
 
 		for (int v = 0; v < 3; v++)
-			p[v] = _pt->scaled_transform(t->vertices[v]);
+			p[v] = _pt.scaled_transform(*t->vertices[v]);
 
 		/*
 		 * Determine the bounding box of the transformed vertices.
@@ -292,7 +292,7 @@ public:
 		for (int d = 0; d < 2; d++) {
 			if (max[d] < p[v][d])
 				max[d] = p[v][d];
-			if (min[d] > min[v][d])
+			if (min[d] > p[v][d])
 				min[d] = p[v][d];
 		}
 
@@ -313,8 +313,8 @@ public:
 		 * Iterate over all points in the bounding box.
 		 */
 
-		for (int i = min[0]; i <= max[0]; i++)
-		for (int j = min[1]; j <= max[1]; j++) {
+		for (int i = (int) floor(min[0]); i <= (int) ceil(max[0]); i++)
+		for (int j = (int) floor(min[1]); j <= (int) ceil(max[1]); j++) {
 
 			ale_real *depth = zbuf + im->width() * i + j;
 
@@ -324,7 +324,7 @@ public:
 			 * XXX: this doesn't work correctly in all cases.
 			 */
 
-			if (*depth > p[2])
+			if (*depth > p[0][2])
 				continue;
 			
 			/*
@@ -365,16 +365,16 @@ public:
 	static const d2::image *view(unsigned int n) {
 		assert (n < d2::image_rw::count());
 
-		image *im = new image_ale_real(d2::align::of(n).scaled_height(),
-				               d2::align::of(n).scaled_width(), 3);
+		d2::image *im = new d2::image_ale_real((int) floor(d2::align::of(n).scaled_height()),
+				               (int) floor(d2::align::of(n).scaled_width()), 3);
 
-		ale_real *zbuf = (ale_real *) malloc(im->height() * im->width()
-				* sizeof(ale_real));
+		ale_pos *zbuf = (ale_pos *) malloc(im->height() * im->width()
+				* sizeof(ale_pos));
 
 		init_zbuf(zbuf, im->height() * im->width());
 
-		fill_with_values(align::projective(n), im, zbuf, triangle_head + 0);
-		fill_with_values(align::projective(n), im, zbuf, triangle_head + 1);
+		fill_with_values(align::projective(n), im, zbuf, triangle_head[0]);
+		fill_with_values(align::projective(n), im, zbuf, triangle_head[1]);
 
 		return im;
 	}
@@ -382,20 +382,20 @@ public:
 	static const d2::image *depth(unsigned int n) {
 		assert (n < d2::image_rw::count());
 
-		image *im = new image_ale_real(d2::align::of(n).scaled_height(),
-				               d2::align::of(n).scaled_width(), 3);
+		d2::image *im = new d2::image_ale_real((int) floor(d2::align::of(n).scaled_height()),
+				               (int) floor(d2::align::of(n).scaled_width()), 3);
 
 		ale_real *zbuf = (ale_real *) malloc(im->height() * im->width()
 				* sizeof(ale_real));
 
 		init_zbuf(zbuf, im->height() * im->width());
 
-		fill_with_values(im, zbuf, triangle_head + 0);
-		fill_with_values(im, zbuf, triangle_head + 1);
+		fill_with_values(align::projective(n), im, zbuf, triangle_head[0]);
+		fill_with_values(align::projective(n), im, zbuf, triangle_head[1]);
 
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++)
-			im->pix(i, j) = pixel(1, 1, 1) * zbuf[i * im->width() + 1];
+			im->pix(i, j) = d2::pixel(1, 1, 1) * zbuf[i * im->width() + 1];
 
 		return im;
 	}
