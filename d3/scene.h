@@ -32,7 +32,7 @@
  */
 
 #define PLANAR_SUBDIVISION_DEPTH 2
-#define PLANAR_SUBDIVISION_COUNT 16 
+#define PLANAR_SUBDIVISION_COUNT 16
 
 class scene {
 
@@ -854,22 +854,28 @@ class scene {
 			point cv = p[v];
 			point nv = p[(v + 1) % 3];
 
-			for (int d = 0; d < 2; d++)
-			if ((test_point[d] - cv[d]) * (test_point[d] - nv[d]) <= 0
-			 && nv[d] - cv[d] != 0) {
-
+			for (int d = 0; d < 2; d++) {
 				int e = (d + 1) % 2;
-				ale_pos travel = (test_point[d] - cv[d]) / (nv[d] - cv[d]);
-				ale_pos intersect = cv[e] + travel * (nv[e] - cv[e]);
-				if (intersect <= test_point[e]) 
-					lower[e] = 1;
-				if (intersect >= test_point[e])
-					upper[e] = 1;
+
+				if ((test_point[d] - cv[d]) * (test_point[d] - nv[d]) <= 0
+				 && nv[d] - cv[d] != 0) {
+					ale_pos travel = (test_point[d] - cv[d]) / (nv[d] - cv[d]);
+					ale_pos intersect = cv[e] + travel * (nv[e] - cv[e]);
+					if (intersect <= test_point[e]) 
+						lower[e] = 1;
+					if (intersect >= test_point[e])
+						upper[e] = 1;
+				}
+				if (nv[d] - cv[d] == 0 && test_point[d] == nv[d]) {
+					lower[d] = 1;
+					upper[d] = 1;
+				}
+
 			}
 		}
 
 		if (!lower[0] || !upper[0] || !lower[1] || !upper[1]) {
-			if (print_on_failure && 0) {
+			if (print_on_failure) {
 				 fprintf(stderr, "is_interior({{%f, %f}, {%f, %f}, {%f, %f}}, {%f, %f})",
 						 p[0][0], p[0][1],
 						 p[1][0], p[1][1],
@@ -894,6 +900,9 @@ class scene {
 		for (int v = 0; v < 3; v++)
 			p_i[v] = _pt.scaled_transform(p_w[v]);
 
+		if (depth == 0)
+			return prefix;
+
 		if (!is_interior(p_i, point(test_point[0], test_point[1], 1), 1)) {
 			/*
 			 * XXX: Error condition ... what should we do here?
@@ -901,9 +910,6 @@ class scene {
 			// assert(0);
 			return prefix;
 		}
-
-		if (depth == 0)
-			return prefix;
 
 		point hp_w[3];
 		point hp_i[3];
@@ -915,10 +921,13 @@ class scene {
 			hp_i[v] = _pt.scaled_transform(hp_w[v]);
 
 		for (int v = 0; v < 3; v++) {
-			point arg_array[3] = {p_i[v], hp_i[(v + 2) % 3], hp_i[(v + 1) % 3]};
+			point arg_array_i[3] = {p_i[v], hp_i[(v + 2) % 3], hp_i[(v + 1) % 3]};
+			point arg_array_w[3] = {p_w[v], hp_w[(v + 2) % 3], hp_w[(v + 1) % 3]};
 
-			if (is_interior(arg_array, point(test_point[0], test_point[1], 1)))
-				return subtriangle_index(_pt, test_point, arg_array, depth - 1, prefix * 4 + v);
+			int interior_t = is_interior(arg_array_i, point(test_point[0], test_point[1], 1));
+
+			if (interior_t)
+				return subtriangle_index(_pt, test_point, arg_array_w, depth - 1, prefix * 4 + v);
 		}
 
 		return subtriangle_index(_pt, test_point, hp_w, depth - 1, prefix * 4 + 3);
@@ -1483,6 +1492,7 @@ public:
 			triangle *t = zbuf[i * im->width() + j];
 			int sti = subtriangle_index(_pt, d2::point(i, j), t);
 			im->pix(i, j) = t->color[sti];
+//			im->pix(i, j) = d2::pixel(sti,sti,sti) / (double) PLANAR_SUBDIVISION_COUNT;
 		}
 
 		free(zbuf);
