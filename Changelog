@@ -1,3 +1,8 @@
+0.5.1-patch1
+
+o	Use most significant bits from input files when ImageMagick has a
+	higher MaxRGB than ALE has CHANNEL_MAX.
+
 0.5.1
 
 o	Several of the changes below are based on a suggestion by Bert

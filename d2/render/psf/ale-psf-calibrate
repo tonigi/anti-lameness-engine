@@ -1,0 +1,289 @@
+#!/usr/bin/perl -w
+
+# Copyright 2003, 2004 David Hilvert <dhilvert@auricle.dyndns.org>,
+#                                    <dhilvert@ugcs.caltech.edu>
+
+#  This file is part of the Anti-Lamenessing Engine.
+#
+#  The Anti-Lamenessing Engine is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  The Anti-Lamenessing Engine is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with Anti-Lamenessing Engine; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# This script attempts to calibrate a filter under ALE for characteristics of a
+# specific device.  It uses the stdin IPC device to configure the filter.
+#
+# The initial filter tested is the box filter, and individual elements
+# of the filter are increased or decreased to determine the effects of
+# such changes.  When the change increases the match with the desired
+# output, it is kept.  Otherwise, the change is backed out.
+#
+# The magnitude of change tested is determined by an increment variable,
+# which starts at a user-defined value and is halved until it is smaller
+# than 0.1 (an arbitrary value which could easily be changed).
+#
+# For every increment value, all elements are tested with positive and negative
+# changes of this magnitude.  If an element fails to offer any error
+# improvement on a given pass, it is skipped on all future passes for the same
+# increment value.
+#
+# Passes at a given increment value continue until all elements are skipped, at
+# which point the magnitude is halved.
+#
+# It may be a good idea to use this script with relatively small images, as
+# large images may require a long time to process.
+
+#
+# Remove these two lines to run the script.
+#
+
+print "Edit this script to set relevant parameters for calibration.\n";
+exit 1;
+
+#
+# The diameter of the filter, in pixels.  Set nlheight to zero to disable 
+# non-linear filtering.
+#
+
+$lheight = 3;
+$lwidth = 3;
+
+$nlheight = 0;
+$nlwidth = 0;
+
+#
+# Filter rows and columns
+#
+
+$lrows = 3;
+$lcols = 3;
+
+$nlrows = 0;
+$nlcols = 0;
+
+#
+# These are the files used for calibration
+#
+# inputs: input images.
+#
+# tfile: transformation file indicating the proper transformations for the
+# input images.
+#
+# comparison: file indicating the desired final output of ALE 
+#
+
+$inputs = "*.ppm";
+$tfile = "b.t";
+$comparison = "c-align.png";
+
+#
+# Factor (>= 1) by which to scale each of the input images.
+#
+
+$scale = 5;
+
+#
+# Random (but non-uniform) temporary files
+#
+
+$output1 = "/tmp/ale1-$$.png";
+$temp_file = "/tmp/ale-$$-input";
+$result_file = "/tmp/ale-$$-results";
+
+#
+# Initialize a box filter. 
+#
+
+@lfilter = (((1.0) x $lrows) x $lcols) x 3;
+@nlfilter = (((1.0) x $nlrows) x $nlcols) x 3;
+
+#
+# Alternatively, something like this can be used:
+#
+# @lfilter = (
+# 	1, 1, 1,
+#	1, 1, 1,
+# 	3, 4, 5.3,
+# 	.
+#	.
+#	.
+#)
+#
+# Or:
+#
+# $lfilter = "1 0.5 ... 3"
+#
+# @lfilter = split / /, $filter;
+#
+
+#
+# When modifying the filter, we start by modifying each element by $increment.
+# We halve the amount until we reach a value smaller than $increment_lower.
+#
+
+$increment = 0.8;
+$increment_lower = 0.1;
+
+#
+# This array indicates the last direction tried for each index.  Since we
+# haven't tried anything yet, initialize this to +1 for all indices.
+#
+#    +1 ==> positive change
+#    -1 ==> negative change
+#
+
+@llast_dir = (((1.0) x $lcols) x $lrows) x 3;
+@nllast_dir = (((1.0) x $nlcols) x $nlrows) x 3;
+
+#
+# Program name to invoke ale
+#
+
+$invocation = "ale";
+
+#
+# Subroutine to obtain the match value associated with the current filter.
+#
+
+sub foo {
+	`echo $lheight > $temp_file`;
+	`echo $lwidth >> $temp_file`;
+	`echo $lrows >> $temp_file`;
+	`echo $lcols >> $temp_file`;
+	foreach $elem (@lfilter) {
+		`echo $elem >> $temp_file`;
+	}
+
+	if ($nlheight > 0) {
+		`echo $nlheight >> $temp_file`;
+		`echo $nlwidth >> $temp_file`;
+		`echo $nlrows >> $temp_file`;
+		`echo $nlcols >> $temp_file`;
+		foreach $elem (@nlfilter) {
+			`echo $elem >> $temp_file`;
+		}
+	}
+
+	if ($nlheight > 0)  {
+		`$invocation --no-inc --mc 1 --scale=$scale --lpsf stdin --nlpsf stdin --psf-match --projective --perturb-upper=0 --trans-load=$tfile $inputs $comparison $output1 < $temp_file 2> $result_file`;
+	} else {
+		`$invocation --no-inc --mc 1 --scale=$scale --lpsf stdin --psf-match --projective --perturb-upper=0 --trans-load=$tfile $inputs $comparison $output1 < $temp_file 2> $result_file`;
+	}
+
+	`rm -f $output1`;
+	`rm -f $temp_file`;
+
+	$data = `cat $result_file`;
+
+	`rm -f $result_file`;
+
+	$data =~ /::\s*(\S+)/ or die "Couldn't get match value.\n";
+
+	$data = $1;
+
+	print "Measured Error: " . $data . "\n";
+
+	$_ = $1;
+}
+
+$curval = foo();
+
+while ($increment >= $increment_lower) {
+	$changed = 0;
+
+	for $i (0 .. $lrows - 1) {
+	for $j (0 .. $lcols - 1) {
+	for $k (0 .. 2) {
+		$index = $k + 3 * ($j + $lcols * $i);
+
+		if ($lskip[$index]) {
+			print "Skipping linear element: " . $index . "\n";
+			next;
+		} else {
+			print "Testing linear element: " . $index . "\n";
+		}
+
+		$dir_incr = $increment * $llast_dir[$index];
+
+		$lfilter[$index] += $dir_incr;
+		$newval = foo();
+		if ($newval < $curval) {
+			$changed = 1;
+			$curval = $newval;
+			if ($nlheight > 0) {
+				print "Filter: " . "$lheight $lwidth $lrows $lcols @lfilter $nlheight $nlwidth $nlrows $nlcols @nlfilter\n";
+			} else {
+				print "Filter: " . "$lheight $lwidth $lrows $lcols @lfilter\n";
+			}
+		} else {
+			$lfilter[$index] -= 2 * $dir_incr;
+			$newval = foo();
+			if ($newval < $curval) {
+				$changed = 1;
+				$curval = $newval;
+				if ($nlheight > 0) {
+					print "Filter: " . "$lheight $lwidth $lrows $lcols @lfilter $nlheight $nlwidth $nlrows $nlcols @nlfilter\n";
+				} else {
+					print "Filter: " . "$lheight $lwidth $lrows $lcols @lfilter\n";
+				}
+				$llast_dir[$index] *= -1;
+			} else {
+				$lfilter[$index] += $dir_incr;
+				$lskip[$index] = 1;
+			}
+		}
+	}}}
+
+	if ($nlheight > 0) {
+	for $i (0 .. $nlrows - 1) {
+	for $j (0 .. $nlcols - 1) {
+	for $k (0 .. 2) {
+		$index = $k + 3 * ($j + $nlcols * $i);
+
+		if ($nlskip[$index]) {
+			print "Skipping non-linear element: " . $index . "\n";
+			next;
+		} else {
+			print "Testing non-linear element: " . $index . "\n";
+		}
+
+		$dir_incr = $increment * $nllast_dir[$index];
+
+		$nlfilter[$index] += $dir_incr;
+		$newval = foo();
+		if ($newval < $curval) {
+			$changed = 1;
+			$curval = $newval;
+			print "Filter: " . "$lheight $lwidth $lrows $lcols @lfilter $nlheight $nlwidth $nlrows $nlcols @nlfilter\n";
+		} else {
+			$nlfilter[$index] -= 2 * $dir_incr;
+			$newval = foo();
+			if ($newval < $curval) {
+				$changed = 1;
+				$curval = $newval;
+				print "Filter: " . "$lheight $lwidth $lrows $lcols @lfilter $nlheight $nlwidth $nlrows $nlcols @nlfilter\n";
+				$nllast_dir[$index] *= -1;
+			} else {
+				$nlfilter[$index] += $dir_incr;
+				$nlskip[$index] = 1;
+			}
+		}
+	}}}}
+
+	if ($changed == 0) {
+		@lskip = ();
+		@nlskip = ();
+		$increment /= 2;
+		print "Increment: $increment\n";
+	}
+}
+

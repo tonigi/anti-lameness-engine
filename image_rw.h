@@ -144,7 +144,14 @@ class image_rw {
 					im->set_pixel_component(i, j, 2, ((channel) p->blue << 8) | p->blue);
 					p++;
 				}
-			} else if (MaxRGB > 255 || CHANNEL_MAX == 255) {
+			} else if (MaxRGB > 255 && CHANNEL_MAX == 255) {
+                                for (j = 0; j < mi->columns; j++) {
+                                        im->set_pixel_component(i, j, 0, p->red >> 8);
+                                        im->set_pixel_component(i, j, 1, p->green >> 8);
+                                        im->set_pixel_component(i, j, 2, p->blue >> 8);
+                                        p++;
+                                }
+			} else if (MaxRGB > 255 && CHANNEL_MAX == 65535) {
 				for (j = 0; j < mi->columns; j++) {
 					im->set_pixel_component(i, j, 0, p->red);
 					im->set_pixel_component(i, j, 1, p->green);
