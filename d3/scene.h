@@ -898,19 +898,19 @@ class scene {
 	static struct triangle *triangle_head[2];
 
 	/*
-	 * Vector test for interiority.
+	 * Vector test for interiority in local cartesian space.
 	 *
-	 * P is a set of triangle vertex points in euclidean space.  R is a ray
-	 * endpoint in euclidean space.  The intersection of R and the plane defined
-	 * by P is the point being tested for interiority.
+	 * P is a set of triangle vertex points.  R is a ray endpoint.  The
+	 * intersection of R and the plane defined by P is the point being
+	 * tested for interiority.
 	 */
-	 static int is_interior_v(point p[3], point r, int print_on_failure = 0) {
+	 static int is_interior_c(point p_c[3], point r_c, int print_on_failure = 0) {
 
-		point multipliers = rt_intersect(r, p);
+		point multipliers = rt_intersect(r_c, p_c);
 
 		if (multipliers[1] >= 0
 		 && multipliers[2] >= 0
-		 && (multipliers[1] + multipliers[2] <= 0.5))
+		 && (multipliers[1] + multipliers[2] <= 1))
 			return 1;
 
 		if (print_on_failure && 0) {
@@ -924,6 +924,7 @@ class scene {
 
 		return 0;
 	}
+
 	/*
 	 * Upper/lower test for interiority.
 	 *
@@ -976,14 +977,14 @@ class scene {
 	}
 
 	/*
-	 * Return a subtriangle index for a given position.  Assumes cartesian
-	 * (not projective) coordinates.
+	 * Return a subtriangle index for a given position.  Assumes local
+	 * cartesian (not projective) coordinates.
 	 *
-	 * R is the endpoint of a ray whose tail is at zero.
-	 * P_W are the vertex coordinates.
+	 * R_C is the endpoint of a ray whose tail is at zero.
+	 * P_C are the vertex coordinates.
 	 */
 #if 0
-	static int subtriangle_index(point r, point p_w[3], int depth, int prefix) {
+	static int subtriangle_index(point r_c, point p_c[3], int depth, int prefix) {
 
 		if (depth == 0)
 			return prefix;
