@@ -60,6 +60,10 @@ public:
 		return point(x[0] - p[0], x[1] - p[1]);
 	}
 
+	point operator-() const {
+		return point(-x[0], -x[1]);
+	}
+
 	point operator+=(point p) { 
 		(*this) = (*this) + p;
 

@@ -371,8 +371,8 @@ public:
 	 * 	1/8	1/4	1/8
 	 * 	1/16	1/8	1/16
 	 *
-	 * At the edges, these values are normalized so that the sum of
-	 * contributing pixels is 1.
+	 * At the edges, these values are normalized so that the sum of the
+	 * weights of contributing pixels is 1.
 	 */
 	image *scale_by_half(char *name) const {
 		ale_pos f = 0.5;
@@ -388,9 +388,9 @@ public:
 
 			is->set_pixel(i, j, 
 
-			      ( ( (i > 0 && j > 0) 
+			      ( ( ((i > 0 && j > 0) 
 				    ? get_pixel(2 * i - 1, 2 * j - 1) * (ale_real) 0.0625
-				    : pixel(0, 0, 0)
+				    : pixel(0, 0, 0))
 				+ ((i > 0)
 				    ? get_pixel(2 * i - 1, 2 * j) * 0.125
 				    : pixel(0, 0, 0))
@@ -416,31 +416,153 @@ public:
 
 			     /
 
-				( (i > 0 && j > 0) 
+				( ((i > 0 && j > 0) 
 				    ? 0.0625
-				    : 0
-				+ (i > 0)
+				    : 0)
+				+ ((i > 0)
 				    ? 0.125
-				    : 0
-				+ (i > 0 && j < is->width() - 1)
+				    : 0)
+				+ ((i > 0 && j < is->width() - 1)
 				    ? 0.0625
-				    : 0
-				+ (j > 0)
+				    : 0)
+				+ ((j > 0)
 				    ? 0.125
-				    : 0
+				    : 0)
 				+ 0.25
-				+ (j < is->width() - 1)
+				+ ((j < is->width() - 1)
 				    ? 0.125
-				    : 0
-				+ (i < is->height() - 1 && j > 0)
+				    : 0)
+				+ ((i < is->height() - 1 && j > 0)
 				    ? 0.0625
-				    : 0
-				+ (i < is->height() - 1)
+				    : 0)
+				+ ((i < is->height() - 1)
 				    ? 0.125
-				    : 0
-				+ (i < is->height() && j < is->width() - 1)
+				    : 0)
+				+ ((i < is->height() && j < is->width() - 1)
 				    ? 0.0625
-				    : 0 ) ) );
+				    : 0) ) ) );
+
+		is->_offset = point(_offset[0] * f, _offset[1] * f);
+
+		return is;
+	}
+
+	/*
+	 * Scale by half.  This function uses externally-provided weights,
+	 * multiplied by the following filter:
+	 *
+	 * 	1/16	1/8	1/16
+	 * 	1/8	1/4	1/8
+	 * 	1/16	1/8	1/16
+	 *
+	 * Values are normalized so that the sum of the weights of contributing
+	 * pixels is 1.
+	 */
+	image *scale_by_half(const image *weights, char *name) const {
+
+		if (weights == NULL)
+			return scale_by_half(name);
+
+		ale_pos f = 0.5;
+
+		image *is = scale_generator(
+			(int) floor(height() * f), 
+			(int) floor(width()  * f), depth(), name);
+
+		assert(is);
+
+		for (unsigned int i = 0; i < is->height(); i++)
+		for (unsigned int j = 0; j < is->width(); j++) {
+
+			pixel value = pixel
+
+			      ( ( ((i > 0 && j > 0) 
+				    ? get_pixel(2 * i - 1, 2 * j - 1) 
+				    * weights->get_pixel(2 * i - 1, 2 * j - 1) 
+				    * (ale_real) 0.0625
+				    : pixel(0, 0, 0))
+				+ ((i > 0)
+				    ? get_pixel(2 * i - 1, 2 * j) 
+				    * weights->get_pixel(2 * i - 1, 2 * j)
+				    * 0.125
+				    : pixel(0, 0, 0))
+				+ ((i > 0 && j < is->width() - 1)
+				    ? get_pixel(2 * i - 1, 2 * j + 1) 
+				    * weights->get_pixel(2 * i - 1, 2 * j + 1)
+				    * 0.0625
+				    : pixel(0, 0, 0))
+				+ ((j > 0)
+				    ? get_pixel(2 * i, 2 * j - 1) 
+				    * weights->get_pixel(2 * i, 2 * j - 1)
+				    * 0.125
+				    : pixel(0, 0, 0))
+				+ get_pixel(2 * i, 2 * j) 
+				    * weights->get_pixel(2 * i, 2 * j)
+				    * 0.25
+				+ ((j < is->width() - 1)
+				    ? get_pixel(2 * i, 2 * j + 1) 
+				    * weights->get_pixel(2 * i, 2 * j + 1)
+				    * 0.125
+				    : pixel(0, 0, 0))
+				+ ((i < is->height() - 1 && j > 0)
+				    ? get_pixel(2 * i + 1, 2 * j - 1) 
+				    * weights->get_pixel(2 * i + 1, 2 * j - 1)
+				    * 0.0625
+				    : pixel(0, 0, 0))
+				+ ((i < is->height() - 1)
+				    ? get_pixel(2 * i + 1, 2 * j) 
+				    * weights->get_pixel(2 * i + 1, 2 * j)
+				    * 0.125
+				    : pixel(0, 0, 0))
+				+ ((i < is->height() && j < is->width() - 1)
+				    ? get_pixel(2 * i + 1, 2 * j + 1) 
+				    * weights->get_pixel(2 * i + 1, 2 * j + 1)
+				    * 0.0625 
+				    : pixel(0, 0, 0)))
+
+			     /
+
+				( ((i > 0 && j > 0) 
+				    ? weights->get_pixel(2 * i - 1, 2 * j - 1)
+				    * 0.0625
+				    : pixel(0, 0, 0))
+				+ ((i > 0)
+				    ? weights->get_pixel(2 * i - 1, 2 * j)
+				    * 0.125
+				    : pixel(0, 0, 0))
+				+ ((i > 0 && j < is->width() - 1)
+				    ? weights->get_pixel(2 * i - 1, 2 * j + 1)
+				    * 0.0625
+				    : pixel(0, 0, 0))
+				+ ((j > 0)
+				    ? weights->get_pixel(2 * i, 2 * j - 1)
+				    * 0.125
+				    : pixel(0, 0, 0))
+				+ weights->get_pixel(2 * i, 2 * j) 
+				* 0.25
+				+ ((j < is->width() - 1)
+				    ? weights->get_pixel(2 * i, 2 * j + 1)
+				    * 0.125
+				    : pixel(0, 0, 0))
+				+ ((i < is->height() - 1 && j > 0)
+				    ? weights->get_pixel(2 * i + 1, 2 * j - 1)
+				    * 0.0625
+				    : pixel(0, 0, 0))
+				+ ((i < is->height() - 1)
+				    ? weights->get_pixel(2 * i + 1, 2 * j)
+				    * 0.125
+				    : pixel(0, 0, 0))
+				+ ((i < is->height() && j < is->width() - 1)
+				    ? weights->get_pixel(2 * i + 1, 2 * j + 1)
+				    * 0.0625
+				    : pixel(0, 0, 0)) ) );
+
+			for (int k = 0; k < 3; k++)
+				if (!finite(value[k]))
+					value[k] = 0;
+
+			is->set_pixel(i, j, value);
+		}
 
 		is->_offset = point(_offset[0] * f, _offset[1] * f);
 

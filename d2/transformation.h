@@ -1,5 +1,5 @@
-// Copyright 2002 David Hilvert <dhilvert@auricle.dyndns.org>, 
-//                              <dhilvert@ugcs.caltech.edu>
+// Copyright 2002, 2004 David Hilvert <dhilvert@auricle.dyndns.org>, 
+//                                    <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
 
@@ -100,7 +100,7 @@ private:
 	mutable ale_pos _a, _b, _c, _d, _e, _f, _g, _h;		// matrix inverse
 	ale_pos bdc[BARREL_DEGREE];				// barrel-dist. coeffs.
 	unsigned int bdcnum;					// number of bdcs
-	int is_projective;
+	int _is_projective;
 	mutable int resultant_memo;
 	mutable int resultant_inverse_memo;
 	ale_pos scale_factor;
@@ -118,7 +118,7 @@ private:
 		if (resultant_memo)
 			return;
 
-		if (is_projective) {
+		if (_is_projective) {
 
 			/*
 			 * Calculate resultant matrix values for a general
@@ -243,6 +243,13 @@ private:
 	}
 
 public:	
+
+	/*
+	 * Returns non-zero if the transformation might be non-Euclidean.
+	 */
+	int is_projective() {
+		return _is_projective;
+	}
 
 	/*
 	 * Get scale factor.
@@ -435,7 +442,7 @@ public:
 	 */
 	void eu_to_gpt() {
 
-		assert(!is_projective);
+		assert(!_is_projective);
 
 		x[0] = transform_unscaled(point(      0      ,      0      ) );
 		x[1] = transform_unscaled(point( input_height,      0      ) );
@@ -445,7 +452,7 @@ public:
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
 
-		is_projective = 1;
+		_is_projective = 1;
 	}
 
 	/*
@@ -464,7 +471,7 @@ public:
 		r.input_height = i ? i->height() : 2;
 		r.scale_factor = scale_factor;
 
-		r.is_projective = 0;
+		r._is_projective = 0;
 
 		r.bdcnum = 0;
 
@@ -487,12 +494,15 @@ public:
 	 */
 	void eu_modify(int i1, ale_pos diff) {
 
-		assert(!is_projective);
+		assert(!_is_projective);
 
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
 
-		eu[i1] += diff;
+		if (i1 < 2)
+			eu[i1] += diff / scale_factor;
+		else
+			eu[i1] += diff;
 
 	}
 
@@ -504,11 +514,12 @@ public:
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
 
-		for (int i = 0; i < 3; i++)
-			this->eu[i] = eu[i];
+		this->eu[0] = eu[0] / scale_factor;
+		this->eu[1] = eu[1] / scale_factor;
+		this->eu[2] = eu[2];
 
-		if (is_projective) {
-			is_projective = 0;
+		if (_is_projective) {
+			_is_projective = 0;
 			eu_to_gpt();
 		}
 
@@ -518,10 +529,14 @@ public:
 	 * Get the specified euclidean parameter
 	 */
 	ale_pos eu_get(int param) {
-		assert (!is_projective);
+		assert (!_is_projective);
 		assert (param >= 0);
 		assert (param < 3);
-		return eu[param];
+
+		if (param < 2)
+			return eu[param] * scale_factor;
+		else
+			return eu[param];
 	}
 
 	/*
@@ -529,7 +544,7 @@ public:
 	 */
 	void gpt_modify(int i1, int i2, ale_pos diff) {
 
-		assert (is_projective);
+		assert (_is_projective);
 
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
@@ -546,7 +561,7 @@ public:
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
 
-		is_projective = 1;
+		_is_projective = 1;
 
 		for (int i = 0; i < 4; i++)
 			this->x[i] = x[i];
@@ -557,7 +572,7 @@ public:
 	 * Get the specified projective parameter
 	 */
 	point gpt_get(int point) {
-		assert (is_projective);
+		assert (_is_projective);
 		assert (point >= 0);
 		assert (point <  4);
 
@@ -568,11 +583,28 @@ public:
 	 * Get the specified projective parameter
 	 */
 	ale_pos gpt_get(int point, int dim) {
-		assert (is_projective);
+		assert (_is_projective);
 		assert (dim   >= 0);
 		assert (dim   <  2);
 
 		return gpt_get(point)[dim];
+	}
+
+	/*
+	 * Translate by a given amount
+	 */
+	void translate(point p) {
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
+		if  (_is_projective)
+		for (int i = 0; i < 4; i++)
+			x[i]+=p;
+		else {
+			eu[0] += p[0] / scale_factor;
+			eu[1] += p[1] / scale_factor;
+		}
 	}
 
 	/*
@@ -639,17 +671,20 @@ public:
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
 
-		if (is_projective) {
+		if (_is_projective) {
 
 			for (int i = 0; i < 4; i++)
 			for (int j = 0; j < 2; j++)
 				x[i][j] *= factor;
 
 		} else {
-
+#if 0
+			/*
+			 * Euclidean scaling is handled in resultant().
+			 */
 			for (int i = 0; i < 2; i++)
 				eu[i] *= factor;
-
+#endif
 		}
 
 		scale_factor *= factor;
@@ -678,7 +713,7 @@ public:
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
 
-		if (is_projective) {
+		if (_is_projective) {
 
 			/*
 			 * If P(w, x, y, z) is a projective transform mapping
@@ -733,9 +768,9 @@ public:
 		 * image pixel P and two adjacent source pixels.
 		 */
 
-		    (*q) = transform_unscaled(p/scale_factor);
-		point q0 = transform_unscaled(point(p[0] + 1, p[1])/scale_factor);
-		point q1 = transform_unscaled(point(p[0], p[1] + 1)/scale_factor);
+		    (*q) = transform_scaled(p);
+		point q0 = transform_scaled(point(p[0] + 1, p[1]));
+		point q1 = transform_scaled(point(p[0], p[1] + 1));
 
 		/*
 		 * Calculate the distance between source image pixel and
@@ -889,7 +924,7 @@ public:
 	 */
 	void gpt_v0_set(point x[4]) {
 
-		is_projective = 1;
+		_is_projective = 1;
 
 		/*
 		 * This is slightly modified code from version
@@ -984,7 +1019,7 @@ public:
 			x[i][1] += eu[1];
 		}
 
-		if (is_projective) {
+		if (_is_projective) {
 			gpt_v0_set(x);
 			return;
 		}
@@ -996,13 +1031,13 @@ public:
 		gpt_v0_set(x);
 
 		point center((input_height * scale_factor) / 2, (input_width * scale_factor) / 2);
-		point center_image = transform_unscaled((1/scale_factor)*center);
+		point center_image = transform_scaled(center);
 
-		this->eu[0] = center_image[0] - center[0];
-		this->eu[1] = center_image[1] - center[1];
+		this->eu[0] = (center_image[0] - center[0]) / scale_factor;
+		this->eu[1] = (center_image[1] - center[1]) / scale_factor;
 
 		point center_left((input_height * scale_factor) / 2, 0);
-		point center_left_image = transform_unscaled((1/scale_factor)*center_left);
+		point center_left_image = transform_scaled(center_left);
 
 		ale_pos displacement = center_image[0] - center_left_image[0];
 
@@ -1014,7 +1049,7 @@ public:
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
 
-		is_projective = 0;
+		_is_projective = 0;
 
 	}
 

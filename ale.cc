@@ -52,6 +52,7 @@
 
 #include "device/xvp610_320x240.h"
 #include "device/xvp610_640x480.h"
+#include "device/ov7620_raw_linear.h"
 
 /*
  * Help files
@@ -63,9 +64,9 @@
  * Version Information
  */
 
-char *short_version = "0.7.0";
+char *short_version = "0.7.0-patch1";
 
-char *version = "ALE Version:      0.7.0\n"
+char *version = "ALE Version:      0.7.0-patch1\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else
@@ -386,6 +387,13 @@ int main(int argc, const char *argv[]){
 			extend = 1;
 		} else if (!strcmp(argv[i], "--no-mc")) {
 			d2::align::no_mc();
+		} else if (!strcmp(argv[i], "--gs")) {
+			if (i + 1 >= argc)
+				not_enough("--gs");
+
+			d2::align::gs(argv[i+1]);
+			i += 1;
+
 		} else if (!strcmp(argv[i], "--mc")) {
 			if (i + 1 >= argc)
 				not_enough("--mc");
@@ -791,7 +799,7 @@ int main(int argc, const char *argv[]){
 
 			d2::psf *device_response[psf_N] = { NULL, NULL };
 			d2::exposure *input_exposure = NULL;
-			ale_pos view_angle = 0;
+			ale_pos view_angle = 90 * M_PI / 180;
 
 			if (device != NULL) {
 				if (!strcmp(device, "xvp610_640x480")) {
@@ -804,13 +812,17 @@ int main(int argc, const char *argv[]){
 					device_response[psf_nonlinear] = new xvp610_320x240::nlpsf();
 					input_exposure = new xvp610_320x240::exposure[argc - i - 1];
 					view_angle = xvp610_320x240::view_angle();
+				} else if (!strcmp(device, "ov7620_raw_linear")) {
+					device_response[psf_linear] = NULL;
+					device_response[psf_nonlinear] = NULL;
+					input_exposure = new ov7620_raw_linear::exposure[argc - i - 1];
+					d2::image_rw::set_default_bayer(IMAGE_BAYER_BGRG);
 				} else {
 					fprintf(stderr, "\n\n*** Error: Unknown device %s ***\n\n", device);
 					exit(1);
 				}
 			} else {
 				input_exposure = new d2::exposure_default[argc - i - 1];
-				view_angle = 90 * M_PI / 180;
 			}
 
 			/*
@@ -977,7 +989,7 @@ int main(int argc, const char *argv[]){
 				d2::image *weight_map;
 				weight_map = d2::image_rw::read_image(wm_filename, new d2::exposure_linear());
 				weight_map->set_offset(wm_offsety, wm_offsetx);
-				d2::align::set_alignment_weights(weight_map);
+				d2::align::set_weight_map(weight_map);
 			}
 
 			/*

@@ -29,6 +29,13 @@
 #include "lanczos.h"
 
 /*
+ * Useful constants.
+ */
+
+static const double sqrt2          = 1.41421356237309504880;
+static const double one_over_sqrt2 = 0.70710678118654752440;
+
+/*
  * Scaled filter class.
  */
 
@@ -69,6 +76,7 @@ private:
 
 	mutable unsigned int t_two;
 	mutable transformation t[2];
+	mutable int _is_projective;
 
 	/*
 	 * Transform a point using the current transformation.
@@ -91,21 +99,30 @@ private:
 	}
 
 	/*
+	 * Returns non-zero if the transformation might be non-Euclidean.
+	 */
+	int is_projective() const {
+		return _is_projective;
+	}
+
+	/*
 	 * If we are limiting to source frequencies, then scale a filter to
 	 * accept only frequencies we know to be expressible in the source.
 	 * (Or do this approximately.)
 	 */
 	void freq_limit(point p, point mapped_p, ale_real *hscale_g, 
 			ale_real *hscale_rb, ale_real *wscale_g, ale_real *wscale_rb) const {
-		
+
 		if (frequency_limit == 0)
 			return;
+
+		ale_real hnorm, wnorm;
 
 		point dh = transform_inverse(p + point(1, 0));
 		point dw = transform_inverse(p + point(0, 1));
 
-		ale_real hnorm = (mapped_p - dh).norm();
-		ale_real wnorm = (mapped_p - dw).norm();
+		hnorm = (mapped_p - dh).norm();
+		wnorm = (mapped_p - dw).norm();
 
 		if (bayer == IMAGE_BAYER_NONE) {
 			if (hnorm < 1) {
@@ -117,14 +134,14 @@ private:
 				*wscale_rb = wnorm;
 			}
 		} else {
-			if (hnorm < sqrt(2)) {
-				*hscale_g = hnorm / sqrt(2);
+			if (hnorm < sqrt2) {
+				*hscale_g = hnorm / sqrt2;
 				*hscale_rb = hnorm / 2;
 			} else if (hnorm < 2) {
 				*hscale_rb = hnorm / 2;
 			}
-			if (wnorm < sqrt(2)) {
-				*wscale_g = wnorm / sqrt(2);
+			if (wnorm < sqrt2) {
+				*wscale_g = wnorm / sqrt2;
 				*wscale_rb = wnorm / 2;
 			} else if (wnorm < 2) {
 				*wscale_rb = wnorm / 2;
@@ -134,17 +151,33 @@ private:
 
 	void filter_channel(point p, point mapped_p, unsigned int k, ale_real hscale,
 			ale_real wscale, pixel *result, pixel *weight) const {
+
+#if 1
+		/*
+		 * This test matches the technical description.
+		 */
 		if (hscale < 1 && wscale < 1) {
+#else
+		/*
+		 * This approach is ~33% faster for Euclidean transformations,
+		 * but is likely to produce different results in some cases.
+		 */
+		if (hscale <= 1 && wscale <= 1) {
+#endif
 
 			/*
 			 * Handle the especially coarse case.
 			 */
 
-			ale_real fscale  = (bayer == IMAGE_BAYER_NONE)
-				         ? 1
-					 : (k == 1)
-					  ? sqrt(2)
-					  : 2;
+			ale_real fscale;
+
+			if (frequency_limit) {
+				fscale  = (bayer == IMAGE_BAYER_NONE)
+					? 1
+					: (k == 1) ? sqrt2 : 2;
+			} else {
+				fscale = 1;
+			}
 			
 			ale_real support = f->support() * fscale;
 
@@ -272,6 +305,8 @@ public:
 
 		bayer = im->get_bayer();
 		offset = _offset;
+
+		_is_projective = _t.is_projective();
 	}
 
 	/*
@@ -285,6 +320,8 @@ public:
 
 		bayer = im->get_bayer();
 		offset = point(0, 0);
+
+		_is_projective = t[0].is_projective() || t[1].is_projective();
 	}
 
 	

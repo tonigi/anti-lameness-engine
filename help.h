@@ -246,6 +246,15 @@ public:
 			"                           this option is not supported.  To use this option,\n"
 			"                           first re-build with POSIX=1.\n"
 #endif
+			BETWEEN_SECTIONS
+			"Global searching [experimental and undocumented]:\n"
+			HEADER_SPACE
+			"--gs <type>       Set global search to <type>, one of:\n"
+			"                     default   Alignment default [default]\n"
+			"                     inner     Alignment reference image inner region\n"
+			"                     outer     Alignment reference image outer region\n"
+			"                     all       Union of inner and outer\n"
+			"                     central   inner if below threshold or better; else, outer.\n"
 			"\n"
 		       );
 		exit(1);
@@ -368,6 +377,7 @@ public:
 			"                     Available devices:\n"
 			"                        xvp610_320x240\n"
 			"                        xvp610_640x480\n"
+			"                        ov7620_raw_linear [experimental and undocumented]\n"
 			"\n"
 		       );
 		exit(1);

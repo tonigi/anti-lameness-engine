@@ -71,10 +71,10 @@ private:
 	static const image *reference_defined;
 
  	/*
-	 * Per-pixel alignment weights
+	 * Per-pixel alignment weight map
 	 */
 
-	static const image *alignment_weights;
+	static const image *weight_map;
 
 	/*
 	 * Frequency-dependent alignment weights
@@ -83,7 +83,6 @@ private:
 	static double horiz_freq_cut;
 	static double vert_freq_cut;
 	static double avg_freq_cut;
-	static image *frequency_weights;
 	static const char *fw_output;
 
 	/*
@@ -93,7 +92,12 @@ private:
 	static const char *wmx_exec;
 	static const char *wmx_file;
 	static const char *wmx_defs;
-	static image *wmx_weights;
+
+	/*
+	 * Consolidated alignment weights
+	 */
+
+	static image *alignment_weights;
 
 	/*
 	 * Latest transformation.
@@ -254,11 +258,36 @@ private:
 	static ale_pos _mc;
 
 	/*
+	 * Global search parameter
+	 *
+	 * 0.  Alignment default.
+	 *
+	 * 1.  Inner:   Alignment reference image inner region
+	 * 2.  Outer:   Alignment reference image outer region
+	 * 3.  All:     Union of inner and outer
+	 * 4.  Central: Inner if possible; else, best of inner and outer.
+	 */
+
+	static int _gs;
+
+	/*
 	 * Exclusion regions
 	 */
 
 	static int *ax_parameters;
 	static int ax_count;
+
+	/*
+	 * Type for scale cluster.
+	 */
+
+	struct scale_cluster {
+		const image *accum;
+		const image *input;
+		const image *defined;
+		const image *aweight;
+		const int   *ax_parameters;
+	};
 
 	/*
 	 * Not-quite-symmetric difference function.  Determines the difference in areas
@@ -277,18 +306,19 @@ private:
 	 * all pixels.
 	 *
 	 */
-	static ale_accum diff(const image *a, const image *b, const image *definition, transformation t, ale_pos _mc_arg,
-			int ax_count, const int *ax_parameters) {
+	static ale_accum diff(struct scale_cluster c, transformation t,
+			ale_pos _mc_arg, int ax_count) {
+
 		assert (reference_image);
 		ale_accum result = 0;
 		ale_accum divisor = 0;
 
-		point offset = a->offset();
+		point offset = c.accum->offset();
 
 		int i, j, k;
 
 		if (interpolant != NULL) 
-			interpolant->set_parameters(t, b, offset);
+			interpolant->set_parameters(t, c.input, offset);
 
 		/*
 		 * We always the same code for exhaustive and Monte Carlo pixel
@@ -300,7 +330,7 @@ private:
 			_mc_arg = 1;
 
 		int index;
-		int index_max = a->height() * a->width();
+		int index_max = c.accum->height() * c.accum->width();
 		
 		/*
 		 * We use a random process for which the expected
@@ -364,20 +394,20 @@ private:
 				      * ( (1 + ((ale_pos) rand()) ) 
 					/ (1 + ((ale_pos) RAND_MAX)) ))){
 
-			i = index / a->width();
-			j = index % a->width();
+			i = index / c.accum->width();
+			j = index % c.accum->width();
 
 			int ax_ok = 1;
 
 			for (int idx = 0; idx < ax_count; idx++)
-				if (i + offset[0] >= ax_parameters[idx * 4 + 0]
-				 && i + offset[0] <= ax_parameters[idx * 4 + 1]
-				 && j + offset[1] >= ax_parameters[idx * 4 + 2]
-				 && j + offset[1] <= ax_parameters[idx * 4 + 3])
+				if (i + offset[0] >= c.ax_parameters[idx * 4 + 0]
+				 && i + offset[0] <= c.ax_parameters[idx * 4 + 1]
+				 && j + offset[1] >= c.ax_parameters[idx * 4 + 2]
+				 && j + offset[1] <= c.ax_parameters[idx * 4 + 3])
 					ax_ok = 0;
 
 			if (ax_ok == 0) {
-				// ((image *)a)->set_pixel(i, j, pixel(0, 0, 0));
+				// ((image *)c.accum)->set_pixel(i, j, pixel(0, 0, 0));
 				continue;
 			}
 
@@ -395,7 +425,7 @@ private:
 
 			/*
 			 * Check that the transformed coordinates are within
-			 * the boundaries of array b.  
+			 * the boundaries of array c.input.  
 			 *
 			 * Also, check that the weight value in the accumulated array
 			 * is nonzero, unless we know it is nonzero by virtue of the
@@ -404,53 +434,31 @@ private:
 			 */
 
 			if (ti >= 0
-			 && ti <= b->height() - 1
+			 && ti <= c.input->height() - 1
 			 && tj >= 0
-			 && tj <= b->width() - 1
-			 && definition->get_pixel(i, j)[0] != 0) { 
+			 && tj <= c.input->width() - 1
+			 && c.defined->get_pixel(i, j)[0] != 0) { 
 
-
-
-				pixel pa = a->get_pixel(i, j);
+				pixel pa = c.accum->get_pixel(i, j);
 				pixel pb;
 				pixel weight;
 
 				if (interpolant != NULL)
 					interpolant->filtered(i, j, &pb, &weight);
 				else
-					pb = b->get_bl(point(ti, tj));
+					pb = c.input->get_bl(point(ti, tj));
 
 				/*
-				 * Calculate per-channel alignment weight
+				 * Get per-channel alignment weight
 				 */
 
-				pixel aweight = pixel(1, 1, 1);
-				if (alignment_weights != NULL) {
-					point aweight_offset = a->offset() - alignment_weights->offset();
-					point aweight_position = aweight_offset + point(i, j);
-					if (aweight_position[0] >= 0
-					 && aweight_position[1] >= 0
-					 && aweight_position[0] < alignment_weights->height()
-					 && aweight_position[1] < alignment_weights->width())
-						aweight = alignment_weights->get_pixel((unsigned int) aweight_position[0],
-										       (unsigned int) aweight_position[1]);
-				}
+				pixel aweight;
 
-				/*
-				 * Adjust per-channel alignment weight by
-				 * frequency weighting.
-				 */
+				if (c.aweight != NULL)
+					aweight = c.aweight->get_pixel(i, j);
+				else
+					aweight = pixel(1, 1, 1);
 
-				if (frequency_weights != NULL)
-					aweight *= frequency_weights->get_pixel(i, j);
-
-				/*
-				 * Adjust per-channel alignment weight by
-				 * algorithmic weighting.
-				 */
-
-				if (wmx_weights != NULL)
-					aweight *= wmx_weights->get_pixel(i, j);
 
 				/*
 				 * Determine alignment type.
@@ -505,27 +513,27 @@ private:
 	/*
 	 * Adjust exposure for an aligned frame B against reference A.
 	 */
-	static void set_exposure_ratio(unsigned int m, const image *a, const image *b, 
-			const image *definition, transformation t, int ax_count, const int *ax_parameters) {
+	static void set_exposure_ratio(unsigned int m, struct scale_cluster c,
+			transformation t, int ax_count) {
 
 		pixel_accum asum(0, 0, 0), bsum(0, 0, 0);
 
-		point offset = a->offset();
+		point offset = c.accum->offset();
 
-		for (unsigned int i = 0; i < a->height(); i++)
-		for (unsigned int j = 0; j < a->width(); j++) {
+		for (unsigned int i = 0; i < c.accum->height(); i++)
+		for (unsigned int j = 0; j < c.accum->width(); j++) {
 
 			int ax_ok = 1;
 
 			for (int idx = 0; idx < ax_count; idx++)
-				if (i + offset[0] >= ax_parameters[idx * 4 + 0]
-				 && i + offset[0] <= ax_parameters[idx * 4 + 1]
-				 && j + offset[1] >= ax_parameters[idx * 4 + 2]
-				 && j + offset[1] <= ax_parameters[idx * 4 + 3])
+				if (i + offset[0] >= c.ax_parameters[idx * 4 + 0]
+				 && i + offset[0] <= c.ax_parameters[idx * 4 + 1]
+				 && j + offset[1] >= c.ax_parameters[idx * 4 + 2]
+				 && j + offset[1] <= c.ax_parameters[idx * 4 + 3])
 					ax_ok = 0;
 
 			if (ax_ok == 0) {
-				// ((image *)a)->set_pixel(i, j, pixel(0, 0, 0));
+				// ((image *)c.accum)->set_pixel(i, j, pixel(0, 0, 0));
 				continue;
 			}
 
@@ -540,7 +548,7 @@ private:
 
 			/*
 			 * Check that the transformed coordinates are within
-			 * the boundaries of array b.  
+			 * the boundaries of array c.input.  
 			 *
 			 * Also, check that the weight value in the accumulated array
 			 * is nonzero, unless we know it is nonzero by virtue of the
@@ -549,12 +557,12 @@ private:
 			 */
 
 			if (q[0] >= 0
-			 && q[0] <= b->height() - 1
+			 && q[0] <= c.input->height() - 1
 			 && q[1] >= 0
-			 && q[1] <= b->width() - 1
-			 && definition->get_pixel(i, j).minabs_norm() != 0) { 
-				asum += a->get_pixel(i, j);
-				bsum += b->get_bl(q);
+			 && q[1] <= c.input->width() - 1
+			 && c.defined->get_pixel(i, j).minabs_norm() != 0) { 
+				asum += c.accum->get_pixel(i, j);
+				bsum += c.input->get_bl(q);
 			}
 		}
 
@@ -564,7 +572,32 @@ private:
 				* image_rw::exp(m).get_multiplier());
 	}
 
-	static void init_ax_parameter_scales(int frame, int *local_ax_count, const int **ax_parameter_scales) {
+	static void halve_ax_parameters(int local_ax_count, struct scale_cluster *scale_clusters) {
+
+		const int *ax_parameter_scales_old = scale_clusters[0].ax_parameters;
+		int *ax_parameter_scales_new = (int *) malloc(local_ax_count * 4 * sizeof(int));
+
+		assert (ax_parameter_scales_old);
+		assert (ax_parameter_scales_new);
+
+		if (!ax_parameter_scales_new)  {
+			fprintf(stderr, "Unable to allocate memory for exclusion regions.\n");
+			exit(1);
+		}
+
+		for (int idx = 0; idx < local_ax_count; idx++) {
+			ax_parameter_scales_new[idx * 4 + 0] = ax_parameter_scales_old[idx * 4 + 0] / 2;
+			ax_parameter_scales_new[idx * 4 + 1] = (ax_parameter_scales_old[idx * 4 + 1] + 1) / 2;
+			ax_parameter_scales_new[idx * 4 + 2] = ax_parameter_scales_old[idx * 4 + 2] / 2;
+			ax_parameter_scales_new[idx * 4 + 3] = (ax_parameter_scales_old[idx * 4 + 3] + 1) / 2;
+		}
+
+		scale_clusters[1].ax_parameters = ax_parameter_scales_new;
+	}
+
+	static void init_ax_parameter_scales(int frame, int *local_ax_count, 
+			struct scale_cluster *scale_clusters, unsigned int steps) {
+
 		int *ax_parameter_scales_0 = (int *) malloc(ax_count * 4 * sizeof(int));
 
 		assert (ax_parameter_scales_0);
@@ -595,33 +628,124 @@ private:
 
 		// ax_parameter_scales_0 = (int *) realloc(ax_parameter_scales_0, *local_ax_count * 4 * sizeof(int));
 
-		ax_parameter_scales[0] = ax_parameter_scales_0;
+		scale_clusters[0].ax_parameters = ax_parameter_scales_0;
+
+		for (unsigned int step = 1; step < steps; step++)
+			halve_ax_parameters(*local_ax_count, scale_clusters + step - 1);
+		
 	}
 
-	static void halve_ax_parameter_scales(int local_ax_count, const int **ax_parameter_scales) {
-		int *ax_parameter_scales_new = (int *) malloc(local_ax_count * 4 * sizeof(int));
+	/*
+	 * Prepare the next level of detail for ordinary images.
+	 */
+	static const image *prepare_lod(const image *current) {
+		if (current == NULL)
+			return NULL;
 
-		assert (ax_parameter_scales_new);
+		return current->scale_by_half("prepare_lod");
+	}
 
-		if (!ax_parameter_scales_new)  {
-			fprintf(stderr, "Unable to allocate memory for exclusion regions.\n");
+	/*
+	 * Prepare the next level of detail for weighted images.
+	 */
+	static const image *prepare_lod(const image *current, const image *weights) {
+		if (current == NULL)
+			return NULL;
+
+		return current->scale_by_half(weights, "prepare_lod");
+	}
+
+	/*
+	 * Prepare the next level of detail for definition maps.
+	 */
+	static const image *prepare_lod_def(const image *current) {
+		assert(current);
+
+		return current->defined_scale_by_half("prepare_lod_def"); 
+	}
+
+	/*
+	 * Initialize the scale cluster data structure.
+	 */
+	static struct scale_cluster *init_clusters(int frame, ale_real scale_factor,
+			const image *input_frame, unsigned int steps,
+			int *local_ax_count) {
+
+		/*
+		 * Allocate memory for the array.
+		 */
+
+		struct scale_cluster *scale_clusters = 
+			(struct scale_cluster *) malloc(steps * sizeof(struct scale_cluster));
+
+		assert (scale_clusters);
+
+		if (!scale_clusters) {
+			fprintf(stderr, "Couldn't allocate memory for alignment.\n");
 			exit(1);
 		}
 
-		for (int idx = 0; idx < local_ax_count; idx++) {
-			ax_parameter_scales_new[idx * 4 + 0] = ax_parameter_scales[0][idx * 4 + 0] / 2;
-			ax_parameter_scales_new[idx * 4 + 1] = (ax_parameter_scales[0][idx * 4 + 1] + 1) / 2;
-			ax_parameter_scales_new[idx * 4 + 2] = ax_parameter_scales[0][idx * 4 + 2] / 2;
-			ax_parameter_scales_new[idx * 4 + 3] = (ax_parameter_scales[0][idx * 4 + 3] + 1) / 2;
+		/*
+		 * Prepare images for the highest level of detail.  
+		 */
+
+		scale_clusters[0].accum = reference_image;
+
+		if (scale_factor > 1.0)
+			scale_clusters[0].input = input_frame->scale(scale_factor, "alignment");
+		else 
+			scale_clusters[0].input = input_frame;
+
+		scale_clusters[0].defined = reference_defined;
+		scale_clusters[0].aweight = alignment_weights;
+
+		/*
+		 * Prepare reduced-detail images.
+		 */
+
+		for (unsigned int step = 1; step < steps; step++) {
+			scale_clusters[step].accum = prepare_lod(scale_clusters[step - 1].accum, scale_clusters[step - 1].aweight);
+			scale_clusters[step].input = prepare_lod(scale_clusters[step - 1].input);
+			scale_clusters[step].defined = prepare_lod_def(scale_clusters[step - 1].defined);
+			scale_clusters[step].aweight = prepare_lod(scale_clusters[step - 1].aweight);
 		}
 
-		ax_parameter_scales[1] = ax_parameter_scales_new;
+		/*
+		 * Initialize ax parameters for all scales.
+		 */
+
+		init_ax_parameter_scales(frame, local_ax_count, scale_clusters, steps);
+
+		return scale_clusters;
+	}
+
+	/*
+	 * Destroy the first element in the scale cluster data structure.
+	 */
+	static void final_clusters(struct scale_cluster *scale_clusters, ale_real scale_factor,
+			unsigned int steps) {
+
+		if (scale_factor > 1.0)
+			delete scale_clusters[0].input;
+
+		free((void *)scale_clusters[0].ax_parameters);
+
+		for (unsigned int step = 1; step < steps; step++) {
+			delete scale_clusters[step].accum;
+			delete scale_clusters[step].input;
+			delete scale_clusters[step].defined;
+			delete scale_clusters[step].aweight;
+
+			free((void *)scale_clusters[step].ax_parameters);
+		}
+
+		free(scale_clusters);
 	}
 
 	/*
 	 * Align frame m against the reference.
 	 */
-	static void _align(int m) {
+	static ale_accum _align(int m, int local_gs) {
 		ale_pos perturb = pow(2, floor(log(perturb_upper) / log(2)));
 		transformation offset;
 		ale_accum here;
@@ -645,51 +769,17 @@ private:
 		 * Determine how many levels of detail should be prepared.
 		 */
 
-		int steps = (perturb > pow(2, lod_max)) ? (int) (log(perturb) / log(2)) - lod_max + 1 : 1;
-		int step;
+		unsigned int steps = (perturb > pow(2, lod_max)) 
+			           ? (unsigned int) (log(perturb) / log(2)) - lod_max + 1 : 1;
 		int local_ax_count;
-		const image **accum_scales = (const image **) malloc(steps * sizeof(image *));
-		const image **input_scales = (const image **) malloc(steps * sizeof(image *));
-		const image **defined_scales = (const image **) malloc(steps * sizeof(image *));
-		const int   **ax_parameter_scales = (const int **) malloc(steps * sizeof(int   *));
-
-		assert (accum_scales);
-		assert (input_scales);
-		assert (defined_scales);
-		assert (ax_parameter_scales);
-
-		if (!accum_scales || !input_scales || !defined_scales || !ax_parameter_scales) {
-			fprintf(stderr, "Couldn't allocate memory for alignment.\n");
-			exit(1);
-		}
 
 		/*
 		 * Prepare multiple levels of detail.
 		 */
 
-		/*
-		 * First, we prepare the highest levels of detail.  Then, we
-		 * use scale_by_half() and defined_scale_by_half() to create
-		 * reduced levels of detail.
-		 */
-
-		accum_scales[0] = reference_image;
-
-		defined_scales[0] = reference_defined;
-
-		if (scale_factor > 1.0)
-			input_scales[0] = input_frame->scale(scale_factor, "alignment");
-		else 
-			input_scales[0] = input_frame;
-
-		init_ax_parameter_scales(m, &local_ax_count, ax_parameter_scales);
-		
-		for (step = 1; step < steps; step++) {
-			accum_scales[step] = accum_scales[step - 1]->scale_by_half("accum_scales[step]");
-			input_scales[step] = input_scales[step - 1]->scale_by_half("accum_scales[step]");
-			defined_scales[step] = defined_scales[step - 1]->defined_scale_by_half("defined_scales[step]");
-			halve_ax_parameter_scales(local_ax_count, ax_parameter_scales + step - 1);
-		}
+		struct scale_cluster *scale_clusters = init_clusters(m,
+				scale_factor, input_frame, steps,
+				&local_ax_count);
 
 		/*
 		 * Initialize variables used in the main loop.
@@ -817,13 +907,10 @@ private:
 		offset = new_offset;
 
 		ale_pos _mc_arg = _mc * pow(2, 2 * lod);
-		const image *ai = accum_scales[lod];
-		const image *ii = input_scales[lod];
-		const image *di = defined_scales[lod];
-		const int   *pi = ax_parameter_scales[lod];
+		struct scale_cluster si = scale_clusters[lod];
 
 		/*
-		 * Positional adjustment value
+		 * Projective adjustment value
 		 */
 
 		ale_pos adj_p = (perturb >= pow(2, lod_diff))
@@ -834,14 +921,13 @@ private:
 		 */
 
 		if (_exp_register)
-			set_exposure_ratio(m, accum_scales[0], input_scales[0],
-					defined_scales[0], offset, local_ax_count, ax_parameter_scales[0]);
+			set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count);
 
 		/*
 		 * Current difference (error) value
 		 */
 
-		here = diff(ai, ii, di, offset, _mc_arg, local_ax_count, pi);
+		here = diff(si, offset, _mc_arg, local_ax_count);
 
 		/*
 		 * Current and modified barrel distortion parameters
@@ -851,6 +937,115 @@ private:
 		ale_pos modified_bd[BARREL_DEGREE];
 		offset.bd_get(current_bd);
 		offset.bd_get(modified_bd);
+
+		/*
+		 * Translational global search step
+		 */
+
+		if (perturb >= perturb_lower && local_gs != 0) {
+			
+			transformation lowest_t = offset;
+			ale_accum lowest_v = here;
+
+			point min, max;
+
+			transformation offset_p = offset;
+
+			if (!offset_p.is_projective())
+				offset_p.eu_to_gpt();
+
+			min = max = offset_p.gpt_get(0);
+			for (int p_index = 1; p_index < 4; p_index++) {
+				point p = offset_p.gpt_get(p_index);
+				if (p[0] < min[0])
+					min[0] = p[0];
+				if (p[1] < min[1])
+					min[1] = p[1];
+				if (p[0] > max[0])
+					max[0] = p[0];
+				if (p[1] > max[1])
+					max[1] = p[1];
+			}
+
+			point inner_min_t = -min;
+			point inner_max_t = -max + point(si.accum->height(), si.accum->width());
+			point outer_min_t = -max + point(adj_p - 1, adj_p - 1);
+			point outer_max_t = point(si.accum->height(), si.accum->width()) - point(adj_p, adj_p);
+
+			if (local_gs == 1 || local_gs == 3 || local_gs == 4) {
+
+				/*
+				 * Inner
+				 */
+
+				for (ale_pos i = inner_min_t[0]; i <= inner_max_t[0]; i += adj_p)
+				for (ale_pos j = inner_min_t[1]; j <= inner_max_t[1]; j += adj_p) {
+					transformation t = offset;
+					t.translate(point(i, j));
+					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+
+					if (v < lowest_v || (!finite(lowest_v) && finite(v))) {
+						lowest_v = v;
+						lowest_t = t;
+					}
+				}
+			} 
+			
+			if (local_gs == 2 || local_gs == 3 || local_gs == -1) {
+
+				/*
+				 * Outer
+				 */
+
+				for (ale_pos i = outer_min_t[0]; i <= outer_max_t[0]; i += adj_p)
+				for (ale_pos j = outer_min_t[1]; j <  inner_min_t[1]; j += adj_p) {
+					transformation t = offset;
+					t.translate(point(i, j));
+					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+
+					if (v < lowest_v || (!finite(lowest_v) && finite(v))) {
+						lowest_v = v;
+						lowest_t = t;
+					}
+				}
+				for (ale_pos i = outer_min_t[0]; i <= outer_max_t[0]; i += adj_p)
+				for (ale_pos j = outer_max_t[1]; j >  inner_max_t[1]; j -= adj_p) {
+					transformation t = offset;
+					t.translate(point(i, j));
+					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+
+					if (v < lowest_v || (!finite(lowest_v) && finite(v))) {
+						lowest_v = v;
+						lowest_t = t;
+					}
+				}
+				for (ale_pos i = outer_min_t[0]; i <  inner_min_t[0]; i += adj_p)
+				for (ale_pos j = outer_min_t[1]; j <= outer_max_t[1]; j += adj_p) {
+					transformation t = offset;
+					t.translate(point(i, j));
+					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+
+					if (v < lowest_v || (!finite(lowest_v) && finite(v))) {
+						lowest_v = v;
+						lowest_t = t;
+					}
+				}
+				for (ale_pos i = outer_max_t[0]; i >  inner_max_t[0]; i -= adj_p)
+				for (ale_pos j = outer_min_t[1]; j <= outer_max_t[1]; j += adj_p) {
+					transformation t = offset;
+					t.translate(point(i, j));
+					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+
+					if (v < lowest_v || (!finite(lowest_v) && finite(v))) {
+						lowest_v = v;
+						lowest_t = t;
+					}
+				}
+			}
+
+			offset = lowest_t;
+			here = lowest_v;
+		}
 
 		/*
 		 * Perturbation adjustment loop.  
@@ -889,9 +1084,9 @@ private:
 
 					test_t.eu_modify(i, adj_s);
 
-					test_d = diff(ai, ii, di, test_t, _mc_arg, local_ax_count, pi);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count);
 
-					if (test_d < here) {
+					if (test_d < here || (!finite(here) && finite(test_d))) {
 						here = test_d;
 						offset = test_t;
 						goto done;
@@ -905,9 +1100,9 @@ private:
 
 					test_t.eu_modify(2, adj_s);
 
-					test_d = diff(ai, ii, di, test_t, _mc_arg, local_ax_count, pi);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count);
 
-					if (test_d < here) {
+					if (test_d < here || (!finite(here) && finite(test_d))) {
 						here = test_d;
 						offset = test_t;
 						goto done;
@@ -928,9 +1123,9 @@ private:
 
 					test_t.gpt_modify(j, i, adj_s);
 
-					test_d = diff(ai, ii, di, test_t, _mc_arg, local_ax_count, pi);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count);
 
-					if (test_d < here) {
+					if (test_d < here || (!finite(here) && finite(test_d))) {
 						here = test_d;
 						offset = test_t;
 						adj_s += 3 * adj_p;
@@ -960,9 +1155,9 @@ private:
 
 					test_t.bd_modify(rd, adj_s);
 
-					test_d = diff(ai, ii, di, test_t, _mc_arg, local_ax_count, pi);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count);
 
-					if (test_d < here) {
+					if (test_d < here || (!finite(here) && finite(test_d))) {
 						here = test_d;
 						offset = test_t;
 						modified_bd[rd] += adj_s;
@@ -972,7 +1167,7 @@ private:
 			}
 			
 	done:
-			if (!(here < old_here)) {
+			if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
 				perturb *= 0.5;
 
 				if (lod > 0) {
@@ -990,13 +1185,10 @@ private:
 					 */
 
 					lod--;
-					ai = accum_scales[lod];
-					ii = input_scales[lod];
-					di = defined_scales[lod];
-					pi = ax_parameter_scales[lod];
+					si = scale_clusters[lod];
 					_mc_arg /= 4;
 
-					here = diff(ai, ii, di, offset, _mc_arg, local_ax_count, pi);
+					here = diff(si, offset, _mc_arg, local_ax_count);
 
 				} else {
 					adj_p = perturb;
@@ -1019,37 +1211,25 @@ private:
 		 */
 
 		if (_exp_register)
-			set_exposure_ratio(m, accum_scales[0], input_scales[0],
-					defined_scales[0], offset, local_ax_count, ax_parameter_scales[0]);
+			set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count);
 
 		/*
 		 * Recalculate error
 		 */
 
-		here = diff(accum_scales[0], input_scales[0],
-				defined_scales[0], offset, _mc, local_ax_count,
-				ax_parameter_scales[0]);
+		here = diff(scale_clusters[0], offset, _mc, local_ax_count);
 
 		/*
 		 * Free the level-of-detail structures
 		 */
 
-		if (scale_factor > 1.0)
-			delete input_scales[0];
+		final_clusters(scale_clusters, scale_factor, steps);
 
-		free((void *)ax_parameter_scales[0]);
+		/*
+		 * Close the image file.
+		 */
 
-		for (step = 1; step < steps; step++) {
-			delete accum_scales[step];
-			delete input_scales[step];
-			delete defined_scales[step];
-			free((void *)ax_parameter_scales[step]);
-		}
-
-		free(accum_scales);
-		free(input_scales);
-		free(defined_scales);
-		free(ax_parameter_scales);
+		image_rw::close(m);
 
 		/*
 		 * Ensure that the match meets the threshold.
@@ -1063,6 +1243,37 @@ private:
 			default_initial_alignment = offset;
 			old_final_alignment = offset;
 			fprintf(stderr, " okay (%f%% match)", (double) (1 - here) * 100);
+		} else if (local_gs == 4) {
+
+			/*
+			 * Align with outer starting points.
+			 */
+
+			/*
+			 * XXX: This probably isn't exactly the right thing to do,
+			 * since variables like old_initial_value have been overwritten.
+			 */
+
+			ale_accum nested_result = _align(m, -1);
+
+			if ((1 - nested_result) * 100 > match_threshold) {
+				return nested_result;
+			} else if (nested_result < here) {
+				here = nested_result;
+				offset = latest_t;
+			}
+
+			if (is_fail_default)
+				offset = default_initial_alignment;
+
+			fprintf(stderr, " no match (%f%% match)", (double) (1 - here) * 100);
+		
+		} else if (local_gs == -1) {
+			
+			latest_ok = 0;
+			latest_t = offset;
+			return here;
+
 		} else {
 			if (is_fail_default)
 				offset = default_initial_alignment;
@@ -1084,9 +1295,9 @@ private:
 
 		match_sum += (1 - here) * 100;
 		match_count++;
-
-		image_rw::close(m);
 		latest = m;
+
+		return here;
 	}
 
 #ifdef USE_FFTW
@@ -1110,19 +1321,72 @@ private:
 	}
 #endif
 
+
 	/*
-	 * Update algorithmic weights
+	 * Reset alignment weights
+	 */
+	static void reset_weights() {
+		if (alignment_weights != NULL) {
+			delete alignment_weights;
+			alignment_weights = NULL;
+		}
+	}
+
+	/*
+	 * Initialize alignment weights
+	 */
+	static void init_weights() {
+		if (alignment_weights != NULL) 
+			return;
+
+		int rows = reference_image->height();
+		int cols = reference_image->width();
+		int colors = reference_image->depth();
+
+		alignment_weights = new image_ale_real(rows, cols,
+				colors, "alignment_weights");
+
+		assert (alignment_weights);
+
+		for (int i = 0; i < rows; i++)
+		for (int j = 0; j < cols; j++)
+			alignment_weights->set_pixel(i, j, pixel(1, 1, 1));
+	}
+	
+	/*
+	 * Update alignment weights with weight map
+	 */
+	static void map_update() {
+
+		if (weight_map == NULL)
+			return;
+
+		init_weights();
+
+		point map_offset = reference_image->offset() - weight_map->offset();
+
+		int rows = reference_image->height();
+		int cols = reference_image->width();
+
+		for (int i = 0; i < rows; i++)
+		for (int j = 0; j < cols; j++) {
+			point map_weight_position = map_offset + point(i, j);
+			if (map_weight_position[0] >= 0
+			 && map_weight_position[1] >= 0
+			 && map_weight_position[0] <= weight_map->height() - 1
+			 && map_weight_position[1] <= weight_map->width() - 1)
+				alignment_weights->pix(i, j) *= weight_map->get_bl(map_weight_position);
+		}
+	}
+
+	/*
+	 * Update alignment weights with algorithmic weights
 	 */
 	static void wmx_update() {
 #ifdef USE_UNIX
 
 		static exposure *exp_def = new exposure_default();
 		static exposure *exp_bool = new exposure_boolean();
-
-		if (wmx_weights != NULL) {
-			delete wmx_weights;
-			wmx_weights = NULL;
-		}
 
 		if (wmx_file == NULL || wmx_exec == NULL || wmx_defs == NULL)
 			return;
@@ -1149,38 +1413,44 @@ private:
 			exit(1);
 		}
 
-		wmx_weights = image_rw::read_image(wmx_file, exp_def);
+		image *wmx_weights = image_rw::read_image(wmx_file, exp_def);
 
 		if (wmx_weights->height() != rows || wmx_weights->width() != cols) {
-			fprintf(stderr, "\n\n*** Error: algorithmic weighting must not change image size. ***\n\n\b");
+			fprintf(stderr, "\n\n*** Error: algorithmic weighting must not change image size. ***\n\n\n");
 			exit(1);
 		}
+
+		if (alignment_weights == NULL)
+			alignment_weights = wmx_weights;
+		else 
+			for (unsigned int i = 0; i < rows; i++)
+			for (unsigned int j = 0; j < cols; j++)
+				alignment_weights->pix(i, j) *= wmx_weights->pix(i, j);
 #endif
 	}
 
 	/*
-	 * Update frequency weights
+	 * Update alignment weights with frequency weights
 	 */
 	static void fw_update() {
 #ifdef USE_FFTW
-		if (frequency_weights != NULL) {
-			delete frequency_weights;
-			frequency_weights = NULL;
-		}
-
 		if (horiz_freq_cut == 0
 		 && vert_freq_cut  == 0
 		 && avg_freq_cut   == 0)
 			return;
 
+		/*
+		 * Required for correct operation of --fwshow
+		 */
+
+		assert (alignment_weights == NULL);
+
 		int rows = reference_image->height();
 		int cols = reference_image->width();
+		int colors = reference_image->depth();
 
-		frequency_weights = new image_ale_real(rows, cols,
-				reference_image->depth(),
-				"frequency weights");
-
-		assert (frequency_weights);
+		alignment_weights = new image_ale_real(rows, cols,
+				colors, "alignment_weights");
 
 		fftw_complex *inout = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * rows * cols);
 
@@ -1194,7 +1464,7 @@ private:
 						inout, inout, 
 						FFTW_BACKWARD, FFTW_ESTIMATE);
 
-		for (int k = 0; k < 3; k++) {
+		for (int k = 0; k < colors; k++) {
 			for (int i = 0; i < rows * cols; i++) {
 				inout[i][0] = reference_image->get_pixel(i / cols, i % cols)[k];
 				inout[i][1] = 0;
@@ -1206,9 +1476,9 @@ private:
 
 			for (int i = 0; i < rows * cols; i++) {
 #if 0
-				frequency_weights->pix(i / cols, i % cols)[k] = fabs(inout[i][0] / (rows * cols));
+				alignment_weights->pix(i / cols, i % cols)[k] = fabs(inout[i][0] / (rows * cols));
 #else
-				frequency_weights->pix(i / cols, i % cols)[k] = 
+				alignment_weights->pix(i / cols, i % cols)[k] = 
 					sqrt(pow(inout[i][0] / (rows * cols), 2)
 					   + pow(inout[i][1] / (rows * cols), 2));
 #endif
@@ -1220,7 +1490,7 @@ private:
 		fftw_free(inout);
 
 		if (fw_output != NULL)
-			image_rw::write_image(fw_output, frequency_weights);
+			image_rw::write_image(fw_output, alignment_weights);
 #endif
 	}
 
@@ -1273,13 +1543,15 @@ private:
 			reference_image = reference->get_image();
 			reference_defined = reference->get_defined();
 
+			reset_weights();
 			fw_update();
 			wmx_update();
+			map_update();
 
 			assert (reference_image != NULL);
 			assert (reference_defined != NULL);
 
-			_align(i);
+			_align(i, _gs);
 		}
 	}
 
@@ -1468,8 +1740,8 @@ public:
  	/*
 	 * Set alignment weights image
 	 */
-	static void set_alignment_weights(const image *i) {
-		alignment_weights = i;
+	static void set_weight_map(const image *i) {
+		weight_map = i;
 	}
 
 	/*
@@ -1555,6 +1827,26 @@ public:
 	 */
 	static void mc(ale_pos n) {
 		_mc = n;
+	}
+
+	/*
+	 * Set the global search type.
+	 */
+	static void gs(const char *type) {
+		if (!strcmp(type, "default")) {
+			_gs = 0;
+		} else if (!strcmp(type, "inner")) {
+			_gs = 1;
+		} else if (!strcmp(type, "outer")) {
+			_gs = 2;
+		} else if (!strcmp(type, "all")) {
+			_gs = 3;
+		} else if (!strcmp(type, "central")) {
+			_gs = 4;
+		} else {
+			fprintf(stderr, "\n\n\n*** Error: bad global search type. ***\n\n\n");
+			exit(1);
+		}
 	}
 
 	/*
