@@ -94,9 +94,9 @@ class scene {
 
 		void init_aux_stats(d2::pixel value = d2::pixel(0, 0, 0)) {
 			if (children[0])
-				children[0]->reset_aux_stat(value);
+				children[0]->init_aux_stats(value);
 			if (children[1])
-				children[1]->reset_aux_stat(value);
+				children[1]->init_aux_stats(value);
 
 			aux_stat = value;
 		}
@@ -457,6 +457,8 @@ class scene {
 			 */
 			pt _pt = align::projective(n);
 			_pt.scale(scale * sf / _pt.scale_2d());
+			unsigned int height = (unsigned int) _pt.scaled_height();
+			unsigned int width  = (unsigned int) _pt.scaled_width();
 			triangle **zbuf = init_zbuf(_pt);
 			zbuffer(_pt, zbuf, triangle_head[0]);
 			zbuffer(_pt, zbuf, triangle_head[1]);
@@ -464,9 +466,9 @@ class scene {
 			/*
 			 * Iterate over all non-border points in the frame.
 			 */
-			for (unsigned int i = 1; i < _pt.scaled_height() - 1; i++)
-			for (unsigned int j = 1; j < _pt.scaled_width()  - 1; j++) {
-				triangle *t = zbuf[i * _pt.scaled_width() + j];
+			for (unsigned int i = 1; i < height - 1; i++)
+			for (unsigned int j = 1; j < width  - 1; j++) {
+				triangle *t = zbuf[i * width + j];
 
 				/*
 				 * Check for points without associated triangles.
@@ -484,7 +486,7 @@ class scene {
 
 				for (int ii = -1; ii <= 1; ii++)
 				for (int jj = -1; jj <= 1; jj++)
-				if (zbuf[(i + ii) * _pt.scaled_width() + (j + jj)] == t)
+				if (zbuf[(i + ii) * width + (j + jj)] == t)
 					count++;
 
 				/*

@@ -63,7 +63,7 @@ public:
 	 * Get the 2D scale factor
 	 */
 	ale_pos scale_2d() {
-		return t.scale_factor();
+		return t.scale();
 	}
 
 	/*
