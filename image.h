@@ -137,6 +137,9 @@ static inline double avg_pixel_magnitude(image *im) {
 		for (j = 0; j < im->dimx; j++)
 			for (k = 0; k < im->depth; k++)
 				im->apm_memo += get_pixel_component(im, i, j, k);
+
+	im->apm_memo /= (im->dimy * im->dimx * im->depth);
+
 	return im->apm_memo;
 }
 

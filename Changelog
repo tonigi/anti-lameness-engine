@@ -1,0 +1,21 @@
+0.1.0
+
+o	Add support for correction of rotation about the lens axis.
+
+o	Add an optional match criterion for merging.
+
+o	Add an option to adjust minimum step-size.
+
+o	Add flags to specify which channels to use for alignment.  Use
+	a summation of all channels by default.
+
+o	Add an option to modify the error metric exponent, and change
+	the default value from 1 to 2. 
+
+o	Display information about how well a new image matches
+	the accumulated image.
+
+o	Add a rule for ale.exe to the Makefile.  
+
+0.0.0
+	Initial release.

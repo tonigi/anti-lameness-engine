@@ -28,23 +28,56 @@ Compiling from source
 You will need GCC and a make utility (GNU Make will do fine).  To compile from
 source, download the tarball into a directory, expand it with 'tar xzf
 ale-x.x.x.tar.gz', enter the unzipped directory, and type 'make'.  The makefile
-may need some tweaking on Windows systems (e.g. you may want to write the output
-to 'ale.exe' or something.
+may need some tweaking on Windows systems (e.g. you may want to write the
+output to 'ale.exe' or something.
 
 
-Using ALE
----------
+Using ALE (version 0.1.0)
+-------------------------
 
-Usage: ale [--scale2] [--scale4] [--scale8] <input-files> ... <output-file>
+Usage: ./ale [<options>] <input-files> ... <output-file>
+   or: ./ale --version
 
 This program clips several supplemental frames against an original frame and
 merges the results into a single output file result.  The first input file is
 considered the original frame, and subsequent input files are considered
 supplemental frames.  All files must be in PPM binary (as opposed to ascii)
 format.  The merge is produced incrementally, and you can inspect the output
-file as the process progresses.  If a scaling argument is given, the program
-will internally scale all input frames up by 2, 4, or 8, respectively,
-resulting in an output file of this larger scale.
+file as the process progresses.  Options are described in the next section.
+
+
+Options (version 0.1.0)
+-----------------------
+
+Options:
+--scale2	Scale input images up by 2
+--scale4	Scale input images up by 4
+--scale8	Scale input images up by 8
+--align-all	Align images using all color channels
+--align-green	Align images using the green channel
+--align-sum	Align images using a sum of all channels [default]
+--rotation	Make rotational adjustments to images [default]
+--no-rotation	Don't make rotational adjustments to images
+--metric=x	Set the error metric exponent (2 is default)
+--threshold=x   Min. match threshold; a perfect match is 100.  (0 is default)
+--stepsize=x	Set the min. correction step, in pixels or degrees (0.1 default)
+
+If a scaling argument is given, the program will internally scale all input
+frames up by 2, 4, or 8, respectively, resulting in an output file of this
+larger scale.  
+
+The error metric for pixel components a and b is (abs(a-b)^x),
+where x is the error metric exponent.  Larger exponents will cause the
+alignment process to be more influenced by smaller image details.  
+
+If a supplemental frame does not meet the minimum match threshold, it will be
+discarded, and will not contribute to the final output (in this case, the
+program will display the message 'no match').  Match values should be in the
+interval [0,100].
+
+No correction smaller than the step size (--stepsize=x) will be made in
+aligning images.
+
 
 Contact
 -------

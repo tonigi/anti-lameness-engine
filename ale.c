@@ -26,92 +26,169 @@
 #include <time.h>
 #include <math.h>
 
-char *version = "0.0.0";
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+char *version = "0.1.0";
 
 image *display_image, *input_image, *weight_image;
+
+/*
+ * Global flags
+ */
+
+static int use_rotation = 1;
+static int align_code = 2;
+static double metric = 2;
+static double match_threshold = 0;
+static double minimum_stepsize = 0.1;
 
 /*
  * Not-quite-symmetric difference function.  Determines the difference in areas
  * where the arrays overlap.  Uses the first array's notion of pixel positions.
  */
-inline double diff(image *a, image *b, double xoff, double yoff) {
-	double result = 0;
-	double apm_a = avg_pixel_magnitude(a);
-	double apm_b = avg_pixel_magnitude(b);
-
-	unsigned int ha = height(a);
-	unsigned int wa = width(a);
-	unsigned int hb = height(b);
-	unsigned int wb = width(b);
-
-	/* Determine the start of the common area of the images */
-
-	unsigned int ystart = (unsigned int)
-		((yoff > 0) ? ceil(yoff) : 0);
-	unsigned int xstart = (unsigned int)
-		((xoff > 0) ? ceil(xoff) : 0);
-
-	/* Determine the overlapping width and height of the images */
-
-	unsigned int hc = (unsigned int)
-		((yoff + hb > ha) ? ha : floor(yoff + hb));
-	unsigned int wc = (unsigned int)
-		((xoff + wb > wa) ? wa : floor(xoff + wb));
+inline double diff(image *a, image *b, double xoff, double yoff, double theta) {
+	float result = 0;
+	float divisor = 0;
+	float apm_a = (float) avg_pixel_magnitude(a);
+	float apm_b = (float) avg_pixel_magnitude(b);
 
 	int i, j, k;
 
-	// assert(ha == hb);
-	// assert(wa == wb);
+	for (i = 0; i < height(a); i++)
+		for (j = 0; j < width(a); j++) {
 
-	for (i = ystart; i < hc; i++)
-		for (j = xstart; j < wc; j++)
-			for (k = 0; k < 3; k++)
-				result += 
-					fabs(apm_b * get_pixel_component(a, i, j, k) - 
-					     apm_a * get_bl_component(b, i - yoff, j - xoff, k));
+			/*
+			 * Translate
+			 */
 
-	return (result / hc) / wc;
+			float ti = i - yoff;
+			float tj = j - xoff;
+
+			/*
+			 * Rotate
+			 */
+
+			float rti = (ti - height(b)/2) * cos(theta)
+				   + (tj - width(b)/2)  * sin(theta)
+				   + height(b)/2;
+
+			float rtj = (tj - width(b)/2)  * cos(theta)
+				   - (ti - height(b)/2) * sin(theta)
+				   + width(b)/2;
+
+			/*
+			 * Check that the transformed coordinates are within
+			 * the boundaries of array b.
+			 */
+
+			if (rti >= 0
+			 && rti <= height(b) - 1
+			 && rtj >= 0
+			 && rtj <= width(b) - 1){ 
+
+				if (align_code == 0) {
+					/*
+					 * Align based on all channels.
+					 */
+
+					for (k = 0; k < 3; k++) {
+						float achan = get_pixel_component(a, i, j, k) / apm_a;
+						float bchan = get_bl_component(b, rti, rtj, k) / apm_b;
+
+						result += pow(fabs(achan - bchan), metric);
+						divisor += pow(achan > bchan ? achan : bchan, metric);
+					}
+				} else if (align_code == 1) {
+					/*
+					 * Align based on the green channel.  XXX: apm_* shouldn't be used here.
+					 */
+
+					float achan = get_pixel_component(a, i, j, 1) / apm_a;
+					float bchan = get_bl_component(b, rti, rtj, 1) / apm_b;
+
+					result += pow(fabs(achan - bchan), metric);
+					divisor += pow(achan > bchan ? achan : bchan, metric);
+				} else if (align_code == 2) {
+					/*
+					 * Align based on the sum of all channels.
+					 */
+
+					float asum = 0;
+					float bsum = 0;
+
+					for (k = 0; k < 3; k++) {
+						asum += get_pixel_component(a, i, j, k) / apm_a;
+						bsum += get_bl_component(b, rti, rtj, k) / apm_b;
+					}
+
+					result += pow(fabs(asum - bsum), metric);
+					divisor += pow(asum > bsum ? asum : bsum, metric);
+				}
+			}
+		}
+
+	return pow(result / divisor, 1/metric);
 }
 
 /*
  * Merge part of a delta frame with part of a target frame using the specified
  * offset.
  */
-inline void merge(image *target, image *delta, double xoff, double yoff) {
-
-	unsigned int ht = height(target);
-	unsigned int wt = width(target);
-	unsigned int hd = height(delta);
-	unsigned int wd = width(delta);
-
-	/* Determine the start of the common area of the images */
-
-	unsigned int ystart = (unsigned int)
-		((yoff > 0) ? ceil(yoff) : 0);
-	unsigned int xstart = (unsigned int)
-		((xoff > 0) ? ceil(xoff) : 0);	
-
-	/* Determine the overlapping width and height of the images */
-
-	unsigned int hc = (unsigned int)
-		((yoff + hd > ht) ? ht : floor(yoff + hd));
-	unsigned int wc = (unsigned int)
-		((xoff + wd > wt) ? wt : floor(xoff + wd));
-
+inline void
+merge(image *target, image *delta, double xoff, double yoff, double theta) {
 	int i, j, k;
 
-	for (i = ystart; i < hc; i++)
-		for (j = xstart; j < wc; j++) {
+	for (i = 0; i < height(target); i++)
+		for (j = 0; j < width(target); j++) {
 
-			int weight = get_pixel_component(weight_image, i, j, 0);
-			set_pixel_component(weight_image, i, j, 0, ++weight);
-			
-			for (k = 0; k < 3; k++)
-				set_pixel_component(target, i, j, k,
-					(weight * get_pixel_component(target, i, j, k)
-				     +   get_bl_component(delta, i - yoff, j - xoff, k)) / (weight + 1));
+			/*
+			 * Translate
+			 */
+
+			double ti = i - yoff;
+			double tj = j - xoff;
+
+			/*
+			 * Rotate
+			 */
+
+			double rti = (ti - height(delta)/2) * cos(theta)
+				   + (tj - width(delta)/2)  * sin(theta)
+				   + height(delta)/2;
+
+			double rtj = (tj - width(delta)/2)  * cos(theta)
+				   - (ti - height(delta)/2) * sin(theta)
+				   + width(delta)/2;
+
+			/*
+			 * Check that the transformed coordinates are within
+			 * the boundaries of the delta frame.
+			 */
+
+			if (rti >= 0
+			 && rti <= height(delta) - 1
+			 && rtj >= 0
+			 && rtj <= width(delta) - 1){ 
+
+				/*
+				 * Determine and update merging weight at this pixel
+				 */
+
+				int weight = get_pixel_component(weight_image, i, j, 0);
+				set_pixel_component(weight_image, i, j, 0, ++weight);
+
+				/*
+				 * Update each channel
+				 */
+				
+				for (k = 0; k < 3; k++)
+					set_pixel_component(target, i, j, k,
+						(weight * get_pixel_component(target, i, j, k)
+					     +   get_bl_component(delta, rti, rtj, k)) / (weight + 1));
+			}
 		}
-
 }
 
 
@@ -120,52 +197,54 @@ inline void merge(image *target, image *delta, double xoff, double yoff) {
  */
 inline void update() {
 	double perturb = 16;
-	double xoff = 0, yoff = 0;
-	double here = diff(display_image, input_image, 0, 0);
+	double xoff = 0, yoff = 0, theta = 0;
+	double here = diff(display_image, input_image, 0, 0, 0);
+	int last = -1;
 
-	double u = diff(display_image, input_image, xoff, yoff - perturb);
-	double d = diff(display_image, input_image, xoff, yoff + perturb);
-	double l = diff(display_image, input_image, xoff - perturb, yoff);
-	double r = diff(display_image, input_image, xoff + perturb, yoff);
+	while (perturb > minimum_stepsize) {
 
-	while (perturb > .1) {
-		// fprintf(stderr, "(%f, %f)\n", xoff, yoff);
-		// fprintf(stderr, "diff: (h, u, d, l, r) %f, %f, %f, %f, %f\n", here, u, d, l, r);
+		/*
+		 * Assumes that (perturb < 360) is an invariant.  XXX: this may be
+		 * unnecessary.
+		 */
 
-		if (u < here) {
+		double perturb_radians = (2 * M_PI / 360) * perturb;
+		double theta_p_perturb = (theta + perturb_radians >= 2 * M_PI) 
+                                       ? (theta + perturb_radians -  2 * M_PI) 
+                                       : (theta + perturb_radians); 
+		double theta_m_perturb = (theta - perturb_radians < 0) 
+                                       ? (theta - perturb_radians + 2 * M_PI) 
+                                       : (theta - perturb_radians); 
+
+		double test = 0;
+
+		if (last != 1 && (test = diff(display_image, input_image, xoff, yoff - perturb, theta)) < here) {
 			yoff -= perturb;
-			d = here;
-			here = u;
-			l = diff(display_image, input_image, xoff - perturb, yoff);
-			r = diff(display_image, input_image, xoff + perturb, yoff);
-			u = diff(display_image, input_image, xoff, yoff - perturb);
-		} else if (d < here) {
+			here = test;
+			last = 0;
+		} else if (last != 0 && (test = diff(display_image, input_image, xoff, yoff + perturb, theta)) < here) {
 			yoff += perturb;
-			u = here;
-			here = d;
-			l = diff(display_image, input_image, xoff - perturb, yoff);
-			r = diff(display_image, input_image, xoff + perturb, yoff);
-			d = diff(display_image, input_image, xoff, yoff + perturb);
-		} else if (l < here) {
-			xoff -=perturb;
-			r = here;
-			here = l;
-			u = diff(display_image, input_image, xoff, yoff - perturb);
-			d = diff(display_image, input_image, xoff, yoff + perturb);
-			l = diff(display_image, input_image, xoff - perturb, yoff);
-		} else if (r < here) {
+			here = test;
+			last = 1;
+		} else if (last != 3 && (test = diff(display_image, input_image, xoff - perturb, yoff, theta)) < here) {
+			xoff -= perturb;
+			here = test;
+			last = 2;
+		} else if (last != 2 && (test = diff(display_image, input_image, xoff + perturb, yoff, theta)) < here) {
 			xoff += perturb;
-			l = here;
-			here = r;
-			u = diff(display_image, input_image, xoff, yoff - perturb);
-			d = diff(display_image, input_image, xoff, yoff + perturb);
-			r = diff(display_image, input_image, xoff + perturb, yoff);
+			here = test;
+			last = 3;
+		} else if (last != 5 && (test = diff(display_image, input_image, xoff, yoff, theta_p_perturb)) < here) {
+			theta = theta_p_perturb;
+			here = test;
+			last = 4;
+		} else if (last != 4 && (test = diff(display_image, input_image, xoff, yoff, theta_m_perturb)) < here) {
+			theta = theta_m_perturb;
+			here = test;
+			last = 5;
 		} else {
 			perturb *= 0.5;
-			u = diff(display_image, input_image, xoff, yoff - perturb);
-			d = diff(display_image, input_image, xoff, yoff + perturb);
-			l = diff(display_image, input_image, xoff - perturb, yoff);
-			r = diff(display_image, input_image, xoff + perturb, yoff);
+			last = -1;
 
 			/*
 			 * Announce that we've dropped a perturbation level.
@@ -174,10 +253,19 @@ inline void update() {
 			fprintf(stderr, ".");
 
 		}
+
 	}
 
+	/*
+	 * Ensure that the match meets the threshold.
+	 */
 
-	merge (display_image, input_image, xoff, yoff);
+	if ((1 - here) * 100 > match_threshold) {
+		merge (display_image, input_image, xoff, yoff, theta);
+		fprintf(stderr, " okay (%f%% match)", (1 - here) * 100);
+	} else {
+		fprintf(stderr, " no match (%f%% match)", (1 - here) * 100);
+	}
 }
 
 int main(int argc, char *argv[]){
@@ -209,6 +297,22 @@ int main(int argc, char *argv[]){
 			res_scale = 4;
 		} else if (!strcmp(argv[i], "--scale8")) {
 			res_scale = 8;
+		} else if (!strcmp(argv[i], "--align-all")) {
+			align_code = 0;
+		} else if (!strcmp(argv[i], "--align-green")) {
+			align_code = 1;
+		} else if (!strcmp(argv[i], "--align-sum")) {
+			align_code = 2;
+		} else if (!strcmp(argv[i], "--rotation")) {
+			use_rotation = 1;
+		} else if (!strcmp(argv[i], "--no-rotation")) {
+			use_rotation = 0;
+		} else if (!strncmp(argv[i], "--metric=", strlen("--metric="))) {
+			sscanf(argv[i] + strlen("--metric="), "%lf", &metric);
+		} else if (!strncmp(argv[i], "--threshold=", strlen("--threshold="))) {
+			sscanf(argv[i] + strlen("--threshold="), "%lf", &match_threshold);
+		} else if (!strncmp(argv[i], "--stepsize=", strlen("--stepsize="))) {
+			sscanf(argv[i] + strlen("--stepsize="), "%lf", &minimum_stepsize);
 		} else if (display_image == NULL) {
 
 			/* 
@@ -256,8 +360,21 @@ int main(int argc, char *argv[]){
 
 	if (display_image == NULL) {
 		fprintf(stderr, 
-			"Usage: %s [--scale2] [--scale4] [--scale8] <input-files> ... <output-file>\n"
-			"   or: %s --version\n",
+			"Usage: %s [<options>] <input-files> ... <output-file>\n"
+			"   or: %s --version\n"
+			"\n"
+			"Options:\n"
+			"--scale2	Scale input images up by 2\n"
+			"--scale4	Scale input images up by 4\n"
+			"--scale8	Scale input images up by 8\n"
+			"--align-all	Align images using all color channels\n"
+			"--align-green	Align images using the green channel\n"
+			"--align-sum	Align images using a sum of channels [default]\n"
+			"--rotation	Make rotational adjustments to images [default]\n"
+			"--no-rotation	Don't make rotational adjustments to images\n"
+			"--metric=x	Set the error metric exponent (2 is default)\n"
+			"--threshold=x  Min. match threshold; a perfect match is 100.  (0 is default)\n"
+			"--stepsize=x	Set the min. correction step, in pixels or degrees (0.1 default)\n",
 			argv[0], argv[0]);
 		return 1;
 	} else {

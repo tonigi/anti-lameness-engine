@@ -23,3 +23,9 @@ clean:
 
 ale: ale.c *.h
 	gcc -o $@ -Wall -DNDEBUG -O3 ale.c -lm
+
+# XXX: this isn't even remotely portable.  It's how I make the Windows
+# binary, though, so I might as well put it here.
+
+ale.exe: ale.c *.h
+	i586-mingw32msvc-gcc -Wall -DNDEBUG -o ale.exe -O3 ale.c -lm 
