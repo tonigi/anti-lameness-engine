@@ -34,7 +34,9 @@ public:
 		fprintf(stderr, "The following feature is currently unsupported:\n\n");
 		fprintf(stderr, description);
 		fprintf(stderr, "\n\n");
+#if 0
 		fprintf(stderr, "For more information, see http://auricle.dyndns.org/ALE/unsupported/currently/\n\n");
+#endif
 
 		exit(1);
 	}

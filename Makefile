@@ -27,6 +27,7 @@ DEBUG=0
 POSIX=1
 COLORS=SINGLE
 COORDINATES=SINGLE
+OPTIMIZATIONS=1
 
 #
 # Variable that is false when ImageMagick is not being used
@@ -49,9 +50,12 @@ PRECISION_CFLAGS:=$(if $(subst SINGLE,,$(COLORS)),,-DALE_COLORS=SINGLE)\
                   $(if $(subst SINGLE,,$(COORDINATES)),,-DALE_COORDINATES=SINGLE)\
                   $(if $(subst DOUBLE,,$(COORDINATES)),,-DALE_COORDINATES=DOUBLE)
 FFTW_LDFLAGS:=$(if $(subst 0,,$(FFTW)),-lfftw3,)
+OPTIMIZATION_CFLAGS:=-DOPTIMIZATIONS=$(OPTIMIZATIONS)
 
 CFLAGS:= $(POSIX_CFLAGS) $(DEBUG_CFLAGS) $(FFTW_CFLAGS) $(PRECISION_CFLAGS) \
-         $(if $(use_imagemagick),$(IMAGEMAGICK_CFLAGS),-Wall -O2) 
+         $(if $(use_imagemagick),$(IMAGEMAGICK_CFLAGS),-Wall -O2) \
+	 $(OPTIMIZATION_CFLAGS)
+
 LDFLAGS:=$(if $(use_imagemagick),$(IMAGEMAGICK_LDFLAGS)) $(FFTW_LDFLAGS) -lm
 
 #
@@ -82,7 +86,7 @@ ale-phony: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h d3.cc d3/*.h
 # better place to start for Windows users.
 
 ale.exe: ale.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h d3.cc d3/*.h
-	i586-mingw32msvc-g++ -Wall $(PRECISION_CFLAGS) $(DEBUG_CFLAGS) -o ale.exe -O2 ale.cc d3.cc d2.cc -lm 
+	i586-mingw32msvc-g++ -Wall $(OPTIMIZATION_CFLAGS) $(PRECISION_CFLAGS) $(DEBUG_CFLAGS) -o ale.exe -O2 ale.cc d3.cc d2.cc -lm 
 
 #
 # The following rules may require additional software to be installed.

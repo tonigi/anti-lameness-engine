@@ -171,6 +171,9 @@ public:
 
 	static render *get(const char *orig_type) {
 		char *type = strdup(orig_type);
+		if (type == NULL)
+			nomem();
+
 		char *comma_index = (char *) type;
 		while (*comma_index != '\0'
 		    && *comma_index != ',')

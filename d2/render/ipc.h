@@ -820,7 +820,7 @@ public:
 		input->sync();
                 fprintf(stderr, "Iterating Irani-Peleg");
                 done = 1;
-                approximation = input->get_image()->clone("IPC Approximation");
+                approximation = optimizations::get_ip_working_image(input->get_image());
                 _ip();
 
 		fprintf(stderr, "\n");
@@ -831,6 +831,8 @@ public:
 	virtual ~ipc() {
 	}
 
+	void free_memory() {
+	}
 };
 
 #endif

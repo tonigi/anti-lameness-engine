@@ -150,6 +150,11 @@ public:
 	const render *get_partial() const {
 		return partial;
 	}
+
+	void free_memory() {
+		delete output_image;
+		delete defined_image;
+	}
 };
 
 #endif

@@ -41,6 +41,10 @@ public:
 		x[2] = x2;
 	}
 
+	/*
+	 * Z-values of zero are almost never the right thing to do, but
+	 * for cases when they are ...
+	 */
 	point(d2::point p) {
 		x[0] = p[0];
 		x[1] = p[1];
@@ -88,6 +92,12 @@ public:
 		x[2] *= r;
 
 		return *this;
+	}
+
+	int operator !=(point p) {
+		return (x[0] != p[0]
+		     || x[1] != p[1]
+		     || x[2] != p[2]);
 	}
 
 	ale_pos lengthtosq(point p) const {

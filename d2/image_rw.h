@@ -57,14 +57,19 @@ class image_rw {
 	/*
 	 * Input and output exposure models
 	 */
-	static exposure *input_exposure;
+	static exposure **input_exposure;
 	static exposure *output_exposure;
 	static int exposure_scale;
 
 	/*
 	 * Default bayer pattern
 	 */
-	static unsigned int bayer;
+	static unsigned int bayer_default;
+
+	/*
+	 * Image-specific bayer patterns.
+	 */
+	static unsigned int *bayer_specific;
 
 	/*
 	 * Pointer to the output filename
@@ -120,7 +125,10 @@ public:
 	/*
 	 * Read an image from a file
 	 */
-	static image *read_image(const char *filename, exposure *exp, char *name = "file") {
+	static image *read_image(const char *filename, exposure *exp, char *name = "file", 
+			unsigned int bayer = IMAGE_BAYER_DEFAULT) {
+		if (bayer == IMAGE_BAYER_DEFAULT)
+			bayer = bayer_default;
 #ifdef USE_MAGICK
 		/*
 		 * Patterned after http://www.imagemagick.org/www/api.html
@@ -194,7 +202,7 @@ public:
 	 * is never freed.
 	 */
 	static void init(unsigned int _file_count, const char **_filenames, 
-			const char *_output_filename, exposure *_input_exposure,
+			const char *_output_filename, exposure **_input_exposure,
 			exposure *_output_exposure){
 		assert (_file_count > 0);
 
@@ -207,15 +215,20 @@ public:
 		output_exposure = _output_exposure;
 
 		images = (const image **)malloc(file_count * sizeof(image *));
+		bayer_specific = (unsigned int *)malloc(file_count * sizeof(unsigned int));
 		files_open = (int *)calloc(file_count, sizeof(int));
 
 		assert (images);
+		assert (bayer_specific);
 		assert (files_open);
 
-		if (!images || !files_open) {
+		if (!images || !files_open || !bayer_specific) {
 			fprintf(stderr, "Unable to allocate memory for images.\n");
 			exit(1);
 		}
+
+		for (unsigned int i = 0; i < file_count; i++)
+			bayer_specific[i] = IMAGE_BAYER_DEFAULT;
 
 		fprintf(stderr, "Output file will be '%s'.\n", 
 				output_filename);
@@ -241,7 +254,12 @@ public:
 	}
 
 	static void set_default_bayer(unsigned int b) {
-		bayer = b;
+		bayer_default = b;
+	}
+
+	static void set_specific_bayer(unsigned int index, unsigned int b) {
+		assert (bayer_specific);
+		bayer_specific[index] = b;
 	}
 
 	static void depth16() {
@@ -415,11 +433,11 @@ public:
 	}
 
 	static exposure &exp(int n) {
-		return input_exposure[n];
+		return *input_exposure[n];
 	}
 
 	static const exposure &const_exp(int n) {
-		return input_exposure[n];
+		return *input_exposure[n];
 	}
 
 	static exposure &exp() {
@@ -438,6 +456,13 @@ public:
 		return *output_exposure;
 	}
 
+	static const unsigned int bayer(unsigned int n) {
+		if (bayer_specific[n] == IMAGE_BAYER_DEFAULT)
+			return bayer_default;
+		else
+			return bayer_specific[n];
+	}
+
 	static const image *open(unsigned int n) {
 		assert (n <  file_count);
 		assert (!files_open[n]);
@@ -448,7 +473,7 @@ public:
 			files_open[n] = 1;
 		} else {
 
-			image *i = read_image(filenames[n], input_exposure + n);
+			image *i = read_image(filenames[n], input_exposure[n], "file", bayer(n));
 
 			images[n] = i;
 			files_open[n] = 1;
@@ -462,7 +487,7 @@ public:
 		if (files_open[n])
 			return images[n]->clone(name);
 		else {
-			image *i = read_image(filenames[n], input_exposure + n, name);
+			image *i = read_image(filenames[n], input_exposure[n], name, bayer(n));
 			return i;
 		}
 	}

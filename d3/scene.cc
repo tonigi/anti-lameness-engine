@@ -30,7 +30,7 @@ scene::lod *scene::cl;
  * Constant for depth tests.
  */
 
-static double depth_quantum = 0.02;
+const double scene::depth_quantum = 2;
 
 /*
  * Function bodies for recursive cost adjustment.

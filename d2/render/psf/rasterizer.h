@@ -180,6 +180,12 @@ public:
 #endif
 
 		compute_integrals();
+		
+//		fprintf(stderr, "(w=%f h=%f we=%d he=%d [", _width, _height, _filter_dim_j, _filter_dim_i);
+//		for (unsigned int i = 0; i < _filter_dim_i; i++)
+//		for (unsigned int j = 0; j < _filter_dim_j; j++)
+//			fprintf(stderr, "%f ", response_arrays[0][i * _filter_dim_j * 3 + j * 3 + 0]);
+//		fprintf(stderr, "])");
 	}
 };
 

@@ -1,5 +1,5 @@
-// Copyright 2003 David Hilvert <dhilvert@auricle.dyndns.org>, 
-//                              <dhilvert@ugcs.caltech.edu>
+// Copyright 2003, 2004 David Hilvert <dhilvert@auricle.dyndns.org>, 
+//                                    <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
 
@@ -57,12 +57,12 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+
 /*
  * All header files in the d2 namespace.
  */
 
 namespace d2 {
-
 #include "d2/pixel.h"
 #include "d2/spixel.h"
 #include "d2/pixel_accum.h"
@@ -73,6 +73,15 @@ namespace d2 {
 #include "d2/align.h"
 #include "d2/transformation.h"
 #include "d2/image.h"
+}
+
+/*
+ * XXX: The placement of this file is somewhat of a hack.  What should
+ * be done about this?
+ */
+#include "optimizations.h"
+
+namespace d2 {
 #include "d2/image_ale_real.h"
 #include "d2/image_rw.h"
 #include "d2/point.h"
@@ -93,6 +102,9 @@ namespace d2 {
 #include "d2/render/psf/sum.h"
 #include "d2/render/psf/stdin.h"	
 #include "d2/render/psf/stdin_vg.h"	
+#include "d2/render/psf/convolution.h"
+#include "d2/render/psf/scalar_mult.h"
+#include "d2/render/psf/psf_parse.h"
 #include "d2/render/psf/psf_calibrate.h"
 #include "d2/vise_core.h"
 

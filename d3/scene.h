@@ -30,6 +30,12 @@
 class scene {
 
 	/*
+	 * Constant for depth tests
+	 */
+
+	static const double depth_quantum;
+
+	/*
 	 * Structure to hold information for a given level of detail.
 	 */
 	struct lod {
@@ -138,7 +144,7 @@ public:
 			 * Allocate partial z-buffer array for frame n
 			 */
 
-			cl->pz_color[n] = new d2::image_ale_real(height, width, 3);
+			cl->pz_color[n] = cl->reference[n];
 			cl->pz_depth[n] = new d2::image_ale_real(height, width, 3);
 
 			assert(cl->pz_color[n]);
@@ -175,13 +181,12 @@ public:
 
 				point q3 = t3(point(q2[0], q2[1], 0));
 				cl->pz_depth[n]->pix(i, j)[0] = q3[2];
-				cl->pz_color[n]->pix(i, j)    = cl->reference[n]->get_pixel(i, j);
 			}
 
-			fprintf(stderr, "(0, 0) depth (n=%d) %f\n", n, cl->pz_depth[n]->get_pixel(0, 0)[0]);
-			fprintf(stderr, "(%d, 0) depth (n=%d) %f\n", height - 1, n, cl->pz_depth[n]->get_pixel(height - 1, 0)[0]);
-			fprintf(stderr, "(0, %d) depth (n=%d) %f\n", width - 1, n, cl->pz_depth[n]->get_pixel(0, width - 1)[0]);
-			fprintf(stderr, "(%d, %d) depth (n=%d) %f\n", height - 1, width - 1, n, cl->pz_depth[n]->get_pixel(height - 1, width - 1)[0]);
+//			fprintf(stderr, "(0, 0) depth (n=%d) %f\n", n, cl->pz_depth[n]->get_pixel(0, 0)[0]);
+//			fprintf(stderr, "(%d, 0) depth (n=%d) %f\n", height - 1, n, cl->pz_depth[n]->get_pixel(height - 1, 0)[0]);
+//			fprintf(stderr, "(0, %d) depth (n=%d) %f\n", width - 1, n, cl->pz_depth[n]->get_pixel(0, width - 1)[0]);
+//			fprintf(stderr, "(%d, %d) depth (n=%d) %f\n", height - 1, width - 1, n, cl->pz_depth[n]->get_pixel(height - 1, width - 1)[0]);
 		}
 	}
 
@@ -415,7 +420,8 @@ public:
 	}
 
 	static double obscuration_depth() {
-		return 0.25;
+		// return 0.25;
+		return 2500;
 	}
 
 	/*
@@ -439,8 +445,10 @@ public:
 
                 if ((mapped[2] - depth) >= obscuration_depth()
 		 && x2m == x1
-		 && y2m == y1) 
+		 && y2m == y1) {
+			fprintf(stderr, "obscured.\n");
                         return obscuration_cost(mapped[2] - depth);
+		}
 
 		return 0;
 	}
@@ -462,8 +470,10 @@ public:
                 unsigned int x2 = (unsigned int) floor(mapped[0]);
                 unsigned int y2 = (unsigned int) floor(mapped[1]);
 
-                if ((mapped[2] - cl->pz_depth[f2]->get_pixel(x2, y2)[0]) >= obscuration_depth())
+                if ((mapped[2] - cl->pz_depth[f2]->get_pixel(x2, y2)[0]) >= obscuration_depth()) {
+			fprintf(stderr, "obscured.\n");
                         return 1;
+		}
 
 		return 0;
 	}
@@ -500,7 +510,8 @@ public:
 		 */
 
 		if (depth >= 0 || mapped[2] >= 0)
-			return 1000000;
+			return 0;
+			// return 1000000;
 
 		/*
 		 * Check for out-of-bounds
@@ -508,7 +519,8 @@ public:
 
 		if (mapped[0] < 0 || mapped[0] > cl->pz_color[f2]->height() - 1
 		 || mapped[1] < 0 || mapped[1] > cl->pz_color[f2]->width() - 1)
-			return 10;
+			return 0;
+			// return 10;
 
 		/*
 		 * Check for coincidence
@@ -525,13 +537,14 @@ public:
 //		  || fabs(cl->pz_color[f2]->get_pixel(x2, y2)[2] - color[2]) > 0.01)) 
 //			return 50;
 
-//		if (fabs(mapped[2] - cl->pz_depth[f2]->get_pixel(x2, y2)[0]) < obscuration_depth()) {
-		if (mapped[2] - cl->pz_depth[f2]->get_pixel(x2, y2)[0] > -obscuration_depth()) {
+//		if (mapped[2] - cl->pz_depth[f2]->get_pixel(x2, y2)[0] > -obscuration_depth()) {
+		if (fabs(mapped[2] - cl->pz_depth[f2]->get_pixel(x2, y2)[0]) < obscuration_depth()) {
 			d2::pixel c2 = cl->pz_color[f2]->get_bl(d2::point(mapped[0], mapped[1]));
 			d2::pixel diff = c2 - color;
 
 			return diff.normsq();
-		}
+		} else
+			fprintf(stderr, "obscured.\n");
 
 		/*
 		 * Check for obscuration
@@ -541,6 +554,7 @@ public:
 //			d2::pixel c2 = cl->pz_color[f2]->get_bl(d2::point(mapped[0], mapped[1]));
 //			d2::pixel diff = c2 - color;
 
+			fprintf(stderr, "obscured.\n");
 			return obscuration_cost(mapped[2] - cl->pz_depth[f2]->get_pixel(x2, y2)[0]);
 			
 			// return diff.normsq() + 50;
@@ -836,7 +850,7 @@ public:
 
 		for (int n = 0; n < N; n++) {
 			nl->reference[n] = cl->reference[n]->scale_by_half("3D, reduced LOD");
-			nl->pz_color[n]  = cl->pz_color[n]->scale_by_half("3D, reduced LOD");
+			nl->pz_color[n]  = nl->reference[n];
 			nl->pz_depth[n]  = cl->pz_depth[n]->scale_by_half("3D, reduced LOD");
 
 			for (unsigned int i = 0; i < nl->pz_depth[n]->height(); i++)
@@ -906,9 +920,9 @@ public:
 		 */
 
 		for (int n = 0; n < N; n++) {
-			free(cl->pz_depth[n]);
-			free(cl->pz_color[n]);
-			free(cl->reference[n]);
+			delete cl->pz_depth[n];
+			delete cl->reference[n];
+			// delete cl->pz_color[n];
 		}
 
 		delete cl;
@@ -916,44 +930,213 @@ public:
 		cl = nl;
 	}
 
-	static void reduce_cost_to_search_depth(unsigned int max_depth) {
+	static const d2::image *view(unsigned int n) {
+
+		const double depth_diff_limit = 0.1;
+
+		assert (n < d2::image_rw::count());
+
+		d2::image *result = cl->pz_color[n]->clone("3D view result");
+		
+		for (unsigned int x = 0; x < cl->pz_color[n]->height(); x++)
+		for (unsigned int y = 0; y < cl->pz_color[n]->width();  y++) {
+			double weight = 1;
+			double d0 = cl->pz_depth[n]->get_pixel(x, y)[0];
+
+			for (unsigned int m = 0; m < d2::image_rw::count(); m++) {
+				if (m == n)
+					continue;
+
+				point p0 = frame_to_frame(m, n, x, y, d0);
+
+				if (!cl->pz_color[m]->in_bounds(d2::point(p0[0], p0[1])))
+					continue;
+
+				d2::pixel pix_0 = cl->pz_color[m]->get_bl(d2::point(p0[0], p0[1]));
+				double s0 = cl->pz_depth[m]->get_bl(d2::point(p0[0], p0[1]))[0];
+
+				if (fabs(p0[2] - s0) < depth_diff_limit) {
+					result->pix(x, y) += pix_0;
+					weight += 1;
+				}
+			}
+
+			result->pix(x, y) /= weight;
+		}
+
+		/*
+		 * XXX: this should be freed somewhere, perhaps?
+		 */
+
+		return result;
+	}
+
+	static const d2::image *depth(unsigned int n) {
+		assert (n < d2::image_rw::count());
+
+		return cl->pz_depth[n];
+	}
+
+	static void reduce_cost_to_search_depth(const char *d_out[], const char *v_out[], d2::exposure *exp_out, int inc_bit) {
+		int max_depth = 2;
 		int improved = 1;
 		int count = 0;
 		void *visit_data;
-		time_t start_seconds, cur_seconds, max_seconds = 1200;
+		// time_t start_seconds, cur_seconds, max_seconds = 1200;
+		double match_weight_shallow = 0.0001;
+		double match_weight_deep = 0.0004;
 
 		assert (max_depth > 0);
 
 		visit_data = init_visit_data(max_depth);
 
-		time(&start_seconds);
+		// time(&start_seconds);
 
 		while(reduce_lod());
 
-		while ((improved && count < 5) || cl->next) {
+		while ((improved /*&& count < 40*/) || cl->next) {
 
-			if (!improved || count >= 5) {
+			if (inc_bit)
+			for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
+				if (d_out[i] != NULL) {
+					const d2::image *im = depth(i);
+					d2::image_rw::write_image(d_out[i], im, exp_out, 1, 1);
+				}
+
+				if (v_out[i] != NULL) {
+					const d2::image *im = view(i);
+					d2::image_rw::write_image(v_out[i], im, exp_out);
+					delete im;
+				}
+			}
+
+			if (!improved/* || count >= 40*/) {
+				// fprintf(stderr, "scale factor: %f\n", cl->sf);
+				fprintf(stderr, ".");
 				assert (cl->next);
+
 				increase_lod();
 				count = 0;
+
+#if 0
+				if (cl->sf >= 0.125) {
+					while (cl->next)
+						increase_lod();
+					count = 100000;
+					improved = 0;
+					continue;
+				}
+#endif
 			}
 
 			count++;
 			improved = 0;
 
-//			d2::image_rw::write_image("debug_0.png", cl->pz_depth[0], &d2::image_rw::exp(), 1, 1);
-//			d2::image_rw::write_image("debug_1.png", cl->pz_depth[1], &d2::image_rw::exp(), 1, 1);
+			// time (&cur_seconds);
 
-			time (&cur_seconds);
-
-			if (cur_seconds - start_seconds > max_seconds)
-				continue;
-
-			fprintf(stderr, "imp_loop ");
+			// if (cur_seconds - start_seconds > max_seconds)
+			//	continue;
 
 			for (unsigned int n = 0; n < d2::image_rw::count(); n++)
 			for (unsigned int x = 0; x < cl->pz_color[n]->height(); x++)
 			for (unsigned int y = 0; y < cl->pz_color[n]->width();  y++) {
+#if 1
+				double multiplier = 1;
+				double lateral_min = 0.5;
+				double depth_ceiling = -pow(10, 5);
+				double d0 = cl->pz_depth[n]->get_pixel(x, y)[0];
+				double dp1 = d0 + depth_quantum;
+				double dm1 = d0 - depth_quantum;
+				double err = 0;
+				double m1_err = 0;
+				double p1_err = 0;
+
+				while (dp1 == d0 || dm1 == d0
+				    && dp1 < 0
+				    && dm1 < 0) {
+					// fprintf(stderr, "Multiplying...\n");
+					multiplier *= 2;
+					dp1 = d0 + depth_quantum * multiplier;
+					dm1 = d0 - depth_quantum * multiplier;
+				}
+
+				if (d0 >= 0)
+					continue;
+				if (dp1 >= 0)
+					dp1 = 0 - depth_quantum;
+				if (dm1 >= 0)
+					dm1 = 0 - depth_quantum;
+
+				for (unsigned int m = 0; m < d2::image_rw::count(); m++) {
+					if (m == n)
+						continue;
+
+					point p0 = frame_to_frame(m, n, x, y, d0);
+
+					if (!cl->pz_color[m]->in_bounds(d2::point(p0[0], p0[1])))
+						continue;
+
+					double r_source = cl->pz_color[n]->get_pixel(x, y)[0];
+					double r0 = cl->pz_color[m]->get_bl(d2::point(p0[0], p0[1]))[0];
+					double s0 = cl->pz_depth[m]->get_bl(d2::point(p0[0], p0[1]))[0];
+					point pp1 = frame_to_frame(m, n, x, y, dp1);
+					point pm1 = frame_to_frame(m, n, x, y, dm1);
+
+					while (sqrt(pow(pm1[0] - p0[0], 2) + pow(pm1[1] - p0[1], 2)) < lateral_min
+					    && sqrt(pow(pp1[0] - p0[0], 2) + pow(pp1[1] - p0[1], 2)) < lateral_min
+					    && dm1 > depth_ceiling / 2
+					    && d0 + depth_quantum * multiplier * 2 < 0) {
+						multiplier *= 2;
+						dp1 = d0 + depth_quantum * multiplier;
+						dm1 = d0 - depth_quantum * multiplier;
+						pp1 = frame_to_frame(m, n, x, y, dp1);
+						pm1 = frame_to_frame(m, n, x, y, dm1);
+					}
+
+					if (dp1 >= 0 || dm1 >= 0) {
+						// fprintf(stderr, "Neg.\n");
+						continue;
+					}
+
+					if (!cl->pz_color[m]->in_bounds(d2::point(pp1[0], pp1[1]))
+					 || !cl->pz_color[m]->in_bounds(d2::point(pm1[0], pm1[1])))
+						continue;
+
+					err += pow(r_source - r0, 2)
+					     + ((p0[2] < s0) 
+					      ? match_weight_deep
+					      : match_weight_shallow)
+					     * pow(p0[2] - s0, 2);
+
+					double rp1 = cl->pz_color[m]->get_bl(d2::point(pp1[0], pp1[1]))[0];
+					double sp1 = cl->pz_depth[m]->get_bl(d2::point(pp1[0], pp1[1]))[0];
+
+					p1_err += pow(r_source - rp1, 2) 
+						+ ((pp1[2] < sp1)
+						 ? match_weight_deep
+						 : match_weight_shallow)
+						* pow(pp1[2] - sp1, 2);
+
+
+					double rm1 = cl->pz_color[m]->get_bl(d2::point(pm1[0], pm1[1]))[0];
+					double sm1 = cl->pz_depth[m]->get_bl(d2::point(pm1[0], pm1[1]))[0];
+
+					m1_err += pow(r_source - rm1, 2)
+						+ ((pm1[2] < sm1)
+						 ? match_weight_deep
+						 : match_weight_shallow)
+						* pow(pm1[2] - sm1, 2);
+				}
+
+				if (m1_err < p1_err && m1_err < err) {
+					cl->pz_depth[n]->pix(x, y)[0] = dm1;
+					improved = 1;
+				} else if (p1_err < err) {
+					cl->pz_depth[n]->pix(x, y)[0] = dp1;
+					improved = 1;
+				}
+#else
+
 
 				d2::pixel options[1];
 				double cur_cost = frc_cost(n, x, y);
@@ -977,8 +1160,18 @@ public:
 //							);
 					improved = 1;
 				}
+#endif
 			}
 		}
+
+#if 0
+		
+		fprintf(stderr, "\n\n******* DEPTH TRANSLATION DEBUGGING FEATURE ENABLED *******\n\n");
+
+		for (unsigned int x = 0; x < cl->pz_depth[0]->height(); x++)
+		for (unsigned int y = 0; y < cl->pz_depth[0]->width(); y++)
+			cl->pz_depth[0]->pix(x, y)[0] += 100;
+#endif
 
 #if 0
 
@@ -996,31 +1189,30 @@ public:
 
 			point q = frame_to_frame(1, 0, p);
 
+			// fprintf(stderr, "ftf [%f %f %f] [%f %f %f]\n", p[0], p[1], p[2], q[0], q[1], q[2]);
+
 			int x2 = (int) floor(q[0]);
 			int y2 = (int) floor(q[1]);
 
 			if (x2 >= 0
 			 && y2 >= 0
 			 && (unsigned) x2 < cl->pz_color[1]->height()
-			 && (unsigned) y2 < cl->pz_color[1]->width())
+			 && (unsigned) y2 < cl->pz_color[1]->width()) {
+#if 1
 				cl->pz_color[1]->set_pixel(x2, y2, cl->pz_color[0]->get_pixel(x, y));
+#else
+				cl->pz_color[1]->set_pixel(x2, y2, d2::pixel(x / (double) cl->pz_color[0]->height(), 
+							                     y / (double) cl->pz_color[0]->width(), 0));
+				cl->pz_color[0]->set_pixel(x, y, d2::pixel(x2 / (double) cl->pz_color[1]->height(), 
+							                   y2 / (double) cl->pz_color[1]->width(), 0));
+#endif
+			}
 		}
 #endif
 
 		destroy_visit_data(visit_data);
 	}
 
-	static const d2::image *view(unsigned int n) {
-		assert (n < d2::image_rw::count());
-
-		return cl->pz_color[n];
-	}
-
-	static const d2::image *depth(unsigned int n) {
-		assert (n < d2::image_rw::count());
-
-		return cl->pz_depth[n];
-	}
 #if 0
 	/*
 	 * Describe a scene to a renderer

@@ -61,7 +61,7 @@ public:
 		fprintf(help_stream, 
 			BETWEEN_SECTIONS
 			"Usage: %s [<options>] <original-frame> [<supplemental-frame> ...] <output-file>\n"
-			"   or: %s <help option>\n"
+			"   or: %s [<help option> ...]\n"
 			"   or: %s --version\n"
 			BETWEEN_SECTIONS
 			"Help options:\n"
@@ -323,6 +323,8 @@ public:
 			"                        stdin\n"
 			"                        stdin_vg\n"
 			"                        <p>+<p> (summation)\n"
+			"                        <p>^<p> (convolution)\n"
+			"                        <n>*<p> (multiplication by a scalar <n>)\n"
 			"                     Default lpsf is either 'box=1.0' or device-specific.\n"
 			"                     Default nlpsf is either disabled or device-specific.\n"
 			BETWEEN_SECTIONS
@@ -376,7 +378,7 @@ public:
 		banner("Device");
 		fprintf(help_stream,
 			BETWEEN_SECTIONS
-			"Device (may set PSF, bayer pattern, and exposure parameters):\n"
+			"Device (may set PSF, bayer pattern, exposure, and view angle):\n"
 			HEADER_SPACE
 			"--device <d>      Set the capture device to <d>.\n"
 			"                     Available devices:\n"
@@ -384,6 +386,10 @@ public:
 			"                        xvp610_640x480\n"
 			"                        ov7620_raw_linear\n"
 			"                        canon_300d_raw_linear\n"
+			"                        canon_300d_raw_linear+50mm_1.4\n"
+			"                        canon_300d_raw_linear+50mm_1.4@1.4\n"
+			"                        canon_300d_raw_linear+50mm_1.8\n"
+			"                        canon_300d_raw_linear+85mm_1.8\n"
 			"\n"
 		       );
 	}
@@ -507,7 +513,13 @@ public:
 		banner("3D Modeling (very experimental)");
 		fprintf(help_stream,
 			BETWEEN_SECTIONS
+			"Camera view:\n"
+			HEADER_SPACE
+			"--view-angle <x>  Set the diagonal view angle to <x> degrees.\n"
+			"                     (Default is 43.7 degrees or device-specific.)\n"
+			BETWEEN_SECTIONS
 			"3D Modeling:\n"
+			HEADER_SPACE
 			"--3dv <n> <o>     Render file <o> from a 3D model using the <n>th frame view.\n"
 			"--3dd <n> <o>     Render 3D depth information <o> for the view from frame <n>.\n"
 			"\n");

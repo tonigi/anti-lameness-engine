@@ -139,6 +139,8 @@ class align {
 		 * can be changed at each step.  
 		 */
 
+		double view_angle = _init_angle;
+
 		for (ale_pos magnitude = estimate[2] / 2; 
 			magnitude >= 1;
 			magnitude /= 2) {
@@ -152,32 +154,48 @@ class align {
 
 			while(old_error > error) {
 
-				fprintf(stderr, "estimate: [%f %f %f %f %f %f]\n", 
-						estimate_h1_angle,
-						estimate_h2_angle,
-						estimate_w1_angle,
-						estimate_w2_angle,
-						estimate_d1_angle,
-						estimate_d2_angle);
+//				ale_pos D = sqrt(h * h + w * w)
+//						 / (2 * tan(view_angle/2));
+//				ale_pos desired_h_angle = 2 * atan(h / (2 * sqrt(D*D + w*w/4)));
+//				ale_pos desired_w_angle = 2 * atan(w / (2 * sqrt(D*D + h*h/4)));
 
-				fprintf(stderr, "desired : [%f %f %f]\n",
-						desired_h_angle,
-						desired_w_angle,
-						_init_angle);
+//				fprintf(stderr, ".");
+
+
+//				fprintf(stderr, "estimate: [%f %f %f %f %f %f]\n", 
+//						estimate_h1_angle,
+//						estimate_h2_angle,
+//						estimate_w1_angle,
+//						estimate_w2_angle,
+//						estimate_d1_angle,
+//						estimate_d2_angle);
+//
+//				fprintf(stderr, "desired : [%f %f %f]\n",
+//						desired_h_angle,
+//						desired_w_angle,
+//						view_angle);
 					
-				fprintf(stderr, "error %f\n", error);
-
 				old_error = error;
 
 				for (double c0 = -magnitude; c0 <= magnitude; c0 += magnitude)
 				for (double c1 = -magnitude; c1 <= magnitude; c1 += magnitude) 
-				for (double c2 = -magnitude; c2 <= magnitude; c2 += magnitude) {
+				for (double c2 = -magnitude; c2 <= magnitude; c2 += magnitude) 
+				for (double c3 = -magnitude; c3 <= magnitude; c3 += magnitude) {
+
+					if (c3 > 10)
+						c3 = 10;
 
 					// fprintf(stderr, "[%f %f %f]\n", c0, c1, c2);
 
 					estimate[0] += c0;
 					estimate[1] += c1;
 					estimate[2] += c2;
+					// view_angle += c3 / 30;
+
+					ale_pos D = sqrt(h * h + w * w)
+							 / (2 * tan(view_angle/2));
+					ale_pos desired_h_angle = 2 * atan(h / (2 * sqrt(D*D + w*w/4)));
+					ale_pos desired_w_angle = 2 * atan(w / (2 * sqrt(D*D + h*h/4)));
 
 					estimate_h1_angle = estimate.anglebetw(a, b);
 					estimate_h2_angle = estimate.anglebetw(c, d);
@@ -191,8 +209,8 @@ class align {
 							   + pow(estimate_h2_angle - desired_h_angle, 2)
 							   + pow(estimate_w1_angle - desired_w_angle, 2)
 							   + pow(estimate_w2_angle - desired_w_angle, 2)
-							   + pow(estimate_d1_angle - _init_angle    , 2)
-							   + pow(estimate_d2_angle - _init_angle    , 2));
+							   + pow(estimate_d1_angle - view_angle    , 2)
+							   + pow(estimate_d2_angle - view_angle    , 2));
 
 					if (perturbed_error < error) {
 						error = perturbed_error;
@@ -200,10 +218,14 @@ class align {
 						estimate[0] -= c0;
 						estimate[1] -= c1;
 						estimate[2] -= c2;
+						// view_angle -= c3 / 30;
 					}
 				}
 			}
 		}
+
+//		fprintf(stderr, "error %f\n", error);
+
 
 		return estimate;
 	}
@@ -334,11 +356,15 @@ public:
 			estimate[1] = e[1];
 			estimate[2] = distance;
 
+			// fprintf(stderr, "position (n=%d) %f %f %f\n", i, estimate[0], estimate[1], estimate[2]);
+
 			/*
 			 * Perform method (2).
 			 */
 
 			estimate = gd_position(estimate, a, b, c, d, t);
+
+			fprintf(stderr, ".");
 
 			/*
 			 * Assign transformation values based on the output of
@@ -348,7 +374,7 @@ public:
 
 			alignment_array[i] = et::identity();
 
-			fprintf(stderr, "position (n=%d) %f %f %f\n", i, estimate[0], estimate[1], estimate[2]);
+			// fprintf(stderr, "position (n=%d) %f %f %f\n", i, estimate[0], estimate[1], estimate[2]);
 
 			/*
 			 * Modify translation values
@@ -417,19 +443,22 @@ public:
 
 			point e_translated = alignment_array[i](e);
 
-			fprintf(stderr, "axis-intersection (n=%d) e1 %f e0 %f e_t1 %f e_t0 %f e_t2 %f\n", 
-				i,
-				e[1],
-				e[0],
-				alignment_array[i](e)[1],
-				alignment_array[i](e)[0],
-				alignment_array[i](e)[2]);
-
-			fprintf(stderr, "camera origin (n=%d) o_t1 %f o_t0 %f o_t2 %f\n", 
-				i,
-				alignment_array[i](estimate)[1],
-				alignment_array[i](estimate)[0],
-				alignment_array[i](estimate)[2]);
+//			fprintf(stderr, "axis-intersection (n=%d) e1 %f e0 %f e_t1 %f e_t0 %f e_t2 %f\n", 
+//				i,
+//				e[1],
+//				e[0],
+//				alignment_array[i](e)[1],
+//				alignment_array[i](e)[0],
+//				alignment_array[i](e)[2]);
+//
+//			fprintf(stderr, "camera origin (n=%d) o1 %f o0 %f o2 %f o_t1 %f o_t0 %f o_t2 %f\n", 
+//				i,
+//				estimate[1],
+//				estimate[0],
+//				estimate[2],
+//				alignment_array[i](estimate)[1],
+//				alignment_array[i](estimate)[0],
+//				alignment_array[i](estimate)[2]);
 
 			ale_pos e0 = atan(-e_translated[1] / e_translated[2]);
 			ale_pos e1 = atan(e_translated[0]
@@ -442,47 +471,48 @@ public:
 			if (alignment_array[i](e)[2] > 0)
 				alignment_array[i].modify_rotation(1, M_PI);
 
-			fprintf(stderr, "axis-intersection (n=%d) e1 %f e0 %f e_t1 %f e_t0 %f e_t2 %f\n", 
-				i,
-				e[1],
-				e[0],
-				alignment_array[i](e)[1],
-				alignment_array[i](e)[0],
-				alignment_array[i](e)[2]);
-
-			fprintf(stderr, "camera origin (n=%d) o_t1 %f o_t0 %f o_t2 %f\n", 
-				i,
-				alignment_array[i](estimate)[1],
-				alignment_array[i](estimate)[0],
-				alignment_array[i](estimate)[2]);
+//			fprintf(stderr, "axis-intersection (n=%d) e1 %f e0 %f e_t1 %f e_t0 %f e_t2 %f\n", 
+//				i,
+//				e[1],
+//				e[0],
+//				alignment_array[i](e)[1],
+//				alignment_array[i](e)[0],
+//				alignment_array[i](e)[2]);
+//
+//			fprintf(stderr, "camera origin (n=%d) o_t1 %f o_t0 %f o_t2 %f\n", 
+//				i,
+//				alignment_array[i](estimate)[1],
+//				alignment_array[i](estimate)[0],
+//				alignment_array[i](estimate)[2]);
 
 			point a_transformed = alignment_array[i](a);
 
 			ale_pos e2 = atan((t.scaled_width() - 1) / (t.scaled_height() - 1)) 
 				   - atan(a_transformed[1] / a_transformed[0]);
 
-			fprintf(stderr, "e2 components (n=%d) tw %f th %f a_t1 %f a_t0 %f\n", i, 
-					t.scaled_width(), t.scaled_height(), a_transformed[1], a_transformed[0]);
+//			fprintf(stderr, "a components (n=%d) a1 %f a0 %f\n", i, a[1], a[0]);
+//			fprintf(stderr, "e2 components (n=%d) tw %f th %f a_t1 %f a_t0 %f\n", i, 
+//					t.scaled_width(), t.scaled_height(), a_transformed[1], a_transformed[0]);
 
 			alignment_array[i].modify_rotation(2, e2);
 
-			fprintf(stderr, "rotation (n=%d) e0 %f e1 %f e2 %f\n", i, e0, e1, e2);
+//			fprintf(stderr, "rotation (n=%d) e0 %f e1 %f e2 %f\n", i, e0, e1, e2);
 
 			if (alignment_array[i](a)[0] > 0) {
 				e2 += M_PI;
 				alignment_array[i].modify_rotation(2, M_PI);
 
-				fprintf(stderr, "adding 2pi to e2.");
+				// fprintf(stderr, "adding 2pi to e2.");
 			}
 
-			fprintf(stderr, "rotation (n=%d) e0 %f e1 %f e2 %f\n", i, e0, e1, e2);
+			// fprintf(stderr, "rotation (n=%d) e0 %f e1 %f e2 %f\n", i, e0, e1, e2);
 
-			fprintf(stderr, "(0, 0) output (n=%d) a1 %f a0 %f a_t1 %f a_t0 %f\n", 
-				i,
-				a[1],
-				a[0],
-				alignment_array[i](a)[1],
-				alignment_array[i](a)[0]);
+//			fprintf(stderr, "(0, 0) output (n=%d) a1 %f a0 %f a_t1 %f a_t0 %f\n", 
+//				i,
+//				a[1],
+//				a[0],
+//				alignment_array[i](a)[1],
+//				alignment_array[i](a)[0]);
 
 			assert (alignment_array[i](a)[0] < 0);
 			assert (alignment_array[i](a)[1] < 0);

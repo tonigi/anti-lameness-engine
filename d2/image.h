@@ -33,6 +33,12 @@
 #define IMAGE_BAYER_NONE 0
 
 /*
+ * This constant indicates that some other default value should be filled in.
+ */
+
+#define IMAGE_BAYER_DEFAULT 0x8
+
+/*
  * Do not change these values without inspecting
  * image_bayer_ale_real::r_*_offset().
  */
@@ -298,6 +304,15 @@ public:
 			result[1] = pixel(1, 1, 1);
 		}
 #endif
+	}
+
+	int in_bounds(point x) const {
+		if (x[0] < 0
+		 || x[1] < 0
+		 || x[0] > height() - 1
+		 || x[1] > width() - 1)
+			return 0;
+		return 1;
 	}
 
 	pixel get_bl(point x) const {

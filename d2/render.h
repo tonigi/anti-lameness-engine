@@ -271,6 +271,14 @@ public:
 	virtual ~render() {
 		directory[entry_number] = NULL;
 	}
+
+	virtual void free_memory() = 0;
+
+	static void free_all_memory() {
+		for (int i = 0; i < ACTIVE_RENDERER_COUNT; i++)
+		if (directory[i] != NULL)
+			directory[i]->free_memory();
+	}
 };
 
 #endif

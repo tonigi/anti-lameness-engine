@@ -1,3 +1,57 @@
+0.7.3
+
+o	Add incremental 3D reconstruction output.
+
+o	Remove the reference to a non-existent web page in
+	unsupported::fornow().
+
+o	Allow device-specific bayer patterns to be overridden by the --bayer
+	option.
+
+o	Add an option for explicitly setting the camera view angle.  Make the 
+	default view angle 43.7 degrees.
+
+o	Implement optimizations that reduce the memory footprint when 3D
+	options are used.
+
+o	Modify the 3D cost reduction algorithm.  The new algorithm seems to
+	offer better results than the old in cases tested thus far, and does
+	not require that spatial extension be enabled.
+
+o	Add support for the Canon 300D with a 50mm f/1.4 lens (specifying view
+	angle), as well as experimental support for the 50mm f/1.4 lens at 1.4
+	(specifying a linear PSF).  Also add support for 50mm f/1.8 and 85mm
+	f/1.8 lenses, specifying view angles as specified in the chart at
+	http://www.acapixus.dk/photography/angle_of_view.htm
+
+o	Don't output final data when --psf-match is specified.  Doing so
+	would be useless anyway, and apparently causes a segfault.
+
+o	For cases where --psf-match is specified, modify the exposure settings
+	for the final input image (i.e., reference image) so that default
+	exposure is used, and modify the bayer pattern settings so that no
+	bayer pattern is used.  (The first of these modifications requires
+	changes in the way that the array of input exposures is stored.)
+
+o	Optionally (when OPTIMIZATIONS == 1) use the output of the default
+	rendering chain directly as the Irani-Peleg initial approximation,
+	instead of copying it.
+
+o	Add support for PSF convolution and scalar multiplication.
+
+o	Move all PSF parsing logic to a new file: d2/render/psf/psf_parse.h
+
+o	Modify help argument processing so that several help arguments can be
+	specified at a time.  Change the usage text to reflect this.
+
+o	Fix concatenated help output; outputs from all help options are now
+	represented.  (3D help had been omitted in 0.7.2.)
+
+o	Add a check to ensure that at most one --q* option is specified.
+	The issue of multiple --q* options being specified was raised on the
+	ALE mailing list by Viktors Rotanovs.  As there is currently no
+	support for this, generating an error message is appropriate.
+
 0.7.2
 
 o	Add cost-minimizing code to reconstruct 3D scenes from 2D inputs.

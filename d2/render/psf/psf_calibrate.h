@@ -319,6 +319,9 @@ public:
 
 		delete approximation;
         }
+
+	void free_memory() {
+	}
 };
 
 #endif

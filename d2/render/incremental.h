@@ -416,6 +416,11 @@ public:
 			image_rw::close(get_step());
 		}
 	}
+
+	void free_memory() {
+		delete accum_image;
+		delete accum_weight;
+	}
 };
 
 #endif

@@ -71,6 +71,9 @@ public:
 		}
 	}
 
+	void free_memory() {
+	}
+
 };
 
 #endif

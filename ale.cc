@@ -60,6 +60,10 @@
 #include "device/xvp610_640x480.h"
 #include "device/ov7620_raw_linear.h"
 #include "device/canon_300d_raw_linear.h"
+#include "device/canon_300d_raw_linear_85mm_1_8.h"
+#include "device/canon_300d_raw_linear_50mm_1_8.h"
+#include "device/canon_300d_raw_linear_50mm_1_4.h"
+#include "device/canon_300d_raw_linear_50mm_1_4_1_4.h"
 
 /*
  * Help files
@@ -71,9 +75,9 @@
  * Version Information
  */
 
-char *short_version = "0.7.2";
+char *short_version = "0.7.3";
 
-char *version = "ALE Version:      0.7.2\n"
+char *version = "ALE Version:      0.7.3\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else
@@ -95,6 +99,11 @@ char *version = "ALE Version:      0.7.2\n"
 #else
                 "Assertions:       Probably enabled\n"
 #endif
+#if OPTIMIZATIONS == 1
+		"Optimizations:    Enabled\n"
+#else
+		"Optimizations:    Disabled\n"
+#endif
 ;
 
 /*
@@ -106,6 +115,22 @@ unsigned int arg_count(int argc, const char *argv[], const char *arg) {
 	unsigned int count = 0;
 	for (int i = 0; i < argc; i++) {
 		if (!strcmp(argv[i], arg))
+			count++;
+		else if (!strcmp(argv[i], "--"))
+			return count;
+	}
+	return count;
+}
+
+/*
+ * Argument prefix counter.
+ *
+ * Counts instances of a given option prefix.
+ */
+unsigned int arg_prefix_count(int argc, const char *argv[], const char *pfix) {
+	unsigned int count = 0;
+	for (int i = 0; i < argc; i++) {
+		if (!strncmp(argv[i], pfix, strlen(pfix)))
 			count++;
 		else if (!strcmp(argv[i], "--"))
 			return count;
@@ -158,12 +183,18 @@ void bad_arg(const char *opt_name) {
 int main(int argc, const char *argv[]){
 
 	/*
-	 * Version information and help.
+	 * Initialize help object
 	 */
 	
 	help hi(argv[0], short_version);
 
-	if (arg_count(argc, argv, "--version") > 0) {
+
+	/*
+	 * Output version information if --version appears
+	 * on the command line.
+	 */
+
+	if (arg_count(argc, argv, "--version")) {
 		/*
 		 * Output the version
 		 */
@@ -171,59 +202,57 @@ int main(int argc, const char *argv[]){
 		fprintf(stdout, "%s", version);
 
 		return 0;
-	} else if (arg_count(argc, argv, "--hu") > 0) {
-		hi.usage();
-		exit(1);
-	} else if (arg_count(argc, argv, "--hq") > 0) {
-		hi.defaults();
-		exit(1);
-	} else if (arg_count(argc, argv, "--hf") > 0) {
-		hi.file();
-		exit(1);
-	} else if (arg_count(argc, argv, "--he") > 0) {
-		hi.exclusion();
-		exit(1);
-	} else if (arg_count(argc, argv, "--ha") > 0) {
-		hi.alignment();
-		exit(1);
-	} else if (arg_count(argc, argv, "--hr") > 0) {
-		hi.rendering();
-		exit(1);
-	} else if (arg_count(argc, argv, "--hx") > 0) {
-		hi.exposure();
-		exit(1);
-	} else if (arg_count(argc, argv, "--ht") > 0) {
-		hi.tdf();
-		exit(1);
-	} else if (arg_count(argc, argv, "--hl") > 0) {
-		hi.filtering();
-		exit(1);
-	} else if (arg_count(argc, argv, "--hd") > 0) {
-		hi.device();
-		exit(1);
-	} else if (arg_count(argc, argv, "--hv") > 0) {
-		hi.visp();
-		exit(1);
-	} else if (arg_count(argc, argv, "--h3") > 0) {
-		hi.d3();
-		exit(1);
-	} else if (arg_count(argc, argv, "--hz") > 0) {
-		hi.undocumented();
-		exit(1);
-	} else if (arg_count(argc, argv, "--hA") > 0) {
-                hi.usage();
-                hi.defaults();
-                hi.file();
-                hi.exclusion();
-                hi.alignment();
-                hi.rendering();
-                hi.exposure();
-                hi.tdf();
-                hi.filtering();
-                hi.device();
-                hi.visp();
-                hi.undocumented();
-		exit(1);
+	}
+
+	/*
+	 * Handle help options
+	 */
+
+	if  (arg_prefix_count(argc, argv, "--h"))
+	for (int i = 1; i < argc; i++) {
+		int all = !strcmp(argv[i], "--hA");
+		int is_help_option = !strncmp(argv[i], "--h", strlen("--h"));
+		int found_help = 0;
+
+		if (!strcmp(argv[i], "--hu") || all)
+			hi.usage(), found_help = 1;
+		if (!strcmp(argv[i], "--hq") || all)
+			hi.defaults(), found_help = 1;
+		if (!strcmp(argv[i], "--hf") || all)
+			hi.file(), found_help = 1;
+		if (!strcmp(argv[i], "--he") || all)
+			hi.exclusion(), found_help = 1;
+		if (!strcmp(argv[i], "--ha") || all)
+			hi.alignment(), found_help = 1;
+		if (!strcmp(argv[i], "--hr") || all)
+			hi.rendering(), found_help = 1;
+		if (!strcmp(argv[i], "--hx") || all)
+			hi.exposure(), found_help = 1;
+		if (!strcmp(argv[i], "--ht") || all)
+			hi.tdf(), found_help = 1;
+		if (!strcmp(argv[i], "--hl") || all)
+			hi.filtering(), found_help = 1;
+		if (!strcmp(argv[i], "--hd") || all)
+			hi.device(), found_help = 1;
+		if (!strcmp(argv[i], "--hv") || all)
+			hi.visp(), found_help = 1;
+		if (!strcmp(argv[i], "--h3") || all)
+			hi.d3(), found_help = 1;
+		if (!strcmp(argv[i], "--hz") || all)
+			hi.undocumented(), found_help = 1;
+
+		if (is_help_option && !found_help)
+			hi.usage();
+
+		/*
+		 * Check for the end-of-options marker, a non-option argument,
+		 * or the end of arguments.  In all of these cases, we exit.
+		 */
+
+		if (!strcmp(argv[i], "--")
+		 || strncmp(argv[i], "--", strlen("--"))
+		 || i == argc - 1)
+		 	return 0;
 	}
 
 	/*
@@ -306,6 +335,8 @@ int main(int argc, const char *argv[]){
 	const char **d3_output = NULL;
 	const char **d3_depth = NULL;
 	unsigned int d3_count = 0;
+	double user_view_angle = 0;
+	int user_bayer = IMAGE_BAYER_DEFAULT;
 
 	/*
 	 * dchain is ochain[0].
@@ -325,6 +356,11 @@ int main(int argc, const char *argv[]){
 	/*
 	 * Handle default settings
 	 */
+
+	if (arg_prefix_count(argc, argv, "--q") > 1) {
+		fprintf(stderr, "\n\n*** Error: more than one default setting option --q* was specified. ***\n\n");
+		exit(1);
+	}
 
 	if (arg_count(argc, argv, "--q0")) {
 		ochain_types[0] = "fine:box:1,triangle:2";
@@ -551,6 +587,14 @@ int main(int argc, const char *argv[]){
 
 			i+=2;
 
+		} else if (!strcmp(argv[i], "--view-angle")) {
+			if (i + 1 >= argc)
+				not_enough("--view-angle");
+
+			double va_parameter;
+			sscanf(argv[i+1], "%lf", &va_parameter);
+			i += 1;
+			user_view_angle = va_parameter * M_PI / 180;
 		} else if (!strcmp(argv[i], "--mc")) {
 			if (i + 1 >= argc)
 				not_enough("--mc");
@@ -727,15 +771,15 @@ int main(int argc, const char *argv[]){
 			 */
 
 			if (!strcmp(argv[i+1], "rgbg")) {
-				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
+				user_bayer = IMAGE_BAYER_RGBG;
 			} else if (!strcmp(argv[i+1], "bgrg")) {
-				d2::image_rw::set_default_bayer(IMAGE_BAYER_BGRG);
+				user_bayer = IMAGE_BAYER_BGRG;
 			} else if (!strcmp(argv[i+1], "gbgr")) {
-				d2::image_rw::set_default_bayer(IMAGE_BAYER_GRGB);
+				user_bayer = IMAGE_BAYER_GRGB;
 			} else if (!strcmp(argv[i+1], "grgb")) {
-				d2::image_rw::set_default_bayer(IMAGE_BAYER_GBGR);
+				user_bayer = IMAGE_BAYER_GBGR;
 			} else if (!strcmp(argv[i+1], "none")) {
-				d2::image_rw::set_default_bayer(IMAGE_BAYER_NONE);
+				user_bayer = IMAGE_BAYER_NONE;
 			} else {
 				bad_arg("--bayer");
 			}
@@ -933,12 +977,14 @@ int main(int argc, const char *argv[]){
 			if (d3_output != NULL && ip_iterations != 0) 
 				unsupported::fornow("3D modeling with Irani-Peleg rendering");
 
+#if 0
 			if (extend == 0 && d3_output != NULL) {
 				implication::changed("3D modeling requires increased image extents.",
 				                     "Image extension is now enabled.",
 						     "--extend");
 				extend = 1;
 			}
+#endif
 
 			if (cx_parameter != 0 && !exposure_register) {
 				implication::changed("Certainty-based rendering requires exposure registration.",
@@ -980,36 +1026,92 @@ int main(int argc, const char *argv[]){
 		         */
 
 			d2::psf *device_response[psf_N] = { NULL, NULL };
-			d2::exposure *input_exposure = NULL;
-			ale_pos view_angle = 90 * M_PI / 180;
+			d2::exposure **input_exposure = NULL;
+			ale_pos view_angle = 43.7 * M_PI / 180;  
+			// ale_pos view_angle = 90 * M_PI / 180;  
+			input_exposure = (d2::exposure **)
+				malloc((argc - i - 1) * sizeof(d2::exposure *));
 
 			if (device != NULL) {
 				if (!strcmp(device, "xvp610_640x480")) {
 					device_response[psf_linear] = new xvp610_640x480::lpsf();
 					device_response[psf_nonlinear] = new xvp610_640x480::nlpsf();
-					input_exposure = new xvp610_640x480::exposure[argc - i - 1];
+					for (int ii = 0; ii < argc - i - 1; ii++)
+						input_exposure[ii] = new xvp610_640x480::exposure();
 					view_angle = xvp610_640x480::view_angle();
 				} else if (!strcmp(device, "xvp610_320x240")) {
 					device_response[psf_linear] = new xvp610_320x240::lpsf();
 					device_response[psf_nonlinear] = new xvp610_320x240::nlpsf();
-					input_exposure = new xvp610_320x240::exposure[argc - i - 1];
+					for (int ii = 0; ii < argc - i - 1; ii++)
+						input_exposure[ii] = new xvp610_320x240::exposure();
 					view_angle = xvp610_320x240::view_angle();
 				} else if (!strcmp(device, "ov7620_raw_linear")) {
 					device_response[psf_linear] = new ov7620_raw_linear::lpsf();
 					device_response[psf_nonlinear] = NULL;
-					input_exposure = new ov7620_raw_linear::exposure[argc - i - 1];
+					for (int ii = 0; ii < argc - i - 1; ii++)
+						input_exposure[ii] = new ov7620_raw_linear::exposure();
 					d2::image_rw::set_default_bayer(IMAGE_BAYER_BGRG);
 				} else if (!strcmp(device, "canon_300d_raw_linear")) {
 					device_response[psf_linear] = new canon_300d_raw_linear::lpsf();
 					device_response[psf_nonlinear] = NULL;
-					input_exposure = new canon_300d_raw_linear::exposure[argc - i - 1];
+					for (int ii = 0; ii < argc - i - 1; ii++)
+						input_exposure[ii] = new canon_300d_raw_linear::exposure();
 					d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
+				} else if (!strcmp(device, "canon_300d_raw_linear+85mm_1.8")) {
+					device_response[psf_linear] = new canon_300d_raw_linear_85mm_1_8::lpsf();
+					device_response[psf_nonlinear] = NULL;
+					for (int ii = 0; ii < argc - i - 1; ii++)
+						input_exposure[ii] = new canon_300d_raw_linear_85mm_1_8::exposure();
+					d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
+					view_angle = canon_300d_raw_linear_85mm_1_8::view_angle();
+				} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.8")) {
+					device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_8::lpsf();
+					device_response[psf_nonlinear] = NULL;
+					for (int ii = 0; ii < argc - i - 1; ii++)
+						input_exposure[ii] = new canon_300d_raw_linear_50mm_1_8::exposure();
+					d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
+					view_angle = canon_300d_raw_linear_50mm_1_8::view_angle();
+				} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.4")) {
+					device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_4::lpsf();
+					device_response[psf_nonlinear] = NULL;
+					for (int ii = 0; ii < argc - i - 1; ii++)
+						input_exposure[ii] = new canon_300d_raw_linear_50mm_1_4::exposure();
+					d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
+					view_angle = canon_300d_raw_linear_50mm_1_4::view_angle();
+				} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.4@1.4")) {
+					device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_4_1_4::lpsf();
+					device_response[psf_nonlinear] = NULL;
+					for (int ii = 0; ii < argc - i - 1; ii++)
+						input_exposure[ii] = new canon_300d_raw_linear_50mm_1_4_1_4::exposure();
+					d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
+					view_angle = canon_300d_raw_linear_50mm_1_4_1_4::view_angle();
 				} else {
 					fprintf(stderr, "\n\n*** Error: Unknown device %s ***\n\n", device);
 					exit(1);
 				}
 			} else {
-				input_exposure = new d2::exposure_default[argc - i - 1];
+				for (int ii = 0; ii < argc - i - 1; ii++)
+					input_exposure[ii] = new d2::exposure_default();
+			}
+
+			/*
+			 * User-specified variables.
+			 */
+
+			if (user_view_angle != 0) {
+				view_angle = user_view_angle;
+			}
+
+			if (user_bayer != IMAGE_BAYER_DEFAULT) {
+				d2::image_rw::set_default_bayer(user_bayer);
+			}
+
+			/*
+			 * PSF-match exposure.
+			 */
+			if (psf_match) {
+				delete input_exposure[argc - i - 2];
+				input_exposure[argc - i - 2] = new d2::exposure_default();
 			}
 
 			/*
@@ -1025,114 +1127,9 @@ int main(int argc, const char *argv[]){
 			d2::psf *response[2] = {NULL, NULL};
 
 			for (int n = 0; n < psf_N; n++ ) {
-				if (psf[n] != NULL) while (psf[n] != NULL) {
+				if (psf[n] != NULL) {
 
-					/*
-					 * Iterate over substrings of the psf command-line
-					 * argument separated by '+' characters.  We sum these
-					 * response functions.
-					 */
-#if 0
-					/*
-					 * Not available everywhere.
-					 */
-					char *summation_index = index(psf[n], '+');
-#else
-					/*
-					 * This mimics the functionality of index.
-					 * Conversion to char * should be OK.  We
-					 * use const char * elsewhere because this
-					 * is the only place that the string should
-					 * be modified.
-					 */
-					char *summation_index = (char *) psf[n];
-					while(*summation_index != '\0'
-					   && *summation_index != '+')
-						summation_index++;
-					if (*summation_index == '\0')
-						summation_index = NULL;
-					
-#endif
-					d2::psf *current_response = response[n];
-
-					if (summation_index) {
-						summation_index[0] = '\0';
-						summation_index++;
-					}
-
-					/*
-					 * User-specified point-spread function
-					 */
-
-					if (!strcmp(psf[n], "stdin")) {
-
-						/*
-						 * Standard input filter
-						 */
-
-						fprintf(stderr, "\nInitializing ");
-						fprintf(stderr, (n == 0) ? "linear" : "non-linear");
-						fprintf(stderr, " PSF.\n");
-							
-
-						response[n] = new d2::psf_stdin();
-
-					} else if (!strcmp(psf[n], "stdin_vg")) {
-
-						/*
-						 * Standard input filter
-						 */
-
-						fprintf(stderr, "\nInitializing ");
-						fprintf(stderr, (n == 0) ? "linear" : "non-linear");
-						fprintf(stderr, " PSF.\n");
-							
-
-						response[n] = new d2::psf_stdin_vg();
-
-					} else if (!strncmp(psf[n], "box=", strlen("box="))) {
-
-						/*
-						 * Box filter
-						 */
-
-						double box_diameter;
-
-						if (sscanf(psf[n] + strlen("box="), "%lf", &box_diameter)
-								!= 1) {
-							fprintf(stderr, "\n\n*** Error: box= takes a "
-									"numerical argument ***\n\n");
-							exit(1);
-						}
-
-						response[n] = new d2::box(box_diameter / 2);
-
-					} else if (!strncmp(psf[n], "circle=", strlen("circle="))) {
-
-						/*
-						 * Circular filter
-						 */
-
-						double diameter;
-
-						if (sscanf(psf[n] + strlen("circle="), "%lf", &diameter)
-								!= 1) {
-							fprintf(stderr, "\n\n*** Error: circle= takes a "
-									"numerical argument ***\n\n");
-							exit(1);
-						}
-
-						response[n] = new d2::circle(diameter / 2);
-
-					} else {
-						fprintf(stderr, "Unknown point-spread function %s.\n\n", psf[n]);
-						exit(1);
-					}
-
-					if (current_response)
-						response[n] = new d2::sum(response[n], current_response);
-
-					psf[n] = summation_index;
+					response[n] = d2::psf_parse::get((n == psf_linear), psf[n]);
 
 				} else if (device_response[n] != NULL) {
 
@@ -1186,6 +1183,14 @@ int main(int argc, const char *argv[]){
 
 			d2::image_rw::init(argc - i - 1, argv + i, argv[argc - 1], input_exposure, output_exposure);
 			ochain_names[0] = argv[argc - 1];
+
+			/*
+			 * PSF-match bayer patterns.
+			 */
+
+			if (psf_match) {
+				d2::image_rw::set_specific_bayer(argc - i - 2, IMAGE_BAYER_NONE);
+			}
 
  			/*
 			 * Handle alignment weight map, if necessary
@@ -1350,16 +1355,18 @@ int main(int argc, const char *argv[]){
 			 */
 
 			for (int opt = 0; opt < oc_count; opt++) 
-			if  (ochain[opt]->sync() || !inc)
+			if  ((ochain[opt]->sync() || !inc) && !psf_match)
 				d2::image_rw::write_image(ochain_names[opt], ochain[opt]->get_image());
 
 			/*
 			 * Perform any 3D tasks
 			 */
 
+			optimizations::begin_3d_work();
+
 			if (d3_count > 0) {
 
-				fprintf(stderr, "Initializing view angle to %f radians", view_angle);
+				fprintf(stderr, "Initializing view angle to %f degrees", view_angle * 180 / M_PI);
 				d3::align::init_angle(view_angle);
 				fprintf(stderr, ".\n");
 
@@ -1372,7 +1379,7 @@ int main(int argc, const char *argv[]){
 				fprintf(stderr, ".\n");
 
 				fprintf(stderr, "Reducing cost in 3D scene");
-				d3::scene::reduce_cost_to_search_depth(2);
+				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, output_exposure, inc);
 				fprintf(stderr, ".\n");
 
 				for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
