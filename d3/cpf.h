@@ -68,11 +68,89 @@ class cpf {
 	}
 
 	/*
+	 * Calculate the centroid of a set of points.
+	 */
+	static point calculate_centroid(point *points, int n) {
+		point sum(0, 0, 0);
+
+		for (int i = 0; i < n; i++) {
+			if (!points[i].defined())
+				continue;
+			sum += points[i];
+		}
+
+		return sum / n;
+	}
+
+	/*
 	 * Solve for a 3D point from a system of projected coordinates.
+	 *
+	 * The algorithm is this:
+	 *
+	 * First, convert all 2D points to 3D points by projecting them onto a
+	 * plane perpendicular to the view axis of the corresponding camera,
+	 * and passing through the origin of the world coordinate system.
+	 * Then, for each point, move it along the view ray to the point
+	 * closest to the centroid of all of the points.  Repeat this last loop
+	 * until the largest adjustment is smaller than some specified lower
+	 * bound.
 	 */
 	static point solve_projected_system(point *points, int n) {
-		assert(0);
-		return point::undefined();
+
+		/*
+		 * Set an initial depth for each point, and convert it to world
+		 * coordinates.
+		 */
+
+		for (int i = 0; i < n; i++) {
+			pt t = align::projective(i);
+
+			point p = t.wc(point(0, 0, 0));
+			ale_pos plane_depth = p[2];
+
+			points[i][2] = plane_depth;
+
+			points[i] = t.pw_unscaled(points[i]);
+		}
+
+		/*
+		 * Calculate the centroid of all points.
+		 */
+
+		point centroid = calculate_centroid(points, n);
+
+		/*
+		 * For each point, adjust the depth along the view ray to
+		 * minimize the distance from the centroid of the other points.
+		 */
+
+		ale_pos diff_bound = 0.01;
+		ale_pos min_diff = diff_bound;
+		do {
+		for (int i = 0; i < n; i++) {
+
+			if (!points[i].defined())
+				continue;
+
+			pt t = align::projective(i);
+			point camera_origin = t.cw(point(0, 0, 0));
+
+			point v = points[i] - camera_origin;
+			ale_pos l = (centroid - camera_origin).norm();
+			ale_pos alpha = camera_origin.anglebetw(points[i], centroid);
+
+			point new_point = v / v.norm() * l * cos(alpha);
+
+			ale_pos diff = points[i].lengthto(new_point);
+
+			if (diff < min_diff)
+				min_diff = diff;
+
+			points[i] = new_point;
+
+		}} while (min_diff > diff_bound);
+
+		return calculate_centroid(points, n);
 	}
 
 	/*
