@@ -29,6 +29,20 @@
 #include "image_bayer_ale_real.h"
 #include "exposure/exposure.h"
 
+/*
+ * Extended attributes
+ */
+
+struct extended_t {
+	int is_extended;
+	int black_level;
+
+	extended_t() {
+		is_extended = 0;
+		black_level = 0;
+	}
+};
+
 static inline void error_ppm(const char *filename) {
 	fprintf(stderr, 
 		"\n\n*** '%s' doesn't look like a PPM file.\n"
@@ -40,14 +54,39 @@ static inline void error_ppm(const char *filename) {
 	exit(1);
 }
 
-static inline void eat_comments(FILE *f, const char *filename) {
+static inline int digest_comment(FILE *f, const char *filename, extended_t *extended) {
+	int next = '#';
+	int value;
+
+	while (next != '\n' && next != '\r' && next != EOF) {
+		while (next == ' ' || next == '\t' || next == '#') {
+			next = fgetc(f);
+			if (feof(f))
+				error_ppm(filename);
+		}
+
+		if (ungetc(next, f) == EOF) {
+			assert(0);
+			fprintf(stderr, "Unable to ungetc().");
+			exit(1);
+		}
+
+		if (extended->is_extended && fscanf(f, "Black-level: %d", &value) == 1)
+			extended->black_level = value;
+
+		next = fgetc(f);
+	}
+
+	return next;
+}
+
+static inline void eat_comments(FILE *f, const char *filename, extended_t *extended) {
 	int next = ' ';
 
 	while (next == ' ' || next == '\n' || next == '\t' || next == '#' || next == '\r') {
 		next = fgetc(f);
 		if (next == '#')
-			while (next != '\n' && next != '\r' && next != EOF)
-				next = fgetc(f);
+			next = digest_comment(f, filename, extended);
 		if (feof(f))
 			error_ppm(filename);
 	}
@@ -59,13 +98,37 @@ static inline void eat_comments(FILE *f, const char *filename) {
 	}
 }
 
+static inline int is_eppm(const char *filename) {
+	char m1, m2, m3, m4;
+	int n;
+	extended_t extended;
+	FILE *f = fopen(filename, "rb");
+
+	if (f == NULL)
+		return 0;
+
+	/* Magic */
+
+	eat_comments(f, filename, &extended);	/* XXX - should we eat comments here? */
+	n = fscanf(f, "%c%c%c%c", &m1, &m2, &m3, &m4);
+
+	fclose(f);
+
+	if (n != 4 || m1 != 'P' || (m2 != '6' && m2 != '3') || m3 != '#' || m4 != 'E') 
+		return 0;
+
+	return 1;
+}
+
 static inline image *read_ppm(const char *filename, exposure *e, unsigned int bayer) {
 	unsigned int i, j, k;
 	image *im;
 	unsigned char m1, m2, val;
-	unsigned int ival;
+	int m3, m4;
+	int ival;
 	int w, h, mcv;
 	int n;
+	struct extended_t extended;
 	FILE *f = fopen(filename, "rb");
 	assert(f);
 
@@ -76,16 +139,32 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 
 	/* Magic */
 
-	eat_comments(f, filename);	/* XXX - should we eat comments here? */
+	eat_comments(f, filename, &extended);	/* XXX - should we eat comments here? */
 	n = fscanf(f, "%c%c", &m1, &m2);
 	assert(n == 2 && m1 == 'P' && (m2 == '6' || m2 == '3'));
 
 	if (n != 2 || m1 != 'P' || (m2 != '6' && m2 != '3'))
 		error_ppm(filename);
 
+	/* Extended flag */
+
+	m3 = fgetc(f);
+
+	if (m3 == '#') {
+		m4 = fgetc(f);
+		if (m4 == 'E') 
+			extended.is_extended = 1;
+		else while (m4 != EOF && m4 != '\n' && m4 != '\r')
+			m4 = fgetc(f);
+	} else if (ungetc(m3, f) == EOF) {
+		assert(0);
+		fprintf(stderr, "Unable to ungetc().");
+		exit(1);
+	}
+
 	/* Width */
 
-	eat_comments(f, filename);
+	eat_comments(f, filename, &extended);
 	n = fscanf(f, " %d", &w);
 	assert(n == 1);
 
@@ -94,7 +173,7 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 
 	/* Height */
 
-	eat_comments(f, filename);
+	eat_comments(f, filename, &extended);
 	n = fscanf(f, "%d", &h);
 	assert(n == 1);
 
@@ -103,7 +182,7 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 
 	/* Maximum component value */
 
-	eat_comments(f, filename);
+	eat_comments(f, filename, &extended);
 	n = fscanf(f, "%d", &mcv);
 	assert(n == 1);
 	assert(mcv <= 65535 || m2 == '3');
@@ -160,7 +239,7 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 
 				/* ASCII data */
 
-				eat_comments(f, filename);
+				eat_comments(f, filename, &extended);
 
 				n = fscanf(f, "%d", &ival);
 
@@ -169,7 +248,7 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 					error_ppm(filename);
 			}
 
-			p[k] = (ale_real) ival / mcv;
+			p[k] = (ale_real) (ival - (extended.is_extended ? extended.black_level : 0)) / mcv;
 		}
 
 		im->set_pixel(i, j, e->linearize(p));

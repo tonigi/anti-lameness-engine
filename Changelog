@@ -1,3 +1,9 @@
+0.7.4-pre5
+
+o	Add support for PPM with extended attributes.
+
+o	Add experimental cost calculation routines to d3/scene.h.
+
 0.7.4-pre4
 
 o	Modify euclidean alignment so that perturb-upper and perturb-lower

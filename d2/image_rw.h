@@ -129,6 +129,11 @@ public:
 			unsigned int bayer = IMAGE_BAYER_DEFAULT) {
 		if (bayer == IMAGE_BAYER_DEFAULT)
 			bayer = bayer_default;
+
+		if (is_eppm(filename)) {
+			return read_ppm(filename, exp, bayer);
+		}
+
 #ifdef USE_MAGICK
 		/*
 		 * Patterned after http://www.imagemagick.org/www/api.html

@@ -977,6 +977,215 @@ public:
 		return cl->pz_depth[n];
 	}
 
+	/*
+	 * Evaluate the interframe cost at for a given location.
+	 *
+	 * m is remote, n is local
+	 *
+	 * Set est_max to estimate maximum cost.
+	 */
+	static double evaluate_cost(int m, int n, int x, int y, int est_max, double modified_depth = 0) {
+#if 0
+
+		if (m == n)
+			return 0;
+
+		if (!cl->pz_depth[n]->in_bounds(d2::point(x, y)))
+			return 0;
+		
+		double depth = (modified_depth == 0)
+			     ? cl->pz_depth[n]->get_pixel(x, y)[0]
+			     : modified_depth;
+
+		point remote_p = frame_to_frame(m, n, x, y, depth);
+
+		if (!cl->pz_color[m]->in_bounds(d2::point(remote_p[0], remote_p[1])))
+			return 0;
+
+		double r_source = cl->pz_color[n]->get_pixel(x, y)[0];
+		double r0 = cl->pz_color[m]->get_bl(d2::point(remote_p[0], remote_p[1]))[0];
+		double s0 = cl->pz_depth[m]->get_bl(d2::point(remote_p[0], remote_p[1]))[0];
+		point pp1 = frame_to_frame(m, n, x, y, dp1);
+		point pm1 = frame_to_frame(m, n, x, y, dm1);
+
+		while (sqrt(pow(pm1[0] - remote_p[0], 2) + pow(pm1[1] - remote_p[1], 2)) < lateral_min
+		    && sqrt(pow(pp1[0] - remote_p[0], 2) + pow(pp1[1] - remote_p[1], 2)) < lateral_min
+		    && dm1 > depth_ceiling / 2
+		    && depth + depth_quantum * multiplier * 2 < 0) {
+			multiplier *= 2;
+			dp1 = depth + depth_quantum * multiplier;
+			dm1 = depth - depth_quantum * multiplier;
+			pp1 = frame_to_frame(m, n, x, y, dp1);
+			pm1 = frame_to_frame(m, n, x, y, dm1);
+		}
+
+		if (dp1 >= 0 || dm1 >= 0) {
+			// fprintf(stderr, "Neg.\n");
+			continue;
+		}
+
+		if (!cl->pz_color[m]->in_bounds(d2::point(pp1[0], pp1[1]))
+		 || !cl->pz_color[m]->in_bounds(d2::point(pm1[0], pm1[1])))
+			continue;
+
+		err += pow(r_source - r0, 2)
+		     + ((remote_p[2] < s0) 
+		      ? match_weight_deep
+		      : match_weight_shallow)
+		     * pow(remote_p[2] - s0, 2);
+
+		double rp1 = cl->pz_color[m]->get_bl(d2::point(pp1[0], pp1[1]))[0];
+		double sp1 = cl->pz_depth[m]->get_bl(d2::point(pp1[0], pp1[1]))[0];
+
+		p1_err += pow(r_source - rp1, 2) 
+			+ ((pp1[2] < sp1)
+			 ? match_weight_deep
+			 : match_weight_shallow)
+			* pow(pp1[2] - sp1, 2);
+
+
+		double rm1 = cl->pz_color[m]->get_bl(d2::point(pm1[0], pm1[1]))[0];
+		double sm1 = cl->pz_depth[m]->get_bl(d2::point(pm1[0], pm1[1]))[0];
+
+		m1_err += pow(r_source - rm1, 2)
+			+ ((pm1[2] < sm1)
+			 ? match_weight_deep
+			 : match_weight_shallow)
+			* pow(pm1[2] - sm1, 2);
+#endif
+		return 0;
+	}
+
+	static void evaluate_total_cost() {
+#if 0
+		for (unsigned int n = 0; n < d2::image_rw::count(); n++)
+		for (unsigned int x = 0; x < cl->pz_color[n]->height(); x++)
+		for (unsigned int y = 0; y < cl->pz_color[n]->width();  y++) {
+#if 1
+			double multiplier = 1;
+			double lateral_min = 0.5;
+			double depth_ceiling = -pow(10, 5);
+			double d0 = cl->pz_depth[n]->get_pixel(x, y)[0];
+			double dp1 = d0 + depth_quantum;
+			double dm1 = d0 - depth_quantum;
+			double err = 0;
+			double m1_err = 0;
+			double p1_err = 0;
+
+			while (dp1 == d0 || dm1 == d0
+			    && dp1 < 0
+			    && dm1 < 0) {
+				// fprintf(stderr, "Multiplying...\n");
+				multiplier *= 2;
+				dp1 = d0 + depth_quantum * multiplier;
+				dm1 = d0 - depth_quantum * multiplier;
+			}
+
+			if (d0 >= 0)
+				continue;
+			if (dp1 >= 0)
+				dp1 = 0 - depth_quantum;
+			if (dm1 >= 0)
+				dm1 = 0 - depth_quantum;
+
+			for (unsigned int m = 0; m < d2::image_rw::count(); m++) {
+				if (m == n)
+					continue;
+
+				point p0 = frame_to_frame(m, n, x, y, d0);
+
+				if (!cl->pz_color[m]->in_bounds(d2::point(p0[0], p0[1])))
+					continue;
+
+				double r_source = cl->pz_color[n]->get_pixel(x, y)[0];
+				double r0 = cl->pz_color[m]->get_bl(d2::point(p0[0], p0[1]))[0];
+				double s0 = cl->pz_depth[m]->get_bl(d2::point(p0[0], p0[1]))[0];
+				point pp1 = frame_to_frame(m, n, x, y, dp1);
+				point pm1 = frame_to_frame(m, n, x, y, dm1);
+
+				while (sqrt(pow(pm1[0] - p0[0], 2) + pow(pm1[1] - p0[1], 2)) < lateral_min
+				    && sqrt(pow(pp1[0] - p0[0], 2) + pow(pp1[1] - p0[1], 2)) < lateral_min
+				    && dm1 > depth_ceiling / 2
+				    && d0 + depth_quantum * multiplier * 2 < 0) {
+					multiplier *= 2;
+					dp1 = d0 + depth_quantum * multiplier;
+					dm1 = d0 - depth_quantum * multiplier;
+					pp1 = frame_to_frame(m, n, x, y, dp1);
+					pm1 = frame_to_frame(m, n, x, y, dm1);
+				}
+
+				if (dp1 >= 0 || dm1 >= 0) {
+					// fprintf(stderr, "Neg.\n");
+					continue;
+				}
+
+				if (!cl->pz_color[m]->in_bounds(d2::point(pp1[0], pp1[1]))
+				 || !cl->pz_color[m]->in_bounds(d2::point(pm1[0], pm1[1])))
+					continue;
+
+				err += pow(r_source - r0, 2)
+				     + ((p0[2] < s0) 
+				      ? match_weight_deep
+				      : match_weight_shallow)
+				     * pow(p0[2] - s0, 2);
+
+				double rp1 = cl->pz_color[m]->get_bl(d2::point(pp1[0], pp1[1]))[0];
+				double sp1 = cl->pz_depth[m]->get_bl(d2::point(pp1[0], pp1[1]))[0];
+
+				p1_err += pow(r_source - rp1, 2) 
+					+ ((pp1[2] < sp1)
+					 ? match_weight_deep
+					 : match_weight_shallow)
+					* pow(pp1[2] - sp1, 2);
+
+
+				double rm1 = cl->pz_color[m]->get_bl(d2::point(pm1[0], pm1[1]))[0];
+				double sm1 = cl->pz_depth[m]->get_bl(d2::point(pm1[0], pm1[1]))[0];
+
+				m1_err += pow(r_source - rm1, 2)
+					+ ((pm1[2] < sm1)
+					 ? match_weight_deep
+					 : match_weight_shallow)
+					* pow(pm1[2] - sm1, 2);
+			}
+
+			if (m1_err < p1_err && m1_err < err) {
+				cl->pz_depth[n]->pix(x, y)[0] = dm1;
+				improved = 1;
+			} else if (p1_err < err) {
+				cl->pz_depth[n]->pix(x, y)[0] = dp1;
+				improved = 1;
+			}
+#else
+
+
+			d2::pixel options[1];
+			double cur_cost = frc_cost(n, x, y);
+
+			// if (cur_cost < 0.0001)
+			//	continue;
+
+			frc_samples(n, x, y, cur_cost/2, 1, options);
+
+			if (try_color_change(n, x, y, 0, max_depth, options[0], cur_cost/2, visit_data) < 0) {
+
+				assert (options[0][0] == cl->pz_color[n]->get_pixel(x, y)[0]);
+				
+//					fprintf(stderr, "[%d %d %d %f (%f %f %f) (%f %f %f)] ", n, x, y, cur_cost, 
+//							cl->pz_color[n]->get_pixel(x, y)[0],
+//							cl->pz_color[n]->get_pixel(x, y)[1],
+//							cl->pz_color[n]->get_pixel(x, y)[2],
+//							options[0][0],
+//							options[0][1],
+//							options[0][2]
+//							);
+				improved = 1;
+			}
+#endif
+		}
+#endif
+	}
+
 	static void reduce_cost_to_search_depth(const char *d_out[], const char *v_out[], d2::exposure *exp_out, int inc_bit) {
 		int max_depth = 2;
 		int improved = 1;

@@ -663,12 +663,8 @@ private:
 
 			/*
 			 * Check that the transformed coordinates are within
-			 * the boundaries of array c.input.  
-			 *
-			 * Also, check that the weight value in the accumulated array
-			 * is nonzero, unless we know it is nonzero by virtue of the
-			 * fact that it falls within the region of the original frame
-			 * (e.g. when we're not increasing image extents).
+			 * the boundaries of array c.input, and check that the
+			 * weight value in the accumulated array is nonzero.
 			 */
 
 			if (q[0] >= 0
@@ -677,29 +673,22 @@ private:
 			 && q[1] <= c.input->width() - 1
 			 && c.defined->get_pixel(i, j).minabs_norm() != 0) { 
 				pixel a = c.accum->get_pixel(i, j);
-				pixel b = c.input->get_bl(q);
+				pixel b[2];
 
-#if 0
+				c.input->get_bl(q, b);
+
 				pixel weight = (c.aweight
 					      ? c.aweight->get_pixel(i, j)
 					      : pixel(1, 1, 1))
-					     * (certainty_weights
-					      ? image_rw::exp(m).confidence(b)
-					      : pixel(1, 1, 1));
-#else
-				pixel weight = (c.aweight
-					      ? c.aweight->get_pixel(i, j)
-					      : pixel(1, 1, 1))
-					     * ((!certainty_weights && !pass_number)
+					     * ((!certainty_weights && pass_number)
 					      ? c.defined->get_pixel(i, j)
 					      : pixel(1, 1, 1))
-					     * (!pass_number
-					      ? image_rw::exp(m).confidence(b)
+					     * (pass_number
+					      ? b[1]
 					      : pixel(1, 1, 1));
-#endif
 
-				asum += a * weight;
-				bsum += b * weight;
+				asum += a    * weight;
+				bsum += b[0] * weight;
 			}
 		}
 
@@ -1147,7 +1136,7 @@ private:
 			transformation o = offset;
 			for (int k = lod; k > 0; k--)
 				o.rescale(2);
-			set_exposure_ratio(m, scale_clusters[0], o, local_ax_count, 1);
+			set_exposure_ratio(m, scale_clusters[0], o, local_ax_count, 0);
 		}
 
 		/*
@@ -1473,7 +1462,7 @@ private:
 
 		if (_exp_register) {
 			ui::get()->exposure_2();
-			set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count, 0);
+			set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count, 1);
 		}
 
 		/*
