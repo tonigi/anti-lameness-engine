@@ -161,8 +161,10 @@ public:
 		if (confidence_exponent == 0)
 			return 1;
 
-		ale_real unexponentiated = 4 * (0.25 - pow(0.5 - input 
-					                 / _multiplier[k], 2));
+		ale_real input_scaled = input / _multiplier[k];
+
+		ale_real unexponentiated = 4 * (0.25 - pow(0.5 - input_scaled, 2));
+		// ale_real unexponentiated = 4 * input_scaled * (0.25 - pow(0.5 - input_scaled, 2));
 
 		if (unexponentiated < 0) 
 			return confidence_floor;
