@@ -331,18 +331,34 @@ public:
 			 * Test for interiority
 			 */
 
-			int above = 0;
-			int below = 0;
-			int left = 0;
-			int right = 0;
+			int lower[2] = {0, 0};
+			int upper[2] = {0, 0};
 
 			for (int v = 0; v < 3; v++) {
-				assert(0);
+				point cv = p[v];
+				point nv = p[(v + 1) % 3];
+				point test_point = point(i, j, 1);
+
+				for (int d = 0; d < 2; d++)
+				if ((test_point[d] - cv[d]) * (i - nv[d]) < 0) {
+					int e = (d + 1) % 2;
+					ale_pos travel = (i - cv[d]) / (nv[d] - cv[d]);
+					ale_pos intersect = cv[e] + travel * (nv[e] - cv[e]);
+					if (intersect <= j) 
+						lower[e] = 1;
+					if (intersect >= j)
+						upper[e] = 1;
+				}
 			}
 
-			if (above && below && left && right) {
-				assert(0);
-			}
+			if (!lower[0] || !upper[0] || !lower[1] || !upper[1])
+				return;
+
+			/*
+			 * Assign the color value;
+			 */
+
+			im->pix(i, j) = t->color;
 		}
 	}
 
