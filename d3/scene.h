@@ -38,19 +38,24 @@ class scene {
 
 	/*
 	 * Ray-Triangle intersection utility function
+	 *
+	 * Variables should be specified in cartesian coordinates (not
+	 * projective coordinates).
 	 */
-	point rt_intersect(point r, point vertices[3]) {
-		point a = v[0];
-		point b = v[1];
-		point c = v[2];
+	static point rt_intersect(point r, point vertices[3]) {
+		point a = vertices[0];
+		point b = vertices[1];
+		point c = vertices[2];
 		point d = a - b;
 		point e = a - c;
 
+		/*
 		ale_pos m[3][3] = {
 			{ r[0], r[1], r[2] },
 			{ d[0], d[1], d[2] },
 			{ e[0], e[1], e[2] }
 		};
+		*/
 
 		ale_pos m_det = r[0] * d[1] * e[2] 
 			      + r[1] * d[2] * e[0]
@@ -75,11 +80,11 @@ class scene {
 			}
 		};
 
-		point k(a[0] * m[0][0] + a[1] * m[0][1] + a[2] * m[0][2],
-		        a[0] * m[1][0] + a[1] * m[1][1] + a[2] * m[1][2],
-			a[0] * m[2][0] + a[1] * m[2][1] + a[2] * m[2][2]);
+		point k(a[0] * m_inverse_t[0][0] + a[1] * m_inverse_t[0][1] + a[2] * m_inverse_t[0][2],
+		        a[0] * m_inverse_t[1][0] + a[1] * m_inverse_t[1][1] + a[2] * m_inverse_t[1][2],
+			a[0] * m_inverse_t[2][0] + a[1] * m_inverse_t[2][1] + a[2] * m_inverse_t[2][2]);
 
-		return k * r;
+		return k[0] * r;
 	}
 
 	/*
@@ -1588,6 +1593,11 @@ public:
 		int max_depth = 2;
 		int improved = 1;
 		int count = 0;
+
+		point int_v[3] = {point(0, 0, 10), point(10, 0, 10), point(0, 10, 10)};
+		point intersect = rt_intersect(point(1, 1, 2), int_v);
+
+		fprintf(stderr, "Intersect: %f %f %f\n", intersect[0], intersect[1], intersect[2]);
 
 		assert (max_depth > 0);
 
