@@ -79,6 +79,8 @@ public:
 		output_image = new image_ale_real(default_image->height(),
 				default_image->width(), 3, NULL);
 
+		output_image->set_offset(default_image->offset());
+
 		const image *partial_weight = partial->get_defined();
 
 		for (unsigned int i = 0; i < default_image->height(); i++)
@@ -110,6 +112,8 @@ public:
 		
 		defined_image = new image_ale_real(default_weight->height(),
 				default_weight->width(), 3, NULL);
+
+		defined_image->set_offset(default_weight->offset());
 
 		for (i = 0; i < default_weight->height(); i++)
 		for (j = 0; j < default_weight->width();  j++)

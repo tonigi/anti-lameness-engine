@@ -172,6 +172,10 @@ public:
 		_offset[1] = j;
 	}
 
+	void set_offset(point p) {
+		_offset = p;
+	}
+
 	unsigned int width() const {
 		return _dimx;
 	}
