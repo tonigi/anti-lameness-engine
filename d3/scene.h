@@ -312,7 +312,8 @@ class scene {
 
 		/*
 		 * Traverse the sub-graph of triangles around a given vertex,
-		 * and return an aggregate result for a given function
+		 * and return an aggregate result for a given function,
+		 * ignoring non-finite values.
 		 *
 		 * TYPE is one of:
 		 *
@@ -352,6 +353,9 @@ class scene {
 			 */
 
 			ale_accum aggregate = (this->*fp)();
+
+			if (!finite(aggregate))
+				aggregate = 0;
 
 			for (int v = 0; v < 3; v++)
 			if  (neighbors[v]) {
@@ -705,6 +709,37 @@ class scene {
 
 		/*
 		 * Return the maximum angle formed with a neighbor triangle.
+		 * Searches one neighbor deep.
+		 */
+		ale_accum max_neighbor_angle() {
+
+			ale_pos max_angle = 0;
+
+			point _normal = normal();
+
+			for (int n = 0; n < 3; n++) {
+				if (neighbors[n] == NULL)
+					continue;
+
+				int srfn = self_ref_from_neighbor(n);
+
+				point a = *neighbors[n]->vertices[srfn];
+				point b = *neighbors[n]->vertices[(srfn + 1) % 3];
+				point c = *neighbors[n]->vertices[(srfn + 2) % 3];
+
+				point unscaled_dnn = a.xproduct(b, c);
+
+				ale_pos angle = point(0, 0, 0).anglebetw(unscaled_dnn, _normal);
+
+				if (angle > max_angle)
+					max_angle = angle;
+			}
+
+			return max_angle;
+		}
+
+		/*
+		 * Return the maximum angle formed with a neighbor triangle.
 		 * Searches two neighbors deep.
 		 */
 		ale_pos max_neighbor_angle_2(ale_pos displacement = 0) {
@@ -1040,7 +1075,7 @@ class scene {
 			 */
 
 			for (int v = 0; v < 3; v++) {
-				lowest_error = traverse_around_vertex(vertices[v], &reference_error, 0);
+				lowest_error = traverse_around_vertex(vertices[v], &triangle::reference_error, 0);
 				for (int axis = 0; axis < 3; axis++)
 				for (int dir = -1; dir <= 1; dir += 2) {
 
@@ -1055,7 +1090,13 @@ class scene {
 					 * a given amount the angle between the normals of adjacent triangles.
 					 */
 
-					if (max_neighbor_angle_2() > M_PI / 3) {
+//					if (max_neighbor_angle_2() > M_PI / 3) {
+//						*vertices[v] = best_vertices[v];
+//						continue;
+//					}
+					
+					ale_accum max_angle = traverse_around_vertex(vertices[v], &triangle::max_neighbor_angle, 1);
+					if (max_angle > M_PI / 1.5) {
 						*vertices[v] = best_vertices[v];
 						continue;
 					}
@@ -1072,7 +1113,7 @@ class scene {
 
 //					color_neighbors_negative();
 //					ale_accum error = accumulate_neighbor_error();
-					ale_accum error = traverse_around_vertex(vertices[v], &reference_error, 0);
+					ale_accum error = traverse_around_vertex(vertices[v], &triangle::reference_error, 0);
 					if (error < lowest_error) {
 						lowest_error = error;
 						improved = 1;
@@ -1082,7 +1123,7 @@ class scene {
 						*vertices[v] = best_vertices[v];
 					}
 
-					if (!finite(error))
+					if (!finite(lowest_error))
 						fprintf(stderr, "dir %d, error %e\n", dir, error);
 				}
 			}
