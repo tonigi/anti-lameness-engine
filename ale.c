@@ -30,7 +30,7 @@
 #include <time.h>
 #include <math.h>
 
-char *version = "0.4.0"
+char *version = "0.4.0p1"
 #ifdef USE_MAGICK
 		" (File handler: ImageMagick)";
 #else
@@ -470,8 +470,11 @@ int main(int argc, char *argv[]){
 
 			/* 
 			 * First file argument.  Print general file information as well
-			 * as information specific to this argument.
+			 * as information specific to this argument.  Initialize image
+			 * file handler.
 			 */
+
+			init_image();
 
 			tsave_orig(tsave, argv[i]);
 			tsave_target(tsave, argv[argc - 1]);
@@ -529,8 +532,23 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, ".\n");
 		}
 
+		/*
+		 * Destroy the image file handler
+		 */
+
+		destroy_image();
+
+		/*
+		 * Delete the transformation file structures
+		 */
+
 		tsave_delete(tsave);
 		tload_delete(tload);
+
+		/*
+		 * Output an summary match statistic.
+		 */
+
 		fprintf(stderr, "Done (%f%% average match).\n", match_sum / match_count);
 		
 	} else {

@@ -37,6 +37,28 @@
 #include <magick/api.h>
 #endif
 
+/*
+ * Initialize the image file handler
+ */
+static inline void init_image() {
+#ifdef USE_MAGICK
+	InitializeMagick("ale");
+#endif
+}
+
+/*
+ * Destroy the image file handler
+ */
+static inline void destroy_image() {
+#ifdef USE_MAGICK
+	DestroyMagick();
+#endif
+}
+
+
+/*
+ * Read an image from a file
+ */
 static inline image *read_image(char *filename)
 #ifdef USE_MAGICK
 {
@@ -53,7 +75,6 @@ static inline image *read_image(char *filename)
 
 	int i, j;
 
-	InitializeMagick("ale");
 	GetExceptionInfo(&exception);
 	image_info = CloneImageInfo((ImageInfo *) NULL);
 
@@ -87,7 +108,6 @@ static inline image *read_image(char *filename)
 
 	DestroyImage(mi);
 	DestroyImageInfo(image_info);
-	DestroyMagick();
 
 	return im;
 }	
@@ -97,6 +117,9 @@ static inline image *read_image(char *filename)
 }
 #endif
 
+/*
+ * Write an image to a file
+ */
 static inline void write_image(char *filename, image *im) {
 #ifdef USE_MAGICK
 	
@@ -112,7 +135,6 @@ static inline void write_image(char *filename, image *im) {
 
 	int i, j;
 
-	InitializeMagick("ale");
 	GetExceptionInfo(&exception);
 	image_info = CloneImageInfo((ImageInfo *) NULL);
 	strncpy(image_info->filename, filename, MaxTextExtent);
@@ -152,7 +174,6 @@ static inline void write_image(char *filename, image *im) {
 
 	DestroyImage(mi);
 	DestroyImageInfo(image_info);
-	DestroyMagick();
 #else
 	write_ppm(filename, im);
 #endif

@@ -1,3 +1,9 @@
+0.4.0p1
+
+o	Merge a bugfix from Debian ALE package version 0.4.0-1.  Without this
+	fix, an assertion failure can occur when ImageMagick support is
+	enabled.  Original fix implemented by Nick Rusnov.  
+
 0.4.0
 
 o	Add support for general scaling parameters (i.e. all scale 
