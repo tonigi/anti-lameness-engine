@@ -215,6 +215,26 @@ static inline void tsave_next(struct tsave_t *this, struct gpt offset, int is_pr
 	}
 }
 
+static inline void tsave_target(struct tsave_t *this, char *filename) {
+	if (this != NULL) {
+		this->file = fopen(this->filename, "a");
+
+		fprintf(this->file, "# Comment: Target output file is %s\n", filename);
+		
+		fclose(this->file);
+	}
+}
+
+static inline void tsave_orig(struct tsave_t *this, char *filename) {
+	if (this != NULL) {
+		this->file = fopen(this->filename, "a");
+
+		fprintf(this->file, "# Comment: Original frame is %s\n", filename);
+		
+		fclose(this->file);
+	}
+}
+
 static inline void tsave_info(struct tsave_t *this, char *filename) {
 	if (this != NULL) {
 		this->file = fopen(this->filename, "a");

@@ -18,6 +18,7 @@
 */
 
 #include "image.h"
+#include "hf-filter.h"
 #include "image_rw.h"
 #include "gpt.h"
 #include "my_real.h"
@@ -29,7 +30,7 @@
 #include <time.h>
 #include <math.h>
 
-char *version = "0.3.0"
+char *version = "0.3.1"
 #ifdef USE_MAGICK
 		" (File handler: ImageMagick)";
 #else
@@ -52,6 +53,9 @@ static double metric = 2;
 static double match_threshold = 0;
 static double perturb_lower = 0.125;
 static double perturb_upper = 32;
+static double hf_enhance = 0.0;
+static double match_sum = 0;
+static int match_count = 0;
 static struct tload_t *tload = NULL;
 static struct tsave_t *tsave = NULL;
 
@@ -184,6 +188,28 @@ merge(image *target, image *delta, struct gpt t) {
 		}
 }
 
+void filter(image *target, image *source, double res_scale, double hf_enhance) {
+	int i, j, k;
+
+	assert (height(target) == height(source));
+	assert (width(target) == width(source));
+	assert (depth(target) == depth(source));
+
+	for (i = 0; i < height(target); i++)
+		for (j = 0; j < width(target); j++) 
+			for (k = 0; k < 3; k++) {
+				int result = 0.01*hf_enhance*hf_filter(res_scale*2.5,i,j,k, source)
+					   + get_pixel_component(source, i, j, k);
+
+				if (result < 0)
+					result = 0;
+				if (result > 255)
+					result = 255;
+
+				set_pixel_component(target, i, j, k, result);
+			}
+}
+
 
 /*
  * Update an accumulated image with a new input image.
@@ -276,7 +302,6 @@ inline void update() {
 					goto done;
 				}
 			}
-done:
 		
 		} else if (transform_code == 2) {
 
@@ -301,6 +326,7 @@ done:
 
 		} else assert(0);
 
+done:
 		if (!(here < old_here)) {
 			perturb *= 0.5;
 
@@ -362,6 +388,9 @@ done:
 	} else {
 		fprintf(stderr, " no match (%f%% match)", (1 - here) * 100);
 	}
+
+	match_sum += (1 - here) * 100;
+	match_count++;
 }
 
 int main(int argc, char *argv[]){
@@ -415,6 +444,8 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, "\n\n*** Warning: --stepsize is deprecated.  "
 					"Use --perturb-lower instead. ***\n\n\n");
 			sscanf(argv[i] + strlen("--stepsize="), "%lf", &perturb_lower);
+		} else if (!strncmp(argv[i], "--hf-enhance=", strlen("--hf-enhance="))) {
+			sscanf(argv[i] + strlen("--hf-enhance="), "%lf", &hf_enhance);
 		} else if (!strncmp(argv[i], "--perturb-lower=", strlen("--perturb-lower="))) {
 			sscanf(argv[i] + strlen("--perturb-lower="), "%lf", &perturb_lower);
 		} else if (!strncmp(argv[i], "--trans-load=", strlen("--trans-load="))) {
@@ -430,7 +461,8 @@ int main(int argc, char *argv[]){
 			 * as information specific to this argument.
 			 */
 
-			tsave_info(tsave, argv[argc - 1]);
+			tsave_orig(tsave, argv[i]);
+			tsave_target(tsave, argv[argc - 1]);
 
 			fprintf(stderr, "Output file will be '%s'.\n", 
 					argv[argc - 1]);
@@ -459,6 +491,8 @@ int main(int argc, char *argv[]){
 			if (res_scale != 1)
 				scale(input_image, res_scale);
 			update();
+			image_final(input_image);
+			free(input_image);
 
 			write_image(argv[argc - 1], display_image);
 
@@ -468,11 +502,31 @@ int main(int argc, char *argv[]){
 
 	}
 
-	/*
-	 * If there was no output, the user might need more information.
-	 */
+	if (display_image) {
 
-	if (display_image == NULL) {
+		if (res_scale != 1) {
+
+			image *pptarget = clone(display_image);
+						    
+			fprintf(stderr, "Post-enhancing high frequencies");
+
+			filter(pptarget, display_image, res_scale, hf_enhance);
+
+			write_image(argv[argc - 1], pptarget);
+
+			fprintf(stderr, ".\n");
+		}
+
+		tsave_delete(tsave);
+		tload_delete(tload);
+		fprintf(stderr, "Done (%f%% average match).\n", match_sum / match_count);
+		
+	} else {
+
+		/*
+		 * If there was no output, the user might need more information.
+		 */
+
 		fprintf(stderr, 
 			"\n"
 			"Usage: %s [<options>] <input-files> ... <output-file>\n"
@@ -482,6 +536,7 @@ int main(int argc, char *argv[]){
 			"--scale2          Scale input images up by 2\n"
 			"--scale4          Scale input images up by 4\n"
 			"--scale8          Scale input images up by 8\n"
+			"--hf-enhance=n    Post-enhance high freq. details by factor n. (0.0 is default)\n"
 			"\n\n"
 			"Alignment channel options:\n\n"
 			"--align-all       Align images using all color channels\n"
@@ -505,10 +560,6 @@ int main(int argc, char *argv[]){
 			"\n",
 			argv[0], argv[0]);
 		return 1;
-	} else {
-		tsave_delete(tsave);
-		tload_delete(tload);
-		fprintf(stderr, "Done.\n");
 	}
 
 	return 0;
