@@ -126,7 +126,7 @@ public:
 	 */
 
 	point scaled_transform(point p) {
-		return generic_transform(p, t.scaled_width(), t.scaled_height());
+		return generic_transform(p, scaled_width(), scaled_height());
 	}
 
 	/*
@@ -134,7 +134,7 @@ public:
 	 */
 
 	point unscaled_transform(point p) {
-		return generic_transform(p, t.unscaled_width(), t.unscaled_height());
+		return generic_transform(p, unscaled_width(), unscaled_height());
 	}
 
 	/*
@@ -177,7 +177,7 @@ public:
 	 */
 
 	point inverse_transform_scaled(point p) {
-		return inverse_transform_generic(p, t.scaled_width(), t.scaled_height());
+		return inverse_transform_generic(p, scaled_width(), scaled_height());
 	}
 
 	/*
@@ -185,7 +185,7 @@ public:
 	 */
 
 	point inverse_transform_unscaled(point p) {
-		return inverse_transform_generic(p, t.unscaled_width(), t.unscaled_height());
+		return inverse_transform_generic(p, unscaled_width(), unscaled_height());
 	}
 };
 
