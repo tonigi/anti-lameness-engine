@@ -140,9 +140,11 @@ public:
 					return point::undefined();
 				case '#':
 				case ' ':
-				case '\n':
-				case '\r':
 				case '\t':
+					get_new_line();
+					break;
+				case '\r':
+				case '\n':
 					break;
 				case 'V':
 					get_integer(&load_version);
@@ -157,8 +159,6 @@ public:
 				default:
 					error("Unrecognized command");
 			}
-
-			get_new_line();
 		}
 
 		return point::undefined();
