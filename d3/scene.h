@@ -1346,7 +1346,7 @@ public:
 
 		while(reduce_lod());
 
-		while ((improved && count < 40) || cl->next) {
+		while ((improved && count < 10) || cl->next) {
 
 			fprintf(stderr, "unsplitting ...\n");
 
@@ -1366,7 +1366,7 @@ public:
 			 * Write output incrementally, if desired.
 			 */
 
-			if (inc_bit && (!improved || !(rand() % 100)))
+			if (inc_bit && (!improved || !(rand() % 2)))
 			for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
 				fprintf(stderr, "writing image...\n");
 				if (d_out[i] != NULL) {
