@@ -59,9 +59,9 @@ public:
 
 private:
 	void trigger(pixel multiplier) {
-		for (unsigned int i = 0; i < _dimx; i++)
-		for (unsigned int j = 0; j < _dimy; j++)
-			_p[i * _dimy + j] *= multiplier[bayer_color(i, j)];
+		for (unsigned int i = 0; i < _dimy; i++)
+		for (unsigned int j = 0; j < _dimx; j++)
+			_p[i * _dimx + j] *= multiplier[bayer_color(i, j)];
 	}
 
 public:

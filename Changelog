@@ -1,3 +1,7 @@
+0.7.4-pre3
+
+o	Fix an index variable bug in d2::image_bayer_ale_real::trigger().
+
 0.7.4-pre2
 
 o	Modify d2::exposure::one_sided_confidence() so that the 'one-sided'
