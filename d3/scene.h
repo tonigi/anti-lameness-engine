@@ -162,17 +162,17 @@ public:
 				ui::get()->memory_error("triangular approximation of 3D scene");
 		}
 
-		triangle_head[0]->vertices[0] = new point(min[0], min[1]);
-		triangle_head[0]->vertices[1] = new point(max[0], min[1]);
-		triangle_head[0]->vertices[2] = new point(min[0], max[1]);
+		triangle_head[0]->vertices[0] = new point(min[0], min[1], 0);
+		triangle_head[0]->vertices[1] = new point(max[0], min[1], 0);
+		triangle_head[0]->vertices[2] = new point(min[0], max[1], 0);
 
 		triangle_head[0]->neighbors[0] = triangle_head[1];
 
 		triangle_head[0]->color = cl->reference[0]->avg_channel_magnitude();
 
-		triangle_head[1]->vertices[0] = new point(max[0], max[1]);
-		triangle_head[1]->vertices[1] = new point(min[0], max[1]);
-		triangle_head[1]->vertices[2] = new point(max[0], min[1]);
+		triangle_head[1]->vertices[0] = new point(max[0], max[1], 0);
+		triangle_head[1]->vertices[1] = new point(min[0], max[1], 0);
+		triangle_head[1]->vertices[2] = new point(max[0], min[1], 0);
 
 		triangle_head[1]->neighbors[0] = triangle_head[0];
 
@@ -292,12 +292,9 @@ public:
 		int max_depth = 2;
 		int improved = 1;
 		int count = 0;
-		void *visit_data;
 		// time_t start_seconds, cur_seconds, max_seconds = 1200;
 
 		assert (max_depth > 0);
-
-		visit_data = init_visit_data(max_depth);
 
 		// time(&start_seconds);
 
@@ -348,8 +345,6 @@ public:
 			//	continue;
 
 		}
-
-		destroy_visit_data(visit_data);
 	}
 
 #if 0
