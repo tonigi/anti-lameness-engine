@@ -700,6 +700,8 @@ class scene {
 					d2::pixel cb = cl->reference[n]->get_bl(mapped_centroid.xy());
 
 					for (int k = 0; k < 3; k++) {
+						if (!finite(ca[k]) || !finite(cb[k]))
+							continue;
 						error += pow(ca[k] - cb[k], 2);
 						divisor += pow(ca[k] > cb[k] ? ca[k] : cb[k], 2);
 					}
@@ -794,7 +796,7 @@ class scene {
 			if (vertices == NULL)
 				vertices = this->vertices;
 
-			if (neg_color == 0)
+			while (neg_color == 0)
 				neg_color = -((ale_real) (rand() % 1000));
 
 			if (color[0][0] == neg_color)
@@ -816,7 +818,7 @@ class scene {
 		/*
 		 * Accumulate error from neighbors identified with negative coloration
 		 */
-		double accumulate_neighbor_error() {
+		ale_accum accumulate_neighbor_error() {
 
 			if (!(color[0][0] < 0))
 				return 0;
@@ -825,13 +827,30 @@ class scene {
 
 			assert (!(color[0][0] < 0));
 
-			double error = reference_error();
+
+			/*
+			 * XXX: This approach to counting could be improved.
+			 * Summation of weights is probably the best approach.
+			 */
+
+			ale_accum error = reference_error();
+			unsigned int error_count = 0;
+
+			if (finite(error))
+				error_count = 1;
+			else
+				error = 0;
 
 			for (int n = 0; n < 3; n++)
-				if (neighbors[n])
+			if  (neighbors[n]) {
+				ale_accum neighbor_error = neighbors[n]->accumulate_neighbor_error();
+				if (finite(neighbor_error)) {
 					error += neighbors[n]->accumulate_neighbor_error();
+					error_count++;
+				}
+			}
 
-			return error;
+			return (ale_accum) (error / error_count);
 		}
 
 		/*
@@ -875,7 +894,7 @@ class scene {
 			ale_accum step = (vertices[0]->lengthto(*vertices[1])
 				        + vertices[1]->lengthto(*vertices[2])
 					+ vertices[2]->lengthto(*vertices[0])) / 21;
-//					+ vertices[2]->lengthto(*vertices[0])) / 3;
+//					+ vertices[2]->lengthto(*vertices[0])) / 7;
 
 			/*
 			 * There are three possibilities for each triangle visited:
@@ -912,8 +931,8 @@ class scene {
 				 * a given amount the angle between the normals of adjacent triangles.
 				 */
 
-//				if (max_neighbor_angle_2(step * dir) > M_PI / 3)
-//					continue;
+				if (max_neighbor_angle_2(step * dir) > M_PI / 3)
+					continue;
 
 				/*
 				 * Adjust the vertices
@@ -938,6 +957,9 @@ class scene {
 					lowest_error = error;
 					best = dir;
 				}
+
+				if (!finite(error))
+					fprintf(stderr, "dir %d, error %e\n", dir, error);
 			}
 
 			for (int v = 0; v < 3; v++)
@@ -1677,7 +1699,7 @@ public:
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++)
 		if (zbuf[i * im->width() + j])
-			im->pix(i, j) = d2::pixel(1, 1, 1) * _pt.wp_scaled(*zbuf[i * im->width() + j]->vertices[0])[2];
+			im->pix(i, j) = d2::pixel(1, 1, 1) * _pt.wc(zbuf[i * im->width() + j]->centroid())[2];
 
 		free(zbuf);
 
