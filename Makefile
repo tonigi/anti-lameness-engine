@@ -81,7 +81,7 @@ clean:
 	find testsuite -name "*.output.*" | xargs rm -rf
 
 ale-phony: ale.cc ui/ui.cc d2.cc *.h d2/*.h d2/render/*.h d2/render/psf/*.h d3.cc d3/*.h
-	g++ -o ale $(CFLAGS) ale.cc ui/ui.cc d3.cc d2.cc $(LDFLAGS)
+	$(CXX) -o ale $(CFLAGS) ale.cc ui/ui.cc d3.cc d2.cc $(LDFLAGS)
 
 # The following approach to building a Windows binary is probably very
 # dependent on the host platform configuration.  The above target may be a
