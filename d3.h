@@ -22,6 +22,7 @@
  * Top-level header file for classes treating scenes as three-dimensional data.
  */
 
+#include <map>
 #include "time.h"
 #include "d2.h"
 

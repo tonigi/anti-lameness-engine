@@ -36,6 +36,23 @@
 
 class scene {
 
+	struct triangle;
+
+	/*
+	 * Vertex Auxiliary Structure
+	 */
+	struct vertex_aux {
+		point last_position;
+		triangle *last_triangle;
+		int update_id;
+		ale_pos max_angle;
+	};
+
+	/*
+	 * Vertex Auxiliary Map.
+	 */
+	static std::map<point *, vertex_aux> vam;
+
 	/*
 	 * Ray-Triangle intersection utility function
 	 *
@@ -239,6 +256,11 @@ class scene {
 				children[1]->write_tree(print_vertices, level + 1);
 		}
 
+		ale_accum write_tree_wrapper() {
+			write_tree();
+			return 0;
+		}
+
 		/*
 		 * Statistic initialization
 		 */
@@ -311,6 +333,37 @@ class scene {
 		}
 
 		/*
+		 * Traverse a tree of triangles and return an aggregate result
+		 * for a given function, ignoring non-finite values.
+		 *
+		 * TYPE is one of:
+		 *
+		 * 	0 returns the sum
+		 * 	1 returns the maximum
+		 * 	2 returns the minimum
+		 */
+		ale_accum traverse_tree(ale_accum (triangle::*fp)(), int type) {
+
+			if (division_new_vertex != NULL) {
+				ale_accum c0 = children[0]->traverse_tree(fp, type);
+				ale_accum c1 = children[1]->traverse_tree(fp, type);
+
+				if (type == 0)
+					return c0 + c1;
+				if (type == 1)
+					return (c0 > c1) ? c0 : c1;
+				if (type == 2)
+					return (c0 < c1) ? c0 : c1;
+
+				assert(0);
+				return 0;
+			}
+
+			return (this->*fp)();
+
+		}
+
+		/*
 		 * Traverse the sub-graph of triangles around a given vertex,
 		 * and return an aggregate result for a given function,
 		 * ignoring non-finite values.
@@ -318,7 +371,8 @@ class scene {
 		 * TYPE is one of:
 		 *
 		 * 	0 returns the sum
-		 * 	1 returns the maximum (where the minimum result is zero)
+		 * 	1 returns the maximum
+		 * 	2 returns the minimum
 		 *
 		 * STARTING_NODE should be left at its default value of 1 when
 		 * this function is called externally.
@@ -326,20 +380,37 @@ class scene {
 		ale_accum traverse_around_vertex(point *vertex, ale_accum (triangle::*fp)(), int type, 
 				int starting_node = 1) {
 
+			if (starting_node)
+				assert(vertex_ref_maybe(vertex) >= 0);
+
 			/*
-			 * Check whether we've already visited this node.
+			 * If we've already visited this node, or if this node
+			 * does not contain the given vertex, then return immediately.
 			 */
 
-			if (traversal_color == 1) {
+			if (traversal_color == 1 || vertex_ref_maybe(vertex) < 0) {
+				double p0 = +0;
+				double p1 = +1;
+				double n1 = -1;
+				double pinf = p1 / p0;
+				double ninf = n1 / p0;
+
+				assert (!finite(pinf));
+				assert (!finite(ninf));
+				assert (pinf > 1);
+				assert (ninf < -1);
+
+				if (type == 0)
+					return 0;
+				if (type == 1)
+					return ninf;
+				if (type == 2)
+					return pinf;
+
+				assert(0);
+
 				return 0;
 			}
-
-			/*
-			 * Check whether this node contains the given vertex.
-			 */
-
-			if (!vertex_ref_maybe(vertex))
-				return 0;
 
 			/*
 			 * Mark that we've visited this node.
@@ -354,7 +425,7 @@ class scene {
 
 			ale_accum aggregate = (this->*fp)();
 
-			if (!finite(aggregate))
+			if (!finite(aggregate) && type == 0)
 				aggregate = 0;
 
 			for (int v = 0; v < 3; v++)
@@ -372,6 +443,13 @@ class scene {
 					 * Maximum
 					 */
 					if (new_value > aggregate)
+						aggregate = new_value;
+					break;
+				case 2:
+					/*
+					 * Minimum
+					 */
+					if (new_value < aggregate)
 						aggregate = new_value;
 					break;
 				default:
@@ -731,7 +809,15 @@ class scene {
 
 				point unscaled_dnn = a.xproduct(b, c);
 
-				ale_pos angle = point(0, 0, 0).anglebetw(unscaled_dnn, _normal);
+//				ale_pos angle = point(0, 0, 0).anglebetw(unscaled_dnn, _normal);
+				ale_pos angle = point(0, 0, 0).anglebetw(neighbors[n]->normal(), _normal);
+
+//				fprintf(stderr, "mna %p = %f\n", this, angle);
+//				if (angle > M_PI / 1.5) {
+//					fprintf(stderr, "n.a. bet. %p and %p\n", this, neighbors[n]);
+//					fprintf(stderr, "xp normal is %f %f %f\n", unscaled_dnn[0], unscaled_dnn[1], unscaled_dnn[2]);
+//					fprintf(stderr, "method normal is %f %f %f\n", neighbors[n]->normal()[0], neighbors[n]->normal()[1], neighbors[n]->normal()[2]);
+//				}
 
 				if (angle > max_angle)
 					max_angle = angle;
@@ -754,6 +840,22 @@ class scene {
 			}
 
 			return max_angle;
+		}
+
+		/*
+		 * Return the minimum internal angle of a triangle.
+		 */
+		ale_accum min_internal_angle() {
+			ale_pos min_angle = M_PI;
+
+			for (int v = 0; v < 3; v++) {
+				ale_pos angle = vertices[v]->anglebetw(*vertices[(v + 1) % 3], *vertices[(v + 2) % 3]);
+
+				if (angle < min_angle)
+					min_angle = angle;
+			}
+
+			return min_angle;
 		}
 
 		/*
@@ -1016,11 +1118,38 @@ class scene {
 		}
 
 		/*
+		 * Display information about vertices.
+		 */
+		ale_accum report_on_vertices() {
+			fprintf(stderr, "Triangle %p\n", this);
+			for (int v = 0; v < 3; v++) {
+				vertex_aux va = vam[vertices[v]];
+
+				fprintf(stderr, " Vertex %d\n", v);
+				fprintf(stderr, "  Position       %f %f %f\n", (*vertices[v])[0],
+						                         (*vertices[v])[1],
+									 (*vertices[v])[2]);
+				fprintf(stderr, "  Last position  %f %f %f\n", va.last_position[0],
+						                              va.last_position[1],
+									      va.last_position[2]);
+				fprintf(stderr, "  Last triangle  %p\n", va.last_triangle);
+				fprintf(stderr, "  Update ID:     %lu\n", va.update_id);
+				fprintf(stderr, "  Maximum angle: %f\n", va.max_angle);
+			}
+
+			return 0;
+		}
+
+			
+
+		/*
 		 * Adjust vertices according to mapped frames.
 		 *
 		 * Return non-zero if an adjustment is made.
 		 */
 		int adjust_vertices() {
+			static unsigned long int update_id = 0;
+
 			if (children[0] && children[1]) {
 				return children[0]->adjust_vertices()
 				     | children[1]->adjust_vertices();
@@ -1079,6 +1208,11 @@ class scene {
 			assert (isinf(lowest_error) == 1);
 
 			point best_vertices[3] = {*vertices[0], *vertices[1], *vertices[2]};
+			point old_vertices[3] = {*vertices[0], *vertices[1], *vertices[2]};
+
+			ale_pos allowable_max_neighbor_angle = M_PI / 1.5;
+			// ale_pos allowable_max_internal_angle = M_PI / 1.5;
+			// ale_pos allowable_min_internal_angle = M_PI / 8;
 
 			/*
 			 * Test modifications to the current position.
@@ -1099,12 +1233,32 @@ class scene {
 
 				lowest_error = traverse_around_vertex(vertices[v], &triangle::reference_error, 0);
 
+				ale_accum max_angle = traverse_around_vertex(vertices[v], &triangle::max_neighbor_angle, 1);
+				// fprintf(stderr, "tmna %p = %f\n", this, max_angle);
+				if (max_angle > allowable_max_neighbor_angle) {
+					fprintf(stderr, "exceeded allowable: %f\n", max_angle);
+					traverse_around_vertex(vertices[v], &triangle::report_on_vertices, 0);
+					lowest_error += 1000000 * max_angle;
+				}
+
+//				max_angle = traverse_around_vertex(vertices[v], &triangle::max_internal_angle, 1);
+//				if (max_angle > allowable_max_internal_angle) {
+//					lowest_error += 1000000 * max_angle;
+//				}
+//
+//				max_angle = traverse_around_vertex(vertices[v], &triangle::min_internal_angle, 2);
+//				if (max_angle < allowable_min_internal_angle) {
+//					lowest_error += 1000000 * (M_PI - max_angle);
+//				}
+
 				/*
 				 * Perturb the position.
 				 */
 
 				for (int axis = 0; axis < 3; axis++)
 				for (int dir = -1; dir <= 1; dir += 2) {
+
+					ale_accum error = 0;
 
 					/*
 					 * Adjust the vertex under consideration
@@ -1117,26 +1271,25 @@ class scene {
 					 * a given amount the angle between the normals of adjacent triangles.
 					 */
 
-//					if (max_neighbor_angle_2() > M_PI / 3) {
-//						*vertices[v] = best_vertices[v];
-//						continue;
-//					}
-					
 					ale_accum max_angle = traverse_around_vertex(vertices[v], &triangle::max_neighbor_angle, 1);
-					if (max_angle > M_PI / 1.5) {
-						*vertices[v] = best_vertices[v];
-						continue;
+					// fprintf(stderr, "tmna' %p = %f\n", this, max_angle);
+					if (max_angle > allowable_max_neighbor_angle) {
+						error += 1000000 * max_angle;
 					}
 
 					/*
 					 * Limit internal angle sizes.
 					 */
 
-					max_angle = traverse_around_vertex(vertices[v], &triangle::max_internal_angle, 1);
-					if (max_angle > M_PI / 1) {
-						*vertices[v] = best_vertices[v];
-						continue;
-					}
+//					max_angle = traverse_around_vertex(vertices[v], &triangle::max_internal_angle, 1);
+//					if (max_angle > allowable_max_internal_angle) {
+//						error += 1000000 * max_angle;
+//					}
+//
+//					max_angle = traverse_around_vertex(vertices[v], &triangle::min_internal_angle, 2);
+//					if (max_angle < allowable_min_internal_angle) {
+//						error += 1000000 * (M_PI - max_angle);
+//					}
 
 					/*
 					 * Recalculate the color
@@ -1150,8 +1303,12 @@ class scene {
 
 //					color_neighbors_negative();
 //					ale_accum error = accumulate_neighbor_error();
-					ale_accum error = traverse_around_vertex(vertices[v], &triangle::reference_error, 0);
+					error += traverse_around_vertex(vertices[v], &triangle::reference_error, 0);
 					if (error < lowest_error) {
+						vam[vertices[v]].max_angle = max_angle;
+						vam[vertices[v]].last_position = old_vertices[v];
+						vam[vertices[v]].last_triangle = this;
+						vam[vertices[v]].update_id = update_id++;
 						lowest_error = error;
 						improved = 1;
 						best_vertices[v] = *vertices[v];
@@ -1935,8 +2092,12 @@ public:
 
 			// fprintf(stderr, "splitting/unsplitting ...\n");
 
+			fprintf(stderr, "pre-split max %f, %f ", triangle_head[0]->traverse_tree(&triangle::max_neighbor_angle, 1),
+					                         triangle_head[1]->traverse_tree(&triangle::max_neighbor_angle, 1));
 			if (density_test_split())
 				continue;
+			fprintf(stderr, "post-split max %f, %f\n", triangle_head[0]->traverse_tree(&triangle::max_neighbor_angle, 1),
+					                         triangle_head[1]->traverse_tree(&triangle::max_neighbor_angle, 1));
 
 			// fprintf(stderr, "color averaging...\n");
 
@@ -1981,6 +2142,8 @@ public:
 			 */
 
 			if (!improved || count > 40) {
+				fprintf(stderr, "pre-lod-adj max %f, %f ", triangle_head[0]->traverse_tree(&triangle::max_neighbor_angle, 1),
+									 triangle_head[1]->traverse_tree(&triangle::max_neighbor_angle, 1));
 //				triangle_head[0]->write_tree(1);
 //				triangle_head[1]->write_tree(1);
 				fprintf(stderr, ".");
@@ -1992,6 +2155,8 @@ public:
 				increase_lod();
 				count = 0;
 				improved = 1;
+				fprintf(stderr, "post-lod-adj max %f, %f ", triangle_head[0]->traverse_tree(&triangle::max_neighbor_angle, 1),
+									 triangle_head[1]->traverse_tree(&triangle::max_neighbor_angle, 1));
 				continue;
 			}
 
@@ -2004,7 +2169,11 @@ public:
 
 			// fprintf(stderr, "adjusting vertices ...\n");
 
+			fprintf(stderr, "pre-vertex-adj max %f, %f ", triangle_head[0]->traverse_tree(&triangle::max_neighbor_angle, 1),
+								 triangle_head[1]->traverse_tree(&triangle::max_neighbor_angle, 1));
 			improved |= adjust_vertices();
+			fprintf(stderr, "post-vertex-adj max %f, %f ", triangle_head[0]->traverse_tree(&triangle::max_neighbor_angle, 1),
+								 triangle_head[1]->traverse_tree(&triangle::max_neighbor_angle, 1));
 		}
 
 		fprintf(stderr, "color averaging...\n");
