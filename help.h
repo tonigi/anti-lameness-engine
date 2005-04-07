@@ -550,6 +550,10 @@ public:
 			HEADER_SPACE
 			"--3dv <n> <o>     Render file <o> from a 3D model using the <n>th frame view.\n"
 			"--3dd <n> <o>     Render 3D depth information <o> for the view from frame <n>.\n"
+			BETWEEN_SECTIONS
+			"Control point files:\n"
+			HEADER_SPACE
+			"--cpf-load <f>    Load control point data from file <f>"
 			"\n");
 	}
 	void undocumented() {

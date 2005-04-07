@@ -66,10 +66,14 @@ public:
 		return p / a;
 	}
 
-	int defined() {
+	int defined() const {
 		return (!isnan(x[0])
 		     && !isnan(x[1])
 		     && !isnan(x[2]));
+	}
+
+	static int defined(const point &p) {
+		return p.defined();
 	}
 
 	/*

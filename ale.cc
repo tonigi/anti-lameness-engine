@@ -591,6 +591,12 @@ int main(int argc, const char *argv[]){
 			sscanf(argv[i+1], "%lf", &va_parameter);
 			i += 1;
 			user_view_angle = va_parameter * M_PI / 180;
+		} else if (!strcmp(argv[i], "--cpf-load")) {
+			if (i + 1 >= argc)
+				not_enough("--cpf-load");
+
+			d3::cpf::init_loadfile(argv[i+1]);
+			i += 1;
 		} else if (!strcmp(argv[i], "--ui=stream")) {
 			ui::set_stream();
 		} else if (!strcmp(argv[i], "--ui=tty")) {

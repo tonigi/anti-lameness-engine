@@ -496,7 +496,7 @@ class scene {
 		/*
 		 * Handle the internal data details of splitting.
 		 */
-		void split_internals(int v, point *nv) {
+		void split_internals(int v, point *nv, int internal_fixed = 0) {
 			assert (children[0] == NULL);
 			assert (children[1] == NULL);
 			assert (division_new_vertex == NULL);
@@ -518,7 +518,7 @@ class scene {
 				children[c]->children[1] = NULL;
 				children[c]->division_new_vertex = NULL;
 				children[c]->vertex_fixed[(division_vertex + 1 + c) % 3] 
-					= neighbors[division_vertex] ? 0 : 1;
+					= neighbors[division_vertex] ? internal_fixed : 1;
 			}
 
 			for (int i = 0; i < 2; i++) {
@@ -533,25 +533,51 @@ class scene {
 
 		}
 
-		void split(int v, point nv) {
+		void split(int v, point nv, int internal_fixed = 0) {
 			point *nvp = new point(nv);
 
 			assert (nvp);
 
-			split_internals(v, nvp);
+			split_internals(v, nvp, internal_fixed);
 
 			if (!neighbors[v])
 				return;
 
 			int self_ref = self_ref_from_neighbor(v);
 
-			neighbors[v]->split_internals(self_ref, nvp);
+			neighbors[v]->split_internals(self_ref, nvp, internal_fixed);
 
 			children[0]->neighbors[v] = neighbors[v]->children[1];
 			children[1]->neighbors[v] = neighbors[v]->children[0];
 
 			neighbors[v]->children[0]->neighbors[self_ref] = children[1];
 			neighbors[v]->children[1]->neighbors[self_ref] = children[0];
+		}
+
+		void split_nearest_triangle(point nv, int internal_fixed = 1) {
+			if (division_new_vertex) {
+				ale_pos d0 = children[0]->centroid().lengthto(nv);
+				ale_pos d1 = children[1]->centroid().lengthto(nv);
+
+				if (d0 < d1)
+					children[0]->split_nearest_triangle(nv, internal_fixed);
+				else
+					children[1]->split_nearest_triangle(nv, internal_fixed);
+
+				return;
+			}
+
+			ale_pos d[3];
+
+			for (int v = 0; v < 3; v++)
+				d[v] = vertices[v]->lengthto(nv);
+
+			if (d[0] > d[1] && d[0] > d[2]) 
+				split(0, nv, internal_fixed);
+			else if (d[1] > d[2])
+				split(1, nv, internal_fixed);
+			else
+				split(2, nv, internal_fixed);
 		}
 
 		/*
@@ -2022,15 +2048,16 @@ public:
 	 * When using a 3D scene data structure, improvements should occur in 
 	 * two passes:
 	 *
-	 * 	(a) Moving vertices in a direction perpendicular to the surface
-	 * 	normal of one of their adjacent triangles
+	 * 	(a) Moving vertices to reduce error
 	 *
-	 * 	(b) Attempting to subdivide triangles by adding new vertices and
-	 * 	moving these in a direction perpendicular to the surface normal
-	 * 	of the corresponding triangle.
+	 * 	(b) Attempting to subdivide triangles by adding new vertices 
 	 *
 	 * When neither of these approaches results in improvement, then the
 	 * level of detail can be increased.
+	 *
+	 * XXX: the name of this function is horribly misleading.  There isn't
+	 * even a 'search depth' any longer, since there is no longer any
+	 * bounded DFS occurring.
 	 */
 	static void reduce_cost_to_search_depth(const char *d_out[], const char *v_out[], d2::exposure *exp_out, int inc_bit) {
 		int max_depth = 2;
@@ -2040,6 +2067,25 @@ public:
 		assert (max_depth > 0);
 
 		while(reduce_lod());
+
+		/*
+		 * First, add any control points.
+		 */
+
+		point control_point;
+		while(point::defined(control_point = cpf::get())) {
+			ale_pos d0 = triangle_head[0]->centroid().lengthto(control_point);
+			ale_pos d1 = triangle_head[1]->centroid().lengthto(control_point);
+
+			if (d0 < d1)
+				triangle_head[0]->split_nearest_triangle(control_point);
+			else
+				triangle_head[1]->split_nearest_triangle(control_point);
+		}
+
+		/*
+		 * Perform cost-reduction.
+		 */
 
 		for (;;) {
 
