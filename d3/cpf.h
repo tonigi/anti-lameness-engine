@@ -156,7 +156,7 @@ class cpf {
 	/*
 	 * Type A control point record
 	 *
-	 * A <frame 0 coord 0> <frame 0 coord 1> ... <frame n coord 1>
+	 * A <frame 0 coord 1> <frame 0 coord 0> ... <frame n coord 0>
 	 */
 	static point get_type_a() {
 
@@ -176,7 +176,7 @@ class cpf {
 		for (int j = 0; j < 2; j++) {
 			double dp;
 			get_double(&dp);
-			coords[i][j] = dp;
+			coords[i][1 - j] = dp;
 		}
 
 		get_new_line();
@@ -191,13 +191,13 @@ class cpf {
 	/*
 	 * Type B control point record
 	 *
-	 * B <coord 0> <coord 1> <coord 2>
+	 * B <coord 1> <coord 0> <coord 2>
 	 */
 	static point get_type_b() {
 		double d[3];
 
-		get_double(&d[0]);
 		get_double(&d[1]);
+		get_double(&d[0]);
 		get_double(&d[2]);
 
 		get_new_line();
