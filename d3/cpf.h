@@ -72,14 +72,16 @@ class cpf {
 	 */
 	static point calculate_centroid(point *points, int n) {
 		point sum(0, 0, 0);
+		int count = 0;
 
 		for (int i = 0; i < n; i++) {
 			if (!points[i].defined())
 				continue;
 			sum += points[i];
+			count++;
 		}
 
-		return sum / n;
+		return sum / count;
 	}
 
 	/*
@@ -114,41 +116,54 @@ class cpf {
 		}
 
 		/*
-		 * Calculate the centroid of all points.
-		 */
-
-		point centroid = calculate_centroid(points, n);
-
-		/*
 		 * For each point, adjust the depth along the view ray to
 		 * minimize the distance from the centroid of the points.
 		 */
 
-		ale_pos diff_bound = 0.01;
-		ale_pos max_diff = diff_bound;
-		do {
-		for (int i = 0; i < n; i++) {
+		ale_pos max_diff = 0;
+		ale_pos prev_max_diff = 0;
+		ale_pos diff_bound = 0.99999;
 
-			if (!points[i].defined())
-				continue;
+		fprintf(stderr, "foo!\n");
+		
+		while (!(max_diff / prev_max_diff > diff_bound) || !finite(max_diff / prev_max_diff)) {
 
-			pt t = align::projective(i);
-			point camera_origin = t.cw(point(0, 0, 0));
+			/*
+			 * Calculate the centroid of all points.
+			 */
 
-			point v = points[i] - camera_origin;
-			ale_pos l = (centroid - camera_origin).norm();
-			ale_pos alpha = camera_origin.anglebetw(points[i], centroid);
+			point centroid = calculate_centroid(points, n);
 
-			point new_point = v / v.norm() * l * cos(alpha);
+//			fprintf(stderr, "md %f pmd %f ratio %f ", max_diff, prev_max_diff, max_diff / prev_max_diff);
+//			fprintf(stderr, "centroid %f %f %f ", centroid[0], centroid[1], centroid[2]);
 
-			ale_pos diff = points[i].lengthto(new_point);
+			prev_max_diff = max_diff;
+			max_diff = 0;
 
-			if (diff > max_diff)
-				max_diff = diff;
+			for (int i = 0; i < n; i++) {
+//				fprintf(stderr, "points[%d] %f %f %f ", i, points[i][0], points[i][1], points[i][2]);
 
-			points[i] = new_point;
+				if (!points[i].defined())
+					continue;
 
-		}} while (max_diff > diff_bound);
+				pt t = align::projective(i);
+				point camera_origin = t.cw(point(0, 0, 0));
+
+				point v = points[i] - camera_origin;
+				ale_pos l = (centroid - camera_origin).norm();
+				ale_pos alpha = camera_origin.anglebetw(points[i], centroid);
+
+				point new_point = camera_origin + v / v.norm() * l * cos(alpha);
+
+				ale_pos diff = points[i].lengthto(new_point);
+
+				if (diff > max_diff)
+					max_diff = diff;
+
+				points[i] = new_point;
+			}
+		}
+		fprintf(stderr, "md %f pmd %f ratio %f ", max_diff, prev_max_diff, max_diff / prev_max_diff);
 
 		return calculate_centroid(points, n);
 	}

@@ -554,40 +554,14 @@ class scene {
 			neighbors[v]->children[1]->neighbors[self_ref] = children[0];
 		}
 
-		void split_nearest_triangle(point nv, int internal_fixed = 1) {
-			if (division_new_vertex) {
-				ale_pos d0 = children[0]->centroid().lengthto(nv);
-				ale_pos d1 = children[1]->centroid().lengthto(nv);
-
-				if (d0 < d1)
-					children[0]->split_nearest_triangle(nv, internal_fixed);
-				else
-					children[1]->split_nearest_triangle(nv, internal_fixed);
-
-				return;
-			}
-
-			ale_pos d[3];
-
-			for (int v = 0; v < 3; v++)
-				d[v] = vertices[v]->lengthto(nv);
-
-			if (d[0] > d[1] && d[0] > d[2]) 
-				split(0, nv, internal_fixed);
-			else if (d[1] > d[2])
-				split(1, nv, internal_fixed);
-			else
-				split(2, nv, internal_fixed);
-		}
-
 		/*
 		 * Split a triangle between the given vertex and the opposite edge's midpoint.
 		 *
 		 * XXX: it might be better to use an angle bisector.
 		 */
 
-		void split(int v) {
-			split(v, (*vertices[(v + 1) % 3] + *vertices[(v + 2) % 3]) / 2);
+		void split_at(int v, int internal_fixed = 0) {
+			split(v, (*vertices[(v + 1) % 3] + *vertices[(v + 2) % 3]) / 2, internal_fixed);
 		}
 
 		/*
@@ -595,7 +569,7 @@ class scene {
 		 * on the size of newly-created angles.
 		 */
 
-		void split() {
+		void split(int internal_fixed = 0) {
 
 			int v;
 			double angle_lbound = 59 * M_PI / 180;
@@ -608,7 +582,7 @@ class scene {
 			assert (v >= 0);
 
 			if (!neighbors[v]) {
-				split(v);
+				split_at(v, internal_fixed);
 				return;
 			}
 
@@ -622,13 +596,22 @@ class scene {
 				 * consequence.
 				 */
 
-				if (division_new_vertex)
+				if (division_new_vertex) {
+
+					if (internal_fixed)
+					for (int c = 0; c < 2; c++) {
+						int ref = children[c]->vertex_ref(division_new_vertex);
+						children[c]->vertex_fixed[ref] = 1;
+					}
+
 					return;
+				}
 
 			}
 
-			split(v);
+			split_at(v, internal_fixed);
 		}
+
 
 #if 0
 		/*
@@ -655,18 +638,18 @@ class scene {
 			for (int v = 0; v < 3; v++)
 			if  (angles[v] > angles[(v + 1) % 3]
 			  && angles[v] > angles[(v + 2) % 3]) {
-				split(v);
+				split_at(v);
 				return;
 			}
 
 			for (int v = 0; v < 3; v++)
 			if  (angles[v] < angles[(v + 1) % 3]
 			  && angles[v] < angles[(v + 2) % 3]) {
-				split((v + 1 + rand() % 2) % 3);
+				split_at((v + 1 + rand() % 2) % 3);
 				return;
 			}
 
-			split(rand() % 3);
+			split_at(rand() % 3);
 		}
 #endif
 
@@ -728,6 +711,11 @@ class scene {
 			neighbors[division_vertex]->unsplit_internals();
 		}
 
+		/*
+		 * Find a triangle to accommodate the new control point NV.
+		 * Cost must be lower than *COST; lowest cost triangle pointer
+		 * is stored in *T.
+		 */
 		int split_on_aux() {
 
 			if (children[0] && children[1]) {
@@ -780,6 +768,265 @@ class scene {
 			point unscaled_normal = vertices[0]->xproduct(*vertices[1], *vertices[2]);
 
 			return (unscaled_normal / fabs(unscaled_normal.norm()));
+		}
+
+		/*
+		 * Intersection between a projected point and the plane of 
+		 * a triangle.
+		 */
+		point projection_intersect(point p, int offset = 0) {
+
+			point v[3] = { (*vertices[(0 + offset) % 3]) - p, 
+				       (*vertices[(1 + offset) % 3]) - p, 
+				       (*vertices[(2 + offset) % 3]) - p };
+
+			return rt_intersect(-normal(), v);
+		}
+
+		int closest_point_is_internal(point p) {
+			point k = projection_intersect(p);
+
+			if (k[1] >= 0 && k[2] >= 0 && k[1] + k[2] <= 1)
+				return 1;
+
+			return 0;
+		}
+
+		/*
+		 * Distance between a point and a triangle.
+		 */
+		ale_pos distance_to(point p) {
+			point k = projection_intersect(p);
+			point vec1 = (*vertices[1]) - (*vertices[0]);
+			point vec2 = (*vertices[2]) - (*vertices[0]);
+			point vec3 = (*vertices[2]) - (*vertices[1]);
+
+			/*
+			 * If the projected point is internal, then return the
+			 * distance to the projected point.
+			 */
+
+			if (k[1] >= 0 && k[2] >= 0 && k[1] + k[2] <= 1) {
+				return fabs(k[0]);
+			}
+
+			/*
+			 * Establish a starting length, and then try various
+			 * distances to triangle boundaries, searching for a
+			 * smaller length.
+			 */
+
+			ale_pos min_length = p.lengthto(*vertices[0]);
+
+			/*
+			 * Search other vertices for a smaller length
+			 */
+
+			for (int v = 1; v < 3; v++)
+				if (p.lengthto(*vertices[v]) < min_length)
+					min_length = p.lengthto(*vertices[v]);
+
+			/*
+			 * Check the edge opposite vertex 2.
+			 */
+
+			ale_pos proj1_len = k[1] + vec1.normalize().dproduct(k[2] * vec2) / vec1.norm();
+			point proj1 = (*vertices[0]) + vec1 * proj1_len;
+
+			if (proj1_len >= 0 && proj1_len <= 1 && p.lengthto(proj1) < min_length)
+				min_length = p.lengthto(proj1);
+
+			/*
+			 * Check the edge opposite vertex 1.
+			 */
+
+			ale_pos proj2_len = k[2] + vec2.normalize().dproduct(k[1] * vec1) / vec2.norm();
+			point proj2 = (*vertices[0]) + vec2 * proj2_len;
+
+			if (proj2_len >= 0 && proj2_len <= 1 && p.lengthto(proj2) < min_length)
+				min_length = p.lengthto(proj2);
+
+			/*
+			 * Check the edge opposite vertex 0.
+			 */
+
+			ale_pos proj3_len = vec3.normalize().dproduct(k[1] * vec1) / vec3.norm()
+				        + vec3.normalize().dproduct(k[2] * vec2) / vec3.norm();
+			point proj3 = (*vertices[1]) + vec3 * proj3_len;
+
+			if (proj3_len >= 0 && proj3_len <= 1 && p.lengthto(proj3) < min_length)
+				min_length = p.lengthto(proj3);
+
+			return min_length;
+		}
+
+		void find_least_cost_triangle(point nv, triangle **t, ale_pos *cost) {
+			assert(point::defined(nv));
+
+			if (division_new_vertex) {
+				children[0]->find_least_cost_triangle(nv, t, cost);
+				children[1]->find_least_cost_triangle(nv, t, cost);
+				return;
+			}
+
+			/*
+			 * Evaluate the distance between the triangle and the
+			 * new control point.
+			 */
+
+			ale_pos this_cost = distance_to(nv);
+			assert(this_cost >= 0);
+			if (this_cost < *cost) {
+				*t = this;
+				*cost = this_cost;
+			}
+
+			return;
+		}
+
+		void add_control_point(point nv) {
+			ale_pos d[3];
+			int nearest[3] = {0, 1, 2};
+
+			/*
+			 * Establish the distance to each vertex.
+			 */
+			for (int v = 0; v < 3; v++) {
+				d[v] = vertices[v]->lengthto(nv);
+				assert (finite(d[v]));
+			}
+
+			/*
+			 * Bubble sort the vertices according to distance.
+			 * (Why not?)
+			 */
+
+			while (!(d[nearest[0]] <= d[nearest[1]] && d[nearest[1]] <= d[nearest[2]])) {
+				for (int v = 0; v < 2; v++) {
+					if (d[nearest[v]] > d[nearest[v + 1]]) {
+						int temp = nearest[v + 1];
+						nearest[v + 1] = nearest[v];
+						nearest[v]     = temp;
+					}
+				}
+			}
+
+			/*
+			 * In the case of an internal projected point, we can
+			 * use any free vertex, or, if no vertices are free,
+			 * then we can split the triangle and use the split
+			 * point, unless the split point is on the surface
+			 * boundary, in which case we need to recurse.
+			 */
+
+			if (closest_point_is_internal(nv)) {
+
+				/*
+				 * First, try to use the closest free vertex.
+				 */
+				for (int v = 0; v < 3; v++) {
+					if (!vertex_fixed[nearest[v]]) {
+						(*vertices[nearest[v]]) = nv;
+						vertex_fixed[nearest[v]] = 1;
+						return;
+					}
+				}
+
+				/*
+				 * No free vertices, so we split the triangle.
+				 */
+
+				split(1);
+
+				/*
+				 * If the split point is shared with a
+				 * neighbor, then we can move it.
+				 */
+				if (neighbors[division_vertex]) {
+					(*division_new_vertex) = nv;
+					return;
+				}
+
+				/*
+				 * Otherwise, we need to recurse.
+				 */
+				ale_pos one = +1;
+				ale_pos zero = +0;
+				ale_pos cost = one / zero;
+				assert (cost > 0);
+				assert (!finite(cost));
+				assert (isinf(cost));
+
+				triangle *lct = NULL;
+
+				find_least_cost_triangle(nv, &lct, &cost);
+
+				assert (lct);
+
+				if (lct)
+					lct->add_control_point(nv);
+				
+				return;
+			}
+
+			/*
+			 * Determine the location of the point in edge
+			 * coordinates.
+			 */
+
+			point k[3];
+			for (int v = 0; v < 3; v++)
+				k[v] = projection_intersect(nv, v);
+
+			/*
+			 * Check whether we can move an existing free vertex.
+			 */
+			for (int v = 0; v < 3; v++) {
+				if (!vertex_fixed[nearest[v]] && k[nearest[v]][1] + k[nearest[v]][2] < 1) {
+					(*vertices[nearest[v]]) = nv;
+					vertex_fixed[nearest[v]] = 1;
+					return;
+				}
+			}
+
+			/*
+			 * Check whether a vertex must be moved, even if non-free.
+			 */
+			for (int v = 0; v < 3; v++) {
+				if (k[v][1] <= 0 && k[v][2] <= 0) {
+					assert (vertex_fixed[v] == 1);
+					point old_point = (*vertices[v]);
+					(*vertices[v]) = nv;
+
+					if (k[v][1] == 0)
+						split_at((v + 1) % 3, 1);
+					else
+						split_at((v + 2) % 3, 1);
+
+					(*division_new_vertex) = old_point;
+					return;
+				}
+			}
+
+			/*
+			 * Now we know that the new point is in an area where
+			 * an edge split can accommodate the point.  Find the
+			 * correct edge to split.
+			 */
+			for (int v = 0; v < 3; v++) {
+				if (k[v][1] > 0 && k[v][2] > 0) {
+					split_at(v, 1);
+					(*division_new_vertex) = nv;
+					return;
+				}
+			}
+
+			/*
+			 * Ideally, we won't get here.  If we do, we can
+			 * probably just throw the point out.
+			 */
+
+			assert(0);
 		}
 
 		point centroid() {
@@ -2073,14 +2320,41 @@ public:
 		 */
 
 		point control_point;
+//		int point_num = 0;
+//		char output_filename[200];
 		while(point::defined(control_point = cpf::get())) {
-			ale_pos d0 = triangle_head[0]->centroid().lengthto(control_point);
-			ale_pos d1 = triangle_head[1]->centroid().lengthto(control_point);
 
-			if (d0 < d1)
-				triangle_head[0]->split_nearest_triangle(control_point);
-			else
-				triangle_head[1]->split_nearest_triangle(control_point);
+			ale_pos one = +1;
+			ale_pos zero = +0;
+
+			ale_pos cost = one / zero;
+			assert (cost > 0);
+			assert (!finite(cost));
+			assert (isinf(cost));
+
+			triangle *lct = NULL;
+			
+			triangle_head[0]->find_least_cost_triangle(control_point, &lct, &cost);
+			triangle_head[1]->find_least_cost_triangle(control_point, &lct, &cost);
+
+			if (lct == NULL)
+				continue;
+
+			lct->add_control_point(control_point);
+
+//			snprintf(output_filename, 199, "xcp_output_%05d.jpg", point_num);
+//
+//			output_filename[0] = 'd';
+//			const d2::image *im = depth(0);
+//			d2::image_rw::write_image(output_filename, im, exp_out, 1, 1);
+//			delete im;
+//
+//			output_filename[0] = 'v';
+//			im = view(0);
+//			d2::image_rw::write_image(output_filename, im, exp_out, 1, 1);
+//			delete im;
+//
+//			point_num++;
 		}
 
 		/*

@@ -117,7 +117,11 @@ public:
 		return point(x[0] - p[0], x[1] - p[1], x[2] - p[2]);
 	}
 
-	point operator/(ale_pos r) {
+	point operator-() const {
+		return point(-x[0], -x[1], -x[2]);
+	}
+
+	point operator/(ale_pos r) const {
 		return point(x[0] / r, x[1] / r, x[2] / r);
 	}
 
@@ -169,6 +173,10 @@ public:
 
 	ale_pos norm() const {
 		return sqrt(normsq());
+	}
+
+	point normalize() const {
+		return operator/(norm());
 	}
 
 	ale_pos lengthtosq(point p) const {
