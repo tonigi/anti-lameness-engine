@@ -537,6 +537,18 @@ public:
 	static pt projective(unsigned int n) {
 		return pt(d2::align::of(n), of(n), angle_of(n));
 	}
+
+	static void adjust_translation(unsigned int n, int d, ale_pos x) {
+		alignment_array[n].modify_translation(d, x);
+	}
+
+	static void adjust_rotation(unsigned int n, int d, ale_pos x) {
+		alignment_array[n].modify_rotation(d, x);
+	}
+
+	static void adjust_view_angle(ale_pos x) {
+		_init_angle += x;
+	}
 };
 
 #endif

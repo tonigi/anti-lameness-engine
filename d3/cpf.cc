@@ -31,3 +31,7 @@ int cpf::load_version = -1;
 const char *cpf::load_n = NULL;
 const char *cpf::save_n = NULL;
 int cpf::save_version = 0;
+
+struct cpf::control_point *cpf::cp_array = NULL;
+unsigned int cpf::cp_array_max = 0;
+unsigned int cpf::cp_index = 0;

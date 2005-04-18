@@ -1231,6 +1231,16 @@ class scene {
 
 			error /= divisor;
 
+			/*
+			 * Add edge length error.
+			 */
+
+			ale_pos edge_multiplier = 0.001;
+
+			error += ((*vertices[0]).lengthto(*vertices[1])
+			        + (*vertices[0]).lengthto(*vertices[2])
+			        + (*vertices[1]).lengthto(*vertices[2])) * edge_multiplier;
+
 			return error;
 
 		}
