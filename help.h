@@ -555,7 +555,7 @@ public:
 			HEADER_SPACE
 			"--cpf-load=<f>    Load control point data from file <f>\n"
 			BETWEEN_SECTIONS
-			"Control-point-based camera realignment:"
+			"Control-point-based camera realignment:\n"
 			HEADER_SPACE
 			"--cpp-upper=<x>   Set perturbation upper bound <x>, in pixels or degrees\n"
 			"                  [default is 32]\n"

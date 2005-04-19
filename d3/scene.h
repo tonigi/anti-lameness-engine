@@ -38,6 +38,8 @@ class scene {
 
 	struct triangle;
 
+	static ale_pos edge_cost_multiplier;
+
 	/*
 	 * Vertex Auxiliary Structure
 	 */
@@ -1235,11 +1237,9 @@ class scene {
 			 * Add edge length error.
 			 */
 
-			ale_pos edge_multiplier = 0.001;
-
 			error += ((*vertices[0]).lengthto(*vertices[1])
 			        + (*vertices[0]).lengthto(*vertices[2])
-			        + (*vertices[1]).lengthto(*vertices[2])) * edge_multiplier;
+			        + (*vertices[1]).lengthto(*vertices[2])) * edge_cost_multiplier;
 
 			return error;
 
@@ -2088,6 +2088,11 @@ class scene {
 	}
 
 public:
+
+	static void ecm(ale_pos ecm) {
+		edge_cost_multiplier = ecm;
+	}
+	
 	/*
 	 * Initialize 3D scene from 2D scene, using 2D and 3D alignment
 	 * information.
