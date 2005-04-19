@@ -39,6 +39,9 @@ class cpf {
 	static const char *save_n;
 	static int save_version;
 
+	static ale_pos cpp_upper;
+	static ale_pos cpp_lower;
+
 	/*
 	 * TYPE is:
 	 * 	0 type A
@@ -307,6 +310,15 @@ class cpf {
 	}
 
 public:
+
+	static void set_cpp_upper(ale_pos cu) {
+		cpp_upper = cu;
+	}
+
+	static void set_cpp_lower(ale_pos cl) {
+		cpp_lower = cl;
+	}
+
 	static void init_loadfile(const char *filename) {
 		load_n = filename;
 		load_f = fopen(load_n, "r");
@@ -387,8 +399,8 @@ public:
 		 * XXX: should probably be pixel arclength instead of degrees.
 		 */
 
-		ale_pos max_perturbation = 0;
-		ale_pos min_perturbation = 0.125;
+		ale_pos max_perturbation = pow(2, floor(log(cpp_upper) / log(2)));
+		ale_pos min_perturbation = cpp_lower;
 		ale_pos perturbation = max_perturbation;
 
 		fprintf(stderr, "Init error %f\n", current_error);
@@ -401,6 +413,12 @@ public:
 			fprintf(stderr, "P %f AP %f ", perturbation, angular_p);
 
 			do {
+
+				/*
+				 * Minimum frame to adjust
+				 */
+				int M = 1;
+
 				previous_error = current_error;
 
 				ale_accum test_error;
@@ -409,7 +427,7 @@ public:
 				 * Try adjusting camera positions
 				 */
 
-				for (unsigned int i =  0; i <  n;  i++)
+				for (unsigned int i =  M; i <  n;  i++)
 				for (unsigned int d =  0; d <  3;  d++) 
 				for (         int s = -1; s <= 1; s+=2) {
 					align::adjust_translation(i, d, s * perturbation);
@@ -426,7 +444,7 @@ public:
 				 * Try adjusting camera orientations
 				 */
 
-				for (unsigned int i =  0; i <  n;  i++)
+				for (unsigned int i =  M; i <  n;  i++)
 				for (unsigned int d =  0; d <  3;  d++) 
 				for (         int s = -1; s <= 1; s+=2) {
 					align::adjust_rotation(i, d, s * angular_p);

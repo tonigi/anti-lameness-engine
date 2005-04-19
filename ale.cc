@@ -993,6 +993,24 @@ int main(int argc, const char *argv[]){
 			ui::get()->warn("--stepsize is deprecated.  Use --perturb-lower instead");
 			sscanf(argv[i] + strlen("--stepsize="), "%lf", &perturb_lower);
 			d2::align::set_perturb_lower(perturb_lower, 0);
+		} else if (!strncmp(argv[i], "--cpp-upper=", strlen("--cpp-upper="))) {
+			double perturb_upper;
+			int characters;
+			sscanf(argv[i] + strlen("--cpp-upper="), "%lf%n", &perturb_upper,
+			                                                      &characters);
+			if (*(argv[i] + strlen("--cpp-upper=") + characters) == '%')
+				ui::get()->error("--cpp-upper= does not currently accept '%' arguments\n");
+			else
+				d3::cpf::set_cpp_upper(perturb_upper);
+		} else if (!strncmp(argv[i], "--cpp-lower=", strlen("--cpp-lower="))) {
+			double perturb_lower;
+			int characters;
+			sscanf(argv[i] + strlen("--cpp-lower="), "%lf%n", &perturb_lower,
+			                                                      &characters);
+			if (*(argv[i] + strlen("--cpp-lower=") + characters) == '%')
+				ui::get()->error("--cpp-lower= does not currently accept '%' arguments\n");
+			else
+				d3::cpf::set_cpp_lower(perturb_lower);
 		} else if (!strncmp(argv[i], "--hf-enhance=", strlen("--hf-enhance="))) {
 			unsupported::discontinued("--hf-enhance=<x>");
 		} else if (!strncmp(argv[i], "--rot-upper=", strlen("--rot-upper="))) {
@@ -1015,6 +1033,8 @@ int main(int argc, const char *argv[]){
 			d2::tload_delete(tload);
 			tload = d2::tload_new(argv[i] + strlen("--trans-load="));
 			d2::align::set_tload(tload);
+		} else if (!strncmp(argv[i], "--cpf-load=", strlen("--cpf-load="))) {
+			d3::cpf::init_loadfile(argv[i] + strlen("--cpf-load="));
 		} else if (!strncmp(argv[i], "--trans-save=", strlen("--trans-save="))) {
 			tsave_delete(tsave);
 			tsave = d2::tsave_new(argv[i] + strlen("--trans-save="));

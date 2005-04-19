@@ -35,3 +35,6 @@ int cpf::save_version = 0;
 struct cpf::control_point *cpf::cp_array = NULL;
 unsigned int cpf::cp_array_max = 0;
 unsigned int cpf::cp_index = 0;
+
+ale_pos cpf::cpp_lower;
+ale_pos cpf::cpp_upper;

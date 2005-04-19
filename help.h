@@ -551,9 +551,20 @@ public:
 			"--3dv <n> <o>     Render file <o> from a 3D model using the <n>th frame view.\n"
 			"--3dd <n> <o>     Render 3D depth information <o> for the view from frame <n>.\n"
 			BETWEEN_SECTIONS
-			"Control point files:\n"
+			"Control points:\n"
 			HEADER_SPACE
-			"--cpf-load <f>    Load control point data from file <f>"
+			"--cpf-load=<f>    Load control point data from file <f>\n"
+			BETWEEN_SECTIONS
+			"Control-point-based camera realignment:"
+			HEADER_SPACE
+			"--cpp-upper=<x>   Set perturbation upper bound <x>, in pixels or degrees\n"
+			"                  [default is 32]\n"
+			"--cpp-lower=<x>   Set perturbation lower bound <x> for CP camera re-alignment,\n"
+			"                  in pixels or degrees [default is 0.125]\n"
+			BETWEEN_SECTIONS
+			"Cost calculation:\n"
+			HEADER_SPACE
+			"--ecm <x>         Set edge cost multiplier <x>.              [default is 0.001]\n"
 			"\n");
 	}
 	void undocumented() {
