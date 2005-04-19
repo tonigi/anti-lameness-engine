@@ -36,5 +36,5 @@ struct cpf::control_point *cpf::cp_array = NULL;
 unsigned int cpf::cp_array_max = 0;
 unsigned int cpf::cp_index = 0;
 
-ale_pos cpf::cpp_lower;
-ale_pos cpf::cpp_upper;
+ale_pos cpf::cpp_lower = 0.125;
+ale_pos cpf::cpp_upper = 32;
