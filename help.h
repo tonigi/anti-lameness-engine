@@ -541,7 +541,7 @@ public:
 		banner("3D Modeling (very experimental)");
 		fprintf(help_stream,
 			BETWEEN_SECTIONS
-			"3D Modeling:\n"
+			"Rendering:\n"
 			HEADER_SPACE
 			"--3dv <n> <o>     Render file <o> from a 3D model using the <n>th frame view.\n"
 			"--3dd <n> <o>     Render 3D depth information <o> for the view from frame <n>.\n"
