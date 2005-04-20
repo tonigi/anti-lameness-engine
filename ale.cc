@@ -601,6 +601,14 @@ int main(int argc, const char *argv[]){
 			ui::set_stream();
 		} else if (!strcmp(argv[i], "--ui=tty")) {
 			ui::set_tty();
+		} else if (!strcmp(argv[i], "--st")) {
+			if (i + 1 >= argc)
+				not_enough("--st");
+
+			double st_parameter;
+			sscanf(argv[i+1], "%lf", &st_parameter);
+			i += 1;
+			d3::cpf::st(st_parameter);
 		} else if (!strcmp(argv[i], "--ecm")) {
 			if (i + 1 >= argc)
 				not_enough("--ecm");

@@ -42,6 +42,8 @@ class cpf {
 	static ale_pos cpp_upper;
 	static ale_pos cpp_lower;
 
+	static ale_pos stereo_threshold;
+
 	/*
 	 * TYPE is:
 	 * 	0 type A
@@ -479,9 +481,13 @@ public:
 
 		solve_total_system();
 	}
+
+	static void st(ale_pos _st) {
+		stereo_threshold = _st;
+	}
 	
 	static point get() {
-		ale_accum error_bound = 4;
+		ale_accum error_bound = stereo_threshold;
 
 		if (cp_array == NULL) {
 			read_file();

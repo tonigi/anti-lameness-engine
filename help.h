@@ -541,28 +541,29 @@ public:
 		banner("3D Modeling (very experimental)");
 		fprintf(help_stream,
 			BETWEEN_SECTIONS
-			"Camera view:\n"
-			HEADER_SPACE
-			"--view-angle <x>  Set the diagonal view angle to <x> degrees.\n"
-			"                     (Default is 43.7 degrees or device-specific.)\n"
-			BETWEEN_SECTIONS
 			"3D Modeling:\n"
 			HEADER_SPACE
 			"--3dv <n> <o>     Render file <o> from a 3D model using the <n>th frame view.\n"
 			"--3dd <n> <o>     Render 3D depth information <o> for the view from frame <n>.\n"
 			BETWEEN_SECTIONS
-			"Control points:\n"
+			"Camera view angle:\n"
+			HEADER_SPACE
+			"--view-angle <x>  Set the diagonal view angle to <x> degrees.\n"
+			"                     (Default is 43.7 degrees or device-specific.)\n"
+			BETWEEN_SECTIONS
+			"Control point files:\n"
 			HEADER_SPACE
 			"--cpf-load=<f>    Load control point data from file <f>\n"
 			BETWEEN_SECTIONS
-			"Control-point-based camera realignment:\n"
+			"Control point parameters:\n"
 			HEADER_SPACE
-			"--cpp-upper=<x>   Set perturbation upper bound <x>, in pixels or degrees\n"
-			"                  [default is 32]\n"
-			"--cpp-lower=<x>   Set perturbation lower bound <x> for CP camera re-alignment,\n"
+			"--cpp-upper=<x>   Set perturbation upper bound <x> for control-point realignment,\n"
+			"                  in pixels or degrees [default is 32]\n"
+			"--cpp-lower=<x>   Set perturbation lower bound <x> for control-point realignment,\n"
 			"                  in pixels or degrees [default is 0.125]\n"
+			"--st <x>          Set stereo threshold <x>.                        [default is 4]\n"
 			BETWEEN_SECTIONS
-			"Cost calculation:\n"
+			"Model costs:\n"
 			HEADER_SPACE
 			"--ecm <x>         Set edge cost multiplier <x>.              [default is 0.001]\n"
 			"\n");
