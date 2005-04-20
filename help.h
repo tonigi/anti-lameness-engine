@@ -565,7 +565,7 @@ public:
 			BETWEEN_SECTIONS
 			"Model costs:\n"
 			HEADER_SPACE
-			"--ecm <x>         Set edge cost multiplier <x>.              [default is 0.001]\n"
+			"--ecm <x>         Set edge cost multiplier <x>.                [default is 0.001]\n"
 			"\n");
 	}
 	void undocumented() {
