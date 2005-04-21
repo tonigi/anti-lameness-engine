@@ -1239,7 +1239,8 @@ class scene {
 
 			error += ((*vertices[0]).lengthto(*vertices[1])
 			        + (*vertices[0]).lengthto(*vertices[2])
-			        + (*vertices[1]).lengthto(*vertices[2])) * edge_cost_multiplier;
+			        + (*vertices[1]).lengthto(*vertices[2])) * edge_cost_multiplier
+				                                         * cl->sf;
 
 			return error;
 
