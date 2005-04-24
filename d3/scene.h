@@ -28,20 +28,32 @@
 #include "point.h"
 
 /*
- * PLANAR_SUBDIVISION_COUNT must be exactly pow(4, PLANAR_SUBDIVISION_DEPTH)
+ * Variables PLANAR_SUBDIVISION_* impose a lower bound on the size of clusters
+ * of co-planar equal area triangles.  COUNT is the lower bound on the number
+ * of such triangles in a cluster, and DEPTH is the base 4 logarithm of COUNT.
+ *
+ * NB: PLANAR_SUBDIVISION_COUNT must be exactly pow(4, PLANAR_SUBDIVISION_DEPTH),
+ * and both numbers must be integers.
  */
 
-#define PLANAR_SUBDIVISION_DEPTH 1
 #define PLANAR_SUBDIVISION_COUNT 4
+#define PLANAR_SUBDIVISION_DEPTH 1
 
 class scene {
 
 	struct triangle;
 
+	/*
+	 * Multiplier used in calculating the edge-length contribution to 
+	 * model cost.
+	 */
 	static ale_pos edge_cost_multiplier;
 
 	/*
 	 * Vertex Auxiliary Structure
+	 *
+	 * This can be used for storing miscellaneous information about
+	 * vertices.
 	 */
 	struct vertex_aux {
 		point last_position;
@@ -751,7 +763,7 @@ class scene {
 			return 0;
 		}
 
-		ale_pos compute_area(pt _pt) {
+		ale_pos compute_projected_area(pt _pt) {
 			point a = _pt.wp_scaled(*vertices[0]);
 			point b = _pt.wp_scaled(*vertices[1]);
 			point c = _pt.wp_scaled(*vertices[2]);
@@ -773,10 +785,9 @@ class scene {
 		}
 
 		/*
-		 * Intersection between a projected point and the plane of 
-		 * a triangle.
+		 * Find the triangle-coplanar point closest to a given point.
 		 */
-		point projection_intersect(point p, int offset = 0) {
+		point nearest_coplanar_point(point p, int offset = 0) {
 
 			point v[3] = { (*vertices[(0 + offset) % 3]) - p, 
 				       (*vertices[(1 + offset) % 3]) - p, 
@@ -786,7 +797,7 @@ class scene {
 		}
 
 		int closest_point_is_internal(point p) {
-			point k = projection_intersect(p);
+			point k = nearest_coplanar_point(p);
 
 			if (k[1] >= 0 && k[2] >= 0 && k[1] + k[2] <= 1)
 				return 1;
@@ -798,7 +809,7 @@ class scene {
 		 * Distance between a point and a triangle.
 		 */
 		ale_pos distance_to(point p) {
-			point k = projection_intersect(p);
+			point k = nearest_coplanar_point(p);
 			point vec1 = (*vertices[1]) - (*vertices[0]);
 			point vec2 = (*vertices[2]) - (*vertices[0]);
 			point vec3 = (*vertices[2]) - (*vertices[1]);
@@ -862,6 +873,11 @@ class scene {
 			return min_length;
 		}
 
+		/*
+		 * Find the triangle for which point addition incurs the lowest cost.
+		 * Cost is evaluated based on the distance between the point and the
+		 * triangle.
+		 */
 		void find_least_cost_triangle(point nv, triangle **t, ale_pos *cost) {
 			assert(point::defined(nv));
 
@@ -886,6 +902,9 @@ class scene {
 			return;
 		}
 
+		/*
+		 * Add a control point to an existing triangle.
+		 */
 		void add_control_point(point nv) {
 			ale_pos d[3];
 			int nearest[3] = {0, 1, 2};
@@ -900,7 +919,7 @@ class scene {
 
 			/*
 			 * Bubble sort the vertices according to distance.
-			 * (Why not?)
+			 * (Why not?  There are only three vertices.)
 			 */
 
 			while (!(d[nearest[0]] <= d[nearest[1]] && d[nearest[1]] <= d[nearest[2]])) {
@@ -978,7 +997,7 @@ class scene {
 
 			point k[3];
 			for (int v = 0; v < 3; v++)
-				k[v] = projection_intersect(nv, v);
+				k[v] = nearest_coplanar_point(nv, v);
 
 			/*
 			 * Check whether we can move an existing free vertex.
@@ -1118,60 +1137,8 @@ class scene {
 		}
 
 		/*
-		 * Return the maximum angle formed with a neighbor triangle.
-		 * Searches two neighbors deep.
-		 */
-		ale_pos max_neighbor_angle_2(ale_pos displacement = 0) {
-
-			ale_pos max_angle = 0;
-
-			point _normal = normal();
-
-			for (int n = 0; n < 3; n++) {
-				if (neighbors[n] == NULL)
-					continue;
-
-				int srfn = self_ref_from_neighbor(n);
-
-				point a = *neighbors[n]->vertices[srfn];
-				point b = *neighbors[n]->vertices[(srfn + 1) % 3] + displacement * _normal;
-				point c = *neighbors[n]->vertices[(srfn + 2) % 3] + displacement * _normal;
-
-				point unscaled_dnn = a.xproduct(b, c);
-
-				ale_pos angle = point(0, 0, 0).anglebetw(unscaled_dnn, _normal);
-
-				if (angle > max_angle)
-					max_angle = angle;
-
-				/*
-				 * Second level of neighbors
-				 */
-
-				for (int m = 0; m < 2; m++) {
-					if (neighbors[n]->neighbors[(m + srfn + 1) % 3] == NULL)
-						continue;
-					int srfn2 = neighbors[n]->self_ref_from_neighbor((m + srfn + 1) % 3);
-
-					point a = *neighbors[n]->neighbors[m]->vertices[srfn2];
-					point b = *neighbors[n]->neighbors[m]->vertices[(srfn2 + 1) % 3] + (1 - m) * displacement * _normal;
-					point c = *neighbors[n]->neighbors[m]->vertices[(srfn2 + 2) % 3] + m * displacement * _normal;;
-
-					point unscaled_dnn2 = a.xproduct(b, c);
-
-					ale_pos angle = point(0, 0, 0).anglebetw(unscaled_dnn, unscaled_dnn2);
-
-					if (angle > max_angle)
-						max_angle = angle;
-				}
-			}
-
-			return max_angle;
-		}
-
-		/*
 		 * Calculate the error between the model and the reference
-		 * images.
+		 * images.  Also includes edge length costs.
 		 */
 		ale_accum reference_error() {
 			assert(!children[0] && !children[1]);
@@ -1317,72 +1284,6 @@ class scene {
 				this->color[e] = color;
 				this->weight[e] = weight;
 			}
-		}
-
-		/*
-		 * Color all neighbors (containing at least one of the given
-		 * set of vertices) with a negative color.
-		 */
-		void color_neighbors_negative(point *vertices[3] = NULL, ale_real neg_color = 0) {
-
-			if (vertices == NULL)
-				vertices = this->vertices;
-
-			while (neg_color == 0)
-				neg_color = -((ale_real) (rand() % 1000));
-
-			if (color[0][0] == neg_color)
-				return;
-
-			if (!vertex_ref_maybe(vertices[0])
-			 && !vertex_ref_maybe(vertices[1])
-			 && !vertex_ref_maybe(vertices[2]))
-				return;
-
-			color[0][0] = neg_color;
-
-			for (int n = 0; n < 3; n++) {
-				if (neighbors[n])
-					neighbors[n]->color_neighbors_negative(vertices, neg_color);
-			}
-		}
-
-		/*
-		 * Accumulate error from neighbors identified with negative coloration
-		 */
-		ale_accum accumulate_neighbor_error() {
-
-			if (!(color[0][0] < 0))
-				return 0;
-
-			recolor();
-
-			assert (!(color[0][0] < 0));
-
-
-			/*
-			 * XXX: This approach to counting could be improved.
-			 * Summation of weights is probably the best approach.
-			 */
-
-			ale_accum error = reference_error();
-			unsigned int error_count = 0;
-
-			if (finite(error))
-				error_count = 1;
-			else
-				error = 0;
-
-			for (int n = 0; n < 3; n++)
-			if  (neighbors[n]) {
-				ale_accum neighbor_error = neighbors[n]->accumulate_neighbor_error();
-				if (finite(neighbor_error)) {
-					error += neighbors[n]->accumulate_neighbor_error();
-					error_count++;
-				}
-			}
-
-			return (ale_accum) (error / error_count);
 		}
 
 		/*
@@ -1982,7 +1883,7 @@ class scene {
 				 * four.
 				 */
 
-				ale_pos area = t->compute_area(_pt);
+				ale_pos area = t->compute_projected_area(_pt);
 
 				if (area / PLANAR_SUBDIVISION_COUNT <= 4 && split)
 					t->aux_stat = d2::pixel(-1, -1, -1);
@@ -2308,6 +2209,34 @@ public:
 	}
 
 	/*
+	 * Add specified control points to the model
+	 */
+	static void add_control_points() {
+
+		point control_point;
+		while(point::defined(control_point = cpf::get())) {
+
+			ale_pos one = +1;
+			ale_pos zero = +0;
+
+			ale_pos cost = one / zero;
+			assert (cost > 0);
+			assert (!finite(cost));
+			assert (isinf(cost));
+
+			triangle *lct = NULL;
+			
+			triangle_head[0]->find_least_cost_triangle(control_point, &lct, &cost);
+			triangle_head[1]->find_least_cost_triangle(control_point, &lct, &cost);
+
+			if (lct == NULL)
+				continue;
+
+			lct->add_control_point(control_point);
+		}
+	}
+
+	/*
 	 * When using a 3D scene data structure, improvements should occur in 
 	 * two passes:
 	 *
@@ -2329,49 +2258,11 @@ public:
 
 		assert (max_depth > 0);
 
-		while(reduce_lod());
-
 		/*
-		 * First, add any control points.
+		 * To start, use the lowest level-of-detail
 		 */
 
-		point control_point;
-//		int point_num = 0;
-//		char output_filename[200];
-		while(point::defined(control_point = cpf::get())) {
-
-			ale_pos one = +1;
-			ale_pos zero = +0;
-
-			ale_pos cost = one / zero;
-			assert (cost > 0);
-			assert (!finite(cost));
-			assert (isinf(cost));
-
-			triangle *lct = NULL;
-			
-			triangle_head[0]->find_least_cost_triangle(control_point, &lct, &cost);
-			triangle_head[1]->find_least_cost_triangle(control_point, &lct, &cost);
-
-			if (lct == NULL)
-				continue;
-
-			lct->add_control_point(control_point);
-
-//			snprintf(output_filename, 199, "xcp_output_%05d.jpg", point_num);
-//
-//			output_filename[0] = 'd';
-//			const d2::image *im = depth(0);
-//			d2::image_rw::write_image(output_filename, im, exp_out, 1, 1);
-//			delete im;
-//
-//			output_filename[0] = 'v';
-//			im = view(0);
-//			d2::image_rw::write_image(output_filename, im, exp_out, 1, 1);
-//			delete im;
-//
-//			point_num++;
-		}
+		while(reduce_lod());
 
 		/*
 		 * Perform cost-reduction.
@@ -2420,7 +2311,6 @@ public:
 				fprintf(stderr, ".");
 				if (!cl->next)
 					break;
-				fprintf(stderr, "increasing LOD ...\n");
 				increase_lod();
 				count = 0;
 				improved = 1;

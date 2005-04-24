@@ -1497,6 +1497,10 @@ int main(int argc, const char *argv[]){
 				d3::scene::init_from_d2();
 				fprintf(stderr, ".\n");
 
+				fprintf(stderr, "Adding control points and realigning");
+				d3::scene::add_control_points();
+				fprintf(stderr, ".\n");
+
 				fprintf(stderr, "Reducing cost in 3D scene");
 				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, output_exposure, inc);
 				fprintf(stderr, ".\n");

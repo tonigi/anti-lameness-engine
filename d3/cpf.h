@@ -276,7 +276,7 @@ class cpf {
 
 		result = solve_projected_system(coords, n);
 
-		fprintf(stderr, "Coordinate system error: %f\n", measure_projected_error(result, coords, n));
+//		fprintf(stderr, "Coordinate system error: %f\n", measure_projected_error(result, coords, n));
 
 		cp_array[cp_array_max - 1].d2 = coords;
 		cp_array[cp_array_max - 1].d3 = result;
@@ -405,14 +405,15 @@ public:
 		ale_pos min_perturbation = cpp_lower;
 		ale_pos perturbation = max_perturbation;
 
-		fprintf(stderr, "Init error %f\n", current_error);
+		if (perturbation < min_perturbation)
+			fprintf(stderr, " (skipping realignment)");
 
 		while (perturbation >= min_perturbation) {
 
 			ale_accum previous_error;
 			ale_pos angular_p = perturbation / 180 * M_PI;
 
-			fprintf(stderr, "P %f AP %f ", perturbation, angular_p);
+//			fprintf(stderr, "P %f AP %f ", perturbation, angular_p);
 
 			do {
 
@@ -474,7 +475,9 @@ public:
 				}
 			} while (current_error < previous_error);
 
-			fprintf(stderr, "E %f\n", current_error);
+//			fprintf(stderr, "E %f\n", current_error);
+
+			fprintf(stderr, ".");
 
 			perturbation /= 2;
 		}
@@ -506,8 +509,8 @@ public:
 		if (cp_index >= cp_array_max)
 			return point::undefined();
 
-		fprintf(stderr, "Coordinate system error: %f\n", 
-				measure_projected_error(cp_array[cp_index].d3, cp_array[cp_index].d2, d2::image_rw::count()));
+//		fprintf(stderr, "Coordinate system error: %f\n", 
+//				measure_projected_error(cp_array[cp_index].d3, cp_array[cp_index].d2, d2::image_rw::count()));
 
 		return cp_array[cp_index++].d3;
 	}
