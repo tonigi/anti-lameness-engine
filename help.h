@@ -543,10 +543,10 @@ public:
 			BETWEEN_SECTIONS
 			"Rendering:\n"
 			HEADER_SPACE
-			"--3dv <n> <o>     Render file <o> from a 3D model using the <n>th frame view.\n"
-			"--3dd <n> <o>     Render 3D depth information <o> for the view from frame <n>.\n"
+			"--3dv <n> <o>     Render, to file <o>, colors as viewed from frame <n>.\n"
+			"--3dd <n> <o>     Render, to file <o>, depths as viewed from frame <n>.\n"
 			BETWEEN_SECTIONS
-			"Camera view angle:\n"
+			"Capture device view angle:\n"
 			HEADER_SPACE
 			"--view-angle <x>  Set the diagonal view angle to <x> degrees.\n"
 			"                     (Default is 43.7 degrees or device-specific.)\n"
@@ -565,7 +565,7 @@ public:
 			BETWEEN_SECTIONS
 			"Model costs:\n"
 			HEADER_SPACE
-			"--ecm <x>         Set edge cost multiplier <x>.                [default is 0.001]\n"
+			"--ecm <x>         Set edge length cost multiplier <x>.         [default is 0.001]\n"
 			"\n");
 	}
 	void undocumented() {

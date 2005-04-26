@@ -1478,6 +1478,12 @@ int main(int argc, const char *argv[]){
 				d2::image_rw::write_image(ochain_names[opt], ochain[opt]->get_image());
 
 			/*
+			 * Output a summary match statistic.
+			 */
+
+			ui::get()->ale_done((double) d2::align::match_summary());
+
+			/*
 			 * Perform any 3D tasks
 			 */
 
@@ -1485,25 +1491,25 @@ int main(int argc, const char *argv[]){
 
 			if (d3_count > 0) {
 
-				fprintf(stderr, "Initializing view angle to %f degrees", view_angle * 180 / M_PI);
+//				fprintf(stderr, "Initializing view angle to %f degrees", view_angle * 180 / M_PI);
 				d3::align::init_angle(view_angle);
-				fprintf(stderr, ".\n");
+//				fprintf(stderr, ".\n");
 
-				fprintf(stderr, "Initializing 3D alignment from 2D alignment");
+//				fprintf(stderr, "Initializing 3D alignment from 2D alignment");
 				d3::align::init_from_d2();
-				fprintf(stderr, ".\n");
+//				fprintf(stderr, ".\n");
 
-				fprintf(stderr, "Initializing 3D scene from 2D scene");
+//				fprintf(stderr, "Initializing 3D scene from 2D scene");
 				d3::scene::init_from_d2();
-				fprintf(stderr, ".\n");
+//				fprintf(stderr, ".\n");
 
 				fprintf(stderr, "Adding control points and realigning");
 				d3::scene::add_control_points();
-				fprintf(stderr, ".\n");
+				fprintf(stderr, " (okay).\n");
 
 				fprintf(stderr, "Reducing cost in 3D scene");
 				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, output_exposure, inc);
-				fprintf(stderr, ".\n");
+				fprintf(stderr, " (okay).\n");
 
 				for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
 					assert (i < d3_count);
@@ -1544,12 +1550,6 @@ int main(int argc, const char *argv[]){
 
 			tsave_delete(tsave);
 			tload_delete(tload);
-
-			/*
-			 * Output a summary match statistic.
-			 */
-
-			ui::get()->ale_done((double) d2::align::match_summary());
 
 			/*
 			 * We're done.

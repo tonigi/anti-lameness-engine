@@ -365,7 +365,7 @@ public:
 
 			estimate = gd_position(estimate, a, b, c, d, t);
 
-			fprintf(stderr, ".");
+			// fprintf(stderr, ".");
 
 			/*
 			 * Assign transformation values based on the output of
