@@ -309,7 +309,7 @@ public:
 
 	void ale_done(double value) {
 		status.code = status.UNDEFINED;
-		printf("  average match %f%%", value);
+		printf("Average match: %f%%", value);
 		status.code = status.SET_DONE;
 		update();
 	}

@@ -37,9 +37,10 @@ private:
 	}
 
 	void update() {
-		if (status.code == status.FRAME_DONE
-		 || status.code == status.SET_DONE) {
+		if (status.code == status.FRAME_DONE) {
 			printf(".\n");
+		} else if (status.code == status.SET_DONE) {
+			printf("\n");
 		}
 	}
 

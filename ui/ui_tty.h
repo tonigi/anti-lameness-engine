@@ -256,9 +256,12 @@ private:
 	}
 
 	void update() {
-		if (status.code == status_type::FRAME_DONE
-		 || status.code == status_type::SET_DONE) {
+		if (status.code == status_type::FRAME_DONE) {
 			printf(".");
+			fputc('\n', ui_stream);
+			buffer_index = 0;
+			buffer[0] = '\0';
+		} else if (status.code == status_type::SET_DONE) {
 			fputc('\n', ui_stream);
 			buffer_index = 0;
 			buffer[0] = '\0';
