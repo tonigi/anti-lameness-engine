@@ -1,0 +1,74 @@
+#!/usr/bin/perl -w
+
+# Copyright 2005 David Hilvert <dhilvert@auricle.dyndns.org>,
+#                              <dhilvert@ugcs.caltech.edu>
+
+#  This file is part of the Anti-Lamenessing Engine.
+#
+#  The Anti-Lamenessing Engine is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  The Anti-Lamenessing Engine is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with Anti-Lamenessing Engine; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#
+# Script to merge ALE cpf files.  Assumes that the first columns of all files
+# refer to points in the first frame in the sequence.  These are written as the
+# first column in the output, followed by the first file's columns, and then
+# the second file's columns, etc.
+#
+
+print "V 0\n";
+
+$data_count = 0;
+
+foreach (@ARGV) {
+	@file_lines = `cat $_`;
+
+	$first_data_line = 1;
+	$old_data_count = $data_count;
+
+	%used_keys = ();
+
+	foreach (@file_lines) {
+		/^A (\d+ \d+) (.*)$/ or next;
+
+		$key = $1;
+		$data = $2;
+
+		if ($first_data_line) {
+			$data_copy = $data;
+			while ($data_copy =~ s/^\d+ \d+(.*)$/$1/) {
+				$data_count++;
+			}
+			$first_data_line = 0;
+		}
+
+		next if ($used_keys{$key});
+
+		if (!defined($points{$key})) {
+			$points{$key} = " nan nan" x $old_data_count;
+		}
+
+		$points{$key} .= " $data";
+		$used_keys{$key} = 1;
+	}
+
+	foreach $key (keys %points) {
+		if (!defined($used_keys{$key})) {
+			$points{$key} .= " nan nan";
+		}
+	}
+}
+
+foreach $key (keys %points) {
+	print "A $key" . "$points{$key}\n";
+}
