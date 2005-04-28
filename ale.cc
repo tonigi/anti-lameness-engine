@@ -1505,7 +1505,9 @@ int main(int argc, const char *argv[]){
 
 				fprintf(stderr, "Adding control points and realigning");
 				d3::scene::add_control_points();
-				fprintf(stderr, " (okay).\n");
+				fprintf(stderr, ".\n");
+
+				fprintf(stderr, "Final view angle: %f\n", d3::align::angle_of(0) / M_PI * 180);
 
 				fprintf(stderr, "Reducing cost in 3D scene");
 				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, output_exposure, inc);

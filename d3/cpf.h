@@ -60,6 +60,8 @@ class cpf {
 	static unsigned int cp_array_max;
 	static unsigned int cp_index;
 
+	static unsigned int systems_solved;
+
 	static void error(const char *message) {
 		fprintf(stderr, "cpf: Error: %s", message);
 		exit(1);
@@ -86,6 +88,113 @@ class cpf {
 	static void check_version(int v) {
 		if (v > CPF_VERSION_MAX)
 			error("Incompatible version number.");
+	}
+
+	/*
+	 * Type A control point record
+	 *
+	 * A <frame 0 coord 1> <frame 0 coord 0> ... <frame n coord 0>
+	 */
+	static void get_type_a() {
+
+		point result;
+
+		/*
+		 * Get the number of frames.
+		 */
+		int n = d2::image_rw::count();
+
+		/*
+		 * Allocate storage for N frames.
+		 */
+		point *coords = new point[n];
+
+		for (int i = 0; i < n; i++)
+		for (int j = 0; j < 2; j++) {
+			double dp;
+			get_double(&dp);
+			coords[i][1 - j] = dp;
+		}
+
+		cp_array[cp_array_max - 1].d2 = coords;
+		cp_array[cp_array_max - 1].d3 = point::undefined();
+		cp_array[cp_array_max - 1].type = 0;
+	}
+
+	/*
+	 * Type B control point record
+	 *
+	 * B <coord 1> <coord 0> <coord 2>
+	 */
+	static void get_type_b() {
+		double d[3];
+
+		get_double(&d[1]);
+		get_double(&d[0]);
+		get_double(&d[2]);
+
+		cp_array[cp_array_max - 1].d3 = point(d[0], d[1], d[2]);
+		cp_array[cp_array_max - 1].type = 1;
+	}
+
+	/*
+	 * Type C control point record
+	 *
+	 * C <type A data> <type B data>
+	 */
+	static void get_type_c() {
+		get_type_a();
+		get_type_b();
+		cp_array[cp_array_max - 1].type = 2;
+	}
+
+	/*
+	 * Read a control point file.
+	 */
+	static void read_file() {
+		while (load_f && !feof(load_f)) {
+			int command_char;
+
+			command_char = fgetc(load_f);
+
+			switch (command_char) {
+				case EOF:
+					return;
+				case '#':
+				case ' ':
+				case '\t':
+					get_new_line();
+					break;
+				case '\r':
+				case '\n':
+					break;
+				case 'V':
+					get_integer(&load_version);
+					check_version(load_version);
+					get_new_line();
+				        break;
+				case 'A':
+					cp_array = (control_point *) realloc(cp_array, ++cp_array_max * sizeof(control_point));
+					assert(cp_array);
+					get_type_a();
+					get_new_line();
+					break;
+				case 'B':
+					cp_array = (control_point *) realloc(cp_array, ++cp_array_max * sizeof(control_point));
+					assert(cp_array);
+					get_type_b();
+					get_new_line();
+					break;
+				case 'C':
+					cp_array = (control_point *) realloc(cp_array, ++cp_array_max * sizeof(control_point));
+					assert(cp_array);
+					get_type_c();
+					get_new_line();
+					break;
+				default:
+					error("Unrecognized command");
+			}
+		}
 	}
 
 	/*
@@ -248,69 +357,6 @@ class cpf {
 		}
 	}
 
-	/*
-	 * Type A control point record
-	 *
-	 * A <frame 0 coord 1> <frame 0 coord 0> ... <frame n coord 0>
-	 */
-	static void get_type_a() {
-
-		point result;
-
-		/*
-		 * Get the number of frames.
-		 */
-		int n = d2::image_rw::count();
-
-		/*
-		 * Allocate storage for N frames.
-		 */
-		point *coords = new point[n];
-
-		for (int i = 0; i < n; i++)
-		for (int j = 0; j < 2; j++) {
-			double dp;
-			get_double(&dp);
-			coords[i][1 - j] = dp;
-		}
-
-		result = solve_projected_system(coords, n);
-
-//		fprintf(stderr, "Coordinate system error: %f\n", measure_projected_error(result, coords, n));
-
-		cp_array[cp_array_max - 1].d2 = coords;
-		cp_array[cp_array_max - 1].d3 = result;
-		cp_array[cp_array_max - 1].type = 0;
-
-	}
-
-	/*
-	 * Type B control point record
-	 *
-	 * B <coord 1> <coord 0> <coord 2>
-	 */
-	static void get_type_b() {
-		double d[3];
-
-		get_double(&d[1]);
-		get_double(&d[0]);
-		get_double(&d[2]);
-
-		cp_array[cp_array_max - 1].d3 = point(d[0], d[1], d[2]);
-		cp_array[cp_array_max - 1].type = 1;
-	}
-
-	/*
-	 * Type C control point record
-	 *
-	 * C <type A data> <type B data>
-	 */
-	static void get_type_c() {
-		get_type_a();
-		get_type_b();
-		cp_array[cp_array_max - 1].type = 2;
-	}
-
 public:
 
 	static void set_cpp_upper(ale_pos cu) {
@@ -345,52 +391,6 @@ public:
 		fclose(save_f);
 	}
 
-	static void read_file() {
-		while (load_f && !feof(load_f)) {
-			int command_char;
-
-			command_char = fgetc(load_f);
-
-			switch (command_char) {
-				case EOF:
-					return;
-				case '#':
-				case ' ':
-				case '\t':
-					get_new_line();
-					break;
-				case '\r':
-				case '\n':
-					break;
-				case 'V':
-					get_integer(&load_version);
-					check_version(load_version);
-					get_new_line();
-				        break;
-				case 'A':
-					cp_array = (control_point *) realloc(cp_array, ++cp_array_max * sizeof(control_point));
-					assert(cp_array);
-					get_type_a();
-					get_new_line();
-					break;
-				case 'B':
-					cp_array = (control_point *) realloc(cp_array, ++cp_array_max * sizeof(control_point));
-					assert(cp_array);
-					get_type_b();
-					get_new_line();
-					break;
-				case 'C':
-					cp_array = (control_point *) realloc(cp_array, ++cp_array_max * sizeof(control_point));
-					assert(cp_array);
-					get_type_c();
-					get_new_line();
-					break;
-				default:
-					error("Unrecognized command");
-			}
-		}
-	}
-
 	static void adjust_cameras() {
 		ale_accum current_error = measure_total_error();
 		unsigned int n = d2::image_rw::count();
@@ -405,8 +405,15 @@ public:
 		ale_pos min_perturbation = cpp_lower;
 		ale_pos perturbation = max_perturbation;
 
-		if (perturbation < min_perturbation)
+		if (cp_array_max == 0) {
+			fprintf(stderr, " (no points specified)");
+			return;
+		}
+
+		if (perturbation < min_perturbation || cp_array_max == 0) {
 			fprintf(stderr, " (skipping realignment)");
+			return;
+		}
 
 		while (perturbation >= min_perturbation) {
 
@@ -483,36 +490,46 @@ public:
 		}
 
 		solve_total_system();
+
+		fprintf(stderr, " (okay)");
 	}
 
 	static void st(ale_pos _st) {
 		stereo_threshold = _st;
 	}
-	
-	static point get() {
-		ale_accum error_bound = stereo_threshold;
 
-		if (cp_array == NULL) {
+	static void solve_3d() {
+		if (systems_solved)
+			return;
+
+		solve_total_system();
+		adjust_cameras();
+		systems_solved = 1;
+	}
+
+	static unsigned int count() {
+
+		if (cp_array_max == 0)
 			read_file();
-			adjust_cameras();
-		}
 
-		if (cp_array == NULL)
+		return cp_array_max;
+	}
+	
+	static point get(unsigned int index) {
+
+		assert (index < cp_array_max);
+		assert (cp_array != NULL);
+
+		if (!systems_solved)
+			solve_3d();
+
+		if (stereo_threshold < measure_projected_error(cp_array[index].d3,
+				 	                       cp_array[index].d2,
+							       d2::image_rw::count()))
 			return point::undefined();
 
-		while (cp_index < cp_array_max 
-		    && error_bound < measure_projected_error(cp_array[cp_index].d3, 
-		                                             cp_array[cp_index].d2, 
-					                     d2::image_rw::count()))
-			cp_index++;
 
-		if (cp_index >= cp_array_max)
-			return point::undefined();
-
-//		fprintf(stderr, "Coordinate system error: %f\n", 
-//				measure_projected_error(cp_array[cp_index].d3, cp_array[cp_index].d2, d2::image_rw::count()));
-
-		return cp_array[cp_index++].d3;
+		return cp_array[index].d3;
 	}
 
 	static void set(point p) {

@@ -2213,8 +2213,12 @@ public:
 	 */
 	static void add_control_points() {
 
-		point control_point;
-		while(point::defined(control_point = cpf::get())) {
+		for (unsigned int i = 0; i < cpf::count(); i++) {
+
+			point control_point = cpf::get(i);
+
+			if (!control_point.defined())
+				continue;
 
 			ale_pos one = +1;
 			ale_pos zero = +0;
