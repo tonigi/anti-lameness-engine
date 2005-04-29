@@ -1292,6 +1292,13 @@ int main(int argc, const char *argv[]){
 			ochain_names[0] = argv[argc - 1];
 
 			/*
+			 * Handle control point data for alignment
+			 */
+			d2::align::set_cp_count(d3::cpf::count());
+			for (unsigned int ii = 0; ii < d3::cpf::count(); ii++)
+				d2::align::set_cp(ii, d3::cpf::get_2d(i));
+
+			/*
 			 * PSF-match bayer patterns.
 			 */
 

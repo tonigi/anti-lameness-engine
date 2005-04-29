@@ -100,7 +100,7 @@ public:
 		return x[i];
 	}
 
-	d2::point xy() {
+	d2::point xy() const {
 		d2::point result;
 
 		result[0] = x[0];

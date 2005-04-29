@@ -99,3 +99,6 @@ int align::_gs = 0;
 unsigned int align::_gs_mo = 16;
 int *align::ax_parameters = NULL;
 int align::ax_count = 0;
+
+const point **align::cp_array = NULL;
+unsigned int align::cp_count = 0;

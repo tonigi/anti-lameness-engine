@@ -136,6 +136,24 @@ public:
 
 		return acos(cos_of);
 	}
+
+	static point undefined() {
+		double a = 0;
+
+		point p(0, 0);
+
+		return p / a;
+	}
+
+	int defined() const {
+		return (!isnan(x[0])
+		     && !isnan(x[1]));
+	}
+
+	static int defined(const point &p) {
+		return p.defined();
+	}
+
 };
 
 inline point operator*(const point &p, double d) {

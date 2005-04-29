@@ -52,7 +52,7 @@ class cpf {
 	 */
 	struct control_point {
 		int type;
-		point *d2;
+		d2::point *d2;
 		point d3;
 	};
 
@@ -107,7 +107,7 @@ class cpf {
 		/*
 		 * Allocate storage for N frames.
 		 */
-		point *coords = new point[n];
+		d2::point *coords = new d2::point[n];
 
 		for (int i = 0; i < n; i++)
 		for (int j = 0; j < 2; j++) {
@@ -217,7 +217,7 @@ class cpf {
 	/*
 	 * Measure the error between a projected system and a solved coordinate.
 	 */
-	static ale_accum measure_projected_error(point solved, const point coords[], int n) {
+	static ale_accum measure_projected_error(point solved, const d2::point coords[], int n) {
 		ale_accum error = 0;
 		ale_accum divisor = 0;
 
@@ -229,9 +229,7 @@ class cpf {
 
 			point sp = t.wp_unscaled(solved);
 
-			sp[2] = coords[i][2];
-
-			error += (sp - coords[i]).normsq();
+			error += (sp.xy() - coords[i]).normsq();
 			divisor += 1;
 		}
 
@@ -267,14 +265,14 @@ class cpf {
 	 * until the largest adjustment is smaller than some specified lower
 	 * bound.
 	 */
-	static point solve_projected_system(const point points[], int n) {
+	static point solve_projected_system(const d2::point points[], int n) {
 
 		/*
 		 * Copy the passed array.
 		 */
 		point *points_copy = new point[n];
 		for (int i = 0; i < n; i++)
-			points_copy[i] = points[i];
+			points_copy[i] = point(points[i][0], points[i][1], 0);
 
 		/*
 		 * Set an initial depth for each point, and convert it to world
@@ -513,6 +511,16 @@ public:
 			read_file();
 
 		return cp_array_max;
+	}
+
+	static const d2::point *get_2d(unsigned int index) {
+		assert (index < cp_array_max);
+		assert (cp_array != NULL);
+
+		if (cp_array[index].type == 1)
+			return NULL;
+
+		return cp_array[index].d2;
 	}
 	
 	static point get(unsigned int index) {

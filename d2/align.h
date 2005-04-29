@@ -62,6 +62,13 @@ private:
 	static tsave_t *tsave;
 
 	/*
+	 * Control point variables
+	 */
+
+	static const point **cp_array;
+	static unsigned int cp_count;
+
+	/*
 	 * Reference rendering to align against
 	 */
 
@@ -296,6 +303,7 @@ private:
 	 * 2.  Outer:   Alignment reference image outer region
 	 * 3.  All:     Alignment reference image inner and outer regions.
 	 * 4.  Central: Inner if possible; else, best of inner and outer.
+	 * 5.  Points:  Align by control points.
 	 */
 
 	static int _gs;
@@ -1183,7 +1191,7 @@ private:
 		 * Translational global search step
 		 */
 
-		if (perturb >= local_lower && local_gs != 0) {
+		if (perturb >= local_lower && local_gs != 0 && local_gs != 5) {
 			
 			ui::get()->aligning(perturb, lod);
 			
@@ -1864,6 +1872,23 @@ private:
 public:
 
 	/*
+	 * Set the control point count
+	 */
+	static void set_cp_count(unsigned int n) {
+		assert (cp_array == NULL);
+
+		cp_count = n;
+		cp_array = (const point **) malloc(n * sizeof(const point *));
+	}
+
+	/*
+	 * Set control points.
+	 */
+	static void set_cp(unsigned int i, const point *p) {
+		cp_array[i] = p;
+	}
+
+	/*
 	 * Register exposure
 	 */
 	static void exp_register() {
@@ -2179,6 +2204,8 @@ public:
 			_gs = 3;
 		} else if (!strcmp(type, "central")) {
 			_gs = 4;
+		} else if (!strcmp(type, "points")) {
+			_gs = 5;
 		} else {
 			ui::get()->error("bad global search type");
 		}
