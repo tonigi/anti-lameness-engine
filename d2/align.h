@@ -918,6 +918,32 @@ private:
 	}
 
 	/*
+	 * Calculate the RMS error of control points for frame m, with
+	 * transformation t, against control points for earlier frames.
+	 */
+	static ale_accum cp_rms_error(unsigned int m, transformation t) {
+		assert (_keep);
+
+		ale_accum err = 0;
+		ale_accum divisor = 0;
+
+		for (unsigned int i = 0; i < cp_count; i++)
+		for (unsigned int j = 0; j < m;        j++) {
+			const point *p = cp_array[i];
+			point p_ref = p[j];
+			point p_cur = p[m];
+
+			if (!p_ref.defined() || !p_cur.defined())
+				continue;
+
+			err += p_ref.lengthtosq(p_cur);
+			divisor += 1;
+		}
+
+		return sqrt(err / divisor);
+	}
+
+	/*
 	 * Align frame m against the reference.
 	 *
 	 * XXX: the transformation class currently combines ordinary
@@ -1308,6 +1334,98 @@ private:
 			here = lowest_v;
 
 			ui::get()->set_match(here);
+		}
+
+		/*
+		 * Control point alignment
+		 */
+
+		if (local_gs == 5) {
+			/*
+			 * Determine the initial magnitude of change 
+			 */
+			ale_accum lowest_error = cp_rms_error(m, offset);
+			ale_accum adj_p = lowest_error;
+
+			if (adj_p < local_lower)
+				adj_p = local_lower;
+
+			while (adj_p >= local_lower) {
+				transformation test_t = offset;
+				ale_accum test_v;
+				ale_accum adj_s;
+				ale_accum adj_o = 2 * adj_p
+						  / sqrt(pow(scale_clusters[0].input->height(), 2)
+						       + pow(scale_clusters[0].input->width(),  2))
+						  * 180
+						  / M_PI;
+				
+
+				if (offset.is_projective()) {
+					assert (alignment_class == 2);
+					/*
+					 * Projective transformations
+					 */
+
+					for (int i = 0; i < 4; i++)
+					for (int j = 0; j < 2; j++)
+					for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+
+						test_t = offset;
+
+						if (perturb_type == 0)
+							test_t.gpt_modify(j, i, adj_s);
+						else if (perturb_type == 1)
+							test_t.gr_modify(j, i, adj_s);
+						else
+							assert(0);
+
+						test_v = cp_rms_error(m, test_t);
+
+						if (test_v < lowest_error) {
+							lowest_error = test_v;
+							offset = test_t;
+							adj_s += 3 * adj_p;
+						}
+					}
+				} else {
+					/*
+					 * Euclidean transformations
+					 */
+					for (int i = 0; i < 2; i++)
+					for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+
+						test_t = offset;
+
+						test_t.eu_modify(i, adj_s);
+
+						test_v = cp_rms_error(m, test_t);
+
+						if (test_v < lowest_error) {
+							lowest_error = test_v;
+							offset = test_t;
+							adj_s += 3 * adj_p;
+						}
+					}
+
+					if (alignment_class == 1 && adj_o < rot_max)
+					for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
+
+						test_t = offset;
+
+						test_t.eu_modify(2, adj_s);
+
+						test_v = cp_rms_error(m, test_t);
+
+						if (test_v < lowest_error) {
+							lowest_error = test_v;
+							offset = test_t;
+							adj_s += 3 * adj_p;
+						}
+					}
+				}
+				adj_p /= 2;
+			}
 		}
 
 		/*
@@ -2206,6 +2324,7 @@ public:
 			_gs = 4;
 		} else if (!strcmp(type, "points")) {
 			_gs = 5;
+			keep();
 		} else {
 			ui::get()->error("bad global search type");
 		}

@@ -74,6 +74,7 @@ public:
 			"--hr              Rendering (not exposure-related).\n"
 			"--hx              Exposure.\n"
 			"--ht              Transformation data files.\n"
+			"--hc              Control points.\n"
 			"--hl              Filtering (PSFs, rendering chains).\n"
 			"--hd              Devices.\n"
 			"--hi              User Interfaces.\n"
@@ -538,6 +539,15 @@ public:
 #endif
 			"\n");
 	}
+	void cp() {
+		banner("Control Points");
+		fprintf(help_stream,
+			BETWEEN_SECTIONS
+			"Control point files:\n"
+			HEADER_SPACE
+			"--cpf-load=<f>    Load control point data from file <f>\n"
+			"\n");
+	}
 	void d3() {
 		banner("3D Modeling (very experimental)");
 		fprintf(help_stream,
@@ -551,10 +561,6 @@ public:
 			HEADER_SPACE
 			"--view-angle <x>  Set the diagonal view angle to <x> degrees.\n"
 			"                     (Default is 43.7 degrees or device-specific.)\n"
-			BETWEEN_SECTIONS
-			"Control point files:\n"
-			HEADER_SPACE
-			"--cpf-load=<f>    Load control point data from file <f>\n"
 			BETWEEN_SECTIONS
 			"Control point parameters:\n"
 			HEADER_SPACE

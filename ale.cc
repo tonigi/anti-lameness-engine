@@ -241,6 +241,8 @@ int main(int argc, const char *argv[]){
 			hi.interface(), found_help = 1;
 		if (!strcmp(argv[i], "--hv") || all)
 			hi.visp(), found_help = 1;
+		if (!strcmp(argv[i], "--hc") || all)
+			hi.cp(), found_help = 1;
 		if (!strcmp(argv[i], "--h3") || all)
 			hi.d3(), found_help = 1;
 		if (!strcmp(argv[i], "--hz") || all)
