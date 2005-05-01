@@ -38,6 +38,7 @@ unsigned int cpf::cp_index = 0;
 
 ale_pos cpf::cpp_lower = 0.125;
 ale_pos cpf::cpp_upper = 32;
+ale_pos cpf::va_upper  = 32;
 
 ale_pos cpf::stereo_threshold = 4;
 

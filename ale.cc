@@ -1011,6 +1011,15 @@ int main(int argc, const char *argv[]){
 			ui::get()->warn("--stepsize is deprecated.  Use --perturb-lower instead");
 			sscanf(argv[i] + strlen("--stepsize="), "%lf", &perturb_lower);
 			d2::align::set_perturb_lower(perturb_lower, 0);
+		} else if (!strncmp(argv[i], "--va-upper=", strlen("--va-upper="))) {
+			double va_upper;
+			int characters;
+			sscanf(argv[i] + strlen("--va-upper="), "%lf%n", &va_upper,
+			                                                      &characters);
+			if (*(argv[i] + strlen("--va-upper=") + characters) == '%')
+				ui::get()->error("--va-upper= does not accept '%' arguments\n");
+			else
+				d3::cpf::set_va_upper(va_upper);
 		} else if (!strncmp(argv[i], "--cpp-upper=", strlen("--cpp-upper="))) {
 			double perturb_upper;
 			int characters;

@@ -40,6 +40,7 @@ class cpf {
 	static int save_version;
 
 	static ale_pos cpp_upper;
+	static ale_pos va_upper;
 	static ale_pos cpp_lower;
 
 	static ale_pos stereo_threshold;
@@ -365,6 +366,10 @@ public:
 		cpp_lower = cl;
 	}
 
+	static void set_va_upper(ale_pos vau) {
+		va_upper = vau * M_PI / 180;
+	}
+
 	static void init_loadfile(const char *filename) {
 		load_n = filename;
 		load_f = fopen(load_n, "r");
@@ -468,6 +473,7 @@ public:
 				/*
 				 * Try adjusting view angle
 				 */
+				if (angular_p <= va_upper)
 				for (int s = -1; s <= 1; s+=2) {
 					align::adjust_view_angle(s * angular_p);
 					solve_total_system();
