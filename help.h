@@ -568,7 +568,7 @@ public:
 			"                  in pixels or degrees [default is 32]\n"
 			"--cpp-lower=<x>   Set perturbation lower bound <x> for control-point realignment,\n"
 			"                  in pixels or degrees [default is 0.125]\n"
-			"--va-upper=<x>    View angle perturbation upper bound in degrees  [default is 32]\n"
+			"--va-upper=<x>    View-angle perturbation upper bound in degrees  [default is 32]\n"
 			"--st <x>          Set stereo threshold <x>.                        [default is 4]\n"
 			BETWEEN_SECTIONS
 			"Model costs:\n"

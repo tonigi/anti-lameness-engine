@@ -366,8 +366,8 @@ public:
 		cpp_lower = cl;
 	}
 
-	static void set_va_upper(ale_pos vau) {
-		va_upper = vau * M_PI / 180;
+	static void set_va_upper(ale_pos vau_degrees) {
+		va_upper = vau_degrees * M_PI / 180;
 	}
 
 	static void init_loadfile(const char *filename) {
