@@ -930,8 +930,8 @@ private:
 		for (unsigned int i = 0; i < cp_count; i++)
 		for (unsigned int j = 0; j < m;        j++) {
 			const point *p = cp_array[i];
-			point p_ref = p[j];
-			point p_cur = p[m];
+			point p_ref = kept_t[j].transform_scaled(p[j]);
+			point p_cur = t.transform_scaled(p[m]);
 
 			if (!p_ref.defined() || !p_cur.defined())
 				continue;
@@ -1352,6 +1352,7 @@ private:
 
 			while (adj_p >= local_lower) {
 				transformation test_t = offset;
+				int is_improved = 1;
 				ale_accum test_v;
 				ale_accum adj_s;
 				ale_accum adj_o = 2 * adj_p
@@ -1361,69 +1362,76 @@ private:
 						  / M_PI;
 				
 
-				if (offset.is_projective()) {
-					assert (alignment_class == 2);
-					/*
-					 * Projective transformations
-					 */
+				while (is_improved) {
+					is_improved = 0;
+					if (offset.is_projective()) {
+						assert (alignment_class == 2);
+						/*
+						 * Projective transformations
+						 */
 
-					for (int i = 0; i < 4; i++)
-					for (int j = 0; j < 2; j++)
-					for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+						for (int i = 0; i < 4; i++)
+						for (int j = 0; j < 2; j++)
+						for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
 
-						test_t = offset;
+							test_t = offset;
 
-						if (perturb_type == 0)
-							test_t.gpt_modify(j, i, adj_s);
-						else if (perturb_type == 1)
-							test_t.gr_modify(j, i, adj_s);
-						else
-							assert(0);
+							if (perturb_type == 0)
+								test_t.gpt_modify(j, i, adj_s);
+							else if (perturb_type == 1)
+								test_t.gr_modify(j, i, adj_s);
+							else
+								assert(0);
 
-						test_v = cp_rms_error(m, test_t);
+							test_v = cp_rms_error(m, test_t);
 
-						if (test_v < lowest_error) {
-							lowest_error = test_v;
-							offset = test_t;
-							adj_s += 3 * adj_p;
+							if (test_v < lowest_error) {
+								lowest_error = test_v;
+								offset = test_t;
+								adj_s += 3 * adj_p;
+								is_improved = 1;
+							}
 						}
-					}
-				} else {
-					/*
-					 * Euclidean transformations
-					 */
-					for (int i = 0; i < 2; i++)
-					for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+					} else {
+						/*
+						 * Euclidean transformations
+						 */
+						for (int i = 0; i < 2; i++)
+						for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
 
-						test_t = offset;
+							test_t = offset;
 
-						test_t.eu_modify(i, adj_s);
+							test_t.eu_modify(i, adj_s);
 
-						test_v = cp_rms_error(m, test_t);
+							test_v = cp_rms_error(m, test_t);
 
-						if (test_v < lowest_error) {
-							lowest_error = test_v;
-							offset = test_t;
-							adj_s += 3 * adj_p;
+							if (test_v < lowest_error) {
+								lowest_error = test_v;
+								offset = test_t;
+								adj_s += 3 * adj_p;
+								is_improved = 1;
+							}
 						}
-					}
 
-					if (alignment_class == 1 && adj_o < rot_max)
-					for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
+						if (alignment_class == 1 && adj_o < rot_max)
+						for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
 
-						test_t = offset;
+							test_t = offset;
 
-						test_t.eu_modify(2, adj_s);
+							test_t.eu_modify(2, adj_s);
 
-						test_v = cp_rms_error(m, test_t);
+							test_v = cp_rms_error(m, test_t);
 
-						if (test_v < lowest_error) {
-							lowest_error = test_v;
-							offset = test_t;
-							adj_s += 3 * adj_p;
+							if (test_v < lowest_error) {
+								lowest_error = test_v;
+								offset = test_t;
+								adj_s += 3 * adj_p;
+								is_improved = 1;
+							}
 						}
 					}
 				}
+
 				adj_p /= 2;
 			}
 		}
