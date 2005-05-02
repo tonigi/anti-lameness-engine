@@ -19,7 +19,7 @@
 */
 
 /*
- * image_weighted_median.h: Image represented by an array of ale_reals
+ * image_weighted_median.h: Image representing a weighted median of inputs.
  */
 
 #ifndef __image_weighted_median_h__
@@ -29,64 +29,55 @@
 #include "point.h"
 #include "image.h"
 
-class image_weighted_median : public image {
+class image_weighted_median : public image_weighted_avg {
 private:
-	spixel *_p;
 
-private:
-	void trigger(pixel multiplier) {
-		for (unsigned int i = 0; i < _dimx * _dimy; i++)
-			_p[i] *= multiplier;
-	}
+	/*
+	 * XXX: This storage approach may have poor cache characteristics.
+	 * It might be better to localize elements having identical spatial
+	 * coordinates.
+	 */
+	image_ale_real **colors;
+	image_ale_real **weights;
 
 public:
 	image_weighted_median (unsigned int dimy, unsigned int dimx, unsigned int
-			depth, char *name = "anonymous", exposure *exp = NULL) 
-			: image(dimy, dimx, depth, name, exp) {
+			depth, char *name = "anonymous") 
+			: image_weighted_avg(dimy, dimx, depth, name) {
 
-		_p = new spixel[dimx * dimy];
+		colors  = (image_ale_real **) malloc(image_rw::count() * sizeof(image_ale_real *));
+		weights = (image_ale_real **) malloc(image_rw::count() * sizeof(image_ale_real *));
 
-		assert (_p);
+		assert(colors);
+		assert(weights);
 
-		if (!_p) {
+		if (!colors || !weights) {
 			fprintf(stderr, "Could not allocate memory for image data.\n");
 			exit(1);
+		}
+
+		for (unsigned int f = 0; f < image_rw::count(); f++) {
+			colors[f] = new image_ale_real(dimy, dimx, depth);
+			weights[f] = new image_ale_real(dimy, dimx, depth);
+
+			assert(colors[f]);
+			assert(weights[f]);
+
+			if (!colors[f] || !weights[f]) {
+				fprintf(stderr, "Could not allocate memory for image data.\n");
+				exit(1);
+			}
 		}
 	}
 
 	virtual ~image_weighted_median() {
-		delete[] _p;
-	}
+		for (unsigned int f = 0; f < image_rw::count(); f++) {
+			delete colors[f];
+			delete weights[f];
+		}
 
-	spixel &pix(unsigned int y, unsigned int x) {
-		assert (x < _dimx);
-		assert (y < _dimy);
-
-		image_updated();
-
-		return _p[y * _dimx + x];
-	}
-
-	const spixel &pix(unsigned int y, unsigned int x) const {
-		assert (x < _dimx);
-		assert (y < _dimy);
-
-		return _p[y * _dimx + x];
-	}
-
-	ale_real &chan(unsigned int y, unsigned int x, unsigned int k) {
-		return pix(y, x)[k];
-	}
-
-	const ale_real &chan(unsigned int y, unsigned int x, unsigned int k) const {
-		return pix(y, x)[k];
-	}
-
-	/*
-	 * Make a new image suitable for receiving scaled values.
-	 */
-	virtual image *scale_generator(int height, int width, int depth, char *name) const {
-		return new image_weighted_median(height, width, depth, name, _exp);
+		free(colors);
+		free(weights);
 	}
 
 	/*
@@ -96,47 +87,97 @@ public:
 	 */
 	void extend(int top, int bottom, int left, int right) {
 
-		image_weighted_median *is = new image_weighted_median (
-			height() + top  + bottom,
-			 width() + left + right , depth(), name, _exp);
+		for (unsigned int f = 0; f < image_rw::count(); f++) {
+			colors[f]->extend(top, bottom, left, right);
+			weights[f]->extend(top, bottom, left, right);
+		}
 
-		assert(is);
+		_dimx = colors[0]->width();
+		_dimy = colors[0]->height();
+		_offset = colors[0]->offset();
+	}
 
-		unsigned int min_i = (-top > 0)
-			      ? -top
-			      : 0;
+	int accumulate_norender(int i, int j) {
+		return 0;
+	}
 
-		unsigned int min_j = (-left > 0)
-			      ? -left
-			      : 0;
+	/*
+	 * Perform insertion sort on the arrays, where sort is by color.
+	 */
+	void accumulate(int i, int j, int f, pixel new_value, pixel new_weight) {
+		for (unsigned int k = 0; k < 3; k++) {
 
-		unsigned int max_i = (height() < is->height() - top)
-			      ? height()
-			      : is->height() - top;
+			if (new_weight[k] <= 0)
+				continue;
 
-		unsigned int max_j = (width() < is->width() - left)
-			      ? width()
-			      : is->width() - left;
+			for (unsigned int ff = 0; ff < image_rw::count(); ff++) {
+				if (ff == image_rw::count() - 1) {
+					colors[ff]->pix(i, j)[k] = new_value[k];
+					weights[ff]->pix(i, j)[k] += new_weight[k];
+					return;
+				}
+				if (colors[ff]->pix(i, j)[k] > new_value[k]) {
+					for (unsigned int fff = image_rw::count() - 1; fff > ff; fff--) {
+						weights[fff]->pix(i, j)[k] = weights[fff - 1]->pix(i, j)[k] + new_weight[k];
+						colors[fff]->pix(i, j)[k]  = colors[fff - 1]->pix(i, j)[k];
+					}
+					colors[ff]->pix(i, j)[k] = new_value[k];
+					weights[ff]->pix(i, j)[k] = new_weight[k];
+					if (ff > 0)
+						weights[ff]->pix(i, j)[k] += weights[ff - 1]->pix(i, j)[k];
 
-		for (unsigned int i = min_i; i < max_i; i++)
-		for (unsigned int j = min_j; j < max_j; j++) 
-			is->pix(i + top, j + left)
-				= get_pixel(i, j);
+					return;
+				}
+				if (colors[ff]->pix(i, j)[k] == new_value[k]) {
+					for (unsigned int fff = ff; fff < image_rw::count(); fff++)
+						weights[fff]->pix(i, j)[k] += new_weight[k];
+					return;
+				}
+				if ((ff == 0 && weights[ff] == 0)
+				 || (ff >  0 && weights[ff] == weights[ff - 1])) {
+					colors[ff]->pix(i, j)[k] = new_value[k];
+					for (unsigned int fff = ff; fff < image_rw::count(); fff++)
+						weights[fff]->pix(i, j)[k] += new_weight[k];
+				}
+			}
+		}
+	}
 
-		delete[] _p;
+	/*
+	 * XXX: This is inefficient in cases where only one channel is desired.
+	 */
+	pixel get_pixel(unsigned int y, unsigned int x) const {
+		pixel result;
 
-		_p = is->_p;
-		_dimx = is->_dimx;
-		_dimy = is->_dimy;
-		_depth = is->_depth;
-		_offset[0] -= top;
-		_offset[1] -= left;
+		for (int k = 0; k < 3; k++) {
+			ale_real total = weights[image_rw::count() - 1]->chan(y, x, k);
+			ale_real accum = 0;
 
-		image_updated();
+			if (total == 0)
+				return pixel::zero();
 
-		is->_p = NULL;
+			for (unsigned int f = 0; f < image_rw::count(); f++) {
+				accum += weights[f]->chan(y, x, k);
+				if (accum > total / 2) {
+					result[k] = colors[f]->chan(y, x, k);
+					break;
+				} else if (accum == total / 2) {
+					result[k] = (colors[f]->chan(y, x, k)
+					           + colors[f + 1]->chan(y, x, k)) / 2;
+					break;
+				}
+			}
+		}
 
-		delete is;
+		return result;
+	}
+
+	image *get_weights() {
+		return weights[image_rw::count() - 1];
+	}
+
+	image *get_colors() {
+		return this;
 	}
 
 };

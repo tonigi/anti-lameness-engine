@@ -135,6 +135,9 @@ public:
 		} else if (!strpfix("avg:", type)) {
 			i = new invariant(get_SSFE(type + strlen("avg:")));
 			i->set_avg();
+		} else if (!strpfix("median:", type)) {
+			i = new invariant(get_SSFE(type + strlen("median:")));
+			i->set_median();
 		} else {
 			i = new invariant(get_SSFE(type));
 			i->set_avg();

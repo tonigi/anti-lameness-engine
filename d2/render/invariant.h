@@ -32,6 +32,7 @@
 #define avg 2
 #define first 3
 #define last 4
+#define median 5
 
 class invariant {
 public:
@@ -64,6 +65,9 @@ public:
 	int is_last() const {
 		return type == last;
 	}
+	int is_median() const {
+		return type == median;
+	}
 	void set_max() {
 		type = max;
 	}
@@ -78,6 +82,9 @@ public:
 	}
 	void set_last() {
 		type = last;
+	}
+	void set_median() {
+		type = median;
 	}
 	~invariant() {
 		delete s;

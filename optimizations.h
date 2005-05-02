@@ -36,7 +36,7 @@ public:
 	 * actually occurred.
 	 */
 	static d2::image *get_ip_working_image(const d2::image *im) {
-#if OPTIMIZATIONS == 1
+#if 0 && OPTIMIZATIONS == 1 
 		return (d2::image *) im;
 #else
 		return im->clone("IPC Approximation");

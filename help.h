@@ -359,6 +359,7 @@ public:
 			"                     last:<e>       Last defined value using SSFE <e>.\n"
 			"                     max:<e>        Maximum defined value using SSFE <e>.\n"
 			"                     min:<e>        Minimum defined value using SSFE <e>.\n"
+			"                     median:<e>     Median value using SSFE <e>.\n"
 			"                     <e>            Same as avg:<e>.\n"
 			"                  Scaled sampling filters with exclusion (SSFE) <e> are:\n"
 			"                     ex:<s>         Use SSF <s>; honor exclusion regions.\n"

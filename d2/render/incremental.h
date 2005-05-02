@@ -252,7 +252,10 @@ public:
 
 			ui::get()->rendering();
 
-			accum_image = new image_weighted_simple(1, 1, 3, inv);
+			if (inv->is_median())
+				accum_image = new image_weighted_median(1, 1, 3);
+			else
+				accum_image = new image_weighted_simple(1, 1, 3, inv);
 
 			set_extents_by_map(0, t);
 
