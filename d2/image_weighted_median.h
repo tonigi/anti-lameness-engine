@@ -114,7 +114,19 @@ public:
 				if (ff == image_rw::count() - 1) {
 					colors[ff]->pix(i, j)[k] = new_value[k];
 					weights[ff]->pix(i, j)[k] += new_weight[k];
-					return;
+					break;
+				}
+				if ((ff == 0 && weights[ff] == 0)
+				 || (ff >  0 && weights[ff] == weights[ff - 1])) {
+					colors[ff]->pix(i, j)[k] = new_value[k];
+					for (unsigned int fff = ff; fff < image_rw::count(); fff++)
+						weights[fff]->pix(i, j)[k] += new_weight[k];
+					break;
+				}
+				if (colors[ff]->pix(i, j)[k] == new_value[k]) {
+					for (unsigned int fff = ff; fff < image_rw::count(); fff++)
+						weights[fff]->pix(i, j)[k] += new_weight[k];
+					break;
 				}
 				if (colors[ff]->pix(i, j)[k] > new_value[k]) {
 					for (unsigned int fff = image_rw::count() - 1; fff > ff; fff--) {
@@ -126,18 +138,7 @@ public:
 					if (ff > 0)
 						weights[ff]->pix(i, j)[k] += weights[ff - 1]->pix(i, j)[k];
 
-					return;
-				}
-				if (colors[ff]->pix(i, j)[k] == new_value[k]) {
-					for (unsigned int fff = ff; fff < image_rw::count(); fff++)
-						weights[fff]->pix(i, j)[k] += new_weight[k];
-					return;
-				}
-				if ((ff == 0 && weights[ff] == 0)
-				 || (ff >  0 && weights[ff] == weights[ff - 1])) {
-					colors[ff]->pix(i, j)[k] = new_value[k];
-					for (unsigned int fff = ff; fff < image_rw::count(); fff++)
-						weights[fff]->pix(i, j)[k] += new_weight[k];
+					break;
 				}
 			}
 		}
@@ -150,23 +151,37 @@ public:
 		pixel result;
 
 		for (int k = 0; k < 3; k++) {
-			ale_real total = weights[image_rw::count() - 1]->chan(y, x, k);
-			ale_real accum = 0;
+			ale_real midpoint = weights[image_rw::count() - 1]->chan(y, x, k) / 2;
 
-			if (total == 0)
+			if (midpoint == 0)
 				return pixel::zero();
 
-			for (unsigned int f = 0; f < image_rw::count(); f++) {
-				accum += weights[f]->chan(y, x, k);
-				if (accum > total / 2) {
-					result[k] = colors[f]->chan(y, x, k);
-					break;
-				} else if (accum == total / 2) {
-					result[k] = (colors[f]->chan(y, x, k)
-					           + colors[f + 1]->chan(y, x, k)) / 2;
-					break;
-				}
+			/*
+			 * Binary search.
+			 */
+
+			unsigned int l = 0;
+			unsigned int h = image_rw::count() - 1;
+			unsigned int m = h / 2;
+
+			while (h - l > 1) {
+				if (weights[m]->chan(y, x, k) < midpoint)
+					l = m;
+				else
+					h = m;
+				m = (h + l) / 2;
 			}
+
+			if (weights[l]->chan(y, x, k) < midpoint)
+				l = h;
+			if (weights[l]->chan(y, x, k) > midpoint)
+				result[k] = colors[l]->chan(y, x, k);
+			else if (weights[l]->chan(y, x, k) == midpoint)
+				result[k] = (colors[l]->chan(y, x, k)
+					   + colors[l + 1]->chan(y, x, k)) / 2;
+			else
+				assert(0);
+			
 		}
 
 		return result;
