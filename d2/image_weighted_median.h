@@ -33,18 +33,20 @@ class image_weighted_median : public image_weighted_avg {
 private:
 
 	/*
-	 * Colors stores image colors, and is sorted by color.
+	 * Array 'colors' stores image colors, sorted by intensity for each
+	 * channel at each pixel location.
 	 *
-	 * Weights stores weights associated with each color, and is
-	 * represented cumulatively, so that the weights and colors:
-	 *
-	 * Color:  1  2  3  6  7
-	 * Weight: 1  1  1  1  2
-	 *
-	 * Would be represented:
+	 * Array 'weights' stores the weights associated with each color, where
+	 * the weights are represented cumulatively, so that for weights and
+	 * intensities:
 	 *
 	 * Color:  1  2  3  6  7
-	 * Weight: 1  2  3  4  6
+	 * Weight: 2  2  1  1  1
+	 *
+	 * The (cumulative) representation would be:
+	 *
+	 * Color:  1  2  3  6  7
+	 * Weight: 2  4  5  6  7
 	 *
 	 * XXX: This storage approach may have poor cache characteristics.
 	 * It might be better to localize elements having identical spatial
