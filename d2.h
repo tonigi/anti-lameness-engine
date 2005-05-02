@@ -84,6 +84,10 @@ namespace d2 {
 
 namespace d2 {
 #include "d2/image_ale_real.h"
+#include "d2/image_weighted_avg.h"
+#include "d2/image_weighted_simple.h"
+#include "d2/image_weighted_median.h"
+#include "d2/image_zero.h"
 #include "d2/image_rw.h"
 #include "d2/point.h"
 #include "d2/ppm.h"

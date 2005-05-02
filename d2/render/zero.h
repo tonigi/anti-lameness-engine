@@ -56,9 +56,6 @@ public:
 			accum_image = new image_zero((int) floor(im->height() * get_scale_factor()) - trim_size,
 						     (int) floor(im->width()  * get_scale_factor()) - trim_size, 3);
 
-			accum_weight = new image_zero(accum_image->height(),
-					accum_image->width(), accum_image->depth());
-
 			set_extents_by_map(0, t);
 
 			image_rw::close(0);

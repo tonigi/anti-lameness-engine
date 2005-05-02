@@ -29,37 +29,9 @@
 #include "pixel.h"
 #include "exposure/exposure.h"
 
-class image_zero : public image {
-private:
-	pixel toy_pixel;
-
-	void trigger(pixel multiplier) {
-	}
-
+class image_zero : public image_weighted_avg {
 public:
 
-	spixel &pix(unsigned int y, unsigned int x) {
-		assert(0);
-		return toy_pixel;
-	}
-
-	const spixel &pix(unsigned int y, unsigned int x) const {
-		return toy_pixel;
-	}
-
-	ale_real &chan(unsigned int y, unsigned int x, unsigned int k) {
-		assert(0);
-		return toy_pixel[k];
-	}
-
-	const ale_real &chan(unsigned int y, unsigned int x, unsigned int k) const {
-		return toy_pixel[k];
-	}
-
-	void set_pixel(unsigned int y, unsigned int x, spixel p) {
-		assert(0);
-	}
-	
 	pixel get_pixel(unsigned int y, unsigned int x) const {
 		return pixel::zero();
 	}
@@ -237,8 +209,23 @@ public:
 	}
 
 	image_zero(unsigned int dimy, unsigned int dimx, unsigned int depth,
-			char *name = "anonymous") : image(dimy, dimx, depth, name) {
-		toy_pixel = pixel::zero();
+			char *name = "anonymous") : image_weighted_avg(dimy, dimx, depth, name) {
+	}
+
+	int accumulate_norender(int i, int j) {
+		return 1;
+	}
+
+	void accumulate(int i, int j, int f, pixel new_value, pixel new_weight) {
+		assert(0);
+	}
+
+	image *get_colors() {
+		return this;
+	}
+
+	image *get_weights() {
+		return this;
 	}
 };
 

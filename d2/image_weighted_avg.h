@@ -38,8 +38,8 @@ private:
 
 public:
 	image_weighted_avg (unsigned int dimy, unsigned int dimx, unsigned int
-			depth, char *name = "anonymous", exposure *exp = NULL) 
-			: image(dimy, dimx, depth, name, exp) {
+			depth, char *name = "anonymous") 
+			: image(dimy, dimx, depth, name, NULL) {
 	}
 
 	virtual ~image_weighted_avg() {
@@ -77,55 +77,25 @@ public:
 	}
 
 	/*
-	 * Extend the image area to the top, bottom, left, and right,
-	 * initializing the new image areas with black pixels.  Negative values
-	 * shrink the image.
+	 * Pre-transformation check for whether an area should be skipped.
+	 * Takes image weights as an argument.
 	 */
-	void extend(int top, int bottom, int left, int right) {
+	virtual int accumulate_norender(int i, int j) = 0;
 
-		image_weighted_avg *is = new image_weighted_avg (
-			height() + top  + bottom,
-			 width() + left + right , depth(), name, _exp);
+	/*
+	 * Accumulate pixels 
+	 */
+	virtual void accumulate(int i, int j, int f, pixel new_value, pixel new_weight) = 0;
 
-		assert(is);
+	/*
+	 * Get color map
+	 */
+	virtual image *get_colors() = 0;
 
-		unsigned int min_i = (-top > 0)
-			      ? -top
-			      : 0;
-
-		unsigned int min_j = (-left > 0)
-			      ? -left
-			      : 0;
-
-		unsigned int max_i = (height() < is->height() - top)
-			      ? height()
-			      : is->height() - top;
-
-		unsigned int max_j = (width() < is->width() - left)
-			      ? width()
-			      : is->width() - left;
-
-		for (unsigned int i = min_i; i < max_i; i++)
-		for (unsigned int j = min_j; j < max_j; j++) 
-			is->pix(i + top, j + left)
-				= get_pixel(i, j);
-
-		delete[] _p;
-
-		_p = is->_p;
-		_dimx = is->_dimx;
-		_dimy = is->_dimy;
-		_depth = is->_depth;
-		_offset[0] -= top;
-		_offset[1] -= left;
-
-		image_updated();
-
-		is->_p = NULL;
-
-		delete is;
-	}
-
+	/*
+	 * Get weight map
+	 */
+	virtual image *get_weights() = 0;
 };
 
 #endif

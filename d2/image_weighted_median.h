@@ -19,17 +19,17 @@
 */
 
 /*
- * image_ale_real.h: Image represented by an array of ale_reals
+ * image_weighted_median.h: Image represented by an array of ale_reals
  */
 
-#ifndef __image_ale_real_h__
-#define __image_ale_real_h__
+#ifndef __image_weighted_median_h__
+#define __image_weighted_median_h__
 
 #include "exposure/exposure.h"
 #include "point.h"
 #include "image.h"
 
-class image_ale_real : public image {
+class image_weighted_median : public image {
 private:
 	spixel *_p;
 
@@ -40,7 +40,7 @@ private:
 	}
 
 public:
-	image_ale_real (unsigned int dimy, unsigned int dimx, unsigned int
+	image_weighted_median (unsigned int dimy, unsigned int dimx, unsigned int
 			depth, char *name = "anonymous", exposure *exp = NULL) 
 			: image(dimy, dimx, depth, name, exp) {
 
@@ -54,7 +54,7 @@ public:
 		}
 	}
 
-	virtual ~image_ale_real() {
+	virtual ~image_weighted_median() {
 		delete[] _p;
 	}
 
@@ -86,7 +86,7 @@ public:
 	 * Make a new image suitable for receiving scaled values.
 	 */
 	virtual image *scale_generator(int height, int width, int depth, char *name) const {
-		return new image_ale_real(height, width, depth, name, _exp);
+		return new image_weighted_median(height, width, depth, name, _exp);
 	}
 
 	/*
@@ -96,7 +96,7 @@ public:
 	 */
 	void extend(int top, int bottom, int left, int right) {
 
-		image_ale_real *is = new image_ale_real (
+		image_weighted_median *is = new image_weighted_median (
 			height() + top  + bottom,
 			 width() + left + right , depth(), name, _exp);
 

@@ -33,8 +33,7 @@
 
 class incremental : public render {
 protected:
-	image *accum_image;
-	image *accum_weight;
+	image_weighted_avg *accum_image;
 	invariant *inv;
 
 	/*
@@ -45,14 +44,10 @@ protected:
 
 	void set_extents_by_map(unsigned int frame_num, transformation t) {
 
-		assert (accum_weight != NULL);
 		assert (accum_image  != NULL);
 
 		ale_pos extend_offset_i = accum_image->offset()[0];
 		ale_pos extend_offset_j = accum_image->offset()[1];
-
-		assert (accum_weight->offset()[0] == extend_offset_i);
-		assert (accum_weight->offset()[1] == extend_offset_j);
 
 		int extend_top = 0;
 		int extend_bottom = 0;
@@ -105,20 +100,14 @@ protected:
 
 		accum_image->extend(extend_top, extend_bottom, 
 			extend_left, extend_right);
-		accum_weight->extend(extend_top, extend_bottom, 
-			extend_left, extend_right);
 	}	
 
 	void increase_extents_by_map(unsigned int frame_num, transformation t) {
 
-		assert (accum_weight != NULL);
 		assert (accum_image  != NULL);
 
 		ale_pos extend_offset_i = accum_image->offset()[0];
 		ale_pos extend_offset_j = accum_image->offset()[1];
-
-		assert (accum_weight->offset()[0] == extend_offset_i);
-		assert (accum_weight->offset()[1] == extend_offset_j);
 
 		int extend_top = 0;
 		int extend_bottom = 0;
@@ -175,151 +164,7 @@ protected:
 
 		accum_image->extend(extend_top, extend_bottom, 
 			extend_left, extend_right);
-		accum_weight->extend(extend_top, extend_bottom, 
-			extend_left, extend_right);
 	}	
-
-	/*
-	 * Pre-transformation check for whether an area should be skipped.
-	 * Takes image weights as an argument.
-	 */
-	int accumulate_norender(int i, int j, const image *weight) {
-
-		/*
-		 * Initial value
-		 */
-		if (inv->is_first() && weight->get_pixel(i, j)[0] != 0)
-			return 1;
-
-		return 0;
-	}
-
-	/*
-	 * Accumulate pixels into the accumulated image.
-	 */
-
-	void accumulate(image *accum, image *weight, int i, int j, int f, pixel new_value, pixel new_weight) {
-
-		/*
-		 * Perform operations separately for each channel
-		 */
-		for (unsigned int k = 0; k < 3; k++) {
-
-			const double min_weight = 0.001;
-
-			/*
-			 * Cases independent of the old pixel value and weight
-			 * for which the update can be ignored.   XXX: the
-			 * minimum weight used here should probably be less
-			 * than or equal to the certainty floor.
-			 */
-
-			if (fabs(new_weight[k]) < min_weight
-			 || (!inv->is_avg()
-			  && new_weight[k] < render::get_wt())) {
-				continue;
-			}
-
-			/*
-			 * Cases independent of the old pixel value and weight for which
-			 * previous pixel values can be ignored. 
-			 */
-
-			if (inv->is_last() && new_weight[k] >= render::get_wt()) {
-				accum->chan(i, j, k) = new_value[k];
-				weight->chan(i, j, k) = new_weight[k];
-				continue;
-			}
-
-			/*
-			 * Obtain the old pixel weight.
-			 */
-
-			ale_real old_weight = weight->chan(i, j, k);
-
-			/*
-			 * Cases independent of the old pixel value for which the
-			 * update can be ignored.
-			 */
-
-			if (old_weight >= render::get_wt()
-			 && inv->is_first())
-				continue;
-
-			/*
-			 * Cases independent of the old pixel value for which previous
-			 * pixel values can be ignored.
-			 */
-
-			if (old_weight == 0
-			 || (old_weight < render::get_wt()
-			  && !inv->is_avg())) {
-				weight->chan(i, j, k) = new_weight[k];
-				accum ->chan(i, j, k) = new_value[k];
-				continue;
-			}
-
-			/*
-			 * Obtain the old pixel value
-			 */
-
-			ale_real old_value = accum->chan(i, j, k);
-
-			/*
-			 * Cases in which the old pixel value can be ignored
-			 */
-
-			if ((inv->is_max()
-			  && new_value[k] > old_value)
-			 || (inv->is_min()
-			  && new_value[k] < old_value)) {
-				weight->chan(i, j, k) = new_weight[k];
-				accum-> chan(i, j, k) = new_value[k];
-				continue;
-			}
-
-			/*
-			 * Cases in which the new pixel value can be ignored
-			 */
-
-			if ((inv->is_max()
-			  && old_value > new_value[k])
-			 || (inv->is_min()
-			  && old_value < new_value[k])) {
-				continue;
-			}
-
-			/*
-			 * Update the weight
-			 */
-
-			ale_real updated_weight = old_weight + new_weight[k];
-
-			if (fabs(updated_weight) < min_weight) {
-				/*
-				 * XXX: Give up.  Because of the way we
-				 * represent weights and values, we can't
-				 * handle small weights (although we could
-				 * probably handle smaller weights than we
-				 * currently handle).  This could be fixed
-				 * by always storing unnormalized values
-				 * separately from weights, and dividing only
-				 * once, just prior to image output.
-				 */
-				continue;
-			}
-
-			weight->chan(i, j, k) = updated_weight;
-
-			/*
-			 * Update the channel
-			 */
-
-			accum->chan(i, j, k) = (old_weight * accum->chan(i, j, k)
-					      + new_weight[k] * new_value[k])
-				             / updated_weight;
-		}
-	}
 
 	/*
 	 * Merge part of a delta frame with part of the accumulated image using
@@ -332,7 +177,6 @@ protected:
 
 		assert (accum_image != NULL);
 		assert (delta != NULL);
-		assert (accum_weight != NULL);
 
 		const filter::ssfe *_ssfe = inv->ssfe();
 
@@ -344,7 +188,7 @@ protected:
 			if (_ssfe->ex_is_honored() && is_excluded(i, j, frame))
 				continue;
 
-			if (accumulate_norender(i, j, accum_weight))
+			if (accum_image->accumulate_norender(i, j))
 				continue;
 			
 			/*
@@ -356,7 +200,7 @@ protected:
 
 			_ssfe->filtered(i, j, frame, &value, &confidence);
 
-			accumulate(accum_image, accum_weight, i, j, frame, value, confidence);
+			accum_image->accumulate(i, j, frame, value, confidence);
 		}
 	}
 
@@ -367,7 +211,6 @@ public:
 	 */
 	incremental(invariant *inv) {
 		this->inv = inv;
-		accum_weight = NULL;
 		accum_image = NULL;
 	}
 	
@@ -384,7 +227,7 @@ public:
 
 	virtual const image *get_image() {
 		assert (get_step() >= 0);
-		return accum_image;
+		return accum_image->get_colors();
 	}
 
 	/*
@@ -394,7 +237,7 @@ public:
 
 	virtual const image *get_defined() {
 		assert (get_step() >= 0);
-		return accum_weight;
+		return accum_image->get_weights();
 	}
 
 	/*
@@ -409,9 +252,7 @@ public:
 
 			ui::get()->rendering();
 
-			accum_image = new image_ale_real(1, 1, 3);
-
-			accum_weight = new image_ale_real(1, 1, 3);
+			accum_image = new image_weighted_simple(1, 1, 3, inv);
 
 			set_extents_by_map(0, t);
 
@@ -431,7 +272,6 @@ public:
 
 	void free_memory() {
 		delete accum_image;
-		delete accum_weight;
 	}
 };
 

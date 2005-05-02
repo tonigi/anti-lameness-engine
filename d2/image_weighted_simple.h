@@ -20,60 +20,33 @@
 
 /*
  * image_weighted_simple.h: Image representing a weighted average of inputs.
+ * Covers simple cases that require space constant with frame count.
  */
 
 #ifndef __image_weighted_simple_h__
 #define __image_weighted_simple_h__
 
-#include "image_ale_real.h"
-#include "exposure/exposure.h"
-#include "point.h"
-#include "image.h"
+#include "image_weighted_avg.h"
+#include "render/invariant.h"
 
-class image_weighted_simple : public image {
+class image_weighted_simple : public image_weighted_avg {
 private:
-	void trigger(pixel multiplier) {
-		assert(0);
-	}
-
+	invariant *inv;
+	image_ale_real *colors;
+	image_ale_real *weights;
+	
 public:
 	image_weighted_simple (unsigned int dimy, unsigned int dimx, unsigned int
-			depth, char *name = "anonymous", exposure *exp = NULL) 
-			: image(dimy, dimx, depth, name, exp) {
+			depth, invariant *inv, char *name = "anonymous") 
+			: image_weighted_avg(dimy, dimx, depth, name) {
+		colors = new image_ale_real(dimy, dimx, depth);
+		weights = new image_ale_real(dimy, dimx, depth);
+		this->inv = inv;
 	}
 
 	virtual ~image_weighted_simple() {
-	}
-
-	spixel &pix(unsigned int y, unsigned int x) {
-		assert(0);
-		static spixel foo;
-		return foo;
-	}
-
-	const spixel &pix(unsigned int y, unsigned int x) const {
-		assert(0);
-		static spixel foo;
-		return foo;
-	}
-
-	ale_real &chan(unsigned int y, unsigned int x, unsigned int k) {
-		assert(0);
-		static ale_real foo;
-		return foo;
-	}
-
-	const ale_real &chan(unsigned int y, unsigned int x, unsigned int k) const {
-		assert(0);
-		static ale_real foo;
-		return foo;
-	}
-
-	/*
-	 * Make a new image suitable for receiving scaled values.
-	 */
-	virtual image *scale_generator(int height, int width, int depth, char *name) const {
-		return new image_ale_real(height, width, depth, name, _exp);
+		delete colors;
+		delete weights;
 	}
 
 	/*
@@ -82,50 +55,166 @@ public:
 	 * shrink the image.
 	 */
 	void extend(int top, int bottom, int left, int right) {
+		colors->extend(top, bottom, left, right);
+		weights->extend(top, bottom, left, right);
 
-		image_weighted_simple *is = new image_weighted_simple (
-			height() + top  + bottom,
-			 width() + left + right , depth(), name, _exp);
-
-		assert(is);
-
-		unsigned int min_i = (-top > 0)
-			      ? -top
-			      : 0;
-
-		unsigned int min_j = (-left > 0)
-			      ? -left
-			      : 0;
-
-		unsigned int max_i = (height() < is->height() - top)
-			      ? height()
-			      : is->height() - top;
-
-		unsigned int max_j = (width() < is->width() - left)
-			      ? width()
-			      : is->width() - left;
-
-		for (unsigned int i = min_i; i < max_i; i++)
-		for (unsigned int j = min_j; j < max_j; j++) 
-			is->pix(i + top, j + left)
-				= get_pixel(i, j);
-
-		delete[] _p;
-
-		_p = is->_p;
-		_dimx = is->_dimx;
-		_dimy = is->_dimy;
-		_depth = is->_depth;
-		_offset[0] -= top;
-		_offset[1] -= left;
-
-		image_updated();
-
-		is->_p = NULL;
-
-		delete is;
+		_dimx = colors->width();
+		_dimy = colors->height();
+		_offset = colors->offset();
 	}
 
+	/*
+	 * Pre-transformation check for whether an area should be skipped.
+	 * Takes image weights as an argument.
+	 */
+	int accumulate_norender(int i, int j) {
+		/*
+		 * Initial value
+		 */
+		if (inv->is_first() && weights->get_pixel(i, j)[0] != 0)
+			return 1;
+
+		return 0;
+	}
+
+	/*
+	 * Accumulate pixels 
+	 */
+	void accumulate(int i, int j, int f, pixel new_value, pixel new_weight) {
+
+		/*
+		 * Perform operations separately for each channel
+		 */
+		for (unsigned int k = 0; k < 3; k++) {
+
+			const double min_weight = 0.001;
+
+			/*
+			 * Cases independent of the old pixel value and weight
+			 * for which the update can be ignored.   XXX: the
+			 * minimum weight used here should probably be less
+			 * than or equal to the certainty floor.
+			 */
+
+			if (fabs(new_weight[k]) < min_weight
+			 || (!inv->is_avg()
+			  && new_weight[k] < render::get_wt())) {
+				continue;
+			}
+
+			/*
+			 * Cases independent of the old pixel value and weight for which
+			 * previous pixel values can be ignored. 
+			 */
+
+			if (inv->is_last() && new_weight[k] >= render::get_wt()) {
+				colors->chan(i, j, k) = new_value[k];
+				weights->chan(i, j, k) = new_weight[k];
+				continue;
+			}
+
+			/*
+			 * Obtain the old pixel weight.
+			 */
+
+			ale_real old_weight = weights->chan(i, j, k);
+
+			/*
+			 * Cases independent of the old pixel value for which the
+			 * update can be ignored.
+			 */
+
+			if (old_weight >= render::get_wt()
+			 && inv->is_first())
+				continue;
+
+			/*
+			 * Cases independent of the old pixel value for which previous
+			 * pixel values can be ignored.
+			 */
+
+			if (old_weight == 0
+			 || (old_weight < render::get_wt()
+			  && !inv->is_avg())) {
+				weights->chan(i, j, k) = new_weight[k];
+				colors ->chan(i, j, k) = new_value[k];
+				continue;
+			}
+
+			/*
+			 * Obtain the old pixel value
+			 */
+
+			ale_real old_value = colors->chan(i, j, k);
+
+			/*
+			 * Cases in which the old pixel value can be ignored
+			 */
+
+			if ((inv->is_max()
+			  && new_value[k] > old_value)
+			 || (inv->is_min()
+			  && new_value[k] < old_value)) {
+				weights->chan(i, j, k) = new_weight[k];
+				colors-> chan(i, j, k) = new_value[k];
+				continue;
+			}
+
+			/*
+			 * Cases in which the new pixel value can be ignored
+			 */
+
+			if ((inv->is_max()
+			  && old_value > new_value[k])
+			 || (inv->is_min()
+			  && old_value < new_value[k])) {
+				continue;
+			}
+
+			/*
+			 * Update the weight
+			 */
+
+			ale_real updated_weight = old_weight + new_weight[k];
+
+			if (fabs(updated_weight) < min_weight) {
+				/*
+				 * XXX: Give up.  Because of the way we
+				 * represent weights and values, we can't
+				 * handle small weights (although we could
+				 * probably handle smaller weights than we
+				 * currently handle).  This could be fixed
+				 * by always storing unnormalized values
+				 * separately from weights, and dividing only
+				 * once, just prior to image output.
+				 */
+				continue;
+			}
+
+			weights->chan(i, j, k) = updated_weight;
+
+			/*
+			 * Update the channel
+			 */
+
+			colors->chan(i, j, k) = (old_weight * colors->chan(i, j, k)
+					      + new_weight[k] * new_value[k])
+				             / updated_weight;
+		}
+	}
+
+
+	pixel get_pixel(unsigned int y, unsigned int x) const {
+		return colors->get_pixel(y, x);
+	}
+
+	image *get_weights() {
+		return weights;
+	}
+
+	image *get_colors() {
+		return colors;
+	}
 };
 
 #endif
