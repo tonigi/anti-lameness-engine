@@ -19,67 +19,54 @@
 */
 
 /*
- * image_ale_real.h: Image represented by an array of ale_reals
+ * image_weighted_avg.h: Image representing a weighted average of inputs.
  */
 
-#ifndef __image_ale_real_h__
-#define __image_ale_real_h__
+#ifndef __image_weighted_avg_h__
+#define __image_weighted_avg_h__
 
+#include "image_ale_real.h"
 #include "exposure/exposure.h"
 #include "point.h"
 #include "image.h"
 
-class image_ale_real : public image {
-private:
-	spixel *_p;
-
+class image_weighted_avg : public image {
 private:
 	void trigger(pixel multiplier) {
-		for (unsigned int i = 0; i < _dimx * _dimy; i++)
-			_p[i] *= multiplier;
+		assert(0);
 	}
 
 public:
-	image_ale_real (unsigned int dimy, unsigned int dimx, unsigned int
+	image_weighted_avg (unsigned int dimy, unsigned int dimx, unsigned int
 			depth, char *name = "anonymous", exposure *exp = NULL) 
 			: image(dimy, dimx, depth, name, exp) {
-
-		_p = new spixel[dimx * dimy];
-
-		assert (_p);
-
-		if (!_p) {
-			fprintf(stderr, "Could not allocate memory for image data.\n");
-			exit(1);
-		}
 	}
 
-	virtual ~image_ale_real() {
-		delete[] _p;
+	virtual ~image_weighted_avg() {
 	}
 
 	spixel &pix(unsigned int y, unsigned int x) {
-		assert (x < _dimx);
-		assert (y < _dimy);
-
-		image_updated();
-
-		return _p[y * _dimx + x];
+		assert(0);
+		static spixel foo;
+		return foo;
 	}
 
 	const spixel &pix(unsigned int y, unsigned int x) const {
-		assert (x < _dimx);
-		assert (y < _dimy);
-
-		return _p[y * _dimx + x];
+		assert(0);
+		static spixel foo;
+		return foo;
 	}
 
 	ale_real &chan(unsigned int y, unsigned int x, unsigned int k) {
-		return pix(y, x)[k];
+		assert(0);
+		static ale_real foo;
+		return foo;
 	}
 
 	const ale_real &chan(unsigned int y, unsigned int x, unsigned int k) const {
-		return pix(y, x)[k];
+		assert(0);
+		static ale_real foo;
+		return foo;
 	}
 
 	/*
@@ -96,7 +83,7 @@ public:
 	 */
 	void extend(int top, int bottom, int left, int right) {
 
-		image_ale_real *is = new image_ale_real (
+		image_weighted_avg *is = new image_weighted_avg (
 			height() + top  + bottom,
 			 width() + left + right , depth(), name, _exp);
 
