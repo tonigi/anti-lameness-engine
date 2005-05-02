@@ -107,17 +107,25 @@ public:
 	void accumulate(int i, int j, int f, pixel new_value, pixel new_weight) {
 		for (unsigned int k = 0; k < 3; k++) {
 
+			/*
+			 * XXX: This initialization should not be necessary.
+			 */
+			if (f == 0)
+			for (unsigned int ff = 0; ff < image_rw::count(); ff++)
+				weights[ff]->pix(i, j)[k] = 0;
+
 			if (new_weight[k] <= 0)
 				continue;
 
 			for (unsigned int ff = 0; ff < image_rw::count(); ff++) {
+				assert (ff <= (unsigned int) f);
 				if (ff == image_rw::count() - 1) {
 					colors[ff]->pix(i, j)[k] = new_value[k];
 					weights[ff]->pix(i, j)[k] += new_weight[k];
 					break;
 				}
-				if ((ff == 0 && weights[ff] == 0)
-				 || (ff >  0 && weights[ff] == weights[ff - 1])) {
+				if ((ff == 0 && weights[ff]->pix(i, j)[k] == 0)
+				 || (ff >  0 && weights[ff]->pix(i, j)[k] == weights[ff - 1]->pix(i, j)[k])) {
 					colors[ff]->pix(i, j)[k] = new_value[k];
 					for (unsigned int fff = ff; fff < image_rw::count(); fff++)
 						weights[fff]->pix(i, j)[k] += new_weight[k];
@@ -164,7 +172,7 @@ public:
 			unsigned int h = image_rw::count() - 1;
 			unsigned int m = h / 2;
 
-			while (h - l > 1) {
+			while (h > l + 1) {
 				if (weights[m]->chan(y, x, k) < midpoint)
 					l = m;
 				else
