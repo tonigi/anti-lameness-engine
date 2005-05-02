@@ -33,6 +33,19 @@ class image_weighted_median : public image_weighted_avg {
 private:
 
 	/*
+	 * Colors stores image colors, and is sorted by color.
+	 *
+	 * Weights stores weights associated with each color, and is
+	 * represented cumulatively, so that the weights and colors:
+	 *
+	 * Color:  1  2  3  6  7
+	 * Weight: 1  1  1  1  2
+	 *
+	 * Would be represented:
+	 *
+	 * Color:  1  2  3  6  7
+	 * Weight: 1  2  3  4  6
+	 *
 	 * XXX: This storage approach may have poor cache characteristics.
 	 * It might be better to localize elements having identical spatial
 	 * coordinates.
