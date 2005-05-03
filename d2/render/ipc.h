@@ -115,6 +115,7 @@ protected:
         unsigned int iterations;
 	psf *lresponse, *nlresponse;
 	int exposure_register;
+	int use_weighted_median;
 
 	/*
 	 * Calculate the simulated input frame SIMULATED from the image
@@ -310,6 +311,88 @@ protected:
 		delete nlsim_weights;
 	}
 
+	/*
+	 * Create correction structures.
+	 */
+	void *correction_create(unsigned int h, unsigned int w, unsigned int d) {
+		if (use_weighted_median) {
+			image_weighted_median *iwm = new image_weighted_median(h, w, d);
+			return (void *) iwm;
+		} else {
+			image **structures = (image **) malloc(2 * sizeof(image *));
+
+			assert(structures);
+
+			for (int i = 0; i < 2; i++) {
+				structures[i] = new image_ale_real(h, w, d);
+				assert (structures[i]);
+			}
+
+			return (void *) structures;
+		}
+	}
+
+	/*
+	 * Destroy correction structures
+	 */
+	void correction_destroy(void *cu) {
+		if (use_weighted_median) {
+			image_weighted_median *iwm = (image_weighted_median *)cu;
+			delete iwm;
+		} else {
+			image **structures = (image **) cu;
+			
+			for (int i = 0; i < 2; i++)
+				delete structures[i];
+
+			free(structures);
+		}
+	}
+
+	/*
+	 * Correction count
+	 */
+	pixel get_correction_count(void *cu, int i, int j) {
+		if (use_weighted_median) {
+			image_weighted_median *iwm = (image_weighted_median *)cu;
+			return iwm->get_weights()->get_pixel(i, j);
+		} else {
+			image **structures = (image **) cu;
+			return structures[1]->get_pixel(i, j);
+		}
+	}
+
+	/*
+	 * Correction value
+	 */
+	pixel get_correction(void *cu, int i, int j) {
+		if (use_weighted_median) {
+			image_weighted_median *iwm = (image_weighted_median *)cu;
+			return iwm->get_colors()->get_pixel(i, j);
+		} else {
+			image **structures = (image **) cu;
+			return structures[0]->get_pixel(i, j)
+			     / structures[1]->get_pixel(i, j);
+		}
+	}
+
+	/*
+	 * Update correction structures, using either a weighted mean update or
+	 * a weighted median update.
+	 */
+
+	void correction_update(void *update_structure, int i, int j, pixel value_times_weight, 
+			pixel value, pixel weight, int frame_num) {
+		if (use_weighted_median) {
+			image_weighted_median *iwm = (image_weighted_median *) update_structure;
+			iwm->accumulate(i, j, frame_num, value, weight);
+		} else {
+			image **structures = (image **) update_structure;
+			structures[0]->pix(i, j) += value_times_weight;
+			structures[1]->pix(i, j) += weight;
+		}
+	}
+
 
 
 	/*
@@ -330,8 +413,8 @@ protected:
 	 * densities.
 	 */
 
-	void _ip_frame_correct(int frame_num, image *approximation, image *c, 
-			image *cc, const image *real, image *lsimulated, 
+	void _ip_frame_correct(int frame_num, image *approximation,
+			void *cu, const image *real, image *lsimulated, 
 			image *nlsimulated, transformation t, 
 			const backprojector *lresponse, 
 			const backprojector *nlresponse) {
@@ -624,7 +707,7 @@ protected:
 				 * Error calculation
 				 */
 
-				c->pix(i, j) += bpv * conf;
+				// c->pix(i, j) += bpv * conf;
 
 				/*
 				 * Increment the backprojection weight.  When
@@ -632,8 +715,13 @@ protected:
 				 * each frame's correction equally.
 				 */
 
-				cc->pix(i, j) += conf * r.weight() 
-					       / lresponse->integral(selection);
+				// cc->pix(i, j) += conf * r.weight() 
+				//	       / lresponse->integral(selection);
+
+				correction_update(cu, i, j, bpv * conf,
+						      bpv / r.weight() * lresponse->integral(selection), 
+						      conf * r.weight() / lresponse->integral(selection), 
+						      frame_num);
 			}
                 }
 
@@ -647,7 +735,7 @@ protected:
 	 * count CC for affected pixels in C.
 	 */
 
-	virtual void _ip_frame(int frame_num, image *c, image *cc, const image *real, 
+	virtual void _ip_frame(int frame_num, void *cu, const image *real, 
 			transformation t, const raster *f, const backprojector *b,
 			const raster *nlf, const backprojector *nlb) {
 
@@ -678,7 +766,7 @@ protected:
 		 * Update the correction array using backprojection.
 		 */
 
-		_ip_frame_correct(frame_num, approximation, c, cc, real, lsimulated, nlsimulated, t, b, nlb);
+		_ip_frame_correct(frame_num, approximation, cu, real, lsimulated, nlsimulated, t, b, nlb);
 
 		/*
 		 * Finalize data structures.
@@ -724,12 +812,7 @@ protected:
 
                 for (unsigned int n = 0; n < iterations; n++) {
 
-                        image *correction = new image_ale_real (
-                                        approximation->height(),
-                                        approximation->width(),
-                                        approximation->depth());
-
-			image *correction_count = new image_ale_real(
+			void *correction = correction_create(
 					approximation->height(),
 					approximation->width(),
 					approximation->depth());
@@ -748,7 +831,7 @@ protected:
 				transformation t = align::of(m);
 				const image *real = image_rw::open(m);
 
-                                _ip_frame(m, correction, correction_count, real,
+                                _ip_frame(m, correction, real,
 					t, f[m], b[m], nlf, nlb);
 
 				image_rw::close(m);
@@ -763,9 +846,9 @@ protected:
 			for (unsigned int i = 0; i < approximation->height(); i++)
 			for (unsigned int j = 0; j < approximation->width();  j++) {
 
-				pixel  cpix = correction       ->get_pixel(i, j);
-				pixel ccpix = correction_count ->get_pixel(i, j);
-				pixel  apix = approximation    ->get_pixel(i, j);
+				pixel  cpix = get_correction(correction, i, j);
+				pixel ccpix = get_correction_count(correction, i, j);
+				pixel  apix = approximation->get_pixel(i, j);
 
 				for (unsigned int k = 0; k < 3; k++) {
 
@@ -774,7 +857,10 @@ protected:
 					if (ccpix[k] < cc_floor)
 						continue;
 
-					ale_real new_value = cpix[k] / ccpix[k] + apix[k];
+					if (!finite(cpix[k]))
+						continue;
+
+					ale_real new_value = cpix[k] + apix[k];
 
 					assert (finite(apix[k]));
 					assert (finite(ccpix[k]));
@@ -791,8 +877,7 @@ protected:
 				}
 			}
 
-                        delete correction;
-			delete correction_count;
+			correction_destroy(correction);
 
 			if (inc) {
 				ui::get()->ip_write();
@@ -821,7 +906,8 @@ protected:
 
 public:
 
-        ipc(render *input, unsigned int iterations, int _inc, psf *lresponse, psf *nlresponse, int exposure_register) {
+        ipc(render *input, unsigned int iterations, int _inc, psf *lresponse, psf *nlresponse, int exposure_register,
+			int use_weighted_median = 0) {
                 this->input = input;
                 done = 0;
 		inc = _inc;
@@ -829,6 +915,7 @@ public:
 		this->lresponse = lresponse;
 		this->nlresponse = nlresponse;
 		this->exposure_register = exposure_register;
+		this->use_weighted_median = use_weighted_median;
         }
 
         const image *get_image() {
