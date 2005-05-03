@@ -311,89 +311,99 @@ protected:
 		delete nlsim_weights;
 	}
 
-	/*
-	 * Create correction structures.
-	 */
-	void *correction_create(unsigned int h, unsigned int w, unsigned int d) {
-		if (use_weighted_median) {
-			image_weighted_median *iwm = new image_weighted_median(h, w, d);
-			return (void *) iwm;
-		} else {
-			image **structures = (image **) malloc(2 * sizeof(image *));
+	struct correction_t {
+		/*
+		 * Type
+		 */
+		int use_weighted_median;
 
-			assert(structures);
+		/*
+		 * Weighted Median
+		 */
+		image_weighted_median *iwm;
 
-			for (int i = 0; i < 2; i++) {
-				structures[i] = new image_ale_real(h, w, d);
-				assert (structures[i]);
+		/*
+		 * Common
+		 */
+		image *c;
+		image *cc;
+
+		/*
+		 * Create correction structures.
+		 */
+		correction_t(int use_weighted_median, unsigned int h, unsigned int w, unsigned int d) {
+			this->use_weighted_median = use_weighted_median;
+			if (use_weighted_median)
+				iwm = new image_weighted_median(h, w, d);
+			c = new image_ale_real(h, w, d);
+			cc = new image_ale_real(h, w, d);
+		}
+
+		/*
+		 * Destroy correction structures
+		 */
+		~correction_t() {
+			if (use_weighted_median)
+				delete iwm;
+			delete c;
+			delete cc;
+		}
+
+		/*
+		 * Correction count
+		 */
+		pixel get_count(int i, int j) {
+			if (use_weighted_median)
+				return iwm->get_weights()->get_pixel(i, j);
+			else
+				return cc->get_pixel(i, j);
+		}
+
+		/*
+		 * Correction value
+		 */
+		pixel get_correction(int i, int j) {
+			if (use_weighted_median)
+				return iwm->get_colors()->get_pixel(i, j);
+			else
+				return c->get_pixel(i, j)
+				     / cc->get_pixel(i, j);
+		}
+
+		/*
+		 * Frame end
+		 */
+		void frame_end(int frame_num) {
+			if (use_weighted_median) {
+
+				for (unsigned int i = 0; i < c->height(); i++)
+				for (unsigned int j = 0; j < c->width(); j++) {
+
+					/*
+					 * Update the median calculator
+					 */
+					pixel cval = c->get_pixel(i, j);
+					pixel ccval = cc->get_pixel(i, j);
+					iwm->accumulate(i, j, frame_num, cval / ccval, ccval);
+
+					/*
+					 * Reset the counters
+					 */
+					c->pix(i, j) = pixel::zero();
+					cc->pix(i, j) = pixel::zero();
+				}
 			}
-
-			return (void *) structures;
 		}
-	}
 
-	/*
-	 * Destroy correction structures
-	 */
-	void correction_destroy(void *cu) {
-		if (use_weighted_median) {
-			image_weighted_median *iwm = (image_weighted_median *)cu;
-			delete iwm;
-		} else {
-			image **structures = (image **) cu;
-			
-			for (int i = 0; i < 2; i++)
-				delete structures[i];
-
-			free(structures);
+		/*
+		 * Update correction structures, using either a weighted mean update or
+		 * a weighted median update.
+		 */
+		void update(int i, int j, pixel value_times_weight, pixel weight) {
+			c->pix(i, j) += value_times_weight;
+			cc->pix(i, j) += weight;
 		}
-	}
-
-	/*
-	 * Correction count
-	 */
-	pixel get_correction_count(void *cu, int i, int j) {
-		if (use_weighted_median) {
-			image_weighted_median *iwm = (image_weighted_median *)cu;
-			return iwm->get_weights()->get_pixel(i, j);
-		} else {
-			image **structures = (image **) cu;
-			return structures[1]->get_pixel(i, j);
-		}
-	}
-
-	/*
-	 * Correction value
-	 */
-	pixel get_correction(void *cu, int i, int j) {
-		if (use_weighted_median) {
-			image_weighted_median *iwm = (image_weighted_median *)cu;
-			return iwm->get_colors()->get_pixel(i, j);
-		} else {
-			image **structures = (image **) cu;
-			return structures[0]->get_pixel(i, j)
-			     / structures[1]->get_pixel(i, j);
-		}
-	}
-
-	/*
-	 * Update correction structures, using either a weighted mean update or
-	 * a weighted median update.
-	 */
-
-	void correction_update(void *update_structure, int i, int j, pixel value_times_weight, 
-			pixel value, pixel weight, int frame_num) {
-		if (use_weighted_median) {
-			image_weighted_median *iwm = (image_weighted_median *) update_structure;
-			iwm->accumulate(i, j, frame_num, value, weight);
-		} else {
-			image **structures = (image **) update_structure;
-			structures[0]->pix(i, j) += value_times_weight;
-			structures[1]->pix(i, j) += weight;
-		}
-	}
-
-
+	};
 
 	/*
 	 * For each pixel in APPROXIMATION, calculate the differences
@@ -414,7 +424,7 @@ protected:
 	 */
 
 	void _ip_frame_correct(int frame_num, image *approximation,
-			void *cu, const image *real, image *lsimulated, 
+			correction_t *cu, const image *real, image *lsimulated, 
 			image *nlsimulated, transformation t, 
 			const backprojector *lresponse, 
 			const backprojector *nlresponse) {
@@ -718,10 +728,7 @@ protected:
 				// cc->pix(i, j) += conf * r.weight() 
 				//	       / lresponse->integral(selection);
 
-				correction_update(cu, i, j, bpv * conf,
-						      bpv / r.weight() * lresponse->integral(selection), 
-						      conf * r.weight() / lresponse->integral(selection), 
-						      frame_num);
+				cu->update(i, j, bpv * conf, conf * r.weight() / lresponse->integral(selection));
 			}
                 }
 
@@ -735,7 +742,7 @@ protected:
 	 * count CC for affected pixels in C.
 	 */
 
-	virtual void _ip_frame(int frame_num, void *cu, const image *real, 
+	virtual void _ip_frame(int frame_num, correction_t *cu, const image *real, 
 			transformation t, const raster *f, const backprojector *b,
 			const raster *nlf, const backprojector *nlb) {
 
@@ -812,7 +819,8 @@ protected:
 
                 for (unsigned int n = 0; n < iterations; n++) {
 
-			void *correction = correction_create(
+			correction_t *correction = new correction_t(
+					use_weighted_median,
 					approximation->height(),
 					approximation->width(),
 					approximation->depth());
@@ -835,6 +843,8 @@ protected:
 					t, f[m], b[m], nlf, nlb);
 
 				image_rw::close(m);
+
+				correction->frame_end(m);
 			}
 
 			/*
@@ -846,8 +856,8 @@ protected:
 			for (unsigned int i = 0; i < approximation->height(); i++)
 			for (unsigned int j = 0; j < approximation->width();  j++) {
 
-				pixel  cpix = get_correction(correction, i, j);
-				pixel ccpix = get_correction_count(correction, i, j);
+				pixel  cpix = correction->get_correction(i, j);
+				pixel ccpix = correction->get_count(i, j);
 				pixel  apix = approximation->get_pixel(i, j);
 
 				for (unsigned int k = 0; k < 3; k++) {
@@ -877,7 +887,7 @@ protected:
 				}
 			}
 
-			correction_destroy(correction);
+			delete correction;
 
 			if (inc) {
 				ui::get()->ip_write();
@@ -907,7 +917,7 @@ protected:
 public:
 
         ipc(render *input, unsigned int iterations, int _inc, psf *lresponse, psf *nlresponse, int exposure_register,
-			int use_weighted_median = 0) {
+			int use_weighted_median) {
                 this->input = input;
                 done = 0;
 		inc = _inc;

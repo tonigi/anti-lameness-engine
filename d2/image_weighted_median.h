@@ -129,6 +129,8 @@ public:
 			for (unsigned int ff = 0; ff < image_rw::count(); ff++)
 				weights[ff]->pix(i, j)[k] = 0;
 
+			assert (finite(new_weight[k]));
+
 			if (new_weight[k] <= 0)
 				continue;
 

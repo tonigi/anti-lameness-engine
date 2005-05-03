@@ -317,6 +317,7 @@ int main(int argc, const char *argv[]){
 	struct d2::tload_t *tload = NULL;
 	struct d2::tsave_t *tsave = NULL;
 	int ip_iterations = 0;
+	int ip_use_median = 0;
 	enum { psf_linear, psf_nonlinear, psf_N };
 	const char *psf[psf_N] = {NULL, NULL};
 	const char *device = NULL;
@@ -920,6 +921,10 @@ int main(int argc, const char *argv[]){
 			ui::get()->warn("--ipr is deprecated.  Use --ips instead");
 			i++;
 
+		} else if (!strcmp(argv[i], "--ip-mean")) {
+			ip_use_median = 0;
+		} else if (!strcmp(argv[i], "--ip-median")) {
+			ip_use_median = 1;
 		} else if (!strcmp(argv[i], "--ips")) {
 
 			if (i + 1 >= argc)
@@ -1422,7 +1427,7 @@ int main(int argc, const char *argv[]){
 				ochain[0] = new d2::ipc( ochain[0], ip_iterations,
 						inc, response[psf_linear],
 						response[psf_nonlinear],
-						(exposure_register == 1));
+						(exposure_register == 1), ip_use_median);
 			}
 
 			/*

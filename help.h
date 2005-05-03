@@ -296,6 +296,8 @@ public:
 			"Irani-Peleg iterative solver (see --hq for defaults):\n"
 			HEADER_SPACE
 			"--ips <i>         Run <i> iterations.  (see also --hx, --hl and --hd)\n"
+			"--ip-mean         Use the mean correction [default]\n"
+			"--ip-median       Use the median correction\n"
 #if 0
 			BETWEEN_SECTIONS
 			"Unsharp Mask (was 'High-frequency Enhancement'):\n"

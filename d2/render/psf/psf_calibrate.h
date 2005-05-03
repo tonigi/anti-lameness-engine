@@ -31,7 +31,7 @@ private:
 public:
 	psf_calibrate(render *input, unsigned int iterations, int _inc, psf *lresponse, psf *nlresponse,
 			double *psf_match_args) 
-			: ipc(input, iterations, _inc, lresponse, nlresponse, 1) {
+			: ipc(input, iterations, _inc, lresponse, nlresponse, 1, 0) {
 		fprintf(stderr, "\nIPC Calibration module.\n\n");
 		fprintf(stderr, "This module is designed for use with a calibration script.\n\n");
 
