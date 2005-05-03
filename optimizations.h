@@ -29,18 +29,22 @@ class optimizations {
 public:
 
 	/*
-	 * Instead of allocating new memory for the Irani-Peleg approximation,
-	 * use allocated memory from the default rendering chain.
-	 *
-	 * XXX: This could break if de-allocation of the IPC approximation
-	 * actually occurred.
+	 * Get the initial Irani-Peleg approximation.
 	 */
 	static d2::image *get_ip_working_image(const d2::image *im) {
-#if 0 && OPTIMIZATIONS == 1 
-		return (d2::image *) im;
-#else
-		return im->clone("IPC Approximation");
+		d2::image *result = im->clone("IPC Approximation");
+
+#if OPTIMIZATIONS == 1
+		/*
+		 * Reduce the extents of the source.  (We might not be able to
+		 * delete it, since deletion might be performed by
+		 * begin_3d_work().)
+		 */
+		d2::image *im_noconst = (d2::image *) im;
+		im_noconst->extend(0, 1 - im->height(), 0, 1 - im->width());
 #endif
+
+		return result;
 	}
 
 	/*
