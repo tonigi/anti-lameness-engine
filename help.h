@@ -293,7 +293,7 @@ public:
 			"--scale=x         Scale images by the factor x, where x > 0.     (1 is default)\n"
 			"--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)\n"
 			BETWEEN_SECTIONS
-			"Irani-Peleg iterative solver (see --hq for defaults):\n"
+			"Irani-Peleg iterative solver (see --hq for --ips defaults):\n"
 			HEADER_SPACE
 			"--ips <i>         Run <i> iterations.  (see also --hx, --hl and --hd)\n"
 			"--ip-mean         Use the mean correction [default]\n"
