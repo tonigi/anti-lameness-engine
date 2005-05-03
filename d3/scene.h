@@ -1275,8 +1275,8 @@ class scene {
 					// color = weight * (mapped_centroid.xy()[1] / cl->reference[n]->width());
 
 					point centroid_local = _pt.wc(centroid);
-					point _vertices[3] = {_pt.wc(*vertices[0]), _pt.wc(*vertices[1]), _pt.wc(*vertices[2])};
-					assert (1 || e == subtriangle_index(centroid_local, _vertices, PLANAR_SUBDIVISION_DEPTH, 0));
+//					point _vertices[3] = {_pt.wc(*vertices[0]), _pt.wc(*vertices[1]), _pt.wc(*vertices[2])};
+//					assert (1 || e == subtriangle_index(centroid_local, _vertices, PLANAR_SUBDIVISION_DEPTH, 0));
 				}
 
 				color /= weight;
@@ -2256,11 +2256,8 @@ public:
 	 * bounded DFS occurring.
 	 */
 	static void reduce_cost_to_search_depth(const char *d_out[], const char *v_out[], d2::exposure *exp_out, int inc_bit) {
-		int max_depth = 2;
 		int improved = 1;
 		int count = 0;
-
-		assert (max_depth > 0);
 
 		/*
 		 * To start, use the lowest level-of-detail
