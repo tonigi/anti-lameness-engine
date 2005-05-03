@@ -316,6 +316,10 @@ public:
 			"                      bgrg      Blue-green-red-green\n"
 			"                      none      RGB-RGB-RGB-RGB\n"
 			"                  Default is none or device-specific.\n"
+			BETWEEN_SECTIONS
+			"Color adjustment:\n"
+			HEADER_SPACE
+			"--exp-mult=c,r,b   Adjust all channels by <c>, red by <r>, and blue by <b>.\n"
 			"\n"
 		);
 	}
@@ -594,10 +598,6 @@ public:
 			"Projective transformation calculator:\n"
 			HEADER_SPACE
 			"--ptcalc\n"
-			BETWEEN_SECTIONS
-			"Color adjustment:\n"
-			HEADER_SPACE
-			"--exp-mult=c,r,b   Adjust all channels by <c>, red by <r>, and blue by <b>.\n"
 			"\n"
 			);
 	}
