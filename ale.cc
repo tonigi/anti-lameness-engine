@@ -620,6 +620,14 @@ int main(int argc, const char *argv[]){
 			sscanf(argv[i+1], "%lf", &ecm_parameter);
 			i += 1;
 			d3::scene::ecm(ecm_parameter);
+		} else if (!strcmp(argv[i], "--acm")) {
+			if (i + 1 >= argc)
+				not_enough("--acm");
+
+			double acm_parameter;
+			sscanf(argv[i+1], "%lf", &acm_parameter);
+			i += 1;
+			d3::scene::acm(acm_parameter);
 		} else if (!strcmp(argv[i], "--mc")) {
 			if (i + 1 >= argc)
 				not_enough("--mc");
@@ -1514,27 +1522,23 @@ int main(int argc, const char *argv[]){
 
 			if (d3_count > 0) {
 
-//				fprintf(stderr, "Initializing view angle to %f degrees", view_angle * 180 / M_PI);
 				d3::align::init_angle(view_angle);
-//				fprintf(stderr, ".\n");
 
-//				fprintf(stderr, "Initializing 3D alignment from 2D alignment");
 				d3::align::init_from_d2();
-//				fprintf(stderr, ".\n");
 
-//				fprintf(stderr, "Initializing 3D scene from 2D scene");
+				if (d3::cpf::count() > 0) {
+					d3::cpf::solve_3d();
+				}
+
 				d3::scene::init_from_d2();
-//				fprintf(stderr, ".\n");
 
-				fprintf(stderr, "Adding control points and realigning");
 				d3::scene::add_control_points();
-				fprintf(stderr, ".\n");
 
-				fprintf(stderr, "Final view angle: %f\n", d3::align::angle_of(0) / M_PI * 180);
+				d3::scene::relax_triangle_model();
 
 				fprintf(stderr, "Reducing cost in 3D scene");
 				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, output_exposure, inc);
-				fprintf(stderr, " (okay).\n");
+				fprintf(stderr, "\n");
 
 				for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
 					assert (i < d3_count);

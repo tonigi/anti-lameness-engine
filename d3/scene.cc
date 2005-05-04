@@ -28,3 +28,4 @@ scene::lod *scene::cl;
 scene::triangle *scene::triangle_head[2];
 std::map<point *, scene::vertex_aux> scene::vam;
 ale_pos scene::edge_cost_multiplier = 0.001;
+ale_pos scene::angle_cost_multiplier = 0.001;

@@ -569,18 +569,19 @@ public:
 			"--view-angle <x>  Set the diagonal view angle to <x> degrees.\n"
 			"                     (Default is 43.7 degrees or device-specific.)\n"
 			BETWEEN_SECTIONS
-			"Control point parameters:\n"
+			"Camera parameters:\n"
 			HEADER_SPACE
-			"--cpp-upper=<x>   Set perturbation upper bound <x> for control-point realignment,\n"
+			"--cpp-upper=<x>   Set upper bound <x> for camera parameter perturbation,\n"
 			"                  in pixels or degrees [default is 32]\n"
-			"--cpp-lower=<x>   Set perturbation lower bound <x> for control-point realignment,\n"
+			"--cpp-lower=<x>   Set lower bound <x> for camera parameter perturbation,\n"
 			"                  in pixels or degrees [default is 0.125]\n"
 			"--va-upper=<x>    View-angle perturbation upper bound in degrees  [default is 32]\n"
-			"--st <x>          Set stereo threshold <x>.                        [default is 4]\n"
+			"--st <x>          Control point stereo threshold is <x> pixels.    [default is 4]\n"
 			BETWEEN_SECTIONS
 			"Model costs:\n"
 			HEADER_SPACE
 			"--ecm <x>         Set edge length cost multiplier <x>.         [default is 0.001]\n"
+			"--acm <x>         Set angle cost multiplier <x>.               [default is 0.001]\n"
 			"\n");
 	}
 	void undocumented() {

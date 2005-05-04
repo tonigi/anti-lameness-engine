@@ -1,15 +1,17 @@
 0.8.1
 
-o	Add support for median-based incremental and Irani-Peleg rendering.
+o	Add support for median-value incremental and Irani-Peleg rendering.
 	This improves somewhat the output of Scott Scriven's text-obstructed
 	example sequences, and also improves the scaled output of
-	fine:sinc*lanc for sparse inputs.
+	fine:sinc*lanc for sparse inputs.  Using a statistic other than the
+	mean was suggested by Scott Scriven.
 
 o	Move ale-psf-calibrate to a new scripts directory.
 
-o	Add support for using control points in 2D and 3D alignment as well
-	as in 3D model construction.  New options include --gs points,
-	--cpf-load=, and others.
+o	Add support for using control points in 2D and 3D alignment, as well
+	as in 3D model construction.  New options include '--gs points',
+	'--cpf-load=', '--cpp-upper=', '--cpp-lower=', '--va-upper=', and
+	'--st'.
 
 o	Fix enumerator compile bugs noted by Gregory Maxwell to cause 
 	compilation failure under GCC 3.4.
@@ -19,7 +21,8 @@ o	Add average magnitude comments to transformation data file output.
 o	Add a color adjustment option --exp-mult=.
 
 o	For 3D scene reconstruction, use a new unified surface model in place
-	of the depth-based multi-model approach used in 0.8.0.
+	of the depth-based multi-model approach used in 0.8.0.  The new model
+	is adjusted on the basis of edge, angle, and color measures.
 
 0.8.0
 

@@ -50,6 +50,12 @@ class scene {
 	static ale_pos edge_cost_multiplier;
 
 	/*
+	 * Multiplier used in calculating the maximum angle contribution to
+	 * model cost.
+	 */
+	static ale_pos angle_cost_multiplier;
+
+	/*
 	 * Vertex Auxiliary Structure
 	 *
 	 * This can be used for storing miscellaneous information about
@@ -75,9 +81,9 @@ class scene {
 	 *
 	 * Return value elements are:
 	 *
-	 * 	0: ray multiplier
-	 * 	1: v[1] - v[0] component
-	 * 	2: v[2] - v[0] component
+	 * 	0: v[1] - v[0] component
+	 * 	1: v[2] - v[0] component
+	 * 	2: ray multiplier
 	 */
 	static point rt_intersect(point r, point vertices[3]) {
 		point a = vertices[0];
@@ -117,9 +123,9 @@ class scene {
 			}
 		};
 
-		point k(a[0] * m_inverse_t[0][0] + a[1] * m_inverse_t[0][1] + a[2] * m_inverse_t[0][2],
-		        a[0] * m_inverse_t[1][0] + a[1] * m_inverse_t[1][1] + a[2] * m_inverse_t[1][2],
-			a[0] * m_inverse_t[2][0] + a[1] * m_inverse_t[2][1] + a[2] * m_inverse_t[2][2]);
+		point k(a[0] * m_inverse_t[1][0] + a[1] * m_inverse_t[1][1] + a[2] * m_inverse_t[1][2],
+			a[0] * m_inverse_t[2][0] + a[1] * m_inverse_t[2][1] + a[2] * m_inverse_t[2][2],
+			a[0] * m_inverse_t[0][0] + a[1] * m_inverse_t[0][1] + a[2] * m_inverse_t[0][2]);
 
 		return k;
 	}
@@ -799,7 +805,7 @@ class scene {
 		int closest_point_is_internal(point p) {
 			point k = nearest_coplanar_point(p);
 
-			if (k[1] >= 0 && k[2] >= 0 && k[1] + k[2] <= 1)
+			if (k[0] >= 0 && k[1] >= 0 && k[0] + k[1] <= 1)
 				return 1;
 
 			return 0;
@@ -819,8 +825,8 @@ class scene {
 			 * distance to the projected point.
 			 */
 
-			if (k[1] >= 0 && k[2] >= 0 && k[1] + k[2] <= 1) {
-				return fabs(k[0]);
+			if (k[0] >= 0 && k[1] >= 0 && k[0] + k[1] <= 1) {
+				return fabs(k[2]);
 			}
 
 			/*
@@ -843,7 +849,7 @@ class scene {
 			 * Check the edge opposite vertex 2.
 			 */
 
-			ale_pos proj1_len = k[1] + vec1.normalize().dproduct(k[2] * vec2) / vec1.norm();
+			ale_pos proj1_len = k[0] + vec1.normalize().dproduct(k[1] * vec2) / vec1.norm();
 			point proj1 = (*vertices[0]) + vec1 * proj1_len;
 
 			if (proj1_len >= 0 && proj1_len <= 1 && p.lengthto(proj1) < min_length)
@@ -853,7 +859,7 @@ class scene {
 			 * Check the edge opposite vertex 1.
 			 */
 
-			ale_pos proj2_len = k[2] + vec2.normalize().dproduct(k[1] * vec1) / vec2.norm();
+			ale_pos proj2_len = k[1] + vec2.normalize().dproduct(k[0] * vec1) / vec2.norm();
 			point proj2 = (*vertices[0]) + vec2 * proj2_len;
 
 			if (proj2_len >= 0 && proj2_len <= 1 && p.lengthto(proj2) < min_length)
@@ -863,8 +869,8 @@ class scene {
 			 * Check the edge opposite vertex 0.
 			 */
 
-			ale_pos proj3_len = vec3.normalize().dproduct(k[1] * vec1) / vec3.norm()
-				        + vec3.normalize().dproduct(k[2] * vec2) / vec3.norm();
+			ale_pos proj3_len = vec3.normalize().dproduct(k[0] * vec1) / vec3.norm()
+				        + vec3.normalize().dproduct(k[1] * vec2) / vec3.norm();
 			point proj3 = (*vertices[1]) + vec3 * proj3_len;
 
 			if (proj3_len >= 0 && proj3_len <= 1 && p.lengthto(proj3) < min_length)
@@ -1003,7 +1009,7 @@ class scene {
 			 * Check whether we can move an existing free vertex.
 			 */
 			for (int v = 0; v < 3; v++) {
-				if (!vertex_fixed[nearest[v]] && k[nearest[v]][1] + k[nearest[v]][2] < 1) {
+				if (!vertex_fixed[nearest[v]] && k[nearest[v]][0] + k[nearest[v]][1] < 1) {
 					(*vertices[nearest[v]]) = nv;
 					vertex_fixed[nearest[v]] = 1;
 					return;
@@ -1014,12 +1020,12 @@ class scene {
 			 * Check whether a vertex must be moved, even if non-free.
 			 */
 			for (int v = 0; v < 3; v++) {
-				if (k[v][1] <= 0 && k[v][2] <= 0) {
+				if (k[v][0] <= 0 && k[v][1] <= 0) {
 					assert (vertex_fixed[v] == 1);
 					point old_point = (*vertices[v]);
 					(*vertices[v]) = nv;
 
-					if (k[v][1] == 0)
+					if (k[v][0] == 0)
 						split_at((v + 1) % 3, 1);
 					else
 						split_at((v + 2) % 3, 1);
@@ -1035,7 +1041,7 @@ class scene {
 			 * correct edge to split.
 			 */
 			for (int v = 0; v < 3; v++) {
-				if (k[v][1] > 0 && k[v][2] > 0) {
+				if (k[v][0] > 0 && k[v][1] > 0) {
 					split_at(v, 1);
 					(*division_new_vertex) = nv;
 					return;
@@ -1079,6 +1085,28 @@ class scene {
 			}
 
 			return result;
+		}
+
+		/*
+		 * Return the sum of angles formed with a neighbor triangle.
+		 * Searches one neighbor deep.
+		 */
+		ale_accum sum_neighbor_angle() {
+
+			ale_pos sum = 0;
+
+			point _normal = normal();
+
+			for (int n = 0; n < 3; n++) {
+				if (neighbors[n] == NULL)
+					continue;
+
+				ale_pos angle = point(0, 0, 0).anglebetw(neighbors[n]->normal(), _normal);
+
+				sum += angle;
+			}
+
+			return sum;
 		}
 
 		/*
@@ -1208,6 +1236,12 @@ class scene {
 			        + (*vertices[0]).lengthto(*vertices[2])
 			        + (*vertices[1]).lengthto(*vertices[2])) * edge_cost_multiplier
 				                                         * cl->sf;
+			
+			/*
+			 * Add angle error.
+			 */
+
+			error += sum_neighbor_angle() * angle_cost_multiplier;
 
 			return error;
 
@@ -1309,6 +1343,110 @@ class scene {
 			return 0;
 		}
 
+		/*
+		 * Step size for adjustment methods.  Determine the average
+		 * distance between vertices and divide it by a constant.
+		 */
+		ale_accum step_size() {
+			return (vertices[0]->lengthto(*vertices[1])
+			      + vertices[1]->lengthto(*vertices[2])
+			      + vertices[2]->lengthto(*vertices[0])) / 9;
+		}
+
+		/*
+		 * Reduce the sum of maximum angle metrics.
+		 */
+		int reduce_angle_metrics() {
+			if (children[0] && children[1]){
+				return children[0]->reduce_angle_metrics()
+				     | children[1]->reduce_angle_metrics();
+			}
+
+			/*
+			 * If all vertices are fixed, then return.
+			 */
+
+			if (vertex_fixed[0]
+			 && vertex_fixed[1]
+			 && vertex_fixed[2])
+				return 0;
+
+			/*
+			 * Determine the adjustment step size.
+			 */
+
+			ale_accum step = step_size();
+
+			/*
+			 * Test modifications to the current position.
+			 */
+
+			int improved = 0;
+
+			for (int v = 0; v < 3; v++) {
+
+				/*
+				 * Check for a fixed vertex.
+				 */
+
+				if (vertex_fixed[v])
+					continue;
+
+				/*
+				 * Evaluate the metrics at the current position
+				 */
+
+				ale_accum max_internal = traverse_around_vertex(vertices[v], &triangle::max_internal_angle, 1);
+				ale_accum sum_neighbor = traverse_around_vertex(vertices[v], &triangle::sum_neighbor_angle, 0);
+
+				/*
+				 * Store the original vertex position
+				 */
+
+				point vertex_original_pos = *vertices[v];
+
+				/*
+				 * Perturb the position.
+				 */
+
+				for (int axis = 0; axis < 3; axis++)
+				for (int dir = -1; dir <= 1; dir += 2) {
+
+					/*
+					 * Adjust the vertex under consideration
+					 */
+
+					*vertices[v] = vertex_original_pos + point::unit(axis) * step * dir;
+
+					/*
+					 * Determine the new values of the metrics.
+					 */
+
+					ale_accum max_internal_test = traverse_around_vertex(vertices[v],
+							&triangle::max_internal_angle, 1);
+					ale_accum sum_neighbor_test = traverse_around_vertex(vertices[v],
+							&triangle::sum_neighbor_angle, 0);
+
+					/*
+					 * Check the new metric values against the old.
+					 */
+
+					if (max_internal_test + sum_neighbor_test 
+					  < max_internal      + sum_neighbor     ) {
+						max_internal = max_internal_test;
+						sum_neighbor = sum_neighbor_test;
+						vertex_original_pos = *vertices[v];
+						improved = 1;
+						break;
+					} else {
+						*vertices[v] = vertex_original_pos;
+					}
+				}
+			}
+
+			return improved;
+		}
+
 			
 
 		/*
@@ -1344,29 +1482,10 @@ class scene {
 				return 0;
 
 			/*
-			 * As a basis for determining the step size for
-			 * adjustment, determine the average distance between
-			 * vertices and divide it by a constant.
+			 * Determine the adjustment step size.
 			 */
 
-			ale_accum step = (vertices[0]->lengthto(*vertices[1])
-				        + vertices[1]->lengthto(*vertices[2])
-					+ vertices[2]->lengthto(*vertices[0])) / 21;
-//					+ vertices[2]->lengthto(*vertices[0])) / 7;
-
-			/*
-			 * There are three possibilities for each triangle visited:
-			 *
-			 * Vertices are moved a step in the direction of the normal
-			 * Vertices remain in place
-			 * Vertices are moved a step against the direction of the normal.
-			 *
-			 * Try each possibility, and determine the sum-of-squares error
-			 * over all frames in which the triangle appears, mapping the triangle
-			 * centroid and using bilinear interpolation between reference frame 
-			 * pixels to determine error.  The position with least sum-of-squares
-			 * error is selected.
-			 */
+			ale_accum step = step_size();
 
 			int improved = 0;
 			ale_accum lowest_error = +0;
@@ -1382,7 +1501,8 @@ class scene {
 			// ale_pos allowable_min_internal_angle = M_PI / 8;
 
 			/*
-			 * Test modifications to the current position.
+			 * Test modifications to the current position of each
+			 * vertex in turn.
 			 */
 
 			for (int v = 0; v < 3; v++) {
@@ -1407,8 +1527,8 @@ class scene {
 				for (int axis = 0; axis < 3; axis++)
 				for (int dir = -1; dir <= 1; dir += 2) {
 
+					ale_accum extremum_angle;
 					ale_accum error = 0;
-					ale_accum extremum_angle = 0;
 
 					/*
 					 * Adjust the vertex under consideration
@@ -1488,9 +1608,9 @@ class scene {
 
 		point multipliers = rt_intersect(r_c, p_c);
 
-		if (multipliers[1] >= 0
-		 && multipliers[2] >= 0
-		 && (multipliers[1] + multipliers[2] <= 1))
+		if (multipliers[0] >= 0
+		 && multipliers[1] >= 0
+		 && (multipliers[0] + multipliers[1] <= 1))
 			return 1;
 
 		if (print_on_failure && 0) {
@@ -1994,6 +2114,10 @@ public:
 	static void ecm(ale_pos ecm) {
 		edge_cost_multiplier = ecm;
 	}
+
+	static void acm(ale_pos acm) {
+		angle_cost_multiplier = acm;
+	}
 	
 	/*
 	 * Initialize 3D scene from 2D scene, using 2D and 3D alignment
@@ -2038,15 +2162,28 @@ public:
 		d2::point min = d2::point(0, 0);
 		d2::point max = d2::point(0, 0);
 
+		point scene_plane[3] = {point(0, 0, 0), point(1, 0, 0), point(0, 1, 0)};
+
 		for (int n = 0; n < N; n++) {
-			d2::transformation t = d2::align::of(n);
 
-			d2::point a[4];
+			pt t = align::projective(n);
 
-			a[0] = t.transform_scaled(d2::point(0, 0));
-			a[1] = t.transform_scaled(d2::point(t.scaled_height() - 1, 0));
-			a[2] = t.transform_scaled(d2::point(t.scaled_height() - 1, t.scaled_width() - 1));
-			a[3] = t.transform_scaled(d2::point(0, t.scaled_width() - 1));
+			point tsp[3];
+
+			for (int p = 0; p < 3; p++)
+				tsp[p] = t.wc(scene_plane[p]);
+
+			point a[4];
+
+			a[0] = point(0, 0, -1);
+			a[1] = point(t.scaled_height() - 1, 0, -1);
+			a[2] = point(t.scaled_height() - 1, t.scaled_width() - 1, -1);
+			a[3] = point(0, t.scaled_width() - 1, -1);
+
+			for (int p = 0; p < 4; p++) {
+				a[p] = t.pc_scaled(a[p]);
+				a[p] = rt_intersect(a[p], tsp);
+			}
 
 			for (int p = 0; p < 4; p++)
 			for (int d = 0; d < 2; d++) {
@@ -2238,7 +2375,26 @@ public:
 
 			lct->add_control_point(control_point);
 		}
+
 	}
+
+	/*
+	 * Relax model to reduce angle sizes.
+	 */
+	static void relax_triangle_model() {
+
+		if (!triangle_head[0]->reduce_angle_metrics()
+		 && !triangle_head[1]->reduce_angle_metrics())
+			return;
+
+		fprintf(stderr, "Relaxing triangle model");
+		while(triangle_head[0]->reduce_angle_metrics()
+		   || triangle_head[1]->reduce_angle_metrics())
+			fprintf(stderr, ".");
+		fprintf(stderr, "\n");
+
+	}
+
 
 	/*
 	 * When using a 3D scene data structure, improvements should occur in 
@@ -2288,7 +2444,7 @@ public:
 			 * Write output incrementally, if desired.
 			 */
 
-			if (inc_bit && (!improved || !(rand() % 2)))
+			if (inc_bit)
 			for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
 				if (d_out[i] != NULL) {
 					const d2::image *im = depth(i);

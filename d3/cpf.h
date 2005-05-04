@@ -408,15 +408,20 @@ public:
 		ale_pos min_perturbation = cpp_lower;
 		ale_pos perturbation = max_perturbation;
 
+		/*
+		 * XXX: Does this ever execute?
+		 */
 		if (cp_array_max == 0) {
 			fprintf(stderr, " (no points specified)");
 			return;
 		}
 
 		if (perturbation < min_perturbation || cp_array_max == 0) {
-			fprintf(stderr, " (skipping realignment)");
+			// fprintf(stderr, " (skipping adjustment)");
 			return;
 		}
+
+		fprintf(stderr, "Adjusting cameras to match control points");
 
 		while (perturbation >= min_perturbation) {
 
@@ -495,7 +500,8 @@ public:
 
 		solve_total_system();
 
-		fprintf(stderr, " (okay)");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "Final view angle: %f\n", d3::align::angle_of(0) / M_PI * 180);
 	}
 
 	static void st(ale_pos _st) {

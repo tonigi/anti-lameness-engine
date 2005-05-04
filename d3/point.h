@@ -202,7 +202,11 @@ public:
 		ale_pos cos_of = (to_p + to_q - p.lengthtosq(q))
 			       / (2 * sqrt(to_p) * sqrt(to_q));
 
-		return acos(cos_of);
+		/*
+		 * XXX: is the fabs() required?
+		 */
+
+		return fabs(acos(cos_of));
 	}
 
 
