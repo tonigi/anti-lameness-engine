@@ -31,4 +31,4 @@ render *render::directory[ACTIVE_RENDERER_COUNT];
 int render::directory_length;
 int render::extend;
 double render::scale_factor;
-double render::wt = 0.8;
+double render::wt = 0.1;

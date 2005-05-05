@@ -83,9 +83,9 @@
  * Version Information
  */
 
-char *short_version = "0.8.0";
+char *short_version = "0.8.1";
 
-char *version = "ALE Version:      0.8.0\n"
+char *version = "ALE Version:      0.8.1\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else
@@ -384,8 +384,8 @@ int main(int argc, const char *argv[]){
 		d2::image_rw::exp_noscale();
 		cx_parameter = 0;
 	} else if (arg_count(argc, argv, "--q1")) {
-		ochain_types[0] = "fine:sinc*lanc:6,sinc*lanc:6";
-		achain_type = "sinc*lanc:6";
+		ochain_types[0] = "median:fine:sinc*lanc:8,triangle:2";
+		achain_type = "triangle:2";
 		d2::align::mc(0.5);
 		ip_iterations = 0;
 		d2::image_rw::exp_noscale();

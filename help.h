@@ -94,7 +94,7 @@ public:
 			HEADER_SPACE
 			"--q0              Low quality, high speed. [default]\n"
 			"--qn              Low noise, moderate speed.\n"
-			"--q1              Moderate quality and speed.\n"
+			"--q1              Moderate quality and speed; high memory use.\n"
 			"--q2              High quality, low speed.\n"
 			"--qr              Range-extended high quality.\n"
 			BETWEEN_SECTIONS
@@ -118,8 +118,8 @@ public:
 			BETWEEN_SECTIONS
 			"q1 defaults:\n"
 			HEADER_SPACE
-			"   --dchain fine:sinc*lanc:6,sinc*lanc:6\n"
-			"   --achain sinc*lanc:6\n"
+			"   --dchain median:fine:sinc*lanc:8,triangle:2\n"
+			"   --achain triangle:2\n"
 			"   --mc 50\n"
 			"   --ips 0\n"
 			"   --exp-noextend\n"
@@ -344,7 +344,7 @@ public:
 			BETWEEN_SECTIONS
 			"Incremental rendering chains:\n"
 			HEADER_SPACE
-			"--wt <w>          Set weight threshold for defined pixels    (default is 0.8).\n"
+			"--wt <w>          Set weight threshold for defined pixels    (default is 0.1).\n"
 			"--dchain <g>      Use chain <g> to render the default output.\n"
 			"--ochain <g> <o>  Use chain <g> to render output file <o>.\n"
 			"--achain <g>      Use chain <g> to render the alignment reference image.\n"
@@ -564,19 +564,16 @@ public:
 			"--3dv <n> <o>     Render, to file <o>, colors as viewed from frame <n>.\n"
 			"--3dd <n> <o>     Render, to file <o>, depths as viewed from frame <n>.\n"
 			BETWEEN_SECTIONS
-			"Capture device view angle:\n"
-			HEADER_SPACE
-			"--view-angle <x>  Set the diagonal view angle to <x> degrees.\n"
-			"                     (Default is 43.7 degrees or device-specific.)\n"
-			BETWEEN_SECTIONS
 			"Camera parameters:\n"
 			HEADER_SPACE
+			"--view-angle <x>  Set the initial diagonal view angle to <x> degrees.\n"
+			"                     (Default is 43.7 degrees or device-specific.)\n"
 			"--cpp-upper=<x>   Set upper bound <x> for camera parameter perturbation,\n"
 			"                  in pixels or degrees [default is 32]\n"
 			"--cpp-lower=<x>   Set lower bound <x> for camera parameter perturbation,\n"
 			"                  in pixels or degrees [default is 0.125]\n"
 			"--va-upper=<x>    View-angle perturbation upper bound in degrees  [default is 32]\n"
-			"--st <x>          Control point stereo threshold is <x> pixels.    [default is 4]\n"
+			"--st <x>          Set stereo threshold to <x> pixels.              [default is 4]\n"
 			BETWEEN_SECTIONS
 			"Model costs:\n"
 			HEADER_SPACE
