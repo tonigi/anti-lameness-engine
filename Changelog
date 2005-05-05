@@ -1,10 +1,12 @@
 0.8.1
 
+o	Modify --q1 to use median-value incremental rendering.
+
 o	Add support for median-value incremental and Irani-Peleg rendering.
-	This improves somewhat the output of Scott Scriven's text-obstructed
-	example sequences, and also improves the scaled output of
-	fine:sinc*lanc for sparse inputs.  Using a statistic other than the
-	mean was suggested by Scott Scriven.
+	Using a statistic other than the mean was suggested by Scott Scriven
+	as a means of eliminating non-uniform artifacts.  Using the median
+	seems to improve performance on Scott Scriven's example sequences, as
+	well as on the scaled output of fine:sinc*lanc for sparse inputs.
 
 o	Move ale-psf-calibrate to a new scripts directory.
 
