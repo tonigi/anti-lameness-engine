@@ -64,7 +64,7 @@ class scene {
 	struct vertex_aux {
 		point last_position;
 		triangle *last_triangle;
-		int update_id;
+		unsigned long update_id;
 		ale_pos max_angle;
 	};
 
@@ -1308,7 +1308,7 @@ class scene {
 					weight += d2::pixel(1, 1, 1);
 					// color = weight * (mapped_centroid.xy()[1] / cl->reference[n]->width());
 
-					point centroid_local = _pt.wc(centroid);
+//					point centroid_local = _pt.wc(centroid);
 //					point _vertices[3] = {_pt.wc(*vertices[0]), _pt.wc(*vertices[1]), _pt.wc(*vertices[2])};
 //					assert (1 || e == subtriangle_index(centroid_local, _vertices, PLANAR_SUBDIVISION_DEPTH, 0));
 				}

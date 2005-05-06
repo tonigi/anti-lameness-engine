@@ -98,8 +98,6 @@ class cpf {
 	 */
 	static void get_type_a() {
 
-		point result;
-
 		/*
 		 * Get the number of frames.
 		 */
