@@ -930,8 +930,8 @@ private:
 		for (unsigned int i = 0; i < cp_count; i++)
 		for (unsigned int j = 0; j < m;        j++) {
 			const point *p = cp_array[i];
-			point p_ref = kept_t[j].transform_scaled(p[j]);
-			point p_cur = t.transform_scaled(p[m]);
+			point p_ref = kept_t[j].transform_unscaled(p[j]);
+			point p_cur = t.transform_unscaled(p[m]);
 
 			if (!p_ref.defined() || !p_cur.defined())
 				continue;
@@ -1341,17 +1341,22 @@ private:
 		 */
 
 		if (local_gs == 5) {
+
+			transformation o = offset;
+			for (int k = lod; k > 0; k--)
+				o.rescale(2);
+
 			/*
 			 * Determine the initial magnitude of change 
 			 */
-			ale_accum lowest_error = cp_rms_error(m, offset);
+			ale_accum lowest_error = cp_rms_error(m, o);
 			ale_accum adj_p = lowest_error;
 
 			if (adj_p < local_lower)
 				adj_p = local_lower;
 
 			while (adj_p >= local_lower) {
-				transformation test_t = offset;
+				transformation test_t = o;
 				int is_improved = 1;
 				ale_accum test_v;
 				ale_accum adj_s;
@@ -1364,7 +1369,7 @@ private:
 
 				while (is_improved) {
 					is_improved = 0;
-					if (offset.is_projective()) {
+					if (o.is_projective()) {
 						assert (alignment_class == 2);
 						/*
 						 * Projective transformations
@@ -1374,7 +1379,7 @@ private:
 						for (int j = 0; j < 2; j++)
 						for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
 
-							test_t = offset;
+							test_t = o;
 
 							if (perturb_type == 0)
 								test_t.gpt_modify(j, i, adj_s);
@@ -1387,7 +1392,7 @@ private:
 
 							if (test_v < lowest_error) {
 								lowest_error = test_v;
-								offset = test_t;
+								o = test_t;
 								adj_s += 3 * adj_p;
 								is_improved = 1;
 							}
@@ -1399,7 +1404,7 @@ private:
 						for (int i = 0; i < 2; i++)
 						for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
 
-							test_t = offset;
+							test_t = o;
 
 							test_t.eu_modify(i, adj_s);
 
@@ -1407,7 +1412,7 @@ private:
 
 							if (test_v < lowest_error) {
 								lowest_error = test_v;
-								offset = test_t;
+								o = test_t;
 								adj_s += 3 * adj_p;
 								is_improved = 1;
 							}
@@ -1416,7 +1421,7 @@ private:
 						if (alignment_class == 1 && adj_o < rot_max)
 						for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
 
-							test_t = offset;
+							test_t = o;
 
 							test_t.eu_modify(2, adj_s);
 
@@ -1424,7 +1429,7 @@ private:
 
 							if (test_v < lowest_error) {
 								lowest_error = test_v;
-								offset = test_t;
+								o = test_t;
 								adj_s += 3 * adj_p;
 								is_improved = 1;
 							}
@@ -1434,6 +1439,14 @@ private:
 
 				adj_p /= 2;
 			}
+
+			if (_exp_register)
+				set_exposure_ratio(m, scale_clusters[0], o, local_ax_count, 0);
+
+			for (int k = lod; k > 0; k--)
+				o.rescale(0.5);
+
+			offset = o;
 		}
 
 		/*
