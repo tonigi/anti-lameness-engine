@@ -1,3 +1,6 @@
+o	Fix various bugs in control-point alignment, possibly resolving
+	alignment failures reported by Gregory Maxwell.
+
 0.8.1
 
 o	Modify --q1 to use median-value incremental rendering.
