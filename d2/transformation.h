@@ -657,8 +657,8 @@ public:
 			
 			point p_rot = transform_unscaled(usi);
 
-			eu[0] -= p_rot[0] - p[0];
-			eu[1] -= p_rot[1] - p[1];
+			eu[0] -= (p_rot[0] - p[0]) / scale_factor;
+			eu[1] -= (p_rot[1] - p[1]) / scale_factor;
 		}
 
 		resultant_memo = 0;
