@@ -644,10 +644,6 @@ public:
 		for (int i = 0; i <= 4; i++) {
 			point y;
 
-			/*
-			 * XXX: Is this the correct direction?
-			 */
-
 			x[i] -= p;
 			x[i] = point(
 				x[i][0] * cos(radians) + x[i][1] * sin(radians),

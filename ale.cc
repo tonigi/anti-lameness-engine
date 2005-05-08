@@ -1320,7 +1320,7 @@ int main(int argc, const char *argv[]){
 			 */
 			d2::align::set_cp_count(d3::cpf::count());
 			for (unsigned int ii = 0; ii < d3::cpf::count(); ii++)
-				d2::align::set_cp(ii, d3::cpf::get_2d(i));
+				d2::align::set_cp(ii, d3::cpf::get_2d(ii));
 
 			/*
 			 * PSF-match bayer patterns.

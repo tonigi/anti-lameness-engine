@@ -1440,7 +1440,7 @@ private:
 				while (is_improved) {
 					is_improved = 0;
 					transformation test_t = o;
-					test_t.rotate(o.transform_unscaled(current), srot);
+					test_t.rotate(current, srot);
 					ale_pos test_v = cp_rms_error(m, test_t);
 
 					if (test_v < lowest_error) {
