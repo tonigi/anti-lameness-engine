@@ -634,6 +634,42 @@ public:
 	}
 
 	/*
+	 * Rotate by a given amount about a given point.
+	 */
+	void rotate(point p, ale_pos degrees) {
+
+		ale_pos radians = degrees * M_PI / (double) 180;
+
+		if (_is_projective)
+		for (int i = 0; i <= 4; i++) {
+			point y;
+
+			/*
+			 * XXX: Is this the correct direction?
+			 */
+
+			x[i] -= p;
+			x[i] = point(
+				x[i][0] * cos(radians) + x[i][1] * sin(radians),
+				x[i][1] * cos(radians) - x[i][0] * sin(radians));
+			x[i] += p;
+		} else {
+			point usi = unscaled_inverse_transform(p);
+
+			eu[2] += degrees;
+			resultant_memo = 0;
+			
+			point p_rot = transform_unscaled(usi);
+
+			eu[0] -= p_rot[0] - p[0];
+			eu[1] -= p_rot[1] - p[1];
+		}
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+	}
+
+	/*
 	 * Set the specified barrel distortion parameter.
 	 */
 	void bd_set(unsigned int degree, ale_pos value) {

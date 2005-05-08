@@ -918,6 +918,67 @@ private:
 	}
 
 	/*
+	 * Calculate the centroid of a control point for the set of frames
+	 * having index lower than m.  Divide by any scaling of the output.
+	 */
+	static point unscaled_centroid(unsigned int m, unsigned int p) {
+		assert(_keep);
+
+		point point_sum(0, 0);
+		ale_accum divisor = 0;
+
+		for(unsigned int j = 0; j < m; j++) {
+			point pp = cp_array[p][j];
+
+			if (pp.defined()) {
+				point_sum += kept_t[j].transform_unscaled(pp) 
+					   / kept_t[j].scale();
+				divisor += 1;
+			}
+		}
+
+		if (divisor == 0)
+			return point::undefined();
+
+		return point_sum / divisor;
+	}
+
+	/*
+	 * Calculate centroid of this frame, and of all previous frames,
+	 * from points common to both sets.
+	 */
+	static void centroids(unsigned int m, point *current, point *previous) {
+		/*
+		 * Calculate the translation
+		 */
+		point other_centroid(0, 0);
+		point this_centroid(0, 0);
+		ale_pos divisor = 0;
+
+		for (unsigned int i = 0; i < cp_count; i++) {
+			point other_c = unscaled_centroid(m, i);
+			point this_c  = cp_array[i][m];
+
+			if (!other_c.defined() || !this_c.defined())
+				continue;
+
+			other_centroid += other_c;
+			this_centroid  += this_c;
+			divisor        += 1;
+
+		}
+
+		if (divisor == 0) {
+			*current = point::undefined();
+			*previous = point::undefined();
+			return;
+		}
+
+		*current = this_centroid / divisor;
+		*previous = other_centroid / divisor;
+	}
+
+	/*
 	 * Calculate the RMS error of control points for frame m, with
 	 * transformation t, against control points for earlier frames.
 	 */
@@ -1347,33 +1408,69 @@ private:
 				o.rescale(2);
 
 			/*
-			 * Determine the initial magnitude of change 
+			 * Determine centroid data
 			 */
+
+			point current, previous;
+			centroids(m, &current, &previous);
+
+			if (current.defined() && previous.defined()) {
+				o = orig_t;
+				o.set_dimensions(input_frame);
+				o.translate((previous - current) * o.scale());
+				current = previous;
+			}
+
+			/*
+			 * Determine rotation for alignment classes other than translation.
+			 */
+
 			ale_accum lowest_error = cp_rms_error(m, o);
-			ale_accum adj_p = lowest_error;
 
-			if (adj_p < local_lower)
-				adj_p = local_lower;
+			ale_pos rot_lower = 2 * local_lower
+					  / sqrt(pow(scale_clusters[0].input->height(), 2)
+					       + pow(scale_clusters[0].input->width(),  2))
+					  * 180
+					  / M_PI;
 
-			while (adj_p >= local_lower) {
-				transformation test_t = o;
+			if  (alignment_class > 0)
+			for (ale_pos rot = 30; rot > rot_lower; rot /= 2) 
+			for (ale_pos srot = -rot; srot <= rot; srot += rot * 2) {
 				int is_improved = 1;
-				ale_accum test_v;
-				ale_accum adj_s;
-				ale_accum adj_o = 2 * adj_p
-						  / sqrt(pow(scale_clusters[0].input->height(), 2)
-						       + pow(scale_clusters[0].input->width(),  2))
-						  * 180
-						  / M_PI;
-				
-
 				while (is_improved) {
 					is_improved = 0;
-					if (o.is_projective()) {
-						assert (alignment_class == 2);
-						/*
-						 * Projective transformations
-						 */
+					transformation test_t = o;
+					test_t.rotate(o.transform_unscaled(current), srot);
+					ale_pos test_v = cp_rms_error(m, test_t);
+
+					if (test_v < lowest_error) {
+						lowest_error = test_v;
+						o = test_t;
+						srot += 3 * rot;
+						is_improved = 1;
+					}
+				}
+			}
+
+			/*
+			 * Determine projective parameters through a local
+			 * minimum search.
+			 */
+
+			if (alignment_class == 2) {
+				ale_accum adj_p = lowest_error;
+
+				if (adj_p < local_lower)
+					adj_p = local_lower;
+
+				while (adj_p >= local_lower) {
+					transformation test_t = o;
+					int is_improved = 1;
+					ale_accum test_v;
+					ale_accum adj_s;
+
+					while (is_improved) {
+						is_improved = 0;
 
 						for (int i = 0; i < 4; i++)
 						for (int j = 0; j < 2; j++)
@@ -1397,47 +1494,9 @@ private:
 								is_improved = 1;
 							}
 						}
-					} else {
-						/*
-						 * Euclidean transformations
-						 */
-						for (int i = 0; i < 2; i++)
-						for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
-
-							test_t = o;
-
-							test_t.eu_modify(i, adj_s);
-
-							test_v = cp_rms_error(m, test_t);
-
-							if (test_v < lowest_error) {
-								lowest_error = test_v;
-								o = test_t;
-								adj_s += 3 * adj_p;
-								is_improved = 1;
-							}
-						}
-
-						if (alignment_class == 1 && adj_o < rot_max)
-						for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
-
-							test_t = o;
-
-							test_t.eu_modify(2, adj_s);
-
-							test_v = cp_rms_error(m, test_t);
-
-							if (test_v < lowest_error) {
-								lowest_error = test_v;
-								o = test_t;
-								adj_s += 3 * adj_p;
-								is_improved = 1;
-							}
-						}
 					}
+					adj_p /= 2;
 				}
-
-				adj_p /= 2;
 			}
 
 			if (_exp_register)
