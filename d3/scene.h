@@ -131,6 +131,54 @@ class scene {
 	}
 
 	/*
+	 * Z-buffer element.  Since we store all triangles encountered (in order
+	 * to more easily accommodate scene modifications), we make the element
+	 * array dynamically resizable and re-sortable.
+	 */
+	class zbuf_elem {
+		unsigned int size;
+		triangle **array;
+		triangle *_nearest;
+
+	public:
+		zbuf_elem() {
+			size = 0;
+			array = NULL;
+			_nearest = NULL;
+		}
+
+		~zbuf_elem() {
+			free(array);
+		}
+
+		void clear_nearest() {
+			_nearest = NULL;
+		}
+
+		void find_nearest(pt _pt, int i, int j);
+
+		triangle *nearest() {
+			assert(_nearest);
+			return _nearest;
+		}
+
+		void insert(triangle *t) {
+			array = (triangle **) realloc(array, (size + 1) * sizeof(triangle *));
+			array[size] = t;
+			size++;
+		}
+	};
+
+	/*
+	 * Frame-to-frame mapping function
+	 *
+	 * Maps from point P in frame F1 to frame F2.  Returns projective
+	 * coordinates.  Returns zero-depth if there is no mutually-visible
+	 * model point.
+	 */
+	point frame_to_frame(d2::point p, int f1, int f2);
+
+	/*
 	 * Structure to hold input frame information for a given level of
 	 * detail.
 	 */
@@ -1752,9 +1800,9 @@ class scene {
 	/*
 	 * Z-buffer initialization function.
 	 */
-	static triangle **init_zbuf(pt _pt) {
-		triangle **result = (triangle **) calloc((int) floor(_pt.scaled_width()) *
-				(int) floor(_pt.scaled_height()), sizeof(triangle *));
+	static zbuf_elem *init_zbuf(pt _pt) {
+		zbuf_elem *result = (zbuf_elem *) calloc((int) floor(_pt.scaled_width()) *
+				(int) floor(_pt.scaled_height()), sizeof(zbuf_elem));
 
 		assert(result);
 
@@ -1766,8 +1814,12 @@ class scene {
 
 	/*
 	 * Z-buffer to determine the closest triangle.
+	 *
+	 * NOTE: we keep track of the depths of all intersected triangles, to
+	 * make it easier to determine the closest triangle after the scene has
+	 * been changed.
 	 */
-	static void zbuffer(pt _pt, triangle **zbuf, triangle *t) {
+	static void zbuffer(pt _pt, zbuf_elem *zbuf, triangle *t) {
 		int height = (int) floor(_pt.scaled_height());
 		int width  = (int) floor(_pt.scaled_width());
 
@@ -1780,13 +1832,17 @@ class scene {
 			}
 
 			/*
-			 * Map the points of the triangle into the image space.
+			 * Map the points of the triangle into local cartesian and
+			 * projective coordinates.
 			 */
 
+			point c[3];
 			point p[3];
 
-			for (int v = 0; v < 3; v++)
-				p[v] = _pt.wp_scaled(*t->vertices[v]);
+			for (int v = 0; v < 3; v++) {
+				c[v] = _pt.wc(*t->vertices[v]);
+				p[v] = _pt.cp_scaled(c[v]);
+			}
 
 			/*
 			 * Determine the bounding box of the transformed vertices.
@@ -1844,19 +1900,13 @@ class scene {
 			for (int i = (int) min[0]; i <= (int) max[0]; i++)
 			for (int j = (int) min[1]; j <= (int) max[1]; j++) {
 
-				triangle **zbuf_tri = zbuf + width * i + j;
+				zbuf_elem *element = zbuf + width * i + j;
 
-				/*
-				 * Simple test for depth
-				 *
-				 * XXX: this doesn't work correctly in all cases.
-				 */
-
-				if (*zbuf_tri && _pt.wp_scaled(*(*zbuf_tri)->vertices[0])[2] > p[0][2])
-					continue;
-				
 				/*
 				 * Test for interiority
+				 *
+				 * XXX: It might be better to use the
+				 * is_interior_c() test instead...
 				 */
 
 				point test_point = point(i, j, 1);
@@ -1864,11 +1914,7 @@ class scene {
 				if (!is_interior(p, test_point))
 					continue;
 
-				/*
-				 * Assign a new triangle to the zbuffer
-				 */
-
-				*zbuf_tri = t;
+				element->insert(t);
 			}
 
 			while(t->parent && t == t->parent->children[1]) {
@@ -1912,7 +1958,7 @@ class scene {
 			_pt.scale(sf / _pt.scale_2d());
 			assert (im->width() == (unsigned int) floor(_pt.scaled_width()));
 			assert (im->height() == (unsigned int) floor(_pt.scaled_height()));
-			triangle **zbuf = init_zbuf(_pt);
+			zbuf_elem *zbuf = init_zbuf(_pt);
 			zbuffer(_pt, zbuf, triangle_head[0]);
 			zbuffer(_pt, zbuf, triangle_head[1]);
 
@@ -1921,7 +1967,9 @@ class scene {
 			 */
 			for (unsigned int i = 0; i < im->height(); i++)
 			for (unsigned int j = 0; j < im->width();  j++) {
-				triangle *t = zbuf[i * im->width() + j];
+				zbuf_elem &ze = zbuf[i * im->width() + j];
+				ze.find_nearest(_pt, i, j);
+				triangle *t = ze.nearest();
 
 				/*
 				 * Check for points without associated triangles.

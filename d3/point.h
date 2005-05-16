@@ -77,13 +77,12 @@ public:
 	}
 
 	/*
-	 * Z-values of zero are almost never the right thing to do, but
-	 * for cases when they are ...
+	 * Z-values of zero are almost never the right thing to do ...
 	 */
-	point(d2::point p) {
+	point(d2::point p, ale_pos z = 0) {
 		x[0] = p[0];
 		x[1] = p[1];
-		x[2] = 0;
+		x[2] = z;
 	}
 
 	const ale_pos &operator[](int i) const {
