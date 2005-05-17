@@ -23,6 +23,8 @@
  */
 
 #include <map>
+#include <set>
+#include <iterator>
 #include "time.h"
 #include "d2.h"
 

@@ -36,20 +36,21 @@ ale_pos scene::angle_cost_multiplier = 0.001;
  */
 
 point scene::frame_to_frame(d2::point p, int f1, int f2, zbuf_elem *z1, zbuf_elem *z2) {
-	pt _pt1 = align::of(f1);
-	pt _pt2 = align::of(f2);
+	pt _pt1 = align::projective(f1);
+	pt _pt2 = align::projective(f2);
 
-	int i = round(p[0]);
-	int j = round(p[1]);
+	_pt1.scale(cl->sf / _pt1.scale_2d());
+	_pt2.scale(cl->sf / _pt2.scale_2d());
 
-	if (i < 0 || i >= _pt1.scaled_height())
+	int i = (int) round(p[0]);
+	int j = (int) round(p[1]);
+
+	if (i < 0 || i > _pt1.scaled_height() - 1)
 		return point::undefined();
-	if (j < 0 || j >= _pt1.scaled_width())
+	if (j < 0 || j > _pt1.scaled_width() - 1)
 		return point::undefined();
 
-	z1[i * _pt1.scaled_width() + j]->find_nearest();
-
-	triangle *t = z1[i * _pt1.scaled_width() + j]->nearest();
+	triangle *t = z1[i * (int) floor(_pt1.scaled_width()) + j].nearest(_pt1, i, j);
 
 	if (!t)
 		return point::undefined();
@@ -60,23 +61,21 @@ point scene::frame_to_frame(d2::point p, int f1, int f2, zbuf_elem *z1, zbuf_ele
 	for (int v = 0; v < 3; v++)
 		c[v] = _pt1.wc(*t->vertices[v]);
 
-	point multipliers = rt_intersect(c, c_ray);
+	point multipliers = rt_intersect(c_ray, c);
 
 	c_ray *= multipliers[2];
 
 	point p2 = _pt2.wp_scaled(c_ray);
 
-	int i2 = round(p2[0]);
-	int j2 = round(p2[1]);
+	int i2 = (int) round(p2[0]);
+	int j2 = (int) round(p2[1]);
 
-	if (i2 < 0 || i2 >= _pt2.scaled_height())
+	if (i2 < 0 || i2 > (int) floor(_pt2.scaled_height()) - 1)
 		return point::undefined();
-	if (j2 < 0 || j2 >= _pt2.scaled_width())
+	if (j2 < 0 || j2 > (int) floor(_pt2.scaled_width()) - 1)
 		return point::undefined();
 
-	z2[i2 * _pt2.scaled_width() + j2].find_nearest();
-
-	triangle *t2 = z2[i2 * _pt2.scaled_width() + j2].nearest();
+	triangle *t2 = z2[i2 * (int) floor(_pt2.scaled_width()) + j2].nearest(_pt2, i2, j2);
 
 	if (t != t2)
 		return point::undefined();
@@ -95,11 +94,10 @@ void scene::zbuf_elem::find_nearest(pt _pt, int i, int j) {
 
 	assert (isinf(least_distance) == 1);
 
-	if (array == NULL)
-		return;
+	assert(tset);
 
-	for (int t_index = 0; t_index < size; t_index++) {
-		triangle *t = array[t_index];
+	for (std::set<triangle *>::iterator i = tset->begin(); i != tset->end(); i++) {
+		triangle *t = (*i);
 		point c[3];
 
 		for (int v = 0; v < 3; v++)
@@ -108,7 +106,7 @@ void scene::zbuf_elem::find_nearest(pt _pt, int i, int j) {
 		if (!is_interior_c(c, c_ray))
 			continue;
 
-		point multipliers = rt_intersect(c, c_ray);
+		point multipliers = rt_intersect(c_ray, c);
 		ale_pos ray_multiplier = fabs(multipliers[2]);
 
 		if (ray_multiplier >= least_distance)
@@ -141,18 +139,19 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 
 	std::set<point *> *v_set = new std::set<point *>;
 
-	for (std::forward_iterator i = t_set->begin(); i != t_set->end(); i++)
+	for (std::set<triangle *>::iterator i = t_set->begin(); i != t_set->end(); i++)
 	for (int v = 0; v < 3; v++)
-		v_set.insert((*i)->vertices[v]);
+		v_set->insert((*i)->vertices[v]);
 
 	/*
 	 * Determine bounding boxes for calculating color costs
 	 */
 
 	point *bb = new point[2 * d2::image_rw::count()];
-	for (int f = 0; f < d2::image_rw::count(); f++) {
+	for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 		point *bbp = bb + 2 * f;
-		pt _pt = align::of(f);
+		pt _pt = align::projective(f);
+		_pt.scale(cl->sf / _pt.scale_2d());
 
 		ale_accum inf = +1;
 		ale_accum zero = 0;
@@ -163,7 +162,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 		bbp[0][0] = bbp[0][1] =  inf;
 		bbp[1][0] = bbp[1][1] = -inf;
 
-		for (std::forward_iterator i = v_set.begin; i != v_set.end(); i++) {
+		for (std::set<point *>::iterator i = v_set->begin(); i != v_set->end(); i++) {
 			point p = _pt.wp_scaled(**i);
 
 			if (p[0] < bbp[0][0])
@@ -186,13 +185,24 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 			bbp[1][0] = np[0];
 		if (np[1] > bbp[1][1])
 			bbp[1][1] = np[1];
+
+		for (int d = 0; d < 2; d++) {
+			if (bbp[d][0] < 0)
+				bbp[d][0] = 0;
+			if (bbp[d][0] > _pt.scaled_height() - 1)
+				bbp[d][0] = _pt.scaled_height() - 1;
+			if (bbp[d][1] < 0)
+				bbp[d][1] = 0;
+			if (bbp[d][1] > _pt.scaled_width() - 1)
+				bbp[d][1] = _pt.scaled_width() - 1;
+		}
 	}
 
 	/*
 	 * Determine geometric costs.
 	 */
 
-	for (std::forward_iterator i = t_set->begin(); i != t_set->end(); i++)
+	for (std::set<triangle *>::iterator i = t_set->begin(); i != t_set->end(); i++)
 	for (int v = 0; v < 3; v++)
 		orig_geom_cost += (*i)->edge_cost() + (*i)->angle_cost();
 
@@ -200,11 +210,38 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Determine color costs
 	 */
 
-	for (int f1 = 0; f1 < d2::image_rw::count(); f1++)
-	for (int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+	for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++)
+	for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+		pt _pt1 = align::projective(f1);
+		pt _pt2 = align::projective(f2);
+
+		_pt1.scale(cl->sf / _pt1.scale_2d());
+		_pt2.scale(cl->sf / _pt2.scale_2d());
+
 		if (f1 == f2)
 			continue;
-		assert(0);
+			
+		for (int i = (int) floor(bb[f1 * 2 + 0][0]); i < (int) ceil(bb[f1 * 2 + 1][0]); i++)
+		for (int j = (int) floor(bb[f1 * 2 + 0][1]); j < (int) ceil(bb[f1 * 2 + 1][1]); j++) {
+			int n1 = i * (int) floor(_pt1.scaled_width()) + j;
+			z[f1][n1].insert(t_set->begin(), t_set->end());
+			d2::point p1(i, j);
+			d2::point p2 = frame_to_frame(p1, f1, f2, z[f1], z[f2]).xy();
+
+			int i2 = (int) round(p2[0]);
+			int j2 = (int) round(p2[1]);
+			int n2 = i2 * (int) floor(_pt2.scaled_width()) + j2;
+
+			z[f2][n2].insert(t_set->begin(), t_set->end());
+
+			if (z[f1][n1].nearest(_pt1, i, j) != z[f2][n2].nearest(_pt2, i2, j2))
+				continue;
+
+			orig_color_cost += (cl->reference[f1]->get_bl(p1)
+			                  - cl->reference[f2]->get_bl(p2)).normsq();
+
+			orig_color_div  += 1;
+		}
 	}
 	
 	/*
@@ -217,7 +254,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Determine geometric costs.
 	 */
 
-	for (std::forward_iterator i = t_set->begin(); i != t_set->end(); i++)
+	for (std::set<triangle *>::iterator i = t_set->begin(); i != t_set->end(); i++)
 	for (int v = 0; v < 3; v++)
 		new_geom_cost += (*i)->edge_cost() + (*i)->angle_cost();
 
@@ -225,11 +262,37 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Determine color costs.
 	 */
 	 
-	for (int f1 = 0; f1 < d2::image_rw::count(); f1++)
-	for (int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+	for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++)
+	for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+		pt _pt1 = align::projective(f1);
+		pt _pt2 = align::projective(f2);
+
+		_pt1.scale(cl->sf / _pt1.scale_2d());
+		_pt2.scale(cl->sf / _pt2.scale_2d());
+
 		if (f1 == f2)
 			continue;
-		assert(0);
+		for (int i = (int) floor(bb[f1 * 2 + 0][0]); i < (int) ceil(bb[f1 * 2 + 1][0]); i++)
+		for (int j = (int) floor(bb[f1 * 2 + 0][1]); j < (int) ceil(bb[f1 * 2 + 1][1]); j++) {
+			int n1 = i * (int) floor(_pt1.scaled_width()) + j;
+			z[f1][n1].insert(t_set->begin(), t_set->end());
+			d2::point p1(i, j);
+			d2::point p2 = frame_to_frame(p1, f1, f2, z[f1], z[f2]).xy();
+
+			int i2 = (int) round(p2[0]);
+			int j2 = (int) round(p2[1]);
+			int n2 = i2 * (int) floor(_pt2.scaled_width()) + j2;
+
+			z[f2][n2].insert(t_set->begin(), t_set->end());
+
+			if (z[f1][n1].nearest(_pt1, i, j) != z[f2][n2].nearest(_pt2, i2, j2))
+				continue;
+
+			new_color_cost += (cl->reference[f1]->get_bl(p1)
+			                 - cl->reference[f2]->get_bl(p2)).normsq();
+
+			new_color_div  += 1;
+		}
 	}
 
 	/*
@@ -260,6 +323,6 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Return the error difference
 	 */
 
-	return (new_color_cost + new_geom_cost)
-	     - (orig_color_cost + orig_geom_cost);
+	return (sqrt(new_color_cost) + new_geom_cost)
+	     - (sqrt(orig_color_cost) + orig_geom_cost);
 }

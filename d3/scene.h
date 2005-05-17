@@ -136,19 +136,17 @@ class scene {
 	 * array dynamically resizable and re-sortable.
 	 */
 	class zbuf_elem {
-		unsigned int size;
-		triangle **array;
+		std::set<triangle *> *tset;
 		triangle *_nearest;
 
 	public:
 		zbuf_elem() {
-			size = 0;
-			array = NULL;
+			tset = new std::set<triangle *>;
 			_nearest = NULL;
 		}
 
 		~zbuf_elem() {
-			free(array);
+			delete tset;
 		}
 
 		void clear_nearest() {
@@ -164,9 +162,11 @@ class scene {
 		}
 
 		void insert(triangle *t) {
-			array = (triangle **) realloc(array, (size + 1) * sizeof(triangle *));
-			array[size] = t;
-			size++;
+			tset->insert(t);
+		}
+
+		void insert(std::set<triangle *>::iterator begin, std::set<triangle *>::iterator end) {
+			tset->insert(begin, end);
 		}
 	};
 
@@ -177,7 +177,7 @@ class scene {
 	 * coordinates.  Returns zero-depth if there is no mutually-visible
 	 * model point.
 	 */
-	point frame_to_frame(d2::point p, int f1, int f2);
+	static point frame_to_frame(d2::point p, int f1, int f2, zbuf_elem *z1, zbuf_elem *z2);
 
 	/*
 	 * Vertex movement cost
@@ -185,7 +185,7 @@ class scene {
 	 * Evaluate the cost of moving a vertex.  Negative values indicate
 	 * improvement; non-negative values indicate lack of improvement.
 	 */
-	ale_accum vertex_movement_cost(triangle *t, point *vertex, point new_position, zbuf_elem **z);
+	static ale_accum vertex_movement_cost(triangle *t, point *vertex, point new_position, zbuf_elem **z);
 
 	/*
 	 * Structure to hold input frame information for a given level of
@@ -457,7 +457,7 @@ class scene {
 			 * visited this node, then return immediately.
 			 */
 
-			if (vertex_ref_maybe(vertex) < 0 || count(this) > 0)
+			if (vertex_ref_maybe(vertex) < 0 || partial->count(this) > 0)
 				return;
 
 			/*
@@ -1558,11 +1558,11 @@ class scene {
 		 *
 		 * Return non-zero if an adjustment is made.
 		 */
-		int adjust_vertices() {
+		int adjust_vertices(zbuf_elem **z) {
 
 			if (children[0] && children[1]) {
-				return children[0]->adjust_vertices()
-				     | children[1]->adjust_vertices();
+				return children[0]->adjust_vertices(z)
+				     | children[1]->adjust_vertices(z);
 			}
 
 			/*
@@ -1592,12 +1592,6 @@ class scene {
 			ale_accum step = step_size();
 
 			int improved = 0;
-			ale_accum lowest_error = +0;
-			lowest_error = +1 / lowest_error;
-
-			assert (lowest_error > 0);
-			assert (isinf(lowest_error) == 1);
-
 			point best_vertices[3] = {*vertices[0], *vertices[1], *vertices[2]};
 
 			ale_pos allowable_max_neighbor_angle = M_PI / 1.5;
@@ -1619,79 +1613,46 @@ class scene {
 					continue;
 
 				/*
-				 * Evaluate the error at the current position.
-				 */
-
-				lowest_error = traverse_around_vertex(vertices[v], &triangle::reference_error, 0);
-
-				/*
 				 * Perturb the position.
 				 */
 
 				for (int axis = 0; axis < 3; axis++)
 				for (int dir = -1; dir <= 1; dir += 2) {
 
+					point orig = *vertices[v];
+					point perturbed = orig + point::unit(axis) * step * dir;
+
 					ale_accum extremum_angle;
-					ale_accum error = 0;
 
 					/*
 					 * Adjust the vertex under consideration
 					 */
-
-					*vertices[v] = best_vertices[v] + point::unit(axis) * step * dir;
 
 					/*
 					 * Eliminate from consideration any change that increases to more than
 					 * a given amount the angle between the normals of adjacent triangles.
 					 */
 
+					*vertices[v] = perturbed;
 					extremum_angle = traverse_around_vertex(vertices[v], &triangle::max_neighbor_angle, 1);
 					if (extremum_angle > allowable_max_neighbor_angle) {
 						*vertices[v] = best_vertices[v];
 						continue;
 					}
-
-					/*
-					 * Limit internal angle sizes.
-					 */
-
-//					extremum_angle = traverse_around_vertex(vertices[v], &triangle::max_internal_angle, 1);
-//					if (extremum_angle > allowable_max_internal_angle) {
-//						*vertices[v] = best_vertices[v];
-//						continue;
-//					}
-//
-//					extremum_angle = traverse_around_vertex(vertices[v], &triangle::min_internal_angle, 2);
-//					if (extremum_angle < allowable_min_internal_angle) {
-//						*vertices[v] = best_vertices[v];
-//						continue;
-//					}
-
-					/*
-					 * Recalculate the color
-					 */
-
-					recolor();
+					*vertices[v] = orig;
 
 					/*
 					 * Check the error
 					 */
 
-					error = traverse_around_vertex(vertices[v], &triangle::reference_error, 0);
-					if (error < lowest_error) {
-						lowest_error = error;
+					ale_accum error = vertex_movement_cost(this, vertices[v], perturbed, z);
+					if (error < 0) {
 						improved = 1;
-						best_vertices[v] = *vertices[v];
+						*vertices[v] = perturbed;
 						break;
-					} else {
-						*vertices[v] = best_vertices[v];
 					}
-
-					if (!finite(lowest_error))
-						fprintf(stderr, "dir %d, error %e\n", dir, error);
 				}
 			}
-
 			return improved;
 		}
 	};
@@ -2080,7 +2041,7 @@ class scene {
 			 */
 			for (unsigned int i = 0; i < height; i++)
 			for (unsigned int j = 0; j < width;  j++) {
-				triangle *t = zbuf[i * width + j].nearest();
+				triangle *t = zbuf[i * width + j].nearest(_pt, i, j);
 
 				/*
 				 * Check for points without associated triangles.
@@ -2163,7 +2124,7 @@ class scene {
 			 */
 			for (unsigned int i = 0; i < im->height(); i++)
 			for (unsigned int j = 0; j < im->width();  j++) {
-				triangle *t = zbuf[i * im->width() + j].nearest();
+				triangle *t = zbuf[i * im->width() + j].nearest(_pt, i, j);
 
 				/*
 				 * Check for points without associated triangles.
@@ -2192,21 +2153,40 @@ class scene {
 		}
 	}
 
+	static zbuf_elem **construct_zbuffers() {
+		zbuf_elem **result = (zbuf_elem **) malloc(d2::image_rw::count() * sizeof(zbuf_elem *));
+
+		for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
+			pt _pt = align::projective(i);
+			_pt.scale(cl->sf / _pt.scale_2d());
+			result[i] = init_zbuf(_pt);
+			zbuffer(_pt, result[i], triangle_head[0]);
+			zbuffer(_pt, result[i], triangle_head[1]);
+		}
+
+		return result;
+	}
+
+	static void free_zbuffers(zbuf_elem **z) {
+		for (unsigned int i = 0; i < d2::image_rw::count(); i++)
+			delete z[i];
+		free(z);
+	}
+
 	/*
 	 * Adjust vertices to minimize scene error.  Return 
 	 * non-zero if improvements are made.
 	 */
 	static int adjust_vertices() {
 		/*
-		 * Determine the visibility of triangles from frames.
+		 * Collect z-buffer data
 		 */
 
-		determine_visibility();
+		zbuf_elem **z = construct_zbuffers();
 
-		int result = triangle_head[0]->adjust_vertices() | triangle_head[1]->adjust_vertices();
+		int result = triangle_head[0]->adjust_vertices(z) | triangle_head[1]->adjust_vertices(z);
 
-		triangle_head[0]->free_aux_vars();
-		triangle_head[1]->free_aux_vars();
+		free_zbuffers(z);
 
 		return result;
 	}
@@ -2413,7 +2393,7 @@ public:
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
 
-			triangle *t = zbuf[i * im->width() + j].nearest();
+			triangle *t = zbuf[i * im->width() + j].nearest(_pt, i, j);
 
 			if (!t)
 				continue;
@@ -2443,7 +2423,7 @@ public:
 
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
-			triangle *t = zbuf[i * im->width() + j].nearest();
+			triangle *t = zbuf[i * im->width() + j].nearest(_pt, i, j);
 
 			if (!t)
 				continue;
