@@ -152,6 +152,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	point *bb = new point[2 * d2::image_rw::count()];
 	for (int f = 0; f < d2::image_rw::count(); f++) {
 		point *bbp = bb + 2 * f;
+		pt _pt = align::of(f);
 
 		ale_accum inf = +1;
 		ale_accum zero = 0;
@@ -163,7 +164,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 		bbp[1][0] = bbp[1][1] = -inf;
 
 		for (std::forward_iterator i = v_set.begin; i != v_set.end(); i++) {
-			point p = (**i);
+			point p = _pt.wp_scaled(**i);
 
 			if (p[0] < bbp[0][0])
 				bbp[0][0] = p[0];
@@ -174,6 +175,17 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 			if (p[1] > bbp[1][1])
 				bbp[1][1] = p[1];
 		}
+
+		point np = _pt.wp_scaled(new_position);
+
+		if (np[0] < bbp[0][0])
+			bbp[0][0] = np[0];
+		if (np[1] < bbp[0][1])
+			bbp[0][1] = np[1];
+		if (np[0] > bbp[1][0])
+			bbp[1][0] = np[0];
+		if (np[1] > bbp[1][1])
+			bbp[1][1] = np[1];
 	}
 
 	/*
@@ -188,7 +200,12 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Determine color costs
 	 */
 
-	assert(0);
+	for (int f1 = 0; f1 < d2::image_rw::count(); f1++)
+	for (int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+		if (f1 == f2)
+			continue;
+		assert(0);
+	}
 	
 	/*
 	 * Move the target vertex
@@ -208,7 +225,12 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Determine color costs.
 	 */
 	 
-	assert(0);
+	for (int f1 = 0; f1 < d2::image_rw::count(); f1++)
+	for (int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+		if (f1 == f2)
+			continue;
+		assert(0);
+	}
 
 	/*
 	 * Free allocated memory.
