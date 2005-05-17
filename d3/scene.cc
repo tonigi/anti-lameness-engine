@@ -118,4 +118,93 @@ void scene::zbuf_elem::find_nearest(pt _pt, int i, int j) {
 	}
 }
 
+ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point new_position, zbuf_elem **z) {
+	ale_accum orig_color_cost = 0, new_color_cost = 0;
+	ale_accum orig_color_div  = 0, new_color_div  = 0;
+	ale_accum orig_geom_cost  = 0, new_geom_cost  = 0;
 
+	point original_position = *vertex;
+
+	/*
+	 * Determine the triangles surrounding the vertex.
+	 */
+
+	std::set<triangle *> *t_set = new std::set<triangle *>;
+
+	t->triangles_around_vertex(vertex, t_set);
+
+	/*
+	 * Determine the set of vertices associated with the triangles
+	 * surrounding the specified vertex.
+	 */
+
+	std::set<point *> *v_set = new std::set<point *>;
+
+	for (std::forward_iterator i = t_set->begin(); i != t_set->end(); i++)
+	for (int v = 0; v < 3; v++)
+		v_set.insert((*i)->vertices[v]);
+
+	/*
+	 * Determine geometric costs.
+	 */
+
+	for (std::forward_iterator i = t_set->begin(); i != t_set->end(); i++)
+	for (int v = 0; v < 3; v++)
+		orig_geom_cost += (*i)->edge_cost() + (*i)->angle_cost();
+
+	/*
+	 * Determine color costs
+	 */
+
+	assert(0);
+	
+	/*
+	 * Move the target vertex
+	 */
+
+	*vertex = new_position;
+
+	/*
+	 * Determine geometric costs.
+	 */
+
+	for (std::forward_iterator i = t_set->begin(); i != t_set->end(); i++)
+	for (int v = 0; v < 3; v++)
+		new_geom_cost += (*i)->edge_cost() + (*i)->angle_cost();
+
+	/*
+	 * Determine color costs.
+	 */
+	 
+	assert(0);
+
+	/*
+	 * Free sets.
+	 */
+	
+	delete t_set;
+	delete v_set;
+
+	/*
+	 * Restore the target vertex
+	 */
+
+	*vertex = original_position;
+
+	/*
+	 * Apply divisors.
+	 */
+
+	orig_color_cost /= orig_color_div;
+	new_color_cost  /= new_color_div;
+
+	if (!finite(orig_color_cost) || !finite(new_color_cost))
+		orig_color_cost = new_color_cost = 0;
+
+	/*
+	 * Return the error difference
+	 */
+
+	return (new_color_cost + new_geom_cost)
+	     - (orig_color_cost + orig_geom_cost);
+}

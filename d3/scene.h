@@ -157,7 +157,8 @@ class scene {
 
 		void find_nearest(pt _pt, int i, int j);
 
-		triangle *nearest() {
+		triangle *nearest(pt _pt, int i, int j) {
+			find_nearest(_pt, i, j);
 			assert(_nearest);
 			return _nearest;
 		}
@@ -177,6 +178,14 @@ class scene {
 	 * model point.
 	 */
 	point frame_to_frame(d2::point p, int f1, int f2);
+
+	/*
+	 * Vertex movement cost
+	 *
+	 * Evaluate the cost of moving a vertex.  Negative values indicate
+	 * improvement; non-negative values indicate lack of improvement.
+	 */
+	ale_accum vertex_movement_cost(triangle *t, point *vertex, point new_position, zbuf_elem **z);
 
 	/*
 	 * Structure to hold input frame information for a given level of
@@ -1331,6 +1340,17 @@ class scene {
 
 		}
 
+		ale_accum edge_cost() {
+			return ((*vertices[0]).lengthto(*vertices[1])
+			      + (*vertices[0]).lengthto(*vertices[2])
+			      + (*vertices[1]).lengthto(*vertices[2])) * edge_cost_multiplier
+				                                       * cl->sf;
+		}
+
+		ale_accum angle_cost() {
+			return sum_neighbor_angle() * angle_cost_multiplier;
+		}
+
 		/*
 		 * Recolor, assuming that visibility remains constant.
 		 */
@@ -2003,9 +2023,7 @@ class scene {
 			 */
 			for (unsigned int i = 0; i < im->height(); i++)
 			for (unsigned int j = 0; j < im->width();  j++) {
-				zbuf_elem &ze = zbuf[i * im->width() + j];
-				ze.find_nearest(_pt, i, j);
-				triangle *t = ze.nearest();
+				triangle *t = zbuf[i * im->width() + j].nearest(_pt, i, j);
 
 				/*
 				 * Check for points without associated triangles.
@@ -2053,7 +2071,7 @@ class scene {
 			_pt.scale(scale * sf / _pt.scale_2d());
 			unsigned int height = (unsigned int) floor(_pt.scaled_height());
 			unsigned int width  = (unsigned int) floor(_pt.scaled_width());
-			triangle **zbuf = init_zbuf(_pt);
+			zbuf_elem *zbuf = init_zbuf(_pt);
 			zbuffer(_pt, zbuf, triangle_head[0]);
 			zbuffer(_pt, zbuf, triangle_head[1]);
 
@@ -2062,7 +2080,7 @@ class scene {
 			 */
 			for (unsigned int i = 0; i < height; i++)
 			for (unsigned int j = 0; j < width;  j++) {
-				triangle *t = zbuf[i * width + j];
+				triangle *t = zbuf[i * width + j].nearest();
 
 				/*
 				 * Check for points without associated triangles.
@@ -2135,7 +2153,7 @@ class scene {
 			_pt.scale(sf / _pt.scale_2d());
 			assert (im->width() == (unsigned int) floor(_pt.scaled_width()));
 			assert (im->height() == (unsigned int) floor(_pt.scaled_height()));
-			triangle **zbuf = init_zbuf(_pt);
+			zbuf_elem *zbuf = init_zbuf(_pt);
 			zbuffer(_pt, zbuf, triangle_head[0]);
 			zbuffer(_pt, zbuf, triangle_head[1]);
 
@@ -2145,7 +2163,7 @@ class scene {
 			 */
 			for (unsigned int i = 0; i < im->height(); i++)
 			for (unsigned int j = 0; j < im->width();  j++) {
-				triangle *t = zbuf[i * im->width() + j];
+				triangle *t = zbuf[i * im->width() + j].nearest();
 
 				/*
 				 * Check for points without associated triangles.
@@ -2387,15 +2405,19 @@ public:
 
 		pt _pt = align::projective(n);
 
-		triangle **zbuf = init_zbuf(_pt);
+		zbuf_elem *zbuf = init_zbuf(_pt);
 
 		zbuffer(_pt, zbuf, triangle_head[0]);
 		zbuffer(_pt, zbuf, triangle_head[1]);
 
 		for (unsigned int i = 0; i < im->height(); i++)
-		for (unsigned int j = 0; j < im->width();  j++)
-		if (zbuf[i * im->width() + j]) {
-			triangle *t = zbuf[i * im->width() + j];
+		for (unsigned int j = 0; j < im->width();  j++) {
+
+			triangle *t = zbuf[i * im->width() + j].nearest();
+
+			if (!t)
+				continue;
+
 			int sti = subtriangle_index(_pt, d2::point(i, j), t);
 			im->pix(i, j) = t->color[sti];
 //			im->pix(i, j) = d2::pixel(sti,sti,sti) / (double) PLANAR_SUBDIVISION_COUNT;
@@ -2414,15 +2436,20 @@ public:
 
 		pt _pt = align::projective(n);
 
-		triangle **zbuf = init_zbuf(align::projective(n));
+		zbuf_elem *zbuf = init_zbuf(align::projective(n));
 
 		zbuffer(_pt, zbuf, triangle_head[0]);
 		zbuffer(_pt, zbuf, triangle_head[1]);
 
 		for (unsigned int i = 0; i < im->height(); i++)
-		for (unsigned int j = 0; j < im->width();  j++)
-		if (zbuf[i * im->width() + j])
-			im->pix(i, j) = d2::pixel(1, 1, 1) * _pt.wc(zbuf[i * im->width() + j]->centroid())[2];
+		for (unsigned int j = 0; j < im->width();  j++) {
+			triangle *t = zbuf[i * im->width() + j].nearest();
+
+			if (!t)
+				continue;
+
+			im->pix(i, j) = d2::pixel(1, 1, 1) * _pt.wc(t->centroid())[2];
+		}
 
 		free(zbuf);
 
