@@ -96,15 +96,21 @@ void scene::zbuf_elem::find_nearest(pt _pt, int i, int j) {
 
 	assert(tset);
 
-	for (std::set<triangle *>::iterator i = tset->begin(); i != tset->end(); i++) {
-		triangle *t = (*i);
+	for (std::set<triangle *>::iterator ii = tset->begin(); ii != tset->end(); ii++) {
+		triangle *t = (*ii);
 		point c[3];
 
 		for (int v = 0; v < 3; v++)
 			c[v] = _pt.wc(*t->vertices[v]);
 
-		if (!is_interior_c(c, c_ray))
+		if (!is_interior_c(c, c_ray)) {
+			point multipliers = rt_intersect(c_ray, c);
+
+			fprintf(stderr, "[i=%d j=%d ci=%f cj=%f cv1=%f %f %f cv2=%f %f %f cv3=%f %f %f m=%f %f %f] ",
+				i, j, c_ray[0], c_ray[1], c[0][0], c[0][1], c[0][2], c[1][0], c[1][1], c[1][2], c[2][0], c[2][1], c[2][2], multipliers[0], multipliers[1], multipliers[2]);
+
 			continue;
+		}
 
 		point multipliers = rt_intersect(c_ray, c);
 		ale_pos ray_multiplier = fabs(multipliers[2]);
@@ -228,6 +234,9 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 			d2::point p1(i, j);
 			d2::point p2 = frame_to_frame(p1, f1, f2, z[f1], z[f2]).xy();
 
+			if (!p2.defined())
+				continue;
+
 			int i2 = (int) round(p2[0]);
 			int j2 = (int) round(p2[1]);
 			int n2 = i2 * (int) floor(_pt2.scaled_width()) + j2;
@@ -278,6 +287,9 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 			z[f1][n1].insert(t_set->begin(), t_set->end());
 			d2::point p1(i, j);
 			d2::point p2 = frame_to_frame(p1, f1, f2, z[f1], z[f2]).xy();
+
+			if (!p2.defined())
+				continue;
 
 			int i2 = (int) round(p2[0]);
 			int j2 = (int) round(p2[1]);

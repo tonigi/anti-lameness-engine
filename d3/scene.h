@@ -157,7 +157,6 @@ class scene {
 
 		triangle *nearest(pt _pt, int i, int j) {
 			find_nearest(_pt, i, j);
-			assert(_nearest);
 			return _nearest;
 		}
 
@@ -1818,8 +1817,7 @@ class scene {
 	 * Z-buffer initialization function.
 	 */
 	static zbuf_elem *init_zbuf(pt _pt) {
-		zbuf_elem *result = (zbuf_elem *) calloc((int) floor(_pt.scaled_width()) *
-				(int) floor(_pt.scaled_height()), sizeof(zbuf_elem));
+		zbuf_elem *result = new zbuf_elem[(int) floor(_pt.scaled_width()) * (int) floor(_pt.scaled_height())];
 
 		assert(result);
 
@@ -2001,7 +1999,7 @@ class scene {
 				t->weight[sti] = t->weight[sti] + d2::pixel(1, 1, 1);
 			}
 
-			free(zbuf);
+			delete[] zbuf;
 		}
 	}
 
@@ -2074,7 +2072,7 @@ class scene {
 					t->parent->aux_stat = d2::pixel(-1, -1, -1);
 			}
 
-			free(zbuf);
+			delete[] zbuf;
 		}
 
 		if (split)
@@ -2149,7 +2147,7 @@ class scene {
 				aux_var[n] = 1;
 			}
 
-			free(zbuf);
+			delete[] zbuf;
 		}
 	}
 
@@ -2169,7 +2167,7 @@ class scene {
 
 	static void free_zbuffers(zbuf_elem **z) {
 		for (unsigned int i = 0; i < d2::image_rw::count(); i++)
-			delete z[i];
+			delete[] z[i];
 		free(z);
 	}
 
@@ -2403,7 +2401,7 @@ public:
 //			im->pix(i, j) = d2::pixel(sti,sti,sti) / (double) PLANAR_SUBDIVISION_COUNT;
 		}
 
-		free(zbuf);
+		delete[] zbuf;
 
 		return im;
 	}
@@ -2431,7 +2429,7 @@ public:
 			im->pix(i, j) = d2::pixel(1, 1, 1) * _pt.wc(t->centroid())[2];
 		}
 
-		free(zbuf);
+		delete[] zbuf;
 
 		return im;
 	}
