@@ -433,6 +433,42 @@ class scene {
 
 		/*
 		 * Traverse the sub-graph of triangles around a given vertex,
+		 * and construct a set containing all triangles encountered.
+		 *
+		 * PARTIAL should be initialized to the empty set by the
+		 * non-recursive call, and will reflect the complete subgraph
+		 * upon return from this call.
+		 */
+		void triangles_around_vertex(point *vertex, std::set<triangle *> *partial) {
+
+			assert (partial);
+
+			/*
+			 * If this node does not contain the given vertex, or if we've already
+			 * visited this node, then return immediately.
+			 */
+
+			if (vertex_ref_maybe(vertex) < 0 || count(this) > 0)
+				return;
+
+			/*
+			 * Add this triangle to the list.
+			 */
+
+			partial->insert(this);
+
+			/*
+			 * Visit neighbors
+			 */
+
+			for (int v = 0; v < 3; v++)
+			if  (neighbors[v]) {
+				neighbors[v]->triangles_around_vertex(vertex, partial);
+			}
+		}
+
+		/*
+		 * Traverse the sub-graph of triangles around a given vertex,
 		 * and return an aggregate result for a given function,
 		 * ignoring non-finite values.
 		 *

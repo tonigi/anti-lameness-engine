@@ -117,3 +117,5 @@ void scene::zbuf_elem::find_nearest(pt _pt, int i, int j) {
 		_nearest = t;
 	}
 }
+
+
