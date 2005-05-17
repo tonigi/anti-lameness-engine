@@ -1,5 +1,6 @@
-// Copyright 2003, 2004 David Hilvert <dhilvert@auricle.dyndns.org>,
-//                                    <dhilvert@ugcs.caltech.edu>
+// Copyright 2003, 2004, 2005 David Hilvert <dhilvert@gmail.com>,
+//                                          <dhilvert@auricle.dyndns.org>,
+//                                          <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
 
@@ -145,6 +146,37 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 		v_set.insert((*i)->vertices[v]);
 
 	/*
+	 * Determine bounding boxes for calculating color costs
+	 */
+
+	point *bb = new point[2 * d2::image_rw::count()];
+	for (int f = 0; f < d2::image_rw::count(); f++) {
+		point *bbp = bb + 2 * f;
+
+		ale_accum inf = +1;
+		ale_accum zero = 0;
+		inf /= zero;
+		assert(isinf(inf)  ==  1);
+		assert(isinf(-inf) == -1);
+
+		bbp[0][0] = bbp[0][1] =  inf;
+		bbp[1][0] = bbp[1][1] = -inf;
+
+		for (std::forward_iterator i = v_set.begin; i != v_set.end(); i++) {
+			point p = (**i);
+
+			if (p[0] < bbp[0][0])
+				bbp[0][0] = p[0];
+			if (p[1] < bbp[0][1])
+				bbp[0][1] = p[1];
+			if (p[0] > bbp[1][0])
+				bbp[1][0] = p[0];
+			if (p[1] > bbp[1][1])
+				bbp[1][1] = p[1];
+		}
+	}
+
+	/*
 	 * Determine geometric costs.
 	 */
 
@@ -179,9 +211,10 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	assert(0);
 
 	/*
-	 * Free sets.
+	 * Free allocated memory.
 	 */
 	
+	delete[] bb;
 	delete t_set;
 	delete v_set;
 
