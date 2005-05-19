@@ -1624,7 +1624,7 @@ class scene {
 					extremum_angle = traverse_around_vertex(vertices[v], &triangle::max_neighbor_angle, 1);
 					*vertices[v] = orig;
 					if (extremum_angle > allowable_max_neighbor_angle)
-						; // continue;
+						continue;
 
 					/*
 					 * Check the error
