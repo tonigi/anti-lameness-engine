@@ -1574,24 +1574,12 @@ class scene {
 				return 0;
 
 			/*
-			 * Get the list of frames in which this triangle appears.  If
-			 * it doesn't appear in any frames, then we don't adjust any
-			 * vertices.
-			 */
-
-			char *frame_list = (char *)aux_var;
-
-			if (!frame_list)
-				return 0;
-
-			/*
 			 * Determine the adjustment step size.
 			 */
 
 			ale_accum step = step_size();
 
 			int improved = 0;
-			point best_vertices[3] = {*vertices[0], *vertices[1], *vertices[2]};
 
 			ale_pos allowable_max_neighbor_angle = M_PI / 1.5;
 			// ale_pos allowable_max_internal_angle = M_PI / 1.5;
@@ -1634,11 +1622,9 @@ class scene {
 
 					*vertices[v] = perturbed;
 					extremum_angle = traverse_around_vertex(vertices[v], &triangle::max_neighbor_angle, 1);
-					if (extremum_angle > allowable_max_neighbor_angle) {
-						*vertices[v] = best_vertices[v];
-						continue;
-					}
 					*vertices[v] = orig;
+					if (extremum_angle > allowable_max_neighbor_angle)
+						; // continue;
 
 					/*
 					 * Check the error

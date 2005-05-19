@@ -67,13 +67,13 @@ point scene::frame_to_frame(d2::point p, int f1, int f2, zbuf_elem *z1, zbuf_ele
 
 	point p2 = _pt2.wp_scaled(c_ray);
 
+	if (p2[0] < 0 || p2[0] > floor(_pt2.scaled_height() - 1))
+		return point::undefined();
+	if (p2[1] < 0 || p2[1] > floor(_pt2.scaled_width() - 1))
+		return point::undefined();
+
 	int i2 = (int) round(p2[0]);
 	int j2 = (int) round(p2[1]);
-
-	if (i2 < 0 || i2 > (int) floor(_pt2.scaled_height()) - 1)
-		return point::undefined();
-	if (j2 < 0 || j2 > (int) floor(_pt2.scaled_width()) - 1)
-		return point::undefined();
 
 	triangle *t2 = z2[i2 * (int) floor(_pt2.scaled_width()) + j2].nearest(_pt2, i2, j2);
 
@@ -103,14 +103,8 @@ void scene::zbuf_elem::find_nearest(pt _pt, int i, int j) {
 		for (int v = 0; v < 3; v++)
 			c[v] = _pt.wc(*t->vertices[v]);
 
-		if (!is_interior_c(c, c_ray)) {
-			point multipliers = rt_intersect(c_ray, c);
-
-			fprintf(stderr, "[i=%d j=%d ci=%f cj=%f cv1=%f %f %f cv2=%f %f %f cv3=%f %f %f m=%f %f %f] ",
-				i, j, c_ray[0], c_ray[1], c[0][0], c[0][1], c[0][2], c[1][0], c[1][1], c[1][2], c[2][0], c[2][1], c[2][2], multipliers[0], multipliers[1], multipliers[2]);
-
+		if (!is_interior_c(c, c_ray))
 			continue;
-		}
 
 		point multipliers = rt_intersect(c_ray, c);
 		ale_pos ray_multiplier = fabs(multipliers[2]);
@@ -205,6 +199,22 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	}
 
 	/*
+	 * Add triangles to bounding box areas.
+	 */
+
+	for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+		pt _pt = align::projective(f);
+
+		_pt.scale(cl->sf / _pt.scale_2d());
+			
+		for (int i = (int) floor(bb[f * 2 + 0][0]); i < (int) ceil(bb[f * 2 + 1][0]); i++)
+		for (int j = (int) floor(bb[f * 2 + 0][1]); j < (int) ceil(bb[f * 2 + 1][1]); j++) {
+			int n = i * (int) floor(_pt.scaled_width()) + j;
+			z[f][n].insert(t_set->begin(), t_set->end());
+		}
+	}
+
+	/*
 	 * Determine geometric costs.
 	 */
 
@@ -230,7 +240,6 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 		for (int i = (int) floor(bb[f1 * 2 + 0][0]); i < (int) ceil(bb[f1 * 2 + 1][0]); i++)
 		for (int j = (int) floor(bb[f1 * 2 + 0][1]); j < (int) ceil(bb[f1 * 2 + 1][1]); j++) {
 			int n1 = i * (int) floor(_pt1.scaled_width()) + j;
-			z[f1][n1].insert(t_set->begin(), t_set->end());
 			d2::point p1(i, j);
 			d2::point p2 = frame_to_frame(p1, f1, f2, z[f1], z[f2]).xy();
 
@@ -240,8 +249,6 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 			int i2 = (int) round(p2[0]);
 			int j2 = (int) round(p2[1]);
 			int n2 = i2 * (int) floor(_pt2.scaled_width()) + j2;
-
-			z[f2][n2].insert(t_set->begin(), t_set->end());
 
 			if (z[f1][n1].nearest(_pt1, i, j) != z[f2][n2].nearest(_pt2, i2, j2))
 				continue;
@@ -284,7 +291,6 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 		for (int i = (int) floor(bb[f1 * 2 + 0][0]); i < (int) ceil(bb[f1 * 2 + 1][0]); i++)
 		for (int j = (int) floor(bb[f1 * 2 + 0][1]); j < (int) ceil(bb[f1 * 2 + 1][1]); j++) {
 			int n1 = i * (int) floor(_pt1.scaled_width()) + j;
-			z[f1][n1].insert(t_set->begin(), t_set->end());
 			d2::point p1(i, j);
 			d2::point p2 = frame_to_frame(p1, f1, f2, z[f1], z[f2]).xy();
 
@@ -294,8 +300,6 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 			int i2 = (int) round(p2[0]);
 			int j2 = (int) round(p2[1]);
 			int n2 = i2 * (int) floor(_pt2.scaled_width()) + j2;
-
-			z[f2][n2].insert(t_set->begin(), t_set->end());
 
 			if (z[f1][n1].nearest(_pt1, i, j) != z[f2][n2].nearest(_pt2, i2, j2))
 				continue;
@@ -334,6 +338,12 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	/*
 	 * Return the error difference
 	 */
+
+	if (sqrt(new_color_cost) + new_geom_cost
+	  - sqrt(orig_color_cost) - orig_geom_cost < 0)
+		fprintf(stderr, "[ncc=%f ngc=%f occ=%f ogc=%f] ", 
+			sqrt(new_color_cost), new_geom_cost,
+			sqrt(orig_color_cost), orig_geom_cost);
 
 	return (sqrt(new_color_cost) + new_geom_cost)
 	     - (sqrt(orig_color_cost) + orig_geom_cost);
