@@ -234,21 +234,11 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 			
 		for (int i = (int) floor(bb[f1 * 2 + 0][0]); i <= (int) ceil(bb[f1 * 2 + 1][0]); i++)
 		for (int j = (int) floor(bb[f1 * 2 + 0][1]); j <= (int) ceil(bb[f1 * 2 + 1][1]); j++) {
-			int n1 = i * (int) floor(_pt1.scaled_width()) + j;
 			d2::point p1(i, j);
 			d2::point p2 = frame_to_frame(p1, _pt1, _pt2, z[f1], z[f2]).xy();
 
 			if (!p2.defined())
 				continue;
-
-			int i2 = (int) round(p2[0]);
-			int j2 = (int) round(p2[1]);
-			int n2 = i2 * (int) floor(_pt2.scaled_width()) + j2;
-
-			if (z[f1][n1].nearest(_pt1, i, j) != z[f2][n2].nearest(_pt2, i2, j2)) {
-				assert(0);
-				continue;
-			}
 
 			orig_color_cost += (cl->reference[f1]->get_bl(p1)
 			                  - cl->reference[f2]->get_bl(p2)).normsq();
@@ -287,21 +277,11 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 			continue;
 		for (int i = (int) floor(bb[f1 * 2 + 0][0]); i <= (int) ceil(bb[f1 * 2 + 1][0]); i++)
 		for (int j = (int) floor(bb[f1 * 2 + 0][1]); j <= (int) ceil(bb[f1 * 2 + 1][1]); j++) {
-			int n1 = i * (int) floor(_pt1.scaled_width()) + j;
 			d2::point p1(i, j);
 			d2::point p2 = frame_to_frame(p1, _pt1, _pt2, z[f1], z[f2]).xy();
 
 			if (!p2.defined())
 				continue;
-
-			int i2 = (int) round(p2[0]);
-			int j2 = (int) round(p2[1]);
-			int n2 = i2 * (int) floor(_pt2.scaled_width()) + j2;
-
-			if (z[f1][n1].nearest(_pt1, i, j) != z[f2][n2].nearest(_pt2, i2, j2)) {
-				assert(0);
-				continue;
-			}
 
 			new_color_cost += (cl->reference[f1]->get_bl(p1)
 			                 - cl->reference[f2]->get_bl(p2)).normsq();
