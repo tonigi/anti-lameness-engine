@@ -255,7 +255,7 @@ public:
 	 * Get scale factor.
 	 */
 
-	ale_pos scale() {
+	ale_pos scale() const {
 		return scale_factor;
 	}
 

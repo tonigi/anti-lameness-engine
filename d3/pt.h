@@ -68,21 +68,21 @@ public:
 	/*
 	 * Get the 2D scale factor
 	 */
-	ale_pos scale_2d() {
+	ale_pos scale_2d() const {
 		return t.scale();
 	}
 
 	/*
 	 * Transform W to C.
 	 */
-	point wc(point p) {
+	point wc(point p) const {
 		return euclidean(p);
 	}
 
 	/*
 	 * Transform C to P for given width and height.
 	 */
-	point cp_generic(point p, ale_pos w, ale_pos h) {
+	point cp_generic(point p, ale_pos w, ale_pos h) const {
 		/*
 		 * Divide x and y by negative z
 		 */
@@ -111,7 +111,7 @@ public:
 	/*
 	 * Transform point p.
 	 */
-	struct point wp_generic(struct point p, ale_pos w, ale_pos h) {
+	struct point wp_generic(struct point p, ale_pos w, ale_pos h) const {
 		return cp_generic(wc(p), w, h);
 	}
 
@@ -119,19 +119,19 @@ public:
 	 * Width and height
 	 */
 
-	ale_pos scaled_width() {
+	ale_pos scaled_width() const {
 		return t.scaled_width() * scale_factor;
 	}
 
-	ale_pos scaled_height() {
+	ale_pos scaled_height() const {
 		return t.scaled_height() * scale_factor;
 	}
 
-	ale_pos unscaled_width() {
+	ale_pos unscaled_width() const {
 		return t.unscaled_width() * scale_factor;
 	}
 
-	ale_pos unscaled_height() {
+	ale_pos unscaled_height() const {
 		return t.unscaled_height() * scale_factor;
 	}
 
@@ -139,11 +139,11 @@ public:
 	 * Scaled transforms
 	 */
 
-	point cp_scaled(point p) {
+	point cp_scaled(point p) const {
 		return cp_generic(p, scaled_width(), scaled_height());
 	}
 
-	point wp_scaled(point p) {
+	point wp_scaled(point p) const {
 		return wp_generic(p, scaled_width(), scaled_height());
 	}
 
@@ -151,18 +151,18 @@ public:
 	 * Unscaled transforms
 	 */
 
-	point cp_unscaled(point p) {
+	point cp_unscaled(point p) const {
 		return cp_generic(p, unscaled_width(), unscaled_height());
 	}
 
-	point wp_unscaled(point p) {
+	point wp_unscaled(point p) const {
 		return wp_generic(p, unscaled_width(), unscaled_height());
 	}
 
 	/*
 	 * Transform P to C.
 	 */
-	point pc_generic(point p, ale_pos w, ale_pos h) {
+	point pc_generic(point p, ale_pos w, ale_pos h) const {
 		/*
 		 * Subtract offset
 		 */
@@ -191,14 +191,14 @@ public:
 	/*
 	 * Transform C to W
 	 */
-	point cw(point p) {
+	point cw(point p) const {
 		return euclidean.inverse_transform(p);
 	}
 
 	/*
 	 * Transform P to W
 	 */
-	point pw_generic(point p, ale_pos w, ale_pos h) {
+	point pw_generic(point p, ale_pos w, ale_pos h) const {
 		return cw(pc_generic(p, w, h));
 	}
 
@@ -206,11 +206,11 @@ public:
 	 * Inverse transforms for scaled points.
 	 */
 
-	point pc_scaled(point p) {
+	point pc_scaled(point p) const {
 		return pc_generic(p, scaled_width(), scaled_height());
 	}
 
-	point pw_scaled(point p) {
+	point pw_scaled(point p) const {
 		return pw_generic(p, scaled_width(), scaled_height());
 	}
 
@@ -218,11 +218,11 @@ public:
 	 * Inverse transforms for unscaled points.
 	 */
 
-	point pc_unscaled(point p) {
+	point pc_unscaled(point p) const {
 		return pc_generic(p, unscaled_width(), unscaled_height());
 	}
 
-	point pw_unscaled(point p) {
+	point pw_unscaled(point p) const {
 		return pw_generic(p, unscaled_width(), unscaled_height());
 	}
 

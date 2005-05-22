@@ -35,12 +35,7 @@ ale_pos scene::angle_cost_multiplier = 0.001;
  * Functions.
  */
 
-point scene::frame_to_frame(d2::point p, int f1, int f2, zbuf_elem *z1, zbuf_elem *z2) {
-	pt _pt1 = align::projective(f1);
-	pt _pt2 = align::projective(f2);
-
-	_pt1.scale(cl->sf / _pt1.scale_2d());
-	_pt2.scale(cl->sf / _pt2.scale_2d());
+point scene::frame_to_frame(d2::point p, const pt &_pt1, const pt &_pt2, zbuf_elem *z1, zbuf_elem *z2) {
 
 	int i = (int) round(p[0]);
 	int j = (int) round(p[1]);
@@ -189,12 +184,12 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 		for (int d = 0; d < 2; d++) {
 			if (bbp[d][0] < 0)
 				bbp[d][0] = 0;
-			if (bbp[d][0] > _pt.scaled_height() - 1)
-				bbp[d][0] = _pt.scaled_height() - 1;
+			if (bbp[d][0] > floor(_pt.scaled_height()) - 1)
+				bbp[d][0] = floor(_pt.scaled_height()) - 1;
 			if (bbp[d][1] < 0)
 				bbp[d][1] = 0;
-			if (bbp[d][1] > _pt.scaled_width() - 1)
-				bbp[d][1] = _pt.scaled_width() - 1;
+			if (bbp[d][1] > floor(_pt.scaled_width()) - 1)
+				bbp[d][1] = floor(_pt.scaled_width()) - 1;
 		}
 	}
 
@@ -241,7 +236,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 		for (int j = (int) floor(bb[f1 * 2 + 0][1]); j <= (int) ceil(bb[f1 * 2 + 1][1]); j++) {
 			int n1 = i * (int) floor(_pt1.scaled_width()) + j;
 			d2::point p1(i, j);
-			d2::point p2 = frame_to_frame(p1, f1, f2, z[f1], z[f2]).xy();
+			d2::point p2 = frame_to_frame(p1, _pt1, _pt2, z[f1], z[f2]).xy();
 
 			if (!p2.defined())
 				continue;
@@ -294,7 +289,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 		for (int j = (int) floor(bb[f1 * 2 + 0][1]); j <= (int) ceil(bb[f1 * 2 + 1][1]); j++) {
 			int n1 = i * (int) floor(_pt1.scaled_width()) + j;
 			d2::point p1(i, j);
-			d2::point p2 = frame_to_frame(p1, f1, f2, z[f1], z[f2]).xy();
+			d2::point p2 = frame_to_frame(p1, _pt1, _pt2, z[f1], z[f2]).xy();
 
 			if (!p2.defined())
 				continue;

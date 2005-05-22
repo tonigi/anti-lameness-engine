@@ -142,6 +142,7 @@ class scene {
 	public:
 		zbuf_elem() {
 			tset = new std::set<triangle *>;
+			assert (tset);
 			_nearest = NULL;
 		}
 
@@ -176,7 +177,7 @@ class scene {
 	 * coordinates.  Returns zero-depth if there is no mutually-visible
 	 * model point.
 	 */
-	static point frame_to_frame(d2::point p, int f1, int f2, zbuf_elem *z1, zbuf_elem *z2);
+	static point frame_to_frame(d2::point p, const pt &_pt1, const pt &_pt2, zbuf_elem *z1, zbuf_elem *z2);
 
 	/*
 	 * Vertex movement cost
@@ -2374,6 +2375,36 @@ public:
 		zbuffer(_pt, zbuf, triangle_head[0]);
 		zbuffer(_pt, zbuf, triangle_head[1]);
 
+
+#if 1
+		zbuf_elem **zbs = construct_zbuffers();
+
+		for (unsigned int i = 0; i < im->height(); i++)
+		for (unsigned int j = 0; j < im->width();  j++) {
+			d2::pixel val;
+			ale_real div = 1;
+
+			for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+
+				pt _ptf = align::projective(f);
+				_ptf.scale(cl->sf / _ptf.scale_2d());
+
+				point p = frame_to_frame(d2::point(i, j), _pt, _ptf, zbuf, zbs[f]);
+
+				if (!p.defined())
+					continue;
+
+				d2::pixel v = cl->reference[f]->get_bl(p.xy());
+
+				val += v;
+				div += 1;
+			}
+
+			im->pix(i, j) = val / div;
+		}
+
+		free_zbuffers(zbs);
+#else
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
 
@@ -2386,6 +2417,7 @@ public:
 			im->pix(i, j) = t->color[sti];
 //			im->pix(i, j) = d2::pixel(sti,sti,sti) / (double) PLANAR_SUBDIVISION_COUNT;
 		}
+#endif
 
 		delete[] zbuf;
 

@@ -62,16 +62,16 @@ struct et {
 private:
 	ale_pos translation[3];
 	ale_pos rotation[3];
-	ale_pos matrix[4][4];
-	ale_pos matrix_inverse[4][4];
-	int resultant_memo;
-	int resultant_inverse_memo;
+	mutable ale_pos matrix[4][4];
+	mutable ale_pos matrix_inverse[4][4];
+	mutable int resultant_memo;
+	mutable int resultant_inverse_memo;
 
 	
 	/*
 	 * Create an identity matrix
 	 */
-	void mident(ale_pos m1[4][4]) {
+	void mident(ale_pos m1[4][4]) const {
 		for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 4; j++)
 			m1[i][j] = (i == j) ? 1 : 0;
@@ -80,7 +80,7 @@ private:
 	/*
 	 * Create a rotation matrix
 	 */
-	void mrot(ale_pos m1[4][4], ale_pos angle, int index) {
+	void mrot(ale_pos m1[4][4], ale_pos angle, int index) const {
 		mident(m1);
 		m1[(index+1)%3][(index+1)%3] = cos(angle);
 		m1[(index+2)%3][(index+2)%3] = cos(angle);
@@ -91,7 +91,7 @@ private:
 	/*
 	 * Multiply matrices M1 and M2; return result M3.
 	 */
-	void mmult(ale_pos m3[4][4], ale_pos m1[4][4], ale_pos m2[4][4]) {
+	void mmult(ale_pos m3[4][4], ale_pos m1[4][4], ale_pos m2[4][4]) const {
 		int k;
 
 		for (int i = 0; i < 4; i++)
@@ -103,7 +103,7 @@ private:
 	/*
 	 * Calculate resultant matrix values.
 	 */
-	void resultant() {
+	void resultant() const {
 
 		/*
 		 * If we already know the answers, don't bother calculating 
@@ -155,7 +155,7 @@ private:
 	/*
 	 * Calculate the inverse transform matrix values.
 	 */
-	void resultant_inverse () {
+	void resultant_inverse () const {
 
 		/*
 		 * If we already know the answers, don't bother calculating 
@@ -210,7 +210,7 @@ public:
 	/*
 	 * Transform point p.
 	 */
-	struct point transform(struct point p) {
+	struct point transform(struct point p) const {
 		struct point result;
 
 		resultant();
@@ -227,14 +227,14 @@ public:
 	/*
 	 * operator() is the transformation operator.
 	 */
-	struct point operator()(struct point p) {
+	struct point operator()(struct point p) const {
 		return transform(p);
 	}
 
 	/*
 	 * Map point p using the inverse of the transform.
 	 */
-	struct point inverse_transform(struct point p) {
+	struct point inverse_transform(struct point p) const {
 		struct point result;
 
 		resultant_inverse();
