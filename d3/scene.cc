@@ -318,11 +318,13 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Return the error difference
 	 */
 
+#if 0
 	if (sqrt(new_color_cost) + new_geom_cost
 	  - sqrt(orig_color_cost) - orig_geom_cost < 0)
 		fprintf(stderr, "[ncc=%f ngc=%f occ=%f ogc=%f] ", 
 			sqrt(new_color_cost), new_geom_cost,
 			sqrt(orig_color_cost), orig_geom_cost);
+#endif
 
 	return (sqrt(new_color_cost) + new_geom_cost)
 	     - (sqrt(orig_color_cost) + orig_geom_cost);
