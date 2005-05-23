@@ -220,6 +220,12 @@ class scene {
 	static struct lod *cl;
 
 	/*
+	 * Base level-of-detail
+	 */
+
+	static d2::image **bl;
+
+	/*
 	 * Structure to hold a subdivisible triangle.
 	 */
 
@@ -2152,6 +2158,20 @@ class scene {
 		return result;
 	}
 
+	static zbuf_elem **construct_zbuffers_unscaled() {
+		zbuf_elem **result = (zbuf_elem **) malloc(d2::image_rw::count() * sizeof(zbuf_elem *));
+
+		for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
+			pt _pt = align::projective(i);
+			_pt.scale(1 / _pt.scale_2d());
+			result[i] = init_zbuf(_pt);
+			zbuffer(_pt, result[i], triangle_head[0]);
+			zbuffer(_pt, result[i], triangle_head[1]);
+		}
+
+		return result;
+	}
+
 	static void free_zbuffers(zbuf_elem **z) {
 		for (unsigned int i = 0; i < d2::image_rw::count(); i++)
 			delete[] z[i];
@@ -2219,6 +2239,8 @@ public:
 			cl->reference[n] = d2::image_rw::copy(n, "3D scene reference");
 			assert(cl->reference[n]);
 		}
+
+		bl = cl->reference;
 
 		/*
 		 * Determine the bounding box of the intersections of the view
@@ -2377,6 +2399,100 @@ public:
 
 
 #if 1
+		zbuf_elem **zbsu = construct_zbuffers_unscaled();
+		zbuf_elem **zbs = construct_zbuffers();
+
+		for (unsigned int i = 0; i < im->height(); i++)
+		for (unsigned int j = 0; j < im->width();  j++) {
+			d2::pixel val;
+			ale_real div = 0;
+
+			/*
+			 * Approximates filter fine:box:1
+			 */
+
+			for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+
+				pt _ptf = align::projective(f);
+				_ptf.scale(1 / _ptf.scale_2d());
+
+				point bounds[2];
+
+				bounds[0] = bounds[1] = point::undefined();
+
+				bounds[0][2] = -1;
+				bounds[1][2] = -1;
+
+				for (ale_pos ii = -0.5; ii <= 0.5; ii += 1)
+				for (ale_pos jj = -0.5; jj <= 0.5; jj += 1) {
+
+					point p = frame_to_frame(d2::point(i + ii, j + jj), _pt, _ptf, zbuf, zbsu[f]);
+
+					if (p[0] < bounds[0][0] || !finite(bounds[0][0]))
+						bounds[0][0] = p[0];
+					if (p[1] < bounds[0][1] || !finite(bounds[0][1]))
+						bounds[0][1] = p[1];
+					if (p[0] > bounds[1][0] || !finite(bounds[1][0]))
+						bounds[1][0] = p[0];
+					if (p[1] > bounds[1][1] || !finite(bounds[1][1]))
+						bounds[1][1] = p[1];
+				}
+
+				if (!bounds[0].defined() || !bounds[1].defined())
+					continue;
+
+				for (int ii = (int) ceil(bounds[0][0]); ii <= (int) floor(bounds[1][0]); ii++)
+				for (int jj = (int) ceil(bounds[0][1]); jj <= (int) floor(bounds[1][1]); jj++) {
+					if (f == n || frame_to_frame(d2::point(ii, jj), _ptf, _pt, zbsu[f], zbuf).defined()) {
+						val += bl[f]->get_pixel(ii, jj);
+						div += 1;
+					}
+				}
+			}
+
+			if (div != 0) {
+				im->pix(i, j) = val / div;
+				continue;
+			}
+
+			/*
+			 * Approximates filter triangle:2
+			 */
+
+			for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+
+				pt _ptf = align::projective(f);
+				_ptf.scale(cl->sf / _ptf.scale_2d());
+
+				if (f == n) {
+					point p = _ptf.wp_scaled(_pt.pw_scaled(point(i, j, -1)));
+
+					if (!cl->reference[f]->in_bounds(p.xy()))
+						continue;
+
+					val += cl->reference[f]->get_bl(p.xy());
+					div += 1;
+
+					continue;
+				}
+
+				point p = frame_to_frame(d2::point(i, j), _pt, _ptf, zbuf, zbs[f]);
+
+				if (!p.defined())
+					continue;
+
+				d2::pixel v = cl->reference[f]->get_bl(p.xy());
+
+				val += v;
+				div += 1;
+			}
+
+			im->pix(i, j) = val / div;
+		}
+
+		free_zbuffers(zbs);
+		free_zbuffers(zbsu);
+#elif 1
 		zbuf_elem **zbs = construct_zbuffers();
 
 		for (unsigned int i = 0; i < im->height(); i++)

@@ -26,6 +26,7 @@
  */
 
 scene::lod *scene::cl;
+d2::image **scene::bl;
 scene::triangle *scene::triangle_head[2];
 std::map<point *, scene::vertex_aux> scene::vam;
 ale_pos scene::edge_cost_multiplier = 0.001;
