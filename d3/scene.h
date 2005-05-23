@@ -2382,12 +2382,24 @@ public:
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
 			d2::pixel val;
-			ale_real div = 1;
+			ale_real div = 0;
 
 			for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 
 				pt _ptf = align::projective(f);
 				_ptf.scale(cl->sf / _ptf.scale_2d());
+
+				if (f == n) {
+					point p = _ptf.wp_scaled(_pt.pw_scaled(point(i, j, -1)));
+
+					if (!cl->reference[f]->in_bounds(p.xy()))
+						continue;
+
+					val += cl->reference[f]->get_bl(p.xy());
+					div += 1;
+
+					continue;
+				}
 
 				point p = frame_to_frame(d2::point(i, j), _pt, _ptf, zbuf, zbs[f]);
 
@@ -2444,7 +2456,19 @@ public:
 			if (!t)
 				continue;
 
+#if 1
+			point r = _pt.pc_scaled(point(i, j, -1));
+			point vertices[3];
+
+			for (int v = 0; v < 3; v++)
+				vertices[v] = _pt.wc(*t->vertices[v]);
+
+			point intersect = rt_intersect(r, vertices);
+
+			im->pix(i, j) = d2::pixel(1, 1, 1) * -intersect[2];
+#else
 			im->pix(i, j) = d2::pixel(1, 1, 1) * _pt.wc(t->centroid())[2];
+#endif
 		}
 
 		delete[] zbuf;
