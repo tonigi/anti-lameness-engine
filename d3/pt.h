@@ -42,7 +42,7 @@ struct pt {
 private:
 	d2::transformation t;
 	et euclidean;
-	ale_real view_angle;		/* XXX: should be ale_pos */
+	ale_real _view_angle;		/* XXX: should be ale_pos */
 	ale_pos scale_factor;
 	
 public:	
@@ -54,7 +54,7 @@ public:
 	pt(d2::transformation t, et e, ale_real va, ale_pos sf = 1) {
 		this->t = t;
 		euclidean = e;
-		view_angle = va;
+		_view_angle = va;
 		scale_factor = sf;
 	}
 
@@ -63,6 +63,17 @@ public:
 	 */
 	void scale(ale_pos sf) {
 		scale_factor = sf;
+	}
+
+	/*
+	 * Modify or get view angle
+	 */
+	void view_angle(ale_pos va) {
+		_view_angle = va;
+	}
+
+	ale_pos view_angle() {
+		return _view_angle;
 	}
 
 	/*
@@ -94,7 +105,7 @@ public:
 		 * Scale x and y
 		 */
 
-		ale_pos scaling_factor = sqrt(w*w + h*h) / (2 * tan(view_angle / 2));
+		ale_pos scaling_factor = sqrt(w*w + h*h) / (2 * tan(_view_angle / 2));
 		p[0] *= scaling_factor;
 		p[1] *= scaling_factor;
 
@@ -174,7 +185,7 @@ public:
 		 * Scale x and y
 		 */
 
-		ale_pos scaling_factor = sqrt(w*w + h*h) / (2 * tan(view_angle / 2));
+		ale_pos scaling_factor = sqrt(w*w + h*h) / (2 * tan(_view_angle / 2));
 		p[0] /= scaling_factor;
 		p[1] /= scaling_factor;
 

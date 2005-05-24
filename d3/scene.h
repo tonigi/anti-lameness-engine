@@ -28,16 +28,12 @@
 #include "point.h"
 
 /*
- * Variables PLANAR_SUBDIVISION_* impose a lower bound on the size of clusters
- * of co-planar equal area triangles.  COUNT is the lower bound on the number
- * of such triangles in a cluster, and DEPTH is the base 4 logarithm of COUNT.
+ * View angle multiplier.  
  *
- * NB: PLANAR_SUBDIVISION_COUNT must be exactly pow(4, PLANAR_SUBDIVISION_DEPTH),
- * and both numbers must be integers.
+ * Setting this to a value larger than one can be useful for debugging.
  */
 
-#define PLANAR_SUBDIVISION_COUNT 4
-#define PLANAR_SUBDIVISION_DEPTH 1
+#define VIEW_ANGLE_MULTIPLIER 1
 
 class scene {
 
@@ -235,10 +231,7 @@ class scene {
 		 * Stats and auxiliaries for this element
 		 */
 
-		d2::pixel color[PLANAR_SUBDIVISION_COUNT];
-		d2::pixel weight[PLANAR_SUBDIVISION_COUNT];
 		d2::pixel aux_stat;
-		void *aux_var;
 
 		/*
 		 * Color for traversal.
@@ -263,19 +256,6 @@ class scene {
 		 */
 
 		triangle() {
-
-			/*
-			 * Ensure that the (COUNT, DEPTH) relationship holds for planar elements.
-			 */
-
-			assert ((int) PLANAR_SUBDIVISION_COUNT == (int) pow(4, PLANAR_SUBDIVISION_DEPTH));
-
-			for (int sti = 0; sti < PLANAR_SUBDIVISION_COUNT; sti++) {
-				color[sti] = d2::pixel(0, 0, 0);
-				weight[sti] = d2::pixel(0, 0, 0);
-			}
-
-			aux_var = NULL;
 
 			vertices[0] = NULL;
 			vertices[1] = NULL;
@@ -348,18 +328,6 @@ class scene {
 		 * Statistic initialization
 		 */
 
-		void init_color_counters() {
-			if (children[0])
-				children[0]->init_color_counters();
-			if (children[1])
-				children[1]->init_color_counters();
-
-			for (int sti = 0; sti < PLANAR_SUBDIVISION_COUNT; sti++) {
-				color[sti] = d2::pixel(0, 0, 0);
-				weight[sti] = d2::pixel(0, 0, 0);
-			}
-		}
-
 		void init_aux_stats(d2::pixel value = d2::pixel(0, 0, 0)) {
 			if (children[0])
 				children[0]->init_aux_stats(value);
@@ -367,16 +335,6 @@ class scene {
 				children[1]->init_aux_stats(value);
 
 			aux_stat = value;
-		}
-
-		void free_aux_vars() {
-			if (children[0])
-				children[0]->free_aux_vars();
-			if (children[1])
-				children[1]->free_aux_vars();
-
-			free(aux_var);
-			aux_var = NULL;
 		}
 
 		/*
@@ -869,9 +827,9 @@ class scene {
 		}
 
 		ale_pos compute_projected_area(pt _pt) {
-			point a = _pt.wp_scaled(*vertices[0]);
-			point b = _pt.wp_scaled(*vertices[1]);
-			point c = _pt.wp_scaled(*vertices[2]);
+			point a = _pt.wp_unscaled(*vertices[0]);
+			point b = _pt.wp_unscaled(*vertices[1]);
+			point c = _pt.wp_unscaled(*vertices[2]);
 
 			a[2] = 0;
 			b[2] = 0;
@@ -1159,33 +1117,6 @@ class scene {
 			return (*vertices[0] + *vertices[1] + *vertices[2]) / 3;
 		}
 
-		point element_centroid(int e) {
-			point result = centroid();
-
-			/*
-			 * Adjust the position, starting with the least
-			 * significant digits.
-			 */
-			ale_pos multiplier = pow(2, -PLANAR_SUBDIVISION_DEPTH);
-			for (int d = 0; d < PLANAR_SUBDIVISION_DEPTH; d++) {
-				int digit = e % 4;
-
-				for (int v = 0; v < 3; v++)
-				if  (digit == v) {
-					point offset = *vertices[v] - centroid();
-					result += offset * multiplier;
-				}
-
-				if (digit == 3)
-					result = 2 * centroid() - result;
-
-				multiplier *= 2;
-				e /= 4;
-			}
-
-			return result;
-		}
-
 		/*
 		 * Return the sum of angles formed with a neighbor triangle.
 		 * Searches one neighbor deep.
@@ -1263,89 +1194,6 @@ class scene {
 			return min_angle;
 		}
 
-		/*
-		 * Calculate the error between the model and the reference
-		 * images.  Also includes edge length costs.
-		 */
-		ale_accum reference_error() {
-			assert(!children[0] && !children[1]);
-
-			ale_accum error = 0;
-			ale_accum divisor = 0;
-
-			char *frame_list = (char *)aux_var;
-
-			if (!frame_list)
-				return 0;
-
-			/*
-			 * Iterate over all elements
-			 */
-
-			for (unsigned int e = 0; e < PLANAR_SUBDIVISION_COUNT; e++) {
-
-				/*
-				 * For all input frames from which this
-				 * triangle is visible, determine the color at
-				 * the projected element centroid, and accumulate
-				 * the difference.
-				 */
-
-				point centroid = element_centroid(e);
-
-				for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
-					if (!frame_list[n])
-						continue;
-
-					pt _pt = align::projective(n);
-					_pt.scale(cl->sf / _pt.scale_2d());
-
-					/*
-					 * Map the centroid into image space.
-					 */
-
-					point mapped_centroid = _pt.wp_scaled(centroid);
-
-					/*
-					 * Check the bounds
-					 */
-
-					if (!cl->reference[n]->in_bounds(mapped_centroid.xy()))
-						continue;
-
-					d2::pixel ca = color[e];
-					d2::pixel cb = cl->reference[n]->get_bl(mapped_centroid.xy());
-
-					for (int k = 0; k < 3; k++) {
-						if (!finite(ca[k]) || !finite(cb[k]))
-							continue;
-						error += pow(ca[k] - cb[k], 2);
-						divisor += pow(ca[k] > cb[k] ? ca[k] : cb[k], 2);
-					}
-				}
-			}
-
-			error /= divisor;
-
-			/*
-			 * Add edge length error.
-			 */
-
-			error += ((*vertices[0]).lengthto(*vertices[1])
-			        + (*vertices[0]).lengthto(*vertices[2])
-			        + (*vertices[1]).lengthto(*vertices[2])) * edge_cost_multiplier
-				                                         * cl->sf;
-			
-			/*
-			 * Add angle error.
-			 */
-
-			error += sum_neighbor_angle() * angle_cost_multiplier;
-
-			return error;
-
-		}
-
 		ale_accum edge_cost() {
 			return ((*vertices[0]).lengthto(*vertices[1])
 			      + (*vertices[0]).lengthto(*vertices[2])
@@ -1355,79 +1203,6 @@ class scene {
 
 		ale_accum angle_cost() {
 			return sum_neighbor_angle() * angle_cost_multiplier;
-		}
-
-		/*
-		 * Recolor, assuming that visibility remains constant.
-		 */
-		void recolor() {
-			// assert(!children[0] && !children[1]);
-			if (children[0])
-				children[0]->recolor();
-			if (children[1])
-				children[1]->recolor();
-
-			if (children[0] || children[1])
-				return;
-
-			init_color_counters();
-
-			char *frame_list = (char *)aux_var;
-
-			if (!frame_list)
-				return;
-
-			/*
-			 * Iterate over all elements
-			 */
-
-			for (unsigned int e = 0; e < PLANAR_SUBDIVISION_COUNT; e++) {
-				d2::pixel color = d2::pixel(0, 0, 0);
-				d2::pixel weight = d2::pixel(0, 0, 0);
-
-				/*
-				 * For all input frames from which this
-				 * triangle is visible, determine the color at
-				 * the projected element centroid.  Average all
-				 * such colors.
-				 */
-
-				point centroid = element_centroid(e);
-
-				for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
-					if (!frame_list[n])
-						continue;
-
-					pt _pt = align::projective(n);
-					_pt.scale(cl->sf / _pt.scale_2d());
-
-					/*
-					 * Map the centroid into image space.
-					 */
-
-					point mapped_centroid = _pt.wp_scaled(centroid);
-
-					/*
-					 * Check the bounds
-					 */
-
-					if (!cl->reference[n]->in_bounds(mapped_centroid.xy()))
-						continue;
-
-					color += cl->reference[n]->get_bl(mapped_centroid.xy());
-					weight += d2::pixel(1, 1, 1);
-					// color = weight * (mapped_centroid.xy()[1] / cl->reference[n]->width());
-
-//					point centroid_local = _pt.wc(centroid);
-//					point _vertices[3] = {_pt.wc(*vertices[0]), _pt.wc(*vertices[1]), _pt.wc(*vertices[2])};
-//					assert (1 || e == subtriangle_index(centroid_local, _vertices, PLANAR_SUBDIVISION_DEPTH, 0));
-				}
-
-				color /= weight;
-
-				this->color[e] = color;
-				this->weight[e] = weight;
-			}
 		}
 
 		/*
@@ -1616,6 +1391,29 @@ class scene {
 					point orig = *vertices[v];
 					point perturbed = orig + point::unit(axis) * step * dir;
 
+					/*
+					 * Ensure that the perturbed point maps
+					 * within the visible boundaries of at least
+					 * one of the inputs.
+					 */
+
+					int in_bounds = 0;
+					for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+						pt _ptf = align::projective(f);
+						point p = _ptf.wp_scaled(perturbed);
+
+						if (p[0] >= 0
+						 && p[1] >= 0
+						 && p[0] <= _ptf.scaled_height() - 1
+						 && p[1] <= _ptf.scaled_width() - 1) {
+							in_bounds = 1;
+							break;
+						}
+					}
+
+					if (!in_bounds)
+						continue;
+
 					ale_accum extremum_angle;
 
 					/*
@@ -1731,79 +1529,6 @@ class scene {
 		}
 
 		return 1;
-	}
-
-	/*
-	 * Return a subtriangle index for a given position.  Assumes local
-	 * cartesian (not projective) coordinates.
-	 *
-	 * R_C is the endpoint of a ray whose tail is at zero.
-	 * P_C are the vertex coordinates.
-	 */
-	static unsigned int subtriangle_index(point r_c, point p_c[3], int depth, int prefix) {
-
-		if (depth == 0)
-			return prefix;
-
-		if (!is_interior_c(p_c, r_c, 1)) {
-			/*
-			 * XXX: Error condition ... what should we do here?
-			 */
-			// assert(0);
-			return prefix;
-		}
-
-		point hp_c[3];
-
-		for (int v = 0; v < 3; v++)
-			hp_c[v] = (p_c[(v + 1) % 3] + p_c[(v + 2) % 3]) / 2;
-
-		for (int v = 0; v < 3; v++) {
-			point arg_array_c[3];
-
-			arg_array_c[v] = p_c[v];
-			arg_array_c[(v + 1) % 3] = hp_c[(v + 2) % 3];
-			arg_array_c[(v + 2) % 3] = hp_c[(v + 1) % 3];
-
-			int interior_t = is_interior_c(arg_array_c, r_c);
-
-			if (interior_t)
-				return subtriangle_index(r_c, arg_array_c, depth - 1, prefix * 4 + v);
-		}
-
-		return subtriangle_index(r_c, hp_c, depth - 1, prefix * 4 + 3);
-	}
-
-	/*
-	 * Return a subtriangle index for a given position.
-	 */
-
-	static int subtriangle_index(pt _pt, d2::point test_point, point p_w[3], int depth, int prefix) {
-		point p_c[3];
-
-		if (depth == 0)
-			return prefix;
-
-		for (int v = 0; v < 3; v++)
-			p_c[v] = _pt.wc(p_w[v]);
-
-		point r_c = _pt.pc_scaled(point(test_point[0], test_point[1], 1));
-
-		return subtriangle_index(r_c, p_c, depth, prefix);
-
-	}
-
-	static int subtriangle_index(pt _pt, d2::point test_point, triangle *t, point triangle_offset = point(0, 0, 0)) {
-		point p[3];
-
-		for (int v = 0; v < 3; v++)
-			p[v] = *t->vertices[v] + triangle_offset;
-
-		return subtriangle_index(_pt, test_point, p, PLANAR_SUBDIVISION_DEPTH, 0);
-	}
-
-	static int subtriangle_index(pt _pt, point test_point, triangle *t, point triangle_offset = point(0, 0, 0)) {
-		return subtriangle_index(_pt, test_point.xy(), t);
 	}
 
 	/*
@@ -1937,69 +1662,9 @@ class scene {
 	}
 
 	/*
-	 * Color a 3D scene using value averaging.  This is intended for
-	 * producing low level-of-detail output.  Better results for higher
-	 * resolution cases could be obtained by using an Irani-Peleg style
-	 * backprojection approach.
-	 */
-	static void color_average() {
-
-		/*
-		 * Initialize color counters
-		 */
-
-		triangle_head[0]->init_color_counters();
-		triangle_head[1]->init_color_counters();
-
-		/*
-		 * Iterate over all frames
-		 */
-		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
-
-			d2::image *im = cl->reference[n];
-			ale_pos sf = cl->sf;
-
-			/*
-			 * Z-buffer to map points to triangles
-			 */
-			pt _pt = align::projective(n);
-			_pt.scale(sf / _pt.scale_2d());
-			assert (im->width() == (unsigned int) floor(_pt.scaled_width()));
-			assert (im->height() == (unsigned int) floor(_pt.scaled_height()));
-			zbuf_elem *zbuf = init_zbuf(_pt);
-			zbuffer(_pt, zbuf, triangle_head[0]);
-			zbuffer(_pt, zbuf, triangle_head[1]);
-
-			/*
-			 * Iterate over all points in the frame.
-			 */
-			for (unsigned int i = 0; i < im->height(); i++)
-			for (unsigned int j = 0; j < im->width();  j++) {
-				triangle *t = zbuf[i * im->width() + j].nearest(_pt, i, j);
-
-				/*
-				 * Check for points without associated triangles.
-				 */
-				if (!t)
-					continue;
-
-				/*
-				 * Set new color and weight.
-				 */
-				int sti = subtriangle_index(_pt, d2::point(i, j), t);
-				t->color[sti] = (t->color[sti] * t->weight[sti] + im->get_pixel(i, j)) 
-					      / (t->weight[sti] + d2::pixel(1, 1, 1));
-				t->weight[sti] = t->weight[sti] + d2::pixel(1, 1, 1);
-			}
-
-			delete[] zbuf;
-		}
-	}
-
-	/*
-	 * Test the density of the mesh for correct sampling in
-	 * color_average(), and split (or unsplit) triangles if necessary,
-	 * continuing until no more operations can be performed.  
+	 * Test the density of the mesh for correct sampling, and split (or
+	 * unsplit) triangles if necessary, continuing until no more operations
+	 * can be performed.  
 	 */
 	static int density_test(int split) {
 
@@ -2054,14 +1719,14 @@ class scene {
 
 				/*
 				 * Check that the triangle area is at least
-				 * four.
+				 * 16.
 				 */
 
 				ale_pos area = t->compute_projected_area(_pt);
 
-				if (area / PLANAR_SUBDIVISION_COUNT <= 4 && split)
+				if (area <= 16 && split)
 					t->aux_stat = d2::pixel(-1, -1, -1);
-				else if (area / PLANAR_SUBDIVISION_COUNT < 4 && !split && t->parent)
+				else if (area < 16 && !split && t->parent)
 					t->parent->aux_stat = d2::pixel(-1, -1, -1);
 			}
 
@@ -2084,64 +1749,6 @@ class scene {
 
 	static int density_test_unsplit() {
 		return density_test(0);
-	}
-
-	/*
-	 * Determine triangle visibility.
-	 */
-	static void determine_visibility() {
-		/*
-		 * Iterate over all frames
-		 */
-		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
-
-			d2::image *im = cl->reference[n];
-			ale_pos sf = cl->sf;
-
-			/*
-			 * Z-buffer to map points to triangles
-			 */
-			pt _pt = align::projective(n);
-			_pt.scale(sf / _pt.scale_2d());
-			assert (im->width() == (unsigned int) floor(_pt.scaled_width()));
-			assert (im->height() == (unsigned int) floor(_pt.scaled_height()));
-			zbuf_elem *zbuf = init_zbuf(_pt);
-			zbuffer(_pt, zbuf, triangle_head[0]);
-			zbuffer(_pt, zbuf, triangle_head[1]);
-
-			/*
-			 * Iterate over all points in the frame, adding this frame
-			 * to the list of frames including the associated triangle.
-			 */
-			for (unsigned int i = 0; i < im->height(); i++)
-			for (unsigned int j = 0; j < im->width();  j++) {
-				triangle *t = zbuf[i * im->width() + j].nearest(_pt, i, j);
-
-				/*
-				 * Check for points without associated triangles.
-				 */
-				if (!t)
-					continue;
-
-				/*
-				 * Add this frame to the list of frames in which this
-				 * triangle is visible, or start a new list if none exists
-				 * yet.
-				 */
-
-
-				if (t->aux_var == NULL)
-					t->aux_var = calloc(d2::image_rw::count(), sizeof(char));
-
-				char *aux_var = (char *) t->aux_var;
-
-				assert (aux_var);
-
-				aux_var[n] = 1;
-			}
-
-			delete[] zbuf;
-		}
 	}
 
 	static zbuf_elem **construct_zbuffers() {
@@ -2301,8 +1908,6 @@ public:
 		triangle_head[1]->vertices[2] = triangle_head[0]->vertices[1];
 
 		triangle_head[1]->neighbors[0] = triangle_head[0];
-
-		color_average();
 	}
 
 	/*
@@ -2385,12 +1990,17 @@ public:
 	}
 
 	static const d2::image *view(unsigned int n) {
+
+		fprintf(stderr, "n=%u t=%u ", n, time(NULL));
+
 		assert (n < d2::image_rw::count());
 
 		d2::image *im = new d2::image_ale_real((int) floor(d2::align::of(n).scaled_height()),
 				               (int) floor(d2::align::of(n).scaled_width()), 3);
 
 		pt _pt = align::projective(n);
+
+		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
 		zbuf_elem *zbuf = init_zbuf(_pt);
 
@@ -2532,19 +2142,6 @@ public:
 		}
 
 		free_zbuffers(zbs);
-#else
-		for (unsigned int i = 0; i < im->height(); i++)
-		for (unsigned int j = 0; j < im->width();  j++) {
-
-			triangle *t = zbuf[i * im->width() + j].nearest(_pt, i, j);
-
-			if (!t)
-				continue;
-
-			int sti = subtriangle_index(_pt, d2::point(i, j), t);
-			im->pix(i, j) = t->color[sti];
-//			im->pix(i, j) = d2::pixel(sti,sti,sti) / (double) PLANAR_SUBDIVISION_COUNT;
-		}
 #endif
 
 		delete[] zbuf;
@@ -2559,6 +2156,7 @@ public:
 				               (int) floor(d2::align::of(n).scaled_width()), 3);
 
 		pt _pt = align::projective(n);
+		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
 		zbuf_elem *zbuf = init_zbuf(align::projective(n));
 
@@ -2668,6 +2266,24 @@ public:
 
 		while(reduce_lod());
 
+#if 0
+		for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
+			if (d_out[i] != NULL) {
+				const d2::image *im = depth(i);
+				d2::image_rw::write_image(d_out[i], im, exp_out, 1, 1);
+				delete im;
+			}
+
+			if (v_out[i] != NULL) {
+				const d2::image *im = view(i);
+				d2::image_rw::write_image(v_out[i], im, exp_out);
+				delete im;
+			}
+		}
+
+		return;
+#endif
+
 		/*
 		 * Perform cost-reduction.
 		 */
@@ -2676,16 +2292,6 @@ public:
 
 			if (density_test_split())
 				continue;
-
-			color_average();
-			
-			determine_visibility();
-
-			triangle_head[0]->recolor();
-			triangle_head[1]->recolor();
-
-			triangle_head[0]->free_aux_vars();
-			triangle_head[1]->free_aux_vars();
 
 			/*
 			 * Write output incrementally, if desired.
@@ -2707,11 +2313,11 @@ public:
 			}
 			
 			/*
-			 * Increase LOD if no improvements were achieved in the
-			 * most recent pass at the previous LOD.
+			 * Limit the number of iterations at a given LOD. 
 			 */
 
-			if (!improved || count > 40) {
+			if (!improved || count > 5) {
+
 				fprintf(stderr, ".");
 				if (!cl->next)
 					break;
@@ -2730,8 +2336,6 @@ public:
 
 			improved |= adjust_vertices();
 		}
-
-		color_average();
 
 	}
 
