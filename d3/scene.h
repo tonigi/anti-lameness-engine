@@ -1400,6 +1400,7 @@ class scene {
 					int in_bounds = 0;
 					for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 						pt _ptf = align::projective(f);
+						_ptf.scale(cl->sf / _ptf.scale_2d());
 						point p = _ptf.wp_scaled(perturbed);
 
 						if (p[0] >= 0
@@ -1991,8 +1992,6 @@ public:
 
 	static const d2::image *view(unsigned int n) {
 
-		fprintf(stderr, "n=%u t=%u ", n, time(NULL));
-
 		assert (n < d2::image_rw::count());
 
 		d2::image *im = new d2::image_ale_real((int) floor(d2::align::of(n).scaled_height()),
@@ -2314,7 +2313,7 @@ public:
 			 * Limit the number of iterations at a given LOD. 
 			 */
 
-			if (!improved || count > 5) {
+			if (!improved || count > 40) {
 
 				fprintf(stderr, ".");
 				if (!cl->next)
