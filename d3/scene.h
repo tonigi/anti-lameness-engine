@@ -827,9 +827,9 @@ class scene {
 		}
 
 		ale_pos compute_projected_area(pt _pt) {
-			point a = _pt.wp_unscaled(*vertices[0]);
-			point b = _pt.wp_unscaled(*vertices[1]);
-			point c = _pt.wp_unscaled(*vertices[2]);
+			point a = _pt.wp_scaled(*vertices[0]);
+			point b = _pt.wp_scaled(*vertices[1]);
+			point c = _pt.wp_scaled(*vertices[2]);
 
 			a[2] = 0;
 			b[2] = 0;
@@ -2010,7 +2010,6 @@ public:
 
 #if 1
 		zbuf_elem **zbsu = construct_zbuffers_unscaled();
-		zbuf_elem **zbs = construct_zbuffers();
 
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
@@ -2072,26 +2071,26 @@ public:
 			for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 
 				pt _ptf = align::projective(f);
-				_ptf.scale(cl->sf / _ptf.scale_2d());
+				_ptf.scale(1 / _ptf.scale_2d());
 
 				if (f == n) {
 					point p = _ptf.wp_scaled(_pt.pw_scaled(point(i, j, -1)));
 
-					if (!cl->reference[f]->in_bounds(p.xy()))
+					if (!bl[f]->in_bounds(p.xy()))
 						continue;
 
-					val += cl->reference[f]->get_bl(p.xy());
+					val += bl[f]->get_bl(p.xy());
 					div += 1;
 
 					continue;
 				}
 
-				point p = frame_to_frame(d2::point(i, j), _pt, _ptf, zbuf, zbs[f]);
+				point p = frame_to_frame(d2::point(i, j), _pt, _ptf, zbuf, zbsu[f]);
 
 				if (!p.defined())
 					continue;
 
-				d2::pixel v = cl->reference[f]->get_bl(p.xy());
+				d2::pixel v = bl[f]->get_bl(p.xy());
 
 				val += v;
 				div += 1;
@@ -2100,7 +2099,6 @@ public:
 			im->pix(i, j) = val / div;
 		}
 
-		free_zbuffers(zbs);
 		free_zbuffers(zbsu);
 #elif 1
 		zbuf_elem **zbs = construct_zbuffers();
