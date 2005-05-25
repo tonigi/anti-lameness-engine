@@ -52,6 +52,12 @@ class scene {
 	static ale_pos angle_cost_multiplier;
 
 	/*
+	 * Clipping planes
+	 */
+	static ale_pos front_clip;
+	static ale_pos rear_clip;
+
+	/*
 	 * Vertex Auxiliary Structure
 	 *
 	 * This can be used for storing miscellaneous information about
@@ -1805,6 +1811,13 @@ class scene {
 	}
 
 public:
+	static void fc(ale_pos fc) {
+		front_clip = fc;
+	}
+
+	static void rc(ale_pos rc) {
+		rear_clip = rc;
+	}
 
 	static void ecm(ale_pos ecm) {
 		edge_cost_multiplier = ecm;

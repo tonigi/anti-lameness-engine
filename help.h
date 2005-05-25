@@ -577,8 +577,13 @@ public:
 			BETWEEN_SECTIONS
 			"Model costs:\n"
 			HEADER_SPACE
-			"--ecm <x>         Set edge length cost multiplier <x>.         [default is 0.001]\n"
-			"--acm <x>         Set angle cost multiplier <x>.               [default is 0.001]\n"
+			"--ecm <x>         Set edge length cost multiplier <x>.             [default is 0]\n"
+			"--acm <x>         Set angle cost multiplier <x>.                   [default is 0]\n"
+			BETWEEN_SECTIONS
+			"Model rules:\n"
+			HEADER_SPACE
+			"--fc <x>          Set front-clip to <x> (0 < x < 1)                [default is 0]\n"
+			"--rc <x>          Set rear-clip to <x> (1 < x < inf)             [default is inf]\n"
 			"\n");
 	}
 	void undocumented() {

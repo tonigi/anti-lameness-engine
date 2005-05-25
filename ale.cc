@@ -612,6 +612,22 @@ int main(int argc, const char *argv[]){
 			sscanf(argv[i+1], "%lf", &st_parameter);
 			i += 1;
 			d3::cpf::st(st_parameter);
+		} else if (!strcmp(argv[i], "--rc")) {
+			if (i + 1 >= argc)
+				not_enough("--rc");
+
+			double rc_parameter;
+			sscanf(argv[i+1], "%lf", &rc_parameter);
+			i += 1;
+			d3::scene::rc(rc_parameter);
+		} else if (!strcmp(argv[i], "--fc")) {
+			if (i + 1 >= argc)
+				not_enough("--fc");
+
+			double fc_parameter;
+			sscanf(argv[i+1], "%lf", &fc_parameter);
+			i += 1;
+			d3::scene::fc(fc_parameter);
 		} else if (!strcmp(argv[i], "--ecm")) {
 			if (i + 1 >= argc)
 				not_enough("--ecm");
