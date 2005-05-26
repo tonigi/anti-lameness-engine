@@ -1303,11 +1303,17 @@ class scene {
 				for (int axis = 0; axis < 3; axis++)
 				for (int dir = -1; dir <= 1; dir += 2) {
 
+					point perturbed = vertex_original_pos + point::unit(axis) * step * dir;
+
+					if (perturbed[2] > front_clip
+					 || perturbed[2] < rear_clip)
+						continue;
+
 					/*
 					 * Adjust the vertex under consideration
 					 */
 
-					*vertices[v] = vertex_original_pos + point::unit(axis) * step * dir;
+					*vertices[v] = perturbed;
 
 					/*
 					 * Determine the new values of the metrics.
@@ -1396,6 +1402,14 @@ class scene {
 
 					point orig = *vertices[v];
 					point perturbed = orig + point::unit(axis) * step * dir;
+
+					/*
+					 * Check the clipping planes.
+					 */
+
+					if (perturbed[2] > front_clip
+					 || perturbed[2] < rear_clip)
+						continue;
 
 					/*
 					 * Ensure that the perturbed point maps
@@ -1834,6 +1848,29 @@ public:
 	static void init_from_d2() {
 
 		/*
+		 * Rear clip value of 0 is converted to infinity.
+		 */
+
+		if (rear_clip == 0) {
+			ale_pos one = +1;
+			ale_pos zero = +0;
+
+			rear_clip = one / zero;
+			assert(isinf(rear_clip) == +1);
+		}
+
+		/*
+		 * Scale and translate clipping plane depths.
+		 */
+
+		ale_pos cp_scalar = d3::align::projective(0).wc(point(0, 0, 0))[2];
+
+		front_clip = front_clip * cp_scalar - cp_scalar;
+		rear_clip = rear_clip * cp_scalar - cp_scalar;
+
+		fprintf(stderr, "fc=%f rc=%f\n", front_clip, rear_clip);
+
+		/*
 		 * Find out how many input frames there are.
 		 */
 
@@ -2210,6 +2247,10 @@ public:
 			point control_point = cpf::get(i);
 
 			if (!control_point.defined())
+				continue;
+
+			if (control_point[2] > front_clip
+			 || control_point[2] < rear_clip)
 				continue;
 
 			ale_pos one = +1;

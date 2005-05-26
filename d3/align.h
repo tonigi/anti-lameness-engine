@@ -278,7 +278,7 @@ public:
 	 * method axis_intersection().
 	 */
 
-	static void init_from_d2() { 
+	static void init_from_d2() {
 		assert (alignment_array == NULL);
 		
 		/*
