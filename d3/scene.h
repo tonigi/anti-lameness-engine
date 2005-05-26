@@ -1344,6 +1344,35 @@ class scene {
 			return improved;
 		}
 
+		int vertex_visible(int v, zbuf_elem **z) {
+			for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+				pt _pt = align::projective(n);
+				_pt.scale(cl->sf / _pt.scale_2d());
+
+				point w = *vertices[v];
+				point p = _pt.wp_scaled(w);
+
+				/*
+				 * Check the four closest points.
+				 */
+
+				int p_int[2] = { (int) floor(p[0]), (int) floor(p[1]) };
+
+				if (p_int[0] < 0
+				 || p_int[1] < 0
+				 || p_int[0] > _pt.scaled_height() - 2
+				 || p_int[1] > _pt.scaled_height() - 2)
+					continue;
+
+				for (int i = 0; i < 2; i++)
+				for (int j = 0; j < 2; j++) {
+					triangle *t = z[n][(p_int[0] + i) * (int) floor(_pt.scaled_width()) + p_int[1] + j].nearest(_pt, p_int[0] + i, p_int[1] + j);
+					if (t->vertex_ref_maybe(vertices[v]))
+						return 1;
+				}
+			}
+			return 0;
+		}
 			
 
 		/*
@@ -1368,10 +1397,11 @@ class scene {
 				return 0;
 
 			/*
-			 * Determine the adjustment step size.
+			 * Determine the adjustment step size according to
+			 * the scale factor.
 			 */
 
-			ale_accum step = step_size();
+			ale_accum step = 2 / cl->sf;
 
 			int improved = 0;
 
@@ -1391,6 +1421,13 @@ class scene {
 				 */
 
 				if (vertex_fixed[v])
+					continue;
+
+				/*
+				 * Ensure that the vertex is visible.
+				 */
+
+				if (!vertex_visible(v, z))
 					continue;
 
 				/*
@@ -1458,6 +1495,17 @@ class scene {
 
 					ale_accum error = vertex_movement_cost(this, vertices[v], perturbed, z);
 					if (error < 0) {
+
+						fprintf(stderr, "%p (%f %f %f) (%f %f %f) [%f]\n",
+							vertices[v],
+							(*vertices[v])[0],
+							(*vertices[v])[1],
+							(*vertices[v])[2],
+							perturbed[0],
+							perturbed[1],
+							perturbed[2],
+							cl->sf);
+
 						improved = 1;
 						*vertices[v] = perturbed;
 						break;
