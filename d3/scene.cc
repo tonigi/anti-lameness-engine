@@ -26,7 +26,7 @@
  */
 
 scene::lod *scene::cl;
-d2::image **scene::bl;
+scene::lod *scene::bl;
 scene::triangle *scene::triangle_head[2];
 std::map<point *, scene::vertex_aux> scene::vam;
 ale_pos scene::edge_cost_multiplier = 0;
@@ -115,7 +115,7 @@ void scene::zbuf_elem::find_nearest(pt _pt, int i, int j) {
 	}
 }
 
-ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point new_position, zbuf_elem **z) {
+ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point new_position, zbuf_elem **z, lod *_lod) {
 	ale_accum orig_color_cost = 0, new_color_cost = 0;
 	ale_accum orig_color_div  = 0, new_color_div  = 0;
 	ale_accum orig_geom_cost  = 0, new_geom_cost  = 0;
@@ -149,7 +149,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 		point *bbp = bb + 2 * f;
 		pt _pt = align::projective(f);
-		_pt.scale(cl->sf / _pt.scale_2d());
+		_pt.scale(_lod->sf / _pt.scale_2d());
 
 		ale_accum inf = +1;
 		ale_accum zero = 0;
@@ -203,7 +203,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 		pt _pt = align::projective(f);
 
-		_pt.scale(cl->sf / _pt.scale_2d());
+		_pt.scale(_lod->sf / _pt.scale_2d());
 			
 		for (int i = (int) floor(bb[f * 2 + 0][0]); i <= (int) ceil(bb[f * 2 + 1][0]); i++)
 		for (int j = (int) floor(bb[f * 2 + 0][1]); j <= (int) ceil(bb[f * 2 + 1][1]); j++) {
@@ -229,8 +229,8 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 		pt _pt1 = align::projective(f1);
 		pt _pt2 = align::projective(f2);
 
-		_pt1.scale(cl->sf / _pt1.scale_2d());
-		_pt2.scale(cl->sf / _pt2.scale_2d());
+		_pt1.scale(_lod->sf / _pt1.scale_2d());
+		_pt2.scale(_lod->sf / _pt2.scale_2d());
 
 		if (f1 == f2)
 			continue;
@@ -243,8 +243,8 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 			if (!p2.defined())
 				continue;
 
-			orig_color_cost += (cl->reference[f1]->get_bl(p1)
-			                  - cl->reference[f2]->get_bl(p2)).normsq();
+			orig_color_cost += (_lod->reference[f1]->get_bl(p1)
+			                  - _lod->reference[f2]->get_bl(p2)).normsq();
 
 			orig_color_div  += 1;
 		}
@@ -273,8 +273,8 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 		pt _pt1 = align::projective(f1);
 		pt _pt2 = align::projective(f2);
 
-		_pt1.scale(cl->sf / _pt1.scale_2d());
-		_pt2.scale(cl->sf / _pt2.scale_2d());
+		_pt1.scale(_lod->sf / _pt1.scale_2d());
+		_pt2.scale(_lod->sf / _pt2.scale_2d());
 
 		if (f1 == f2)
 			continue;
@@ -286,8 +286,8 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 			if (!p2.defined())
 				continue;
 
-			new_color_cost += (cl->reference[f1]->get_bl(p1)
-			                 - cl->reference[f2]->get_bl(p2)).normsq();
+			new_color_cost += (_lod->reference[f1]->get_bl(p1)
+			                 - _lod->reference[f2]->get_bl(p2)).normsq();
 
 			new_color_div  += 1;
 		}

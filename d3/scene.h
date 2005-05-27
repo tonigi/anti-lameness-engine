@@ -182,14 +182,6 @@ class scene {
 	static point frame_to_frame(d2::point p, const pt &_pt1, const pt &_pt2, zbuf_elem *z1, zbuf_elem *z2);
 
 	/*
-	 * Vertex movement cost
-	 *
-	 * Evaluate the cost of moving a vertex.  Negative values indicate
-	 * improvement; non-negative values indicate lack of improvement.
-	 */
-	static ale_accum vertex_movement_cost(triangle *t, point *vertex, point new_position, zbuf_elem **z);
-
-	/*
 	 * Structure to hold input frame information for a given level of
 	 * detail.
 	 */
@@ -225,7 +217,15 @@ class scene {
 	 * Base level-of-detail
 	 */
 
-	static d2::image **bl;
+	static struct lod *bl;
+
+	/*
+	 * Vertex movement cost
+	 *
+	 * Evaluate the cost of moving a vertex.  Negative values indicate
+	 * improvement; non-negative values indicate lack of improvement.
+	 */
+	static ale_accum vertex_movement_cost(triangle *t, point *vertex, point new_position, zbuf_elem **z, lod *_lod);
 
 	/*
 	 * Structure to hold a subdivisible triangle.
@@ -1344,10 +1344,10 @@ class scene {
 			return improved;
 		}
 
-		int vertex_visible(int v, zbuf_elem **z) {
+		int vertex_visible(int v, zbuf_elem **z, lod *_lod) {
 			for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
 				pt _pt = align::projective(n);
-				_pt.scale(cl->sf / _pt.scale_2d());
+				_pt.scale(_lod->sf / _pt.scale_2d());
 
 				point w = *vertices[v];
 				point p = _pt.wp_scaled(w);
@@ -1380,11 +1380,11 @@ class scene {
 		 *
 		 * Return non-zero if an adjustment is made.
 		 */
-		int adjust_vertices(zbuf_elem **z) {
+		int adjust_vertices(zbuf_elem **z, lod *_lod) {
 
 			if (children[0] && children[1]) {
-				return children[0]->adjust_vertices(z)
-				     | children[1]->adjust_vertices(z);
+				return children[0]->adjust_vertices(z, _lod)
+				     | children[1]->adjust_vertices(z, _lod);
 			}
 
 			/*
@@ -1401,7 +1401,7 @@ class scene {
 			 * the scale factor.
 			 */
 
-			ale_accum step = 2 / cl->sf;
+			ale_pos step = 2 / cl->sf;
 
 			int improved = 0;
 
@@ -1427,7 +1427,7 @@ class scene {
 				 * Ensure that the vertex is visible.
 				 */
 
-				if (!vertex_visible(v, z))
+				if (!vertex_visible(v, z, _lod))
 					continue;
 
 				/*
@@ -1457,7 +1457,7 @@ class scene {
 					int in_bounds = 0;
 					for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 						pt _ptf = align::projective(f);
-						_ptf.scale(cl->sf / _ptf.scale_2d());
+						_ptf.scale(_lod->sf / _ptf.scale_2d());
 						point p = _ptf.wp_scaled(perturbed);
 
 						if (p[0] >= 0
@@ -1493,7 +1493,7 @@ class scene {
 					 * Check the error
 					 */
 
-					ale_accum error = vertex_movement_cost(this, vertices[v], perturbed, z);
+					ale_accum error = vertex_movement_cost(this, vertices[v], perturbed, z, _lod);
 					if (error < 0) {
 
 						fprintf(stderr, "%p (%f %f %f) (%f %f %f) [%f]\n",
@@ -1820,26 +1820,12 @@ class scene {
 		return density_test(0);
 	}
 
-	static zbuf_elem **construct_zbuffers() {
+	static zbuf_elem **construct_zbuffers(lod *_lod) {
 		zbuf_elem **result = (zbuf_elem **) malloc(d2::image_rw::count() * sizeof(zbuf_elem *));
 
 		for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
 			pt _pt = align::projective(i);
-			_pt.scale(cl->sf / _pt.scale_2d());
-			result[i] = init_zbuf(_pt);
-			zbuffer(_pt, result[i], triangle_head[0]);
-			zbuffer(_pt, result[i], triangle_head[1]);
-		}
-
-		return result;
-	}
-
-	static zbuf_elem **construct_zbuffers_unscaled() {
-		zbuf_elem **result = (zbuf_elem **) malloc(d2::image_rw::count() * sizeof(zbuf_elem *));
-
-		for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
-			pt _pt = align::projective(i);
-			_pt.scale(1 / _pt.scale_2d());
+			_pt.scale(_lod->sf / _pt.scale_2d());
 			result[i] = init_zbuf(_pt);
 			zbuffer(_pt, result[i], triangle_head[0]);
 			zbuffer(_pt, result[i], triangle_head[1]);
@@ -1863,11 +1849,18 @@ class scene {
 		 * Collect z-buffer data
 		 */
 
-		zbuf_elem **z = construct_zbuffers();
+		fprintf(stderr, "  begin creating zbuffers[%u] \n", time(NULL));
+		zbuf_elem **z = construct_zbuffers(bl);
+		fprintf(stderr, "  end creating zbuffers[%u] \n", time(NULL));
 
-		int result = triangle_head[0]->adjust_vertices(z) | triangle_head[1]->adjust_vertices(z);
+		fprintf(stderr, "  begin tree traversal[%u] \n", time(NULL));
+		int result = triangle_head[0]->adjust_vertices(z, bl) 
+			   | triangle_head[1]->adjust_vertices(z, bl);
+		fprintf(stderr, "  end tree traversal[%u] \n", time(NULL));
 
+		fprintf(stderr, "  begin freeing zbuffers[%u] \n", time(NULL));
 		free_zbuffers(z);
+		fprintf(stderr, "  end freeing zbuffers[%u] \n", time(NULL));
 
 		return result;
 	}
@@ -1946,7 +1939,7 @@ public:
 			assert(cl->reference[n]);
 		}
 
-		bl = cl->reference;
+		bl = cl;
 
 		/*
 		 * Determine the bounding box of the intersections of the view
@@ -2105,8 +2098,7 @@ public:
 		zbuffer(_pt, zbuf, triangle_head[1]);
 
 
-#if 1
-		zbuf_elem **zbsu = construct_zbuffers_unscaled();
+		zbuf_elem **zbsu = construct_zbuffers(bl);
 
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
@@ -2150,7 +2142,7 @@ public:
 				for (int ii = (int) ceil(bounds[0][0]); ii <= (int) floor(bounds[1][0]); ii++)
 				for (int jj = (int) ceil(bounds[0][1]); jj <= (int) floor(bounds[1][1]); jj++) {
 					if (f == n || frame_to_frame(d2::point(ii, jj), _ptf, _pt, zbsu[f], zbuf).defined()) {
-						val += bl[f]->get_pixel(ii, jj);
+						val += bl->reference[f]->get_pixel(ii, jj);
 						div += 1;
 					}
 				}
@@ -2173,10 +2165,10 @@ public:
 				if (f == n) {
 					point p = _ptf.wp_scaled(_pt.pw_scaled(point(i, j, -1)));
 
-					if (!bl[f]->in_bounds(p.xy()))
+					if (!bl->reference[f]->in_bounds(p.xy()))
 						continue;
 
-					val += bl[f]->get_bl(p.xy());
+					val += bl->reference[f]->get_bl(p.xy());
 					div += 1;
 
 					continue;
@@ -2187,7 +2179,7 @@ public:
 				if (!p.defined())
 					continue;
 
-				d2::pixel v = bl[f]->get_bl(p.xy());
+				d2::pixel v = bl->reference[f]->get_bl(p.xy());
 
 				val += v;
 				div += 1;
@@ -2197,47 +2189,6 @@ public:
 		}
 
 		free_zbuffers(zbsu);
-#elif 1
-		zbuf_elem **zbs = construct_zbuffers();
-
-		for (unsigned int i = 0; i < im->height(); i++)
-		for (unsigned int j = 0; j < im->width();  j++) {
-			d2::pixel val;
-			ale_real div = 0;
-
-			for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
-
-				pt _ptf = align::projective(f);
-				_ptf.scale(cl->sf / _ptf.scale_2d());
-
-				if (f == n) {
-					point p = _ptf.wp_scaled(_pt.pw_scaled(point(i, j, -1)));
-
-					if (!cl->reference[f]->in_bounds(p.xy()))
-						continue;
-
-					val += cl->reference[f]->get_bl(p.xy());
-					div += 1;
-
-					continue;
-				}
-
-				point p = frame_to_frame(d2::point(i, j), _pt, _ptf, zbuf, zbs[f]);
-
-				if (!p.defined())
-					continue;
-
-				d2::pixel v = cl->reference[f]->get_bl(p.xy());
-
-				val += v;
-				div += 1;
-			}
-
-			im->pix(i, j) = val / div;
-		}
-
-		free_zbuffers(zbs);
-#endif
 
 		delete[] zbuf;
 
@@ -2389,14 +2340,20 @@ public:
 
 		for (;;) {
 
+			fprintf(stderr, "begin density test split[%u] \n", time(NULL));
+
 			if (density_test_split())
 				continue;
+
+			fprintf(stderr, "end density test split[%u] \n", time(NULL));
 
 			/*
 			 * Write output incrementally, if desired.
 			 */
 
-			if (inc_bit)
+			fprintf(stderr, "begin output[%u] \n", time(NULL));
+
+			if (inc_bit && improved)
 			for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
 				if (d_out[i] != NULL) {
 					const d2::image *im = depth(i);
@@ -2411,6 +2368,8 @@ public:
 				}
 			}
 			
+			fprintf(stderr, "end output[%u] \n", time(NULL));
+
 			/*
 			 * Limit the number of iterations at a given LOD. 
 			 */
@@ -2433,7 +2392,11 @@ public:
 			 * Try improving the result by moving existing vertices.
 			 */
 
+			fprintf(stderr, "begin adjustment[%u] \n", time(NULL));
+
 			improved |= adjust_vertices();
+
+			fprintf(stderr, "end adjustment[%u] \n", time(NULL));
 		}
 
 	}
