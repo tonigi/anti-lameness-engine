@@ -35,6 +35,18 @@ ale_pos scene::front_clip = 0;
 ale_pos scene::rear_clip = 0;
 
 /*
+ * Precision discriminator
+ *
+ * For some reason, colors that should be identical are calculated differently
+ * along different computational pathways, either due to a compiler idiosyncrasy,
+ * or due to an as-of-yet undiscovered bug in the code.  We use the following
+ * constant in an effort to winnow out these discrepancies, which can sometimes
+ * cause cycles in the adjustment preference function.
+ */
+
+#define DISCRIMINATOR 1e-5
+
+/*
  * Functions.
  */
 
@@ -211,6 +223,71 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 			z[f][n].insert(t_set->begin(), t_set->end());
 		}
 	}
+#if 0
+	/*
+	 * Check for out-of-bounds changes in cost.
+	 */
+
+	for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++)
+	for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+		pt _pt1 = align::projective(f1);
+		pt _pt2 = align::projective(f2);
+
+		_pt1.scale(_lod->sf / _pt1.scale_2d());
+		_pt2.scale(_lod->sf / _pt2.scale_2d());
+
+		if (f1 == f2)
+			continue;
+			
+		for (int i = 0; i <= (int) floor(_pt1.scaled_height()) - 1; i++)
+		for (int j = 0; j <= (int) floor(_pt1.scaled_width()) - 1;  j++) {
+			d2::point p1(i, j);
+
+			*vertex = new_position;
+			d2::point npp2 = frame_to_frame(p1, _pt1, _pt2, z[f1], z[f2]).xy();
+
+			*vertex = original_position;
+			d2::point opp2 = frame_to_frame(p1, _pt1, _pt2, z[f1], z[f2]).xy();
+
+			if (!npp2.defined() || !opp2.defined())
+				continue;
+
+			ale_real new_color_diff = (_lod->reference[f1]->get_bl(p1)
+			                  - _lod->reference[f2]->get_bl(npp2)).normsq();
+
+			ale_real orig_color_diff = (_lod->reference[f1]->get_bl(p1)
+			                  - _lod->reference[f2]->get_bl(opp2)).normsq();
+
+			if (new_color_diff != orig_color_diff
+			 && (i < (int) floor(bb[f1 * 2 + 0][0]) || i > (int) ceil(bb[f1 * 2 + 1][0])
+			  || j < (int) floor(bb[f1 * 2 + 0][1]) || j > (int) ceil(bb[f1 * 2 + 1][1]))) {
+
+				fprintf(stderr, "Out-of-bounds color difference: n=%.10g - o=%.10g = %.10g\n", new_color_diff, orig_color_diff, new_color_diff - orig_color_diff);
+				fprintf(stderr, "v=%p, f1=%u, f2=%u i=%u j=%u\n ni2=%.10f nj2=%.10f oi2=%.10f oj2=%.10f\n", vertex, f1, f2, i, j, npp2[0], npp2[1], opp2[0], opp2[1]);
+
+				*vertex = new_position;
+				triangle *nt = z[f1][i * (int) floor(_pt1.scaled_width()) + j].nearest(_pt1, i, j);
+				fprintf(stderr, "New triangle intersect: t=%p, v=[%p %p %p]\n",
+					nt, nt->vertices[0], nt->vertices[1], nt->vertices[2]);
+
+				*vertex = original_position;;
+				triangle *ot = z[f1][i * (int) floor(_pt1.scaled_width()) + j].nearest(_pt1, i, j);
+				fprintf(stderr, "Old triangle intersect: t=%p, v=[%p %p %p]\n",
+					ot, ot->vertices[0], ot->vertices[1], ot->vertices[2]);
+
+				fprintf(stderr, "Triangle set:");
+				for (std::set<triangle *>::iterator tt = t_set->begin(); tt != t_set->end(); tt++)
+					fprintf(stderr, " %p", *tt);
+				fprintf(stderr, "\n");
+
+				fprintf(stderr, "Vertex set:");
+				for (std::set<point *>::iterator vv = v_set->begin(); vv != v_set->end(); vv++)
+					fprintf(stderr, " %p", *vv);
+				fprintf(stderr, "\n");
+			}
+		}
+	}
+#endif
 
 	/*
 	 * Determine geometric costs.
@@ -328,6 +405,12 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 			sqrt(new_color_cost), new_geom_cost,
 			sqrt(orig_color_cost), orig_geom_cost);
 #endif
+
+	ale_accum result = (sqrt(new_color_cost) + new_geom_cost)
+	                 - (sqrt(orig_color_cost) + orig_geom_cost);
+
+	if (fabs(result) < DISCRIMINATOR)
+		return 0;
 
 	return (sqrt(new_color_cost) + new_geom_cost)
 	     - (sqrt(orig_color_cost) + orig_geom_cost);
