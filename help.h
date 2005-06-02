@@ -584,7 +584,7 @@ public:
 			HEADER_SPACE
 			"--fc <x>          Set front-clip to <x> (0 < x < 1)                [default is 0]\n"
 			"--rc <x>          Set rear-clip to <x> (1 < x < inf)             [default is inf]\n"
-			"--mpu <x>         Set model perturb upper bound to <x>          [default is 100%%]\n"
+			"--mpu <x>         Set model perturb upper bound to <x>           [default is 25%%]\n"
 			"--mpl <x>         Set model perturb lower bound to <x>             [default is 1]\n"
 			"--model-save=<x>  Save model data to file <x>.\n"
 			"--model-load=<x>  Load model data from file <x>.\n"

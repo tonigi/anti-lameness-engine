@@ -2645,13 +2645,19 @@ public:
 				relative_unit = distance;
 		}
 
+		fprintf(stderr, "ru=%f\n", relative_unit);
+
 		if (mpl_type == 1) {
 			mpl_type = 0;
+			if (mpl_value > 25)
+				mpl_value = 25;
 			mpl_value = (mpl_value / 100) * relative_unit;
 		}
 
 		if (mpu_type == 1) {
 			mpu_type = 0;
+			if (mpu_value > 25)
+				mpu_value = 25;
 			mpu_value = (mpu_value / 100) * relative_unit;
 		}
 
@@ -2660,6 +2666,8 @@ public:
 		 */
 
 		perturb = mpu_value;
+
+		fprintf(stderr, "perturb=%f\n", perturb);
 
 #if 0
 		for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
