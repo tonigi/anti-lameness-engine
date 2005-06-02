@@ -1534,12 +1534,261 @@ class scene {
 			}
 			return improved;
 		}
+
+		void recursive_write_triangle_ascii_ptr(FILE *f, 
+				std::map<triangle *, unsigned int> *triangle_map, 
+				std::map<point *, unsigned int> *vertex_map, unsigned int *id) {
+
+			if (!triangle_map->count(this))
+				triangle_map->add(this, (*id)++);
+
+			for (int v = 0; v < 3; v++)
+			if (!vertex_map->count(vertices[v]))
+				vertex_map->add(vertices[v], (*id)++);
+
+			for (int v = 0; v < 3; v++)
+			if (!triangle_map->count(neighbors[v]))
+				triangle_map->add(neighbors[v], (*id)++);
+
+			if (!triangle_map->count(parent))
+				triangle_map->add(parent, (*id)++);
+
+			if (!vertex_map->count(division_new_vertex))
+				vertex_map->add(division_new_vertex, (*id)++);
+
+			for (int v = 0; v < 2; v++)
+			if (!triangle_map->count(children[v]))
+				triangle_map->add(children[v], (*id)++);
+
+			fprintf(f, "T %u %u %u %u %u %u %u %u %u %u %u %d %u %u %u\n", 
+				vertex_map->get(vertices[0]),
+				vertex_map->get(vertices[1]),
+				vertex_map->get(vertices[2]),
+				(unsigned int) vertex_fixed[0],
+				(unsigned int) vertex_fixed[1],
+				(unsigned int) vertex_fixed[2],
+				triangle_map->get(neighbors[0]),
+				triangle_map->get(neighbors[1]),
+				triangle_map->get(neighbors[2]),
+				triangle_map->get(parent),
+				division_vertex,
+				vertex_map->get(division_new_vertex),
+				triangle_map->get(children[0]),
+				triangle_map->get(children[1]));
+
+			if (children[0])
+				children[0]->write_triangle_ascii_ptr(f, triangle_map, vertex_map, id);
+			if (children[1])
+				children[1]->write_triangle_ascii_ptr(f, triangle_map, vertex_map, id);
+		}
+
+		void read_triangle_ascii_ptr(FILE *f, std::map<unsigned int, triangle *> *triangle_map, 
+				std::map<unsigned int, point *> *vertex_map) {
+			unsigned int id;
+
+			for (int v = 0; v < 3; v++) {
+				if (!fscanf(f, "%u", &id))
+					ui::get()->error("Bad model file.");
+				if (!vertex_map->count(id))
+					vertex_map->set(id, new point);
+				vertices[v] = vertex_map->get(id);
+			}
+
+			for (int v = 0; v < 3; v++) {
+				unsigned int vf;
+				if (!fscanf(f, "%u", &vf))
+					ui::get()->error("Bad model file.");
+				vertex_fixed[v] = vf;
+			}
+
+			for (int v = 0; v < 3; v++) {
+				if (!fscanf(f, "%u", &id))
+					ui::get()->error("Bad model file.");
+				if (!triangle_map->count(id))
+					triangle_map->set(id, new triangle);
+				neighbors[v] = triangle_map->get(id);
+			}
+
+			if (!fscanf(f, "%u", &id))
+				ui::get()->error("Bad model file.");
+			if (!triangle_map->count(id))
+				triangle_map->set(id, new triangle);
+			parent = triangle_map->get(id);
+
+			if (!fscanf(f, "%u", &division_vertex))
+				ui::get()->error("Bad model file.");
+
+			if (!fscanf(f, "%u", &id))
+				ui::get()->error("Bad model file.");
+			if (!vertex_map->count(id))
+				vertex_map->set(id, new point);
+			division_new_vertex = vertex_map->get(id);
+
+			for (int v = 0; v < 2; v++) {
+				if (!fscanf(f, "%u", &id))
+					ui::get()->error("Bad model file.");
+				if (!triangle_map->count(id))
+					triangle_map->set(id, new triangle);
+				children[v] = triangle_map->get(id);
+			}
+		}
 	};
 
 	/*
 	 * Use a pair of trees to store the triangles.
 	 */
 	static struct triangle *triangle_head[2];
+
+	/*
+	 * Read the model file.
+	 */
+	void read_model_file() {
+		assert(load_model_name);
+
+		FILE *f = fopen(load_model_name, "r");
+
+		if (!f)
+			ui::get()->error("Can't open model load file.");
+
+		char command;
+		int int_value;
+		unsigned int id;
+		int root_index;
+
+		/*
+		 * Check model file version.
+		 */
+
+		if (fscanf(f, "%c %d", &command, &int_value) != 2
+		 || command != 'V')
+			ui::get()->error("Bad model file.");
+
+		if (int_value != 0)
+			ui::get()->error("Unrecognized model file version.");
+
+		/*
+		 * Map variables.
+		 */
+
+		std::map<unsigned int, triangle *> triangle_map;
+		std::map<unsigned int, point *> vertex_map;
+
+		triangle_map(0, 0);
+		vertex_map(0, 0);
+
+		/*
+		 * Read commands
+		 */
+
+		while (!feof(f)) {
+			if (!fscanf(f, "%c", &command))
+				return;
+
+			switch(command) {
+			case ' ':
+			case '\t':
+			case '\n':
+			case '\r':
+				break;
+			case 'T':
+				/*
+				 * Triangle
+				 */
+				if (!fscanf(f, "%u", &id))
+					ui::get()->error("Bad model file.");
+				if (!triangle_map->count(id))
+					triangle_map->set(id, new triangle);
+				triangle_map->get(id)->read_triangle_ascii_ptr(f, triangle_map, vertex_map);
+				break;
+			case 'R':
+				/*
+				 * Roots
+				 */
+				if (fscanf(f, "%d %u", &root_index, &id) != 2)
+					ui::get()->error("Bad model file.");
+
+				triangle_head[root_index] = triangle_map->get(id);
+				break;
+			case 'P':
+				/*
+				 * Vertices
+				 */
+				if (fscanf(f, "%u", &id) != 1)
+					ui::get()->error("Bad model file.");
+
+				if(!vertex_map->count(id))
+					vertex_map->set(id, new point);
+
+				for (int v = 0; v < 3; v++) {
+					double coord;
+					if (!fscanf(f, "%f"))
+						ui::get()->error("Bad model file.");
+					(*vertex_map->get(id))[v] = coord;
+				}
+			default:
+				assert(0);
+			}
+		}
+	}
+
+	/*
+	 * Write the model file.
+	 */
+	void write_model_file() {
+		if (!save_model_name)
+			return;
+
+		FILE *f = fopen(save_model_name, "w");
+
+		if (!f)
+			ui::get()->error("Can't open model save file.");
+
+		/*
+		 * Print model file version.
+		 */
+
+		fprintf(f, "V %d\n", 0);
+
+		/*
+		 * Map variables.
+		 */
+
+		std::map<triangle *, unsigned int> triangle_map;
+		std::map<point *, unsigned int> vertex_map;
+
+		triangle_map->set(0, 0);
+		vertex_map->set(0, 0);
+
+		unsigned int id = 1;
+
+		/*
+		 * Print root values.
+		 */
+
+		for (int r = 0; r < 2; r++) {
+			triangle_map->set(triangle_head[r], id++);
+			fprintf(f, "R %d %u\n", r, triangle_map->get(triangle_head[r]));
+		}
+
+		/*
+		 * Print trees
+		 */
+
+		for (int r = 0; r < 2; r++)
+			triangle_head[r]->recursive_write_triangle_ascii_ptr(f, triangle_map, vertex_map, &id);
+
+		/*
+		 * Print vertex data
+		 */
+
+		for (std::map<point *, unsigned int>::iterator *i = 
+				vertex_map->begin(); i != vertex_map->end(); i++) {
+
+			point *p = (*i)->value();
+
+			fprintf(f, "P %u %f %f %f", (*i)->key(), p[0], p[1], p[2]);
+		}
+	}
 
 	/*
 	 * Vector test for interiority in local cartesian space.
@@ -1980,6 +2229,19 @@ public:
 		bl = cl;
 
 		/*
+		 * If there is a file to load scene data from, then use it.
+		 */
+
+		if (load_model_name) {
+			read_model_file();
+			return;
+		}
+
+		/*
+		 * Otherwise, initialize the model explicitly.
+		 */
+
+		/*
 		 * Determine the bounding box of the intersections of the view
 		 * pyramids with the estimated scene plane, and construct an
 		 * initial (planar) triangular decomposition of the scene.
@@ -2279,6 +2541,12 @@ public:
 	 */
 	static void add_control_points() {
 
+		/*
+		 * Don't add control points to loaded scenes.
+		 */
+		if (load_model_name)
+			return;
+
 		for (unsigned int i = 0; i < cpf::count(); i++) {
 
 			point control_point = cpf::get(i);
@@ -2391,18 +2659,22 @@ public:
 
 			fprintf(stderr, "begin output[%u] \n", time(NULL));
 
-			if (inc_bit && improved)
-			for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
-				if (d_out[i] != NULL) {
-					const d2::image *im = depth(i);
-					d2::image_rw::write_image(d_out[i], im, exp_out, 1, 1);
-					delete im;
-				}
+			if (inc_bit && improved) {
 
-				if (v_out[i] != NULL) {
-					const d2::image *im = view(i);
-					d2::image_rw::write_image(v_out[i], im, exp_out);
-					delete im;
+				write_model_file();
+
+				for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
+					if (d_out[i] != NULL) {
+						const d2::image *im = depth(i);
+						d2::image_rw::write_image(d_out[i], im, exp_out, 1, 1);
+						delete im;
+					}
+
+					if (v_out[i] != NULL) {
+						const d2::image *im = view(i);
+						d2::image_rw::write_image(v_out[i], im, exp_out);
+						delete im;
+					}
 				}
 			}
 			
