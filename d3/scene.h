@@ -228,6 +228,12 @@ class scene {
 	};
 
 	/*
+	 * Perturbation amount
+	 */
+
+	static ale_pos perturb;
+
+	/*
 	 * Current level-of-detail
 	 */
 
@@ -1224,7 +1230,7 @@ class scene {
 			return ((*vertices[0]).lengthto(*vertices[1])
 			      + (*vertices[0]).lengthto(*vertices[2])
 			      + (*vertices[1]).lengthto(*vertices[2])) * edge_cost_multiplier
-				                                       * cl->sf;
+				                                       * (2 / perturb);
 		}
 
 		ale_accum angle_cost() {
@@ -1421,7 +1427,7 @@ class scene {
 			 * the scale factor.
 			 */
 
-			ale_pos step = 2 / cl->sf;
+			ale_pos step = perturb;
 
 			int improved = 0;
 
@@ -1524,7 +1530,7 @@ class scene {
 							perturbed[0],
 							perturbed[1],
 							perturbed[2],
-							cl->sf);
+							2 / perturb);
 
 						improved = 1;
 						*vertices[v] = perturbed;
@@ -1540,46 +1546,46 @@ class scene {
 				std::map<point *, unsigned int> *vertex_map, unsigned int *id) {
 
 			if (!triangle_map->count(this))
-				triangle_map->add(this, (*id)++);
+				(*triangle_map)[this] = (*id)++;
 
 			for (int v = 0; v < 3; v++)
 			if (!vertex_map->count(vertices[v]))
-				vertex_map->add(vertices[v], (*id)++);
+				(*vertex_map)[vertices[v]] = (*id)++;
 
 			for (int v = 0; v < 3; v++)
 			if (!triangle_map->count(neighbors[v]))
-				triangle_map->add(neighbors[v], (*id)++);
+				(*triangle_map)[neighbors[v]] = (*id)++;
 
 			if (!triangle_map->count(parent))
-				triangle_map->add(parent, (*id)++);
+				(*triangle_map)[parent] = (*id)++;
 
 			if (!vertex_map->count(division_new_vertex))
-				vertex_map->add(division_new_vertex, (*id)++);
+				(*vertex_map)[division_new_vertex] = (*id)++;
 
 			for (int v = 0; v < 2; v++)
 			if (!triangle_map->count(children[v]))
-				triangle_map->add(children[v], (*id)++);
+				(*triangle_map)[children[v]] = (*id)++;
 
 			fprintf(f, "T %u %u %u %u %u %u %u %u %u %u %u %d %u %u %u\n", 
-				vertex_map->get(vertices[0]),
-				vertex_map->get(vertices[1]),
-				vertex_map->get(vertices[2]),
+				(*vertex_map)[vertices[0]],
+				(*vertex_map)[vertices[1]],
+				(*vertex_map)[vertices[2]],
 				(unsigned int) vertex_fixed[0],
 				(unsigned int) vertex_fixed[1],
 				(unsigned int) vertex_fixed[2],
-				triangle_map->get(neighbors[0]),
-				triangle_map->get(neighbors[1]),
-				triangle_map->get(neighbors[2]),
-				triangle_map->get(parent),
+				(*triangle_map)[neighbors[0]],
+				(*triangle_map)[neighbors[1]],
+				(*triangle_map)[neighbors[2]],
+				(*triangle_map)[parent],
 				division_vertex,
-				vertex_map->get(division_new_vertex),
-				triangle_map->get(children[0]),
-				triangle_map->get(children[1]));
+				(*vertex_map)[division_new_vertex],
+				(*triangle_map)[children[0]],
+				(*triangle_map)[children[1]]);
 
 			if (children[0])
-				children[0]->write_triangle_ascii_ptr(f, triangle_map, vertex_map, id);
+				children[0]->recursive_write_triangle_ascii_ptr(f, triangle_map, vertex_map, id);
 			if (children[1])
-				children[1]->write_triangle_ascii_ptr(f, triangle_map, vertex_map, id);
+				children[1]->recursive_write_triangle_ascii_ptr(f, triangle_map, vertex_map, id);
 		}
 
 		void read_triangle_ascii_ptr(FILE *f, std::map<unsigned int, triangle *> *triangle_map, 
@@ -1590,8 +1596,8 @@ class scene {
 				if (!fscanf(f, "%u", &id))
 					ui::get()->error("Bad model file.");
 				if (!vertex_map->count(id))
-					vertex_map->set(id, new point);
-				vertices[v] = vertex_map->get(id);
+					(*vertex_map)[id] = new point;
+				vertices[v] = (*vertex_map)[id];
 			}
 
 			for (int v = 0; v < 3; v++) {
@@ -1605,15 +1611,15 @@ class scene {
 				if (!fscanf(f, "%u", &id))
 					ui::get()->error("Bad model file.");
 				if (!triangle_map->count(id))
-					triangle_map->set(id, new triangle);
-				neighbors[v] = triangle_map->get(id);
+					(*triangle_map)[id] = new triangle;
+				neighbors[v] = (*triangle_map)[id];
 			}
 
 			if (!fscanf(f, "%u", &id))
 				ui::get()->error("Bad model file.");
 			if (!triangle_map->count(id))
-				triangle_map->set(id, new triangle);
-			parent = triangle_map->get(id);
+				(*triangle_map)[id] = new triangle;
+			parent = (*triangle_map)[id];
 
 			if (!fscanf(f, "%u", &division_vertex))
 				ui::get()->error("Bad model file.");
@@ -1621,15 +1627,15 @@ class scene {
 			if (!fscanf(f, "%u", &id))
 				ui::get()->error("Bad model file.");
 			if (!vertex_map->count(id))
-				vertex_map->set(id, new point);
-			division_new_vertex = vertex_map->get(id);
+				(*vertex_map)[id] = new point;
+			division_new_vertex = (*vertex_map)[id];
 
 			for (int v = 0; v < 2; v++) {
 				if (!fscanf(f, "%u", &id))
 					ui::get()->error("Bad model file.");
 				if (!triangle_map->count(id))
-					triangle_map->set(id, new triangle);
-				children[v] = triangle_map->get(id);
+					(*triangle_map)[id] = new triangle;
+				children[v] = (*triangle_map)[id];
 			}
 		}
 	};
@@ -1642,7 +1648,7 @@ class scene {
 	/*
 	 * Read the model file.
 	 */
-	void read_model_file() {
+	static void read_model_file() {
 		assert(load_model_name);
 
 		FILE *f = fopen(load_model_name, "r");
@@ -1673,8 +1679,8 @@ class scene {
 		std::map<unsigned int, triangle *> triangle_map;
 		std::map<unsigned int, point *> vertex_map;
 
-		triangle_map(0, 0);
-		vertex_map(0, 0);
+		triangle_map[0] = 0;
+		vertex_map[0] = 0;
 
 		/*
 		 * Read commands
@@ -1696,9 +1702,9 @@ class scene {
 				 */
 				if (!fscanf(f, "%u", &id))
 					ui::get()->error("Bad model file.");
-				if (!triangle_map->count(id))
-					triangle_map->set(id, new triangle);
-				triangle_map->get(id)->read_triangle_ascii_ptr(f, triangle_map, vertex_map);
+				if (!triangle_map.count(id))
+					triangle_map[id] = new triangle;
+				triangle_map[id]->read_triangle_ascii_ptr(f, &triangle_map, &vertex_map);
 				break;
 			case 'R':
 				/*
@@ -1707,7 +1713,7 @@ class scene {
 				if (fscanf(f, "%d %u", &root_index, &id) != 2)
 					ui::get()->error("Bad model file.");
 
-				triangle_head[root_index] = triangle_map->get(id);
+				triangle_head[root_index] = triangle_map[id];
 				break;
 			case 'P':
 				/*
@@ -1716,14 +1722,14 @@ class scene {
 				if (fscanf(f, "%u", &id) != 1)
 					ui::get()->error("Bad model file.");
 
-				if(!vertex_map->count(id))
-					vertex_map->set(id, new point);
+				if(!vertex_map.count(id))
+					vertex_map[id] = new point;
 
 				for (int v = 0; v < 3; v++) {
 					double coord;
-					if (!fscanf(f, "%f"))
+					if (!fscanf(f, "%lf", &coord))
 						ui::get()->error("Bad model file.");
-					(*vertex_map->get(id))[v] = coord;
+					(*vertex_map[id])[v] = coord;
 				}
 			default:
 				assert(0);
@@ -1734,7 +1740,7 @@ class scene {
 	/*
 	 * Write the model file.
 	 */
-	void write_model_file() {
+	static void write_model_file() {
 		if (!save_model_name)
 			return;
 
@@ -1756,8 +1762,8 @@ class scene {
 		std::map<triangle *, unsigned int> triangle_map;
 		std::map<point *, unsigned int> vertex_map;
 
-		triangle_map->set(0, 0);
-		vertex_map->set(0, 0);
+		triangle_map[0] = 0;
+		vertex_map[0] = 0;
 
 		unsigned int id = 1;
 
@@ -1766,8 +1772,8 @@ class scene {
 		 */
 
 		for (int r = 0; r < 2; r++) {
-			triangle_map->set(triangle_head[r], id++);
-			fprintf(f, "R %d %u\n", r, triangle_map->get(triangle_head[r]));
+			triangle_map[triangle_head[r]] = id++;
+			fprintf(f, "R %d %u\n", r, triangle_map[triangle_head[r]]);
 		}
 
 		/*
@@ -1775,18 +1781,18 @@ class scene {
 		 */
 
 		for (int r = 0; r < 2; r++)
-			triangle_head[r]->recursive_write_triangle_ascii_ptr(f, triangle_map, vertex_map, &id);
+			triangle_head[r]->recursive_write_triangle_ascii_ptr(f, &triangle_map, &vertex_map, &id);
 
 		/*
 		 * Print vertex data
 		 */
 
-		for (std::map<point *, unsigned int>::iterator *i = 
-				vertex_map->begin(); i != vertex_map->end(); i++) {
+		for (std::map<point *, unsigned int>::iterator i = 
+				vertex_map.begin(); i != vertex_map.end(); i++) {
 
-			point *p = (*i)->value();
+			point p = *i->first;
 
-			fprintf(f, "P %u %f %f %f", (*i)->key(), p[0], p[1], p[2]);
+			fprintf(f, "P %u %f %f %f", i->second, p[0], p[1], p[2]);
 		}
 	}
 
@@ -2017,7 +2023,7 @@ class scene {
 		 */
 		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
 
-			ale_pos sf = cl->sf;
+			ale_pos sf = 2 / perturb;
 
 			/*
 			 * Z-buffer to map points to triangles
@@ -2141,6 +2147,16 @@ public:
 
 	static void save_model(const char *name) {
 		save_model_name = name;
+	}
+
+	static void mpl_absolute(ale_real value) {
+		mpl_value = value;
+		mpl_type = 0;
+	}
+
+	static void mpu_absolute(ale_real value) {
+		mpu_value = value;
+		mpu_type = 0;
 	}
 
 	static void mpl_percent(ale_real value) {
@@ -2617,10 +2633,33 @@ public:
 		int count = 0;
 
 		/*
-		 * To start, use the lowest level-of-detail
+		 * Make all perturbation bounds absolute.
 		 */
 
-		while(reduce_lod());
+		ale_pos relative_unit = 0;
+
+		for (int v = 0; v < 3; v++) {
+			ale_pos distance = triangle_head[0]->vertices[v]->lengthto(*triangle_head[1]->vertices[v]);
+
+			if (distance > relative_unit)
+				relative_unit = distance;
+		}
+
+		if (mpl_type == 1) {
+			mpl_type = 0;
+			mpl_value = (mpl_value / 100) * relative_unit;
+		}
+
+		if (mpu_type == 1) {
+			mpu_type = 0;
+			mpu_value = (mpu_value / 100) * relative_unit;
+		}
+
+		/*
+		 * To start, use the largest perturbation value.
+		 */
+
+		perturb = mpu_value;
 
 #if 0
 		for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
@@ -2687,9 +2726,12 @@ public:
 			if (!improved || count > 40) {
 
 				fprintf(stderr, ".");
-				if (!cl->next)
+
+				perturb /= 2;
+
+				if (perturb < mpl_value)
 					break;
-				increase_lod();
+
 				count = 0;
 				improved = 1;
 				continue;
@@ -2709,6 +2751,7 @@ public:
 			fprintf(stderr, "end adjustment[%u] \n", time(NULL));
 		}
 
+		write_model_file();
 	}
 
 #if 0

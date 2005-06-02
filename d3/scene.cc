@@ -26,6 +26,7 @@
  */
 
 scene::lod *scene::cl;
+ale_pos scene::perturb;
 scene::lod *scene::bl;
 scene::triangle *scene::triangle_head[2];
 std::map<point *, scene::vertex_aux> scene::vam;
