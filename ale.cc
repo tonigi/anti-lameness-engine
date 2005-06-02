@@ -612,6 +612,32 @@ int main(int argc, const char *argv[]){
 			sscanf(argv[i+1], "%lf", &st_parameter);
 			i += 1;
 			d3::cpf::st(st_parameter);
+		} else if (!strcmp(argv[i], "--mpu")) {
+			if (i + 1 >= argc)
+				not_enough("--mpu");
+
+			double mpu_parameter;
+			int characters;
+			sscanf(argv[i+1], "%lf%n", &mpu_parameter, &characters);
+			if (*(argv[i+1] + characters) == '%')
+				d3::scene::mpu_percent(mpu_parameter);
+			else
+				d3::scene::mpu_absolute(mpu_parameter);
+
+			i += 1;
+		} else if (!strcmp(argv[i], "--mpl")) {
+			if (i + 1 >= argc)
+				not_enough("--mpl");
+
+			double mpl_parameter;
+			int characters;
+			sscanf(argv[i+1], "%lf%n", &mpl_parameter, &characters);
+			if (*(argv[i+1] + characters) == '%')
+				d3::scene::mpl_percent(mpl_parameter);
+			else
+				d3::scene::mpl_absolute(mpl_parameter);
+
+			i += 1;
 		} else if (!strcmp(argv[i], "--rc")) {
 			if (i + 1 >= argc)
 				not_enough("--rc");
@@ -1085,12 +1111,16 @@ int main(int argc, const char *argv[]){
 			double lod_max;
 			sscanf(argv[i] + strlen("--lod-max="), "%lf", &lod_max);
 			d2::align::set_lod_max((int) floor(lod_max));
+		} else if (!strncmp(argv[i], "--cpf-load=", strlen("--cpf-load="))) {
+			d3::cpf::init_loadfile(argv[i] + strlen("--cpf-load="));
+		} else if (!strncmp(argv[i], "--model-load=", strlen("--model-load="))) {
+			d3::scene::load_model(argv[i] + strlen("--model-load="));
+		} else if (!strncmp(argv[i], "--model-save=", strlen("--model-save="))) {
+			d3::scene::save_model(argv[i] + strlen("--model-save="));
 		} else if (!strncmp(argv[i], "--trans-load=", strlen("--trans-load="))) {
 			d2::tload_delete(tload);
 			tload = d2::tload_new(argv[i] + strlen("--trans-load="));
 			d2::align::set_tload(tload);
-		} else if (!strncmp(argv[i], "--cpf-load=", strlen("--cpf-load="))) {
-			d3::cpf::init_loadfile(argv[i] + strlen("--cpf-load="));
 		} else if (!strncmp(argv[i], "--trans-save=", strlen("--trans-save="))) {
 			tsave_delete(tsave);
 			tsave = d2::tsave_new(argv[i] + strlen("--trans-save="));

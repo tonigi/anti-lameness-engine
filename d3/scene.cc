@@ -33,6 +33,12 @@ ale_pos scene::edge_cost_multiplier = 0;
 ale_pos scene::angle_cost_multiplier = 0;
 ale_pos scene::front_clip = 0;
 ale_pos scene::rear_clip = 0;
+ale_pos scene::mpl_value = 1;
+ale_pos scene::mpu_value = 100;
+int scene::mpl_type = 0;
+int scene::mpu_type = 1;
+const char *scene::load_model_name = NULL;
+const char *scene::save_model_name = NULL;
 
 /*
  * Precision discriminator
