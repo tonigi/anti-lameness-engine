@@ -1584,8 +1584,9 @@ int main(int argc, const char *argv[]){
 
 				fprintf(stderr, "Reducing cost in 3D scene");
 				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, output_exposure, inc);
-				fprintf(stderr, "\n");
+				fprintf(stderr, ".\n");
 
+				fprintf(stderr, "Writing 3D output");
 				for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
 					assert (i < d3_count);
 
@@ -1601,6 +1602,7 @@ int main(int argc, const char *argv[]){
 						delete im;
 					}
 				}
+				fprintf(stderr, ".\n");
 
 				for (unsigned int i = d2::image_rw::count(); i < d3_count; i++) {
 					if (d3_depth[i] != NULL) {

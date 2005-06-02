@@ -563,6 +563,18 @@ public:
 			HEADER_SPACE
 			"--3dv <n> <o>     Render, to file <o>, colors as viewed from frame <n>.\n"
 			"--3dd <n> <o>     Render, to file <o>, depths as viewed from frame <n>.\n"
+			"--3dvt <args> <o> Render, to file <o>, colors viewed with <args>.\n"
+			"--3ddt <args> <o> Render, to file <o>, depths viewed with <args>.\n"
+			"                    <args> are w h v x y z P Y R:\n"
+			"                         w    image width.\n"
+			"                         h    image height.\n"
+			"                         v    camera view angle.\n"
+			"                         x    translation x component.\n"
+			"                         y    translation y component.\n"
+			"                         z    translation z component.\n"
+			"                         P    rotation around x-axis.\n"
+			"                         Y    rotation around y-axis.\n"
+			"                         R    rotation around z-axis.\n"
 			BETWEEN_SECTIONS
 			"Camera parameters:\n"
 			HEADER_SPACE

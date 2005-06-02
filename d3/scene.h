@@ -1688,8 +1688,10 @@ class scene {
 		 */
 
 		while (!feof(f)) {
-			if (!fscanf(f, "%c", &command))
-				return;
+			if (fscanf(f, "%c", &command) < 1) {
+				assert(feof(f));
+				break;
+			}
 
 			switch(command) {
 			case ' ':
@@ -1713,7 +1715,8 @@ class scene {
 				 */
 				if (fscanf(f, "%d %u", &root_index, &id) != 2)
 					ui::get()->error("Bad model file.");
-
+				if (!triangle_map.count(id))
+					triangle_map[id] = new triangle;
 				triangle_head[root_index] = triangle_map[id];
 				break;
 			case 'P':
@@ -1732,8 +1735,10 @@ class scene {
 						ui::get()->error("Bad model file.");
 					(*vertex_map[id])[v] = coord;
 				}
+				break;
 			default:
-				assert(0);
+				fprintf(stderr, "Unknown model file command '%c' (%x).\n", command, command);
+				ui::get()->error("Bad model file.");
 			}
 		}
 
@@ -2606,6 +2611,12 @@ public:
 	 */
 	static void relax_triangle_model() {
 
+		/*
+		 * Don't relax loaded scenes
+		 */
+		if (load_model_name)
+			return;
+
 		if (!triangle_head[0]->reduce_angle_metrics()
 		 && !triangle_head[1]->reduce_angle_metrics())
 			return;
@@ -2693,7 +2704,7 @@ public:
 		 * Perform cost-reduction.
 		 */
 
-		for (;;) {
+		while (perturb >= mpl_value) {
 
 			fprintf(stderr, "begin density test split[%u] \n", time(NULL));
 
@@ -2738,9 +2749,6 @@ public:
 				fprintf(stderr, ".");
 
 				perturb /= 2;
-
-				if (perturb < mpl_value)
-					break;
 
 				count = 0;
 				improved = 1;
