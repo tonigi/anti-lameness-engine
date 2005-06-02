@@ -1567,6 +1567,7 @@ class scene {
 				(*triangle_map)[children[v]] = (*id)++;
 
 			fprintf(f, "T %u %u %u %u %u %u %u %u %u %u %u %d %u %u %u\n", 
+				(*triangle_map)[this],
 				(*vertex_map)[vertices[0]],
 				(*vertex_map)[vertices[1]],
 				(*vertex_map)[vertices[2]],
@@ -1735,6 +1736,8 @@ class scene {
 				assert(0);
 			}
 		}
+
+		fclose(f);
 	}
 
 	/*
@@ -1790,10 +1793,15 @@ class scene {
 		for (std::map<point *, unsigned int>::iterator i = 
 				vertex_map.begin(); i != vertex_map.end(); i++) {
 
+			if (i->first == NULL)
+				continue;
+
 			point p = *i->first;
 
-			fprintf(f, "P %u %f %f %f", i->second, p[0], p[1], p[2]);
+			fprintf(f, "P %u %f %f %f\n", i->second, p[0], p[1], p[2]);
 		}
+
+		fclose(f);
 	}
 
 	/*
@@ -2211,8 +2219,6 @@ public:
 
 		front_clip = front_clip * cp_scalar - cp_scalar;
 		rear_clip = rear_clip * cp_scalar - cp_scalar;
-
-		fprintf(stderr, "fc=%f rc=%f\n", front_clip, rear_clip);
 
 		/*
 		 * Find out how many input frames there are.
@@ -2645,8 +2651,6 @@ public:
 				relative_unit = distance;
 		}
 
-		fprintf(stderr, "ru=%f\n", relative_unit);
-
 		if (mpl_type == 1) {
 			mpl_type = 0;
 			if (mpl_value > 25)
@@ -2666,8 +2670,6 @@ public:
 		 */
 
 		perturb = mpu_value;
-
-		fprintf(stderr, "perturb=%f\n", perturb);
 
 #if 0
 		for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
