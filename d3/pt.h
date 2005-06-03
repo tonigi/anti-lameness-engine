@@ -51,6 +51,11 @@ public:
 	 * Constructor
 	 */
 
+	pt() {
+		_view_angle = 45;
+		scale_factor = 1;
+	}
+
 	pt(d2::transformation t, et e, ale_real va, ale_pos sf = 1) {
 		this->t = t;
 		euclidean = e;

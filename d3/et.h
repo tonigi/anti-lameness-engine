@@ -248,23 +248,44 @@ public:
 		return result;
 	}
 
+	/*
+	 * Default constructor
+	 *
+	 * Returns the identity transformation.
+	 *
+	 * Note: identity() depends on this.
+	 */
+	et() {
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
+		translation[0] = 0;
+		translation[1] = 0;
+		translation[2] = 0;
+
+		rotation[0] = 0;
+		rotation[1] = 0;
+		rotation[2] = 0;
+	}
+	
+	et(ale_pos x, ale_pos y, ale_pos z, ale_pos P, ale_pos Y, ale_pos R) {
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
+		translation[0] = x;
+		translation[1] = y;
+		translation[2] = z;
+
+		rotation[0] = P;
+		rotation[1] = Y;
+		rotation[2] = R;
+	}
 	
 	/*
 	 * Return identity transformation.
 	 */
 	static struct et identity() {
 		struct et r;
-
-		r.resultant_memo = 0;
-		r.resultant_inverse_memo = 0;
-
-		r.translation[0] = 0;
-		r.translation[1] = 0;
-		r.translation[2] = 0;
-
-		r.rotation[0] = 0;
-		r.rotation[1] = 0;
-		r.rotation[2] = 0;
 
 		return r;
 	}

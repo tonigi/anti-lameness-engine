@@ -346,6 +346,8 @@ int main(int argc, const char *argv[]){
 	double user_view_angle = 0;
 	int user_bayer = IMAGE_BAYER_DEFAULT;
 	d2::pixel exp_mult = d2::pixel(1, 1, 1);
+	std::map<const char *, d3::pt> d3_output_pt;
+	std::map<const char *, d3::pt> d3_depth_pt;
 
 	/*
 	 * dchain is ochain[0].
@@ -491,6 +493,72 @@ int main(int argc, const char *argv[]){
 			d2::align::gs_mo(mo_parameter);
 			i += 1;
 
+		} else if (!strcmp(argv[i], "--3ddp") || !strcmp(argv[i], "--3dvp")) {
+			d2::align::keep();
+
+			/*
+			 * Unsupported configurations
+			 */
+
+			if (ip_iterations)
+				unsupported::fornow("3D modeling with Irani-Peleg rendering");
+
+#if 0
+			if (usm_multiplier)
+				unsupported::fornow("3D modeling with unsharp mask");
+#endif
+
+			/*
+			 * Check for argument availability
+			 */
+
+			if (i + 10 >= argc) 
+				not_enough(argv[i]);
+
+			/*
+			 * Initialize if necessary
+			 *
+			 * Note: because their existence is checked as an
+			 * indicator of the presence of 3D arguments, we
+			 * initialize these structures here.
+			 */
+
+			if (d3_output == NULL) {
+				d3_count  = argc - (i + 2) - 1;
+				d3_output = (const char **) calloc(d3_count, sizeof(char *));
+				d3_depth = (const char **) calloc(d3_count, sizeof(char *));
+			}
+
+			unsigned int width, height;
+			double view_angle;
+			double x, y, z;
+			double P, Y, R;
+
+			if (sscanf(argv[i+1], "%u", &width) != 1
+			 || sscanf(argv[i+2], "%u", &height) != 1
+			 || sscanf(argv[i+3], "%lf", &view_angle) != 1
+			 || sscanf(argv[i+4], "%lf", &x) != 1
+			 || sscanf(argv[i+5], "%lf", &y) != 1
+			 || sscanf(argv[i+6], "%lf", &z) != 1
+			 || sscanf(argv[i+7], "%lf", &P) != 1
+			 || sscanf(argv[i+8], "%lf", &Y) != 1
+			 || sscanf(argv[i+9], "%lf", &R) != 1)
+				bad_arg(argv[i]);
+
+			d2::transformation t = 
+				d2::transformation::eu_identity();
+			t.set_domain(height, width);
+			d3::pt _pt(t, d3::et(y, x, z, Y, P, R), view_angle);
+			
+			if (!strcmp(argv[i], "--3dvp")) {
+				d3_output_pt[argv[i+10]] = _pt;
+			} else if (!strcmp(argv[i], "--3ddp")) {
+				d3_depth_pt[argv[i+10]] = _pt;
+			} else {
+				assert(0);
+			}
+
+			i+=10;
 		} else if (!strcmp(argv[i], "--3dv")) {
 			d2::align::keep();
 
@@ -1583,7 +1651,8 @@ int main(int argc, const char *argv[]){
 				d3::scene::relax_triangle_model();
 
 				fprintf(stderr, "Reducing cost in 3D scene");
-				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, output_exposure, inc);
+				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, 
+						&d3_depth_pt, &d3_output_pt, output_exposure, inc);
 				fprintf(stderr, ".\n");
 
 				fprintf(stderr, "Writing 3D output");
@@ -1599,6 +1668,22 @@ int main(int argc, const char *argv[]){
 					if (d3_output[i] != NULL) {
 						const d2::image *im = d3::scene::view(i);
 						d2::image_rw::write_image(d3_output[i], im, output_exposure);
+						delete im;
+					}
+
+					for (std::map<const char *, d3::pt>::iterator i = d3_output_pt.begin();
+							i != d3_output_pt.end(); i++) {
+
+						const d2::image *im = d3::scene::view(i->second);
+						d2::image_rw::write_image(i->first, im, output_exposure);
+						delete im;
+					}
+
+					for (std::map<const char *, d3::pt>::iterator i = d3_depth_pt.begin();
+							i != d3_depth_pt.end(); i++) {
+
+						const d2::image *im = d3::scene::depth(i->second);
+						d2::image_rw::write_image(i->first, im, output_exposure, 1, 1);
 						delete im;
 					}
 				}

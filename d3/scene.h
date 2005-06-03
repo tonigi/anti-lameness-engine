@@ -2410,14 +2410,18 @@ public:
 		cl = nl;
 	}
 
-	static const d2::image *view(unsigned int n) {
+	static const d2::image *view(pt _pt, int n = -1) {
+		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
-		assert (n < d2::image_rw::count());
+		if (n >= 0) {
+			assert((int) floor(d2::align::of(n).scaled_height())
+			     == (int) floor(_pt.scaled_height()));
+			assert((int) floor(d2::align::of(n).scaled_width())
+			     == (int) floor(_pt.scaled_width()));
+		}
 
-		d2::image *im = new d2::image_ale_real((int) floor(d2::align::of(n).scaled_height()),
-				               (int) floor(d2::align::of(n).scaled_width()), 3);
-
-		pt _pt = align::projective(n);
+		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+				               (int) floor(_pt.scaled_width()), 3);
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
@@ -2470,7 +2474,8 @@ public:
 
 				for (int ii = (int) ceil(bounds[0][0]); ii <= (int) floor(bounds[1][0]); ii++)
 				for (int jj = (int) ceil(bounds[0][1]); jj <= (int) floor(bounds[1][1]); jj++) {
-					if (f == n || frame_to_frame(d2::point(ii, jj), _ptf, _pt, zbsu[f], zbuf).defined()) {
+					if ((n > 0 && f == (unsigned int) n) 
+					 || frame_to_frame(d2::point(ii, jj), _ptf, _pt, zbsu[f], zbuf).defined()) {
 						val += bl->reference[f]->get_pixel(ii, jj);
 						div += 1;
 					}
@@ -2491,7 +2496,7 @@ public:
 				pt _ptf = align::projective(f);
 				_ptf.scale(1 / _ptf.scale_2d());
 
-				if (f == n) {
+				if (n > 0 && f == (unsigned int) n) {
 					point p = _ptf.wp_scaled(_pt.pw_scaled(point(i, j, -1)));
 
 					if (!bl->reference[f]->in_bounds(p.xy()))
@@ -2524,16 +2529,31 @@ public:
 		return im;
 	}
 
-	static const d2::image *depth(unsigned int n) {
+	static const d2::image *view(unsigned int n) {
+
 		assert (n < d2::image_rw::count());
 
-		d2::image *im = new d2::image_ale_real((int) floor(d2::align::of(n).scaled_height()),
-				               (int) floor(d2::align::of(n).scaled_width()), 3);
-
 		pt _pt = align::projective(n);
+
+		return view(_pt, n);
+	}
+
+	static const d2::image *depth(pt _pt, int n = -1) {
+		assert (n < 0 || (unsigned int) n < d2::image_rw::count());
+
+		if (n >= 0) {
+			assert((int) floor(d2::align::of(n).scaled_height())
+			     == (int) floor(_pt.scaled_height()));
+			assert((int) floor(d2::align::of(n).scaled_width())
+			     == (int) floor(_pt.scaled_width()));
+		}
+
+		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+				               (int) floor(_pt.scaled_width()), 3);
+
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
-		zbuf_elem *zbuf = init_zbuf(align::projective(n));
+		zbuf_elem *zbuf = init_zbuf(_pt);
 
 		zbuffer(_pt, zbuf, triangle_head[0]);
 		zbuffer(_pt, zbuf, triangle_head[1]);
@@ -2563,6 +2583,15 @@ public:
 		delete[] zbuf;
 
 		return im;
+	}
+
+	static const d2::image *depth(unsigned int n) {
+
+		assert (n < d2::image_rw::count());
+
+		pt _pt = align::projective(n);
+
+		return depth(_pt, n);
 	}
 
 	/*
@@ -2647,7 +2676,11 @@ public:
 	 * even a 'search depth' any longer, since there is no longer any
 	 * bounded DFS occurring.
 	 */
-	static void reduce_cost_to_search_depth(const char *d_out[], const char *v_out[], d2::exposure *exp_out, int inc_bit) {
+	static void reduce_cost_to_search_depth(const char *d_out[], const char *v_out[], 
+			std::map<const char *, pt> *d3_depth_pt,
+			std::map<const char *, pt> *d3_output_pt,
+			d2::exposure *exp_out, int inc_bit) {
+
 		int improved = 1;
 		int count = 0;
 
@@ -2737,6 +2770,22 @@ public:
 						d2::image_rw::write_image(v_out[i], im, exp_out);
 						delete im;
 					}
+				}
+
+				for (std::map<const char *, pt>::iterator i = d3_depth_pt->begin();
+						i != d3_depth_pt->end(); i++) {
+
+					const d2::image *im = depth(i->second);
+					d2::image_rw::write_image(i->first, im, exp_out, 1, 1);
+					delete im;
+				}
+
+				for (std::map<const char *, pt>::iterator i = d3_output_pt->begin();
+						i != d3_output_pt->end(); i++) {
+
+					const d2::image *im = view(i->second);
+					d2::image_rw::write_image(i->first, im, exp_out);
+					delete im;
 				}
 			}
 			
