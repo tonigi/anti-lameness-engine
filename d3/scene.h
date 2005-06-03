@@ -1715,6 +1715,8 @@ class scene {
 				 */
 				if (fscanf(f, "%d %u", &root_index, &id) != 2)
 					ui::get()->error("Bad model file.");
+				if (root_index < 0 || root_index > 1)
+					ui::get()->error("Cannot handle roots other than 0 or 1");
 				if (!triangle_map.count(id))
 					triangle_map[id] = new triangle;
 				triangle_head[root_index] = triangle_map[id];
