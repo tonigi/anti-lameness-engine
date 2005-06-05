@@ -1454,7 +1454,7 @@ class scene {
 
 			int improved = 0;
 
-			ale_pos allowable_max_neighbor_angle = M_PI / 1.5;
+			// ale_pos allowable_max_neighbor_angle = M_PI / 1.5;
 			// ale_pos allowable_max_internal_angle = M_PI / 1.5;
 			// ale_pos allowable_min_internal_angle = M_PI / 8;
 
