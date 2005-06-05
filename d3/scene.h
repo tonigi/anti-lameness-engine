@@ -1384,9 +1384,9 @@ class scene {
 				int p_int[2] = { (int) floor(p[0]), (int) floor(p[1]) };
 
 				if (p_int[0] >= 0
-				 || p_int[1] >= 0
-				 || p_int[0] <= _pt.scaled_height() - 2
-				 || p_int[1] <= _pt.scaled_width() - 2)
+				 && p_int[1] >= 0
+				 && p_int[0] <= _pt.scaled_height() - 2
+				 && p_int[1] <= _pt.scaled_width() - 2)
 					return 1;
 			}
 			return 0;
