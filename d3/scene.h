@@ -1502,12 +1502,14 @@ class scene {
 					 * a given amount the angle between the normals of adjacent triangles.
 					 */
 
+#if 0
 					ale_accum extremum_angle;
 					*vertices[v] = perturbed;
 					extremum_angle = traverse_around_vertex(vertices[v], &triangle::max_neighbor_angle, 1);
 					*vertices[v] = orig;
 					if (extremum_angle > allowable_max_neighbor_angle)
 						continue;
+#endif
 
 					/*
 					 * Check the error
@@ -2106,7 +2108,7 @@ class scene {
 
 				/*
 				 * Check that the triangle area is at least
-				 * 4.
+				 * 16.
 				 */
 
 				// ale_pos area = t->compute_projected_area(_pt);
@@ -2114,9 +2116,9 @@ class scene {
 						                                    *t->vertices[1],
 										    *t->vertices[2]);
 
-				if (area <= 4 && split)
+				if (area <= 16 && split)
 					t->aux_stat = d2::pixel(-1, -1, -1);
-				else if (area < 4 && !split && t->parent)
+				else if (area < 16 && !split && t->parent)
 					t->parent->aux_stat = d2::pixel(-1, -1, -1);
 			}
 
