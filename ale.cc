@@ -545,6 +545,11 @@ int main(int argc, const char *argv[]){
 			 || sscanf(argv[i+9], "%lf", &R) != 1)
 				bad_arg(argv[i]);
 
+			view_angle *= M_PI / 180;
+			P *= M_PI / 180;
+			Y *= M_PI / 180;
+			R *= M_PI / 180;
+
 			d2::transformation t = 
 				d2::transformation::eu_identity();
 			t.set_domain(height, width);

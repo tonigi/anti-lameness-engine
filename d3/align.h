@@ -546,8 +546,20 @@ public:
 		alignment_array[n].modify_rotation(d, x);
 	}
 
+	static void set_translation(unsigned int n, int d, ale_pos x) {
+		alignment_array[n].set_translation(d, x);
+	}
+
+	static void set_rotation(unsigned int n, int d, ale_pos x) {
+		alignment_array[n].set_rotation(d, x);
+	}
+
 	static void adjust_view_angle(ale_pos x) {
 		_init_angle += x;
+	}
+
+	static void set_view_angle(ale_pos x) {
+		_init_angle = x;
 	}
 };
 

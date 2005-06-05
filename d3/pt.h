@@ -44,7 +44,7 @@ private:
 	et euclidean;
 	ale_real _view_angle;		/* XXX: should be ale_pos */
 	ale_pos scale_factor;
-	
+
 public:	
 
 	/*
@@ -52,7 +52,7 @@ public:
 	 */
 
 	pt() {
-		_view_angle = 45;
+		_view_angle = M_PI / 4;
 		scale_factor = 1;
 	}
 
@@ -242,6 +242,37 @@ public:
 		return pw_generic(p, unscaled_width(), unscaled_height());
 	}
 
+	/*
+	 * Density calculation
+	 */
+
+	ale_pos c_density_scaled(point p) const {
+		ale_pos one_density = 1 / (pc_scaled(point(0, 0, -1)).lengthto(pc_scaled(point(0, 1, -1)))
+				         * pc_scaled(point(0, 0, -1)).lengthto(pc_scaled(point(1, 0, -1))));
+
+		return one_density / (-p[2]);
+	}
+
+	ale_pos w_density_scaled(point p) const {
+		return c_density_scaled(wc(p));
+	}
+
+	ale_pos w_density_scaled_max(point w0, point w1, point w2) {
+		point c0 = wc(w0);
+		point c1 = wc(w1);
+		point c2 = wc(w2);
+
+		/*
+		 * Select the point closest to the camera.
+		 */
+
+		if (c0[2] > c1[2] && c0[2] > c2[2])
+			return c_density_scaled(c0);
+		else if (c1[2] > c2[2])
+			return c_density_scaled(c1);
+		else
+			return c_density_scaled(c2);
+	}
 };
 
 #endif

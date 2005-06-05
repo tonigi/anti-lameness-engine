@@ -125,7 +125,7 @@ private:
 
 		mident(m1);
 
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 3; i++)
 			m1[i][3] = translation[i];
 
 		/*
@@ -179,7 +179,7 @@ private:
 
 		mident(m1);
 
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 3; i++)
 			m1[i][3] = -translation[i];
 
 		/*
@@ -303,6 +303,16 @@ public:
 		translation[i1] += diff;
 	}
 
+	void set_translation(int i1, ale_pos new_value) {
+		assert (i1 >= 0);
+		assert (i1 < 3);
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
+		translation[i1] = new_value;
+	}
+
 	/*
 	 * Adjust rotation in the indicated manner.
 	 */
@@ -316,6 +326,29 @@ public:
 		rotation[i1] += diff;
 	}
 
+	void set_rotation(int i1, ale_pos new_value) {
+		assert (i1 >= 0);
+		assert (i1 < 3);
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
+		rotation[i1] = new_value;
+	}
+
+	ale_pos get_rotation(int i1) {
+		assert (i1 >= 0);
+		assert (i1 < 3);
+
+		return rotation[i1];
+	}
+
+	ale_pos get_translation(int i1) {
+		assert (i1 >= 0);
+		assert (i1 < 3);
+
+		return translation[i1];
+	}
 };
 
 #endif

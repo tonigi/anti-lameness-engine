@@ -1370,6 +1370,29 @@ class scene {
 			return improved;
 		}
 
+		int pyramid_bounds_check(point w) {
+			for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+				pt _pt = align::projective(n);
+				_pt.scale(1 / _pt.scale_2d());
+
+				point p = _pt.wp_scaled(w);
+
+				/*
+				 * Check the four closest points.
+				 */
+
+				int p_int[2] = { (int) floor(p[0]), (int) floor(p[1]) };
+
+				if (p_int[0] >= 0
+				 || p_int[1] >= 0
+				 || p_int[0] <= _pt.scaled_height() - 2
+				 || p_int[1] <= _pt.scaled_width() - 2)
+					return 1;
+			}
+			return 0;
+		}
+
+
 		int vertex_visible(int v, zbuf_elem **z, lod *_lod) {
 			for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
 				pt _pt = align::projective(n);
@@ -1387,7 +1410,7 @@ class scene {
 				if (p_int[0] < 0
 				 || p_int[1] < 0
 				 || p_int[0] > _pt.scaled_height() - 2
-				 || p_int[1] > _pt.scaled_height() - 2)
+				 || p_int[1] > _pt.scaled_width() - 2)
 					continue;
 
 				for (int i = 0; i < 2; i++)
@@ -1450,13 +1473,6 @@ class scene {
 					continue;
 
 				/*
-				 * Ensure that the vertex is visible.
-				 */
-
-				if (!vertex_visible(v, z, _lod))
-					continue;
-
-				/*
 				 * Perturb the position.
 				 */
 
@@ -1475,40 +1491,18 @@ class scene {
 						continue;
 
 					/*
-					 * Ensure that the perturbed point maps
-					 * within the visible boundaries of at least
-					 * one of the inputs.
+					 * Check view pyramid bounds
 					 */
 
-					int in_bounds = 0;
-					for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
-						pt _ptf = align::projective(f);
-						_ptf.scale(_lod->sf / _ptf.scale_2d());
-						point p = _ptf.wp_scaled(perturbed);
-
-						if (p[0] >= 0
-						 && p[1] >= 0
-						 && p[0] <= _ptf.scaled_height() - 1
-						 && p[1] <= _ptf.scaled_width() - 1) {
-							in_bounds = 1;
-							break;
-						}
-					}
-
-					if (!in_bounds)
+					if (!pyramid_bounds_check(perturbed))
 						continue;
-
-					ale_accum extremum_angle;
-
-					/*
-					 * Adjust the vertex under consideration
-					 */
 
 					/*
 					 * Eliminate from consideration any change that increases to more than
 					 * a given amount the angle between the normals of adjacent triangles.
 					 */
 
+					ale_accum extremum_angle;
 					*vertices[v] = perturbed;
 					extremum_angle = traverse_around_vertex(vertices[v], &triangle::max_neighbor_angle, 1);
 					*vertices[v] = orig;
@@ -1738,6 +1732,22 @@ class scene {
 					(*vertex_map[id])[v] = coord;
 				}
 				break;
+			case 'C':
+				unsigned int index;
+				ale_pos view_angle, x, y, z, P, Y, R;
+				if (fscanf(f, "%u %f %f %f %f %f %f %f", &index,
+						&view_angle, &y, &x, &z, &Y, &P, &R) != 8)
+					ui::get()->error("Bad model file.");
+
+				align::set_view_angle(view_angle * M_PI / 180);
+				align::set_translation(index, 0, x);
+				align::set_translation(index, 1, y);
+				align::set_translation(index, 2, z);
+				align::set_rotation(index, 0, P * M_PI / 180);
+				align::set_rotation(index, 1, Y * M_PI / 180);
+				align::set_rotation(index, 2, R * M_PI / 180);
+
+				break;
 			default:
 				fprintf(stderr, "Unknown model file command '%c' (%x).\n", command, command);
 				ui::get()->error("Bad model file.");
@@ -1806,6 +1816,24 @@ class scene {
 			point p = *i->first;
 
 			fprintf(f, "P %u %f %f %f\n", i->second, p[0], p[1], p[2]);
+		}
+
+		/*
+		 * Print camera data
+		 */
+
+		for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
+			et _et = align::of(i);
+			pt _pt = align::projective(i);
+
+			fprintf(f, "C %u %f %f %f %f %f %f %f\n", i,
+					_pt.view_angle() * 180 / M_PI,
+					_et.get_translation(1),
+					_et.get_translation(0),
+					_et.get_translation(2),
+					_et.get_rotation(1) * 180 / M_PI,
+					_et.get_rotation(0) * 180 / M_PI,
+					_et.get_rotation(2) * 180 / M_PI);
 		}
 
 		fclose(f);
@@ -2078,14 +2106,17 @@ class scene {
 
 				/*
 				 * Check that the triangle area is at least
-				 * 16.
+				 * 4.
 				 */
 
-				ale_pos area = t->compute_projected_area(_pt);
+				// ale_pos area = t->compute_projected_area(_pt);
+				ale_pos area = t->area() * _pt.w_density_scaled_max(*t->vertices[0],
+						                                    *t->vertices[1],
+										    *t->vertices[2]);
 
-				if (area <= 16 && split)
+				if (area <= 4 && split)
 					t->aux_stat = d2::pixel(-1, -1, -1);
-				else if (area < 16 && !split && t->parent)
+				else if (area < 4 && !split && t->parent)
 					t->parent->aux_stat = d2::pixel(-1, -1, -1);
 			}
 
