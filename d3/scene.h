@@ -1431,14 +1431,18 @@ class scene {
 		 */
 		int adjust_vertices(zbuf_elem **z, lod *_lod) {
 
+			// fprintf(stderr, "%p traversing children [%u] \n", this, time(NULL));
 			if (children[0] && children[1]) {
 				return children[0]->adjust_vertices(z, _lod)
 				     | children[1]->adjust_vertices(z, _lod);
 			}
+			// fprintf(stderr, "%p leaf node [%u] \n", this, time(NULL));
 
 			/*
 			 * If all vertices are fixed, then return.
 			 */
+
+			// fprintf(stderr, "%p checking for unfixed vertices [%u] \n", this, time(NULL));
 
 			if (vertex_fixed[0]
 			 && vertex_fixed[1]
@@ -1454,7 +1458,7 @@ class scene {
 
 			int improved = 0;
 
-			// ale_pos allowable_max_neighbor_angle = M_PI / 1.5;
+			ale_pos allowable_max_neighbor_angle = M_PI / 1.5;
 			// ale_pos allowable_max_internal_angle = M_PI / 1.5;
 			// ale_pos allowable_min_internal_angle = M_PI / 8;
 
@@ -1463,12 +1467,14 @@ class scene {
 			 * vertex in turn.
 			 */
 
+			// fprintf(stderr, "%p iterating over vertices vertices [%u] \n", this, time(NULL));
 			for (int v = 0; v < 3; v++) {
 
 				/*
 				 * Check for fixed vertices.
 				 */
 
+				// fprintf(stderr, "%p checking that vertex %d is unfixed [%u] \n", this, v, time(NULL));
 				if (vertex_fixed[v])
 					continue;
 
@@ -1476,9 +1482,11 @@ class scene {
 				 * Perturb the position.
 				 */
 
+				// fprintf(stderr, "%p perturbing vertex %d [%u] \n", this, v, time(NULL));
 				for (int axis = 0; axis < 3; axis++)
 				for (int dir = -1; dir <= 1; dir += 2) {
 
+					// fprintf(stderr, "%p perturbing vertex %d (%d %d) [%u] \n", this, v, axis, dir, time(NULL));
 					point orig = *vertices[v];
 					point perturbed = orig + point::unit(axis) * step * dir;
 
@@ -1486,6 +1494,7 @@ class scene {
 					 * Check the clipping planes.
 					 */
 
+					// fprintf(stderr, "%p checking clipping planes [%u] \n", this, time(NULL));
 					if (perturbed[2] > front_clip
 					 || perturbed[2] < rear_clip)
 						continue;
@@ -1494,6 +1503,7 @@ class scene {
 					 * Check view pyramid bounds
 					 */
 
+					// fprintf(stderr, "%p checking view pyramid bounds [%u] \n", this, time(NULL));
 					if (!pyramid_bounds_check(perturbed))
 						continue;
 
@@ -1502,20 +1512,20 @@ class scene {
 					 * a given amount the angle between the normals of adjacent triangles.
 					 */
 
-#if 0
 					ale_accum extremum_angle;
 					*vertices[v] = perturbed;
 					extremum_angle = traverse_around_vertex(vertices[v], &triangle::max_neighbor_angle, 1);
 					*vertices[v] = orig;
 					if (extremum_angle > allowable_max_neighbor_angle)
 						continue;
-#endif
 
 					/*
 					 * Check the error
 					 */
 
+					// fprintf(stderr, "%p calculating error [%u] \n", this, time(NULL));
 					ale_accum error = vertex_movement_cost(this, vertices[v], perturbed, z, _lod);
+					// fprintf(stderr, "%p done calculating error (%f) [%u] \n", this, error, time(NULL));
 					if (error < 0) {
 
 						fprintf(stderr, "%p (%f %f %f) (%f %f %f) [%f]\n",

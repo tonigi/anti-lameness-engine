@@ -145,8 +145,10 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Determine the triangles surrounding the vertex.
 	 */
 
+	//fprintf(stderr, "  %p allocating set for triangles surrounding vertex [%u] \n", t, time(NULL));
 	std::set<triangle *> *t_set = new std::set<triangle *>;
 
+	// fprintf(stderr, "  %p populating set of triangles surrounding vertex [%u] \n", t, time(NULL));
 	t->triangles_around_vertex(vertex, t_set);
 
 	/*
@@ -154,8 +156,10 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * surrounding the specified vertex.
 	 */
 
+	//fprintf(stderr, "  %p allocating set for vertices in triangles surrounding vertex [%u] \n", t, time(NULL));
 	std::set<point *> *v_set = new std::set<point *>;
 
+	// fprintf(stderr, "  %p populating set of vertices in triangles surrounding vertex [%u] \n", t, time(NULL));
 	for (std::set<triangle *>::iterator i = t_set->begin(); i != t_set->end(); i++)
 	for (int v = 0; v < 3; v++)
 		v_set->insert((*i)->vertices[v]);
@@ -164,6 +168,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Determine bounding boxes for calculating color costs
 	 */
 
+	// fprintf(stderr, "  %p determining bounding box for calculating color costs [%u] \n", t, time(NULL));
 	point *bb = new point[2 * d2::image_rw::count()];
 	for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 		point *bbp = bb + 2 * f;
@@ -219,6 +224,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Add triangles to bounding box areas.
 	 */
 
+	// fprintf(stderr, "  %p adding triangles to z-buffers for points in the bounding box [%u] \n", t, time(NULL));
 	for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 		pt _pt = align::projective(f);
 
@@ -300,6 +306,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Determine geometric costs.
 	 */
 
+	// fprintf(stderr, "  %p determining original geometric costs [%u] \n", t, time(NULL));
 	for (std::set<triangle *>::iterator i = t_set->begin(); i != t_set->end(); i++)
 	for (int v = 0; v < 3; v++)
 		orig_geom_cost += (*i)->edge_cost() + (*i)->angle_cost();
@@ -308,6 +315,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Determine color costs
 	 */
 
+	// fprintf(stderr, "  %p determining original color costs [%u] \n", t, time(NULL));
 	for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++)
 	for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
 		pt _pt1 = align::projective(f1);
@@ -344,6 +352,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Determine geometric costs.
 	 */
 
+	// fprintf(stderr, "  %p determining new geometric costs [%u] \n", t, time(NULL));
 	for (std::set<triangle *>::iterator i = t_set->begin(); i != t_set->end(); i++)
 	for (int v = 0; v < 3; v++)
 		new_geom_cost += (*i)->edge_cost() + (*i)->angle_cost();
@@ -352,8 +361,10 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Determine color costs.
 	 */
 	 
+	// fprintf(stderr, "  %p determining new color costs [%u] \n", t, time(NULL));
 	for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++)
 	for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+//		fprintf(stderr, "  %p determining color costs between frames %u, %u [%u] \n", t, f1, f2, time(NULL));
 		pt _pt1 = align::projective(f1);
 		pt _pt2 = align::projective(f2);
 
@@ -362,14 +373,24 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 
 		if (f1 == f2)
 			continue;
+
+//		fprintf(stderr, "  %p Iterating over bounding box (%d, %d) - (%d, %d) [%u] \n", t, 
+//					(int) floor(bb[f1 * 2 + 0][0]),
+//					(int) floor(bb[f1 * 2 + 0][1]),
+//					(int) ceil(bb[f1 * 2 + 1][0]),
+//					(int) ceil(bb[f1 * 2 + 1][1]), time(NULL));
+
 		for (int i = (int) floor(bb[f1 * 2 + 0][0]); i <= (int) ceil(bb[f1 * 2 + 1][0]); i++)
 		for (int j = (int) floor(bb[f1 * 2 + 0][1]); j <= (int) ceil(bb[f1 * 2 + 1][1]); j++) {
+			// fprintf(stderr, "  %p determining color costs for point (%d, %d) [%u] \n", t, i, j, time(NULL));
 			d2::point p1(i, j);
+			// fprintf(stderr, "  %p mapping frame to frame [%u] \n", t, time(NULL));
 			d2::point p2 = frame_to_frame(p1, _pt1, _pt2, z[f1], z[f2]).xy();
 
 			if (!p2.defined())
 				continue;
 
+			// fprintf(stderr, "  %p interpolating colors [%u] \n", t, time(NULL));
 			new_color_cost += (_lod->reference[f1]->get_bl(p1)
 			                 - _lod->reference[f2]->get_bl(p2)).normsq();
 
@@ -381,6 +402,7 @@ ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point n
 	 * Free allocated memory.
 	 */
 	
+	// fprintf(stderr, "  %p freeing allocated memory [%u] \n", t, time(NULL));
 	delete[] bb;
 	delete t_set;
 	delete v_set;
