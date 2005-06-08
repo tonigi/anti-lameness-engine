@@ -260,12 +260,6 @@ class scene {
 	struct triangle {
 
 		/*
-		 * Stats and auxiliaries for this element
-		 */
-
-		d2::pixel aux_stat;
-
-		/*
 		 * Color for traversal.
 		 */
 
@@ -354,19 +348,6 @@ class scene {
 		ale_accum write_tree_wrapper() {
 			write_tree();
 			return 0;
-		}
-
-		/*
-		 * Statistic initialization
-		 */
-
-		void init_aux_stats(d2::pixel value = d2::pixel(0, 0, 0)) {
-			if (children[0])
-				children[0]->init_aux_stats(value);
-			if (children[1])
-				children[1]->init_aux_stats(value);
-
-			aux_stat = value;
 		}
 
 		/*
@@ -820,42 +801,40 @@ class scene {
 			neighbors[division_vertex]->unsplit_internals();
 		}
 
-		/*
-		 * Find a triangle to accommodate the new control point NV.
-		 * Cost must be lower than *COST; lowest cost triangle pointer
-		 * is stored in *T.
-		 */
-		int split_on_aux() {
+		int unsplit_on_camera_area_threshold(pt _pt, ale_pos threshold) {
 
 			if (children[0] && children[1]) {
-
-				// int a = rand() % 2;
-				int a = 0;
-				int b = 1 - a;
-
-				return (children[a]->split_on_aux()
-				      | children[b]->split_on_aux());
+				return (children[0]->unsplit_on_camera_area_threshold(_pt, threshold)
+				      | children[1]->unsplit_on_camera_area_threshold(_pt, threshold));
 			}
 
 			assert (!children[0] && !children[1] && !division_new_vertex);
 
-			if (aux_stat != d2::pixel(0, 0, 0)) 
+			ale_pos _area = area() * _pt.w_density_scaled_max(*vertices[0], *vertices[1], *vertices[2]);
+
+			if (_area > threshold)
+				return 0;
+
+			unsplit();
+			return 1;
+		}
+
+		int split_on_camera_area_threshold(pt _pt, ale_pos threshold) {
+
+			if (children[0] && children[1]) {
+				return (children[0]->split_on_camera_area_threshold(_pt, threshold)
+				      | children[1]->split_on_camera_area_threshold(_pt, threshold));
+			}
+
+			assert (!children[0] && !children[1] && !division_new_vertex);
+
+			ale_pos _area = area() * _pt.w_density_scaled_max(*vertices[0], *vertices[1], *vertices[2]);
+
+			if (_area <= threshold)
 				return 0;
 
 			split();
 			return 1;
-		}
-
-		int unsplit_on_aux() {
-			if (aux_stat != d2::pixel(0, 0, 0)) {
-				unsplit();
-				return 1;
-			} else if (children[0] && children[1]) {
-				return children[0]->unsplit_on_aux()
-				     | children[1]->unsplit_on_aux();
-			}
-
-			return 0;
 		}
 
 		ale_pos compute_projected_area(pt _pt) {
@@ -2067,82 +2046,28 @@ class scene {
 	 */
 	static int density_test(int split) {
 
-		ale_pos scale = (split ? 1 : 1);
-		d2::pixel init_value = d2::pixel(1, 1, 1) * (ale_real) (split ? 1 : 0);
-
-		triangle_head[0]->init_aux_stats(init_value);
-		triangle_head[1]->init_aux_stats(init_value);
+		int result = 0;
 
 		/*
 		 * Iterate over all frames
 		 */
 		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
 
-			ale_pos sf = 2 / perturb;
-
-			/*
-			 * Z-buffer to map points to triangles
-			 */
 			pt _pt = align::projective(n);
-			_pt.scale(scale * sf / _pt.scale_2d());
-			unsigned int height = (unsigned int) floor(_pt.scaled_height());
-			unsigned int width  = (unsigned int) floor(_pt.scaled_width());
-			zbuf_elem *zbuf = init_zbuf(_pt);
-			zbuffer(_pt, zbuf, triangle_head[0]);
-			zbuffer(_pt, zbuf, triangle_head[1]);
+			_pt.scale(1 / _pt.scale_2d());
+			ale_pos area_threshold = pow(2 * perturb, 2);
 
-			/*
-			 * Iterate over all points in the frame.
-			 */
-			for (unsigned int i = 0; i < height; i++)
-			for (unsigned int j = 0; j < width;  j++) {
-				triangle *t = zbuf[i * width + j].nearest(_pt, i, j);
+			if (split)
+				result |= triangle_head[0]->split_on_camera_area_threshold(_pt, area_threshold)
+					| triangle_head[1]->split_on_camera_area_threshold(_pt, area_threshold);
+			else
+				result |= triangle_head[0]->unsplit_on_camera_area_threshold(_pt, area_threshold)
+					| triangle_head[1]->unsplit_on_camera_area_threshold(_pt, area_threshold);
 
-				/*
-				 * Check for points without associated triangles.
-				 */
-				if (!t)
-					continue;
 
-				/*
-				 * Check for triangles that have already been eliminated.
-				 */
-				if (t->aux_stat == d2::pixel(-1, -1, -1))
-					continue;
-
-				/*
-				 * Mark the triangle as under consideration
-				 */
-
-				t->aux_stat = d2::pixel(0, 0, 0);
-
-				/*
-				 * Check that the triangle area is at least
-				 * 16.
-				 */
-
-				// ale_pos area = t->compute_projected_area(_pt);
-				ale_pos area = t->area() * _pt.w_density_scaled_max(*t->vertices[0],
-						                                    *t->vertices[1],
-										    *t->vertices[2]);
-
-				if (area <= 16 && split)
-					t->aux_stat = d2::pixel(-1, -1, -1);
-				else if (area < 16 && !split && t->parent)
-					t->parent->aux_stat = d2::pixel(-1, -1, -1);
-			}
-
-			delete[] zbuf;
 		}
 
-		if (split)
-			return (triangle_head[0]->split_on_aux() | triangle_head[1]->split_on_aux());
-		if (!split)
-			return (triangle_head[0]->unsplit_on_aux() | triangle_head[1]->unsplit_on_aux());
-
-		assert(0);
-
-		return 0;
+		return result;
 	}
 
 	static int density_test_split() {
@@ -2183,12 +2108,12 @@ class scene {
 		 */
 
 		fprintf(stderr, "  begin creating zbuffers[%u] \n", time(NULL));
-		zbuf_elem **z = construct_zbuffers(bl);
+		zbuf_elem **z = construct_zbuffers(cl);
 		fprintf(stderr, "  end creating zbuffers[%u] \n", time(NULL));
 
 		fprintf(stderr, "  begin tree traversal[%u] \n", time(NULL));
-		int result = triangle_head[0]->adjust_vertices(z, bl) 
-			   | triangle_head[1]->adjust_vertices(z, bl);
+		int result = triangle_head[0]->adjust_vertices(z, cl) 
+			   | triangle_head[1]->adjust_vertices(z, cl);
 		fprintf(stderr, "  end tree traversal[%u] \n", time(NULL));
 
 		fprintf(stderr, "  begin freeing zbuffers[%u] \n", time(NULL));
@@ -2779,6 +2704,14 @@ public:
 #endif
 
 		/*
+		 * Reduce level-of-detail.
+		 */
+
+		while (perturb / bl->reference[0]->width() < cl->sf / 4 
+		    && perturb / bl->reference[0]->height() < cl->sf / 4 
+		    && reduce_lod());
+
+		/*
 		 * Perform cost-reduction.
 		 */
 
@@ -2843,6 +2776,9 @@ public:
 				fprintf(stderr, ".");
 
 				perturb /= 2;
+
+				if (cl->next)
+					increase_lod();
 
 				count = 0;
 				improved = 1;
