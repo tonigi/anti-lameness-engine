@@ -250,7 +250,7 @@ public:
 		ale_pos one_density = 1 / (pc_scaled(point(0, 0, -1)).lengthto(pc_scaled(point(0, 1, -1)))
 				         * pc_scaled(point(0, 0, -1)).lengthto(pc_scaled(point(1, 0, -1))));
 
-		return one_density / (-p[2]);
+		return one_density / (p[2] * p[2]);
 	}
 
 	ale_pos w_density_scaled(point p) const {

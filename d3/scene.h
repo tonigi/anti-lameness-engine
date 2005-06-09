@@ -1410,6 +1410,9 @@ class scene {
 		 */
 		int adjust_vertices(zbuf_elem **z, lod *_lod) {
 
+			pt _pt0 = d3::align::projective(0);
+			_pt0.scale(1 / _pt0.scale_2d());
+
 			// fprintf(stderr, "%p traversing children [%u] \n", this, time(NULL));
 			if (children[0] && children[1]) {
 				return children[0]->adjust_vertices(z, _lod)
@@ -1427,13 +1430,6 @@ class scene {
 			 && vertex_fixed[1]
 			 && vertex_fixed[2])
 				return 0;
-
-			/*
-			 * Determine the adjustment step size according to
-			 * the scale factor.
-			 */
-
-			ale_pos step = perturb;
 
 			int improved = 0;
 
@@ -1456,6 +1452,13 @@ class scene {
 				// fprintf(stderr, "%p checking that vertex %d is unfixed [%u] \n", this, v, time(NULL));
 				if (vertex_fixed[v])
 					continue;
+
+				/*
+				 * Determine the adjustment step size according to
+				 * the perturbation size.
+				 */
+
+				ale_pos step = perturb / sqrt(_pt0.w_density_scaled(*vertices[v]));
 
 				/*
 				 * Perturb the position.
@@ -2050,6 +2053,10 @@ class scene {
 
 		/*
 		 * Iterate over all frames
+		 *
+		 * XXX: we might not want to do this.  E.g., for splitting, we
+		 * might select one frame, since the perturbation magnitude is determined
+		 * by a single frame.
 		 */
 		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
 
@@ -2532,8 +2539,17 @@ public:
 
 			if (!t)
 				continue;
+#if 0
+			point r = _pt.pc_scaled(point(i, j, -1));
+			point vertices[3];
 
-#if 1
+			for (int v = 0; v < 3; v++)
+				vertices[v] = _pt.wc(*t->vertices[v]);
+
+			point intersect = rt_intersect(r, vertices);
+
+			im->pix(i, j) = d2::pixel(1, 1, 1) * t->area() * (intersect[0] + intersect[1]);
+#elif 1
 			point r = _pt.pc_scaled(point(i, j, -1));
 			point vertices[3];
 
