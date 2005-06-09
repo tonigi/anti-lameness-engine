@@ -2723,9 +2723,7 @@ public:
 		 * Reduce level-of-detail.
 		 */
 
-		while (perturb / bl->reference[0]->width() < cl->sf / 4 
-		    && perturb / bl->reference[0]->height() < cl->sf / 4 
-		    && reduce_lod());
+		while (perturb > 2 / cl->sf && reduce_lod());
 
 		/*
 		 * Perform cost-reduction.
