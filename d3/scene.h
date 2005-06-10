@@ -1411,7 +1411,7 @@ class scene {
 		int adjust_vertices(zbuf_elem **z, lod *_lod) {
 
 			pt _pt0 = d3::align::projective(0);
-			_pt0.scale(1 / _pt0.scale_2d());
+			// _pt0.scale(1 / _pt0.scale_2d());  // XXX: world coordinates vary with output scale.
 
 			// fprintf(stderr, "%p traversing children [%u] \n", this, time(NULL));
 			if (children[0] && children[1]) {
@@ -2061,7 +2061,7 @@ class scene {
 		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
 
 			pt _pt = align::projective(n);
-			_pt.scale(1 / _pt.scale_2d());
+			// _pt.scale(1 / _pt.scale_2d());  // XXX: world coordinates vary with the output scale.
 			ale_pos area_threshold = pow(2 * perturb, 2);
 
 			if (split)
