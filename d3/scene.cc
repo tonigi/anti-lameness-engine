@@ -134,22 +134,13 @@ void scene::zbuf_elem::find_nearest(pt _pt, int i, int j) {
 	}
 }
 
-ale_accum scene::vertex_movement_cost(scene::triangle *t, point *vertex, point new_position, zbuf_elem **z, lod *_lod) {
+ale_accum scene::vertex_movement_cost(std::set<triangle *> *t_set, point *vertex, 
+				point new_position, zbuf_elem **z, lod *_lod) {
 	ale_accum orig_color_cost = 0, new_color_cost = 0;
 	ale_accum orig_color_div  = 0, new_color_div  = 0;
 	ale_accum orig_geom_cost  = 0, new_geom_cost  = 0;
 
 	point original_position = *vertex;
-
-	/*
-	 * Determine the triangles surrounding the vertex.
-	 */
-
-	//fprintf(stderr, "  %p allocating set for triangles surrounding vertex [%u] \n", t, time(NULL));
-	std::set<triangle *> *t_set = new std::set<triangle *>;
-
-	// fprintf(stderr, "  %p populating set of triangles surrounding vertex [%u] \n", t, time(NULL));
-	t->triangles_around_vertex(vertex, t_set);
 
 	/*
 	 * Determine the set of vertices associated with the triangles

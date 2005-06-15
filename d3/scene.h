@@ -193,6 +193,31 @@ class scene {
 	};
 
 	/*
+	 * Pyramid bounds check.
+	 */
+	static int pyramid_bounds_check(point w) {
+		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+			pt _pt = align::projective(n);
+			_pt.scale(1 / _pt.scale_2d());
+
+			point p = _pt.wp_scaled(w);
+
+			/*
+			 * Check the four closest points.
+			 */
+
+			int p_int[2] = { (int) floor(p[0]), (int) floor(p[1]) };
+
+			if (p_int[0] >= 0
+			 && p_int[1] >= 0
+			 && p_int[0] <= _pt.scaled_height() - 2
+			 && p_int[1] <= _pt.scaled_width() - 2)
+				return 1;
+		}
+		return 0;
+	}
+
+	/*
 	 * Frame-to-frame mapping function
 	 *
 	 * Maps from point P in frame F1 to frame F2.  Returns projective
@@ -251,7 +276,8 @@ class scene {
 	 * Evaluate the cost of moving a vertex.  Negative values indicate
 	 * improvement; non-negative values indicate lack of improvement.
 	 */
-	static ale_accum vertex_movement_cost(triangle *t, point *vertex, point new_position, zbuf_elem **z, lod *_lod);
+	static ale_accum vertex_movement_cost(std::set<triangle *> *t_set, 
+			point *vertex, point new_position, zbuf_elem **z, lod *_lod);
 
 	/*
 	 * Structure to hold a subdivisible triangle.
@@ -303,6 +329,33 @@ class scene {
 			children[1] = NULL;
 
 			traversal_color = 0;
+		}
+
+		/*
+		 * Collect information from the triangle tree:
+		 *
+		 *   1. The set of all non-fixed vertices.
+		 *   2. A multimap from non-fixed vertices to triangles.
+		 */
+		
+		void collect_vertex_data(std::set<point *> *vertex_set,
+				         std::multimap<point *, triangle *> *vertex_map) {
+
+			if (children[0] && children[1]) {
+				children[0]->collect_vertex_data(vertex_set, vertex_map);
+				children[1]->collect_vertex_data(vertex_set, vertex_map);
+				return;
+			}
+
+			assert(!children[0]);
+			assert(!children[1]);
+
+			for (int v = 0; v < 3; v++) {
+				if (vertex_fixed[v])
+					continue;
+				vertex_set->insert(vertices[v]);
+				vertex_map->insert(std::make_pair(vertices[v], this));
+			}
 		}
 
 		/*
@@ -1349,28 +1402,6 @@ class scene {
 			return improved;
 		}
 
-		int pyramid_bounds_check(point w) {
-			for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
-				pt _pt = align::projective(n);
-				_pt.scale(1 / _pt.scale_2d());
-
-				point p = _pt.wp_scaled(w);
-
-				/*
-				 * Check the four closest points.
-				 */
-
-				int p_int[2] = { (int) floor(p[0]), (int) floor(p[1]) };
-
-				if (p_int[0] >= 0
-				 && p_int[1] >= 0
-				 && p_int[0] <= _pt.scaled_height() - 2
-				 && p_int[1] <= _pt.scaled_width() - 2)
-					return 1;
-			}
-			return 0;
-		}
-
 
 		int vertex_visible(int v, zbuf_elem **z, lod *_lod) {
 			for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
@@ -1403,6 +1434,7 @@ class scene {
 		}
 			
 
+#if 0
 		/*
 		 * Adjust vertices according to mapped frames.
 		 *
@@ -1528,6 +1560,7 @@ class scene {
 			}
 			return improved;
 		}
+#endif
 
 		void recursive_write_triangle_ascii_ptr(FILE *f, 
 				std::map<triangle *, unsigned int> *triangle_map, 
@@ -2109,7 +2142,9 @@ class scene {
 	 * Adjust vertices to minimize scene error.  Return 
 	 * non-zero if improvements are made.
 	 */
-	static int adjust_vertices() {
+	static int adjust_vertices(std::set<point *> *vertex_set, 
+			           std::multimap<point *, triangle *> *vertex_map) {
+
 		/*
 		 * Collect z-buffer data
 		 */
@@ -2118,10 +2153,105 @@ class scene {
 		zbuf_elem **z = construct_zbuffers(cl);
 		fprintf(stderr, "  end creating zbuffers[%u] \n", time(NULL));
 
+#if 0
 		fprintf(stderr, "  begin tree traversal[%u] \n", time(NULL));
 		int result = triangle_head[0]->adjust_vertices(z, cl) 
 			   | triangle_head[1]->adjust_vertices(z, cl);
 		fprintf(stderr, "  end tree traversal[%u] \n", time(NULL));
+#else
+		int result = 0;
+
+		fprintf(stderr, "  begin free vertex set traversal[%u] \n", time(NULL));
+		for (std::set<point *>::iterator i = vertex_set->begin(); i != vertex_set->end(); i++) {
+			/*
+			 * Determine the adjustment step size according to
+			 * the perturbation size.
+			 */
+
+			ale_pos allowable_max_neighbor_angle = M_PI / 1.5;
+			ale_pos step = perturb / sqrt(d3::align::projective(0).w_density_scaled(**i));
+
+			/*
+			 * Perturb the position.
+			 */
+			
+			for (int axis = 0; axis < 3; axis++)
+			for (int dir = -1; dir <= 1; dir += 2) {
+
+				// fprintf(stderr, "%p perturbing vertex %d (%d %d) [%u] \n", this, v, axis, dir, time(NULL));
+				point orig = **i;
+				point perturbed = orig + point::unit(axis) * step * dir;
+
+				/*
+				 * Check the clipping planes.
+				 */
+
+				// fprintf(stderr, "%p checking clipping planes [%u] \n", this, time(NULL));
+				if (perturbed[2] > front_clip
+				 || perturbed[2] < rear_clip)
+					continue;
+
+				/*
+				 * Check view pyramid bounds
+				 */
+
+				// fprintf(stderr, "%p checking view pyramid bounds [%u] \n", this, time(NULL));
+				if (!pyramid_bounds_check(perturbed))
+					continue;
+
+				/*
+				 * The set of triangles surrounding the vertex.
+				 */
+
+				std::set<triangle *> tset;
+
+				for (std::multimap<point *, triangle *>::iterator t = vertex_map->lower_bound(*i);
+						t != vertex_map->upper_bound(*i); t++)
+					tset.insert(t->second);
+
+				/*
+				 * Eliminate from consideration any change that increases to more than
+				 * a given amount the angle between the normals of adjacent triangles.
+				 */
+
+				**i = perturbed;
+				int angles_ok = 1;
+				for (std::set<triangle *>::iterator t = tset.begin(); t != tset.end(); t++) {
+					if ((*t)->max_neighbor_angle() > allowable_max_neighbor_angle)
+						angles_ok = 0;
+				}
+				**i = orig;
+				if (!angles_ok)
+					continue;
+
+				/*
+				 * Check the error
+				 */
+
+				// fprintf(stderr, "%p calculating error [%u] \n", this, time(NULL));
+				ale_accum error = vertex_movement_cost(&tset, *i, perturbed, z, cl);
+				// fprintf(stderr, "%p done calculating error (%f) [%u] \n", this, error, time(NULL));
+				if (error < 0) {
+
+					fprintf(stderr, "%p (%f %f %f) (%f %f %f) [%f]\n",
+						*i,
+						(**i)[0],
+						(**i)[1],
+						(**i)[2],
+						perturbed[0],
+						perturbed[1],
+						perturbed[2],
+						2 / perturb);
+
+					result = 1;
+					**i = perturbed;
+					break;
+				}
+			}
+
+		}
+		fprintf(stderr, "  end free vertex set traversal[%u] \n", time(NULL));
+#endif
 
 		fprintf(stderr, "  begin freeing zbuffers[%u] \n", time(NULL));
 		free_zbuffers(z);
@@ -2739,6 +2869,20 @@ public:
 			fprintf(stderr, "end density test split[%u] \n", time(NULL));
 
 			/*
+			 * Gather vertex data
+			 */
+
+			std::set<point *> vertex_set;
+			std::multimap<point *, triangle *> vertex_map;
+
+			fprintf(stderr, "begin collecting vertex data[%u]\n", time(NULL));
+			triangle_head[0]->collect_vertex_data(&vertex_set, &vertex_map);
+			triangle_head[1]->collect_vertex_data(&vertex_set, &vertex_map);
+			fprintf(stderr, "end collecting vertex data[%u]\n", time(NULL));
+
+			fprintf(stderr, "Number of vertices: %u\n", vertex_set.size());
+
+			/*
 			 * Write output incrementally, if desired.
 			 */
 
@@ -2808,7 +2952,7 @@ public:
 
 			fprintf(stderr, "begin adjustment[%u] \n", time(NULL));
 
-			improved |= adjust_vertices();
+			improved |= adjust_vertices(&vertex_set, &vertex_map);
 
 			fprintf(stderr, "end adjustment[%u] \n", time(NULL));
 		}
