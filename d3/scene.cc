@@ -395,7 +395,7 @@ ale_accum scene::vertex_movement_cost(std::set<triangle *> *t_set, point *vertex
 	
 	// fprintf(stderr, "  %p freeing allocated memory [%u] \n", t, time(NULL));
 	delete[] bb;
-	delete t_set;
+	// delete t_set;
 	delete v_set;
 
 	/*
