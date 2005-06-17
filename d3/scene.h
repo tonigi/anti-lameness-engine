@@ -2939,7 +2939,7 @@ public:
 
 				fprintf(stderr, "begin output[%u] \n", time(NULL));
 
-				if (inc_bit && improved) {
+				if (inc_bit) {
 
 					write_model_file();
 
