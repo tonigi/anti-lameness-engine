@@ -296,12 +296,17 @@ class scene {
 		 */
 
 		point *vertices[3];
-		char vertex_fixed[3];
 		struct triangle *neighbors[3];
 		struct triangle *parent;
 		int division_vertex;
 		point *division_new_vertex;
 		struct triangle *children[2];
+
+		/*
+		 * Set of fixed vertices.
+		 */
+
+		static std::set<point *> fixed_vertices;
 
 		/*
 		 * Constructor
@@ -312,10 +317,6 @@ class scene {
 			vertices[0] = NULL;
 			vertices[1] = NULL;
 			vertices[2] = NULL;
-
-			vertex_fixed[0] = 1;
-			vertex_fixed[1] = 1;
-			vertex_fixed[2] = 1;
 
 			neighbors[0] = NULL;
 			neighbors[1] = NULL;
@@ -331,19 +332,33 @@ class scene {
 			traversal_color = 0;
 		}
 
+		static void fix_vertex(point *p) {
+			fixed_vertices.insert(p);
+		}
+
+		static void free_vertex(point *p) {
+			fixed_vertices.erase(p);
+		}
+
+		static int vertex_is_free(point *p) {
+			return !fixed_vertices.count(p);
+		}
+
 		/*
 		 * Collect information from the triangle tree:
 		 *
 		 *   1. The set of all non-fixed vertices.
 		 *   2. A multimap from non-fixed vertices to triangles.
+		 *   3. The set of all fixed vertices (for verification).
 		 */
 		
 		void collect_vertex_data(std::set<point *> *vertex_set,
-				         std::multimap<point *, triangle *> *vertex_map) {
+				         std::multimap<point *, triangle *> *vertex_map,
+					 std::set<point *> *fixed_set) {
 
 			if (children[0] && children[1]) {
-				children[0]->collect_vertex_data(vertex_set, vertex_map);
-				children[1]->collect_vertex_data(vertex_set, vertex_map);
+				children[0]->collect_vertex_data(vertex_set, vertex_map, fixed_set);
+				children[1]->collect_vertex_data(vertex_set, vertex_map, fixed_set);
 				return;
 			}
 
@@ -351,10 +366,12 @@ class scene {
 			assert(!children[1]);
 
 			for (int v = 0; v < 3; v++) {
-				if (vertex_fixed[v])
-					continue;
-				vertex_set->insert(vertices[v]);
-				vertex_map->insert(std::make_pair(vertices[v], this));
+				if (fixed_vertices.count(vertices[v])) {
+					fixed_set->insert(vertices[v]);
+				} else {
+					vertex_set->insert(vertices[v]);
+					vertex_map->insert(std::make_pair(vertices[v], this));
+				}
 			}
 		}
 
@@ -639,13 +656,16 @@ class scene {
 		/*
 		 * Handle the internal data details of splitting.
 		 */
-		void split_internals(int v, point *nv, int internal_fixed = 0) {
+		void split_internals(int v, point *nv) {
 			assert (children[0] == NULL);
 			assert (children[1] == NULL);
 			assert (division_new_vertex == NULL);
 
 			division_vertex = v;
 			division_new_vertex = nv;
+
+			if (!neighbors[division_vertex])
+				fix_vertex(nv);
 
 			children[0] = new triangle(*this);
 			children[1] = new triangle(*this);
@@ -660,8 +680,6 @@ class scene {
 				children[c]->children[0] = NULL;
 				children[c]->children[1] = NULL;
 				children[c]->division_new_vertex = NULL;
-				children[c]->vertex_fixed[(division_vertex + 1 + c) % 3] 
-					= neighbors[division_vertex] ? internal_fixed : 1;
 			}
 
 			for (int i = 0; i < 2; i++) {
@@ -681,14 +699,17 @@ class scene {
 
 			assert (nvp);
 
-			split_internals(v, nvp, internal_fixed);
+			if (internal_fixed)
+				fix_vertex(nvp);
+
+			split_internals(v, nvp);
 
 			if (!neighbors[v])
 				return;
 
 			int self_ref = self_ref_from_neighbor(v);
 
-			neighbors[v]->split_internals(self_ref, nvp, internal_fixed);
+			neighbors[v]->split_internals(self_ref, nvp);
 
 			children[0]->neighbors[v] = neighbors[v]->children[1];
 			children[1]->neighbors[v] = neighbors[v]->children[0];
@@ -742,10 +763,7 @@ class scene {
 				if (division_new_vertex) {
 
 					if (internal_fixed)
-					for (int c = 0; c < 2; c++) {
-						int ref = children[c]->vertex_ref(division_new_vertex);
-						children[c]->vertex_fixed[ref] = 1;
-					}
+						fix_vertex(division_new_vertex);
 
 					return;
 				}
@@ -1073,9 +1091,9 @@ class scene {
 				 * First, try to use the closest free vertex.
 				 */
 				for (int v = 0; v < 3; v++) {
-					if (!vertex_fixed[nearest[v]]) {
+					if (vertex_is_free(vertices[nearest[v]])) {
 						(*vertices[nearest[v]]) = nv;
-						vertex_fixed[nearest[v]] = 1;
+						fix_vertex(vertices[nearest[v]]);
 						return;
 					}
 				}
@@ -1130,9 +1148,9 @@ class scene {
 			 * Check whether we can move an existing free vertex.
 			 */
 			for (int v = 0; v < 3; v++) {
-				if (!vertex_fixed[nearest[v]] && k[nearest[v]][0] + k[nearest[v]][1] < 1) {
+				if (vertex_is_free(vertices[nearest[v]]) && k[nearest[v]][0] + k[nearest[v]][1] < 1) {
 					(*vertices[nearest[v]]) = nv;
-					vertex_fixed[nearest[v]] = 1;
+					fix_vertex(vertices[nearest[v]]);
 					return;
 				}
 			}
@@ -1142,7 +1160,7 @@ class scene {
 			 */
 			for (int v = 0; v < 3; v++) {
 				if (k[v][0] <= 0 && k[v][1] <= 0) {
-					assert (vertex_fixed[v] == 1);
+					assert (!vertex_is_free(vertices[v]));
 					point old_point = (*vertices[v]);
 					(*vertices[v]) = nv;
 
@@ -1315,9 +1333,9 @@ class scene {
 			 * If all vertices are fixed, then return.
 			 */
 
-			if (vertex_fixed[0]
-			 && vertex_fixed[1]
-			 && vertex_fixed[2])
+			if (!vertex_is_free(vertices[0])
+			 && !vertex_is_free(vertices[1])
+			 && !vertex_is_free(vertices[2]))
 				return 0;
 
 			/*
@@ -1338,7 +1356,7 @@ class scene {
 				 * Check for a fixed vertex.
 				 */
 
-				if (vertex_fixed[v])
+				if (!vertex_is_free(vertices[v]))
 					continue;
 
 				/*
@@ -1458,9 +1476,9 @@ class scene {
 
 			// fprintf(stderr, "%p checking for unfixed vertices [%u] \n", this, time(NULL));
 
-			if (vertex_fixed[0]
-			 && vertex_fixed[1]
-			 && vertex_fixed[2])
+			if (!vertex_is_free(vertices[0])
+			 && !vertex_is_free(vertices[1])
+			 && !vertex_is_free(vertices[2]))
 				return 0;
 
 			int improved = 0;
@@ -1482,7 +1500,7 @@ class scene {
 				 */
 
 				// fprintf(stderr, "%p checking that vertex %d is unfixed [%u] \n", this, v, time(NULL));
-				if (vertex_fixed[v])
+				if (!vertex_is_free(vertices[v]))
 					continue;
 
 				/*
@@ -1592,9 +1610,9 @@ class scene {
 				(*vertex_map)[vertices[0]],
 				(*vertex_map)[vertices[1]],
 				(*vertex_map)[vertices[2]],
-				(unsigned int) vertex_fixed[0],
-				(unsigned int) vertex_fixed[1],
-				(unsigned int) vertex_fixed[2],
+				(unsigned int) !vertex_is_free(vertices[0]),
+				(unsigned int) !vertex_is_free(vertices[1]),
+				(unsigned int) !vertex_is_free(vertices[2]),
 				(*triangle_map)[neighbors[0]],
 				(*triangle_map)[neighbors[1]],
 				(*triangle_map)[neighbors[2]],
@@ -1626,7 +1644,8 @@ class scene {
 				unsigned int vf;
 				if (!fscanf(f, "%u", &vf))
 					ui::get()->error("Bad model file.");
-				vertex_fixed[v] = vf;
+				if (vf)
+					fix_vertex(vertices[v]);
 			}
 
 			for (int v = 0; v < 3; v++) {
@@ -2434,6 +2453,14 @@ public:
 		triangle_head[1]->vertices[2] = triangle_head[0]->vertices[1];
 
 		triangle_head[1]->neighbors[0] = triangle_head[0];
+
+		triangle::fix_vertex(triangle_head[0]->vertices[0]);
+		triangle::fix_vertex(triangle_head[0]->vertices[1]);
+		triangle::fix_vertex(triangle_head[0]->vertices[2]);
+
+		triangle::fix_vertex(triangle_head[1]->vertices[0]);
+		triangle::fix_vertex(triangle_head[1]->vertices[1]);
+		triangle::fix_vertex(triangle_head[1]->vertices[2]);
 	}
 
 	/*
@@ -2873,63 +2900,81 @@ public:
 			 */
 
 			std::set<point *> vertex_set;
+			std::set<point *> fixed_set;
 			std::multimap<point *, triangle *> vertex_map;
 
 			fprintf(stderr, "begin collecting vertex data[%u]\n", time(NULL));
-			triangle_head[0]->collect_vertex_data(&vertex_set, &vertex_map);
-			triangle_head[1]->collect_vertex_data(&vertex_set, &vertex_map);
+			triangle_head[0]->collect_vertex_data(&vertex_set, &vertex_map, &fixed_set);
+			triangle_head[1]->collect_vertex_data(&vertex_set, &vertex_map, &fixed_set);
 			fprintf(stderr, "end collecting vertex data[%u]\n", time(NULL));
 
 			fprintf(stderr, "Number of vertices: %u\n", vertex_set.size());
 
-			/*
-			 * Write output incrementally, if desired.
-			 */
+			std::set<point *>::iterator aa = vertex_set.begin();
+			std::set<point *>::iterator bb = fixed_set.begin();
 
-			fprintf(stderr, "begin output[%u] \n", time(NULL));
-
-			if (inc_bit && improved) {
-
-				write_model_file();
-
-				for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
-					if (d_out[i] != NULL) {
-						const d2::image *im = depth(i);
-						d2::image_rw::write_image(d_out[i], im, exp_out, 1, 1);
-						delete im;
-					}
-
-					if (v_out[i] != NULL) {
-						const d2::image *im = view(i);
-						d2::image_rw::write_image(v_out[i], im, exp_out);
-						delete im;
-					}
-				}
-
-				for (std::map<const char *, pt>::iterator i = d3_depth_pt->begin();
-						i != d3_depth_pt->end(); i++) {
-
-					const d2::image *im = depth(i->second);
-					d2::image_rw::write_image(i->first, im, exp_out, 1, 1);
-					delete im;
-				}
-
-				for (std::map<const char *, pt>::iterator i = d3_output_pt->begin();
-						i != d3_output_pt->end(); i++) {
-
-					const d2::image *im = view(i->second);
-					d2::image_rw::write_image(i->first, im, exp_out);
-					delete im;
-				}
+			while (aa != vertex_set.end() && bb != fixed_set.end()) {
+				if (*aa == *bb) {
+					fprintf(stderr, "Error: the fixed and free vertex sets have elements in common.\n");
+					assert(0);
+				} else if (*aa < *bb) {
+					aa++;
+				} else if (*bb < *aa) {
+					bb++;
+				} else
+					assert(0);
 			}
-			
-			fprintf(stderr, "end output[%u] \n", time(NULL));
+
+			fprintf(stderr, "Finished checking for common elements.\n");
 
 			/*
 			 * Limit the number of iterations at a given LOD. 
 			 */
 
 			if (!improved || count > 40) {
+
+				/*
+				 * Write output incrementally, if desired.
+				 */
+
+				fprintf(stderr, "begin output[%u] \n", time(NULL));
+
+				if (inc_bit && improved) {
+
+					write_model_file();
+
+					for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
+						if (d_out[i] != NULL) {
+							const d2::image *im = depth(i);
+							d2::image_rw::write_image(d_out[i], im, exp_out, 1, 1);
+							delete im;
+						}
+
+						if (v_out[i] != NULL) {
+							const d2::image *im = view(i);
+							d2::image_rw::write_image(v_out[i], im, exp_out);
+							delete im;
+						}
+					}
+
+					for (std::map<const char *, pt>::iterator i = d3_depth_pt->begin();
+							i != d3_depth_pt->end(); i++) {
+
+						const d2::image *im = depth(i->second);
+						d2::image_rw::write_image(i->first, im, exp_out, 1, 1);
+						delete im;
+					}
+
+					for (std::map<const char *, pt>::iterator i = d3_output_pt->begin();
+							i != d3_output_pt->end(); i++) {
+
+						const d2::image *im = view(i->second);
+						d2::image_rw::write_image(i->first, im, exp_out);
+						delete im;
+					}
+				}
+				
+				fprintf(stderr, "end output[%u] \n", time(NULL));
 
 				fprintf(stderr, ".");
 

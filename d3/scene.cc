@@ -29,6 +29,7 @@ scene::lod *scene::cl;
 ale_pos scene::perturb;
 scene::lod *scene::bl;
 scene::triangle *scene::triangle_head[2];
+std::set<point *> scene::triangle::fixed_vertices;
 std::map<point *, scene::vertex_aux> scene::vam;
 ale_pos scene::edge_cost_multiplier = 0;
 ale_pos scene::angle_cost_multiplier = 0;
