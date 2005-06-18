@@ -2229,18 +2229,26 @@ class scene {
 					tset.insert(t->second);
 
 				/*
-				 * Eliminate from consideration any change that increases to more than
+				 * Eliminate from consideration any change that increases the number of forbidden 
+				 * neighbor angles.
+				 * to more than
 				 * a given amount the angle between the normals of adjacent triangles.
 				 */
 
-				**i = perturbed;
-				int angles_ok = 1;
+				int orig_forbidden_angles = 0;
 				for (std::set<triangle *>::iterator t = tset.begin(); t != tset.end(); t++) {
 					if ((*t)->max_neighbor_angle() > allowable_max_neighbor_angle)
-						angles_ok = 0;
+						orig_forbidden_angles++;
+				}
+
+				**i = perturbed;
+				int perturb_forbidden_angles = 0;
+				for (std::set<triangle *>::iterator t = tset.begin(); t != tset.end(); t++) {
+					if ((*t)->max_neighbor_angle() > allowable_max_neighbor_angle)
+						perturb_forbidden_angles++;
 				}
 				**i = orig;
-				if (!angles_ok)
+				if (perturb_forbidden_angles > orig_forbidden_angles)
 					continue;
 
 				/*
