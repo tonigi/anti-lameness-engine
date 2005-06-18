@@ -2231,8 +2231,6 @@ class scene {
 				/*
 				 * Eliminate from consideration any change that increases the number of forbidden 
 				 * neighbor angles.
-				 * to more than
-				 * a given amount the angle between the normals of adjacent triangles.
 				 */
 
 				int orig_forbidden_angles = 0;
