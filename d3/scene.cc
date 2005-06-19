@@ -135,26 +135,13 @@ void scene::zbuf_elem::find_nearest(pt _pt, int i, int j) {
 	}
 }
 
-ale_accum scene::vertex_movement_cost(std::set<triangle *> *t_set, point *vertex, 
+ale_accum scene::vertex_movement_cost(std::set<triangle *> *t_set, change_elem_t *v_set, point *vertex, 
 				point new_position, zbuf_elem **z, lod *_lod) {
 	ale_accum orig_color_cost = 0, new_color_cost = 0;
 	ale_accum orig_color_div  = 0, new_color_div  = 0;
 	ale_accum orig_geom_cost  = 0, new_geom_cost  = 0;
 
 	point original_position = *vertex;
-
-	/*
-	 * Determine the set of vertices associated with the triangles
-	 * surrounding the specified vertex.
-	 */
-
-	//fprintf(stderr, "  %p allocating set for vertices in triangles surrounding vertex [%u] \n", t, time(NULL));
-	std::set<point *> *v_set = new std::set<point *>;
-
-	// fprintf(stderr, "  %p populating set of vertices in triangles surrounding vertex [%u] \n", t, time(NULL));
-	for (std::set<triangle *>::iterator i = t_set->begin(); i != t_set->end(); i++)
-	for (int v = 0; v < 3; v++)
-		v_set->insert((*i)->vertices[v]);
 
 	/*
 	 * Determine bounding boxes for calculating color costs
@@ -176,8 +163,8 @@ ale_accum scene::vertex_movement_cost(std::set<triangle *> *t_set, point *vertex
 		bbp[0][0] = bbp[0][1] =  inf;
 		bbp[1][0] = bbp[1][1] = -inf;
 
-		for (std::set<point *>::iterator i = v_set->begin(); i != v_set->end(); i++) {
-			point p = _pt.wp_scaled(**i);
+		for (std::set<point>::iterator i = v_set->begin(); i != v_set->end(); i++) {
+			point p = _pt.wp_scaled(*i);
 
 			if (p[0] < bbp[0][0])
 				bbp[0][0] = p[0];
@@ -188,17 +175,6 @@ ale_accum scene::vertex_movement_cost(std::set<triangle *> *t_set, point *vertex
 			if (p[1] > bbp[1][1])
 				bbp[1][1] = p[1];
 		}
-
-		point np = _pt.wp_scaled(new_position);
-
-		if (np[0] < bbp[0][0])
-			bbp[0][0] = np[0];
-		if (np[1] < bbp[0][1])
-			bbp[0][1] = np[1];
-		if (np[0] > bbp[1][0])
-			bbp[1][0] = np[0];
-		if (np[1] > bbp[1][1])
-			bbp[1][1] = np[1];
 
 		for (int d = 0; d < 2; d++) {
 			if (bbp[d][0] < 0)

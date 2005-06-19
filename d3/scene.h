@@ -96,6 +96,62 @@ class scene {
 	static std::map<point *, vertex_aux> vam;
 
 	/*
+	 * Change set data types.
+	 */
+	struct point_2d_lt {
+		bool operator()(d2::point a, d2::point b) const {
+			for (int d = 0; d < 2; d++) {
+				if (a[d] < b[d])
+					return true;
+				if (a[d] > b[d])
+					return false;
+			}
+		}
+	};
+	struct point_lt {
+		bool operator()(point a, point b) const {
+			for (int d = 0; d < 2; d++) {
+				if (a[d] < b[d])
+					return true;
+				if (a[d] > b[d])
+					return false;
+			}
+		}
+	};
+	typedef std::pair<d2::point,d2::point> pp_t;
+	struct pp_lt {
+		bool operator()(pp_t a, pp_t b) const {
+			point_2d_lt lt;
+			if (lt(a.first, b.first))
+				return true;
+			if (lt(b.first, a.first))
+				return false;
+			if (lt(a.second, b.second))
+				return true;
+			return false;
+		}
+	};
+	typedef std::set<pp_t,pp_lt> pp_set_t;
+	typedef std::set<point,point_lt> change_elem_t;
+	struct change_elem_lt {
+		bool operator()(change_elem_t a, change_elem_t b) const {
+			for (change_elem_t::iterator i = a.begin(), j = b.begin(); 
+					i != a.end() && j != b.end(); i++, j++) {
+				point_lt lt;
+				if (lt(*i, *j))
+					return true;
+				if (lt(*j, *i))
+					return false;
+			}
+			if (a.size() < b.size())
+				return true;
+
+			return false;
+		}
+	};
+	typedef std::set<change_elem_t,change_elem_lt> change_set_t;
+	
+	/*
 	 * Ray-Triangle intersection utility function
 	 *
 	 * Variables should be specified in cartesian coordinates (not
@@ -276,7 +332,7 @@ class scene {
 	 * Evaluate the cost of moving a vertex.  Negative values indicate
 	 * improvement; non-negative values indicate lack of improvement.
 	 */
-	static ale_accum vertex_movement_cost(std::set<triangle *> *t_set, 
+	static ale_accum vertex_movement_cost(std::set<triangle *> *t_set, change_elem_t *v_set,
 			point *vertex, point new_position, zbuf_elem **z, lod *_lod);
 
 	/*
@@ -2158,53 +2214,6 @@ class scene {
 	}
 
 	/*
-	 * Change set data type.
-	 */
-	struct point_lt {
-		bool operator()(d2::point a, d2::point b) const {
-			for (int d = 0; d < 2; d++) {
-				if (a[d] < b[d])
-					return true;
-				if (a[d] > b[d])
-					return false;
-			}
-		}
-	};
-	typedef std::pair<d2::point,d2::point> pp_t;
-	struct pp_lt {
-		bool operator()(pp_t a, pp_t b) const {
-			point_lt lt;
-			if (lt(a.first, b.first))
-				return true;
-			if (lt(b.first, a.first))
-				return false;
-			if (lt(a.second, b.second))
-				return true;
-			return false;
-		}
-	};
-	typedef std::set<pp_t,pp_lt> pp_set_t;
-	typedef std::set<d2::point,point_lt> change_elem_t;
-	struct change_elem_lt {
-		bool operator()(change_elem_t a, change_elem_t b) const {
-			for (change_elem_t::iterator i = a.begin(), j = b.begin(); 
-					i != a.end() && j != b.end(); i++, j++) {
-				point_lt lt;
-				if (lt(*i, *j))
-					return true;
-				if (lt(*j, *i))
-					return false;
-			}
-			if (a.size() < b.size())
-				return true;
-
-			return false;
-		}
-	};
-	typedef std::set<change_elem_t,change_elem_lt> change_set_t;
-	
-
-	/*
 	 * Adjust vertices to minimize scene error.  Return 
 	 * non-zero if improvements are made.
 	 */
@@ -2229,8 +2238,9 @@ class scene {
 
 				for (change_elem_t::iterator j = i->begin();
 						j != i->end(); j++) {
-					max.accumulate_max(*j);
-					min.accumulate_min(*j);
+					d2::point p = _pt.wp_scaled(*j).xy();
+					max.accumulate_max(p);
+					min.accumulate_min(p);
 				}
 
 				if (max[0] >= min[0]
@@ -2380,11 +2390,22 @@ class scene {
 					continue;
 
 				/*
+				 * Determine the set of vertices associated with the triangles
+				 * surrounding the vertex being perturbed
+				 */
+
+				change_elem_t v_set;
+				for (std::set<triangle *>::iterator j = tset.begin(); j != tset.end(); j++)
+				for (int v = 0; v < 3; v++)
+					v_set.insert(*(*j)->vertices[v]);
+				v_set.insert(perturbed);
+
+				/*
 				 * Check the error
 				 */
 
 				// fprintf(stderr, "%p calculating error [%u] \n", this, time(NULL));
-				ale_accum error = vertex_movement_cost(&tset, *i, perturbed, z, cl);
+				ale_accum error = vertex_movement_cost(&tset, &v_set, *i, perturbed, z, cl);
 				// fprintf(stderr, "%p done calculating error (%f) [%u] \n", this, error, time(NULL));
 				if (error < 0) {
 
@@ -2400,6 +2421,7 @@ class scene {
 
 					result = 1;
 					**i = perturbed;
+					change_set_cur->insert(v_set);
 					break;
 				}
 			}
