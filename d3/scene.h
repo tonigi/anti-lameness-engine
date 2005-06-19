@@ -2226,7 +2226,7 @@ class scene {
 		 * Collect bounding box data.
 		 */
 
-		std::vector<pp_set_t> bb_array;
+		std::vector<pp_set_t> bb_array(d2::image_rw::count());
 
 		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 			pt _pt = align::projective(f);
