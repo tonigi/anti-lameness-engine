@@ -137,6 +137,37 @@ public:
 		return acos(cos_of);
 	}
 
+	static point posinf() {
+		double a = +1;
+		double z = +0;
+
+		a = a / z;
+
+		assert (isinf(a) == +1);
+
+		return point(a, a);
+	}
+
+	static point neginf() {
+		point n = -posinf();
+
+		assert (isinf(n[0]) == -1);
+
+		return n;
+	}
+
+	void accumulate_max(point p) {
+		for (int d = 0; d < 2; d++)
+			if (p[d] > x[d])
+				x[d] = p[d];
+	}
+
+	void accumulate_min(point p) {
+		for (int d = 0; d < 2; d++)
+			if (p[d] < x[d])
+				x[d] = p[d];
+	}
+
 	static point undefined() {
 		double a = 0;
 

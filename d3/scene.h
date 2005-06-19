@@ -2158,11 +2158,85 @@ class scene {
 	}
 
 	/*
+	 * Change set data type.
+	 */
+	struct point_lt {
+		bool operator()(d2::point a, d2::point b) const {
+			for (int d = 0; d < 2; d++) {
+				if (a[d] < b[d])
+					return true;
+				if (a[d] > b[d])
+					return false;
+			}
+		}
+	};
+	struct pp_lt {
+		bool operator()(std::pair<d2::point, d2::point> a,
+				std::pair<d2::point, d2::point> b) const {
+			point_lt lt;
+			if (lt(a.first, b.first))
+				return true;
+			if (lt(b.first, a.first))
+				return false;
+			if (lt(a.second, b.second))
+				return true;
+			return false;
+		}
+	};
+	typedef std::set<d2::point,point_lt> change_elem_t;
+	struct change_elem_lt {
+		bool operator()(change_elem_t a, change_elem_t b) const {
+			for (change_elem_t::iterator i = a.begin(), j = b.begin(); 
+					i != a.end() && j != b.end(); i++, j++) {
+				point_lt lt;
+				if (lt(*i, *j))
+					return true;
+				if (lt(*j, *i))
+					return false;
+			}
+			if (a.size() < b.size())
+				return true;
+
+			return false;
+		}
+	};
+	typedef std::set<change_elem_t,change_elem_lt> change_set_t;
+	
+
+	/*
 	 * Adjust vertices to minimize scene error.  Return 
 	 * non-zero if improvements are made.
 	 */
 	static int adjust_vertices(std::set<point *> *vertex_set, 
-			           std::multimap<point *, triangle *> *vertex_map) {
+			           std::multimap<point *, triangle *> *vertex_map,
+				   change_set_t *change_set_prev,
+				   change_set_t *change_set_cur) {
+
+		/*
+		 * Collect bounding box data.
+		 */
+
+		std::map<unsigned int, std::set<std::pair<d2::point, d2::point>,pp_lt> > bb_map;
+
+		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+			pt _pt = align::projective(f);
+
+			for (change_set_t::iterator i = change_set_prev->begin();
+					i != change_set_prev->end(); i++) {
+				d2::point max = d2::point::neginf();
+				d2::point min = d2::point::posinf();
+
+				for (change_elem_t::iterator j = i->begin();
+						j != i->end(); j++) {
+					max.accumulate_max(*j);
+					min.accumulate_min(*j);
+				}
+
+				if (max[0] >= min[0]
+				 && max[1] >= min[1])
+					bb_map[f].insert(std::make_pair(min, max));
+			}
+		}
 
 		/*
 		 * Collect z-buffer data
@@ -2883,6 +2957,12 @@ public:
 #endif
 
 		/*
+		 * Change sets.
+		 */
+		change_set_t change_set[2];
+		int csi = 0;
+
+		/*
 		 * Reduce level-of-detail.
 		 */
 
@@ -2989,6 +3069,13 @@ public:
 				if (cl->next)
 					increase_lod();
 
+				/*
+				 * Clear change sets.
+				 */
+
+				change_set[0].clear();
+				change_set[1].clear();
+
 				count = 0;
 				improved = 1;
 				continue;
@@ -3003,7 +3090,14 @@ public:
 
 			fprintf(stderr, "begin adjustment[%u] \n", time(NULL));
 
-			improved |= adjust_vertices(&vertex_set, &vertex_map);
+			improved |= adjust_vertices(&vertex_set, &vertex_map, &change_set[1 - csi], &change_set[csi]);
+
+			/*
+			 * Update change sets.
+			 */
+
+			csi = 1 - csi;
+			change_set[csi].clear();
 
 			fprintf(stderr, "end adjustment[%u] \n", time(NULL));
 		}
