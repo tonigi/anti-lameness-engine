@@ -2170,9 +2170,9 @@ class scene {
 			}
 		}
 	};
+	typedef std::pair<d2::point,d2::point> pp_t;
 	struct pp_lt {
-		bool operator()(std::pair<d2::point, d2::point> a,
-				std::pair<d2::point, d2::point> b) const {
+		bool operator()(pp_t a, pp_t b) const {
 			point_lt lt;
 			if (lt(a.first, b.first))
 				return true;
@@ -2183,6 +2183,7 @@ class scene {
 			return false;
 		}
 	};
+	typedef std::set<pp_t,pp_lt> pp_set_t;
 	typedef std::set<d2::point,point_lt> change_elem_t;
 	struct change_elem_lt {
 		bool operator()(change_elem_t a, change_elem_t b) const {
@@ -2216,7 +2217,7 @@ class scene {
 		 * Collect bounding box data.
 		 */
 
-		std::map<unsigned int, std::set<std::pair<d2::point, d2::point>,pp_lt> > bb_map;
+		std::vector<pp_set_t> bb_array;
 
 		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 			pt _pt = align::projective(f);
@@ -2234,7 +2235,7 @@ class scene {
 
 				if (max[0] >= min[0]
 				 && max[1] >= min[1])
-					bb_map[f].insert(std::make_pair(min, max));
+					bb_array[f].insert(std::make_pair(min, max));
 			}
 		}
 
@@ -2256,6 +2257,31 @@ class scene {
 
 		fprintf(stderr, "  begin free vertex set traversal[%u] \n", time(NULL));
 		for (std::set<point *>::iterator i = vertex_set->begin(); i != vertex_set->end(); i++) {
+
+			/*
+			 * Check for inclusion of the original point in one of
+			 * the bounding box regions.
+			 */
+			int orig_inclusion = 0;
+			if (change_set_prev->size() > 0)
+			for (unsigned int f = 0; !orig_inclusion && f < d2::image_rw::count(); f++) {
+				pt _pt = align::projective(f);
+
+				for (pp_set_t::iterator j = bb_array[f].begin(); 
+						!orig_inclusion && j != bb_array[f].end(); j++) {
+
+					point p = (**i);
+					point bb_min = j->first;
+					point bb_max = j->second;
+
+					if (p[0] >= bb_min[0]
+					 && p[1] >= bb_min[1]
+					 && p[0] <= bb_max[0]
+					 && p[1] <= bb_max[1])
+						orig_inclusion = 1;
+				}
+			}
+
 			/*
 			 * Determine the adjustment step size according to
 			 * the perturbation size.
@@ -2290,6 +2316,36 @@ class scene {
 
 				// fprintf(stderr, "%p checking view pyramid bounds [%u] \n", this, time(NULL));
 				if (!pyramid_bounds_check(perturbed))
+					continue;
+
+				/*
+				 * Check for inclusion of the perturbed point in one of
+				 * the bounding box regions.
+				 */
+				int perturbed_inclusion = 0;
+				if (!orig_inclusion && change_set_prev->size() > 0)
+				for (unsigned int f = 0; !perturbed_inclusion && f < d2::image_rw::count(); f++) {
+					pt _pt = align::projective(f);
+
+					for (pp_set_t::iterator j = bb_array[f].begin(); 
+							!perturbed_inclusion && j != bb_array[f].end(); j++) {
+
+						point p = perturbed;
+						point bb_min = j->first;
+						point bb_max = j->second;
+
+						if (p[0] >= bb_min[0]
+						 && p[1] >= bb_min[1]
+						 && p[0] <= bb_max[0]
+						 && p[1] <= bb_max[1])
+							perturbed_inclusion = 1;
+					}
+				}
+
+				/*
+				 * Bounding box predicate
+				 */
+				if (change_set_prev->size() > 0 && !orig_inclusion && !perturbed_inclusion)
 					continue;
 
 				/*

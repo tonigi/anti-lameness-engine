@@ -25,6 +25,7 @@
 #include <map>
 #include <set>
 #include <iterator>
+#include <vector>
 #include "time.h"
 #include "d2.h"
 
