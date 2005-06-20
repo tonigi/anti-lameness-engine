@@ -44,4 +44,4 @@ ale_pos cpf::stereo_threshold = 4;
 
 unsigned int cpf::systems_solved = 0;
 
-int cpf::total_error_mean = 0;
+int cpf::total_error_mean = 1;
