@@ -45,6 +45,8 @@ class cpf {
 
 	static ale_pos stereo_threshold;
 
+	static int total_error_mean;
+
 	/*
 	 * TYPE is:
 	 * 	0 type A
@@ -236,19 +238,52 @@ class cpf {
 	}
 
 	static ale_accum measure_total_error() {
-		ale_accum result = 0;
-		ale_accum divisor = 0;
 
-		for (unsigned int i = 0; i < cp_array_max; i++) {
-			ale_accum e = measure_projected_error(cp_array[i].d3, cp_array[i].d2, d2::image_rw::count());
-			if (!finite(e)) 
-				continue;
+		if (cp_array_max == 0)
+			return 0;
 
-			result += e * e;
-			divisor += 1;
+		if (total_error_mean) {
+			/*
+			 * Use mean error.
+			 */
+
+			ale_accum result = 0;
+			ale_accum divisor = 0;
+
+			for (unsigned int i = 0; i < cp_array_max; i++) {
+				ale_accum e = measure_projected_error(cp_array[i].d3, cp_array[i].d2, d2::image_rw::count());
+				if (!finite(e)) 
+					continue;
+
+				result += e * e;
+				divisor += 1;
+			}
+
+			return sqrt(result / divisor);
+		} else {
+			/*
+			 * Use median error
+			 */
+
+			std::vector<ale_accum> v;
+
+			for (unsigned int i = 0; i < cp_array_max; i++) {
+				ale_accum e = measure_projected_error(cp_array[i].d3, cp_array[i].d2, d2::image_rw::count());
+				if (!finite(e)) 
+					continue;
+
+				v.push_back(fabs(e));
+			}
+
+			std::sort(v.begin(), v.end());
+
+			if (v.size() % 2) {
+				return v[v.size() / 2];
+			} else {
+				return 0.5 * (v[v.size() / 2 - 1]
+				            + v[v.size() / 2]);
+			}
 		}
-
-		return sqrt(result / divisor);
 	}
 
 	/*
@@ -355,6 +390,14 @@ class cpf {
 	}
 
 public:
+
+	static void err_median() {
+		total_error_mean = 0;
+	}
+
+	static void err_mean() {
+		total_error_mean = 1;
+	}
 
 	static void set_cpp_upper(ale_pos cu) {
 		cpp_upper = cu;

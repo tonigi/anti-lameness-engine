@@ -106,6 +106,7 @@ class scene {
 				if (a[d] > b[d])
 					return false;
 			}
+			return false;
 		}
 	};
 	struct point_lt {

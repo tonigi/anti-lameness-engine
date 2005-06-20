@@ -584,6 +584,8 @@ public:
 			"                  in pixels or degrees [default is 32]\n"
 			"--cpp-lower=<x>   Set lower bound <x> for camera parameter perturbation,\n"
 			"                  in pixels or degrees [default is 0.125]\n"
+			"--cpp-err-median  Use median error to determine camera parameters.      [default]\n"
+			"--cpp-err-mean    Use root-mean-square error to determine camera parameters.\n"
 			"--va-upper=<x>    View-angle perturbation upper bound in degrees  [default is 32]\n"
 			"--st <x>          Set stereo threshold to <x> pixels.              [default is 4]\n"
 			BETWEEN_SECTIONS
