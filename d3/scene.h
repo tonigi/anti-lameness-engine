@@ -37,7 +37,18 @@
 
 class scene {
 
+	/*
+	 * Geometric model structure.
+	 */
+
 	struct triangle;
+
+	/*
+	 * Voxel model structure.
+	 */
+
+	struct partition;
+
 
 	/*
 	 * Multiplier used in calculating the edge-length contribution to 
@@ -1736,6 +1747,13 @@ class scene {
 				children[v] = (*triangle_map)[id];
 			}
 		}
+	};
+
+	/*
+	 * Structure to hold a subdivisible region of space.
+	 */
+
+	struct partition {
 	};
 
 	/*
