@@ -47,7 +47,7 @@ class scene {
 	 * Voxel model structure.
 	 */
 
-	struct partition;
+	struct voxel;
 
 
 	/*
@@ -1753,8 +1753,12 @@ class scene {
 	 * Structure to hold a subdivisible region of space.
 	 */
 
-	struct partition {
+	struct voxel {
+		struct voxel *positive;
+		struct voxel *negative;
 	};
+
+	std::map<struct voxel *, float> mean_prob_occ;
 
 	/*
 	 * Use a pair of trees to store the triangles.
