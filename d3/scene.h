@@ -1766,6 +1766,13 @@ class scene {
 	static struct triangle *triangle_head[2];
 
 	/*
+	 * Map view B and pixel A(i, j) within view A to a set of depths where
+	 * A(i, j) matches a point in image B.
+	 */
+	std::set<ale_pos> depth_match_set(int B, int A, int i, int j) {
+	}
+
+	/*
 	 * Read the model file.
 	 */
 	static void read_model_file() {
