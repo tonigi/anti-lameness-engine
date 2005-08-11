@@ -118,6 +118,9 @@ public:
 
 	/*
 	 * Perform insertion sort on the arrays, where sort is by color.
+	 *
+	 * XXX: This does a poor job of handling multiple contributions from
+	 * the same frame, especially when the number of frames is 1.
 	 */
 	void accumulate(int i, int j, int f, pixel new_value, pixel new_weight) {
 		for (unsigned int k = 0; k < 3; k++) {

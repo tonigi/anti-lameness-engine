@@ -1659,6 +1659,8 @@ int main(int argc, const char *argv[]){
 
 				d3::scene::relax_triangle_model();
 
+				d3::scene::make_space();
+
 				fprintf(stderr, "Reducing cost in 3D scene");
 				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, 
 						&d3_depth_pt, &d3_output_pt, output_exposure, inc);

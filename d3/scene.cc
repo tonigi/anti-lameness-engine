@@ -41,6 +41,7 @@ int scene::mpl_type = 0;
 int scene::mpu_type = 1;
 const char *scene::load_model_name = NULL;
 const char *scene::save_model_name = NULL;
+const ale_real nearness = 0.01;
 
 /*
  * Precision discriminator

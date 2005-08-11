@@ -89,6 +89,11 @@ class scene {
 	static const char *save_model_name;
 
 	/*
+	 * Nearness threshold
+	 */
+	static const ale_real nearness;
+
+	/*
 	 * Vertex Auxiliary Structure
 	 *
 	 * This can be used for storing miscellaneous information about
@@ -1758,7 +1763,177 @@ class scene {
 		struct space *negative;
 	};
 
-	std::map<struct space *, float> mean_prob_occ;
+	/*
+	 * Space root pointer
+	 */
+	space *root_space;
+
+	/*
+	 * Space traversal and navigation class.
+	 */
+
+	class space_traverse {
+		space *current;
+		point min, max;
+		int next_split;
+
+	public:
+
+		static void root() {
+			current = root_space;
+			min = point(-M_PI/2, -M_PI/2, -M_PI/2);
+			max = point( M_PI/2,  M_PI/2,  M_PI/2);
+			next_split = 0;
+		}
+
+		space_traverse positive() {
+
+			if (current->positive == NULL)
+				current->positive = new space;
+			
+			space_traverse result;
+
+			result->current = current->positive;
+			result->min = min;
+			result->max = max;
+			result->next_split = (next_split + 1) % 3;
+
+			result->min[next_split] = (min[next_split] + max[next_split]) / 2;
+
+			return result;
+		}
+
+		space_traverse negative() {
+
+			if (current->negative == NULL)
+				current->negative = new space;
+			
+			space_traverse result;
+
+			result->current = current->negative;
+			result->min = min;
+			result->max = max;
+			result->next_split = (next_split + 1) % 3;
+
+			result->max[next_split] = (min[next_split] + max[next_split]) / 2;
+
+			return result;
+		}
+
+		point get_min() {
+			return point(tan(min[0]), tan(min[1]), tan(min[2]));
+		}
+
+		point get_max() {
+			return point(tan(max[0]), tan(max[1]), tan(max[2]));
+		}
+
+		int includes(point p) {
+			point tdp = point(atan(p[0]), atan(p[1]), atan(p[2]));
+
+			for (int d = 0; d < 3; d++) {
+				if (tdp[d] > max[d])
+					return 0;
+				if (tdp[d] < min[d])
+					return 0;
+				if (isnan(tdp[d]))
+					return 0;
+			}
+
+			return 1;
+		}
+
+		space *get_space() {
+			return current;
+		}
+	};
+
+	/*
+	 * Class for information regarding spatial regions of interest.
+	 */
+
+	class spatial_info {
+		/*
+		 * Map channel value --> weight.
+		 */
+		std::map<ale_real, ale_real> color_weights[3];
+
+		/*
+		 * Current color.
+		 */
+		pixel color;
+
+		/*
+		 * Map occupancy value --> weight.
+		 */
+		std::map<ale_real, ale_pos> occupancy_weights;
+
+		/*
+		 * Current occupancy value.
+		 */
+		ale_pos occupancy;
+
+	public:
+		/*
+		 * Constructor.
+		 */
+		spatial_info() {
+			color = pixel::zero();
+			occupancy = 0.5;
+		}
+
+		/*
+		 * Accumulate color.
+		 */
+		accumulate_color(pixel color, pixel weight) {
+		}
+
+		/*
+		 * Accumulate occupancy.
+		 */
+		accumulate_occupancy(ale_real occupancy, ale_real weight) {
+		}
+
+		/*
+		 * Update color (and clear accumulation structure).
+		 */
+		update_color() {
+		}
+
+		/*
+		 * Update occupancy (and clear accumulation structure).
+		 */
+		update_occupancy() {
+		}
+
+		/*
+		 * Get current color.
+		 */
+		get_color() {
+		}
+
+		/*
+		 * Get current occupancy.
+		 */
+		get_occupancy() {
+		}
+	};
+
+	/*
+	 * Map spatial regions of interest to spatial info structures.  XXX:
+	 * This may get very poor cache behavior in comparison with, say, an
+	 * array.  Unfortunately, there is no immediately obvious array
+	 * representation.  If some kind of array representation were adopted,
+	 * it would probably cluster regions of similar depth from the
+	 * perspective of the typical camera.  In particular, for a
+	 * stereoscopic view, depth ordering for two random points tends to be
+	 * similar between cameras, I think.  Unfortunately, it is never
+	 * identical for all points (unless cameras are co-located).  One
+	 * possible approach would be to order based on, say, camera 0's idea
+	 * of depth.
+	 */
+
+	std::map<struct space *, spatial_info> spatial_info_map;
 
 	/*
 	 * Use a pair of trees to store the triangles.
@@ -2987,6 +3162,274 @@ public:
 			fprintf(stderr, ".");
 		fprintf(stderr, "\n");
 
+	}
+
+	/*
+	 * Initialize space and identify regions of interest for the adaptive
+	 * subspace model.
+	 */
+	void make_space() {
+
+		/*
+		 * Initialize root space.
+		 */
+
+		root_space = new space;
+
+		/*
+		 * Subdivide space to resolve intensity matches between pairs
+		 * of frames.
+		 */
+
+		for (int f1 = 0; f1 < d2::image_rw::count(); f1++)
+		for (int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+			if (f1 == f2)
+				continue;
+
+			d2::image *if1 = d2::image_rw::open(f1);
+			d2::image *if2 = d2::image_rw::open(f2);
+
+			pt _pt1 = align::projective(f1);
+			pt _pt2 = align::projective(f2);
+
+			/*
+			 * Iterate over all points in the primary frame.
+			 */
+
+			for (int i = 0; i < if1->height(); i++)
+			for (int j = 0; j < if1->width();  j++) {
+
+				/*
+				 * Get the pixel color in the primary frame
+				 */
+
+				pixel color_primary = if1->get_pixel(i, j);
+
+				/*
+				 * Map two depths to the secondary frame.
+				 */
+
+				point p1 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j,  1000)));
+				point p2 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j, -1000)));
+
+				/*
+				 * For cases where the mapped points define a
+				 * line and where points on the line fall
+				 * within the defined area of the frame,
+				 * determine the starting point for inspection.
+				 * In other cases, continue to the next pixel.
+				 */
+
+				ale_pos diff_i = p2[0] - p1[0];
+				ale_pos diff_j = p2[1] - p1[1];
+				ale_pos slope = diff_j / diff_i;
+
+				if (is_nan(slope))
+					continue;
+
+				ale_pos top_intersect = p1[1] - p1[0] * slope;
+				ale_pos lef_intersect = p1[0] - p1[1] / slope;
+				ale_pos rig_intersect = p1[0] - (p1[1] - if2->width() + 2) / slope;
+				ale_pos sp_i, sp_j;
+
+				if (finite(slope) && top_intersect >= 0 && top_intersect < if2->width() - 1) {
+					sp_i = 0;
+					sp_j = top_intersect;
+				} else if (slope > 0 && lef_intersect >= 0 && lef_intersect < if2->height() - 1) {
+					sp_i = lef_intersect;
+					sp_j = 0;
+				} else if (slope < 0 && rig_intersect >= 0 && rig_intersect < if2->height() - 1) {
+					sp_i = rig_intersect;
+					sp_j = if2->width() - 2;
+				} else 
+					continue;
+
+				/*
+				 * Determine increment values for examining
+				 * point, ensuring that incr_i is always
+				 * positive.
+				 */
+
+				ale_pos incr_i, incr_j;
+
+				if (fabs(diff_i) > fabs(diff_j) {
+					incr_i = 1;
+					incr_j = slope;
+				} else if (slope > 0) {
+					incr_i = 1 / slope;
+					incr_j = 1;
+				} else {
+					incr_i = -1 / slope;
+					incr_j = -1;
+				}
+
+				/*
+				 * Examine regions near the projected line.
+				 */
+
+				for (ale_pos ii = sp_i, jj = sp_j; 
+					ii < if2->height() - 1 && jj < if2->width() - 1 && ii >= 0 && jj >= 0; 
+					ii += incr_i, jj += incr_j) {
+
+					/*
+					 * Check for higher, lower, and nearby points.
+					 *
+					 * 	Red   = 2^0
+					 * 	Green = 2^1
+					 * 	Blue  = 2^2
+					 */
+
+					int higher = 0, lower = 0, nearby = 0;
+
+					for (int iii = 0; iii < 2; iii++)
+					for (int jjj = 0; jjj < 2; jjj++) {
+						pixel p = if2->get_pixel(floor(ii) + iii, floor(jj) + jjj);
+
+						for (int k = 0; k < 3; k++) {
+							int bitmask = (int) pow(2, k);
+
+							if (p[k] > color_primary[k])
+								higher |= bitmask;
+							if (p[k] < color_primary[k])
+								lower  |= bitmask;
+							if (fabs(p[k] - color_primary[k]) < nearness)
+								nearby |= bitmask;
+						}
+					}
+
+					/*
+					 * If this is not a region of interest,
+					 * then continue.
+					 */
+
+					if (((higher & lower) | nearby) != 0x7)
+						continue;
+
+					/*
+					 * Create an orthonormal basis to
+					 * determine line intersection.
+					 */
+
+					point bp0 = _pt1.pw_unscaled(point(i, j, 0));
+					point bp1 = _pt1.pw_unscaled(point(i, j, 1));
+					point bp2 = _pt2.pw_unscaled(point(ii, jj, 0));
+
+					point b0  = (bp1 - bp0).normalize();
+					point b1n = bp2 - bp0;
+					point b1  = (b1n - b1n.dproduct(b0)).normalize();
+
+					/*
+					 * Select a fourth point to define a second line.
+					 */
+
+					point p3  = _pt2.pw_unscaled(point(ii, jj, 1));
+
+					/*
+					 * Representation in the new basis.
+					 */
+
+					d2::point nbp0 = d2::point(bp0.dproduct(b0), bp0.dproduct(b1));
+					d2::point nbp1 = d2::point(bp1.dproduct(b0), bp1.dproduct(b1));
+					d2::point nbp2 = d2::point(bp2.dproduct(b0), bp2.dproduct(b1));
+					d2::point np3  = d2::point( p3.dproduct(b0),  p3.dproduct(b1));
+
+					/*
+					 * Determine intersection of line
+					 * (nbp0, nbp1), which is parallel to
+					 * b0, with line (nbp2, np3).
+					 */
+
+					/*
+					 * XXX: a stronger check would be
+					 * better here, e.g., involving the
+					 * ratio (np3[0] - nbp2[0]) / (np3[1] -
+					 * nbp2[1]).  Also, acceptance of these
+					 * cases is probably better than
+					 * rejection.
+					 */
+
+					if (np3[1] - nbp2[1] == 0)
+						continue;
+
+					d2::point intersection = d2::point(nbp2[0] 
+							+ (nbp0[1] - nbp2[1]) * (np3[0] - nbp2[0]) / (np3[1] - nbp2[1]),
+							npb0[1]);
+
+					/*
+					 * Map the intersection back to the world
+					 * basis.
+					 */
+
+					point iw = intersection[0] * b0 + intersection[1] * b1;
+
+					/*
+					 * Reject interesection points behind a
+					 * camera.
+					 */
+
+					if (_pt1.wc(iw)[2] >= 0 || _pt2.wc(iw)[2] >= 0)
+						continue;
+
+					/*
+					 * Refine space around the intersection point.
+					 */
+
+					space_traverse st = space_traverse::root();
+
+					if (!st.includes(iw))
+						continue;
+
+					for(;;) {
+
+						point frame_min[2] = { posinf(), posinf() },
+						      frame_max[2] = { neginf(), neginf() };
+
+						point p[2] = { st.get_min(), st.get_max() };
+
+						for (int ibit = 0; ibit < 2; ibit++)
+						for (int jbit = 0; jbit < 2; jbit++)
+						for (int kbit = 0; kbit < 2; kbit++) {
+							point pp = point(p[ibit][0], p[jbit][1], p[kbit][2]);
+
+							point ppp[2] = {_pt1.wp_unscaled(pp), _pt2.wp_unscaled(pp)};
+
+							for (int f = 0; f < 2; f++)
+							for (int d = 0; d < 3; d++) {
+								if (pp1[d] < frame_min[f][d])
+									frame_min[f][d] = ppp[f][d];
+								if (pp1[d] > frame_max[f][d])
+									frame_max[f][d] = ppp[f][d];
+							}
+						}
+
+						if (frame_min[0].lengthtosq(frame_max[0]) < 2
+						 && frame_min[1].lengthtosq(frame_max[1]) < 2)
+							break;
+
+						if (st.positive().includes(iw))
+							st = st.positive();
+						else if (st.negative().includes(iw))
+							st = st.negative();
+						else
+							assert(0);
+					}
+
+					/*
+					 * Associate refined space with a
+					 * spatial info structure.
+					 */
+
+					spatial_info_map[st.get_space()];
+				}
+			}
+
+			/*
+			 * This ordering should ensure that image f1 is cached.
+			 */
+
+			d2::image_rw::close(f2);
+			d2::image_rw::close(f1);
+		}
 	}
 
 
