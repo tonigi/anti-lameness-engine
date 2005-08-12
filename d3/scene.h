@@ -1850,13 +1850,20 @@ class scene {
 
 	/*
 	 * Class for information regarding spatial regions of interest.
+	 *
+	 * This class is configured for convenience in cases where sampling is
+	 * performed using an approximation of the fine:box:1,triangle:2 chain.
+	 * In this case, the *_1 variables would store the fine data and the
+	 * *_2 variables would store the coarse data.  Other uses are also
+	 * possible.
 	 */
 
 	class spatial_info {
 		/*
 		 * Map channel value --> weight.
 		 */
-		std::map<ale_real, ale_real> color_weights[3];
+		std::map<ale_real, ale_real> color_weights_1[3];
+		std::map<ale_real, ale_real> color_weights_2[3];
 
 		/*
 		 * Current color.
@@ -1866,12 +1873,42 @@ class scene {
 		/*
 		 * Map occupancy value --> weight.
 		 */
-		std::map<ale_real, ale_pos> occupancy_weights;
+		std::map<ale_real, ale_real> occupancy_weights_1;
+		std::map<ale_real, ale_real> occupancy_weights_2;
 
 		/*
 		 * Current occupancy value.
 		 */
-		ale_pos occupancy;
+		ale_real occupancy;
+
+		/*
+		 * Insert a weight into a list.
+		 */
+		void insert_weight(std::map<ale_real, ale_real> *m, ale_real v, ale_real w) {
+			if (m->count(v))
+				(*m)[v] += w;
+			else
+				(*m)[v] = w;
+		}
+
+		/*
+		 * Find the median of a weighted list.
+		 */
+		ale_real find_median(std::map<ale_real, ale_real> *m) {
+			std::map<ale_real, ale_real>::iterator a = m->begin(),
+				                               b = m->begin();
+
+			ale_accum weight_sum = 0;
+
+			while (a != m->end()) {
+				weight_sum += a.first;
+			}
+
+			while (b != m->end() && b.first < (void))
+				;
+
+			assert(0);
+		}
 
 	public:
 		/*
@@ -1883,39 +1920,61 @@ class scene {
 		}
 
 		/*
-		 * Accumulate color.
+		 * Accumulate color; primary data set.
 		 */
-		accumulate_color(pixel color, pixel weight) {
+		accumulate_color_1(pixel color, pixel weight) {
+			for (int k = 0; k < 3; k++)
+				insert_weight(color_weights_1[k], color[k], weight[k]);
 		}
 
 		/*
-		 * Accumulate occupancy.
+		 * Accumulate color; secondary data set.
 		 */
-		accumulate_occupancy(ale_real occupancy, ale_real weight) {
+		accumulate_color_2(pixel color, pixel weight) {
+			for (int k = 0; k < 3; k++)
+				insert_weight(color_weights_2[k], color[k], weight[k]);
 		}
 
 		/*
-		 * Update color (and clear accumulation structure).
+		 * Accumulate occupancy; primary data set.
 		 */
-		update_color() {
+		accumulate_occupancy_1(ale_real occupancy, ale_real weight) {
+			insert_weight(occupancy_weights_1, occupancy, weight);
 		}
 
 		/*
-		 * Update occupancy (and clear accumulation structure).
+		 * Accumulate occupancy; secondary data set.
 		 */
-		update_occupancy() {
+		accumulate_occupancy_2(ale_real occupancy, ale_real weight) {
+			insert_weight(occupancy_weights_2, occupancy, weight);
+		}
+
+		/*
+		 * Update color (and clear accumulation structures).
+		 */
+		void update_color() {
+			assert(0);
+		}
+
+		/*
+		 * Update occupancy (and clear accumulation structures).
+		 */
+		void update_occupancy() {
+			assert(0);
 		}
 
 		/*
 		 * Get current color.
 		 */
-		get_color() {
+		ale_real get_color() {
+			return color;
 		}
 
 		/*
 		 * Get current occupancy.
 		 */
-		get_occupancy() {
+		ale_real get_occupancy() {
+			return occupancy;
 		}
 	};
 
