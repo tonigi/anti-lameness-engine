@@ -1892,20 +1892,45 @@ class scene {
 		}
 
 		/*
-		 * Find the median of a weighted list.
+		 * Find the median of a weighted list.  Uses NaN for undefined.
 		 */
 		ale_real find_median(std::map<ale_real, ale_real> *m) {
 			std::map<ale_real, ale_real>::iterator a = m->begin(),
 				                               b = m->begin();
 
+			ale_real zero1 = 0;
+			ale_real zero2 = 0;
+			ale_real undefined = zero1 / zero2;
+
 			ale_accum weight_sum = 0;
 
 			while (a != m->end()) {
 				weight_sum += a.first;
+				a++;
 			}
 
-			while (b != m->end() && b.first < (void))
-				;
+			if (weight_sum == 0)
+				return undefined;
+
+			ale_accum midpoint = weight_sum / 2;
+
+			ale_accum weight_sum_2 = 0;
+
+			while (b != m->end() && weight_sum_2 < midpoint) {
+				weight_sum_2 += b.first;
+
+				if (weight_sum_2 > midpoint) {
+					return b.second;
+				} else if (weight_sum_2 == midpoint) {
+					ale_accum first_value = b.second;
+					b++;
+					assert (b != m->end());
+
+					return (first_value + b.second) / 2;
+				} 
+
+				b++;
+			}
 
 			assert(0);
 		}
@@ -1953,14 +1978,34 @@ class scene {
 		 * Update color (and clear accumulation structures).
 		 */
 		void update_color() {
-			assert(0);
+			for (int d = 0; d < 3; d++) {
+				ale_real c = find_median(&color_weights_1[d]);
+				if (isnan(c))
+					c = find_median(&color_weights_2[d]);
+				if (isnan(c))
+					c = 0;
+
+				color[d] = c;
+
+				color_weights_1[d].clear();
+				color_weights_2[d].clear();
+			}
 		}
 
 		/*
 		 * Update occupancy (and clear accumulation structures).
 		 */
 		void update_occupancy() {
-			assert(0);
+			ale_real o = find_median(&occupancy_weights_1);
+			if (isnan(o))
+				o = find_median(&occupancy_weights_2);
+			if (isnan(o))
+				o = 0.5;
+
+			occupancy = o;
+
+			occupancy_weights_1.clear();
+			occupancy_weights_2.clear();
 		}
 
 		/*
