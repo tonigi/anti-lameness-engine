@@ -1779,11 +1779,16 @@ class scene {
 
 	public:
 
-		static void root() {
-			current = root_space;
-			min = point(-M_PI/2, -M_PI/2, -M_PI/2);
-			max = point( M_PI/2,  M_PI/2,  M_PI/2);
-			next_split = 0;
+		static space_traverse root() {
+
+			space_traverse result;
+
+			result.current = root_space;
+			result.min = point(-M_PI/2, -M_PI/2, -M_PI/2);
+			result.max = point( M_PI/2,  M_PI/2,  M_PI/2);
+			result.next_split = 0;
+
+			return result;
 		}
 
 		space_traverse positive() {
@@ -1845,6 +1850,69 @@ class scene {
 
 		space *get_space() {
 			return current;
+		}
+
+		int get_next_split() {
+			return next_split;
+		}
+	};
+
+	/*
+	 * Class to iterate through subspaces based on proximity to a camera.
+	 */
+
+	class space_iterate {
+		std::stack<space_traverse> space_stack;
+		point camera_origin;
+	public:
+		space_iterate(pt _pt) {
+			camera_origin = _pt.cw(point(0, 0, 0));
+			space_stack.push(space_traverse::root());
+		}
+
+		int next() {
+			if (space_stack.empty())
+				return 0;
+
+			space_traverse st = space_stack.top();
+
+			int d = st.get_next_split();
+
+			ale_pos split_point = (st.get_max()[d] + st.get_min()[d]) / 2;
+
+			space *n = get_space()->negative;
+			space *p = get_space()->positive;
+
+			if (camera_origin[d] > split_point) {
+				if (n) {
+					space_stack.top() = st.negative();
+					if (p)
+						space_stack.push(st.positive());
+				} else {
+					if (p)
+						space_stack.top() = st.positive();
+					else
+						space_stack.pop();
+				}
+			} else {
+				if (p) {
+					space_stack.top() = st.positive();
+					if (n)
+						space_stack.push(st.negative());
+				} else {
+					if (n)
+						space_stack.top() = st.negative();
+					else
+						space_stack.pop();
+				}
+			}
+
+			return 1;
+		}
+
+		space_traverse *get() {
+			assert (!space_stack.empty());
+			return space_stack.top();
 		}
 	};
 
@@ -3024,11 +3092,22 @@ public:
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
+#if 1
+		/*
+		 * Use adaptive subspace data.
+		 */
+
+		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+						(int) floor(_pt.scaled_width()), 3);
+#else
+		/*
+		 * Use hierarchical triangle data.
+		 */
+
 		zbuf_elem *zbuf = init_zbuf(_pt);
 
 		zbuffer(_pt, zbuf, triangle_head[0]);
 		zbuffer(_pt, zbuf, triangle_head[1]);
-
 
 		zbuf_elem **zbsu = construct_zbuffers(bl);
 
@@ -3120,6 +3199,7 @@ public:
 
 			im->pix(i, j) = val / div;
 		}
+#endif
 
 		free_zbuffers(zbsu);
 
