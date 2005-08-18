@@ -3077,6 +3077,140 @@ public:
 		cl = nl;
 	}
 
+	/*
+	 * Run a single iteration of the spatial_info update cycle.
+	 */
+	static void spatial_info_update() {
+		/*
+		 * Iterate through each frame.
+		 */
+		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+			/*
+			 * Get transformation data.
+			 */
+			pt _pt = pt::of(f);
+
+			assert((int) floor(d2::align::of(n).scaled_height())
+			     == (int) floor(_pt.scaled_height()));
+			assert((int) floor(d2::align::of(n).scaled_width())
+			     == (int) floor(_pt.scaled_width()));
+
+			/*
+			 * Allocate an image for storing encounter probabilities.
+			 */
+			d2::image *weight = new image((int) floor(_pt.scaled_height()), 
+					(int) floor(_pt.scaled_width()), 3);
+
+			/*
+			 * 
+			 */
+
+			/*
+			 * Visit spatial_info nodes in order.
+			 */
+
+			space_iterate si(_pt);
+
+			do {
+
+				/*
+				 * XXX: What follows needs to be edited.
+				 */
+
+				assert(0);
+
+
+				space_traverse st = si.get();
+
+				/*
+				 * XXX: This could be more efficient, perhaps.
+				 */
+
+				if (spatial_info_map.count(st.get_space()) == 0)
+					continue;
+
+				spatial_info sn = spatial_info_map[st.get_space()];
+
+				/*
+				 * Get information on the subspace.
+				 */
+
+				pixel color = sn.get_color();
+				pixel occupancy = sn.get_occupancy();
+
+				/*
+				 * Determine the view-local bounding box for the
+				 * subspace.
+				 */
+
+				point min = d2::point(_pt.scaled_height(), _pt.scaled_width());
+				point max = d2::point(0, 0);
+
+				point wbb[2] = { st.get_min(), st.get_max() };
+
+				for (int x = 0; x < 2; x++)
+				for (int y = 0; y < 2; y++)
+				for (int z = 0; z < 2; z++) {
+					point p = _pt.wp_scaled(wbb[x][0], wbb[y][1], wbb[z][2]);
+
+					if (p[0] < min[0])
+						min[0] = p[0];
+					if (p[0] > max[0])
+						max[0] = p[0];
+					if (p[1] < min[1])
+						min[1] = p[1];
+					if (p[1] > max[1])
+						max[1] = p[1];
+				}
+
+				/*
+				 * Clip bounding box to image extents.
+				 */
+
+				if (min[0] < 0)
+					min[0] = 0;
+				if (min[1] < 0)
+					min[1] = 0;
+				if (max[0] > _pt.scaled_height())
+					max[0] = _pt.scaled_height();
+				if (max[1] > _pt.scaled_width())
+					max[1] = _pt.scaled_width();
+
+				/*
+				 * Iterate over pixels in the bounding box, finding
+				 * pixels that intersect the subspace.  XXX: assume
+				 * for now that all pixels in the bounding box
+				 * intersect the subspace.
+				 */
+
+				for (unsigned int i = (unsigned int) floor(min[0]); i < (unsigned int) ceil(max[0]); i++)
+				for (unsigned int j = (unsigned int) floor(min[1]); j < (unsigned int) ceil(max[1]); j++) {
+					/*
+					 * Determine the probability of encounter.
+					 */
+
+					pixel encounter = (pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
+
+					/*
+					 * Update images.
+					 */
+
+					weights->pix(i, j) += encounter;
+					im->pix(i, j)      += encounter * color;
+				}
+
+			} while (si.next());
+		}
+
+		/*
+		 * Update all spatial_info structures.
+		 */
+		for (map<space *,spatial_info>::iterator i = spatial_info_map.begin(); i < spatial_info_map.end(); i++) {
+			i->second.update_color();
+			i->second.update_occupancy();
+		}
+	}
+
 	static const d2::image *view(pt _pt, int n = -1) {
 		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
