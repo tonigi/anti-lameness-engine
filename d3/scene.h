@@ -3189,13 +3189,14 @@ public:
 
 					pixel encounter = (pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
 					pixel colordiff = color - im->get_pixel(i, j);
+					ale_real exp_scale = 256 * 256;
 
 					/*
 					 * Update subspace.
 					 */
 
 					sn->accumulate_color_1(color, encounter);
-					sn->accumulate_occupancy_1(pexp(-colordiff * colordiff)), encounter);
+					sn->accumulate_occupancy_1(pexp(-colordiff * colordiff * exp_scale)), encounter);
 
 					weights->pix(i, j) += encounter;
 				}
