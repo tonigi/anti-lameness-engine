@@ -3096,9 +3096,14 @@ public:
 			     == (int) floor(_pt.scaled_width()));
 
 			/*
+			 * Get color data for the frames.
+			 */
+			d2::image *im = d2::image_rw::open(f);
+
+			/*
 			 * Allocate an image for storing encounter probabilities.
 			 */
-			d2::image *weight = new image((int) floor(_pt.scaled_height()), 
+			d2::image *weights = new image((int) floor(_pt.scaled_height()), 
 					(int) floor(_pt.scaled_width()), 3);
 
 			/*
@@ -3113,13 +3118,6 @@ public:
 
 			do {
 
-				/*
-				 * XXX: What follows needs to be edited.
-				 */
-
-				assert(0);
-
-
 				space_traverse st = si.get();
 
 				/*
@@ -3129,14 +3127,14 @@ public:
 				if (spatial_info_map.count(st.get_space()) == 0)
 					continue;
 
-				spatial_info sn = spatial_info_map[st.get_space()];
+				spatial_info *sn = &spatial_info_map[st.get_space()];
 
 				/*
 				 * Get information on the subspace.
 				 */
 
-				pixel color = sn.get_color();
-				pixel occupancy = sn.get_occupancy();
+				pixel color = sn->get_color();
+				pixel occupancy = sn->get_occupancy();
 
 				/*
 				 * Determine the view-local bounding box for the
@@ -3177,10 +3175,10 @@ public:
 					max[1] = _pt.scaled_width();
 
 				/*
-				 * Iterate over pixels in the bounding box, finding
-				 * pixels that intersect the subspace.  XXX: assume
-				 * for now that all pixels in the bounding box
-				 * intersect the subspace.
+				 * Iterate over pixels in the bounding box,
+				 * adding new data to the subspace.  XXX:
+				 * assume for now that all pixels in the
+				 * bounding box intersect the subspace.
 				 */
 
 				for (unsigned int i = (unsigned int) floor(min[0]); i < (unsigned int) ceil(max[0]); i++)
@@ -3190,16 +3188,23 @@ public:
 					 */
 
 					pixel encounter = (pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
+					pixel colordiff = color - im->get_pixel(i, j);
 
 					/*
-					 * Update images.
+					 * Update subspace.
 					 */
 
+					sn->accumulate_color_1(color, encounter);
+					sn->accumulate_occupancy_1(pexp(-colordiff * colordiff)), encounter);
+
 					weights->pix(i, j) += encounter;
-					im->pix(i, j)      += encounter * color;
 				}
 
 			} while (si.next());
+
+			d2::image_rw::close(f);
+
+			delete weights;
 		}
 
 		/*

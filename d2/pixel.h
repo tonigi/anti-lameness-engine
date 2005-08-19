@@ -227,4 +227,11 @@ inline pixel ppow(pixel p, float d) {
 			pow((double) p[2], d));
 }
 
+inline pixel pexp(pixel p) {
+	return pixel(
+			exp((double) p[0]),
+			exp((double) p[1]),
+			exp((double) p[2]));
+}
+
 #endif
