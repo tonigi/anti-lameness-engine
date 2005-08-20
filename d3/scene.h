@@ -3217,6 +3217,9 @@ public:
 		}
 	}
 
+	/*
+	 * Generate an image from a specified view.
+	 */
 	static const d2::image *view(pt _pt, int n = -1) {
 		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
@@ -3467,6 +3470,113 @@ public:
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
+#if 1
+		/*
+		 * Use adaptive subspace data.
+		 */
+
+		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+						(int) floor(_pt.scaled_width()), 3);
+
+		/*
+		 * Iterate through subspaces.
+		 */
+
+		space_iterate si(_pt);
+
+		do {
+			space_traverse st = si.get();
+
+			/*
+			 * XXX: This could be more efficient, perhaps.
+			 */
+
+			if (spatial_info_map.count(st.get_space()) == 0)
+				continue;
+
+			spatial_info sn = spatial_info_map[st.get_space()];
+
+			/*
+			 * Get information on the subspace.
+			 */
+
+			pixel color = sn.get_color();
+			pixel occupancy = sn.get_occupancy();
+
+			/*
+			 * Determine the view-local bounding box for the
+			 * subspace.
+			 */
+
+			point min = d2::point(_pt.scaled_height(), _pt.scaled_width());
+			point max = d2::point(0, 0);
+
+			point wbb[2] = { st.get_min(), st.get_max() };
+
+			for (int x = 0; x < 2; x++)
+			for (int y = 0; y < 2; y++)
+			for (int z = 0; z < 2; z++) {
+				point p = _pt.wp_scaled(wbb[x][0], wbb[y][1], wbb[z][2]);
+
+				if (p[0] < min[0])
+					min[0] = p[0];
+				if (p[0] > max[0])
+					max[0] = p[0];
+				if (p[1] < min[1])
+					min[1] = p[1];
+				if (p[1] > max[1])
+					max[1] = p[1];
+			}
+
+			/*
+			 * Clip bounding box to image extents.
+			 */
+
+			if (min[0] < 0)
+				min[0] = 0;
+			if (min[1] < 0)
+				min[1] = 0;
+			if (max[0] > _pt.scaled_height())
+				max[0] = _pt.scaled_height();
+			if (max[1] > _pt.scaled_width())
+				max[1] = _pt.scaled_width();
+
+			/*
+			 * Iterate over pixels in the bounding box, finding
+			 * pixels that intersect the subspace.  XXX: assume
+			 * for now that all pixels in the bounding box
+			 * intersect the subspace.
+			 */
+
+			for (unsigned int i = (unsigned int) floor(min[0]); i < (unsigned int) ceil(max[0]); i++)
+			for (unsigned int j = (unsigned int) floor(min[1]); j < (unsigned int) ceil(max[1]); j++) {
+				/*
+				 * Determine the probability of encounter.
+				 */
+
+				pixel encounter = (pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
+
+				/*
+				 * Update images.
+				 */
+
+				weights->pix(i, j) += encounter;
+				im->pix(i, j)      += encounter * _pt.wp_scaled(st.get_min())[2];
+			}
+
+		} while (si.next());
+
+		for (unsigned int i = 0; i < im->height(); i++)
+		for (unsigned int j = 0; j < im->width();  j++) {
+			im->pix(i, j) /= weights->pix(i, j);
+		}
+
+#else
+
+		/*
+		 * Use triangle model data.
+		 */
+
 		zbuf_elem *zbuf = init_zbuf(_pt);
 
 		zbuffer(_pt, zbuf, triangle_head[0]);
@@ -3504,6 +3614,8 @@ public:
 		}
 
 		delete[] zbuf;
+
+#endif
 
 		return im;
 	}
@@ -3872,6 +3984,20 @@ public:
 			std::map<const char *, pt> *d3_output_pt,
 			d2::exposure *exp_out, int inc_bit) {
 
+#if 1
+		/*
+		 * Subspace model
+		 */
+
+		for (int i = 0; i < 10; i++)
+			spatial_info_update();
+
+#else
+
+		/*
+		 * Triangle model
+		 */
+
 		int improved = 1;
 		int count = 0;
 
@@ -4072,6 +4198,7 @@ public:
 			fprintf(stderr, "end adjustment[%u] \n", time(NULL));
 		}
 
+#endif
 		write_model_file();
 	}
 
