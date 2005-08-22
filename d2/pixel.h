@@ -73,6 +73,10 @@ public:
 		return pixel(x[0] - p[0], x[1] - p[1], x[2] - p[2]);
 	}
 
+	pixel operator-() const {
+		return pixel(-x[0], -x[1], -x[2]);
+	}
+
 	pixel operator/(pixel p) const {
 		return pixel(x[0] / p[0], x[1] / p[1], x[2] / p[2]);
 	}

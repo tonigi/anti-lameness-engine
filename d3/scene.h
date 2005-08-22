@@ -1766,7 +1766,7 @@ class scene {
 	/*
 	 * Space root pointer
 	 */
-	space *root_space;
+	static space *root_space;
 
 	/*
 	 * Space traversal and navigation class.
@@ -1798,12 +1798,12 @@ class scene {
 			
 			space_traverse result;
 
-			result->current = current->positive;
-			result->min = min;
-			result->max = max;
-			result->next_split = (next_split + 1) % 3;
+			result.current = current->positive;
+			result.min = min;
+			result.max = max;
+			result.next_split = (next_split + 1) % 3;
 
-			result->min[next_split] = (min[next_split] + max[next_split]) / 2;
+			result.min[next_split] = (min[next_split] + max[next_split]) / 2;
 
 			return result;
 		}
@@ -1815,12 +1815,12 @@ class scene {
 			
 			space_traverse result;
 
-			result->current = current->negative;
-			result->min = min;
-			result->max = max;
-			result->next_split = (next_split + 1) % 3;
+			result.current = current->negative;
+			result.min = min;
+			result.max = max;
+			result.next_split = (next_split + 1) % 3;
 
-			result->max[next_split] = (min[next_split] + max[next_split]) / 2;
+			result.max[next_split] = (min[next_split] + max[next_split]) / 2;
 
 			return result;
 		}
@@ -1880,8 +1880,8 @@ class scene {
 
 			ale_pos split_point = (st.get_max()[d] + st.get_min()[d]) / 2;
 
-			space *n = get_space()->negative;
-			space *p = get_space()->positive;
+			space *n = st.get_space()->negative;
+			space *p = st.get_space()->positive;
 
 			if (camera_origin[d] > split_point) {
 				if (n) {
@@ -1910,7 +1910,7 @@ class scene {
 			return 1;
 		}
 
-		space_traverse *get() {
+		space_traverse get() {
 			assert (!space_stack.empty());
 			return space_stack.top();
 		}
@@ -1936,7 +1936,7 @@ class scene {
 		/*
 		 * Current color.
 		 */
-		pixel color;
+		d2::pixel color;
 
 		/*
 		 * Map occupancy value --> weight.
@@ -1973,7 +1973,7 @@ class scene {
 			ale_accum weight_sum = 0;
 
 			while (a != m->end()) {
-				weight_sum += a.first;
+				weight_sum += a->first;
 				a++;
 			}
 
@@ -1985,22 +1985,24 @@ class scene {
 			ale_accum weight_sum_2 = 0;
 
 			while (b != m->end() && weight_sum_2 < midpoint) {
-				weight_sum_2 += b.first;
+				weight_sum_2 += b->first;
 
 				if (weight_sum_2 > midpoint) {
-					return b.second;
+					return b->second;
 				} else if (weight_sum_2 == midpoint) {
-					ale_accum first_value = b.second;
+					ale_accum first_value = b->second;
 					b++;
 					assert (b != m->end());
 
-					return (first_value + b.second) / 2;
+					return (first_value + b->second) / 2;
 				} 
 
 				b++;
 			}
 
 			assert(0);
+
+			return undefined;
 		}
 
 	public:
@@ -2008,38 +2010,38 @@ class scene {
 		 * Constructor.
 		 */
 		spatial_info() {
-			color = pixel::zero();
+			color = d2::pixel::zero();
 			occupancy = 0.5;
 		}
 
 		/*
 		 * Accumulate color; primary data set.
 		 */
-		accumulate_color_1(pixel color, pixel weight) {
+		void accumulate_color_1(d2::pixel color, d2::pixel weight) {
 			for (int k = 0; k < 3; k++)
-				insert_weight(color_weights_1[k], color[k], weight[k]);
+				insert_weight(&color_weights_1[k], color[k], weight[k]);
 		}
 
 		/*
 		 * Accumulate color; secondary data set.
 		 */
-		accumulate_color_2(pixel color, pixel weight) {
+		void accumulate_color_2(d2::pixel color, d2::pixel weight) {
 			for (int k = 0; k < 3; k++)
-				insert_weight(color_weights_2[k], color[k], weight[k]);
+				insert_weight(&color_weights_2[k], color[k], weight[k]);
 		}
 
 		/*
 		 * Accumulate occupancy; primary data set.
 		 */
-		accumulate_occupancy_1(ale_real occupancy, ale_real weight) {
-			insert_weight(occupancy_weights_1, occupancy, weight);
+		void accumulate_occupancy_1(ale_real occupancy, ale_real weight) {
+			insert_weight(&occupancy_weights_1, occupancy, weight);
 		}
 
 		/*
 		 * Accumulate occupancy; secondary data set.
 		 */
-		accumulate_occupancy_2(ale_real occupancy, ale_real weight) {
-			insert_weight(occupancy_weights_2, occupancy, weight);
+		void accumulate_occupancy_2(ale_real occupancy, ale_real weight) {
+			insert_weight(&occupancy_weights_2, occupancy, weight);
 		}
 
 		/*
@@ -2079,7 +2081,7 @@ class scene {
 		/*
 		 * Get current color.
 		 */
-		ale_real get_color() {
+		d2::pixel get_color() {
 			return color;
 		}
 
@@ -2105,19 +2107,21 @@ class scene {
 	 * of depth.
 	 */
 
-	std::map<struct space *, spatial_info> spatial_info_map;
+	static std::map<struct space *, spatial_info> spatial_info_map;
 
 	/*
 	 * Use a pair of trees to store the triangles.
 	 */
 	static struct triangle *triangle_head[2];
 
+#if 0
 	/*
 	 * Map view B and pixel A(i, j) within view A to a set of depths where
 	 * A(i, j) matches a point in image B.
 	 */
 	std::set<ale_pos> depth_match_set(int B, int A, int i, int j) {
 	}
+#endif
 
 	/*
 	 * Read the model file.
@@ -3088,7 +3092,7 @@ public:
 			/*
 			 * Get transformation data.
 			 */
-			pt _pt = pt::of(f);
+			pt _pt = align::projective(f);
 
 			assert((int) floor(d2::align::of(n).scaled_height())
 			     == (int) floor(_pt.scaled_height()));
@@ -3098,12 +3102,12 @@ public:
 			/*
 			 * Get color data for the frames.
 			 */
-			d2::image *im = d2::image_rw::open(f);
+			const d2::image *im = d2::image_rw::open(f);
 
 			/*
 			 * Allocate an image for storing encounter probabilities.
 			 */
-			d2::image *weights = new image((int) floor(_pt.scaled_height()), 
+			d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()), 
 					(int) floor(_pt.scaled_width()), 3);
 
 			/*
@@ -3133,8 +3137,8 @@ public:
 				 * Get information on the subspace.
 				 */
 
-				pixel color = sn->get_color();
-				pixel occupancy = sn->get_occupancy();
+				d2::pixel color = sn->get_color();
+				ale_real occupancy = sn->get_occupancy();
 
 				/*
 				 * Determine the view-local bounding box for the
@@ -3149,7 +3153,7 @@ public:
 				for (int x = 0; x < 2; x++)
 				for (int y = 0; y < 2; y++)
 				for (int z = 0; z < 2; z++) {
-					point p = _pt.wp_scaled(wbb[x][0], wbb[y][1], wbb[z][2]);
+					point p = _pt.wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
 
 					if (p[0] < min[0])
 						min[0] = p[0];
@@ -3187,8 +3191,8 @@ public:
 					 * Determine the probability of encounter.
 					 */
 
-					pixel encounter = (pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
-					pixel colordiff = color - im->get_pixel(i, j);
+					d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
+					d2::pixel colordiff = color - im->get_pixel(i, j);
 					ale_real exp_scale = 256 * 256;
 
 					/*
@@ -3196,7 +3200,9 @@ public:
 					 */
 
 					sn->accumulate_color_1(color, encounter);
-					sn->accumulate_occupancy_1(pexp(-colordiff * colordiff * exp_scale)), encounter);
+					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
+					for (int k = 0; k < 3; k++)
+						sn->accumulate_occupancy_1(channel_occ[k], encounter[k]);
 
 					weights->pix(i, j) += encounter;
 				}
@@ -3211,7 +3217,7 @@ public:
 		/*
 		 * Update all spatial_info structures.
 		 */
-		for (map<space *,spatial_info>::iterator i = spatial_info_map.begin(); i < spatial_info_map.end(); i++) {
+		for (std::map<space *,spatial_info>::iterator i = spatial_info_map.begin(); i != spatial_info_map.end(); i++) {
 			i->second.update_color();
 			i->second.update_occupancy();
 		}
@@ -3265,8 +3271,8 @@ public:
 			 * Get information on the subspace.
 			 */
 
-			pixel color = sn.get_color();
-			pixel occupancy = sn.get_occupancy();
+			d2::pixel color = sn.get_color();
+			ale_real occupancy = sn.get_occupancy();
 
 			/*
 			 * Determine the view-local bounding box for the
@@ -3281,7 +3287,7 @@ public:
 			for (int x = 0; x < 2; x++)
 			for (int y = 0; y < 2; y++)
 			for (int z = 0; z < 2; z++) {
-				point p = _pt.wp_scaled(wbb[x][0], wbb[y][1], wbb[z][2]);
+				point p = _pt.wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
 
 				if (p[0] < min[0])
 					min[0] = p[0];
@@ -3319,7 +3325,7 @@ public:
 				 * Determine the probability of encounter.
 				 */
 
-				pixel encounter = (pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
+				d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
 
 				/*
 				 * Update images.
@@ -3500,8 +3506,8 @@ public:
 			 * Get information on the subspace.
 			 */
 
-			pixel color = sn.get_color();
-			pixel occupancy = sn.get_occupancy();
+			d2::pixel color = sn.get_color();
+			ale_real occupancy = sn.get_occupancy();
 
 			/*
 			 * Determine the view-local bounding box for the
@@ -3516,7 +3522,7 @@ public:
 			for (int x = 0; x < 2; x++)
 			for (int y = 0; y < 2; y++)
 			for (int z = 0; z < 2; z++) {
-				point p = _pt.wp_scaled(wbb[x][0], wbb[y][1], wbb[z][2]);
+				point p = _pt.wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
 
 				if (p[0] < min[0])
 					min[0] = p[0];
@@ -3554,7 +3560,7 @@ public:
 				 * Determine the probability of encounter.
 				 */
 
-				pixel encounter = (pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
+				d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
 
 				/*
 				 * Update images.
@@ -3699,7 +3705,7 @@ public:
 	 * Initialize space and identify regions of interest for the adaptive
 	 * subspace model.
 	 */
-	void make_space() {
+	static void make_space() {
 
 		/*
 		 * Initialize root space.
@@ -3712,13 +3718,13 @@ public:
 		 * of frames.
 		 */
 
-		for (int f1 = 0; f1 < d2::image_rw::count(); f1++)
-		for (int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+		for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++)
+		for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
 			if (f1 == f2)
 				continue;
 
-			d2::image *if1 = d2::image_rw::open(f1);
-			d2::image *if2 = d2::image_rw::open(f2);
+			const d2::image *if1 = d2::image_rw::open(f1);
+			const d2::image *if2 = d2::image_rw::open(f2);
 
 			pt _pt1 = align::projective(f1);
 			pt _pt2 = align::projective(f2);
@@ -3727,14 +3733,14 @@ public:
 			 * Iterate over all points in the primary frame.
 			 */
 
-			for (int i = 0; i < if1->height(); i++)
-			for (int j = 0; j < if1->width();  j++) {
+			for (unsigned int i = 0; i < if1->height(); i++)
+			for (unsigned int j = 0; j < if1->width();  j++) {
 
 				/*
 				 * Get the pixel color in the primary frame
 				 */
 
-				pixel color_primary = if1->get_pixel(i, j);
+				d2::pixel color_primary = if1->get_pixel(i, j);
 
 				/*
 				 * Map two depths to the secondary frame.
@@ -3755,7 +3761,7 @@ public:
 				ale_pos diff_j = p2[1] - p1[1];
 				ale_pos slope = diff_j / diff_i;
 
-				if (is_nan(slope))
+				if (isnan(slope))
 					continue;
 
 				ale_pos top_intersect = p1[1] - p1[0] * slope;
@@ -3783,7 +3789,7 @@ public:
 
 				ale_pos incr_i, incr_j;
 
-				if (fabs(diff_i) > fabs(diff_j) {
+				if (fabs(diff_i) > fabs(diff_j)) {
 					incr_i = 1;
 					incr_j = slope;
 				} else if (slope > 0) {
@@ -3814,7 +3820,7 @@ public:
 
 					for (int iii = 0; iii < 2; iii++)
 					for (int jjj = 0; jjj < 2; jjj++) {
-						pixel p = if2->get_pixel(floor(ii) + iii, floor(jj) + jjj);
+						d2::pixel p = if2->get_pixel((int) floor(ii) + iii, (int) floor(jj) + jjj);
 
 						for (int k = 0; k < 3; k++) {
 							int bitmask = (int) pow(2, k);
@@ -3847,7 +3853,7 @@ public:
 
 					point b0  = (bp1 - bp0).normalize();
 					point b1n = bp2 - bp0;
-					point b1  = (b1n - b1n.dproduct(b0)).normalize();
+					point b1  = (b1n - b1n.dproduct(b0) * b0).normalize();
 
 					/*
 					 * Select a fourth point to define a second line.
@@ -3884,7 +3890,7 @@ public:
 
 					d2::point intersection = d2::point(nbp2[0] 
 							+ (nbp0[1] - nbp2[1]) * (np3[0] - nbp2[0]) / (np3[1] - nbp2[1]),
-							npb0[1]);
+							nbp0[1]);
 
 					/*
 					 * Map the intersection back to the world
@@ -3912,8 +3918,8 @@ public:
 
 					for(;;) {
 
-						point frame_min[2] = { posinf(), posinf() },
-						      frame_max[2] = { neginf(), neginf() };
+						point frame_min[2] = { point::posinf(), point::posinf() },
+						      frame_max[2] = { point::neginf(), point::neginf() };
 
 						point p[2] = { st.get_min(), st.get_max() };
 
@@ -3926,9 +3932,9 @@ public:
 
 							for (int f = 0; f < 2; f++)
 							for (int d = 0; d < 3; d++) {
-								if (pp1[d] < frame_min[f][d])
+								if (ppp[f][d] < frame_min[f][d])
 									frame_min[f][d] = ppp[f][d];
-								if (pp1[d] > frame_max[f][d])
+								if (ppp[f][d] > frame_max[f][d])
 									frame_max[f][d] = ppp[f][d];
 							}
 						}

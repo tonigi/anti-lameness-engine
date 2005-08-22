@@ -26,6 +26,7 @@
 #include <set>
 #include <iterator>
 #include <vector>
+#include <stack>
 #include <algorithm>
 #include "time.h"
 #include "d2.h"
