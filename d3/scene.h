@@ -1791,6 +1791,17 @@ class scene {
 			return result;
 		}
 
+		int precision_wall() {
+			ale_pos split_point = (min[next_split] + max[next_split]) / 2;
+			
+			if (split_point == min[next_split] || split_point == max[next_split]
+			 || tan(split_point) == tan(min[next_split])
+			 || tan(split_point) == tan(max[next_split]))
+				return 1;
+
+			return 0;
+		}
+
 		space_traverse positive() {
 
 			if (current->positive == NULL)
@@ -3094,9 +3105,9 @@ public:
 			 */
 			pt _pt = align::projective(f);
 
-			assert((int) floor(d2::align::of(n).scaled_height())
+			assert((int) floor(d2::align::of(f).scaled_height())
 			     == (int) floor(_pt.scaled_height()));
-			assert((int) floor(d2::align::of(n).scaled_width())
+			assert((int) floor(d2::align::of(f).scaled_width())
 			     == (int) floor(_pt.scaled_width()));
 
 			/*
@@ -3707,6 +3718,8 @@ public:
 	 */
 	static void make_space() {
 
+		fprintf(stderr, "Start making space.\n");
+
 		/*
 		 * Initialize root space.
 		 */
@@ -3723,6 +3736,9 @@ public:
 			if (f1 == f2)
 				continue;
 
+
+			fprintf(stderr, "Modify space for frames %u, %u. [%u]\n", f1, f2, time(NULL));
+
 			const d2::image *if1 = d2::image_rw::open(f1);
 			const d2::image *if2 = d2::image_rw::open(f2);
 
@@ -3735,6 +3751,8 @@ public:
 
 			for (unsigned int i = 0; i < if1->height(); i++)
 			for (unsigned int j = 0; j < if1->width();  j++) {
+
+				// fprintf(stderr, "Modify space for f1 point (%u, %u). [%u]\n", i, j, time(NULL));
 
 				/*
 				 * Get the pixel color in the primary frame
@@ -3916,6 +3934,8 @@ public:
 					if (!st.includes(iw))
 						continue;
 
+					// fprintf(stderr, "Entering refinement loop [%u]\n", time(NULL));
+
 					for(;;) {
 
 						point frame_min[2] = { point::posinf(), point::posinf() },
@@ -3939,8 +3959,22 @@ public:
 							}
 						}
 
+#if 0
+						if (i == 11 && j == 302)
+							fprintf(stderr, "min, max = [(%f, %f, %f), (%f, %f), (%f, %f)], [(%f, %f, %f), (%f, %f), (%f, %f)] [%u]\n", 
+								p[0][0], p[0][1], p[0][2],
+								frame_min[0][0], frame_min[0][1],
+								frame_min[1][0], frame_min[1][1],
+								p[1][0], p[1][1], p[1][2],
+								frame_max[0][0], frame_max[0][1],
+								frame_max[1][0], frame_max[1][1], time(NULL));
+#endif
+
 						if (frame_min[0].lengthtosq(frame_max[0]) < 2
 						 && frame_min[1].lengthtosq(frame_max[1]) < 2)
+							break;
+
+						if (st.precision_wall())
 							break;
 
 						if (st.positive().includes(iw))
@@ -3950,6 +3984,8 @@ public:
 						else
 							assert(0);
 					}
+
+					// fprintf(stderr, "Done with refinement loop [%u]\n", time(NULL));
 
 					/*
 					 * Associate refined space with a
