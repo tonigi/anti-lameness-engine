@@ -1761,6 +1761,11 @@ class scene {
 	struct space {
 		struct space *positive;
 		struct space *negative;
+
+		space() {
+			positive = NULL;
+			negative = NULL;
+		}
 	};
 
 	/*
@@ -1788,6 +1793,8 @@ class scene {
 			result.max = point( M_PI/2,  M_PI/2,  M_PI/2);
 			result.next_split = 0;
 
+			assert(result.current);
+
 			return result;
 		}
 
@@ -1804,6 +1811,8 @@ class scene {
 
 		space_traverse positive() {
 
+			assert(current);
+
 			if (current->positive == NULL)
 				current->positive = new space;
 			
@@ -1816,10 +1825,14 @@ class scene {
 
 			result.min[next_split] = (min[next_split] + max[next_split]) / 2;
 
+			assert(result.current);
+
 			return result;
 		}
 
 		space_traverse negative() {
+
+			assert(current);
 
 			if (current->negative == NULL)
 				current->negative = new space;
@@ -1832,6 +1845,8 @@ class scene {
 			result.next_split = (next_split + 1) % 3;
 
 			result.max[next_split] = (min[next_split] + max[next_split]) / 2;
+
+			assert(result.current);
 
 			return result;
 		}
@@ -1860,6 +1875,7 @@ class scene {
 		}
 
 		space *get_space() {
+			assert(current);
 			return current;
 		}
 
@@ -3736,9 +3752,6 @@ public:
 			if (f1 == f2)
 				continue;
 
-
-			fprintf(stderr, "Modify space for frames %u, %u. [%u]\n", f1, f2, time(NULL));
-
 			const d2::image *if1 = d2::image_rw::open(f1);
 			const d2::image *if2 = d2::image_rw::open(f2);
 
@@ -3751,8 +3764,6 @@ public:
 
 			for (unsigned int i = 0; i < if1->height(); i++)
 			for (unsigned int j = 0; j < if1->width();  j++) {
-
-				// fprintf(stderr, "Modify space for f1 point (%u, %u). [%u]\n", i, j, time(NULL));
 
 				/*
 				 * Get the pixel color in the primary frame
@@ -3934,8 +3945,6 @@ public:
 					if (!st.includes(iw))
 						continue;
 
-					// fprintf(stderr, "Entering refinement loop [%u]\n", time(NULL));
-
 					for(;;) {
 
 						point frame_min[2] = { point::posinf(), point::posinf() },
@@ -3960,7 +3969,7 @@ public:
 						}
 
 #if 0
-						if (i == 11 && j == 302)
+						if (i == 0 && j == 0)
 							fprintf(stderr, "min, max = [(%f, %f, %f), (%f, %f), (%f, %f)], [(%f, %f, %f), (%f, %f), (%f, %f)] [%u]\n", 
 								p[0][0], p[0][1], p[0][2],
 								frame_min[0][0], frame_min[0][1],
@@ -3981,11 +3990,13 @@ public:
 							st = st.positive();
 						else if (st.negative().includes(iw))
 							st = st.negative();
-						else
+						else {
+							fprintf(stderr, "failed iw = (%f, %f, %f)\n", 
+									iw[0], iw[1], iw[2]);
 							assert(0);
-					}
+						}
 
-					// fprintf(stderr, "Done with refinement loop [%u]\n", time(NULL));
+					}
 
 					/*
 					 * Associate refined space with a

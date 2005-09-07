@@ -377,7 +377,7 @@ class cpf {
 		
 		point result = calculate_centroid(points_copy, n);
 
-		delete points_copy;
+		delete[] points_copy;
 
 		return result;
 	}
