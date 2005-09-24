@@ -1934,7 +1934,7 @@ class scene {
 				}
 			}
 
-			return 1;
+			return (!space_stack.empty());
 		}
 
 		space_traverse get() {
@@ -3121,21 +3121,25 @@ public:
 			 */
 			pt _pt = align::projective(f);
 
-			assert((int) floor(d2::align::of(f).scaled_height())
-			     == (int) floor(_pt.scaled_height()));
-			assert((int) floor(d2::align::of(f).scaled_width())
-			     == (int) floor(_pt.scaled_width()));
+			assert((int) floor(d2::align::of(f).unscaled_height())
+			     == (int) floor(_pt.unscaled_height()));
+			assert((int) floor(d2::align::of(f).unscaled_width())
+			     == (int) floor(_pt.unscaled_width()));
 
 			/*
 			 * Get color data for the frames.
 			 */
 			const d2::image *im = d2::image_rw::open(f);
 
+			assert(im);
+
 			/*
 			 * Allocate an image for storing encounter probabilities.
 			 */
-			d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()), 
-					(int) floor(_pt.scaled_width()), 3);
+			d2::image *weights = new d2::image_ale_real((int) floor(_pt.unscaled_height()), 
+					(int) floor(_pt.unscaled_width()), 3);
+
+			assert(weights);
 
 			/*
 			 * 
@@ -3172,7 +3176,7 @@ public:
 				 * subspace.
 				 */
 
-				point min = d2::point(_pt.scaled_height(), _pt.scaled_width());
+				point min = d2::point(_pt.unscaled_height(), _pt.unscaled_width());
 				point max = d2::point(0, 0);
 
 				point wbb[2] = { st.get_min(), st.get_max() };
@@ -3180,7 +3184,7 @@ public:
 				for (int x = 0; x < 2; x++)
 				for (int y = 0; y < 2; y++)
 				for (int z = 0; z < 2; z++) {
-					point p = _pt.wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
+					point p = _pt.wp_unscaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
 
 					if (p[0] < min[0])
 						min[0] = p[0];
@@ -3200,10 +3204,10 @@ public:
 					min[0] = 0;
 				if (min[1] < 0)
 					min[1] = 0;
-				if (max[0] > _pt.scaled_height())
-					max[0] = _pt.scaled_height();
-				if (max[1] > _pt.scaled_width())
-					max[1] = _pt.scaled_width();
+				if (max[0] > _pt.unscaled_height())
+					max[0] = _pt.unscaled_height();
+				if (max[1] > _pt.unscaled_width())
+					max[1] = _pt.unscaled_width();
 
 				/*
 				 * Iterate over pixels in the bounding box,
