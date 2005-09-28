@@ -3219,19 +3219,27 @@ public:
 
 				for (unsigned int i = (unsigned int) floor(min[0]); i < (unsigned int) ceil(max[0]); i++)
 				for (unsigned int j = (unsigned int) floor(min[1]); j < (unsigned int) ceil(max[1]); j++) {
+
+					d2::pixel pcolor = im->get_pixel(i, j);
+					d2::pixel colordiff = color - pcolor;
+
 					/*
 					 * Determine the probability of encounter.
 					 */
 
 					d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
-					d2::pixel colordiff = color - im->get_pixel(i, j);
+
+					/*
+					 * Scale for encounter probability exponent.
+					 */
+
 					ale_real exp_scale = 256 * 256;
 
 					/*
 					 * Update subspace.
 					 */
 
-					sn->accumulate_color_1(color, encounter);
+					sn->accumulate_color_1(pcolor, encounter);
 					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
 					for (int k = 0; k < 3; k++)
 						sn->accumulate_occupancy_1(channel_occ[k], encounter[k]);
