@@ -302,8 +302,22 @@ public:
 	 * Write an image to a file
 	 */
 	static void write_image(const char *filename, const image *im, exposure *exp = output_exposure, int rezero = 0, int exp_scale_override = 0) {
-#ifdef USE_MAGICK
+		/*
+		 * Handle ALE-specific magical filenames.
+		 */
+
+		if (!strcmp(filename, "dump:")) {
+			fprintf(stderr, "Image dump: ");
+			for (unsigned int i = 0; i < im->height(); i++)
+			for (unsigned int j = 0; j < im->width(); j++) {
+				pixel p = im->pix(i, j);
+				fprintf(stderr, "(%d, %d): [%f %f %f] ", i, j, p[0], p[1], p[2]);
+			}
+			fprintf(stderr, "\n");
+		}
 		
+#ifdef USE_MAGICK
+
 		/*
 		 * Patterned after http://www.imagemagick.org/www/api.html
 		 * and http://www.imagemagick.org/www/smile.c
