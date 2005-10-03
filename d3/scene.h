@@ -33,7 +33,7 @@
  * Setting this to a value larger than one can be useful for debugging.
  */
 
-#define VIEW_ANGLE_MULTIPLIER 1
+#define VIEW_ANGLE_MULTIPLIER 2
 
 class scene {
 
@@ -3340,6 +3340,10 @@ public:
 
 			st.get_view_local_bb(_pt, bb);
 
+			point min = bb[0];
+			point max = bb[1];
+
+
 			/*
 			 * Iterate over pixels in the bounding box, finding
 			 * pixels that intersect the subspace.  XXX: assume
@@ -4043,6 +4047,11 @@ public:
 
 					st.get_view_local_bb(_pt1, bb_pt1);
 					st.get_view_local_bb(_pt2, bb_pt2);
+
+					if (!(bb_pt1[0][0] <= i)) {
+						fprintf(stderr, "BB failure: i == %d, j == %d, ii == %d, jj = %d, bb_pt1[0][0] == %f\n",
+								i, j, ii, jj, bb_pt1[0][0]);
+					}
 
 					assert (bb_pt1[0][0] <= i);
 					assert (bb_pt1[0][1] <= j);
