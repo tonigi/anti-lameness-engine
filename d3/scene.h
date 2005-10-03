@@ -1859,6 +1859,49 @@ class scene {
 			return point(tan(max[0]), tan(max[1]), tan(max[2]));
 		}
 
+		/*
+		 * Get bounding box for projection onto a plane.
+		 */
+
+		void get_view_local_bb(pt _pt, point bb[2]) {
+			point min = d2::point(_pt.scaled_height(), _pt.scaled_width());
+			point max = d2::point(0, 0);
+
+			point wbb[2] = { get_min(), get_max() };
+
+
+			for (int x = 0; x < 2; x++)
+			for (int y = 0; y < 2; y++)
+			for (int z = 0; z < 2; z++) {
+				point p = _pt.wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
+
+				if (p[0] < min[0])
+					min[0] = p[0];
+				if (p[0] > max[0])
+					max[0] = p[0];
+				if (p[1] < min[1])
+					min[1] = p[1];
+				if (p[1] > max[1])
+					max[1] = p[1];
+			}
+
+			/*
+			 * Clip bounding box to image extents.
+			 */
+
+			if (min[0] < 0)
+				min[0] = 0;
+			if (min[1] < 0)
+				min[1] = 0;
+			if (max[0] > _pt.scaled_height() - 1)
+				max[0] = _pt.scaled_height() - 1;
+			if (max[1] > _pt.scaled_width() - 1)
+				max[1] = _pt.scaled_width() - 1;
+
+			bb[0] = min;
+			bb[1] = max;
+		}
+
 		int includes(point p) {
 			point tdp = point(atan(p[0]), atan(p[1]), atan(p[2]));
 
@@ -3177,38 +3220,12 @@ public:
 				 * subspace.
 				 */
 
-				point min = d2::point(_pt.scaled_height(), _pt.scaled_width());
-				point max = d2::point(0, 0);
+				point bb[2];
 
-				point wbb[2] = { st.get_min(), st.get_max() };
+				st.get_view_local_bb(_pt, bb);
 
-				for (int x = 0; x < 2; x++)
-				for (int y = 0; y < 2; y++)
-				for (int z = 0; z < 2; z++) {
-					point p = _pt.wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
-
-					if (p[0] < min[0])
-						min[0] = p[0];
-					if (p[0] > max[0])
-						max[0] = p[0];
-					if (p[1] < min[1])
-						min[1] = p[1];
-					if (p[1] > max[1])
-						max[1] = p[1];
-				}
-
-				/*
-				 * Clip bounding box to image extents.
-				 */
-
-				if (min[0] < 0)
-					min[0] = 0;
-				if (min[1] < 0)
-					min[1] = 0;
-				if (max[0] > _pt.scaled_height())
-					max[0] = _pt.scaled_height();
-				if (max[1] > _pt.scaled_width())
-					max[1] = _pt.scaled_width();
+				point min = bb[0];
+				point max = bb[1];
 
 				/*
 				 * Iterate over pixels in the bounding box,
@@ -3217,8 +3234,8 @@ public:
 				 * bounding box intersect the subspace.
 				 */
 
-				for (unsigned int i = (unsigned int) floor(min[0]); i < (unsigned int) ceil(max[0]); i++)
-				for (unsigned int j = (unsigned int) floor(min[1]); j < (unsigned int) ceil(max[1]); j++) {
+				for (unsigned int i = (unsigned int) floor(min[0]); i <= (unsigned int) ceil(max[0]); i++)
+				for (unsigned int j = (unsigned int) floor(min[1]); j <= (unsigned int) ceil(max[1]); j++) {
 
 					d2::pixel pcolor = im->get_pixel(i, j);
 					d2::pixel colordiff = color - pcolor;
@@ -3319,38 +3336,9 @@ public:
 			 * subspace.
 			 */
 
-			point min = d2::point(_pt.scaled_height(), _pt.scaled_width());
-			point max = d2::point(0, 0);
+			point bb[2];
 
-			point wbb[2] = { st.get_min(), st.get_max() };
-
-			for (int x = 0; x < 2; x++)
-			for (int y = 0; y < 2; y++)
-			for (int z = 0; z < 2; z++) {
-				point p = _pt.wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
-
-				if (p[0] < min[0])
-					min[0] = p[0];
-				if (p[0] > max[0])
-					max[0] = p[0];
-				if (p[1] < min[1])
-					min[1] = p[1];
-				if (p[1] > max[1])
-					max[1] = p[1];
-			}
-
-			/*
-			 * Clip bounding box to image extents.
-			 */
-
-			if (min[0] < 0)
-				min[0] = 0;
-			if (min[1] < 0)
-				min[1] = 0;
-			if (max[0] > _pt.scaled_height())
-				max[0] = _pt.scaled_height();
-			if (max[1] > _pt.scaled_width())
-				max[1] = _pt.scaled_width();
+			st.get_view_local_bb(_pt, bb);
 
 			/*
 			 * Iterate over pixels in the bounding box, finding
@@ -3359,8 +3347,8 @@ public:
 			 * intersect the subspace.
 			 */
 
-			for (unsigned int i = (unsigned int) floor(min[0]); i < (unsigned int) ceil(max[0]); i++)
-			for (unsigned int j = (unsigned int) floor(min[1]); j < (unsigned int) ceil(max[1]); j++) {
+			for (unsigned int i = (unsigned int) floor(min[0]); i <= (unsigned int) ceil(max[0]); i++)
+			for (unsigned int j = (unsigned int) floor(min[1]); j <= (unsigned int) ceil(max[1]); j++) {
 				/*
 				 * Determine the probability of encounter.
 				 */
@@ -3554,38 +3542,11 @@ public:
 			 * subspace.
 			 */
 
-			point min = d2::point(_pt.scaled_height(), _pt.scaled_width());
-			point max = d2::point(0, 0);
+			point bb[2]; 
+			st.get_view_local_bb(_pt, bb);
 
-			point wbb[2] = { st.get_min(), st.get_max() };
-
-			for (int x = 0; x < 2; x++)
-			for (int y = 0; y < 2; y++)
-			for (int z = 0; z < 2; z++) {
-				point p = _pt.wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
-
-				if (p[0] < min[0])
-					min[0] = p[0];
-				if (p[0] > max[0])
-					max[0] = p[0];
-				if (p[1] < min[1])
-					min[1] = p[1];
-				if (p[1] > max[1])
-					max[1] = p[1];
-			}
-
-			/*
-			 * Clip bounding box to image extents.
-			 */
-
-			if (min[0] < 0)
-				min[0] = 0;
-			if (min[1] < 0)
-				min[1] = 0;
-			if (max[0] > _pt.scaled_height())
-				max[0] = _pt.scaled_height();
-			if (max[1] > _pt.scaled_width())
-				max[1] = _pt.scaled_width();
+			point min = bb[0];
+			point max = bb[1];
 
 			/*
 			 * Iterate over pixels in the bounding box, finding
@@ -3594,8 +3555,8 @@ public:
 			 * intersect the subspace.
 			 */
 
-			for (unsigned int i = (unsigned int) floor(min[0]); i < (unsigned int) ceil(max[0]); i++)
-			for (unsigned int j = (unsigned int) floor(min[1]); j < (unsigned int) ceil(max[1]); j++) {
+			for (unsigned int i = (unsigned int) floor(min[0]); i <= (unsigned int) ceil(max[0]); i++)
+			for (unsigned int j = (unsigned int) floor(min[1]); j <= (unsigned int) ceil(max[1]); j++) {
 				/*
 				 * Determine the probability of encounter.
 				 */
@@ -3606,8 +3567,34 @@ public:
 				 * Update images.
 				 */
 
+				ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
+
+#if 0
+				/*
+				 * Weighted (transparent) depth display
+				 */
 				weights->pix(i, j) += encounter;
-				im->pix(i, j)      += encounter * _pt.wp_scaled(st.get_min())[2];
+				im->pix(i, j)      += encounter * depth_value;
+#elsif 0
+				/*
+				 * Ambiguity (ambivalence) measure.
+				 */
+				weights->pix(i, j) = d2::pixel(1, 1, 1);
+				im->pix(i, j) += 0.1 * d2::pixel(1, 1, 1);
+#else
+				/*
+				 * Closeness measure.
+				 */ 
+
+				if (weights->pix(i, j)[0] == 0) {
+					weights->pix(i, j) = d2::pixel(1, 1, 1);
+					im->pix(i, j) = d2::pixel(1, 1, 1) * depth_value;
+				} else if (im->pix(i, j)[2] < depth_value) {
+					im->pix(i, j) = d2::pixel(1, 1, 1) * depth_value;
+				} else {
+					continue;
+				}
+#endif
 			}
 
 		} while (si.next());
@@ -3791,6 +3778,9 @@ public:
 				point p1 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j,  1000)));
 				point p2 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j, -1000)));
 
+				// fprintf(stderr, "%d->%d (%d, %d) point pair: (%d, %d, %d -> %f, %f), (%d, %d, %d -> %f, %f)\n",
+				//		f1, f2, i, j, i, j, 1000, p1[0], p1[1], i, j, -1000, p2[0], p2[1]);
+
 				/*
 				 * For cases where the mapped points define a
 				 * line and where points on the line fall
@@ -3803,8 +3793,11 @@ public:
 				ale_pos diff_j = p2[1] - p1[1];
 				ale_pos slope = diff_j / diff_i;
 
-				if (isnan(slope))
+				if (isnan(slope)) {
+					fprintf(stderr, "%d->%d (%d, %d) has undefined slope\n",
+							f1, f2, i, j);
 					continue;
+				}
 
 				ale_pos top_intersect = p1[1] - p1[0] * slope;
 				ale_pos lef_intersect = p1[0] - p1[1] / slope;
@@ -3820,8 +3813,11 @@ public:
 				} else if (slope < 0 && rig_intersect >= 0 && rig_intersect < if2->height() - 1) {
 					sp_i = rig_intersect;
 					sp_j = if2->width() - 2;
-				} else 
+				} else {
+					// fprintf(stderr, "%d->%d (%d, %d) does not intersect the defined area\n",
+					// 		f1, f2, i, j);
 					continue;
+				}
 
 				/*
 				 * Determine increment values for examining
@@ -3841,6 +3837,9 @@ public:
 					incr_i = -1 / slope;
 					incr_j = -1;
 				}
+				
+				// fprintf(stderr, "%d->%d (%d, %d) increments are (%f, %f)\n",
+				// 		f1, f2, i, j, incr_i, incr_j);
 
 				/*
 				 * Examine regions near the projected line.
@@ -3849,6 +3848,9 @@ public:
 				for (ale_pos ii = sp_i, jj = sp_j; 
 					ii < if2->height() - 1 && jj < if2->width() - 1 && ii >= 0 && jj >= 0; 
 					ii += incr_i, jj += incr_j) {
+
+					// fprintf(stderr, "%d->%d (%d, %d) checking (%f, %f)\n", 
+					//		f1, f2, i, j, ii, jj);
 
 					/*
 					 * Check for higher, lower, and nearby points.
@@ -3883,6 +3885,9 @@ public:
 
 					if (((higher & lower) | nearby) != 0x7)
 						continue;
+
+					// fprintf(stderr, "%d->%d (%d, %d) accepted (%f, %f)\n", 
+					//		f1, f2, i, j, ii, jj);
 
 					/*
 					 * Create an orthonormal basis to
@@ -3941,14 +3946,22 @@ public:
 
 					point iw = intersection[0] * b0 + intersection[1] * b1;
 
+					// fprintf(stderr, "%d->%d (%d, %d) point (%f, %f) intersects at (%f, %f ,%f)\n", 
+					//		f1, f2, i, j, ii, jj, iw[0], iw[1], iw[2]);
+
 					/*
 					 * Reject interesection points behind a
 					 * camera.
 					 */
 
-					if (_pt1.wc(iw)[2] >= 0 || _pt2.wc(iw)[2] >= 0)
+					point il = _pt1.wc(iw);
+
+					if (il[2] >= 0 || il[2] >= 0)
 						continue;
 
+					fprintf(stderr, "%d->%d (%d, %d) passed camera check: (%f, %f), (%f, %f, %f)\n", 
+							f1, f2, i, j, ii, jj, il[0], il[1], il[2]);
+					
 					/*
 					 * Refine space around the intersection point.
 					 */
@@ -3964,6 +3977,10 @@ public:
 						      frame_max[2] = { point::neginf(), point::neginf() };
 
 						point p[2] = { st.get_min(), st.get_max() };
+
+						/*
+						 * Cycle through the corner points bounding the subspace.
+						 */
 
 						for (int ibit = 0; ibit < 2; ibit++)
 						for (int jbit = 0; jbit < 2; jbit++)
@@ -4010,6 +4027,34 @@ public:
 						}
 
 					}
+
+					/*
+					 * Assert that the refined space
+					 * actually corresponds to the desired
+					 * points.  XXX: the current form of
+					 * this assertion relies on all points
+					 * in the bounding box being considered
+					 * as intersecting by all relevant code
+					 * sections.
+					 */
+
+					point bb_pt1[2];
+					point bb_pt2[2];
+
+					st.get_view_local_bb(_pt1, bb_pt1);
+					st.get_view_local_bb(_pt2, bb_pt2);
+
+					assert (bb_pt1[0][0] <= i);
+					assert (bb_pt1[0][1] <= j);
+
+					assert (bb_pt1[1][0] >= i);
+					assert (bb_pt1[1][1] >= j);
+
+					assert (bb_pt2[0][0] <= ii);
+					assert (bb_pt2[0][1] <= jj);
+
+					assert (bb_pt2[1][0] >= ii);
+					assert (bb_pt2[1][1] >= jj);
 
 					/*
 					 * Associate refined space with a
