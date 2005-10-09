@@ -110,8 +110,8 @@ private:
 	 * accept only frequencies we know to be expressible in the source.
 	 * (Or do this approximately.)
 	 */
-	void freq_limit(point p, point mapped_p, ale_real *hscale_g, 
-			ale_real *hscale_rb, ale_real *wscale_g, ale_real *wscale_rb) const {
+	void freq_limit(point p, point mapped_p, ale_pos *hscale_g, 
+			ale_pos *hscale_rb, ale_pos *wscale_g, ale_pos *wscale_rb) const {
 
 		if (frequency_limit == 0)
 			return;
@@ -149,8 +149,8 @@ private:
 		}
 	}
 
-	void filter_channel(point p, point mapped_p, unsigned int k, ale_real hscale,
-			ale_real wscale, pixel *result, pixel *weight) const {
+	void filter_channel(point p, point mapped_p, unsigned int k, ale_pos hscale,
+			ale_pos wscale, pixel *result, pixel *weight) const {
 
 #if 1
 		/*
@@ -169,7 +169,7 @@ private:
 			 * Handle the especially coarse case.
 			 */
 
-			ale_real fscale;
+			ale_pos fscale;
 
 			if (frequency_limit) {
 				fscale  = (bayer == IMAGE_BAYER_NONE)
@@ -179,7 +179,7 @@ private:
 				fscale = 1;
 			}
 			
-			ale_real support = f->support() * fscale;
+			ale_pos support = f->support() * fscale;
 
 			point min = mapped_p - point(support, support);
 			point max = mapped_p + point(support, support);
