@@ -1536,18 +1536,18 @@ class scene {
 			pt _pt0 = d3::align::projective(0);
 			// _pt0.scale(1 / _pt0.scale_2d());  // XXX: world coordinates vary with output scale.
 
-			// fprintf(stderr, "%p traversing children [%u] \n", this, time(NULL));
+			// fprintf(stderr, "%p traversing children [%lu] \n", this, time(NULL));
 			if (children[0] && children[1]) {
 				return children[0]->adjust_vertices(z, _lod)
 				     | children[1]->adjust_vertices(z, _lod);
 			}
-			// fprintf(stderr, "%p leaf node [%u] \n", this, time(NULL));
+			// fprintf(stderr, "%p leaf node [%lu] \n", this, time(NULL));
 
 			/*
 			 * If all vertices are fixed, then return.
 			 */
 
-			// fprintf(stderr, "%p checking for unfixed vertices [%u] \n", this, time(NULL));
+			// fprintf(stderr, "%p checking for unfixed vertices [%lu] \n", this, time(NULL));
 
 			if (!vertex_is_free(vertices[0])
 			 && !vertex_is_free(vertices[1])
@@ -1565,14 +1565,14 @@ class scene {
 			 * vertex in turn.
 			 */
 
-			// fprintf(stderr, "%p iterating over vertices vertices [%u] \n", this, time(NULL));
+			// fprintf(stderr, "%p iterating over vertices vertices [%lu] \n", this, time(NULL));
 			for (int v = 0; v < 3; v++) {
 
 				/*
 				 * Check for fixed vertices.
 				 */
 
-				// fprintf(stderr, "%p checking that vertex %d is unfixed [%u] \n", this, v, time(NULL));
+				// fprintf(stderr, "%p checking that vertex %d is unfixed [%lu] \n", this, v, time(NULL));
 				if (!vertex_is_free(vertices[v]))
 					continue;
 
@@ -1587,11 +1587,11 @@ class scene {
 				 * Perturb the position.
 				 */
 
-				// fprintf(stderr, "%p perturbing vertex %d [%u] \n", this, v, time(NULL));
+				// fprintf(stderr, "%p perturbing vertex %d [%lu] \n", this, v, time(NULL));
 				for (int axis = 0; axis < 3; axis++)
 				for (int dir = -1; dir <= 1; dir += 2) {
 
-					// fprintf(stderr, "%p perturbing vertex %d (%d %d) [%u] \n", this, v, axis, dir, time(NULL));
+					// fprintf(stderr, "%p perturbing vertex %d (%d %d) [%lu] \n", this, v, axis, dir, time(NULL));
 					point orig = *vertices[v];
 					point perturbed = orig + point::unit(axis) * step * dir;
 
@@ -1599,7 +1599,7 @@ class scene {
 					 * Check the clipping planes.
 					 */
 
-					// fprintf(stderr, "%p checking clipping planes [%u] \n", this, time(NULL));
+					// fprintf(stderr, "%p checking clipping planes [%lu] \n", this, time(NULL));
 					if (perturbed[2] > front_clip
 					 || perturbed[2] < rear_clip)
 						continue;
@@ -1608,7 +1608,7 @@ class scene {
 					 * Check view pyramid bounds
 					 */
 
-					// fprintf(stderr, "%p checking view pyramid bounds [%u] \n", this, time(NULL));
+					// fprintf(stderr, "%p checking view pyramid bounds [%lu] \n", this, time(NULL));
 					if (!pyramid_bounds_check(perturbed))
 						continue;
 
@@ -1628,9 +1628,9 @@ class scene {
 					 * Check the error
 					 */
 
-					// fprintf(stderr, "%p calculating error [%u] \n", this, time(NULL));
+					// fprintf(stderr, "%p calculating error [%lu] \n", this, time(NULL));
 					ale_accum error = vertex_movement_cost(this, vertices[v], perturbed, z, _lod);
-					// fprintf(stderr, "%p done calculating error (%f) [%u] \n", this, error, time(NULL));
+					// fprintf(stderr, "%p done calculating error (%f) [%lu] \n", this, error, time(NULL));
 					if (error < 0) {
 
 						fprintf(stderr, "%p (%f %f %f) (%f %f %f) [%f]\n",
@@ -2704,19 +2704,19 @@ class scene {
 		 * Collect z-buffer data
 		 */
 
-		fprintf(stderr, "  begin creating zbuffers[%u] \n", time(NULL));
+		fprintf(stderr, "  begin creating zbuffers[%lu] \n", time(NULL));
 		zbuf_elem **z = construct_zbuffers(cl);
-		fprintf(stderr, "  end creating zbuffers[%u] \n", time(NULL));
+		fprintf(stderr, "  end creating zbuffers[%lu] \n", time(NULL));
 
 #if 0
-		fprintf(stderr, "  begin tree traversal[%u] \n", time(NULL));
+		fprintf(stderr, "  begin tree traversal[%lu] \n", time(NULL));
 		int result = triangle_head[0]->adjust_vertices(z, cl) 
 			   | triangle_head[1]->adjust_vertices(z, cl);
-		fprintf(stderr, "  end tree traversal[%u] \n", time(NULL));
+		fprintf(stderr, "  end tree traversal[%lu] \n", time(NULL));
 #else
 		int result = 0;
 
-		fprintf(stderr, "  begin free vertex set traversal[%u] \n", time(NULL));
+		fprintf(stderr, "  begin free vertex set traversal[%lu] \n", time(NULL));
 		for (std::set<point *>::iterator i = vertex_set->begin(); i != vertex_set->end(); i++) {
 
 			/*
@@ -2758,7 +2758,7 @@ class scene {
 			for (int axis = 0; axis < 3; axis++)
 			for (int dir = -1; dir <= 1; dir += 2) {
 
-				// fprintf(stderr, "%p perturbing vertex %d (%d %d) [%u] \n", this, v, axis, dir, time(NULL));
+				// fprintf(stderr, "%p perturbing vertex %d (%d %d) [%lu] \n", this, v, axis, dir, time(NULL));
 				point orig = **i;
 				point perturbed = orig + point::unit(axis) * step * dir;
 
@@ -2766,7 +2766,7 @@ class scene {
 				 * Check the clipping planes.
 				 */
 
-				// fprintf(stderr, "%p checking clipping planes [%u] \n", this, time(NULL));
+				// fprintf(stderr, "%p checking clipping planes [%lu] \n", this, time(NULL));
 				if (perturbed[2] > front_clip
 				 || perturbed[2] < rear_clip)
 					continue;
@@ -2775,7 +2775,7 @@ class scene {
 				 * Check view pyramid bounds
 				 */
 
-				// fprintf(stderr, "%p checking view pyramid bounds [%u] \n", this, time(NULL));
+				// fprintf(stderr, "%p checking view pyramid bounds [%lu] \n", this, time(NULL));
 				if (!pyramid_bounds_check(perturbed))
 					continue;
 
@@ -2855,9 +2855,9 @@ class scene {
 				 * Check the error
 				 */
 
-				// fprintf(stderr, "%p calculating error [%u] \n", this, time(NULL));
+				// fprintf(stderr, "%p calculating error [%lu] \n", this, time(NULL));
 				ale_accum error = vertex_movement_cost(&tset, &v_set, *i, perturbed, z, cl);
-				// fprintf(stderr, "%p done calculating error (%f) [%u] \n", this, error, time(NULL));
+				// fprintf(stderr, "%p done calculating error (%f) [%lu] \n", this, error, time(NULL));
 				if (error < 0) {
 
 					fprintf(stderr, "%p (%f %f %f) (%f %f %f) [%f]\n",
@@ -2878,12 +2878,12 @@ class scene {
 			}
 
 		}
-		fprintf(stderr, "  end free vertex set traversal[%u] \n", time(NULL));
+		fprintf(stderr, "  end free vertex set traversal[%lu] \n", time(NULL));
 #endif
 
-		fprintf(stderr, "  begin freeing zbuffers[%u] \n", time(NULL));
+		fprintf(stderr, "  begin freeing zbuffers[%lu] \n", time(NULL));
 		free_zbuffers(z);
-		fprintf(stderr, "  end freeing zbuffers[%u] \n", time(NULL));
+		fprintf(stderr, "  end freeing zbuffers[%lu] \n", time(NULL));
 
 		return result;
 	}
@@ -3902,6 +3902,14 @@ public:
 					point bp1 = _pt1.pw_unscaled(point(i, j, 1));
 					point bp2 = _pt2.pw_unscaled(point(ii, jj, 0));
 
+					point foo = _pt1.wp_unscaled(bp0);
+					// fprintf(stderr, "(%d, %d, 0) transformed to world and back is: (%f, %f, %f)\n",
+					//		i, j, foo[0], foo[1], foo[2]);
+
+					foo = _pt1.wp_unscaled(bp1);
+					// fprintf(stderr, "(%d, %d, 10)  transformed to world and back is: (%f, %f, %f)\n",
+					//		i, j, foo[0], foo[1], foo[2]);
+
 					point b0  = (bp1 - bp0).normalize();
 					point b1n = bp2 - bp0;
 					point b1  = (b1n - b1n.dproduct(b0) * b0).normalize();
@@ -3949,9 +3957,6 @@ public:
 					 */
 
 					point iw = intersection[0] * b0 + intersection[1] * b1;
-
-					// fprintf(stderr, "%d->%d (%d, %d) point (%f, %f) intersects at (%f, %f ,%f)\n", 
-					//		f1, f2, i, j, ii, jj, iw[0], iw[1], iw[2]);
 
 					/*
 					 * Reject interesection points behind a
@@ -4004,7 +4009,7 @@ public:
 
 #if 0
 						if (i == 0 && j == 0)
-							fprintf(stderr, "min, max = [(%f, %f, %f), (%f, %f), (%f, %f)], [(%f, %f, %f), (%f, %f), (%f, %f)] [%u]\n", 
+							fprintf(stderr, "min, max = [(%f, %f, %f), (%f, %f), (%f, %f)], [(%f, %f, %f), (%f, %f), (%f, %f)] [%lu]\n", 
 								p[0][0], p[0][1], p[0][2],
 								frame_min[0][0], frame_min[0][1],
 								frame_min[1][0], frame_min[1][1],
@@ -4049,7 +4054,7 @@ public:
 					st.get_view_local_bb(_pt2, bb_pt2);
 
 					if (!(bb_pt1[0][0] <= i)) {
-						fprintf(stderr, "BB failure: i == %d, j == %d, ii == %d, jj = %d, bb_pt1[0][0] == %f\n",
+						fprintf(stderr, "BB failure: i == %d, j == %d, ii == %f, jj = %f, bb_pt1[0][0] == %f\n",
 								i, j, ii, jj, bb_pt1[0][0]);
 					}
 
@@ -4190,12 +4195,12 @@ public:
 
 		while (perturb >= mpl_value) {
 
-			fprintf(stderr, "begin density test split[%u] \n", time(NULL));
+			fprintf(stderr, "begin density test split[%lu] \n", time(NULL));
 
 			if (density_test_split())
 				continue;
 
-			fprintf(stderr, "end density test split[%u] \n", time(NULL));
+			fprintf(stderr, "end density test split[%lu] \n", time(NULL));
 
 			/*
 			 * Gather vertex data
@@ -4205,10 +4210,10 @@ public:
 			std::set<point *> fixed_set;
 			std::multimap<point *, triangle *> vertex_map;
 
-			fprintf(stderr, "begin collecting vertex data[%u]\n", time(NULL));
+			fprintf(stderr, "begin collecting vertex data[%lu]\n", time(NULL));
 			triangle_head[0]->collect_vertex_data(&vertex_set, &vertex_map, &fixed_set);
 			triangle_head[1]->collect_vertex_data(&vertex_set, &vertex_map, &fixed_set);
-			fprintf(stderr, "end collecting vertex data[%u]\n", time(NULL));
+			fprintf(stderr, "end collecting vertex data[%lu]\n", time(NULL));
 
 			fprintf(stderr, "Number of vertices: %u\n", vertex_set.size());
 
@@ -4239,7 +4244,7 @@ public:
 				 * Write output incrementally, if desired.
 				 */
 
-				fprintf(stderr, "begin output[%u] \n", time(NULL));
+				fprintf(stderr, "begin output[%lu] \n", time(NULL));
 
 				if (inc_bit) {
 
@@ -4276,7 +4281,7 @@ public:
 					}
 				}
 				
-				fprintf(stderr, "end output[%u] \n", time(NULL));
+				fprintf(stderr, "end output[%lu] \n", time(NULL));
 
 				fprintf(stderr, ".");
 
@@ -4304,7 +4309,7 @@ public:
 			 * Try improving the result by moving existing vertices.
 			 */
 
-			fprintf(stderr, "begin adjustment[%u] \n", time(NULL));
+			fprintf(stderr, "begin adjustment[%lu] \n", time(NULL));
 
 			improved |= adjust_vertices(&vertex_set, &vertex_map, &change_set[1 - csi], &change_set[csi]);
 
@@ -4315,7 +4320,7 @@ public:
 			csi = 1 - csi;
 			change_set[csi].clear();
 
-			fprintf(stderr, "end adjustment[%u] \n", time(NULL));
+			fprintf(stderr, "end adjustment[%lu] \n", time(NULL));
 		}
 
 #endif
