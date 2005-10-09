@@ -41,7 +41,7 @@ int scene::mpl_type = 0;
 int scene::mpu_type = 1;
 const char *scene::load_model_name = NULL;
 const char *scene::save_model_name = NULL;
-const ale_real scene::nearness = 0.02;
+const ale_real scene::nearness = 0.01;
 
 scene::space *scene::root_space = NULL;
 std::map<struct scene::space *, scene::spatial_info> scene::spatial_info_map;
