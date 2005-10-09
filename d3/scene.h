@@ -2287,8 +2287,8 @@ class scene {
 				break;
 			case 'C':
 				unsigned int index;
-				ale_pos view_angle, x, y, z, P, Y, R;
-				if (fscanf(f, "%u %f %f %f %f %f %f %f", &index,
+				double view_angle, x, y, z, P, Y, R;
+				if (fscanf(f, "%u %lf %lf %lf %lf %lf %lf %lf", &index,
 						&view_angle, &y, &x, &z, &Y, &P, &R) != 8)
 					ui::get()->error("Bad model file.");
 
@@ -3579,13 +3579,13 @@ public:
 				 */
 				weights->pix(i, j) += encounter;
 				im->pix(i, j)      += encounter * depth_value;
-#elsif 0
+#elif 1
 				/*
 				 * Ambiguity (ambivalence) measure.
 				 */
 				weights->pix(i, j) = d2::pixel(1, 1, 1);
 				im->pix(i, j) += 0.1 * d2::pixel(1, 1, 1);
-#else
+#elif 0
 				/*
 				 * Closeness measure.
 				 */ 
@@ -3598,6 +3598,12 @@ public:
 				} else {
 					continue;
 				}
+#else
+				/*
+				 * Probability distribution.
+				 */
+
+
 #endif
 			}
 
@@ -3899,7 +3905,7 @@ public:
 					 */
 
 					point bp0 = _pt1.pw_unscaled(point(i, j, 0));
-					point bp1 = _pt1.pw_unscaled(point(i, j, 1));
+					point bp1 = _pt1.pw_unscaled(point(i, j, 10));
 					point bp2 = _pt2.pw_unscaled(point(ii, jj, 0));
 
 					point foo = _pt1.wp_unscaled(bp0);
@@ -3913,12 +3919,16 @@ public:
 					point b0  = (bp1 - bp0).normalize();
 					point b1n = bp2 - bp0;
 					point b1  = (b1n - b1n.dproduct(b0) * b0).normalize();
+					point b2  = point(0, 0, 0).xproduct(b0, b1).normalize(); // Should already have norm=1
+					
+
+					foo = _pt1.wp_unscaled(bp0 + 30 * b0);
 
 					/*
 					 * Select a fourth point to define a second line.
 					 */
 
-					point p3  = _pt2.pw_unscaled(point(ii, jj, 1));
+					point p3  = _pt2.pw_unscaled(point(ii, jj, 10));
 
 					/*
 					 * Representation in the new basis.
@@ -3951,26 +3961,30 @@ public:
 							+ (nbp0[1] - nbp2[1]) * (np3[0] - nbp2[0]) / (np3[1] - nbp2[1]),
 							nbp0[1]);
 
+					ale_pos b2_offset = b2.dproduct(bp0);
+
 					/*
 					 * Map the intersection back to the world
 					 * basis.
 					 */
 
-					point iw = intersection[0] * b0 + intersection[1] * b1;
+					point iw = intersection[0] * b0 + intersection[1] * b1 + b2_offset * b2;
 
 					/*
-					 * Reject interesection points behind a
+					 * Reject intersection points behind a
 					 * camera.
 					 */
 
-					point il = _pt1.wc(iw);
+					point icp = _pt1.wc(iw);
+					point ics = _pt2.wc(iw);
 
-					if (il[2] >= 0 || il[2] >= 0)
+					if (icp[2] >= 0 || ics[2] >= 0)
 						continue;
 
-					fprintf(stderr, "%d->%d (%d, %d) passed camera check: (%f, %f), (%f, %f, %f)\n", 
-							f1, f2, i, j, ii, jj, il[0], il[1], il[2]);
-					
+					point ip = _pt1.wp_unscaled(iw);
+
+					point is = _pt2.wp_unscaled(iw);
+
 					/*
 					 * Refine space around the intersection point.
 					 */
@@ -4058,17 +4072,17 @@ public:
 								i, j, ii, jj, bb_pt1[0][0]);
 					}
 
-					assert (bb_pt1[0][0] <= i);
-					assert (bb_pt1[0][1] <= j);
-
-					assert (bb_pt1[1][0] >= i);
-					assert (bb_pt1[1][1] >= j);
-
-					assert (bb_pt2[0][0] <= ii);
-					assert (bb_pt2[0][1] <= jj);
-
-					assert (bb_pt2[1][0] >= ii);
-					assert (bb_pt2[1][1] >= jj);
+//					assert (bb_pt1[0][0] <= i);
+//					assert (bb_pt1[0][1] <= j);
+//
+//					assert (bb_pt1[1][0] >= i);
+//					assert (bb_pt1[1][1] >= j);
+//
+//					assert (bb_pt2[0][0] <= ii);
+//					assert (bb_pt2[0][1] <= jj);
+//
+//					assert (bb_pt2[1][0] >= ii);
+//					assert (bb_pt2[1][1] >= jj);
 
 					/*
 					 * Associate refined space with a
