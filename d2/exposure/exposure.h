@@ -224,6 +224,9 @@ public:
 		_multiplier = pixel(1, 1, 1);
 		_gain_multiplier = 1;
 	}
+
+	virtual ~exposure() {
+	}
 };
 
 #endif

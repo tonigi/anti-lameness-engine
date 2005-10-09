@@ -40,5 +40,8 @@ public:
 	virtual ale_real response(point p) const = 0;
 
 	virtual int equals(const filter *f) const = 0;
+
+	virtual ~filter(){
+	}
 };
 #endif

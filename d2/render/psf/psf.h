@@ -170,6 +170,9 @@ public:
 		return operator()(top, bot, lef, rig, 0);
 	}
 #endif
+
+	virtual ~psf() {
+	}
 };
 
 #endif
