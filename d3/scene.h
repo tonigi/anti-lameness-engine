@@ -235,6 +235,7 @@ class scene {
 		triangle *_nearest;
 
 	public:
+
 		zbuf_elem() {
 			tset = new std::set<triangle *>;
 			assert (tset);
@@ -2889,6 +2890,17 @@ class scene {
 	}
 
 public:
+	/*
+	 * Debugging variables.
+	 */
+
+	static unsigned long total_ambiguity;
+	static unsigned long total_pixels;
+
+	/*
+	 * Member functions
+	 */
+
 	static void load_model(const char *name) {
 		load_model_name = name;
 	}
@@ -3775,6 +3787,8 @@ public:
 			for (unsigned int i = 0; i < if1->height(); i++)
 			for (unsigned int j = 0; j < if1->width();  j++) {
 
+				total_pixels++;
+
 				/*
 				 * Get the pixel color in the primary frame
 				 */
@@ -3984,6 +3998,8 @@ public:
 					point ip = _pt1.wp_unscaled(iw);
 
 					point is = _pt2.wp_unscaled(iw);
+
+					total_ambiguity++;
 
 					/*
 					 * Refine space around the intersection point.
