@@ -3583,12 +3583,11 @@ public:
 				 * Update images.
 				 */
 
-				ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
-
 #if 0
 				/*
 				 * Weighted (transparent) depth display
 				 */
+				ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
 				weights->pix(i, j) += encounter;
 				im->pix(i, j)      += encounter * depth_value;
 #elif 1
@@ -3602,6 +3601,7 @@ public:
 				 * Closeness measure.
 				 */ 
 
+				ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
 				if (weights->pix(i, j)[0] == 0) {
 					weights->pix(i, j) = d2::pixel(1, 1, 1);
 					im->pix(i, j) = d2::pixel(1, 1, 1) * depth_value;
@@ -3750,6 +3750,353 @@ public:
 
 	}
 
+	typedef struct {point p; d2::point f1, f2;} analytic;
+	typedef std::multimap<ale_real,analytic> score_map;
+	typedef std::pair<ale_real,analytic> score_map_element;
+
+	/*
+	 * Generate a map from scores to 3D points for various depths in f1.
+	 */
+	static score_map p2f_score_map(unsigned int f1, unsigned int f2, pt _pt1, pt _pt2, 
+			const d2::image *if1, const d2::image *if2, unsigned int i, unsigned int j) {
+
+		score_map result;
+
+		/*
+		 * Get the pixel color in the primary frame
+		 */
+
+		d2::pixel color_primary = if1->get_pixel(i, j);
+
+		/*
+		 * Map two depths to the secondary frame.
+		 */
+
+		point p1 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j,  1000)));
+		point p2 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j, -1000)));
+
+		// fprintf(stderr, "%d->%d (%d, %d) point pair: (%d, %d, %d -> %f, %f), (%d, %d, %d -> %f, %f)\n",
+		//		f1, f2, i, j, i, j, 1000, p1[0], p1[1], i, j, -1000, p2[0], p2[1]);
+
+		/*
+		 * For cases where the mapped points define a
+		 * line and where points on the line fall
+		 * within the defined area of the frame,
+		 * determine the starting point for inspection.
+		 * In other cases, continue to the next pixel.
+		 */
+
+		ale_pos diff_i = p2[0] - p1[0];
+		ale_pos diff_j = p2[1] - p1[1];
+		ale_pos slope = diff_j / diff_i;
+
+		if (isnan(slope)) {
+			fprintf(stderr, "%d->%d (%d, %d) has undefined slope\n",
+					f1, f2, i, j);
+			return result;
+		}
+
+		ale_pos top_intersect = p1[1] - p1[0] * slope;
+		ale_pos lef_intersect = p1[0] - p1[1] / slope;
+		ale_pos rig_intersect = p1[0] - (p1[1] - if2->width() + 2) / slope;
+		ale_pos sp_i, sp_j;
+
+		if (finite(slope) && top_intersect >= 0 && top_intersect < if2->width() - 1) {
+			sp_i = 0;
+			sp_j = top_intersect;
+		} else if (slope > 0 && lef_intersect >= 0 && lef_intersect < if2->height() - 1) {
+			sp_i = lef_intersect;
+			sp_j = 0;
+		} else if (slope < 0 && rig_intersect >= 0 && rig_intersect < if2->height() - 1) {
+			sp_i = rig_intersect;
+			sp_j = if2->width() - 2;
+		} else {
+			// fprintf(stderr, "%d->%d (%d, %d) does not intersect the defined area\n",
+			// 		f1, f2, i, j);
+			return result;
+		}
+
+		/*
+		 * Determine increment values for examining
+		 * point, ensuring that incr_i is always
+		 * positive.
+		 */
+
+		ale_pos incr_i, incr_j;
+
+		if (fabs(diff_i) > fabs(diff_j)) {
+			incr_i = 1;
+			incr_j = slope;
+		} else if (slope > 0) {
+			incr_i = 1 / slope;
+			incr_j = 1;
+		} else {
+			incr_i = -1 / slope;
+			incr_j = -1;
+		}
+		
+		// fprintf(stderr, "%d->%d (%d, %d) increments are (%f, %f)\n",
+		// 		f1, f2, i, j, incr_i, incr_j);
+
+		/*
+		 * Examine regions near the projected line.
+		 */
+
+		for (ale_pos ii = sp_i, jj = sp_j; 
+			ii < if2->height() - 1 && jj < if2->width() - 1 && ii >= 0 && jj >= 0; 
+			ii += incr_i, jj += incr_j) {
+
+			// fprintf(stderr, "%d->%d (%d, %d) checking (%f, %f)\n", 
+			//		f1, f2, i, j, ii, jj);
+
+			/*
+			 * Check for higher, lower, and nearby points.
+			 *
+			 * 	Red   = 2^0
+			 * 	Green = 2^1
+			 * 	Blue  = 2^2
+			 */
+
+			int higher = 0, lower = 0, nearby = 0;
+
+			for (int iii = 0; iii < 2; iii++)
+			for (int jjj = 0; jjj < 2; jjj++) {
+				d2::pixel p = if2->get_pixel((int) floor(ii) + iii, (int) floor(jj) + jjj);
+
+				for (int k = 0; k < 3; k++) {
+					int bitmask = (int) pow(2, k);
+
+					if (p[k] > color_primary[k])
+						higher |= bitmask;
+					if (p[k] < color_primary[k])
+						lower  |= bitmask;
+					if (fabs(p[k] - color_primary[k]) < nearness)
+						nearby |= bitmask;
+				}
+			}
+
+			/*
+			 * If this is not a region of interest,
+			 * then continue.
+			 */
+
+			if (((higher & lower) | nearby) != 0x7)
+				continue;
+
+			// fprintf(stderr, "%d->%d (%d, %d) accepted (%f, %f)\n", 
+			//		f1, f2, i, j, ii, jj);
+
+			/*
+			 * Create an orthonormal basis to
+			 * determine line intersection.
+			 */
+
+			point bp0 = _pt1.pw_unscaled(point(i, j, 0));
+			point bp1 = _pt1.pw_unscaled(point(i, j, 10));
+			point bp2 = _pt2.pw_unscaled(point(ii, jj, 0));
+
+			point foo = _pt1.wp_unscaled(bp0);
+			// fprintf(stderr, "(%d, %d, 0) transformed to world and back is: (%f, %f, %f)\n",
+			//		i, j, foo[0], foo[1], foo[2]);
+
+			foo = _pt1.wp_unscaled(bp1);
+			// fprintf(stderr, "(%d, %d, 10)  transformed to world and back is: (%f, %f, %f)\n",
+			//		i, j, foo[0], foo[1], foo[2]);
+
+			point b0  = (bp1 - bp0).normalize();
+			point b1n = bp2 - bp0;
+			point b1  = (b1n - b1n.dproduct(b0) * b0).normalize();
+			point b2  = point(0, 0, 0).xproduct(b0, b1).normalize(); // Should already have norm=1
+			
+
+			foo = _pt1.wp_unscaled(bp0 + 30 * b0);
+
+			/*
+			 * Select a fourth point to define a second line.
+			 */
+
+			point p3  = _pt2.pw_unscaled(point(ii, jj, 10));
+
+			/*
+			 * Representation in the new basis.
+			 */
+
+			d2::point nbp0 = d2::point(bp0.dproduct(b0), bp0.dproduct(b1));
+			d2::point nbp1 = d2::point(bp1.dproduct(b0), bp1.dproduct(b1));
+			d2::point nbp2 = d2::point(bp2.dproduct(b0), bp2.dproduct(b1));
+			d2::point np3  = d2::point( p3.dproduct(b0),  p3.dproduct(b1));
+
+			/*
+			 * Determine intersection of line
+			 * (nbp0, nbp1), which is parallel to
+			 * b0, with line (nbp2, np3).
+			 */
+
+			/*
+			 * XXX: a stronger check would be
+			 * better here, e.g., involving the
+			 * ratio (np3[0] - nbp2[0]) / (np3[1] -
+			 * nbp2[1]).  Also, acceptance of these
+			 * cases is probably better than
+			 * rejection.
+			 */
+
+			if (np3[1] - nbp2[1] == 0)
+				continue;
+
+			d2::point intersection = d2::point(nbp2[0] 
+					+ (nbp0[1] - nbp2[1]) * (np3[0] - nbp2[0]) / (np3[1] - nbp2[1]),
+					nbp0[1]);
+
+			ale_pos b2_offset = b2.dproduct(bp0);
+
+			/*
+			 * Map the intersection back to the world
+			 * basis.
+			 */
+
+			point iw = intersection[0] * b0 + intersection[1] * b1 + b2_offset * b2;
+
+			/*
+			 * Reject intersection points behind a
+			 * camera.
+			 */
+
+			point icp = _pt1.wc(iw);
+			point ics = _pt2.wc(iw);
+
+			if (icp[2] >= 0 || ics[2] >= 0)
+				continue;
+
+			point ip = _pt1.wp_unscaled(iw);
+
+			point is = _pt2.wp_unscaled(iw);
+
+			total_ambiguity++;
+
+			analytic _a = { iw, ip, is };
+
+			result.insert(score_map_element(1, _a));
+		}
+
+		return result;
+	}
+
+	/*
+	 * Analyze space in a manner dependent on the score map.
+	 */
+
+	static void analyze_space_from_map(score_map _sm) {
+
+		for( ....  ) {
+			/*
+			 * Refine space around the intersection point.
+			 */
+
+			space_traverse st = space_traverse::root();
+
+			if (!st.includes(iw))
+				continue;
+
+			for(;;) {
+
+				point frame_min[2] = { point::posinf(), point::posinf() },
+				      frame_max[2] = { point::neginf(), point::neginf() };
+
+				point p[2] = { st.get_min(), st.get_max() };
+
+				/*
+				 * Cycle through the corner points bounding the subspace.
+				 */
+
+				for (int ibit = 0; ibit < 2; ibit++)
+				for (int jbit = 0; jbit < 2; jbit++)
+				for (int kbit = 0; kbit < 2; kbit++) {
+					point pp = point(p[ibit][0], p[jbit][1], p[kbit][2]);
+
+					point ppp[2] = {_pt1.wp_unscaled(pp), _pt2.wp_unscaled(pp)};
+
+					for (int f = 0; f < 2; f++)
+					for (int d = 0; d < 3; d++) {
+						if (ppp[f][d] < frame_min[f][d])
+							frame_min[f][d] = ppp[f][d];
+						if (ppp[f][d] > frame_max[f][d])
+							frame_max[f][d] = ppp[f][d];
+					}
+				}
+
+#if 0
+				if (i == 0 && j == 0)
+					fprintf(stderr, "min, max = [(%f, %f, %f), (%f, %f), (%f, %f)], [(%f, %f, %f), (%f, %f), (%f, %f)] [%lu]\n", 
+						p[0][0], p[0][1], p[0][2],
+						frame_min[0][0], frame_min[0][1],
+						frame_min[1][0], frame_min[1][1],
+						p[1][0], p[1][1], p[1][2],
+						frame_max[0][0], frame_max[0][1],
+						frame_max[1][0], frame_max[1][1], time(NULL));
+#endif
+
+				if (frame_min[0].lengthtosq(frame_max[0]) < 2
+				 && frame_min[1].lengthtosq(frame_max[1]) < 2)
+					break;
+
+				if (st.precision_wall())
+					break;
+
+				if (st.positive().includes(iw))
+					st = st.positive();
+				else if (st.negative().includes(iw))
+					st = st.negative();
+				else {
+					fprintf(stderr, "failed iw = (%f, %f, %f)\n", 
+							iw[0], iw[1], iw[2]);
+					assert(0);
+				}
+
+			}
+
+			/*
+			 * Assert that the refined space
+			 * actually corresponds to the desired
+			 * points.  XXX: the current form of
+			 * this assertion relies on all points
+			 * in the bounding box being considered
+			 * as intersecting by all relevant code
+			 * sections.
+			 */
+
+			point bb_pt1[2];
+			point bb_pt2[2];
+
+			st.get_view_local_bb(_pt1, bb_pt1);
+			st.get_view_local_bb(_pt2, bb_pt2);
+
+			if (!(bb_pt1[0][0] <= i)) {
+				fprintf(stderr, "BB failure: i == %d, j == %d, ii == %f, jj = %f, ip == [%f %f %f] bb_pt1[0][0] == %f\n",
+						i, j, ii, jj, ip[0], ip[1], ip[2], bb_pt1[0][0]);
+			}
+
+//					assert (bb_pt1[0][0] <= i);
+//					assert (bb_pt1[0][1] <= j);
+//
+//					assert (bb_pt1[1][0] >= i);
+//					assert (bb_pt1[1][1] >= j);
+//
+//					assert (bb_pt2[0][0] <= ii);
+//					assert (bb_pt2[0][1] <= jj);
+//
+//					assert (bb_pt2[1][0] >= ii);
+//					assert (bb_pt2[1][1] >= jj);
+
+			/*
+			 * Associate refined space with a
+			 * spatial info structure.
+			 */
+
+			spatial_info_map[st.get_space()];
+		}
+	}
+
 	/*
 	 * Initialize space and identify regions of interest for the adaptive
 	 * subspace model.
@@ -3790,323 +4137,18 @@ public:
 				total_pixels++;
 
 				/*
-				 * Get the pixel color in the primary frame
+				 * Generate a map from scores to 3D points for
+				 * various depths in f1.
 				 */
 
-				d2::pixel color_primary = if1->get_pixel(i, j);
+				score_map _sm = p2f_score_map(f1, f2, _pt1, _pt2, if1, if2, i, j);
 
 				/*
-				 * Map two depths to the secondary frame.
+				 * Analyze space in a manner dependent on the score map.
 				 */
 
-				point p1 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j,  1000)));
-				point p2 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j, -1000)));
+				analyze_space_from_map(_sm);
 
-				// fprintf(stderr, "%d->%d (%d, %d) point pair: (%d, %d, %d -> %f, %f), (%d, %d, %d -> %f, %f)\n",
-				//		f1, f2, i, j, i, j, 1000, p1[0], p1[1], i, j, -1000, p2[0], p2[1]);
-
-				/*
-				 * For cases where the mapped points define a
-				 * line and where points on the line fall
-				 * within the defined area of the frame,
-				 * determine the starting point for inspection.
-				 * In other cases, continue to the next pixel.
-				 */
-
-				ale_pos diff_i = p2[0] - p1[0];
-				ale_pos diff_j = p2[1] - p1[1];
-				ale_pos slope = diff_j / diff_i;
-
-				if (isnan(slope)) {
-					fprintf(stderr, "%d->%d (%d, %d) has undefined slope\n",
-							f1, f2, i, j);
-					continue;
-				}
-
-				ale_pos top_intersect = p1[1] - p1[0] * slope;
-				ale_pos lef_intersect = p1[0] - p1[1] / slope;
-				ale_pos rig_intersect = p1[0] - (p1[1] - if2->width() + 2) / slope;
-				ale_pos sp_i, sp_j;
-
-				if (finite(slope) && top_intersect >= 0 && top_intersect < if2->width() - 1) {
-					sp_i = 0;
-					sp_j = top_intersect;
-				} else if (slope > 0 && lef_intersect >= 0 && lef_intersect < if2->height() - 1) {
-					sp_i = lef_intersect;
-					sp_j = 0;
-				} else if (slope < 0 && rig_intersect >= 0 && rig_intersect < if2->height() - 1) {
-					sp_i = rig_intersect;
-					sp_j = if2->width() - 2;
-				} else {
-					// fprintf(stderr, "%d->%d (%d, %d) does not intersect the defined area\n",
-					// 		f1, f2, i, j);
-					continue;
-				}
-
-				/*
-				 * Determine increment values for examining
-				 * point, ensuring that incr_i is always
-				 * positive.
-				 */
-
-				ale_pos incr_i, incr_j;
-
-				if (fabs(diff_i) > fabs(diff_j)) {
-					incr_i = 1;
-					incr_j = slope;
-				} else if (slope > 0) {
-					incr_i = 1 / slope;
-					incr_j = 1;
-				} else {
-					incr_i = -1 / slope;
-					incr_j = -1;
-				}
-				
-				// fprintf(stderr, "%d->%d (%d, %d) increments are (%f, %f)\n",
-				// 		f1, f2, i, j, incr_i, incr_j);
-
-				/*
-				 * Examine regions near the projected line.
-				 */
-
-				for (ale_pos ii = sp_i, jj = sp_j; 
-					ii < if2->height() - 1 && jj < if2->width() - 1 && ii >= 0 && jj >= 0; 
-					ii += incr_i, jj += incr_j) {
-
-					// fprintf(stderr, "%d->%d (%d, %d) checking (%f, %f)\n", 
-					//		f1, f2, i, j, ii, jj);
-
-					/*
-					 * Check for higher, lower, and nearby points.
-					 *
-					 * 	Red   = 2^0
-					 * 	Green = 2^1
-					 * 	Blue  = 2^2
-					 */
-
-					int higher = 0, lower = 0, nearby = 0;
-
-					for (int iii = 0; iii < 2; iii++)
-					for (int jjj = 0; jjj < 2; jjj++) {
-						d2::pixel p = if2->get_pixel((int) floor(ii) + iii, (int) floor(jj) + jjj);
-
-						for (int k = 0; k < 3; k++) {
-							int bitmask = (int) pow(2, k);
-
-							if (p[k] > color_primary[k])
-								higher |= bitmask;
-							if (p[k] < color_primary[k])
-								lower  |= bitmask;
-							if (fabs(p[k] - color_primary[k]) < nearness)
-								nearby |= bitmask;
-						}
-					}
-
-					/*
-					 * If this is not a region of interest,
-					 * then continue.
-					 */
-
-					if (((higher & lower) | nearby) != 0x7)
-						continue;
-
-					// fprintf(stderr, "%d->%d (%d, %d) accepted (%f, %f)\n", 
-					//		f1, f2, i, j, ii, jj);
-
-					/*
-					 * Create an orthonormal basis to
-					 * determine line intersection.
-					 */
-
-					point bp0 = _pt1.pw_unscaled(point(i, j, 0));
-					point bp1 = _pt1.pw_unscaled(point(i, j, 10));
-					point bp2 = _pt2.pw_unscaled(point(ii, jj, 0));
-
-					point foo = _pt1.wp_unscaled(bp0);
-					// fprintf(stderr, "(%d, %d, 0) transformed to world and back is: (%f, %f, %f)\n",
-					//		i, j, foo[0], foo[1], foo[2]);
-
-					foo = _pt1.wp_unscaled(bp1);
-					// fprintf(stderr, "(%d, %d, 10)  transformed to world and back is: (%f, %f, %f)\n",
-					//		i, j, foo[0], foo[1], foo[2]);
-
-					point b0  = (bp1 - bp0).normalize();
-					point b1n = bp2 - bp0;
-					point b1  = (b1n - b1n.dproduct(b0) * b0).normalize();
-					point b2  = point(0, 0, 0).xproduct(b0, b1).normalize(); // Should already have norm=1
-					
-
-					foo = _pt1.wp_unscaled(bp0 + 30 * b0);
-
-					/*
-					 * Select a fourth point to define a second line.
-					 */
-
-					point p3  = _pt2.pw_unscaled(point(ii, jj, 10));
-
-					/*
-					 * Representation in the new basis.
-					 */
-
-					d2::point nbp0 = d2::point(bp0.dproduct(b0), bp0.dproduct(b1));
-					d2::point nbp1 = d2::point(bp1.dproduct(b0), bp1.dproduct(b1));
-					d2::point nbp2 = d2::point(bp2.dproduct(b0), bp2.dproduct(b1));
-					d2::point np3  = d2::point( p3.dproduct(b0),  p3.dproduct(b1));
-
-					/*
-					 * Determine intersection of line
-					 * (nbp0, nbp1), which is parallel to
-					 * b0, with line (nbp2, np3).
-					 */
-
-					/*
-					 * XXX: a stronger check would be
-					 * better here, e.g., involving the
-					 * ratio (np3[0] - nbp2[0]) / (np3[1] -
-					 * nbp2[1]).  Also, acceptance of these
-					 * cases is probably better than
-					 * rejection.
-					 */
-
-					if (np3[1] - nbp2[1] == 0)
-						continue;
-
-					d2::point intersection = d2::point(nbp2[0] 
-							+ (nbp0[1] - nbp2[1]) * (np3[0] - nbp2[0]) / (np3[1] - nbp2[1]),
-							nbp0[1]);
-
-					ale_pos b2_offset = b2.dproduct(bp0);
-
-					/*
-					 * Map the intersection back to the world
-					 * basis.
-					 */
-
-					point iw = intersection[0] * b0 + intersection[1] * b1 + b2_offset * b2;
-
-					/*
-					 * Reject intersection points behind a
-					 * camera.
-					 */
-
-					point icp = _pt1.wc(iw);
-					point ics = _pt2.wc(iw);
-
-					if (icp[2] >= 0 || ics[2] >= 0)
-						continue;
-
-					point ip = _pt1.wp_unscaled(iw);
-
-					point is = _pt2.wp_unscaled(iw);
-
-					total_ambiguity++;
-
-					/*
-					 * Refine space around the intersection point.
-					 */
-
-					space_traverse st = space_traverse::root();
-
-					if (!st.includes(iw))
-						continue;
-
-					for(;;) {
-
-						point frame_min[2] = { point::posinf(), point::posinf() },
-						      frame_max[2] = { point::neginf(), point::neginf() };
-
-						point p[2] = { st.get_min(), st.get_max() };
-
-						/*
-						 * Cycle through the corner points bounding the subspace.
-						 */
-
-						for (int ibit = 0; ibit < 2; ibit++)
-						for (int jbit = 0; jbit < 2; jbit++)
-						for (int kbit = 0; kbit < 2; kbit++) {
-							point pp = point(p[ibit][0], p[jbit][1], p[kbit][2]);
-
-							point ppp[2] = {_pt1.wp_unscaled(pp), _pt2.wp_unscaled(pp)};
-
-							for (int f = 0; f < 2; f++)
-							for (int d = 0; d < 3; d++) {
-								if (ppp[f][d] < frame_min[f][d])
-									frame_min[f][d] = ppp[f][d];
-								if (ppp[f][d] > frame_max[f][d])
-									frame_max[f][d] = ppp[f][d];
-							}
-						}
-
-#if 0
-						if (i == 0 && j == 0)
-							fprintf(stderr, "min, max = [(%f, %f, %f), (%f, %f), (%f, %f)], [(%f, %f, %f), (%f, %f), (%f, %f)] [%lu]\n", 
-								p[0][0], p[0][1], p[0][2],
-								frame_min[0][0], frame_min[0][1],
-								frame_min[1][0], frame_min[1][1],
-								p[1][0], p[1][1], p[1][2],
-								frame_max[0][0], frame_max[0][1],
-								frame_max[1][0], frame_max[1][1], time(NULL));
-#endif
-
-						if (frame_min[0].lengthtosq(frame_max[0]) < 2
-						 && frame_min[1].lengthtosq(frame_max[1]) < 2)
-							break;
-
-						if (st.precision_wall())
-							break;
-
-						if (st.positive().includes(iw))
-							st = st.positive();
-						else if (st.negative().includes(iw))
-							st = st.negative();
-						else {
-							fprintf(stderr, "failed iw = (%f, %f, %f)\n", 
-									iw[0], iw[1], iw[2]);
-							assert(0);
-						}
-
-					}
-
-					/*
-					 * Assert that the refined space
-					 * actually corresponds to the desired
-					 * points.  XXX: the current form of
-					 * this assertion relies on all points
-					 * in the bounding box being considered
-					 * as intersecting by all relevant code
-					 * sections.
-					 */
-
-					point bb_pt1[2];
-					point bb_pt2[2];
-
-					st.get_view_local_bb(_pt1, bb_pt1);
-					st.get_view_local_bb(_pt2, bb_pt2);
-
-					if (!(bb_pt1[0][0] <= i)) {
-						fprintf(stderr, "BB failure: i == %d, j == %d, ii == %f, jj = %f, bb_pt1[0][0] == %f\n",
-								i, j, ii, jj, bb_pt1[0][0]);
-					}
-
-//					assert (bb_pt1[0][0] <= i);
-//					assert (bb_pt1[0][1] <= j);
-//
-//					assert (bb_pt1[1][0] >= i);
-//					assert (bb_pt1[1][1] >= j);
-//
-//					assert (bb_pt2[0][0] <= ii);
-//					assert (bb_pt2[0][1] <= jj);
-//
-//					assert (bb_pt2[1][0] >= ii);
-//					assert (bb_pt2[1][1] >= jj);
-
-					/*
-					 * Associate refined space with a
-					 * spatial info structure.
-					 */
-
-					spatial_info_map[st.get_space()];
-				}
 			}
 
 			/*
