@@ -3750,12 +3750,12 @@ public:
 
 	}
 
-	typedef struct {point p; d2::point f1, f2;} analytic;
+	typedef struct {point iw; point ip, is;} analytic;
 	typedef std::multimap<ale_real,analytic> score_map;
 	typedef std::pair<ale_real,analytic> score_map_element;
 
 	/*
-	 * Generate a map from scores to 3D points for various depths in f1.
+	 * Generate a map from scores to 3D points for various depths at point (i, j) in f1.
 	 */
 	static score_map p2f_score_map(unsigned int f1, unsigned int f2, pt _pt1, pt _pt2, 
 			const d2::image *if1, const d2::image *if2, unsigned int i, unsigned int j) {
@@ -3968,6 +3968,18 @@ public:
 			if (icp[2] >= 0 || ics[2] >= 0)
 				continue;
 
+			/*
+			 * Reject clipping plane violations.
+			 */
+
+			if (iw[2] > front_clip
+			 || iw[2] < rear_clip)
+				continue;
+
+			/*
+			 * Accept the point.
+			 */
+
 			point ip = _pt1.wp_unscaled(iw);
 
 			point is = _pt2.wp_unscaled(iw);
@@ -3986,9 +3998,15 @@ public:
 	 * Analyze space in a manner dependent on the score map.
 	 */
 
-	static void analyze_space_from_map(score_map _sm) {
+	static void analyze_space_from_map(unsigned int i, unsigned int j, pt
+			_pt1, pt _pt2, score_map _sm) {
 
-		for( ....  ) {
+		for(score_map::iterator smi = _sm.begin(); smi != _sm.end(); smi++) {
+
+			point iw = smi->second.iw;
+			point ip = smi->second.ip;
+			point is = smi->second.is;
+			
 			/*
 			 * Refine space around the intersection point.
 			 */
@@ -4072,8 +4090,8 @@ public:
 			st.get_view_local_bb(_pt2, bb_pt2);
 
 			if (!(bb_pt1[0][0] <= i)) {
-				fprintf(stderr, "BB failure: i == %d, j == %d, ii == %f, jj = %f, ip == [%f %f %f] bb_pt1[0][0] == %f\n",
-						i, j, ii, jj, ip[0], ip[1], ip[2], bb_pt1[0][0]);
+				fprintf(stderr, "BB failure: i == %d, j == %d, ip == [%f %f %f] bb_pt1[0][0] == %f\n",
+						i, j, ip[0], ip[1], ip[2], bb_pt1[0][0]);
 			}
 
 //					assert (bb_pt1[0][0] <= i);
@@ -4147,7 +4165,7 @@ public:
 				 * Analyze space in a manner dependent on the score map.
 				 */
 
-				analyze_space_from_map(_sm);
+				analyze_space_from_map(i, j, _pt1, _pt2, _sm);
 
 			}
 
