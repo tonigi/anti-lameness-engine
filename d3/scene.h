@@ -3977,19 +3977,69 @@ public:
 				continue;
 
 			/*
-			 * Accept the point.
+			 * Score the point.
 			 */
 
 			point ip = _pt1.wp_unscaled(iw);
 
 			point is = _pt2.wp_unscaled(iw);
 
-			total_ambiguity++;
-
 			analytic _a = { iw, ip, is };
 
-			result.insert(score_map_element(1, _a));
+			/*
+			 * Calculate score from color match.  Assume for now
+			 * that the transformation can be approximated locally
+			 * with a translation.
+			 */
+
+			ale_pos score = 0;
+			ale_pos divisor = 0;
+			ale_pos l1_multiplier = 0.125;
+
+			if (if1->in_bounds(ip.xy())
+			 && if2->in_bounds(is.xy())) {
+				divisor += 1 - l1_multiplier;
+				score += (1 - l1_multiplier)
+				       * (if1->get_bl(ip.xy()) - if2->get_bl(is.xy())).normsq();
+			}
+
+			for (int iii = -1; iii < 1; iii++)
+			for (int jjj = -1; jjj < 1; jjj++) {
+				d2::point t(iii, jjj);
+
+				if (!if1->in_bounds(ip.xy() + t)
+				 || !if2->in_bounds(is.xy() + t))
+					continue;
+
+				divisor += l1_multiplier;
+				score   += l1_multiplier
+					 * (if1->get_bl(ip.xy() + t) - if2->get_bl(is.xy() + t)).normsq();
+					 
+			}
+
+			/*
+			 * Reject points with undefined score.
+			 */
+
+			if (!finite(score / divisor))
+				continue;
+
+			/*
+			 * Add the point to the score map.
+			 */
+
+			total_ambiguity++;
+
+			result.insert(score_map_element(score / divisor, _a));
 		}
+
+//		fprintf(stderr, "Iterating through the score map:\n");
+//
+//		for (score_map::iterator smi = result.begin(); smi != result.end(); smi++) {
+//			fprintf(stderr, "%f ", smi->first);
+//		}
+//
+//		fprintf(stderr, "\n");
 
 		return result;
 	}
