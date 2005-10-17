@@ -4028,8 +4028,6 @@ public:
 			 * Add the point to the score map.
 			 */
 
-			total_ambiguity++;
-
 			result.insert(score_map_element(score / divisor, _a));
 		}
 
@@ -4051,12 +4049,20 @@ public:
 	static void analyze_space_from_map(unsigned int i, unsigned int j, pt
 			_pt1, pt _pt2, score_map _sm) {
 
+		int accumulated_ambiguity = 0;
+		int max_acc_amb = 3;
+
 		for(score_map::iterator smi = _sm.begin(); smi != _sm.end(); smi++) {
 
 			point iw = smi->second.iw;
 			point ip = smi->second.ip;
 			point is = smi->second.is;
-			
+
+			if (accumulated_ambiguity++ >= max_acc_amb)
+				break;
+
+			total_ambiguity++;
+
 			/*
 			 * Refine space around the intersection point.
 			 */
