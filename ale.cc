@@ -1663,6 +1663,8 @@ int main(int argc, const char *argv[]){
 
 				fprintf(stderr, "Total pixels: %lu\n", d3::scene::total_pixels);
 				fprintf(stderr, "Total ambiguity: %lu\n", d3::scene::total_ambiguity);
+				fprintf(stderr, "Total tsteps: %lu\n", d3::scene::total_tsteps);
+				fprintf(stderr, "Total divisions: %lu\n", d3::scene::total_divisions);
 
 				fprintf(stderr, "Reducing cost in 3D scene");
 				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, 

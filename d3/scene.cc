@@ -48,6 +48,8 @@ std::map<struct scene::space *, scene::spatial_info> scene::spatial_info_map;
 
 unsigned long scene::total_ambiguity = 0;
 unsigned long scene::total_pixels = 0;
+unsigned long scene::total_divisions = 0;
+unsigned long scene::total_tsteps = 0;
 
 /*
  * Precision discriminator

@@ -1814,8 +1814,10 @@ class scene {
 
 			assert(current);
 
-			if (current->positive == NULL)
+			if (current->positive == NULL) {
 				current->positive = new space;
+				total_divisions++;
+			}
 			
 			space_traverse result;
 
@@ -1835,8 +1837,10 @@ class scene {
 
 			assert(current);
 
-			if (current->negative == NULL)
+			if (current->negative == NULL) {
 				current->negative = new space;
+				total_divisions++;
+			}
 			
 			space_traverse result;
 
@@ -1988,6 +1992,107 @@ class scene {
 	};
 
 	/*
+	 * List for calculating weighted median.
+	 */
+	class wml {
+		ale_real *data;
+		int size;
+		int used;
+
+		ale_real &_w(unsigned int i) {
+			assert(i < used);
+			return data[i * 2];
+		}
+
+		ale_real &_d(unsigned int i) {
+			assert(i < used);
+			return data[i * 2 + 1];
+		}
+
+		void double_capacity() {
+			data = realloc(data, sizeof(ale_real) * 2 * (size * 2));
+			assert(data);
+			size *= 2;
+			assert (size > used);
+		}
+
+		void insert_weight(int i, ale_real v, ale_real w) {
+			assert(used < size);
+			assert(used > i);
+			for (unsigned int j = used; j > i; j--) {
+				_w(j) = _w(j - 1);
+				_d(j) = _d(j - 1);
+			}
+
+			_w(i) = w;
+			_d(i) = v;
+
+			used++;
+		}
+
+	public:
+		void insert_weight(ale_real v, ale_real w) {
+			for (unsigned int i = 0; i < used; i++) {
+				if (_d(i) == v) {
+					_w(i) += w;
+					return;
+				}
+				if (_d(i) > v) {
+					if (used == size)
+						double_capacity();
+					insert_weight(i, v, w);
+				}
+			}
+		}
+
+		ale_real find_median() {
+			ale_real zero1 = 0;
+			ale_real zero2 = 0;
+			ale_real undefined = zero1 / zero2;
+
+			ale_accum weight_sum = 0;
+
+			for (unsigned int i = 0; i < used; i++)
+				weight_sum += _w[i];
+
+			if (weight_sum == 0)
+				return undefined;
+
+			ale_accum midpoint = weight_sum / 2;
+
+			ale_accum weight_sum_2 = 0;
+
+			for (unsigned int i = 0; i < used && weight_sum_2 < midpoint; i++) {
+				weight_sum_2 += _w(i);
+
+				if (weight_sum_2 > midpoint) {
+					return _d(i);
+				} else if (weight_sum_2 == midpoint) {
+					assert (i + 1 < used);
+					return (_d(i) + _d(i + 1)) / 2;
+				} 
+			}
+
+			assert(0);
+
+			return undefined;
+		}
+
+		wml(int initial_size = 0) {
+
+			if (initial_size == 0) {
+				initial_size = d2::image_rw::count() * 1.5;
+			}
+
+			size = initial_size;
+			used = 0;
+			data = (ale_real *) malloc(initial_size * sizeof(ale_real) * 2);
+
+			assert(data);
+		}
+	}
+
+	/*
 	 * Class for information regarding spatial regions of interest.
 	 *
 	 * This class is configured for convenience in cases where sampling is
@@ -2001,8 +2106,8 @@ class scene {
 		/*
 		 * Map channel value --> weight.
 		 */
-		std::map<ale_real, ale_real> color_weights_1[3];
-		std::map<ale_real, ale_real> color_weights_2[3];
+		wml color_weights_1[3];
+		wml color_weights_2[3];
 
 		/*
 		 * Current color.
@@ -2012,8 +2117,8 @@ class scene {
 		/*
 		 * Map occupancy value --> weight.
 		 */
-		std::map<ale_real, ale_real> occupancy_weights_1;
-		std::map<ale_real, ale_real> occupancy_weights_2;
+		wml occupancy_weights_1;
+		wml occupancy_weights_2;
 
 		/*
 		 * Current occupancy value.
@@ -2023,57 +2128,15 @@ class scene {
 		/*
 		 * Insert a weight into a list.
 		 */
-		void insert_weight(std::map<ale_real, ale_real> *m, ale_real v, ale_real w) {
-			if (m->count(v))
-				(*m)[v] += w;
-			else
-				(*m)[v] = w;
+		void insert_weight(wml *m, ale_real v, ale_real w) {
+			m->insert_weight(v, w);
 		}
 
 		/*
 		 * Find the median of a weighted list.  Uses NaN for undefined.
 		 */
 		ale_real find_median(std::map<ale_real, ale_real> *m) {
-			std::map<ale_real, ale_real>::iterator a = m->begin(),
-				                               b = m->begin();
-
-			ale_real zero1 = 0;
-			ale_real zero2 = 0;
-			ale_real undefined = zero1 / zero2;
-
-			ale_accum weight_sum = 0;
-
-			while (a != m->end()) {
-				weight_sum += a->first;
-				a++;
-			}
-
-			if (weight_sum == 0)
-				return undefined;
-
-			ale_accum midpoint = weight_sum / 2;
-
-			ale_accum weight_sum_2 = 0;
-
-			while (b != m->end() && weight_sum_2 < midpoint) {
-				weight_sum_2 += b->first;
-
-				if (weight_sum_2 > midpoint) {
-					return b->second;
-				} else if (weight_sum_2 == midpoint) {
-					ale_accum first_value = b->second;
-					b++;
-					assert (b != m->end());
-
-					return (first_value + b->second) / 2;
-				} 
-
-				b++;
-			}
-
-			assert(0);
-
-			return undefined;
+			return m->find_median();
 		}
 
 	public:
@@ -2896,6 +2959,8 @@ public:
 
 	static unsigned long total_ambiguity;
 	static unsigned long total_pixels;
+	static unsigned long total_divisions;
+	static unsigned long total_tsteps;
 
 	/*
 	 * Member functions
@@ -4117,11 +4182,13 @@ public:
 				if (st.precision_wall())
 					break;
 
-				if (st.positive().includes(iw))
+				if (st.positive().includes(iw)) {
 					st = st.positive();
-				else if (st.negative().includes(iw))
+					total_tsteps++;
+				} else if (st.negative().includes(iw)) {
 					st = st.negative();
-				else {
+					total_tsteps++;
+				} else {
 					fprintf(stderr, "failed iw = (%f, %f, %f)\n", 
 							iw[0], iw[1], iw[2]);
 					assert(0);
@@ -4167,7 +4234,13 @@ public:
 			 * spatial info structure.
 			 */
 
+#if 0
+			/*
+			 * XXX: Disable this for testing.
+			 */
+
 			spatial_info_map[st.get_space()];
+#endif
 		}
 	}
 
