@@ -1996,29 +1996,33 @@ class scene {
 	 */
 	class wml {
 		ale_real *data;
-		int size;
-		int used;
+		unsigned int size;
+		unsigned int used;
 
 		ale_real &_w(unsigned int i) {
-			assert(i < used);
+			assert(i <= used);
 			return data[i * 2];
 		}
 
 		ale_real &_d(unsigned int i) {
-			assert(i < used);
+			assert(i <= used);
 			return data[i * 2 + 1];
 		}
 
 		void double_capacity() {
-			data = realloc(data, sizeof(ale_real) * 2 * (size * 2));
+			data = (ale_real *) realloc(data, sizeof(ale_real) * 2 * (size * 2));
+			if (!data) {
+				fprintf(stderr, "Unable to allocate %d bytes of memory\n",
+						sizeof(ale_real) * 2 * (size * 2));
+			} 
 			assert(data);
 			size *= 2;
 			assert (size > used);
 		}
 
-		void insert_weight(int i, ale_real v, ale_real w) {
+		void insert_weight(unsigned int i, ale_real v, ale_real w) {
 			assert(used < size);
-			assert(used > i);
+			assert(used >= i);
 			for (unsigned int j = used; j > i; j--) {
 				_w(j) = _w(j - 1);
 				_d(j) = _d(j - 1);
@@ -2031,6 +2035,10 @@ class scene {
 		}
 
 	public:
+		void clear() {
+			used = 0;
+		}
+
 		void insert_weight(ale_real v, ale_real w) {
 			for (unsigned int i = 0; i < used; i++) {
 				if (_d(i) == v) {
@@ -2041,8 +2049,12 @@ class scene {
 					if (used == size)
 						double_capacity();
 					insert_weight(i, v, w);
+					return;
 				}
 			}
+			if (used == size)
+				double_capacity();
+			insert_weight(used, v, w);
 		}
 
 		ale_real find_median() {
@@ -2053,7 +2065,7 @@ class scene {
 			ale_accum weight_sum = 0;
 
 			for (unsigned int i = 0; i < used; i++)
-				weight_sum += _w[i];
+				weight_sum += _w(i);
 
 			if (weight_sum == 0)
 				return undefined;
@@ -2081,7 +2093,7 @@ class scene {
 		wml(int initial_size = 0) {
 
 			if (initial_size == 0) {
-				initial_size = d2::image_rw::count() * 1.5;
+				initial_size = (int) (d2::image_rw::count() * 1.5);
 			}
 
 			size = initial_size;
@@ -2090,7 +2102,24 @@ class scene {
 
 			assert(data);
 		}
-	}
+
+		/*
+		 * copy constructor.  This is required to avoid undesired frees.
+		 */
+
+		wml(const wml &w) {
+			size = w.size;
+			used = w.used;
+			data = (ale_real *) malloc(size * sizeof(ale_real) * 2);
+			assert(data);
+
+			memcpy(data, w.data, size * sizeof(ale_real) * 2);
+		}
+
+		~wml() {
+			free(data);
+		}
+	};
 
 	/*
 	 * Class for information regarding spatial regions of interest.
@@ -2135,7 +2164,7 @@ class scene {
 		/*
 		 * Find the median of a weighted list.  Uses NaN for undefined.
 		 */
-		ale_real find_median(std::map<ale_real, ale_real> *m) {
+		ale_real find_median(wml *m) {
 			return m->find_median();
 		}
 
@@ -4234,13 +4263,7 @@ public:
 			 * spatial info structure.
 			 */
 
-#if 0
-			/*
-			 * XXX: Disable this for testing.
-			 */
-
 			spatial_info_map[st.get_space()];
-#endif
 		}
 	}
 
