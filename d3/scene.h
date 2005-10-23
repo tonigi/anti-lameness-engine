@@ -2035,6 +2035,18 @@ class scene {
 		}
 
 	public:
+
+		unsigned int get_size() {
+			return size;
+		}
+
+		void print_info() {
+			fprintf(stderr, "[st %p sz %u el", this, size);
+			for (unsigned int i = 0; i < used; i++)
+				fprintf(stderr, " (%f, %f)", _d(i), _w(i));
+			fprintf(stderr, "]\n");
+		}
+
 		void clear() {
 			used = 0;
 		}
@@ -2180,7 +2192,7 @@ class scene {
 		/*
 		 * Accumulate color; primary data set.
 		 */
-		void accumulate_color_1(d2::pixel color, d2::pixel weight) {
+		void accumulate_color_1(int f, int i, int j, d2::pixel color, d2::pixel weight) {
 			for (int k = 0; k < 3; k++)
 				insert_weight(&color_weights_1[k], color[k], weight[k]);
 		}
@@ -2196,7 +2208,7 @@ class scene {
 		/*
 		 * Accumulate occupancy; primary data set.
 		 */
-		void accumulate_occupancy_1(ale_real occupancy, ale_real weight) {
+		void accumulate_occupancy_1(int f, int i, int j, ale_real occupancy, ale_real weight) {
 			insert_weight(&occupancy_weights_1, occupancy, weight);
 		}
 
@@ -2205,6 +2217,12 @@ class scene {
 		 */
 		void accumulate_occupancy_2(ale_real occupancy, ale_real weight) {
 			insert_weight(&occupancy_weights_2, occupancy, weight);
+			
+			if (occupancy == 0 || occupancy_weights_2.get_size() < 96)
+				return;
+
+			// fprintf(stderr, "%p updated socc with: %f %f\n", this, occupancy, weight);
+			// occupancy_weights_2.print_info();
 		}
 
 		/*
@@ -3347,10 +3365,11 @@ public:
 					d2::pixel colordiff = color - pcolor;
 
 					/*
-					 * Determine the probability of encounter.
+					 * Determine the probability of
+					 * encounter, divided by the occupancy.
 					 */
 
-					d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
+					d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j));
 
 					/*
 					 * Scale for encounter probability exponent.
@@ -3362,12 +3381,12 @@ public:
 					 * Update subspace.
 					 */
 
-					sn->accumulate_color_1(pcolor, encounter);
+					sn->accumulate_color_1(f, i, j, pcolor, encounter);
 					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
 					for (int k = 0; k < 3; k++)
-						sn->accumulate_occupancy_1(channel_occ[k], encounter[k]);
+						sn->accumulate_occupancy_1(f, i, j, channel_occ[k], encounter[k]);
 
-					weights->pix(i, j) += encounter;
+					weights->pix(i, j) += encounter * occupancy;
 				}
 
 			} while (si.next());
