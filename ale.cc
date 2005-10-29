@@ -1048,6 +1048,14 @@ int main(int argc, const char *argv[]){
 			d3::cpf::err_median();
 		} else if (!strcmp(argv[i], "--cpp-err-mean")) {
 			d3::cpf::err_mean();
+		} else if (!strcmp(argv[i], "--vp-adjust")) {
+			d3::align::vp_adjust();
+		} else if (!strcmp(argv[i], "--vp-noadjust")) {
+			d3::align::vp_noadjust();
+		} else if (!strcmp(argv[i], "--vo-adjust")) {
+			d3::align::vo_adjust();
+		} else if (!strcmp(argv[i], "--vo-noadjust")) {
+			d3::align::vo_noadjust();
 		} else if (!strcmp(argv[i], "--ip-mean")) {
 			ip_use_median = 0;
 		} else if (!strcmp(argv[i], "--ip-median")) {

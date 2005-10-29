@@ -2040,6 +2040,10 @@ class scene {
 			return size;
 		}
 
+		unsigned int get_used() {
+			return used;
+		}
+
 		void print_info() {
 			fprintf(stderr, "[st %p sz %u el", this, size);
 			for (unsigned int i = 0; i < used; i++)
@@ -2167,6 +2171,13 @@ class scene {
 		ale_real occupancy;
 
 		/*
+		 * pocc/socc density
+		 */
+
+		unsigned int pocc_density;
+		unsigned int socc_density;
+
+		/*
 		 * Insert a weight into a list.
 		 */
 		void insert_weight(wml *m, ale_real v, ale_real w) {
@@ -2187,6 +2198,8 @@ class scene {
 		spatial_info() {
 			color = d2::pixel::zero();
 			occupancy = 0.5;
+			pocc_density = 0;
+			socc_density = 0;
 		}
 
 		/*
@@ -2255,6 +2268,9 @@ class scene {
 
 			occupancy = o;
 
+			pocc_density = occupancy_weights_1.get_used();
+			socc_density = occupancy_weights_2.get_used();
+
 			occupancy_weights_1.clear();
 			occupancy_weights_2.clear();
 		}
@@ -2271,6 +2287,18 @@ class scene {
 		 */
 		ale_real get_occupancy() {
 			return occupancy;
+		}
+
+		/*
+		 * Get primary color density.
+		 */
+
+		unsigned int get_pocc_density() {
+			return pocc_density;
+		}
+
+		unsigned int get_socc_density() {
+			return socc_density;
 		}
 	};
 
@@ -3352,6 +3380,33 @@ public:
 				point max = bb[1];
 
 				/*
+				 * Use the center of the bounding box to grab interpolation data.
+				 */
+
+				d2::point interp((min[0] + max[0]) / 2, (min[1] + max[1]) / 2);
+
+				/*
+				 * For interpolation points, ensure that the
+				 * bounding box area is at least 0.25.
+				 */
+
+				if ((max[0] - min[0]) * (max[1] - min[1]) > 0.25
+				 && max[0] > min[0]
+				 && max[1] > min[1]) {
+					d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_bl(interp));
+					d2::pixel pcolor = im->get_bl(interp);
+					d2::pixel colordiff = color - pcolor;
+
+					ale_real exp_scale = 256 * 256;
+
+//					sn->accumulate_color_2(pcolor, encounter);
+					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
+					for (int k = 0; k < 3; k++)
+						sn->accumulate_occupancy_2(channel_occ[k], encounter[k]);
+				}
+					
+
+				/*
 				 * Iterate over pixels in the bounding box,
 				 * adding new data to the subspace.  XXX:
 				 * assume for now that all pixels in the
@@ -3383,8 +3438,8 @@ public:
 
 					sn->accumulate_color_1(f, i, j, pcolor, encounter);
 					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
-					for (int k = 0; k < 3; k++)
-						sn->accumulate_occupancy_1(f, i, j, channel_occ[k], encounter[k]);
+//					for (int k = 0; k < 3; k++)
+//						sn->accumulate_occupancy_1(f, i, j, channel_occ[k], encounter[k]);
 
 					weights->pix(i, j) += encounter * occupancy;
 				}
@@ -3696,14 +3751,14 @@ public:
 				 * Update images.
 				 */
 
-#if 0
+#if 1
 				/*
 				 * Weighted (transparent) depth display
 				 */
 				ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
 				weights->pix(i, j) += encounter;
 				im->pix(i, j)      += encounter * depth_value;
-#elif 1
+#elif 0
 				/*
 				 * Ambiguity (ambivalence) measure.
 				 */
@@ -3723,12 +3778,20 @@ public:
 				} else {
 					continue;
 				}
+#elif 0
+				/*
+				 * Weighted (transparent) contribution display
+				 */
+				ale_pos contribution_value = sn.get_pocc_density() + sn.get_socc_density();
+				weights->pix(i, j) += encounter;
+				im->pix(i, j)      += encounter * contribution_value;
 #else
 				/*
-				 * Probability distribution.
+				 * Weighted (transparent) occupancy display
 				 */
-
-
+				ale_pos contribution_value = occupancy;
+				weights->pix(i, j) += encounter;
+				im->pix(i, j)      += encounter * contribution_value;
 #endif
 			}
 
@@ -4375,7 +4438,7 @@ public:
 		 * Subspace model
 		 */
 
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 20; i++)
 			spatial_info_update();
 
 #else

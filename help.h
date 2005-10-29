@@ -588,6 +588,10 @@ public:
 			"--cpp-err-median  Use median error to determine camera parameters.               \n"
 			"--va-upper=<x>    View-angle perturbation upper bound in degrees  [default is 32]\n"
 			"--st <x>          Set stereo threshold to <x> pixels.              [default is 4]\n"
+			"--vp-adjust       Adjust the view point                                 [default]\n"
+			"--vp-noadjust     Do not adjust the view point\n"
+			"--vo-adjust       Adjust the view orientation                           [default]\n"
+			"--vo-noadjust     Do not adjust the view orientation\n"
 			BETWEEN_SECTIONS
 			"Model costs:\n"
 			HEADER_SPACE

@@ -39,6 +39,8 @@
 class align {
 	static ale_pos _init_angle;
 	static et *alignment_array;
+	static int _vp_adjust;
+	static int _vo_adjust;
 
 	/*
 	 * Estimate the point at which the pyramidal axis passes through the
@@ -232,6 +234,22 @@ class align {
 	}
 
 public:
+
+	vp_adjust() {
+		_vp_adjust = 1;
+	}
+
+	vp_noadjust() {
+		_vp_adjust = 0;
+	}
+
+	vo_adjust() {
+		_vo_adjust = 1;
+	}
+
+	vo_noadjust() {
+		_vo_adjust = 0;
+	}
 
 	/* 
 	 * Set the initial estimated diagonal viewing angle of the view

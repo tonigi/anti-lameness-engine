@@ -26,3 +26,5 @@
 
 ale_pos align::_init_angle;
 et *align::alignment_array = NULL;
+int align::_vp_adjust = 1;
+int align::_vo_adjust = 1;
