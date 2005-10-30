@@ -235,19 +235,19 @@ class align {
 
 public:
 
-	vp_adjust() {
+	static void vp_adjust() {
 		_vp_adjust = 1;
 	}
 
-	vp_noadjust() {
+	static void vp_noadjust() {
 		_vp_adjust = 0;
 	}
 
-	vo_adjust() {
+	static void vo_adjust() {
 		_vo_adjust = 1;
 	}
 
-	vo_noadjust() {
+	static void vo_noadjust() {
 		_vo_adjust = 0;
 	}
 
@@ -396,12 +396,21 @@ public:
 			// fprintf(stderr, "position (n=%d) %f %f %f\n", i, estimate[0], estimate[1], estimate[2]);
 
 			/*
-			 * Modify translation values
+			 * Modify translation values, if desired.
 			 */
 
-			alignment_array[i].modify_translation(0, -estimate[0]);
-			alignment_array[i].modify_translation(1, -estimate[1]);
-			alignment_array[i].modify_translation(2, -estimate[2]);
+			if (_vp_adjust) {
+				alignment_array[i].modify_translation(0, -estimate[0]);
+				alignment_array[i].modify_translation(1, -estimate[1]);
+				alignment_array[i].modify_translation(2, -estimate[2]);
+			} else {
+
+				/*
+				 * Establish a default translation value.
+				 */
+
+				alignment_array[i].modify_translation(2, -1);
+			}
 
 			/*
 			 * Assert that the z-axis translation is nonzero.  This
@@ -409,6 +418,14 @@ public:
 			 */
 
 			assert (estimate[2] != 0);
+
+			/*
+			 * Check whether rotation adjustment must proceed.
+			 */
+
+			if (!_vo_adjust) {
+				continue;
+			}
 
 			/*
 			 * Modify rotation values
