@@ -1210,6 +1210,14 @@ int main(int argc, const char *argv[]){
 			tsave_delete(tsave);
 			tsave = d2::tsave_new(argv[i] + strlen("--trans-save="));
 			d2::align::set_tsave(tsave);
+		} else if (!strncmp(argv[i], "--3d-trans-load=", strlen("--3d-trans-load="))) {
+			d3::tload_delete(d3_tload);
+			d3_tload = d3::tload_new(argv[i] + strlen("--3d-trans-load="));
+			d3::align::set_tload(d3_tload);
+		} else if (!strncmp(argv[i], "--3d-trans-save=", strlen("--3d-trans-save="))) {
+			d3::tsave_delete(d3_tsave);
+			d3_tsave = d3::tsave_new(argv[i] + strlen("--3d-trans-save="));
+			d3::align::set_tsave(d3_tsave);
 		} else {
 
 			/*

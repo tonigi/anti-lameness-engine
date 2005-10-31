@@ -593,6 +593,11 @@ public:
 			"--vo-adjust       Adjust the view orientation                           [default]\n"
 			"--vo-noadjust     Do not adjust the view orientation\n"
 			BETWEEN_SECTIONS
+			"Transformation file operations:\n"
+			HEADER_SPACE
+			"--3d-trans-load=x Load initial transformation settings from file x\n"
+			"--3d-trans-save=x Save final transformation data in file x\n"
+			BETWEEN_SECTIONS
 			"Model costs:\n"
 			HEADER_SPACE
 			"--ecm <x>         Set edge length cost multiplier <x>.             [default is 0]\n"
