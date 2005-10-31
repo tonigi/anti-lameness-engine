@@ -42,6 +42,8 @@ class align {
 	static et *alignment_array;
 	static int _vp_adjust;
 	static int _vo_adjust;
+	static tload_t *tload;
+	static tsave_t *tsave;
 
 	/*
 	 * Estimate the point at which the pyramidal axis passes through the
@@ -236,12 +238,41 @@ class align {
 
 public:
 
+	/*
+	 * Get alignment for frame N.
+	 */
+	static et of(unsigned int n) {
+		assert (n < d2::image_rw::count());
+		assert (alignment_array);
+
+		return alignment_array[n];
+	}
+
+	static double angle_of(unsigned int n) {
+		return _init_angle;
+	}
+
+	static pt projective(unsigned int n) {
+		return pt(d2::align::of(n), of(n), angle_of(n));
+	}
+
 	static void set_tload(tload_t *t) {
-		assert(0);
+		tload = t;
 	}
 
 	static void set_tsave(tsave_t *t) {
-		assert(0);
+		tsave = t;
+	}
+
+	static void write_alignments() {
+		int count = d2::image_rw::count();
+
+		if (count > 0) 
+			tsave_first(tsave, projective(0));
+
+		for (int i = 1; i < count; i++) {
+			tsave_next(tsave, projective(i));
+		}
 	}
 
 	static void vp_adjust() {
@@ -405,6 +436,24 @@ public:
 			// fprintf(stderr, "position (n=%d) %f %f %f\n", i, estimate[0], estimate[1], estimate[2]);
 
 			/*
+			 * Load any transformations.
+			 */
+
+			if (i == 0) {
+				int is_default;
+				pt p = tload_first(tload, projective(i), &is_default);
+				_init_angle = p.view_angle();
+			} else {
+				int is_default;
+				pt p = tload_next(tload, projective(i), &is_default);
+				
+				if (p.view_angle() != _init_angle) {
+					fprintf(stderr, "Error: variation in view angle is not currently supported.\n");
+					exit(1);
+				}
+			}
+
+			/*
 			 * Modify translation values, if desired.
 			 */
 
@@ -562,24 +611,6 @@ public:
 			assert (alignment_array[i](a)[0] < 0);
 			assert (alignment_array[i](a)[1] < 0);
 		}
-	}
-
-	/*
-	 * Get alignment for frame N.
-	 */
-	static et of(unsigned int n) {
-		assert (n < d2::image_rw::count());
-		assert (alignment_array);
-
-		return alignment_array[n];
-	}
-
-	static double angle_of(unsigned int n) {
-		return _init_angle;
-	}
-
-	static pt projective(unsigned int n) {
-		return pt(d2::align::of(n), of(n), angle_of(n));
 	}
 
 	static void adjust_translation(unsigned int n, int d, ale_pos x) {
