@@ -35,6 +35,7 @@
 #include "point.h"
 #include "et.h"
 #include "pt.h"
+#include "tfile.h"
 
 class align {
 	static ale_pos _init_angle;
@@ -234,6 +235,14 @@ class align {
 	}
 
 public:
+
+	static void set_tload(tload_t *t) {
+		assert(0);
+	}
+
+	static void set_tsave(tsave_t *t) {
+		assert(0);
+	}
 
 	static void vp_adjust() {
 		_vp_adjust = 1;

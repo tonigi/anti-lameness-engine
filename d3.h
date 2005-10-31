@@ -35,6 +35,7 @@ namespace d3 {
 
 #include "d3/align.h"
 #include "d3/et.h"
+#include "d3/tfile.h"
 #include "d3/point.h"
 #include "d3/cpf.h"
 #include "d3/scene.h"

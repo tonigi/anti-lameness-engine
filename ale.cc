@@ -316,6 +316,8 @@ int main(int argc, const char *argv[]){
 	int extend = 0;
 	struct d2::tload_t *tload = NULL;
 	struct d2::tsave_t *tsave = NULL;
+	struct d3::tload_t *d3_tload = NULL;
+	struct d3::tsave_t *d3_tsave = NULL;
 	int ip_iterations = 0;
 	int ip_use_median = 0;
 	enum { psf_linear, psf_nonlinear, psf_N };

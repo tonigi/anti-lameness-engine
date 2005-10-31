@@ -64,6 +64,14 @@ public:
 	}
 
 	/*
+	 * Get euclidean transformation reference.
+	 */
+
+	et &e() {
+		return euclidean;
+	}
+
+	/*
 	 * Modify scale factor
 	 */
 	void scale(ale_pos sf) {

@@ -291,6 +291,16 @@ public:
 	}
 
 	/*
+	 * Set Euclidean parameters (x, y, z, P, Y, R).
+	 */
+	void set(double values[6]) {
+		for (int i = 0; i < 3; i++) 
+			translation[i] = values[i];
+		for (int i = 0; i < 3; i++)
+			rotation[i] = values[i + 3];
+	}
+
+	/*
 	 * Adjust translation in the indicated manner.
 	 */
 	void modify_translation(int i1, ale_pos diff) {

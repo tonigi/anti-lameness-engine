@@ -31,8 +31,8 @@
 
 #include "pt.h"
 
-#define TFILE_VERSION     0
-#define TFILE_VERSION_MAX 0
+#define D3_TFILE_VERSION     0
+#define D3_TFILE_VERSION_MAX 0
 
 extern int tfile_input_version;
 extern int tfile_output_version;
@@ -54,7 +54,6 @@ struct tsave_t {
 	const char *filename;
 	const char *target;
 	const char *orig;
-	pixel orig_apm;
 	FILE *file;
 };
 
@@ -92,7 +91,7 @@ static inline struct tload_t *tload_new(const char *filename) {
  *	IS_DEFAULT is used to signal a non-default transformation result.
  */
 
-static inline transformation tload_first(struct tload_t *t,
+static inline pt tload_first(struct tload_t *t,
 		pt default_transform, int *is_default) {
 
 	pt result = default_transform;
@@ -140,7 +139,7 @@ static inline transformation tload_first(struct tload_t *t,
 		ungetc(first_character, t->file);
 
 	if (first_character != 'W') {
-		fprintf(stderr, "\n"3d-trans-load: First command must be a version number.\n");
+		fprintf(stderr, "\n3d-trans-load: First command must be a version number.\n");
 		exit(1);
 	}
 
@@ -162,7 +161,7 @@ static inline transformation tload_first(struct tload_t *t,
 		fprintf(stderr, "Error in 3d transformation "
 				"file version command.\n");
 		exit(1);
-	} else if (tfile_input_version > TFILE_VERSION_MAX) {
+	} else if (tfile_input_version > D3_TFILE_VERSION_MAX) {
 		fprintf(stderr, "Unsupported 3D transformation "
 				"file version %d\n", 
 				tfile_input_version);
@@ -223,7 +222,7 @@ static inline transformation tload_first(struct tload_t *t,
 				{
 					double width, height;
 					double values[6] = {0, 0, -1, 0, 0, 0};
-					int count, i;
+					int count;
 
 					count = sscanf(line, "E %lf%lf%lf%lf%lf%lf%lf%lf",
 							&width, &height,
@@ -240,9 +239,7 @@ static inline transformation tload_first(struct tload_t *t,
 								"Scaled image width and/or height mismatch.");
 					}
 
-					assert(0);
-
-					result.eu_set(eu);
+					result.e().set(values);
 
 					return result;
 				}
@@ -276,10 +273,10 @@ static inline transformation tload_first(struct tload_t *t,
  *	IS_DEFAULT is used to signal a non-default transformation result.
  */
 
-static inline transformation tload_next(struct tload_t *t, int is_p, 
-		transformation default_transform, int *is_default) {
+static inline pt tload_next(struct tload_t *t, 
+		pt default_transform, int *is_default) {
 
-	transformation result = default_transform;
+	pt result = default_transform;
 
 	*is_default = 1;
 
@@ -312,111 +309,21 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 			case 'd':
 				/* Default transformation */
 				return result;
-			case 'B':
-			case 'b':
-				if (tfile_input_version < 3) {
-					fprintf(stderr, "\ntrans-load: Error: "
-						"Barrel distortion not supported "
-						"for version %d input files.\n"
-						"trans-load: Hint:  Use version 3 "
-						"file syntax.\n", tfile_input_version);
+			case 'V':
+			case 'v':
+				unsigned int count;
+				double view_angle;
+
+				count = sscanf(line, "V %lf", &view_angle);
+
+				if (count < 1) {
+					fprintf(stderr, "\n3d-trans-load: Error: "
+							"Malformed 'V' command.\n");
 					exit(1);
-				} else {
-					unsigned int count;
-					unsigned int pos = 0, chars;
-					unsigned int bdc;
-					ale_pos parameters[BARREL_DEGREE];
-					double dparameters[BARREL_DEGREE];
-
-					count = sscanf(line, "B %u%n", &bdc, &chars);
-					pos += chars;
-
-					if (count < 1) {
-						fprintf(stderr, "\ntrans-load: Error: "
-								"Malformed 'B' command.\n");
-						exit(1);
-					}
-
-					if (bdc > result.bd_max()) {
-						fprintf(stderr, "\ntrans-load: Error: "
-								"Barrel distortion degree %d "
-								"is too large.  (Maximum is %d.)\n"
-								"trans-load: Hint:  "
-								"Reduce degree or re-compile "
-								"with BD_DEGREE=%d\n", bdc, BARREL_DEGREE, bdc);
-						exit(1);
-					}
-
-					for (unsigned int d = 0; d < bdc; d++) {
-						count = sscanf(line + pos, "%lf%n", &dparameters[d], &chars);
-						pos += chars;
-
-						if (count < 1) {
-							fprintf(stderr, "\ntrans-load: Error: "
-									"Malformed 'B' command.\n");
-							exit(1);
-						}
-
-						parameters[d] = dparameters[d];
-					}
-
-					result.bd_set(bdc, parameters);
 				}
-				break;
-			case 'P':
-			case 'p':
-				/* Projective transformation data */
-				*is_default = 0;
-				if (is_p == 0) {
-					fprintf(stderr, "\ntrans-load: Error: "
-						"Projective data for euclidean "
-						"transformation.\n"
-						"trans-load: Hint:  "
-						"Use command-line option --projective.\n");
-					exit(1);
-				} else {
-					double width, height, values[8];
-					int count, i;
-					point x[4];
 
-					count = sscanf(line, "P %lf%lf%lf%lf%lf%lf%lf%lf%lf%lf", &width, &height,
-							&values[0], &values[1], &values[2], &values[3],
-							&values[4], &values[5], &values[6], &values[7]);
-				
-					int index = 0;
-					for (int i = 0; i < 4; i++)
-					for (int j = 1; j >= 0; j--) 
-						x[i][j] = values[index++];
+				result.view_angle(view_angle);
 
-					if (count < 10) 
-						fprintf(stderr, "\ntrans-load: warning:"
-								"Missing args for 'P'\n");
-
-					for (i = 0; i < count - 2; i++) {
-						ale_pos factor = (i % 2)
-							? (result.scaled_width() / width)
-							: (result.scaled_height() / height);
-							
-						x[i / 2][i % 2] *= factor;
-					}
-
-					if (tfile_input_version < 1) {
-						/*
-						 * Accommodate older versions
-						 * of tfile.
-						 */
-						for (i = 0; i < 4; i++) {
-							ale_pos y = x[i][0];
-							  x[i][0] = x[i][1];
-							  x[i][1] = y;
-						}
-						result.gpt_v0_set(x);
-					} else {
-						result.gpt_set(x);
-					}
-
-					return result;
-				}
 				break;
 			case 'E':
 			case 'e':
@@ -424,42 +331,25 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 				*is_default = 0;
 				{
 					double width, height;
-					double values[3] = {0, 0, 0};
-					int count, i;
-					ale_pos eu[3];
+					double values[6] = {0, 0, -1, 0, 0, 0};
+					int count;
 
-					count = sscanf(line, "E %lf%lf%lf%lf%lf",
+					count = sscanf(line, "E %lf%lf%lf%lf%lf%lf%lf%lf",
 							&width, &height,
-							&values[0], &values[1], &values[2]);
+							&values[0], &values[1], &values[2],
+							&values[3], &values[4], &values[5]);
 
-					eu[1] = values[0];
-					eu[0] = values[1];
-					eu[2] = values[2];
-
-					if (tfile_input_version < 2) {
-						ale_pos t = eu[0];
-						   eu[0] = eu[1];
-						   eu[1] = t;
-					}
-
-
-					if (count < 5) 
-						fprintf(stderr, "\ntrans-load: warning:"
+					if (count < 8) 
+						fprintf(stderr, "\n3d-trans-load: warning: "
 								"Missing args for 'E'\n");
 
-					for (i = 0; (i < count - 2) && (i < 2); i++) {
-						ale_pos factor = (i % 2)
-							? (result.scaled_width() / width)
-							: (result.scaled_height() / height);
-							
-						eu[i] *= factor;
+					if (width != result.scaled_width()
+					 || height != result.scaled_height()) {
+						fprintf(stderr, "\n3d-trans-load: Error: "
+								"Scaled image width and/or height mismatch.");
 					}
 
-					if (tfile_input_version < 1) {
-						result.eu_v0_set(eu);
-					} else {		
-						result.eu_set(eu);
-					}
+					result.e().set(values);
 
 					return result;
 				}
@@ -497,7 +387,7 @@ static inline struct tsave_t *tsave_new(const char *filename) {
 	result->target = "unknown";
 
 	fprintf(file, "# created by ALE transformation file handler version %d\n", 
-			TFILE_VERSION);
+			D3_TFILE_VERSION);
 
 	fclose(file);
 
@@ -515,70 +405,31 @@ static inline struct tsave_t *tsave_new(const char *filename) {
  *
  */
 
-static inline void tsave_first(struct tsave_t *t, transformation offset, int is_projective) {
+static inline void tsave_first(struct tsave_t *t, pt offset) {
 
 	if (t == NULL)
 		return;
 
 	t->file = fopen(t->filename, "a");
 	
-	/*
-	 * Determine the output version to use.  We use version 3 output syntax only when 
-	 * necessary.  This comprises two cases:
-	 *
-	 *   (i)  an input file is used, and this file uses version 3 syntax.
-	 *   (ii) non-degenerate barrel distortion correction is selected.
-	 *
-	 * (i) can be directly examined.  When (i) does not hold, (ii) can be
-	 * inferred from offset.bd_count(), since this value should be constant
-	 * when (i) does not hold.  XXX: This logic should be reviewed.
-	 */
+	tfile_output_version = 0;
 
-	if (tfile_input_version == 3 || offset.bd_count() > 0) 
-		tfile_output_version = 3;
-	else
-		tfile_output_version = 2;
-	
-	
-	fprintf(t->file, "# producing transformation file syntax version %d\n", tfile_output_version);
+	fprintf(t->file, "# producing 3D transformation file syntax version %d\n", tfile_output_version);
 	fprintf(t->file, "V %d\n", tfile_output_version);
 
 	fprintf(t->file, "# Comment: Target output file is %s\n", t->target);
 	fprintf(t->file, "# Comment: Original frame is %s\n", t->orig);
-	fprintf(t->file, "# Comment: Avg magnitude [r=%f g=%f b=%f]\n", t->orig_apm[0], t->orig_apm[1], t->orig_apm[2]);
 
-	if (tfile_output_version < 3) {
-		fclose(t->file);
-		return;
-	}
+	fprintf(t->file, "V %lf\n", offset.view_angle());
 
-	if (offset.bd_count() > 0) {
-		assert (tfile_output_version >= 3);
-		unsigned int i;
-
-		fprintf(t->file, "B ");
-		fprintf(t->file, "%u ", offset.bd_count());
-		for (i = 0; i < offset.bd_count(); i++)
-			fprintf(t->file, "%f ", (double) offset.bd_get(i));
-		fprintf(t->file, "\n");
-	}
-
-
-	if (is_projective) {
-		int i, j;
-
-		fprintf(t->file, "P ");
-		fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
-		for (i = 0; i < 4; i++)
-			for (j = 1; j >= 0; j--)
-				fprintf(t->file, "%f ", (double) offset.gpt_get(i, j));
-	} else {
-		fprintf(t->file, "E ");
-		fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
-		fprintf(t->file, "%f ",    (double) offset.eu_get(1));
-		fprintf(t->file, "%f ",    (double) offset.eu_get(0));
-		fprintf(t->file, "%f ",    (double) offset.eu_get(2));
-	}
+	fprintf(t->file, "E ");
+	fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
+	fprintf(t->file, "%f ",    (double) offset.e().get_translation(0));
+	fprintf(t->file, "%f ",    (double) offset.e().get_translation(1));
+	fprintf(t->file, "%f ",    (double) offset.e().get_translation(2));
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(0));
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(1));
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(2));
 
 	fprintf(t->file, "\n");
 
@@ -595,39 +446,23 @@ static inline void tsave_first(struct tsave_t *t, transformation offset, int is_
  *
  */
 
-static inline void tsave_next(struct tsave_t *t, transformation offset, int is_projective) {
+static inline void tsave_next(struct tsave_t *t, pt offset) {
 
 	if (t == NULL)
 		return;
 
 	t->file = fopen(t->filename, "a");
 	
-	if (offset.bd_count() > 0) {
-		assert (tfile_output_version >= 3);
-		unsigned int i;
+	fprintf(t->file, "V %lf\n", offset.view_angle());
 
-		fprintf(t->file, "B ");
-		fprintf(t->file, "%u ", offset.bd_count());
-		for (i = 0; i < offset.bd_count(); i++)
-			fprintf(t->file, "%f ", (double) offset.bd_get(i));
-		fprintf(t->file, "\n");
-	}
-
-	if (is_projective) {
-		int i, j;
-
-		fprintf(t->file, "P ");
-		fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
-		for (i = 0; i < 4; i++)
-			for (j = 1; j >= 0; j--)
-				fprintf(t->file, "%f ", (double) offset.gpt_get(i, j));
-	} else {
-		fprintf(t->file, "E ");
-		fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
-		fprintf(t->file, "%f ",    (double) offset.eu_get(1));
-		fprintf(t->file, "%f ",    (double) offset.eu_get(0));
-		fprintf(t->file, "%f ",    (double) offset.eu_get(2));
-	}
+	fprintf(t->file, "E ");
+	fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
+	fprintf(t->file, "%f ",    (double) offset.e().get_translation(0));
+	fprintf(t->file, "%f ",    (double) offset.e().get_translation(1));
+	fprintf(t->file, "%f ",    (double) offset.e().get_translation(2));
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(0));
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(1));
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(2));
 
 	fprintf(t->file, "\n");
 
@@ -658,12 +493,11 @@ static inline void tsave_target(struct tsave_t *t, const char *filename) {
  * frames).
  */
 
-static inline void tsave_orig(struct tsave_t *t, const char *filename, pixel apm) {
+static inline void tsave_orig(struct tsave_t *t, const char *filename) {
 	if (t == NULL)
 		return;
 
 	t->orig = filename;
-	t->orig_apm = apm;
 }
 
 /*
