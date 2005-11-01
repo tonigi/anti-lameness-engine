@@ -239,6 +239,12 @@ static inline pt tload_first(struct tload_t *t,
 								"Scaled image width and/or height mismatch.");
 					}
 
+					const double rtod_multiplier = 180 / M_PI;
+
+					for (int i = 3; i < 6; i++) {
+						values [i] /= rtod_multiplier;
+					}
+
 					result.e().set(values);
 
 					return result;
@@ -349,6 +355,12 @@ static inline pt tload_next(struct tload_t *t,
 								"Scaled image width and/or height mismatch.");
 					}
 
+					const double rtod_multiplier = 180 / M_PI;
+
+					for (int i = 3; i < 6; i++) {
+						values [i] /= rtod_multiplier;
+					}
+
 					result.e().set(values);
 
 					return result;
@@ -386,7 +398,7 @@ static inline struct tsave_t *tsave_new(const char *filename) {
 	result->orig = "unknown";
 	result->target = "unknown";
 
-	fprintf(file, "# created by ALE transformation file handler version %d\n", 
+	fprintf(file, "# created by ALE 3D transformation file handler version %d\n", 
 			D3_TFILE_VERSION);
 
 	fclose(file);
@@ -419,17 +431,19 @@ static inline void tsave_first(struct tsave_t *t, pt offset) {
 
 	// fprintf(t->file, "# Comment: Target output file is %s\n", t->target);
 	// fprintf(t->file, "# Comment: Original frame is %s\n", t->orig);
+	
+	const double rtod_multiplier = 180 / M_PI;
 
-	fprintf(t->file, "V %lf\n", offset.view_angle());
+	fprintf(t->file, "V %lf\n", offset.view_angle() * rtod_multiplier);
 
 	fprintf(t->file, "E ");
 	fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
 	fprintf(t->file, "%f ",    (double) offset.e().get_translation(0));
 	fprintf(t->file, "%f ",    (double) offset.e().get_translation(1));
 	fprintf(t->file, "%f ",    (double) offset.e().get_translation(2));
-	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(0));
-	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(1));
-	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(2));
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(0) * rtod_multiplier);
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(1) * rtod_multiplier);
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(2) * rtod_multiplier);
 
 	fprintf(t->file, "\n");
 
@@ -453,16 +467,18 @@ static inline void tsave_next(struct tsave_t *t, pt offset) {
 
 	t->file = fopen(t->filename, "a");
 	
-	fprintf(t->file, "V %lf\n", offset.view_angle());
+	const double rtod_multiplier = 180 / M_PI;
+
+	fprintf(t->file, "V %lf\n", offset.view_angle() * rtod_multiplier);
 
 	fprintf(t->file, "E ");
 	fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
 	fprintf(t->file, "%f ",    (double) offset.e().get_translation(0));
 	fprintf(t->file, "%f ",    (double) offset.e().get_translation(1));
 	fprintf(t->file, "%f ",    (double) offset.e().get_translation(2));
-	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(0));
-	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(1));
-	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(2));
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(0) * rtod_multiplier);
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(1) * rtod_multiplier);
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(2) * rtod_multiplier);
 
 	fprintf(t->file, "\n");
 
