@@ -226,8 +226,8 @@ static inline pt tload_first(struct tload_t *t,
 
 					count = sscanf(line, "E %lf%lf%lf%lf%lf%lf%lf%lf",
 							&width, &height,
-							&values[0], &values[1], &values[2],
-							&values[3], &values[4], &values[5]);
+							&values[1], &values[0], &values[2],
+							&values[4], &values[3], &values[5]);
 
 					if (count < 8) 
 						fprintf(stderr, "\n3d-trans-load: warning: "
@@ -342,8 +342,8 @@ static inline pt tload_next(struct tload_t *t,
 
 					count = sscanf(line, "E %lf%lf%lf%lf%lf%lf%lf%lf",
 							&width, &height,
-							&values[0], &values[1], &values[2],
-							&values[3], &values[4], &values[5]);
+							&values[1], &values[0], &values[2],
+							&values[4], &values[3], &values[5]);
 
 					if (count < 8) 
 						fprintf(stderr, "\n3d-trans-load: warning: "
@@ -438,11 +438,11 @@ static inline void tsave_first(struct tsave_t *t, pt offset) {
 
 	fprintf(t->file, "E ");
 	fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
-	fprintf(t->file, "%f ",    (double) offset.e().get_translation(0));
 	fprintf(t->file, "%f ",    (double) offset.e().get_translation(1));
+	fprintf(t->file, "%f ",    (double) offset.e().get_translation(0));
 	fprintf(t->file, "%f ",    (double) offset.e().get_translation(2));
-	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(0) * rtod_multiplier);
 	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(1) * rtod_multiplier);
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(0) * rtod_multiplier);
 	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(2) * rtod_multiplier);
 
 	fprintf(t->file, "\n");
@@ -473,11 +473,11 @@ static inline void tsave_next(struct tsave_t *t, pt offset) {
 
 	fprintf(t->file, "E ");
 	fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
-	fprintf(t->file, "%f ",    (double) offset.e().get_translation(0));
 	fprintf(t->file, "%f ",    (double) offset.e().get_translation(1));
+	fprintf(t->file, "%f ",    (double) offset.e().get_translation(0));
 	fprintf(t->file, "%f ",    (double) offset.e().get_translation(2));
-	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(0) * rtod_multiplier);
 	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(1) * rtod_multiplier);
+	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(0) * rtod_multiplier);
 	fprintf(t->file, "%f ",    (double) offset.e().get_rotation(2) * rtod_multiplier);
 
 	fprintf(t->file, "\n");
