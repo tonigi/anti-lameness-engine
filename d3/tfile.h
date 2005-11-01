@@ -415,7 +415,7 @@ static inline void tsave_first(struct tsave_t *t, pt offset) {
 	tfile_output_version = 0;
 
 	fprintf(t->file, "# producing 3D transformation file syntax version %d\n", tfile_output_version);
-	fprintf(t->file, "V %d\n", tfile_output_version);
+	fprintf(t->file, "W %d\n", tfile_output_version);
 
 	// fprintf(t->file, "# Comment: Target output file is %s\n", t->target);
 	// fprintf(t->file, "# Comment: Original frame is %s\n", t->orig);
