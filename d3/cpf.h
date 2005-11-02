@@ -459,6 +459,7 @@ public:
 
 		if (perturbation < min_perturbation || cp_array_max == 0) {
 			// fprintf(stderr, " (skipping adjustment)");
+			align::write_alignments();
 			return;
 		}
 

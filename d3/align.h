@@ -436,24 +436,6 @@ public:
 			// fprintf(stderr, "position (n=%d) %f %f %f\n", i, estimate[0], estimate[1], estimate[2]);
 
 			/*
-			 * Load any transformations.
-			 */
-
-			if (i == 0) {
-				int is_default;
-				pt p = tload_first(tload, projective(i), &is_default);
-				_init_angle = p.view_angle();
-			} else {
-				int is_default;
-				pt p = tload_next(tload, projective(i), &is_default);
-				
-				if (p.view_angle() != _init_angle) {
-					fprintf(stderr, "Error: variation in view angle is not currently supported.\n");
-					exit(1);
-				}
-			}
-
-			/*
 			 * Modify translation values, if desired.
 			 */
 
@@ -468,6 +450,26 @@ public:
 				 */
 
 				alignment_array[i].modify_translation(2, -1);
+			}
+
+			/*
+			 * Load any transformations.
+			 */
+
+			if (i == 0) {
+				int is_default;
+				pt p = tload_first(tload, projective(i), &is_default);
+				alignment_array[i] = p.e();
+				_init_angle = p.view_angle();
+			} else {
+				int is_default;
+				pt p = tload_next(tload, projective(i), &is_default);
+				alignment_array[i] = p.e();
+				
+				if (p.view_angle() != _init_angle) {
+					fprintf(stderr, "Error: variation in view angle is not currently supported.\n");
+					exit(1);
+				}
 			}
 
 			/*

@@ -187,6 +187,8 @@ static inline pt tload_first(struct tload_t *t,
 			exit(1);
 		}
 
+		const double rtod_multiplier = 180 / M_PI;
+
 		switch (line[0]) {
 			case ' ':
 			case 0xa:
@@ -212,7 +214,7 @@ static inline pt tload_first(struct tload_t *t,
 					exit(1);
 				}
 
-				result.view_angle(view_angle);
+				result.view_angle(view_angle / rtod_multiplier);
 
 				break;
 			case 'E':
@@ -238,8 +240,6 @@ static inline pt tload_first(struct tload_t *t,
 						fprintf(stderr, "\n3d-trans-load: Error: "
 								"Scaled image width and/or height mismatch.");
 					}
-
-					const double rtod_multiplier = 180 / M_PI;
 
 					for (int i = 3; i < 6; i++) {
 						values [i] /= rtod_multiplier;
@@ -303,6 +303,8 @@ static inline pt tload_next(struct tload_t *t,
 				"\ntrans-load: warning: line too long in input file\n");
 		}
 
+		const double rtod_multiplier = 180 / M_PI;
+
 		switch (line[0]) {
 			case ' ':
 			case 0xa:
@@ -328,7 +330,7 @@ static inline pt tload_next(struct tload_t *t,
 					exit(1);
 				}
 
-				result.view_angle(view_angle);
+				result.view_angle(view_angle / rtod_multiplier);
 
 				break;
 			case 'E':
@@ -354,8 +356,6 @@ static inline pt tload_next(struct tload_t *t,
 						fprintf(stderr, "\n3d-trans-load: Error: "
 								"Scaled image width and/or height mismatch.");
 					}
-
-					const double rtod_multiplier = 180 / M_PI;
 
 					for (int i = 3; i < 6; i++) {
 						values [i] /= rtod_multiplier;
