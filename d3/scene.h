@@ -33,7 +33,7 @@
  * Setting this to a value larger than one can be useful for debugging.
  */
 
-#define VIEW_ANGLE_MULTIPLIER 2
+#define VIEW_ANGLE_MULTIPLIER 1
 
 class scene {
 

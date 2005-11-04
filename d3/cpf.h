@@ -459,7 +459,6 @@ public:
 
 		if (perturbation < min_perturbation || cp_array_max == 0) {
 			// fprintf(stderr, " (skipping adjustment)");
-			align::write_alignments();
 			return;
 		}
 
@@ -541,12 +540,6 @@ public:
 		}
 
 		solve_total_system();
-
-		/*
-		 * Write final alignment.
-		 */
-
-		align::write_alignments();
 
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Final view angle: %f\n", d3::align::angle_of(0) / M_PI * 180);

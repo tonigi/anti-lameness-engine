@@ -1671,6 +1671,8 @@ int main(int argc, const char *argv[]){
 					d3::cpf::solve_3d();
 				}
 
+				d3::align::write_alignments();
+
 				d3::scene::init_from_d2();
 
 				d3::scene::add_control_points();
