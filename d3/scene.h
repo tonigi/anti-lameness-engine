@@ -2101,8 +2101,6 @@ class scene {
 				} 
 			}
 
-			assert(0);
-
 			return undefined;
 		}
 
@@ -3509,6 +3507,7 @@ public:
 			 */
 
 			d2::pixel color = sn.get_color();
+			// d2::pixel color = d2::pixel(1, 1, 1) * (double) (((unsigned int) (st.get_space()) / sizeof(space)) % 65535);
 			ale_real occupancy = sn.get_occupancy();
 
 			/*
@@ -3524,6 +3523,12 @@ public:
 			point max = bb[1];
 
 
+			if (fabs(min[0] - max[0]) > sqrt(2) 
+			 || fabs(min[1] - max[1]) > sqrt(2)) {
+				fprintf(stderr, "Unusually large bb detected: (%f, %f) - (%f, %f)\n", min[0], min[1], max[0], max[1]);
+			}
+
+
 			/*
 			 * Iterate over pixels in the bounding box, finding
 			 * pixels that intersect the subspace.  XXX: assume
@@ -3531,8 +3536,8 @@ public:
 			 * intersect the subspace.
 			 */
 
-			for (unsigned int i = (unsigned int) floor(min[0]); i <= (unsigned int) ceil(max[0]); i++)
-			for (unsigned int j = (unsigned int) floor(min[1]); j <= (unsigned int) ceil(max[1]); j++) {
+			for (unsigned int i = (unsigned int) ceil(min[0]); i <= (unsigned int) floor(max[0]); i++)
+			for (unsigned int j = (unsigned int) ceil(min[1]); j <= (unsigned int) floor(max[1]); j++) {
 				/*
 				 * Determine the probability of encounter.
 				 */
@@ -3739,8 +3744,8 @@ public:
 			 * intersect the subspace.
 			 */
 
-			for (unsigned int i = (unsigned int) floor(min[0]); i <= (unsigned int) ceil(max[0]); i++)
-			for (unsigned int j = (unsigned int) floor(min[1]); j <= (unsigned int) ceil(max[1]); j++) {
+			for (unsigned int i = (unsigned int) ceil(min[0]); i <= (unsigned int) floor(max[0]); i++)
+			for (unsigned int j = (unsigned int) ceil(min[1]); j <= (unsigned int) floor(max[1]); j++) {
 				/*
 				 * Determine the probability of encounter.
 				 */
@@ -4290,8 +4295,11 @@ public:
 				 && frame_min[1].lengthtosq(frame_max[1]) < 2)
 					break;
 
-				if (st.precision_wall())
+				if (st.precision_wall()) {
+					fprintf(stderr, "debug: reached precision wall for primary (i, j) = (%u, %u)", i, j);
+					assert(0);
 					break;
+				}
 
 				if (st.positive().includes(iw)) {
 					st = st.positive();
