@@ -2083,8 +2083,19 @@ class scene {
 			for (unsigned int i = 0; i < used; i++)
 				weight_sum += _w(i);
 
-			if (weight_sum == 0)
+//			if (weight_sum == 0)
+//				return undefined;
+
+			if (used == 0)
 				return undefined;
+
+			if (weight_sum == 0) {
+				ale_accum data_sum = 0;
+				for (unsigned int i = 0; i < used; i++)
+					data_sum += _d(i);
+				return data_sum / used;
+			}
+					
 
 			ale_accum midpoint = weight_sum / 2;
 
@@ -3377,28 +3388,41 @@ public:
 				point min = bb[0];
 				point max = bb[1];
 
+				fprintf(stderr, "frame %d color update space pointer %p, bb (%f, %f) -> (%f, %f)\n", 
+						f, st.get_space(), min[0], min[1], max[0], max[1]);
+
+				fprintf(stderr, "space %p c=[%f %f %f]\n", st.get_space(), color[0], color[1], color[2]);
+				fprintf(stderr, "space %p occ=[%g]\n", st.get_space(), occupancy);
+
 				/*
 				 * Use the center of the bounding box to grab interpolation data.
 				 */
 
 				d2::point interp((min[0] + max[0]) / 2, (min[1] + max[1]) / 2);
 
+				fprintf(stderr, "interp=(%f, %f)\n", interp[0], interp[1]);
+
 				/*
 				 * For interpolation points, ensure that the
-				 * bounding box area is at least 0.25.
+				 * bounding box area is at least 0.25. XXX: Why?
+				 * Remove this constraint.
 				 */
 
-				if ((max[0] - min[0]) * (max[1] - min[1]) > 0.25
-				 && max[0] > min[0]
+				if (/* (max[0] - min[0]) * (max[1] - min[1]) > 0.25
+				 && */ max[0] > min[0]
 				 && max[1] > min[1]) {
 					d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_bl(interp));
 					d2::pixel pcolor = im->get_bl(interp);
 					d2::pixel colordiff = color - pcolor;
 
+					fprintf(stderr, "color_interp=(%f, %f, %f)\n", pcolor[0], pcolor[1], pcolor[2]);
+
 					ale_real exp_scale = 256 * 256;
 
 //					sn->accumulate_color_2(pcolor, encounter);
 					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
+					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
+					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
 					for (int k = 0; k < 3; k++)
 						sn->accumulate_occupancy_2(channel_occ[k], encounter[k]);
 				}
@@ -3411,11 +3435,17 @@ public:
 				 * bounding box intersect the subspace.
 				 */
 
-				for (unsigned int i = (unsigned int) floor(min[0]); i <= (unsigned int) ceil(max[0]); i++)
-				for (unsigned int j = (unsigned int) floor(min[1]); j <= (unsigned int) ceil(max[1]); j++) {
+				for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
+				for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++) {
+
+					if (i < 0 || j < 0)
+						continue;
 
 					d2::pixel pcolor = im->get_pixel(i, j);
 					d2::pixel colordiff = color - pcolor;
+
+					fprintf(stderr, "(i, j) == (%d, %d); c=[%f %f %f]\n",
+							i, j, pcolor[0], pcolor[1], pcolor[2]);
 
 					/*
 					 * Determine the probability of
@@ -3436,8 +3466,10 @@ public:
 
 					sn->accumulate_color_1(f, i, j, pcolor, encounter);
 					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
-//					for (int k = 0; k < 3; k++)
-//						sn->accumulate_occupancy_1(f, i, j, channel_occ[k], encounter[k]);
+					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
+					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
+					for (int k = 0; k < 3; k++)
+						sn->accumulate_occupancy_1(f, i, j, channel_occ[k], encounter[k]);
 
 					weights->pix(i, j) += encounter * occupancy;
 				}
@@ -3528,6 +3560,12 @@ public:
 				fprintf(stderr, "Unusually large bb detected: (%f, %f) - (%f, %f)\n", min[0], min[1], max[0], max[1]);
 			}
 
+			fprintf(stderr, "for frame %d, space %p has bb (%f, %f) - (%f, %f)\n", 
+					n, st.get_space(), min[0], min[1], max[0], max[1]);
+			fprintf(stderr, "space %p c=[%g %g %g]\n", st.get_space(), color[0], color[1], color[2]);
+			fprintf(stderr, "space %p occ=[%g]\n", st.get_space(), occupancy);
+			fprintf(stderr, "for frame %d, space %p has int bb (%f, %f) - (%f, %f)\n", 
+					n, st.get_space(), ceil(min[0]), ceil(min[1]), floor(max[0]), floor(max[1]));
 
 			/*
 			 * Iterate over pixels in the bounding box, finding
@@ -3536,8 +3574,8 @@ public:
 			 * intersect the subspace.
 			 */
 
-			for (unsigned int i = (unsigned int) ceil(min[0]); i <= (unsigned int) floor(max[0]); i++)
-			for (unsigned int j = (unsigned int) ceil(min[1]); j <= (unsigned int) floor(max[1]); j++) {
+			for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
+			for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++) {
 				/*
 				 * Determine the probability of encounter.
 				 */
@@ -3550,6 +3588,11 @@ public:
 
 				weights->pix(i, j) += encounter;
 				im->pix(i, j)      += encounter * color;
+
+				fprintf(stderr, "frame %d (i, j)=(%d, %d) updated to (enc,enc*col)=([%g %g %g], [%g %g %g])\n",
+						n, i, j, weights->pix(i, j)[0], weights->pix(i, j)[1], weights->pix(i, j)[2],
+						      im->pix(i, j)[0], im->pix(i, j)[1], im->pix(i, j)[2]);
+
 			}
 
 		} while (si.next());
@@ -3943,6 +3986,10 @@ public:
 
 		score_map result;
 
+		fprintf(stderr, "generating score map (i, j) == (%u, %u)\n", i, j);
+
+		fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+
 		/*
 		 * Get the pixel color in the primary frame
 		 */
@@ -3977,25 +4024,55 @@ public:
 			return result;
 		}
 
+		/*
+		 * Make absurdly large/small slopes either infinity, negative infinity, or zero.
+		 */
+
+		if (fabs(slope) > if2->width() * 100) {
+			double zero = 0;
+			double one  = 1;
+			double inf  = one / zero;
+			slope = inf;
+		} else if (slope < 1 / (double) if2->height() / 100
+		        && slope > -1/ (double) if2->height() / 100) {
+			slope = 0;
+		}
+
+		fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+
 		ale_pos top_intersect = p1[1] - p1[0] * slope;
 		ale_pos lef_intersect = p1[0] - p1[1] / slope;
 		ale_pos rig_intersect = p1[0] - (p1[1] - if2->width() + 2) / slope;
 		ale_pos sp_i, sp_j;
 
-		if (finite(slope) && top_intersect >= 0 && top_intersect < if2->width() - 1) {
+		fprintf(stderr, "slope == %f\n", slope);
+
+
+		if (slope == 0) {
+			fprintf(stderr, "case 0\n");
+			sp_i = lef_intersect;
+			sp_j = 0;
+		} else if (finite(slope) && top_intersect >= 0 && top_intersect < if2->width() - 1) {
+			fprintf(stderr, "case 1\n");
 			sp_i = 0;
 			sp_j = top_intersect;
 		} else if (slope > 0 && lef_intersect >= 0 && lef_intersect < if2->height() - 1) {
+			fprintf(stderr, "case 2\n");
 			sp_i = lef_intersect;
 			sp_j = 0;
 		} else if (slope < 0 && rig_intersect >= 0 && rig_intersect < if2->height() - 1) {
+			fprintf(stderr, "case 3\n");
 			sp_i = rig_intersect;
 			sp_j = if2->width() - 2;
 		} else {
+			fprintf(stderr, "case 4\n");
 			// fprintf(stderr, "%d->%d (%d, %d) does not intersect the defined area\n",
 			// 		f1, f2, i, j);
 			return result;
 		}
+
+
+		fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 		/*
 		 * Determine increment values for examining
@@ -4027,8 +4104,8 @@ public:
 			ii < if2->height() - 1 && jj < if2->width() - 1 && ii >= 0 && jj >= 0; 
 			ii += incr_i, jj += incr_j) {
 
-			// fprintf(stderr, "%d->%d (%d, %d) checking (%f, %f)\n", 
-			//		f1, f2, i, j, ii, jj);
+			fprintf(stderr, "%d->%d (%d, %d) checking (%f, %f)\n", 
+					f1, f2, i, j, ii, jj);
 
 			/*
 			 * Check for higher, lower, and nearby points.
@@ -4061,8 +4138,13 @@ public:
 			 * then continue.
 			 */
 
-			if (((higher & lower) | nearby) != 0x7)
-				continue;
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+
+			// if (((higher & lower) | nearby) != 0x7)
+			//	continue;
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			// fprintf(stderr, "%d->%d (%d, %d) accepted (%f, %f)\n", 
 			//		f1, f2, i, j, ii, jj);
@@ -4122,8 +4204,14 @@ public:
 			 * rejection.
 			 */
 
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+
 			if (np3[1] - nbp2[1] == 0)
 				continue;
+
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			d2::point intersection = d2::point(nbp2[0] 
 					+ (nbp0[1] - nbp2[1]) * (np3[0] - nbp2[0]) / (np3[1] - nbp2[1]),
@@ -4146,16 +4234,28 @@ public:
 			point icp = _pt1.wc(iw);
 			point ics = _pt2.wc(iw);
 
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+
 			if (icp[2] >= 0 || ics[2] >= 0)
 				continue;
+
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			/*
 			 * Reject clipping plane violations.
 			 */
 
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+
 			if (iw[2] > front_clip
 			 || iw[2] < rear_clip)
 				continue;
+
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			/*
 			 * Score the point.
@@ -4184,8 +4284,11 @@ public:
 				       * (if1->get_bl(ip.xy()) - if2->get_bl(is.xy())).normsq();
 			}
 
-			for (int iii = -1; iii < 1; iii++)
-			for (int jjj = -1; jjj < 1; jjj++) {
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+
+			for (int iii = -1; iii <= 1; iii++)
+			for (int jjj = -1; jjj <= 1; jjj++) {
 				d2::point t(iii, jjj);
 
 				if (!if1->in_bounds(ip.xy() + t)
@@ -4198,12 +4301,34 @@ public:
 					 
 			}
 
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+
 			/*
 			 * Reject points with undefined score.
 			 */
 
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+
 			if (!finite(score / divisor))
 				continue;
+
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+
+			/*
+			 * XXX: reject points not on the z=-27.882252 plane.
+			 */
+
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+
+			if (_a.ip[2] > -27 || _a.ip[2] < -28)
+				continue;
+
+
+			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			/*
 			 * Add the point to the score map.
@@ -4238,6 +4363,9 @@ public:
 			point iw = smi->second.iw;
 			point ip = smi->second.ip;
 			point is = smi->second.is;
+
+			fprintf(stderr, "score_map: (i, j) = (%u, %u), iw=(%f, %f, %f), ip=(%f, %f, %f), is=(%f, %f, %f) s=%f\n",
+					i, j, iw[0], iw[1], iw[2], ip[0], ip[1], ip[2], is[0], is[1], is[2], smi->first);
 
 			if (accumulated_ambiguity++ >= max_acc_amb)
 				break;
@@ -4291,8 +4419,14 @@ public:
 						frame_max[1][0], frame_max[1][1], time(NULL));
 #endif
 
-				if (frame_min[0].lengthtosq(frame_max[0]) < 2
-				 && frame_min[1].lengthtosq(frame_max[1]) < 2)
+//				if (frame_min[0].lengthtosq(frame_max[0]) < 2
+//				 && frame_min[1].lengthtosq(frame_max[1]) < 2)
+//					break;
+
+				if (frame_max[0][0] - frame_min[0][0] < 1
+				 && frame_max[0][1] - frame_min[0][1] < 1
+				 && frame_max[1][0] - frame_min[1][0] < 1
+				 && frame_max[1][1] - frame_min[1][1] < 1)
 					break;
 
 				if (st.precision_wall()) {
@@ -4352,6 +4486,8 @@ public:
 			 * Associate refined space with a
 			 * spatial info structure.
 			 */
+
+			fprintf(stderr, "Made space with pointer %p\n", st.get_space());
 
 			spatial_info_map[st.get_space()];
 		}
