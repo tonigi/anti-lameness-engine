@@ -3423,8 +3423,23 @@ public:
 					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
 					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
 					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
+
+					/*
+					 * XXX: the best approach is probably to use 3 separate occupancy
+					 * data sets, just as there are 3 separate color data sets.
+					 */
+
+					ale_accum occ = channel_occ[0];
+
+					for (int k = 1; k < 3; k++)
+						if (channel_occ[k] < occ)
+							occ = channel_occ[k];
+
+					sn->accumulate_occupancy_2(occ, encounter[0]);
+#if 0
 					for (int k = 0; k < 3; k++)
 						sn->accumulate_occupancy_2(channel_occ[k], encounter[k]);
+#endif
 				}
 					
 
@@ -3468,10 +3483,16 @@ public:
 					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
 					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
 					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
-					for (int k = 0; k < 3; k++)
-						sn->accumulate_occupancy_1(f, i, j, channel_occ[k], encounter[k]);
 
-					weights->pix(i, j) += encounter * occupancy;
+					ale_accum occ = channel_occ[0];
+
+					for (int k = 1; k < 3; k++)
+						if (channel_occ[k] < occ)
+							occ = channel_occ[k];
+
+					sn->accumulate_occupancy_1(f, i, j, occ, encounter[0]);
+
+					weights->pix(i, j) += encounter * occ;
 				}
 
 			} while (si.next());
@@ -4056,11 +4077,11 @@ public:
 			fprintf(stderr, "case 1\n");
 			sp_i = 0;
 			sp_j = top_intersect;
-		} else if (slope > 0 && lef_intersect >= 0 && lef_intersect < if2->height() - 1) {
+		} else if (slope > 0 && lef_intersect >= 0 && lef_intersect <= if2->height() - 1) {
 			fprintf(stderr, "case 2\n");
 			sp_i = lef_intersect;
 			sp_j = 0;
-		} else if (slope < 0 && rig_intersect >= 0 && rig_intersect < if2->height() - 1) {
+		} else if (slope < 0 && rig_intersect >= 0 && rig_intersect <= if2->height() - 1) {
 			fprintf(stderr, "case 3\n");
 			sp_i = rig_intersect;
 			sp_j = if2->width() - 2;
@@ -4101,12 +4122,13 @@ public:
 		 */
 
 		for (ale_pos ii = sp_i, jj = sp_j; 
-			ii < if2->height() - 1 && jj < if2->width() - 1 && ii >= 0 && jj >= 0; 
+			ii <= if2->height() - 1 && jj <= if2->width() - 1 && ii >= 0 && jj >= 0; 
 			ii += incr_i, jj += incr_j) {
 
 			fprintf(stderr, "%d->%d (%d, %d) checking (%f, %f)\n", 
 					f1, f2, i, j, ii, jj);
 
+#if 0
 			/*
 			 * Check for higher, lower, and nearby points.
 			 *
@@ -4143,7 +4165,7 @@ public:
 
 			// if (((higher & lower) | nearby) != 0x7)
 			//	continue;
-
+#endif
 			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			// fprintf(stderr, "%d->%d (%d, %d) accepted (%f, %f)\n", 
@@ -4317,6 +4339,7 @@ public:
 
 			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
+#if 0
 			/*
 			 * XXX: reject points not on the z=-27.882252 plane.
 			 */
@@ -4326,6 +4349,7 @@ public:
 
 			if (_a.ip[2] > -27 || _a.ip[2] < -28)
 				continue;
+#endif
 
 
 			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
