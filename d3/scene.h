@@ -4007,9 +4007,9 @@ public:
 
 		score_map result;
 
-		fprintf(stderr, "generating score map (i, j) == (%u, %u)\n", i, j);
+		// fprintf(stderr, "generating score map (i, j) == (%u, %u)\n", i, j);
 
-		fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+		// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 		/*
 		 * Get the pixel color in the primary frame
@@ -4059,41 +4059,41 @@ public:
 			slope = 0;
 		}
 
-		fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+		// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 		ale_pos top_intersect = p1[1] - p1[0] * slope;
 		ale_pos lef_intersect = p1[0] - p1[1] / slope;
 		ale_pos rig_intersect = p1[0] - (p1[1] - if2->width() + 2) / slope;
 		ale_pos sp_i, sp_j;
 
-		fprintf(stderr, "slope == %f\n", slope);
+		// fprintf(stderr, "slope == %f\n", slope);
 
 
 		if (slope == 0) {
-			fprintf(stderr, "case 0\n");
+			// fprintf(stderr, "case 0\n");
 			sp_i = lef_intersect;
 			sp_j = 0;
 		} else if (finite(slope) && top_intersect >= 0 && top_intersect < if2->width() - 1) {
-			fprintf(stderr, "case 1\n");
+			// fprintf(stderr, "case 1\n");
 			sp_i = 0;
 			sp_j = top_intersect;
 		} else if (slope > 0 && lef_intersect >= 0 && lef_intersect <= if2->height() - 1) {
-			fprintf(stderr, "case 2\n");
+			// fprintf(stderr, "case 2\n");
 			sp_i = lef_intersect;
 			sp_j = 0;
 		} else if (slope < 0 && rig_intersect >= 0 && rig_intersect <= if2->height() - 1) {
-			fprintf(stderr, "case 3\n");
+			// fprintf(stderr, "case 3\n");
 			sp_i = rig_intersect;
 			sp_j = if2->width() - 2;
 		} else {
-			fprintf(stderr, "case 4\n");
+			// fprintf(stderr, "case 4\n");
 			// fprintf(stderr, "%d->%d (%d, %d) does not intersect the defined area\n",
 			// 		f1, f2, i, j);
 			return result;
 		}
 
 
-		fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+		// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 		/*
 		 * Determine increment values for examining
@@ -4125,8 +4125,8 @@ public:
 			ii <= if2->height() - 1 && jj <= if2->width() - 1 && ii >= 0 && jj >= 0; 
 			ii += incr_i, jj += incr_j) {
 
-			fprintf(stderr, "%d->%d (%d, %d) checking (%f, %f)\n", 
-					f1, f2, i, j, ii, jj);
+			// fprintf(stderr, "%d->%d (%d, %d) checking (%f, %f)\n", 
+			//		f1, f2, i, j, ii, jj);
 
 #if 0
 			/*
@@ -4166,7 +4166,7 @@ public:
 			// if (((higher & lower) | nearby) != 0x7)
 			//	continue;
 #endif
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			// fprintf(stderr, "%d->%d (%d, %d) accepted (%f, %f)\n", 
 			//		f1, f2, i, j, ii, jj);
@@ -4227,13 +4227,13 @@ public:
 			 */
 
 
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			if (np3[1] - nbp2[1] == 0)
 				continue;
 
 
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			d2::point intersection = d2::point(nbp2[0] 
 					+ (nbp0[1] - nbp2[1]) * (np3[0] - nbp2[0]) / (np3[1] - nbp2[1]),
@@ -4257,27 +4257,27 @@ public:
 			point ics = _pt2.wc(iw);
 
 
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			if (icp[2] >= 0 || ics[2] >= 0)
 				continue;
 
 
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			/*
 			 * Reject clipping plane violations.
 			 */
 
 
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			if (iw[2] > front_clip
 			 || iw[2] < rear_clip)
 				continue;
 
 
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			/*
 			 * Score the point.
@@ -4307,7 +4307,7 @@ public:
 			}
 
 
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			for (int iii = -1; iii <= 1; iii++)
 			for (int jjj = -1; jjj <= 1; jjj++) {
@@ -4324,20 +4324,20 @@ public:
 			}
 
 
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			/*
 			 * Reject points with undefined score.
 			 */
 
 
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			if (!finite(score / divisor))
 				continue;
 
 
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 #if 0
 			/*
@@ -4345,14 +4345,14 @@ public:
 			 */
 
 
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			if (_a.ip[2] > -27 || _a.ip[2] < -28)
 				continue;
 #endif
 
 
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			/*
 			 * Add the point to the score map.
@@ -4388,8 +4388,8 @@ public:
 			point ip = smi->second.ip;
 			point is = smi->second.is;
 
-			fprintf(stderr, "score_map: (i, j) = (%u, %u), iw=(%f, %f, %f), ip=(%f, %f, %f), is=(%f, %f, %f) s=%f\n",
-					i, j, iw[0], iw[1], iw[2], ip[0], ip[1], ip[2], is[0], is[1], is[2], smi->first);
+//			fprintf(stderr, "score_map: (i, j) = (%u, %u), iw=(%f, %f, %f), ip=(%f, %f, %f), is=(%f, %f, %f) s=%f\n",
+//					i, j, iw[0], iw[1], iw[2], ip[0], ip[1], ip[2], is[0], is[1], is[2], smi->first);
 
 			if (accumulated_ambiguity++ >= max_acc_amb)
 				break;
@@ -4511,7 +4511,7 @@ public:
 			 * spatial info structure.
 			 */
 
-			fprintf(stderr, "Made space with pointer %p\n", st.get_space());
+			// fprintf(stderr, "Made space with pointer %p\n", st.get_space());
 
 			spatial_info_map[st.get_space()];
 		}
