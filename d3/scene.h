@@ -3374,7 +3374,7 @@ public:
 				 */
 
 				d2::pixel color = sn->get_color();
-				ale_real occupancy = sn->get_occupancy();
+//				ale_real occupancy = sn->get_occupancy();
 
 				/*
 				 * Determine the view-local bounding box for the
@@ -3388,11 +3388,11 @@ public:
 				point min = bb[0];
 				point max = bb[1];
 
-				fprintf(stderr, "frame %d color update space pointer %p, bb (%f, %f) -> (%f, %f)\n", 
-						f, st.get_space(), min[0], min[1], max[0], max[1]);
-
-				fprintf(stderr, "space %p c=[%f %f %f]\n", st.get_space(), color[0], color[1], color[2]);
-				fprintf(stderr, "space %p occ=[%g]\n", st.get_space(), occupancy);
+//				fprintf(stderr, "frame %d color update space pointer %p, bb (%f, %f) -> (%f, %f)\n", 
+//						f, st.get_space(), min[0], min[1], max[0], max[1]);
+//
+//				fprintf(stderr, "space %p c=[%f %f %f]\n", st.get_space(), color[0], color[1], color[2]);
+//				fprintf(stderr, "space %p occ=[%g]\n", st.get_space(), occupancy);
 
 				/*
 				 * Use the center of the bounding box to grab interpolation data.
@@ -3400,7 +3400,7 @@ public:
 
 				d2::point interp((min[0] + max[0]) / 2, (min[1] + max[1]) / 2);
 
-				fprintf(stderr, "interp=(%f, %f)\n", interp[0], interp[1]);
+//				fprintf(stderr, "interp=(%f, %f)\n", interp[0], interp[1]);
 
 				/*
 				 * For interpolation points, ensure that the
@@ -3415,14 +3415,14 @@ public:
 					d2::pixel pcolor = im->get_bl(interp);
 					d2::pixel colordiff = color - pcolor;
 
-					fprintf(stderr, "color_interp=(%f, %f, %f)\n", pcolor[0], pcolor[1], pcolor[2]);
+//					fprintf(stderr, "color_interp=(%f, %f, %f)\n", pcolor[0], pcolor[1], pcolor[2]);
 
 					ale_real exp_scale = 256 * 256;
 
 //					sn->accumulate_color_2(pcolor, encounter);
 					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
-					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
-					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
+//					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
+//					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
 
 					/*
 					 * XXX: the best approach is probably to use 3 separate occupancy
@@ -3459,8 +3459,8 @@ public:
 					d2::pixel pcolor = im->get_pixel(i, j);
 					d2::pixel colordiff = color - pcolor;
 
-					fprintf(stderr, "(i, j) == (%d, %d); c=[%f %f %f]\n",
-							i, j, pcolor[0], pcolor[1], pcolor[2]);
+//					fprintf(stderr, "(i, j) == (%d, %d); c=[%f %f %f]\n",
+//							i, j, pcolor[0], pcolor[1], pcolor[2]);
 
 					/*
 					 * Determine the probability of
@@ -3481,8 +3481,8 @@ public:
 
 					sn->accumulate_color_1(f, i, j, pcolor, encounter);
 					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
-					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
-					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
+//					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
+//					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
 
 					ale_accum occ = channel_occ[0];
 
@@ -3578,15 +3578,15 @@ public:
 
 			if (fabs(min[0] - max[0]) > sqrt(2) 
 			 || fabs(min[1] - max[1]) > sqrt(2)) {
-				fprintf(stderr, "Unusually large bb detected: (%f, %f) - (%f, %f)\n", min[0], min[1], max[0], max[1]);
+//				fprintf(stderr, "Unusually large bb detected: (%f, %f) - (%f, %f)\n", min[0], min[1], max[0], max[1]);
 			}
 
-			fprintf(stderr, "for frame %d, space %p has bb (%f, %f) - (%f, %f)\n", 
-					n, st.get_space(), min[0], min[1], max[0], max[1]);
-			fprintf(stderr, "space %p c=[%g %g %g]\n", st.get_space(), color[0], color[1], color[2]);
-			fprintf(stderr, "space %p occ=[%g]\n", st.get_space(), occupancy);
-			fprintf(stderr, "for frame %d, space %p has int bb (%f, %f) - (%f, %f)\n", 
-					n, st.get_space(), ceil(min[0]), ceil(min[1]), floor(max[0]), floor(max[1]));
+//			fprintf(stderr, "for frame %d, space %p has bb (%f, %f) - (%f, %f)\n", 
+//					n, st.get_space(), min[0], min[1], max[0], max[1]);
+//			fprintf(stderr, "space %p c=[%g %g %g]\n", st.get_space(), color[0], color[1], color[2]);
+//			fprintf(stderr, "space %p occ=[%g]\n", st.get_space(), occupancy);
+//			fprintf(stderr, "for frame %d, space %p has int bb (%f, %f) - (%f, %f)\n", 
+//					n, st.get_space(), ceil(min[0]), ceil(min[1]), floor(max[0]), floor(max[1]));
 
 			/*
 			 * Iterate over pixels in the bounding box, finding
@@ -3610,9 +3610,9 @@ public:
 				weights->pix(i, j) += encounter;
 				im->pix(i, j)      += encounter * color;
 
-				fprintf(stderr, "frame %d (i, j)=(%d, %d) updated to (enc,enc*col)=([%g %g %g], [%g %g %g])\n",
-						n, i, j, weights->pix(i, j)[0], weights->pix(i, j)[1], weights->pix(i, j)[2],
-						      im->pix(i, j)[0], im->pix(i, j)[1], im->pix(i, j)[2]);
+//				fprintf(stderr, "frame %d (i, j)=(%d, %d) updated to (enc,enc*col)=([%g %g %g], [%g %g %g])\n",
+//						n, i, j, weights->pix(i, j)[0], weights->pix(i, j)[1], weights->pix(i, j)[2],
+//						      im->pix(i, j)[0], im->pix(i, j)[1], im->pix(i, j)[2]);
 
 			}
 
