@@ -51,6 +51,8 @@ unsigned long scene::total_pixels = 0;
 unsigned long scene::total_divisions = 0;
 unsigned long scene::total_tsteps = 0;
 
+double scene::occ_att = 0.50;
+
 /*
  * Precision discriminator
  *

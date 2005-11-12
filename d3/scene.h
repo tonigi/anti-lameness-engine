@@ -89,6 +89,12 @@ class scene {
 	static const char *save_model_name;
 
 	/*
+	 * Occupancy attenuation
+	 */
+
+	static double occ_att;
+
+	/*
 	 * Nearness threshold
 	 */
 	static const ale_real nearness;
@@ -1869,8 +1875,9 @@ class scene {
 		 */
 
 		void get_view_local_bb(pt _pt, point bb[2]) {
-			point min = d2::point(_pt.scaled_height(), _pt.scaled_width());
-			point max = d2::point(0, 0);
+
+			point min(_pt.scaled_height(), _pt.scaled_width(), point::posinf()[2]);
+			point max(0, 0, point::neginf()[2]);
 
 			point wbb[2] = { get_min(), get_max() };
 
@@ -1888,6 +1895,10 @@ class scene {
 					min[1] = p[1];
 				if (p[1] > max[1])
 					max[1] = p[1];
+				if (p[2] < min[2])
+					min[2] = p[2];
+				if (p[2] > max[2])
+					max[2] = p[2];
 			}
 
 			/*
@@ -2073,7 +2084,16 @@ class scene {
 			insert_weight(used, v, w);
 		}
 
-		ale_real find_median() {
+		/*
+		 * Finds the median at half-weight, or between half-weight
+		 * and zero-weight, depending on the attenuation value.
+		 */
+
+		ale_real find_median(double attenuation = 0) {
+
+			assert(attenuation >= 0);
+			assert(attenuation <= 1);
+
 			ale_real zero1 = 0;
 			ale_real zero2 = 0;
 			ale_real undefined = zero1 / zero2;
@@ -2097,7 +2117,7 @@ class scene {
 			}
 					
 
-			ale_accum midpoint = weight_sum / 2;
+			ale_accum midpoint = weight_sum * (0.5 - 0.5 * attenuation);
 
 			ale_accum weight_sum_2 = 0;
 
@@ -2196,8 +2216,8 @@ class scene {
 		/*
 		 * Find the median of a weighted list.  Uses NaN for undefined.
 		 */
-		ale_real find_median(wml *m) {
-			return m->find_median();
+		ale_real find_median(wml *m, double attenuation = 0) {
+			return m->find_median(attenuation);
 		}
 
 	public:
@@ -2269,9 +2289,9 @@ class scene {
 		 * Update occupancy (and clear accumulation structures).
 		 */
 		void update_occupancy() {
-			ale_real o = find_median(&occupancy_weights_1);
+			ale_real o = find_median(&occupancy_weights_1, occ_att);
 			if (isnan(o))
-				o = find_median(&occupancy_weights_2);
+				o = find_median(&occupancy_weights_2, occ_att);
 			if (isnan(o))
 				o = 0.5;
 
@@ -3616,9 +3636,10 @@ public:
 				weights->pix(i, j) += encounter;
 				im->pix(i, j)      += encounter * color;
 
-//				fprintf(stderr, "frame %d (i, j)=(%d, %d) updated to (enc,enc*col)=([%g %g %g], [%g %g %g])\n",
-//						n, i, j, weights->pix(i, j)[0], weights->pix(i, j)[1], weights->pix(i, j)[2],
-//						      im->pix(i, j)[0], im->pix(i, j)[1], im->pix(i, j)[2]);
+				fprintf(stderr, "%p updating frame %d (i, j)=(%d, %d) to (enc,enc*col, col)=([%g %g %g], [%g %g %g], [%g %g %g]) d=%f-%f\n",
+						st.get_space(), n, i, j, weights->pix(i, j)[0], weights->pix(i, j)[1], weights->pix(i, j)[2],
+						      im->pix(i, j)[0], im->pix(i, j)[1], im->pix(i, j)[2],
+						      color[0], color[1], color[2], max[2], min[2]);
 
 			}
 
