@@ -3508,6 +3508,12 @@ public:
 		for (std::map<space *,spatial_info>::iterator i = spatial_info_map.begin(); i != spatial_info_map.end(); i++) {
 			i->second.update_color();
 			i->second.update_occupancy();
+
+			d2::pixel color = i->second.get_color();
+
+			fprintf(stderr, "space p=%p updated to c=[%f %f %f] o=%f\n",
+					i->first, color[0], color[1], color[2], 
+					i->second.get_occupancy());
 		}
 	}
 
@@ -4358,6 +4364,16 @@ public:
 			 * Add the point to the score map.
 			 */
 
+			d2::pixel c_ip = if1->in_bounds(ip.xy()) ? if1->get_bl(ip.xy())
+				                                 : d2::pixel();
+			d2::pixel c_is = if2->in_bounds(is.xy()) ? if2->get_bl(is.xy())
+				                                 : d2::pixel();
+
+			fprintf(stderr, "Candidate subspace: f1=%u f2=%u i=%u j=%u ii=%f jj=%f"
+					"cp=[%f %f %f] cs=[%f %f %f]\n",
+					f1, f2, i, j, ii, jj, c_ip[0], c_ip[1], c_ip[2],
+					c_is[0], c_is[1], c_is[2]);
+
 			result.insert(score_map_element(score / divisor, _a));
 		}
 
@@ -4388,13 +4404,13 @@ public:
 			point ip = smi->second.ip;
 			point is = smi->second.is;
 
-//			fprintf(stderr, "score_map: (i, j) = (%u, %u), iw=(%f, %f, %f), ip=(%f, %f, %f), is=(%f, %f, %f) s=%f\n",
-//					i, j, iw[0], iw[1], iw[2], ip[0], ip[1], ip[2], is[0], is[1], is[2], smi->first);
-
 			if (accumulated_ambiguity++ >= max_acc_amb)
 				break;
 
 			total_ambiguity++;
+
+			fprintf(stderr, "score_map: (i, j) = (%u, %u), iw=(%f, %f, %f), ip=(%f, %f, %f), is=(%f, %f, %f) s=%f\n",
+					i, j, iw[0], iw[1], iw[2], ip[0], ip[1], ip[2], is[0], is[1], is[2], smi->first);
 
 			/*
 			 * Refine space around the intersection point.
@@ -4511,7 +4527,7 @@ public:
 			 * spatial info structure.
 			 */
 
-			// fprintf(stderr, "Made space with pointer %p\n", st.get_space());
+			fprintf(stderr, "space p=%p\n", st.get_space());
 
 			spatial_info_map[st.get_space()];
 		}
