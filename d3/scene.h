@@ -1816,6 +1816,10 @@ class scene {
 			return 0;
 		}
 
+		ale_pos split_coordinate() {
+			return tan((min[next_split] + max[next_split]) / 2);
+		}
+
 		space_traverse positive() {
 
 			assert(current);
@@ -1964,12 +1968,12 @@ class scene {
 
 			int d = st.get_next_split();
 
-			ale_pos split_point = (st.get_max()[d] + st.get_min()[d]) / 2;
+			ale_pos split_coordinate = st.split_coordinate();
 
 			space *n = st.get_space()->negative;
 			space *p = st.get_space()->positive;
 
-			if (camera_origin[d] > split_point) {
+			if (camera_origin[d] > split_coordinate) {
 				if (n) {
 					space_stack.top() = st.negative();
 					if (p)
@@ -3636,10 +3640,15 @@ public:
 				weights->pix(i, j) += encounter;
 				im->pix(i, j)      += encounter * color;
 
-				fprintf(stderr, "%p updating frame %d (i, j)=(%d, %d) to (enc,enc*col, col)=([%g %g %g], [%g %g %g], [%g %g %g]) d=%f-%f\n",
+				point wmin = st.get_min();
+				point wmax = st.get_max();
+
+				point camera = _pt.cw(point(0, 0, 0));
+
+				fprintf(stderr, "%p updating frame %d (i, j)=(%d, %d) to (enc,enc*col, col)=([%g %g %g], [%g %g %g], [%g %g %g]) bb=[%f %f %f]-[%f %f %f] wbb=[%f %f %f]-[%f %f %f] cam=[%f %f %f]\n",
 						st.get_space(), n, i, j, weights->pix(i, j)[0], weights->pix(i, j)[1], weights->pix(i, j)[2],
 						      im->pix(i, j)[0], im->pix(i, j)[1], im->pix(i, j)[2],
-						      color[0], color[1], color[2], max[2], min[2]);
+						      color[0], color[1], color[2], min[0], min[1], min[2], max[0], max[1], max[2], wmin[0], wmin[1], wmin[2], wmax[0], wmax[1], wmax[2], camera[0], camera[1], camera[2]);
 
 			}
 
