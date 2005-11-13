@@ -3398,7 +3398,7 @@ public:
 				 */
 
 				d2::pixel color = sn->get_color();
-//				ale_real occupancy = sn->get_occupancy();
+				ale_real occupancy = sn->get_occupancy();
 
 				/*
 				 * Determine the view-local bounding box for the
@@ -3505,6 +3505,7 @@ public:
 
 					sn->accumulate_color_1(f, i, j, pcolor, encounter);
 					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
+//					fprintf(stderr, "encounter=(%f, %f, %f)\n", encounter[0], encounter[1], encounter[2]);
 //					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
 //					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
 
@@ -3516,7 +3517,7 @@ public:
 
 					sn->accumulate_occupancy_1(f, i, j, occ, encounter[0]);
 
-					weights->pix(i, j) += encounter * occ;
+					weights->pix(i, j) += encounter * occupancy;
 				}
 
 			} while (si.next());
