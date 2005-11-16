@@ -755,6 +755,16 @@ int main(int argc, const char *argv[]){
 			i += 1;
 			d2::align::mc(mc_parameter);
 
+		} else if (!strcmp(argv[i], "--fx")) {
+
+			if (i + 1 >= argc)
+				not_enough("--fx");
+
+			double fx_parameter;
+			sscanf(argv[i+1], "%lf", &fx_parameter);
+			i += 1;
+			d3::scene::fx(fx_parameter);
+
 		} else if (!strcmp(argv[i], "--cw")) {
 			d2::align::certainty_weighted(1);
 		} else if (!strcmp(argv[i], "--no-cw")) {
@@ -1087,6 +1097,10 @@ int main(int argc, const char *argv[]){
 			d2::align::exp_meta_only();
 		} else if (!strcmp(argv[i], "--drizzle-only")) {
 			unsupported::discontinued("--drizzle-only", "--dchain box:1");
+		} else if (!strcmp(argv[i], "--nw")) {
+			d2::scene::nw();
+		} else if (!strcmp(argv[i], "--no-nw") {
+			d2::scene::no_nw();
 		} else if (!strcmp(argv[i], "--inc")) {
 			inc = 1;
 		} else if (!strcmp(argv[i], "--no-inc")) {

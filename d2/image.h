@@ -235,6 +235,57 @@ public:
 	}
 
 	/*
+	 * Get the maximum difference among adjacent pixels.
+	 */
+
+	pixel get_max_diff(int i, int j) {
+		assert(i >= 0);
+		assert(j >= 0);
+		assert(i <= _dimy - 1);
+		assert(j <= _dimx - 1);
+
+		pixel max = get_pixel(i, j), min = get_pixel(i, j);
+
+		for (int ii = -1; ii <= 1; ii++)
+		for (int jj = -1; jj <= 1; jj++) {
+			int iii = i + ii;
+			int jjj = j + jj;
+
+			if (iii < 0)
+				continue;
+			if (jjj < 0)
+				continue;
+			if (iii > _dimy - 1)
+				continue;
+			if (jjj > _dimx - 1)
+				continue;
+
+			pixel p = get_pixel(iii, jjj);
+
+			for (int d = 0; d < 3; d++) {
+				if (p[d] > max[d])
+					max[d] = p[d];
+				if (p[d] < min[d])
+					min[d] = p[d];
+			}
+		}
+
+		return max - min;
+	}
+
+	pixel get_var(point x) const {
+		assert (x[0] >= 0);
+		assert (x[1] >= 0);
+		assert (x[0] <= _dimy - 1);
+		assert (x[1] <= _dimx - 1);
+
+		int i = (int) round(x[0]);
+		int j = (int) round(x[1]);
+
+		return get_var(i, j);
+	}
+
+	/*
 	 * Get a color value at a given position using bilinear interpolation between the
 	 * four nearest pixels.  Result values:
 	 *

@@ -575,6 +575,8 @@ public:
 			"                         P    rotation around x-axis.\n"
 			"                         Y    rotation around y-axis.\n"
 			"                         R    rotation around z-axis.\n"
+			"--nw              Normalize output by weight.\n"
+			"--no-nw           Don't normalize output by weight.\n"
 			BETWEEN_SECTIONS
 			"Camera parameters:\n"
 			HEADER_SPACE
@@ -607,6 +609,7 @@ public:
 			HEADER_SPACE
 			"--fc <x>          Set front-clip to <x> (0 < x < 1)                [default is 0]\n"
 			"--rc <x>          Set rear-clip to <x> (1 < x < inf)             [default is inf]\n"
+			"--fx <x>          Set falloff exponent to <x>                      [default is 0]\n"
 			"--mpu <x>         Set model perturb upper bound to <x>           [default is 25%%]\n"
 			"--mpl <x>         Set model perturb lower bound to <x>             [default is 1]\n"
 			"--model-save=<x>  Save model data to file <x>.\n"

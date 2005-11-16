@@ -95,6 +95,18 @@ class scene {
 	static double occ_att;
 
 	/*
+	 * Normalization of output by weight
+	 */
+
+	static int normalize_weights;
+
+	/*
+	 * Falloff exponent
+	 */
+
+	static double falloff_exponent;
+
+	/*
 	 * Nearness threshold
 	 */
 	static const ale_real nearness;
@@ -3439,6 +3451,14 @@ public:
 					d2::pixel pcolor = im->get_bl(interp);
 					d2::pixel colordiff = color - pcolor;
 
+					if (falloff_exponent != 0) {
+						pixel max_diff = get_max_diff(interp);
+
+						for (int k = 0; k < 3; k++)
+						if (max_diff[k] > 1)
+							colordiff[k] /= pow(max_diff[k], falloff_exponent);
+					}
+
 //					fprintf(stderr, "color_interp=(%f, %f, %f)\n", pcolor[0], pcolor[1], pcolor[2]);
 
 					ale_real exp_scale = 256 * 256;
@@ -3482,6 +3502,14 @@ public:
 
 					d2::pixel pcolor = im->get_pixel(i, j);
 					d2::pixel colordiff = color - pcolor;
+
+					if (falloff_exponent != 0) {
+						pixel max_diff = get_max_diff(interp);
+
+						for (int k = 0; k < 3; k++)
+						if (max_diff[k] > 1)
+							colordiff[k] /= pow(max_diff[k], falloff_exponent);
+					}
 
 //					fprintf(stderr, "(i, j) == (%d, %d); c=[%f %f %f]\n",
 //							i, j, pcolor[0], pcolor[1], pcolor[2]);
@@ -3655,6 +3683,7 @@ public:
 
 		} while (si.next());
 
+		if (normalize_weights)
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
 			im->pix(i, j) /= weights->pix(i, j);
@@ -3768,6 +3797,18 @@ public:
 #endif
 
 		return im;
+	}
+
+	static fx(double _fx) {
+		falloff_exponent = _fx;
+	}
+
+	static nw() {
+		normalize_weights = 1;
+	}
+
+	static no_nw() {
+		normalize_weights = 0;
 	}
 
 	static const d2::image *view(unsigned int n) {
