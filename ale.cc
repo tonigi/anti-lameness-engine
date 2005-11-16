@@ -1098,9 +1098,9 @@ int main(int argc, const char *argv[]){
 		} else if (!strcmp(argv[i], "--drizzle-only")) {
 			unsupported::discontinued("--drizzle-only", "--dchain box:1");
 		} else if (!strcmp(argv[i], "--nw")) {
-			d2::scene::nw();
-		} else if (!strcmp(argv[i], "--no-nw") {
-			d2::scene::no_nw();
+			d3::scene::nw();
+		} else if (!strcmp(argv[i], "--no-nw")) {
+			d3::scene::no_nw();
 		} else if (!strcmp(argv[i], "--inc")) {
 			inc = 1;
 		} else if (!strcmp(argv[i], "--no-inc")) {

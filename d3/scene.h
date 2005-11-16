@@ -3452,7 +3452,7 @@ public:
 					d2::pixel colordiff = color - pcolor;
 
 					if (falloff_exponent != 0) {
-						pixel max_diff = get_max_diff(interp);
+						d2::pixel max_diff = im->get_max_diff(interp);
 
 						for (int k = 0; k < 3; k++)
 						if (max_diff[k] > 1)
@@ -3504,7 +3504,7 @@ public:
 					d2::pixel colordiff = color - pcolor;
 
 					if (falloff_exponent != 0) {
-						pixel max_diff = get_max_diff(interp);
+						d2::pixel max_diff = im->get_max_diff(interp);
 
 						for (int k = 0; k < 3; k++)
 						if (max_diff[k] > 1)
@@ -3799,15 +3799,15 @@ public:
 		return im;
 	}
 
-	static fx(double _fx) {
+	static void fx(double _fx) {
 		falloff_exponent = _fx;
 	}
 
-	static nw() {
+	static void nw() {
 		normalize_weights = 1;
 	}
 
-	static no_nw() {
+	static void no_nw() {
 		normalize_weights = 0;
 	}
 

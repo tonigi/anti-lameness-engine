@@ -238,7 +238,7 @@ public:
 	 * Get the maximum difference among adjacent pixels.
 	 */
 
-	pixel get_max_diff(int i, int j) {
+	pixel get_max_diff(unsigned int i, unsigned int j) const {
 		assert(i >= 0);
 		assert(j >= 0);
 		assert(i <= _dimy - 1);
@@ -255,9 +255,9 @@ public:
 				continue;
 			if (jjj < 0)
 				continue;
-			if (iii > _dimy - 1)
+			if ((unsigned int) iii > _dimy - 1)
 				continue;
-			if (jjj > _dimx - 1)
+			if ((unsigned int) jjj > _dimx - 1)
 				continue;
 
 			pixel p = get_pixel(iii, jjj);
@@ -273,16 +273,16 @@ public:
 		return max - min;
 	}
 
-	pixel get_var(point x) const {
+	pixel get_max_diff(point x) const {
 		assert (x[0] >= 0);
 		assert (x[1] >= 0);
 		assert (x[0] <= _dimy - 1);
 		assert (x[1] <= _dimx - 1);
 
-		int i = (int) round(x[0]);
-		int j = (int) round(x[1]);
+		unsigned int i = (unsigned int) round(x[0]);
+		unsigned int j = (unsigned int) round(x[1]);
 
-		return get_var(i, j);
+		return get_max_diff(i, j);
 	}
 
 	/*
