@@ -1,5 +1,18 @@
-o	Fix various bugs in control-point alignment, possibly resolving
-	alignment failures reported by Gregory Maxwell.
+0.8.2
+
+o	Add magical file 'dump:' for listing color values numerically
+	to stderr.
+
+o	Transition from a subdivisible triangle model to a subdivisible	
+	space model, using a rudimentary implementation of Hans Moravec's 
+	notion of occupancy.
+
+o	Add support for view and depth output from arbitrary cameras.
+
+o	Add clipping plane options for 3D modeling.
+
+o	Fix various bugs in control-point alignment reported by Gregory
+	Maxwell.
 
 0.8.1
 
