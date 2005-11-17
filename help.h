@@ -575,7 +575,7 @@ public:
 			"                         P    rotation around x-axis.\n"
 			"                         Y    rotation around y-axis.\n"
 			"                         R    rotation around z-axis.\n"
-			"--nw              Normalize output by weight.\n"
+			"--nw              Normalize output by weight.                           [default]\n"
 			"--no-nw           Don't normalize output by weight.\n"
 			BETWEEN_SECTIONS
 			"Camera parameters:\n"
