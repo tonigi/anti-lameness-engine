@@ -1222,16 +1222,16 @@ int main(int argc, const char *argv[]){
 			d2::align::set_lod_max((int) floor(lod_max));
 		} else if (!strncmp(argv[i], "--cpf-load=", strlen("--cpf-load="))) {
 			d3::cpf::init_loadfile(argv[i] + strlen("--cpf-load="));
+#if 0
 		} else if (!strncmp(argv[i], "--model-load=", strlen("--model-load="))) {
 			d3::scene::load_model(argv[i] + strlen("--model-load="));
-#if 0
 		} else if (!strncmp(argv[i], "--model-save=", strlen("--model-save="))) {
 			d3::scene::save_model(argv[i] + strlen("--model-save="));
+#endif
 		} else if (!strncmp(argv[i], "--trans-load=", strlen("--trans-load="))) {
 			d2::tload_delete(tload);
 			tload = d2::tload_new(argv[i] + strlen("--trans-load="));
 			d2::align::set_tload(tload);
-#endif
 		} else if (!strncmp(argv[i], "--trans-save=", strlen("--trans-save="))) {
 			tsave_delete(tsave);
 			tsave = d2::tsave_new(argv[i] + strlen("--trans-save="));
@@ -1705,15 +1705,15 @@ int main(int argc, const char *argv[]){
 
 				d3::scene::make_space();
 
-				fprintf(stderr, "Total pixels: %lu\n", d3::scene::total_pixels);
-				fprintf(stderr, "Total ambiguity: %lu\n", d3::scene::total_ambiguity);
-				fprintf(stderr, "Total tsteps: %lu\n", d3::scene::total_tsteps);
-				fprintf(stderr, "Total divisions: %lu\n", d3::scene::total_divisions);
+//				fprintf(stderr, "Total pixels: %lu\n", d3::scene::total_pixels);
+//				fprintf(stderr, "Total ambiguity: %lu\n", d3::scene::total_ambiguity);
+//				fprintf(stderr, "Total tsteps: %lu\n", d3::scene::total_tsteps);
+//				fprintf(stderr, "Total divisions: %lu\n", d3::scene::total_divisions);
 
-				fprintf(stderr, "Reducing cost in 3D scene");
+				fprintf(stderr, "Updating occupancy values");
 				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, 
 						&d3_depth_pt, &d3_output_pt, output_exposure, inc);
-				fprintf(stderr, ".\n");
+				fprintf(stderr, ".  [done]\n");
 
 				fprintf(stderr, "Writing 3D output");
 				for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
@@ -1747,7 +1747,7 @@ int main(int argc, const char *argv[]){
 						delete im;
 					}
 				}
-				fprintf(stderr, ".\n");
+				fprintf(stderr, ".  [done]\n");
 
 				for (unsigned int i = d2::image_rw::count(); i < d3_count; i++) {
 					if (d3_depth[i] != NULL) {
