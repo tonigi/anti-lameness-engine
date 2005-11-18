@@ -3191,6 +3191,7 @@ public:
 		 * If there is a file to load scene data from, then use it.
 		 */
 
+#if 0
 		if (load_model_name) {
 			read_model_file();
 			return;
@@ -3267,6 +3268,7 @@ public:
 		triangle::fix_vertex(triangle_head[1]->vertices[0]);
 		triangle::fix_vertex(triangle_head[1]->vertices[1]);
 		triangle::fix_vertex(triangle_head[1]->vertices[2]);
+#endif
 	}
 
 	/*
@@ -4611,7 +4613,7 @@ public:
 	 */
 	static void make_space() {
 
-		fprintf(stderr, "Subdividing space");
+		fprintf(stderr, "Subdividing 3D space");
 
 		/*
 		 * Initialize root space.
@@ -4667,7 +4669,7 @@ public:
 			d2::image_rw::close(f1);
 		}
 
-		fprintf(stderr, ".  [done]\n");
+		fprintf(stderr, ".\n");
 	}
 
 

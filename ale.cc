@@ -1699,9 +1699,9 @@ int main(int argc, const char *argv[]){
 
 				d3::scene::init_from_d2();
 
-				d3::scene::add_control_points();
+//				d3::scene::add_control_points();
 
-				d3::scene::relax_triangle_model();
+//				d3::scene::relax_triangle_model();
 
 				d3::scene::make_space();
 
@@ -1713,7 +1713,7 @@ int main(int argc, const char *argv[]){
 				fprintf(stderr, "Updating occupancy values");
 				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, 
 						&d3_depth_pt, &d3_output_pt, output_exposure, inc);
-				fprintf(stderr, ".  [done]\n");
+				fprintf(stderr, ".\n");
 
 				fprintf(stderr, "Writing 3D output");
 				for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
@@ -1747,7 +1747,7 @@ int main(int argc, const char *argv[]){
 						delete im;
 					}
 				}
-				fprintf(stderr, ".  [done]\n");
+				fprintf(stderr, ".\n");
 
 				for (unsigned int i = d2::image_rw::count(); i < d3_count; i++) {
 					if (d3_depth[i] != NULL) {
