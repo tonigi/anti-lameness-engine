@@ -575,8 +575,8 @@ public:
 			"                         P    rotation around x-axis.\n"
 			"                         Y    rotation around y-axis.\n"
 			"                         R    rotation around z-axis.\n"
-			"--nw              Normalize output by weight.                           [default]\n"
-			"--no-nw           Don't normalize output by weight.\n"
+			"--occ-norm        Normalize output with accumulated occupancy.          [default]\n"
+			"--occ-nonorm      Don't normalize output with accumulated occupancy.\n"
 			BETWEEN_SECTIONS
 			"Camera parameters:\n"
 			HEADER_SPACE
