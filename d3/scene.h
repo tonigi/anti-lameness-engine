@@ -2910,8 +2910,6 @@ class scene {
 			int orig_inclusion = 0;
 			if (change_set_prev->size() > 0)
 			for (unsigned int f = 0; !orig_inclusion && f < d2::image_rw::count(); f++) {
-				pt _pt = align::projective(f);
-
 				for (pp_set_t::iterator j = bb_array[f].begin(); 
 						!orig_inclusion && j != bb_array[f].end(); j++) {
 
@@ -2970,8 +2968,6 @@ class scene {
 				int perturbed_inclusion = 0;
 				if (!orig_inclusion && change_set_prev->size() > 0)
 				for (unsigned int f = 0; !perturbed_inclusion && f < d2::image_rw::count(); f++) {
-					pt _pt = align::projective(f);
-
 					for (pp_set_t::iterator j = bb_array[f].begin(); 
 							!perturbed_inclusion && j != bb_array[f].end(); j++) {
 
@@ -3564,7 +3560,7 @@ public:
 			i->second.update_color();
 			i->second.update_occupancy();
 
-			d2::pixel color = i->second.get_color();
+//			d2::pixel color = i->second.get_color();
 
 //			fprintf(stderr, "space p=%p updated to c=[%f %f %f] o=%f\n",
 //					i->first, color[0], color[1], color[2], 
@@ -3671,10 +3667,10 @@ public:
 				weights->pix(i, j) += encounter;
 				im->pix(i, j)      += encounter * color;
 
-				point wmin = st.get_min();
-				point wmax = st.get_max();
+//				point wmin = st.get_min();
+//				point wmax = st.get_max();
 
-				point camera = _pt.cw(point(0, 0, 0));
+//				point camera = _pt.cw(point(0, 0, 0));
 
 //				fprintf(stderr, "%p updating frame %d (i, j)=(%d, %d) to (enc,enc*col, col)=([%g %g %g], [%g %g %g], [%g %g %g]) bb=[%f %f %f]-[%f %f %f] wbb=[%f %f %f]-[%f %f %f] cam=[%f %f %f]\n",
 //						st.get_space(), n, i, j, weights->pix(i, j)[0], weights->pix(i, j)[1], weights->pix(i, j)[2],
@@ -3867,7 +3863,7 @@ public:
 			 * Get information on the subspace.
 			 */
 
-			d2::pixel color = sn.get_color();
+//			d2::pixel color = sn.get_color();
 			ale_real occupancy = sn.get_occupancy();
 
 			/*
@@ -4095,7 +4091,7 @@ public:
 		 * Get the pixel color in the primary frame
 		 */
 
-		d2::pixel color_primary = if1->get_pixel(i, j);
+		// d2::pixel color_primary = if1->get_pixel(i, j);
 
 		/*
 		 * Map two depths to the secondary frame.
@@ -4287,7 +4283,7 @@ public:
 			 */
 
 			d2::point nbp0 = d2::point(bp0.dproduct(b0), bp0.dproduct(b1));
-			d2::point nbp1 = d2::point(bp1.dproduct(b0), bp1.dproduct(b1));
+			// d2::point nbp1 = d2::point(bp1.dproduct(b0), bp1.dproduct(b1));
 			d2::point nbp2 = d2::point(bp2.dproduct(b0), bp2.dproduct(b1));
 			d2::point np3  = d2::point( p3.dproduct(b0),  p3.dproduct(b1));
 
@@ -4438,10 +4434,10 @@ public:
 			 * Add the point to the score map.
 			 */
 
-			d2::pixel c_ip = if1->in_bounds(ip.xy()) ? if1->get_bl(ip.xy())
-				                                 : d2::pixel();
-			d2::pixel c_is = if2->in_bounds(is.xy()) ? if2->get_bl(is.xy())
-				                                 : d2::pixel();
+//			d2::pixel c_ip = if1->in_bounds(ip.xy()) ? if1->get_bl(ip.xy())
+//				                                 : d2::pixel();
+//			d2::pixel c_is = if2->in_bounds(is.xy()) ? if2->get_bl(is.xy())
+//				                                 : d2::pixel();
 
 //			fprintf(stderr, "Candidate subspace: f1=%u f2=%u i=%u j=%u ii=%f jj=%f"
 //					"cp=[%f %f %f] cs=[%f %f %f]\n",
@@ -4476,7 +4472,7 @@ public:
 
 			point iw = smi->second.iw;
 			point ip = smi->second.ip;
-			point is = smi->second.is;
+			// point is = smi->second.is;
 
 			if (accumulated_ambiguity++ >= max_acc_amb)
 				break;

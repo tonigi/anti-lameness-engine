@@ -642,8 +642,6 @@ public:
 
 		if (_is_projective)
 		for (int i = 0; i <= 4; i++) {
-			point y;
-
 			x[i] -= p;
 			x[i] = point(
 				x[i][0] * cos(radians) + x[i][1] * sin(radians),
