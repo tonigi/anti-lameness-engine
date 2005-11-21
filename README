@@ -63,7 +63,7 @@ Compiling from source
 URLs
 ----
 
-http://auricle.dyndns.org/ALE/download/ale-0.8.1.tar.gz
+http://auricle.dyndns.org/ALE/download/ale-0.8.2.tar.gz
 
 
 Build prerequisites
@@ -78,8 +78,8 @@ Extraction and Installation
 
 Download the source archive file from the URL indicated above, and invoke:
 
-	tar xzf ale-0.8.1.tar.gz
-	cd ale-0.8.1
+	tar xzf ale-0.8.2.tar.gz
+	cd ale-0.8.2
 	make [OPTIONS]
 
 where the text '[OPTIONS]' is replaced by zero or more of the compilation
