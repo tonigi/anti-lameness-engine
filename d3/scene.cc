@@ -56,6 +56,9 @@ double scene::occ_att = 0.50;
 int scene::normalize_weights = 1;
 
 double scene::falloff_exponent = 0;
+double scene::tc_multiplier = 0;
+unsigned int scene::ou_iterations = 10;
+unsigned int scene::pairwise_ambiguity = 3;
 
 /*
  * Precision discriminator

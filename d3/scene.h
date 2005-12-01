@@ -107,6 +107,21 @@ class scene {
 	static double falloff_exponent;
 
 	/*
+	 * Third-camera error multiplier
+	 */
+	static double tc_multiplier;
+
+	/*
+	 * Occupancy update iterations
+	 */
+	static unsigned int ou_iterations;
+
+	/*
+	 * Pairwise ambiguity
+	 */
+	static unsigned int pairwise_ambiguity;
+
+	/*
 	 * Nearness threshold
 	 */
 	static const ale_real nearness;
@@ -3797,6 +3812,18 @@ public:
 		return im;
 	}
 
+	static void tcem(double _tcem) {
+		tc_multiplier = _tcem;
+	}
+
+	static void oui(unsigned int _oui) {
+		ou_iterations = _oui;
+	}
+
+	static void pa(unsigned int _pa) {
+		pairwise_ambiguity = _pa;
+	}
+
 	static void fx(double _fx) {
 		falloff_exponent = _fx;
 	}
@@ -4466,7 +4493,7 @@ public:
 			_pt1, pt _pt2, score_map _sm) {
 
 		int accumulated_ambiguity = 0;
-		int max_acc_amb = 3;
+		int max_acc_amb = pairwise_ambiguity;
 
 		for(score_map::iterator smi = _sm.begin(); smi != _sm.end(); smi++) {
 
@@ -4694,7 +4721,7 @@ public:
 		 * Subspace model
 		 */
 
-		for (int i = 0; i < 20; i++)
+		for (unsigned int i = 0; i < ou_iterations; i++)
 			spatial_info_update();
 
 #else

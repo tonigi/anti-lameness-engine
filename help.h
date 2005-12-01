@@ -612,6 +612,9 @@ public:
 			"--fc <x>          Set front-clip to <x> (0 < x < 1)                [default is 0]\n"
 			"--rc <x>          Set rear-clip to <x> (1 < x < inf)             [default is inf]\n"
 			"--fx <x>          Set falloff exponent to <x>                      [default is 0]\n"
+			"--tcem <x>        Set third-camera error multiplier to <x>         [default is 0]\n"
+			"--oui <x>         Set occupancy update iterations to <x>          [default is 10]\n"
+			"--pa <x>          Set pairwise ambiguity to <x>                    [default is 3]\n"
 #if 0
 			"--mpu <x>         Set model perturb upper bound to <x>           [default is 25%%]\n"
 			"--mpl <x>         Set model perturb lower bound to <x>             [default is 1]\n"

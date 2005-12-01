@@ -773,6 +773,36 @@ int main(int argc, const char *argv[]){
 			i += 1;
 			d3::scene::fx(fx_parameter);
 
+		} else if (!strcmp(argv[i], "--tcem")) {
+
+			if (i + 1 >= argc)
+				not_enough("--tcem");
+
+			double tcem_parameter;
+			sscanf(argv[i+1], "%lf", &tcem_parameter);
+			i += 1;
+			d3::scene::tcem(tcem_parameter);
+
+		} else if (!strcmp(argv[i], "--oui")) {
+
+			if (i + 1 >= argc)
+				not_enough("--oui");
+
+			unsigned int oui_parameter;
+			sscanf(argv[i+1], "%u", &oui_parameter);
+			i += 1;
+			d3::scene::oui(oui_parameter);
+
+		} else if (!strcmp(argv[i], "--pa")) {
+
+			if (i + 1 >= argc)
+				not_enough("--pa");
+
+			unsigned int pa_parameter;
+			sscanf(argv[i+1], "%u", &pa_parameter);
+			i += 1;
+			d3::scene::pa(pa_parameter);
+
 		} else if (!strcmp(argv[i], "--cw")) {
 			d2::align::certainty_weighted(1);
 		} else if (!strcmp(argv[i], "--no-cw")) {
