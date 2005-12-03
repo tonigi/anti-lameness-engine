@@ -4443,7 +4443,8 @@ public:
 
 				point p = _ptf.wp_unscaled(iw);
 
-				if (!cl->reference[f]->in_bounds(p.xy()))
+				if (!cl->reference[f]->in_bounds(p.xy())
+				 || !if2->in_bounds(ip.xy()))
 					continue;
 
 				divisor += tc_multiplier;
