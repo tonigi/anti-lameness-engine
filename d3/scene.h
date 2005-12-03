@@ -4430,6 +4430,7 @@ public:
 			 * Include third-camera contributions in the score.
 			 */
 
+			if (tc_multiplier != 0)
 			for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 				if (f == f1 || f == f2)
 					continue;
