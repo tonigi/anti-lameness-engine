@@ -4426,6 +4426,32 @@ public:
 					 
 			}
 
+			/*
+			 * Include third-camera contributions in the score.
+			 */
+
+			for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+				if (f == f1 || f == f2)
+					continue;
+
+				assert(cl);
+				assert(cl->reference);
+				assert(cl->reference[f]);
+
+				pt _ptf = align::projective(f);
+
+				point p = _ptf.wp_unscaled(iw);
+
+				if (!cl->reference[f]->in_bounds(p.xy()))
+					continue;
+
+				divisor += tc_multiplier;
+				score   += tc_multiplier
+					 * (if1->get_bl(ip.xy()) - cl->reference[f]->get_bl(p.xy())).normsq();
+			}
+
+			
+
 
 			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
