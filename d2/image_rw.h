@@ -314,6 +314,8 @@ public:
 				fprintf(stderr, "(%d, %d): [%f %f %f] ", i, j, p[0], p[1], p[2]);
 			}
 			fprintf(stderr, "\n");
+
+			return;
 		}
 		
 #ifdef USE_MAGICK
@@ -376,7 +378,10 @@ public:
 		 */
 		ale_real maxval = 1;
 		ale_real minval = (rezero ? im->minval() : 0);
+		if (minval > 0)
+			minval = 0;
 		pixel minval_pixel(minval, minval, minval);
+
 
 		if (exposure_scale || exp_scale_override) {
 			ale_real new_maxval = im->maxval();

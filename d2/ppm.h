@@ -332,6 +332,8 @@ static inline void write_ppm(const char *filename, const image *im, exposure *e,
 
 	ale_real maxval = 1;
 	ale_real minval = (rezero ? im->minval() : 0);
+	if (minval > 0)
+		minval = 0;
 	pixel minval_pixel(minval, minval, minval);
 
 	if (exposure_scale) {

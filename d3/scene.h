@@ -3858,6 +3858,8 @@ public:
 		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
 				               (int) floor(_pt.scaled_width()), 3);
 
+		assert(im);
+
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
 #if 1
@@ -3867,6 +3869,8 @@ public:
 
 		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
 						(int) floor(_pt.scaled_width()), 3);
+
+		assert(weights);
 
 		/*
 		 * Iterate through subspaces.
