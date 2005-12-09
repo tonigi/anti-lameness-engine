@@ -1907,8 +1907,11 @@ class scene {
 
 		void get_view_local_bb(pt _pt, point bb[2]) {
 
-			point min(_pt.scaled_height(), _pt.scaled_width(), point::posinf()[2]);
-			point max(0, 0, point::neginf()[2]);
+//			point min(_pt.scaled_height(), _pt.scaled_width(), point::posinf()[2]);
+//			point max(0, 0, point::neginf()[2]);
+
+			point min = point::posinf();
+			point max = point::neginf();
 
 			point wbb[2] = { get_min(), get_max() };
 
@@ -2333,6 +2336,7 @@ class scene {
 
 			occupancy_weights_1.clear();
 			occupancy_weights_2.clear();
+
 		}
 
 		/*
@@ -2361,6 +2365,14 @@ class scene {
 			return socc_density;
 		}
 	};
+
+	/*
+	 * DEBUG: This is a debugging variable, added for the sake of
+	 * tracking particular occupancy registers, when such tracking is
+	 * desired.
+	 */
+
+//	static spatial_info *tracked_space;
 
 	/*
 	 * Map spatial regions of interest to spatial info structures.  XXX:
@@ -3648,8 +3660,8 @@ public:
 			point max = bb[1];
 
 
-			if (fabs(min[0] - max[0]) > sqrt(2) 
-			 || fabs(min[1] - max[1]) > sqrt(2)) {
+			if (max[0] - min[0] > sqrt(2) 
+			 || max[1] - min[1] > sqrt(2)) {
 //				fprintf(stderr, "Unusually large bb detected: (%f, %f) - (%f, %f)\n", min[0], min[1], max[0], max[1]);
 			}
 
@@ -4521,8 +4533,8 @@ public:
 	 * Analyze space in a manner dependent on the score map.
 	 */
 
-	static void analyze_space_from_map(unsigned int i, unsigned int j, pt
-			_pt1, pt _pt2, score_map _sm) {
+	static void analyze_space_from_map(unsigned int f1, unsigned int f2, unsigned int i, 
+			unsigned int j, pt _pt1, pt _pt2, score_map _sm) {
 
 		int accumulated_ambiguity = 0;
 		int max_acc_amb = pairwise_ambiguity;
@@ -4712,7 +4724,7 @@ public:
 				 * Analyze space in a manner dependent on the score map.
 				 */
 
-				analyze_space_from_map(i, j, _pt1, _pt2, _sm);
+				analyze_space_from_map(f1, f2, i, j, _pt1, _pt2, _sm);
 
 			}
 

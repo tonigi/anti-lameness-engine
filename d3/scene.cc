@@ -46,6 +46,8 @@ const ale_real scene::nearness = 0.01;
 scene::space *scene::root_space = NULL;
 std::map<struct scene::space *, scene::spatial_info> scene::spatial_info_map;
 
+scene::spatial_info *scene::tracked_space = NULL;
+
 unsigned long scene::total_ambiguity = 0;
 unsigned long scene::total_pixels = 0;
 unsigned long scene::total_divisions = 0;
