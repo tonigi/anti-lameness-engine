@@ -3927,8 +3927,8 @@ public:
 			 * intersect the subspace.
 			 */
 
-			for (unsigned int i = (unsigned int) ceil(min[0]); i <= (unsigned int) floor(max[0]); i++)
-			for (unsigned int j = (unsigned int) ceil(min[1]); j <= (unsigned int) floor(max[1]); j++) {
+			for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
+			for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++) {
 				/*
 				 * Determine the probability of encounter.
 				 */
