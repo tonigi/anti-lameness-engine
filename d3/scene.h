@@ -1814,9 +1814,21 @@ class scene {
 	class space_traverse {
 		space *current;
 		point min, max;
-		int next_split;
 
 	public:
+
+		int get_next_split() {
+			// return next_split;
+
+			if (tan(max[0]) - tan(min[0]) > tan(max[1]) - tan(min[1])
+			 && tan(max[0]) - tan(min[0]) > tan(max[2]) - tan(max[2]))
+				return 0;
+
+			if (tan(max[1]) - tan(min[1]) > tan(max[2]) - tan(min[2]))
+				return 1;
+
+			return 2;
+		}
 
 		static space_traverse root() {
 
@@ -1825,7 +1837,6 @@ class scene {
 			result.current = root_space;
 			result.min = point(-M_PI/2, -M_PI/2, -M_PI/2);
 			result.max = point( M_PI/2,  M_PI/2,  M_PI/2);
-			result.next_split = 0;
 
 			assert(result.current);
 
@@ -1833,6 +1844,7 @@ class scene {
 		}
 
 		int precision_wall() {
+			int next_split = get_next_split();
 			ale_pos split_point = (min[next_split] + max[next_split]) / 2;
 			
 			if (split_point == min[next_split] || split_point == max[next_split]
@@ -1844,12 +1856,15 @@ class scene {
 		}
 
 		ale_pos split_coordinate() {
+			int next_split = get_next_split();
 			return tan((min[next_split] + max[next_split]) / 2);
 		}
 
 		space_traverse positive() {
 
 			assert(current);
+
+			int next_split = get_next_split();
 
 			if (current->positive == NULL) {
 				current->positive = new space;
@@ -1861,7 +1876,6 @@ class scene {
 			result.current = current->positive;
 			result.min = min;
 			result.max = max;
-			result.next_split = (next_split + 1) % 3;
 
 			result.min[next_split] = (min[next_split] + max[next_split]) / 2;
 
@@ -1874,6 +1888,8 @@ class scene {
 
 			assert(current);
 
+			int next_split = get_next_split();
+
 			if (current->negative == NULL) {
 				current->negative = new space;
 				total_divisions++;
@@ -1884,7 +1900,6 @@ class scene {
 			result.current = current->negative;
 			result.min = min;
 			result.max = max;
-			result.next_split = (next_split + 1) % 3;
 
 			result.max[next_split] = (min[next_split] + max[next_split]) / 2;
 
@@ -1972,9 +1987,6 @@ class scene {
 			return current;
 		}
 
-		int get_next_split() {
-			return next_split;
-		}
 	};
 
 	/*
