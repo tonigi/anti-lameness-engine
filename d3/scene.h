@@ -1818,13 +1818,30 @@ class scene {
 	public:
 
 		int get_next_split() {
-			// return next_split;
 
-			if (tan(max[0]) - tan(min[0]) > tan(max[1]) - tan(min[1])
-			 && tan(max[0]) - tan(min[0]) > tan(max[2]) - tan(max[2]))
+			/*
+			 * Double-infinite case.
+			 */
+
+			for (int d = 0; d < 3; d++)
+			if (isinf(max[d]) && isinf(min[d]))
+				return d;
+
+			/*
+			 * Finite or single-infinite case
+			 */
+
+			if (max[0] - min[0] >= max[1] - min[1]
+			 && (max[0] >= max[1] || !isinf(min[1]))
+			 && (min[0] <= min[1] || !isinf(max[1]))
+			 && max[0] - min[0] >= max[2] - max[2]
+			 && (max[0] >= max[2] || !isinf(min[2]))
+			 && (min[0] <= min[2] || !isinf(max[2])))
 				return 0;
 
-			if (tan(max[1]) - tan(min[1]) > tan(max[2]) - tan(min[2]))
+			if (max[1] - min[1] > max[2] - min[2]
+			 && (max[1] >= max[2] || !isinf(min[2]))
+			 && (min[1] <= min[2] || !isinf(max[2])))
 				return 1;
 
 			return 2;
@@ -1835,29 +1852,43 @@ class scene {
 			space_traverse result;
 
 			result.current = root_space;
-			result.min = point(-M_PI/2, -M_PI/2, -M_PI/2);
-			result.max = point( M_PI/2,  M_PI/2,  M_PI/2);
+			result.min = point::neginf();
+			result.max = point::posinf();
 
 			assert(result.current);
 
 			return result;
 		}
 
-		int precision_wall() {
-			int next_split = get_next_split();
-			ale_pos split_point = (min[next_split] + max[next_split]) / 2;
-			
-			if (split_point == min[next_split] || split_point == max[next_split]
-			 || tan(split_point) == tan(min[next_split])
-			 || tan(split_point) == tan(max[next_split]))
-				return 1;
+		ale_pos split_coordinate(int d) {
+			if (isinf(max[d]) && isinf(min[d]))
+				return 0;
 
-			return 0;
+			if (isinf(max[d]))
+				return tan((atan(min[d]) + M_PI/2) / 2);
+
+			if (isinf(min[d]))
+				return tan((atan(max[d]) - M_PI/2) / 2);
+
+			return (min[d] + max[d]) / 2;
 		}
 
 		ale_pos split_coordinate() {
 			int next_split = get_next_split();
-			return tan((min[next_split] + max[next_split]) / 2);
+			return split_coordinate(next_split);
+		}
+
+		int precision_wall() {
+			int next_split = get_next_split();
+			ale_pos split_point = split_coordinate(next_split);
+
+			assert(split_point <= max[next_split]);
+			assert(split_point >= min[next_split]);
+			
+			if (split_point == min[next_split] || split_point == max[next_split]) 
+				return 1;
+
+			return 0;
 		}
 
 		space_traverse positive() {
@@ -1877,7 +1908,7 @@ class scene {
 			result.min = min;
 			result.max = max;
 
-			result.min[next_split] = (min[next_split] + max[next_split]) / 2;
+			result.min[next_split] = split_coordinate(next_split);
 
 			assert(result.current);
 
@@ -1901,7 +1932,7 @@ class scene {
 			result.min = min;
 			result.max = max;
 
-			result.max[next_split] = (min[next_split] + max[next_split]) / 2;
+			result.max[next_split] = split_coordinate(next_split);
 
 			assert(result.current);
 
@@ -1909,11 +1940,11 @@ class scene {
 		}
 
 		point get_min() {
-			return point(tan(min[0]), tan(min[1]), tan(min[2]));
+			return min;
 		}
 
 		point get_max() {
-			return point(tan(max[0]), tan(max[1]), tan(max[2]));
+			return max;
 		}
 
 		/*
@@ -1921,9 +1952,6 @@ class scene {
 		 */
 
 		void get_view_local_bb(pt _pt, point bb[2]) {
-
-//			point min(_pt.scaled_height(), _pt.scaled_width(), point::posinf()[2]);
-//			point max(0, 0, point::neginf()[2]);
 
 			point min = point::posinf();
 			point max = point::neginf();
@@ -1968,14 +1996,13 @@ class scene {
 		}
 
 		int includes(point p) {
-			point tdp = point(atan(p[0]), atan(p[1]), atan(p[2]));
 
 			for (int d = 0; d < 3; d++) {
-				if (tdp[d] > max[d])
+				if (p[d] > max[d])
 					return 0;
-				if (tdp[d] < min[d])
+				if (p[d] < min[d])
 					return 0;
-				if (isnan(tdp[d]))
+				if (isnan(p[d]))
 					return 0;
 			}
 
@@ -4594,15 +4621,15 @@ public:
 
 					for (int f = 0; f < 2; f++)
 					for (int d = 0; d < 3; d++) {
-						if (ppp[f][d] < frame_min[f][d])
+						if (ppp[f][d] < frame_min[f][d] || isnan(ppp[f][d]))
 							frame_min[f][d] = ppp[f][d];
-						if (ppp[f][d] > frame_max[f][d])
+						if (ppp[f][d] > frame_max[f][d] || isnan(ppp[f][d]))
 							frame_max[f][d] = ppp[f][d];
 					}
 				}
 
 #if 0
-				if (i == 0 && j == 0)
+				if (/*i == 0 && j == 0*/ 1)
 					fprintf(stderr, "min, max = [(%f, %f, %f), (%f, %f), (%f, %f)], [(%f, %f, %f), (%f, %f), (%f, %f)] [%lu]\n", 
 						p[0][0], p[0][1], p[0][2],
 						frame_min[0][0], frame_min[0][1],
@@ -4659,8 +4686,9 @@ public:
 			st.get_view_local_bb(_pt2, bb_pt2);
 
 			if (!(bb_pt1[0][0] <= i)) {
-				fprintf(stderr, "BB failure: i == %d, j == %d, ip == [%f %f %f] bb_pt1[0][0] == %f\n",
-						i, j, ip[0], ip[1], ip[2], bb_pt1[0][0]);
+				fprintf(stderr, "BB failure: i == %d, j == %d, ip == [%f %f %f] bb_pt1 == [%f %f %f]-[%f %f %f]\n",
+						i, j, ip[0], ip[1], ip[2], bb_pt1[0][0], bb_pt1[0][1], bb_pt1[0][2],
+						bb_pt1[1][0], bb_pt1[1][1], bb_pt1[1][2]);
 			}
 
 //					assert (bb_pt1[0][0] <= i);
