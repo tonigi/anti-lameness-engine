@@ -2085,6 +2085,10 @@ class scene {
 			return result;
 		}
 
+		int done() {
+			return space_stack.empty();
+		}
+
 		space_traverse get() {
 			assert (!space_stack.empty());
 			return space_stack.top();
@@ -3434,7 +3438,7 @@ public:
 	 * parameters.
 	 */
 	static void subspace_info_update(space_iterate si, int f, d2::image *weights, const d2::image *im, pt _pt) {
-		do {
+		while(!si.done()) {
 
 			space_traverse st = si.get();
 
@@ -3442,8 +3446,10 @@ public:
 			 * XXX: This could be more efficient, perhaps.
 			 */
 
-			if (spatial_info_map.count(st.get_space()) == 0)
+			if (spatial_info_map.count(st.get_space()) == 0) {
+				si.next();
 				continue;
+			}
 
 			spatial_info *sn = &spatial_info_map[st.get_space()];
 
@@ -3540,7 +3546,8 @@ public:
 			std::queue<d2::pixel> weight_queue;
 
 			/*
-			 * Check for higher resolution subspaces.
+			 * Check for higher resolution subspaces, and
+			 * update the space iterator.
 			 */
 
 			if (st.get_space()->positive
@@ -3570,6 +3577,8 @@ public:
 				cleaved_space.next();
 
 				subspace_info_update(cleaved_space, f, weights, im, _pt);
+			} else {
+				si.next();
 			}
 				
 
@@ -3655,7 +3664,7 @@ public:
 					weights->pix(i, j) += encounter * occupancy;
 			}
 
-		} while (si.next());
+		}
 	}
 
 	/*
