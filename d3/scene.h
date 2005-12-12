@@ -3614,6 +3614,20 @@ public:
 				ale_real exp_scale = 256 * 256;
 
 				/*
+				 * Check for higher-resolution modifications.
+				 */
+
+				int high_res_mod = 0;
+
+				if (weight_queue.size()) {
+					if (weight_queue.front() != weights->get_pixel(i, j)) {
+						high_res_mod = 1;
+						encounter = d2::pixel(1, 1, 1) - weight_queue.front();
+					}
+					weight_queue.pop();
+				}
+
+				/*
 				 * Update subspace.
 				 */
 
@@ -3632,23 +3646,13 @@ public:
 				sn->accumulate_occupancy_1(f, i, j, occ, encounter[0]);
 
 				/*
-				 * Check for higher-resolution modifications.
-				 */
-
-				if (weight_queue.size() && weight_queue.front() != weights->get_pixel(i, j)) {
-					weight_queue.pop();
-					continue;
-				} else if (weight_queue.size()) {
-					weight_queue.pop();
-				}
-
-				/*
 				 * If weights have not been updated by
 				 * higher-resolution cells, then update
 				 * weights at the current resolution.
 				 */
 
-				weights->pix(i, j) += encounter * occupancy;
+				if (!high_res_mod)
+					weights->pix(i, j) += encounter * occupancy;
 			}
 
 		} while (si.next());
