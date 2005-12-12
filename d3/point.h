@@ -197,6 +197,10 @@ public:
 		return point(x[0] * d, x[1] * d, x[2] * d);
 	}
 
+	point operator*(point p) const {
+		return point(x[0] * p[0], x[1] * p[1], x[2] * p[2]);
+	}
+
 	ale_pos normsq() const {
 		return x[0] * x[0] + x[1] * x[1] + x[2] * x[2];
 	}

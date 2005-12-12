@@ -2023,10 +2023,16 @@ class scene {
 	class space_iterate {
 		std::stack<space_traverse> space_stack;
 		point camera_origin;
+
+		space_iterate(point co, space_traverse top) {
+			camera_origin = co;
+			space_stack.push(top);
+		}
+
 	public:
-		space_iterate(pt _pt) {
+		space_iterate(pt _pt, space_traverse top = space_traverse::root()) {
 			camera_origin = _pt.cw(point(0, 0, 0));
-			space_stack.push(space_traverse::root());
+			space_stack.push(top);
 		}
 
 		int next() {
@@ -2067,6 +2073,16 @@ class scene {
 			}
 
 			return (!space_stack.empty());
+		}
+
+		space_iterate cleave() {
+			assert (!space_stack.empty());
+
+			space_iterate result(camera_origin, space_stack.top());
+			
+			space_stack.pop();
+
+			return result;
 		}
 
 		space_traverse get() {
@@ -3412,6 +3428,232 @@ public:
 		cl = nl;
 	}
 
+
+	/*
+	 * Perform spatial_info updating on a given subspace, for given
+	 * parameters.
+	 */
+	static void subspace_info_update(space_iterate si, int f, d2::image *weights, const d2::image *im, pt _pt) {
+		do {
+
+			space_traverse st = si.get();
+
+			/*
+			 * XXX: This could be more efficient, perhaps.
+			 */
+
+			if (spatial_info_map.count(st.get_space()) == 0)
+				continue;
+
+			spatial_info *sn = &spatial_info_map[st.get_space()];
+
+			/*
+			 * Get information on the subspace.
+			 */
+
+			d2::pixel color = sn->get_color();
+			ale_real occupancy = sn->get_occupancy();
+
+			/*
+			 * Determine the view-local bounding box for the
+			 * subspace.
+			 */
+
+			point bb[2];
+
+			st.get_view_local_bb(_pt, bb);
+
+			point min = bb[0];
+			point max = bb[1];
+
+//				fprintf(stderr, "frame %d color update space pointer %p, bb (%f, %f) -> (%f, %f)\n", 
+//						f, st.get_space(), min[0], min[1], max[0], max[1]);
+//
+//				fprintf(stderr, "space %p c=[%f %f %f]\n", st.get_space(), color[0], color[1], color[2]);
+//				fprintf(stderr, "space %p occ=[%g]\n", st.get_space(), occupancy);
+
+			/*
+			 * Use the center of the bounding box to grab interpolation data.
+			 */
+
+			d2::point interp((min[0] + max[0]) / 2, (min[1] + max[1]) / 2);
+
+//				fprintf(stderr, "interp=(%f, %f)\n", interp[0], interp[1]);
+
+			/*
+			 * For interpolation points, ensure that the
+			 * bounding box area is at least 0.25. XXX: Why?
+			 * Remove this constraint.
+			 *
+			 * XXX: Is interpolation useful for anything, given
+			 * that we're using spatial info registers at multiple
+			 * resolutions?
+			 */
+
+			if (/* (max[0] - min[0]) * (max[1] - min[1]) > 0.25
+			 && */ max[0] > min[0]
+			 && max[1] > min[1]) {
+				d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_bl(interp));
+				d2::pixel pcolor = im->get_bl(interp);
+				d2::pixel colordiff = color - pcolor;
+
+				if (falloff_exponent != 0) {
+					d2::pixel max_diff = im->get_max_diff(interp);
+
+					for (int k = 0; k < 3; k++)
+					if (max_diff[k] > 1)
+						colordiff[k] /= pow(max_diff[k], falloff_exponent);
+				}
+
+//					fprintf(stderr, "color_interp=(%f, %f, %f)\n", pcolor[0], pcolor[1], pcolor[2]);
+
+				ale_real exp_scale = 256 * 256;
+
+//					sn->accumulate_color_2(pcolor, encounter);
+				d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
+//					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
+//					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
+
+				/*
+				 * XXX: the best approach is probably to use 3 separate occupancy
+				 * data sets, just as there are 3 separate color data sets.
+				 */
+
+				ale_accum occ = channel_occ[0];
+
+				for (int k = 1; k < 3; k++)
+					if (channel_occ[k] < occ)
+						occ = channel_occ[k];
+
+				sn->accumulate_occupancy_2(occ, encounter[0]);
+#if 0
+				for (int k = 0; k < 3; k++)
+					sn->accumulate_occupancy_2(channel_occ[k], encounter[k]);
+#endif
+			}
+
+			/*
+			 * Data structure to check modification of weights by
+			 * higher-resolution subspaces.
+			 */
+
+			std::queue<d2::pixel> weight_queue;
+
+			/*
+			 * Check for higher resolution subspaces.
+			 */
+
+			if (st.get_space()->positive
+			 || st.get_space()->negative) {
+
+				/*
+				 * Store information about current weights,
+				 * so we will know which areas have been
+				 * covered by higher-resolution subspaces.
+				 */
+
+				for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
+				for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++) {
+					if (i < 0 || j < 0)
+						continue;
+					weight_queue.push(weights->get_pixel(i, j));
+				}
+				
+				/*
+				 * Cleave space for the higher-resolution pass,
+				 * skipping the current space, since we will
+				 * process that later.
+				 */
+
+				space_iterate cleaved_space = si.cleave();
+
+				cleaved_space.next();
+
+				subspace_info_update(cleaved_space, f, weights, im, _pt);
+			}
+				
+
+			/*
+			 * Iterate over pixels in the bounding box,
+			 * adding new data to the subspace.  XXX:
+			 * assume for now that all pixels in the
+			 * bounding box intersect the subspace.
+			 */
+
+			for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
+			for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++) {
+
+				if (i < 0 || j < 0)
+					continue;
+
+				d2::pixel pcolor = im->get_pixel(i, j);
+				d2::pixel colordiff = color - pcolor;
+
+				if (falloff_exponent != 0) {
+					d2::pixel max_diff = im->get_max_diff(interp);
+
+					for (int k = 0; k < 3; k++)
+					if (max_diff[k] > 1)
+						colordiff[k] /= pow(max_diff[k], falloff_exponent);
+				}
+
+//					fprintf(stderr, "(i, j) == (%d, %d); c=[%f %f %f]\n",
+//							i, j, pcolor[0], pcolor[1], pcolor[2]);
+
+				/*
+				 * Determine the probability of
+				 * encounter, divided by the occupancy.
+				 */
+
+				d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j));
+
+				/*
+				 * Scale for encounter probability exponent.
+				 */
+
+				ale_real exp_scale = 256 * 256;
+
+				/*
+				 * Update subspace.
+				 */
+
+				sn->accumulate_color_1(f, i, j, pcolor, encounter);
+				d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
+//					fprintf(stderr, "encounter=(%f, %f, %f)\n", encounter[0], encounter[1], encounter[2]);
+//					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
+//					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
+
+				ale_accum occ = channel_occ[0];
+
+				for (int k = 1; k < 3; k++)
+					if (channel_occ[k] < occ)
+						occ = channel_occ[k];
+
+				sn->accumulate_occupancy_1(f, i, j, occ, encounter[0]);
+
+				/*
+				 * Check for higher-resolution modifications.
+				 */
+
+				if (weight_queue.size() && weight_queue.front() != weights->get_pixel(i, j)) {
+					weight_queue.pop();
+					continue;
+				} else if (weight_queue.size()) {
+					weight_queue.pop();
+				}
+
+				/*
+				 * If weights have not been updated by
+				 * higher-resolution cells, then update
+				 * weights at the current resolution.
+				 */
+
+				weights->pix(i, j) += encounter * occupancy;
+			}
+
+		} while (si.next());
+	}
+
 	/*
 	 * Run a single iteration of the spatial_info update cycle.
 	 */
@@ -3447,172 +3689,10 @@ public:
 			assert(weights);
 
 			/*
-			 * 
+			 * Call subspace_info_update for the root space.
 			 */
 
-			/*
-			 * Visit spatial_info nodes in order.
-			 */
-
-			space_iterate si(_pt);
-
-			do {
-
-				space_traverse st = si.get();
-
-				/*
-				 * XXX: This could be more efficient, perhaps.
-				 */
-
-				if (spatial_info_map.count(st.get_space()) == 0)
-					continue;
-
-				spatial_info *sn = &spatial_info_map[st.get_space()];
-
-				/*
-				 * Get information on the subspace.
-				 */
-
-				d2::pixel color = sn->get_color();
-				ale_real occupancy = sn->get_occupancy();
-
-				/*
-				 * Determine the view-local bounding box for the
-				 * subspace.
-				 */
-
-				point bb[2];
-
-				st.get_view_local_bb(_pt, bb);
-
-				point min = bb[0];
-				point max = bb[1];
-
-//				fprintf(stderr, "frame %d color update space pointer %p, bb (%f, %f) -> (%f, %f)\n", 
-//						f, st.get_space(), min[0], min[1], max[0], max[1]);
-//
-//				fprintf(stderr, "space %p c=[%f %f %f]\n", st.get_space(), color[0], color[1], color[2]);
-//				fprintf(stderr, "space %p occ=[%g]\n", st.get_space(), occupancy);
-
-				/*
-				 * Use the center of the bounding box to grab interpolation data.
-				 */
-
-				d2::point interp((min[0] + max[0]) / 2, (min[1] + max[1]) / 2);
-
-//				fprintf(stderr, "interp=(%f, %f)\n", interp[0], interp[1]);
-
-				/*
-				 * For interpolation points, ensure that the
-				 * bounding box area is at least 0.25. XXX: Why?
-				 * Remove this constraint.
-				 */
-
-				if (/* (max[0] - min[0]) * (max[1] - min[1]) > 0.25
-				 && */ max[0] > min[0]
-				 && max[1] > min[1]) {
-					d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_bl(interp));
-					d2::pixel pcolor = im->get_bl(interp);
-					d2::pixel colordiff = color - pcolor;
-
-					if (falloff_exponent != 0) {
-						d2::pixel max_diff = im->get_max_diff(interp);
-
-						for (int k = 0; k < 3; k++)
-						if (max_diff[k] > 1)
-							colordiff[k] /= pow(max_diff[k], falloff_exponent);
-					}
-
-//					fprintf(stderr, "color_interp=(%f, %f, %f)\n", pcolor[0], pcolor[1], pcolor[2]);
-
-					ale_real exp_scale = 256 * 256;
-
-//					sn->accumulate_color_2(pcolor, encounter);
-					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
-//					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
-//					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
-
-					/*
-					 * XXX: the best approach is probably to use 3 separate occupancy
-					 * data sets, just as there are 3 separate color data sets.
-					 */
-
-					ale_accum occ = channel_occ[0];
-
-					for (int k = 1; k < 3; k++)
-						if (channel_occ[k] < occ)
-							occ = channel_occ[k];
-
-					sn->accumulate_occupancy_2(occ, encounter[0]);
-#if 0
-					for (int k = 0; k < 3; k++)
-						sn->accumulate_occupancy_2(channel_occ[k], encounter[k]);
-#endif
-				}
-					
-
-				/*
-				 * Iterate over pixels in the bounding box,
-				 * adding new data to the subspace.  XXX:
-				 * assume for now that all pixels in the
-				 * bounding box intersect the subspace.
-				 */
-
-				for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
-				for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++) {
-
-					if (i < 0 || j < 0)
-						continue;
-
-					d2::pixel pcolor = im->get_pixel(i, j);
-					d2::pixel colordiff = color - pcolor;
-
-					if (falloff_exponent != 0) {
-						d2::pixel max_diff = im->get_max_diff(interp);
-
-						for (int k = 0; k < 3; k++)
-						if (max_diff[k] > 1)
-							colordiff[k] /= pow(max_diff[k], falloff_exponent);
-					}
-
-//					fprintf(stderr, "(i, j) == (%d, %d); c=[%f %f %f]\n",
-//							i, j, pcolor[0], pcolor[1], pcolor[2]);
-
-					/*
-					 * Determine the probability of
-					 * encounter, divided by the occupancy.
-					 */
-
-					d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j));
-
-					/*
-					 * Scale for encounter probability exponent.
-					 */
-
-					ale_real exp_scale = 256 * 256;
-
-					/*
-					 * Update subspace.
-					 */
-
-					sn->accumulate_color_1(f, i, j, pcolor, encounter);
-					d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
-//					fprintf(stderr, "encounter=(%f, %f, %f)\n", encounter[0], encounter[1], encounter[2]);
-//					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
-//					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
-
-					ale_accum occ = channel_occ[0];
-
-					for (int k = 1; k < 3; k++)
-						if (channel_occ[k] < occ)
-							occ = channel_occ[k];
-
-					sn->accumulate_occupancy_1(f, i, j, occ, encounter[0]);
-
-					weights->pix(i, j) += encounter * occupancy;
-				}
-
-			} while (si.next());
+			subspace_info_update(space_iterate(_pt), f, weights, im, _pt);
 
 			d2::image_rw::close(f);
 
@@ -4569,6 +4649,122 @@ public:
 	}
 
 	/*
+	 * Attempt to refine space around a point, to high and low resolutions
+	 * for two cameras, resulting in four resolutions in total.
+	 */
+
+	static void refine_space(point iw, pt _pt1, pt _pt2) {
+
+		space_traverse st = space_traverse::root();
+
+		if (!st.includes(iw)) {
+			assert(0);
+			return;
+		}
+
+		int camera_highres[2] = {0, 0};
+		int camera_lowres[2] = {0, 0};
+
+		/*
+		 * Loop until all resolutions of interest have been generated.
+		 */
+		
+		for(;;) {
+
+			point frame_min[2] = { point::posinf(), point::posinf() },
+			      frame_max[2] = { point::neginf(), point::neginf() };
+
+			point p[2] = { st.get_min(), st.get_max() };
+
+			/*
+			 * Cycle through the corner points bounding the
+			 * subspace to determine a bounding box.  
+			 *
+			 * NB: This code is not identical to
+			 * get_view_local_bb(), as it does not clip the
+			 * results.
+			 */
+
+			for (int ibit = 0; ibit < 2; ibit++)
+			for (int jbit = 0; jbit < 2; jbit++)
+			for (int kbit = 0; kbit < 2; kbit++) {
+				point pp = point(p[ibit][0], p[jbit][1], p[kbit][2]);
+
+				point ppp[2] = {_pt1.wp_unscaled(pp), _pt2.wp_unscaled(pp)};
+
+				for (int f = 0; f < 2; f++)
+				for (int d = 0; d < 3; d++) {
+					if (ppp[f][d] < frame_min[f][d] || isnan(ppp[f][d]))
+						frame_min[f][d] = ppp[f][d];
+					if (ppp[f][d] > frame_max[f][d] || isnan(ppp[f][d]))
+						frame_max[f][d] = ppp[f][d];
+				}
+			}
+
+			/*
+			 * Generate any new desired spatial registers.
+			 */
+
+			for (int f = 0; f < 2; f++) {
+
+				/*
+				 * Low resolution
+				 */
+
+				if (frame_max[f][0] - frame_min[f][0] < 2
+				 && frame_max[f][1] - frame_min[f][1] < 2
+				 && camera_lowres[f] == 0) {
+					spatial_info_map[st.get_space()];
+					camera_lowres[f] = 1;
+				}
+
+				/*
+				 * High resolution.
+				 */
+
+				if (frame_max[f][0] - frame_min[f][0] < 1
+				 && frame_max[f][1] - frame_min[f][1] < 1
+				 && camera_highres[f] == 0) {
+					spatial_info_map[st.get_space()];
+					camera_highres[f] = 1;
+				}
+			}
+
+			/*
+			 * Check for completion
+			 */
+
+			if (camera_highres[0]
+			 && camera_highres[1]
+			 && camera_lowres[0]
+			 && camera_lowres[1])
+				return;
+
+			/*
+			 * Check precision before analyzing space further.
+			 */
+
+			if (st.precision_wall()) {
+				fprintf(stderr, "\n\n*** Error: reached subspace precision wall ***\n\n");
+				assert(0);
+				return;
+			}
+
+			if (st.positive().includes(iw)) {
+				st = st.positive();
+				total_tsteps++;
+			} else if (st.negative().includes(iw)) {
+				st = st.negative();
+				total_tsteps++;
+			} else {
+				fprintf(stderr, "failed iw = (%f, %f, %f)\n", 
+						iw[0], iw[1], iw[2]);
+				assert(0);
+			}
+		}
+	}
+
+	/*
 	 * Analyze space in a manner dependent on the score map.
 	 */
 
@@ -4589,128 +4785,11 @@ public:
 
 			total_ambiguity++;
 
-//			fprintf(stderr, "score_map: (i, j) = (%u, %u), iw=(%f, %f, %f), ip=(%f, %f, %f), is=(%f, %f, %f) s=%f\n",
-//					i, j, iw[0], iw[1], iw[2], ip[0], ip[1], ip[2], is[0], is[1], is[2], smi->first);
-
 			/*
-			 * Refine space around the intersection point.
+			 * Attempt to refine space around the intersection point.
 			 */
 
-			space_traverse st = space_traverse::root();
-
-			if (!st.includes(iw))
-				continue;
-
-			for(;;) {
-
-				point frame_min[2] = { point::posinf(), point::posinf() },
-				      frame_max[2] = { point::neginf(), point::neginf() };
-
-				point p[2] = { st.get_min(), st.get_max() };
-
-				/*
-				 * Cycle through the corner points bounding the subspace.
-				 */
-
-				for (int ibit = 0; ibit < 2; ibit++)
-				for (int jbit = 0; jbit < 2; jbit++)
-				for (int kbit = 0; kbit < 2; kbit++) {
-					point pp = point(p[ibit][0], p[jbit][1], p[kbit][2]);
-
-					point ppp[2] = {_pt1.wp_unscaled(pp), _pt2.wp_unscaled(pp)};
-
-					for (int f = 0; f < 2; f++)
-					for (int d = 0; d < 3; d++) {
-						if (ppp[f][d] < frame_min[f][d] || isnan(ppp[f][d]))
-							frame_min[f][d] = ppp[f][d];
-						if (ppp[f][d] > frame_max[f][d] || isnan(ppp[f][d]))
-							frame_max[f][d] = ppp[f][d];
-					}
-				}
-
-#if 0
-				if (/*i == 0 && j == 0*/ 1)
-					fprintf(stderr, "min, max = [(%f, %f, %f), (%f, %f), (%f, %f)], [(%f, %f, %f), (%f, %f), (%f, %f)] [%lu]\n", 
-						p[0][0], p[0][1], p[0][2],
-						frame_min[0][0], frame_min[0][1],
-						frame_min[1][0], frame_min[1][1],
-						p[1][0], p[1][1], p[1][2],
-						frame_max[0][0], frame_max[0][1],
-						frame_max[1][0], frame_max[1][1], time(NULL));
-#endif
-
-//				if (frame_min[0].lengthtosq(frame_max[0]) < 2
-//				 && frame_min[1].lengthtosq(frame_max[1]) < 2)
-//					break;
-
-				if (frame_max[0][0] - frame_min[0][0] < 1
-				 && frame_max[0][1] - frame_min[0][1] < 1
-				 && frame_max[1][0] - frame_min[1][0] < 1
-				 && frame_max[1][1] - frame_min[1][1] < 1)
-					break;
-
-				if (st.precision_wall()) {
-					fprintf(stderr, "debug: reached precision wall for primary (i, j) = (%u, %u)", i, j);
-					assert(0);
-					break;
-				}
-
-				if (st.positive().includes(iw)) {
-					st = st.positive();
-					total_tsteps++;
-				} else if (st.negative().includes(iw)) {
-					st = st.negative();
-					total_tsteps++;
-				} else {
-					fprintf(stderr, "failed iw = (%f, %f, %f)\n", 
-							iw[0], iw[1], iw[2]);
-					assert(0);
-				}
-
-			}
-
-			/*
-			 * Assert that the refined space
-			 * actually corresponds to the desired
-			 * points.  XXX: the current form of
-			 * this assertion relies on all points
-			 * in the bounding box being considered
-			 * as intersecting by all relevant code
-			 * sections.
-			 */
-
-			point bb_pt1[2];
-			point bb_pt2[2];
-
-			st.get_view_local_bb(_pt1, bb_pt1);
-			st.get_view_local_bb(_pt2, bb_pt2);
-
-			if (!(bb_pt1[0][0] <= i)) {
-				fprintf(stderr, "BB failure: i == %d, j == %d, ip == [%f %f %f] bb_pt1 == [%f %f %f]-[%f %f %f]\n",
-						i, j, ip[0], ip[1], ip[2], bb_pt1[0][0], bb_pt1[0][1], bb_pt1[0][2],
-						bb_pt1[1][0], bb_pt1[1][1], bb_pt1[1][2]);
-			}
-
-//					assert (bb_pt1[0][0] <= i);
-//					assert (bb_pt1[0][1] <= j);
-//
-//					assert (bb_pt1[1][0] >= i);
-//					assert (bb_pt1[1][1] >= j);
-//
-//					assert (bb_pt2[0][0] <= ii);
-//					assert (bb_pt2[0][1] <= jj);
-//
-//					assert (bb_pt2[1][0] >= ii);
-//					assert (bb_pt2[1][1] >= jj);
-
-			/*
-			 * Associate refined space with a
-			 * spatial info structure.
-			 */
-
-//			fprintf(stderr, "space p=%p\n", st.get_space());
-
-			spatial_info_map[st.get_space()];
+			refine_space(iw, _pt1, _pt2);
 		}
 	}
 

@@ -26,6 +26,7 @@
 #include <set>
 #include <iterator>
 #include <vector>
+#include <queue>
 #include <stack>
 #include <algorithm>
 #include "time.h"
