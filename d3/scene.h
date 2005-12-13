@@ -3728,46 +3728,21 @@ public:
 	}
 
 	/*
-	 * Generate an image from a specified view.
+	 * Support function for view() and depth().
 	 */
-	static const d2::image *view(pt _pt, int n = -1) {
-		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
-		if (n >= 0) {
-			assert((int) floor(d2::align::of(n).scaled_height())
-			     == (int) floor(_pt.scaled_height()));
-			assert((int) floor(d2::align::of(n).scaled_width())
-			     == (int) floor(_pt.scaled_width()));
-		}
-
-		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-				               (int) floor(_pt.scaled_width()), 3);
-
-		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
-
-#if 1
-		/*
-		 * Use adaptive subspace data.
-		 */
-
-		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-						(int) floor(_pt.scaled_width()), 3);
-
-		/*
-		 * Iterate through subspaces.
-		 */
-
-		space_iterate si(_pt);
-
-		do {
+	static const void view_recurse(int type, d2::image *im, d2::image *weights, space_iterate si, pt _pt) {
+		while (!si.done()) {
 			space_traverse st = si.get();
 
 			/*
 			 * XXX: This could be more efficient, perhaps.
 			 */
 
-			if (spatial_info_map.count(st.get_space()) == 0)
+			if (spatial_info_map.count(st.get_space()) == 0) {
+				si.next();
 				continue;
+			}
 
 			spatial_info sn = spatial_info_map[st.get_space()];
 
@@ -3791,18 +3766,47 @@ public:
 			point min = bb[0];
 			point max = bb[1];
 
+			/*
+			 * Data structure to check modification of weights by
+			 * higher-resolution subspaces.
+			 */
 
-			if (max[0] - min[0] > sqrt(2) 
-			 || max[1] - min[1] > sqrt(2)) {
-//				fprintf(stderr, "Unusually large bb detected: (%f, %f) - (%f, %f)\n", min[0], min[1], max[0], max[1]);
+			std::queue<d2::pixel> weight_queue;
+
+			/*
+			 * Check for higher resolution subspaces, and
+			 * update the space iterator.
+			 */
+
+			if (st.get_space()->positive
+			 || st.get_space()->negative) {
+
+				/*
+				 * Store information about current weights,
+				 * so we will know which areas have been
+				 * covered by higher-resolution subspaces.
+				 */
+
+				for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
+				for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++)
+					weight_queue.push(weights->get_pixel(i, j));
+				
+				/*
+				 * Cleave space for the higher-resolution pass,
+				 * skipping the current space, since we will
+				 * process that afterward.
+				 */
+
+				space_iterate cleaved_space = si.cleave();
+
+				cleaved_space.next();
+
+				view_recurse(type, im, weights, cleaved_space, _pt);
+
+			} else {
+				si.next();
 			}
-
-//			fprintf(stderr, "for frame %d, space %p has bb (%f, %f) - (%f, %f)\n", 
-//					n, st.get_space(), min[0], min[1], max[0], max[1]);
-//			fprintf(stderr, "space %p c=[%g %g %g]\n", st.get_space(), color[0], color[1], color[2]);
-//			fprintf(stderr, "space %p occ=[%g]\n", st.get_space(), occupancy);
-//			fprintf(stderr, "for frame %d, space %p has int bb (%f, %f) - (%f, %f)\n", 
-//					n, st.get_space(), ceil(min[0]), ceil(min[1]), floor(max[0]), floor(max[1]));
+				
 
 			/*
 			 * Iterate over pixels in the bounding box, finding
@@ -3813,6 +3817,19 @@ public:
 
 			for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
 			for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++) {
+
+				/*
+				 * Check for higher-resolution updates.
+				 */
+
+				if (weight_queue.size()) {
+					if (weight_queue.front() != weights->get_pixel(i, j)) {
+						weight_queue.pop();
+						continue;
+					}
+					weight_queue.pop();
+				}
+
 				/*
 				 * Determine the probability of encounter.
 				 */
@@ -3823,135 +3840,114 @@ public:
 				 * Update images.
 				 */
 
-				weights->pix(i, j) += encounter;
-				im->pix(i, j)      += encounter * color;
+				if (type == 0) {
 
-//				point wmin = st.get_min();
-//				point wmax = st.get_max();
+					/*
+					 * Color view
+					 */
 
-//				point camera = _pt.cw(point(0, 0, 0));
+					weights->pix(i, j) += encounter;
+					im->pix(i, j)      += encounter * color;
 
-//				fprintf(stderr, "%p updating frame %d (i, j)=(%d, %d) to (enc,enc*col, col)=([%g %g %g], [%g %g %g], [%g %g %g]) bb=[%f %f %f]-[%f %f %f] wbb=[%f %f %f]-[%f %f %f] cam=[%f %f %f]\n",
-//						st.get_space(), n, i, j, weights->pix(i, j)[0], weights->pix(i, j)[1], weights->pix(i, j)[2],
-//						      im->pix(i, j)[0], im->pix(i, j)[1], im->pix(i, j)[2],
-//						      color[0], color[1], color[2], min[0], min[1], min[2], max[0], max[1], max[2], wmin[0], wmin[1], wmin[2], wmax[0], wmax[1], wmax[2], camera[0], camera[1], camera[2]);
+				} else if (type == 1) {
 
+					/*
+					 * Weighted (transparent) depth display
+					 */
+
+					ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
+					weights->pix(i, j) += encounter;
+					im->pix(i, j)      += encounter * depth_value;
+
+				} else if (type == 2) {
+
+					/*
+					 * Ambiguity (ambivalence) measure.
+					 */
+
+					weights->pix(i, j) = d2::pixel(1, 1, 1);
+					im->pix(i, j) += 0.1 * d2::pixel(1, 1, 1);
+
+				} else if (type == 3) {
+
+					/*
+					 * Closeness measure.
+					 */
+
+					ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
+					if (weights->pix(i, j)[0] == 0) {
+						weights->pix(i, j) = d2::pixel(1, 1, 1);
+						im->pix(i, j) = d2::pixel(1, 1, 1) * depth_value;
+					} else if (im->pix(i, j)[2] < depth_value) {
+						im->pix(i, j) = d2::pixel(1, 1, 1) * depth_value;
+					} else {
+						continue;
+					}
+
+				} else if (type == 4) {
+
+					/*
+					 * Weighted (transparent) contribution display
+					 */
+
+					ale_pos contribution_value = sn.get_pocc_density() + sn.get_socc_density();
+					weights->pix(i, j) += encounter;
+					im->pix(i, j)      += encounter * contribution_value;
+
+				} else if (type == 5) {
+
+					/*
+					 * Weighted (transparent) occupancy display
+					 */
+
+					ale_pos contribution_value = occupancy;
+					weights->pix(i, j) += encounter;
+					im->pix(i, j)      += encounter * contribution_value;
+
+				} else 
+					assert(0);
 			}
+		}
+	}
 
-		} while (si.next());
+	/*
+	 * Generate an image from a specified view.
+	 */
+	static const d2::image *view(pt _pt, int n = -1) {
+		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
+
+		if (n >= 0) {
+			assert((int) floor(d2::align::of(n).scaled_height())
+			     == (int) floor(_pt.scaled_height()));
+			assert((int) floor(d2::align::of(n).scaled_width())
+			     == (int) floor(_pt.scaled_width()));
+		}
+
+		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+				               (int) floor(_pt.scaled_width()), 3);
+
+		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
+
+		/*
+		 * Use adaptive subspace data.
+		 */
+
+		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+						(int) floor(_pt.scaled_width()), 3);
+
+		/*
+		 * Iterate through subspaces.
+		 */
+
+		space_iterate si(_pt);
+
+		view_recurse(0, im, weights, si, _pt);
 
 		if (normalize_weights)
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
 			im->pix(i, j) /= weights->pix(i, j);
 		}
-
-
-#else
-		/*
-		 * Use hierarchical triangle data.
-		 */
-
-		zbuf_elem *zbuf = init_zbuf(_pt);
-
-		zbuffer(_pt, zbuf, triangle_head[0]);
-		zbuffer(_pt, zbuf, triangle_head[1]);
-
-		zbuf_elem **zbsu = construct_zbuffers(bl);
-
-		for (unsigned int i = 0; i < im->height(); i++)
-		for (unsigned int j = 0; j < im->width();  j++) {
-			d2::pixel val;
-			ale_real div = 0;
-
-			/*
-			 * Approximates filter fine:box:1
-			 */
-
-			for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
-
-				pt _ptf = align::projective(f);
-				_ptf.scale(1 / _ptf.scale_2d());
-
-				point bounds[2];
-
-				bounds[0] = bounds[1] = point::undefined();
-
-				bounds[0][2] = -1;
-				bounds[1][2] = -1;
-
-				for (ale_pos ii = -0.5; ii <= 0.5; ii += 1)
-				for (ale_pos jj = -0.5; jj <= 0.5; jj += 1) {
-
-					point p = frame_to_frame(d2::point(i + ii, j + jj), _pt, _ptf, zbuf, zbsu[f]);
-
-					if (p[0] < bounds[0][0] || !finite(bounds[0][0]))
-						bounds[0][0] = p[0];
-					if (p[1] < bounds[0][1] || !finite(bounds[0][1]))
-						bounds[0][1] = p[1];
-					if (p[0] > bounds[1][0] || !finite(bounds[1][0]))
-						bounds[1][0] = p[0];
-					if (p[1] > bounds[1][1] || !finite(bounds[1][1]))
-						bounds[1][1] = p[1];
-				}
-
-				if (!bounds[0].defined() || !bounds[1].defined())
-					continue;
-
-				for (int ii = (int) ceil(bounds[0][0]); ii <= (int) floor(bounds[1][0]); ii++)
-				for (int jj = (int) ceil(bounds[0][1]); jj <= (int) floor(bounds[1][1]); jj++) {
-					if ((n > 0 && f == (unsigned int) n) 
-					 || frame_to_frame(d2::point(ii, jj), _ptf, _pt, zbsu[f], zbuf).defined()) {
-						val += bl->reference[f]->get_pixel(ii, jj);
-						div += 1;
-					}
-				}
-			}
-
-			if (div != 0) {
-				im->pix(i, j) = val / div;
-				continue;
-			}
-
-			/*
-			 * Approximates filter triangle:2
-			 */
-
-			for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
-
-				pt _ptf = align::projective(f);
-				_ptf.scale(1 / _ptf.scale_2d());
-
-				if (n > 0 && f == (unsigned int) n) {
-					point p = _ptf.wp_scaled(_pt.pw_scaled(point(i, j, -1)));
-
-					if (!bl->reference[f]->in_bounds(p.xy()))
-						continue;
-
-					val += bl->reference[f]->get_bl(p.xy());
-					div += 1;
-
-					continue;
-				}
-
-				point p = frame_to_frame(d2::point(i, j), _pt, _ptf, zbuf, zbsu[f]);
-
-				if (!p.defined())
-					continue;
-
-				d2::pixel v = bl->reference[f]->get_bl(p.xy());
-
-				val += v;
-				div += 1;
-			}
-
-			im->pix(i, j) = val / div;
-		}
-
-		free_zbuffers(zbsu);
-
-		delete[] zbuf;
-#endif
 
 		return im;
 	}
@@ -3989,8 +3985,11 @@ public:
 		return view(_pt, n);
 	}
 
+	/*
+	 * Generate an depth image from a specified view.
+	 */
 	static const d2::image *depth(pt _pt, int n = -1) {
-		assert (n < 0 || (unsigned int) n < d2::image_rw::count());
+		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
 		if (n >= 0) {
 			assert((int) floor(d2::align::of(n).scaled_height())
@@ -4002,11 +4001,8 @@ public:
 		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
 				               (int) floor(_pt.scaled_width()), 3);
 
-		assert(im);
-
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
-#if 1
 		/*
 		 * Use adaptive subspace data.
 		 */
@@ -4014,159 +4010,19 @@ public:
 		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
 						(int) floor(_pt.scaled_width()), 3);
 
-		assert(weights);
-
 		/*
 		 * Iterate through subspaces.
 		 */
 
 		space_iterate si(_pt);
 
-		do {
-			space_traverse st = si.get();
+		view_recurse(1, im, weights, si, _pt);
 
-			/*
-			 * XXX: This could be more efficient, perhaps.
-			 */
-
-			if (spatial_info_map.count(st.get_space()) == 0)
-				continue;
-
-			spatial_info sn = spatial_info_map[st.get_space()];
-
-			/*
-			 * Get information on the subspace.
-			 */
-
-//			d2::pixel color = sn.get_color();
-			ale_real occupancy = sn.get_occupancy();
-
-			/*
-			 * Determine the view-local bounding box for the
-			 * subspace.
-			 */
-
-			point bb[2]; 
-			st.get_view_local_bb(_pt, bb);
-
-			point min = bb[0];
-			point max = bb[1];
-
-			/*
-			 * Iterate over pixels in the bounding box, finding
-			 * pixels that intersect the subspace.  XXX: assume
-			 * for now that all pixels in the bounding box
-			 * intersect the subspace.
-			 */
-
-			for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
-			for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++) {
-				/*
-				 * Determine the probability of encounter.
-				 */
-
-				d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
-
-				/*
-				 * Update images.
-				 */
-
-#if 1
-				/*
-				 * Weighted (transparent) depth display
-				 */
-				ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
-				weights->pix(i, j) += encounter;
-				im->pix(i, j)      += encounter * depth_value;
-#elif 0
-				/*
-				 * Ambiguity (ambivalence) measure.
-				 */
-				weights->pix(i, j) = d2::pixel(1, 1, 1);
-				im->pix(i, j) += 0.1 * d2::pixel(1, 1, 1);
-#elif 0
-				/*
-				 * Closeness measure.
-				 */ 
-
-				ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
-				if (weights->pix(i, j)[0] == 0) {
-					weights->pix(i, j) = d2::pixel(1, 1, 1);
-					im->pix(i, j) = d2::pixel(1, 1, 1) * depth_value;
-				} else if (im->pix(i, j)[2] < depth_value) {
-					im->pix(i, j) = d2::pixel(1, 1, 1) * depth_value;
-				} else {
-					continue;
-				}
-#elif 0
-				/*
-				 * Weighted (transparent) contribution display
-				 */
-				ale_pos contribution_value = sn.get_pocc_density() + sn.get_socc_density();
-				weights->pix(i, j) += encounter;
-				im->pix(i, j)      += encounter * contribution_value;
-#else
-				/*
-				 * Weighted (transparent) occupancy display
-				 */
-				ale_pos contribution_value = occupancy;
-				weights->pix(i, j) += encounter;
-				im->pix(i, j)      += encounter * contribution_value;
-#endif
-			}
-
-		} while (si.next());
-
+		if (normalize_weights)
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
 			im->pix(i, j) /= weights->pix(i, j);
 		}
-
-#else
-
-		/*
-		 * Use triangle model data.
-		 */
-
-		zbuf_elem *zbuf = init_zbuf(_pt);
-
-		zbuffer(_pt, zbuf, triangle_head[0]);
-		zbuffer(_pt, zbuf, triangle_head[1]);
-
-		for (unsigned int i = 0; i < im->height(); i++)
-		for (unsigned int j = 0; j < im->width();  j++) {
-			triangle *t = zbuf[i * im->width() + j].nearest(_pt, i, j);
-
-			if (!t)
-				continue;
-#if 0
-			point r = _pt.pc_scaled(point(i, j, -1));
-			point vertices[3];
-
-			for (int v = 0; v < 3; v++)
-				vertices[v] = _pt.wc(*t->vertices[v]);
-
-			point intersect = rt_intersect(r, vertices);
-
-			im->pix(i, j) = d2::pixel(1, 1, 1) * t->area() * (intersect[0] + intersect[1]);
-#elif 1
-			point r = _pt.pc_scaled(point(i, j, -1));
-			point vertices[3];
-
-			for (int v = 0; v < 3; v++)
-				vertices[v] = _pt.wc(*t->vertices[v]);
-
-			point intersect = rt_intersect(r, vertices);
-
-			im->pix(i, j) = d2::pixel(1, 1, 1) * -intersect[2];
-#else
-			im->pix(i, j) = d2::pixel(1, 1, 1) * _pt.wc(t->centroid())[2];
-#endif
-		}
-
-		delete[] zbuf;
-
-#endif
 
 		return im;
 	}
