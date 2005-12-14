@@ -3949,6 +3949,8 @@ public:
 			im->pix(i, j) /= weights->pix(i, j);
 		}
 
+		delete weights;
+
 		return im;
 	}
 
@@ -4023,6 +4025,8 @@ public:
 		for (unsigned int j = 0; j < im->width();  j++) {
 			im->pix(i, j) /= weights->pix(i, j);
 		}
+
+		delete weights;
 
 		return im;
 	}
