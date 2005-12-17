@@ -38,6 +38,8 @@ int *image_rw::files_open;
 int image_rw::latest_close_num = -1;
 const image *image_rw::latest_close = NULL;
 
+double image_rw::nn_defined_radius = 2;
+
 exposure **image_rw::input_exposure = NULL;
 exposure *image_rw::output_exposure = NULL;
 unsigned int image_rw::bayer_default = 0;

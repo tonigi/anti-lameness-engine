@@ -55,6 +55,11 @@ class image_rw {
 	static unsigned int mcv;
 
 	/*
+	 * Nearest-neighbor defined value radius.
+	 */
+	static double nn_defined_radius;
+
+	/*
 	 * Input and output exposure models
 	 */
 	static exposure **input_exposure;
@@ -293,6 +298,10 @@ public:
 		return filenames[image];
 	}
 
+	static void def_nn(double _nn) {
+		nn_defined_radius = _nn;
+	}
+
 	static const char *output_name() {
 		assert (file_count > 0);
 		return output_filename;
@@ -400,7 +409,36 @@ public:
 				break;
 
 			for (j = 0; j < mi->columns; j++) {
-				pixel unlinearized(exp->unlinearize((im->get_pixel(i, j) - minval_pixel) 
+
+				pixel value = im->get_pixel(i, j);
+
+				/*
+				 * Get nearest-neighbor defined values.
+				 */
+
+				for (int k = 0; k < 3; k++)
+				if (isnan(value[k]))
+				for (int radius = 1; radius <= nn_defined_radius; radius++) {
+					double nearest_radius_squared = (radius + 1) * (radius + 1);
+					for (int ii = -radius; ii <= radius; ii++)
+					for (int jj = -radius; jj <= radius; jj++) {
+						if (!im->in_bounds(point(i + ii, j + jj)))
+							continue;
+						if (ii * ii + jj * jj < nearest_radius_squared
+						 && finite(im->get_pixel(i + ii, j + jj)[k])) {
+							value[k] = im->get_pixel(i + ii, j + jj)[k];
+							nearest_radius_squared = ii * ii + jj * jj;
+						}
+					}
+					if (nearest_radius_squared < (radius + 1) * (radius + 1))
+						break;
+				}
+
+				/*
+				 * Unlinearize
+				 */
+
+				pixel unlinearized(exp->unlinearize((value - minval_pixel) 
 							          / (maxval - minval)));
 
 				unlinearized = unlinearized.clamp();
@@ -435,7 +473,8 @@ public:
 		DestroyImage(mi);
 		DestroyImageInfo(image_info);
 #else
-		write_ppm(filename, im, exp, mcv, ppm_type == 2, rezero, exposure_scale || exp_scale_override);
+		write_ppm(filename, im, exp, mcv, ppm_type == 2, rezero, exposure_scale || exp_scale_override, 
+				nn_defined_radius);
 #endif
 	}
 

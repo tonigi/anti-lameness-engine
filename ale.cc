@@ -753,6 +753,15 @@ int main(int argc, const char *argv[]){
 			i += 1;
 			d3::scene::acm(acm_parameter);
 #endif
+		} else if (!strcmp(argv[i], "--def-nn")) {
+			if (i + 1 >= argc)
+				not_enough("--def-nn");
+
+			double nn_parameter;
+			sscanf(argv[i+1], "%lf", &nn_parameter);
+			i += 1;
+			d2::image_rw::def_nn(nn_parameter);
+
 		} else if (!strcmp(argv[i], "--mc")) {
 			if (i + 1 >= argc)
 				not_enough("--mc");

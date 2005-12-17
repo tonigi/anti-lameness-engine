@@ -295,7 +295,7 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 }
 
 static inline void write_ppm(const char *filename, const image *im, exposure *e, 
-		unsigned int mcv, int plain, int rezero, int exposure_scale) {
+		unsigned int mcv, int plain, int rezero, int exposure_scale, double nn_defined_radius) {
 	unsigned int i, j, k;
 	FILE *f = fopen(filename, "wb");
 	assert(f);
@@ -347,8 +347,31 @@ static inline void write_ppm(const char *filename, const image *im, exposure *e,
 
 	for (i = 0; i < im->height(); i++)
 	for (j = 0; j < im->width();  j++) {
+		pixel value = im->get_pixel(i, j);
 
-		pixel exposure_adjust = (im->get_pixel(i, j) - minval_pixel)
+		/*
+		 * Get nearest-neighbor defined values.
+		 */
+
+		for (k = 0; k < 3; k++)
+		if (isnan(value[k]))
+		for (int radius = 1; radius <= nn_defined_radius; radius++) {
+			double nearest_radius_squared = (radius + 1) * (radius + 1);
+			for (int ii = -radius; ii <= radius; ii++)
+			for (int jj = -radius; jj <= radius; jj++) {
+				if (!im->in_bounds(point(i + ii, j + jj)))
+					continue;
+				if (ii * ii + jj * jj < nearest_radius_squared
+				 && finite(im->get_pixel(i + ii, j + jj)[k])) {
+					value[k] = im->get_pixel(i + ii, j + jj)[k];
+					nearest_radius_squared = ii * ii + jj * jj;
+				}
+			}
+			if (nearest_radius_squared < (radius + 1) * (radius + 1))
+				break;
+		}
+
+		pixel exposure_adjust = (value - minval_pixel)
 			              / (maxval - minval);
 		pixel unlinearized = (e->unlinearize(exposure_adjust)).clamp();
 

@@ -170,6 +170,12 @@ public:
 			HEADER_SPACE
 			"--inc             Produce incremental output.  [default]\n"
 			"--no-inc          Don't produce incremental output.\n"
+
+			BETWEEN_SECTIONS
+			"Undefined values:\n"
+			HEADER_SPACE
+			"--def-nn <R>      Use nearest-neighbor defined values within\n"
+			"                  radius <R>, zero outside.  Default radius is 0.\n"
 			"\n"
 		       );
 	}
