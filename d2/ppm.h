@@ -351,6 +351,12 @@ static inline void write_ppm(const char *filename, const image *im, exposure *e,
 
 		/*
 		 * Get nearest-neighbor defined values.
+		 *
+		 * XXX: While this implementation is correct, it is inefficient
+		 * for large radii.  A better implementation would search
+		 * perimeters of squares of ever-increasing radius, tracking
+		 * the best-so-far data until the square perimeter exceeded the
+		 * best-so-far radius.
 		 */
 
 		for (k = 0; k < 3; k++)

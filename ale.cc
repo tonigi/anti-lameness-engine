@@ -762,6 +762,11 @@ int main(int argc, const char *argv[]){
 			i += 1;
 			d2::image_rw::def_nn(nn_parameter);
 
+			if (nn_parameter > 2) {
+				fprintf(stderr, "\n\n*** Warning: --def-nn implementation is currently "
+				                     "inefficient for large radii. ***\n\n");
+			}
+
 		} else if (!strcmp(argv[i], "--mc")) {
 			if (i + 1 >= argc)
 				not_enough("--mc");
