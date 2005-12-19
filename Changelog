@@ -1,3 +1,28 @@
+0.8.3
+
+o	Clean up d3::scene to remove triangle-mesh code.
+
+o	Add an option --def-nn to allow definition of pixels in output images
+	to take values from neighboring pixels within a certain radius, in
+	cases where they would not otherwise be defined.
+
+o	Modify representation of 3D subspaces so that refined subspaces
+	are roughly cubical, and to allow refinements at multiple
+	resolutions.
+
+o	Fix bugs in 3D color and occupancy updating caused by bounding
+	box miscalculation.
+
+o	Add option --pa to set the number of point candidates accepted
+	for each pair of cameras (pairwise ambiguity).  The default
+	of 3 preserves existing default behavior.
+
+o	Add option --oui for determining occupancy update iterations.
+	The new default is 10, halving the previous default of 20.
+
+o	Add option --tcem for scoring point candidates by third-camera
+	views.  The default of 0 preserves existing default behavior.
+
 0.8.2
 
 o	Add magical file 'dump:' for listing color values numerically

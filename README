@@ -1,5 +1,5 @@
 ========================
-ALE version 0.8.2 README
+ALE version 0.8.3 README
 ========================
 
 This README discusses downloading, extraction, and compilation of ALE.
@@ -35,7 +35,7 @@ Windows Binaries
 URLs
 ----
 
-http://auricle.dyndns.org/ALE/download/ale-0_8_2-win32.zip
+http://auricle.dyndns.org/ALE/download/ale-0_8_3-win32.zip
 
 
 Extraction and Use
@@ -63,7 +63,7 @@ Compiling from source
 URLs
 ----
 
-http://auricle.dyndns.org/ALE/download/ale-0.8.2.tar.gz
+http://auricle.dyndns.org/ALE/download/ale-0.8.3.tar.gz
 
 
 Build prerequisites
@@ -78,8 +78,8 @@ Extraction and Installation
 
 Download the source archive file from the URL indicated above, and invoke:
 
-	tar xzf ale-0.8.2.tar.gz
-	cd ale-0.8.2
+	tar xzf ale-0.8.3.tar.gz
+	cd ale-0.8.3
 	make [OPTIONS]
 
 where the text '[OPTIONS]' is replaced by zero or more of the compilation
@@ -101,9 +101,9 @@ Enabling ImageMagick support allows ALE to make use of the file-handling
 capabilities of ImageMagick ( http://imagemagick.org/ ).  This includes reading
 and writing a variety of file formats, including, among many others, PNG and
 JPEG (two formats commonly used in web publishing) as well as common
-interchange formats such as PPM and TIFF.  ImageMagick 6.0.1-2 is known to work
-with this version of ALE; some older versions of ImageMagick may cause compile
-or link errors.
+interchange formats such as PPM and TIFF.  ImageMagick 6.0.6 is known to work
+with this version of ALE; certain older versions of ImageMagick may cause
+compile, link, or runtime errors.
 
 IMAGEMAGICK=0 *        Disable ImageMagick support.
 IMAGEMAGICK=1          Enable ImageMagick support.  

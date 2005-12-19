@@ -83,9 +83,9 @@
  * Version Information
  */
 
-char *short_version = "0.8.2";
+char *short_version = "0.8.3";
 
-char *version = "ALE Version:      0.8.2\n"
+char *version = "ALE Version:      0.8.3\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else
