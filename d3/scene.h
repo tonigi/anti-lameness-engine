@@ -121,6 +121,11 @@ class scene {
 	static const ale_real nearness;
 
 	/*
+	 * Encounter threshold for defined pixels.
+	 */
+	static double encounter_threshold;
+
+	/*
 	 * Ray-Triangle intersection utility function
 	 *
 	 * Variables should be specified in cartesian coordinates (not
@@ -1014,6 +1019,10 @@ public:
 	 * Member functions
 	 */
 
+	static void et(double et_parameter) {
+		encounter_threshold = et_parameter;
+	}
+
 	static void load_model(const char *name) {
 		load_model_name = name;
 	}
@@ -1789,10 +1798,13 @@ public:
 
 		view_recurse(0, im, weights, si, _pt);
 
-		if (normalize_weights)
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
-			im->pix(i, j) /= weights->pix(i, j);
+			if (weights->pix(i, j).min_norm() < encounter_threshold) {
+				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
+				weights->pix(i, j) = d2::pixel::zero();
+			} else if (normalize_weights)
+				im->pix(i, j) /= weights->pix(i, j);
 		}
 
 		delete weights;
@@ -1866,10 +1878,13 @@ public:
 
 		view_recurse(1, im, weights, si, _pt);
 
-		if (normalize_weights)
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
-			im->pix(i, j) /= weights->pix(i, j);
+			if (weights->pix(i, j).min_norm() < encounter_threshold) {
+				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
+				weights->pix(i, j) = d2::pixel::zero();
+			} else if (normalize_weights)
+				im->pix(i, j) /= weights->pix(i, j);
 		}
 
 		delete weights;

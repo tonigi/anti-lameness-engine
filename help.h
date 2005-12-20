@@ -583,6 +583,7 @@ public:
 			"                         R    rotation around z-axis.\n"
 			"--occ-norm        Normalize output with accumulated occupancy.          [default]\n"
 			"--occ-nonorm      Don't normalize output with accumulated occupancy.\n"
+			"--et <x>          Set encounter threshold <x> for defined pixels.  [default is 0]\n"
 			BETWEEN_SECTIONS
 			"Camera parameters:\n"
 			HEADER_SPACE

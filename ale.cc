@@ -679,6 +679,16 @@ int main(int argc, const char *argv[]){
 			ui::set_stream();
 		} else if (!strcmp(argv[i], "--ui=tty")) {
 			ui::set_tty();
+		} else if (!strcmp(argv[i], "--et")) {
+
+			if (i + 1 >= argc)
+				not_enough("--et");
+
+			double et_parameter;
+			sscanf(argv[i+1], "%lf", &et_parameter);
+			i += 1;
+			d3::scene::et(et_parameter);
+
 		} else if (!strcmp(argv[i], "--st")) {
 			if (i + 1 >= argc)
 				not_enough("--st");
