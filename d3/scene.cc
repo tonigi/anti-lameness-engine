@@ -58,6 +58,9 @@ double scene::falloff_exponent = 0;
 double scene::tc_multiplier = 0;
 unsigned int scene::ou_iterations = 10;
 unsigned int scene::pairwise_ambiguity = 3;
+const char *scene::pairwise_comparisons = "auto";
+int scene::d3px_count;
+double *scene::d3px_parameters;
 double scene::encounter_threshold = 0;
 
 /*

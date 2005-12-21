@@ -330,6 +330,8 @@ int main(int argc, const char *argv[]){
 	const char *wm_filename = NULL;
 	int wm_offsetx, wm_offsety;
 	double cx_parameter = 0;
+	double *d3px_parameters = NULL;
+	int d3px_count = 0;
 	int *ex_parameters = NULL;
 	int ex_count = 0;
 	int ex_show = 0;
@@ -827,6 +829,14 @@ int main(int argc, const char *argv[]){
 			i += 1;
 			d3::scene::pa(pa_parameter);
 
+		} else if (!strcmp(argv[i], "--pc")) {
+
+			if (i + 1 >= argc)
+				not_enough("--pc");
+
+			d3::scene::pc(argv[i+1]);
+			i += 1;
+
 		} else if (!strcmp(argv[i], "--cw")) {
 			d2::align::certainty_weighted(1);
 		} else if (!strcmp(argv[i], "--no-cw")) {
@@ -877,6 +887,33 @@ int main(int argc, const char *argv[]){
 				not_enough("--flshow");
 			d2::align::set_fl_show(argv[i+1]);
 			i++;
+		} else if (!strcmp(argv[i], "--3dpx")) {
+			if (i + 6 >= argc)
+				not_enough("--3dpx");
+
+			d3px_parameters = (double *) local_realloc(d3px_parameters, (d3px_count + 1) * 6 * sizeof(double));
+
+			for (int param = 0; param < 6; param++)
+			if  (sscanf(argv[i + param + 1], "%lf", &(d3px_parameters[6 * d3px_count + param])) != 1)
+				bad_arg("--d3px");
+
+			/*
+			 * Swap x and y, since their internal meanings differ from their external meanings.
+			 */
+
+			for (int param = 0; param < 2; param++) {
+				double temp = d3px_parameters[6 * d3px_count + 2 + param];
+				d3px_parameters[6 * d3px_count + 2 + param] = d3px_parameters[6 * d3px_count + 0 + param];
+				d3px_parameters[6 * d3px_count + 0 + param] = temp;
+			}
+
+
+			/*
+			 * Increment counters
+			 */
+
+			d3px_count++;
+			i += 6;
 		} else if (!strcmp(argv[i], "--ex")) {
 			if (i + 6 >= argc)
 				not_enough("--ex");
@@ -1757,7 +1794,7 @@ int main(int argc, const char *argv[]){
 
 //				d3::scene::relax_triangle_model();
 
-				d3::scene::make_space();
+				d3::scene::make_space(d3_depth, d3_output, &d3_depth_pt, &d3_output_pt);
 
 //				fprintf(stderr, "Total pixels: %lu\n", d3::scene::total_pixels);
 //				fprintf(stderr, "Total ambiguity: %lu\n", d3::scene::total_ambiguity);
@@ -1765,11 +1802,11 @@ int main(int argc, const char *argv[]){
 //				fprintf(stderr, "Total divisions: %lu\n", d3::scene::total_divisions);
 
 				fprintf(stderr, "Updating occupancy values");
-				d3::scene::reduce_cost_to_search_depth(d3_depth, d3_output, 
-						&d3_depth_pt, &d3_output_pt, output_exposure, inc);
+				d3::scene::reduce_cost_to_search_depth(output_exposure, inc);
 				fprintf(stderr, ".\n");
 
 				fprintf(stderr, "Writing 3D output");
+				d3::scene::d3px(d3px_count, d3px_parameters);
 				for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
 					assert (i < d3_count);
 

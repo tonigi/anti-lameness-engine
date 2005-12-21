@@ -584,6 +584,10 @@ public:
 			"--occ-norm        Normalize output with accumulated occupancy.          [default]\n"
 			"--occ-nonorm      Don't normalize output with accumulated occupancy.\n"
 			"--et <x>          Set encounter threshold <x> for defined pixels.  [default is 0]\n"
+			"--3dpx <args>     Exclude a specified spatial volume following full-scene\n"
+			"                  reconstruction, assuming a single depth at each point\n"
+			"                  in the output.  <args> are:\n"
+			"                         <xmin> <xmax> <ymin> <ymax> <zmin> <zmax>\n"
 			BETWEEN_SECTIONS
 			"Camera parameters:\n"
 			HEADER_SPACE
@@ -622,6 +626,9 @@ public:
 			"--tcem <x>        Set third-camera error multiplier to <x>         [default is 0]\n"
 			"--oui <x>         Set occupancy update iterations to <x>          [default is 10]\n"
 			"--pa <x>          Set pairwise ambiguity to <x>                    [default is 3]\n"
+			"--pc <type>       Set the type of pairwise comparisons:\n"
+			"                     auto     Determine comparisons automatically.      [default]\n"
+			"                     all      Perform all comparisons.\n"
 #if 0
 			"--mpu <x>         Set model perturb upper bound to <x>           [default is 25%%]\n"
 			"--mpl <x>         Set model perturb lower bound to <x>             [default is 1]\n"

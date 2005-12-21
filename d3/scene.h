@@ -116,6 +116,17 @@ class scene {
 	static unsigned int pairwise_ambiguity;
 
 	/*
+	 * Pairwise comparisons
+	 */
+	static const char *pairwise_comparisons;
+
+	/*
+	 * 3D Post-exclusion
+	 */
+	static int d3px_count;
+	static double *d3px_parameters;
+
+	/*
 	 * Nearness threshold
 	 */
 	static const ale_real nearness;
@@ -1766,86 +1777,6 @@ public:
 	}
 
 	/*
-	 * Generate an image from a specified view.
-	 */
-	static const d2::image *view(pt _pt, int n = -1) {
-		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
-
-		if (n >= 0) {
-			assert((int) floor(d2::align::of(n).scaled_height())
-			     == (int) floor(_pt.scaled_height()));
-			assert((int) floor(d2::align::of(n).scaled_width())
-			     == (int) floor(_pt.scaled_width()));
-		}
-
-		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-				               (int) floor(_pt.scaled_width()), 3);
-
-		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
-
-		/*
-		 * Use adaptive subspace data.
-		 */
-
-		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-						(int) floor(_pt.scaled_width()), 3);
-
-		/*
-		 * Iterate through subspaces.
-		 */
-
-		space_iterate si(_pt);
-
-		view_recurse(0, im, weights, si, _pt);
-
-		for (unsigned int i = 0; i < im->height(); i++)
-		for (unsigned int j = 0; j < im->width();  j++) {
-			if (weights->pix(i, j).min_norm() < encounter_threshold) {
-				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
-				weights->pix(i, j) = d2::pixel::zero();
-			} else if (normalize_weights)
-				im->pix(i, j) /= weights->pix(i, j);
-		}
-
-		delete weights;
-
-		return im;
-	}
-
-	static void tcem(double _tcem) {
-		tc_multiplier = _tcem;
-	}
-
-	static void oui(unsigned int _oui) {
-		ou_iterations = _oui;
-	}
-
-	static void pa(unsigned int _pa) {
-		pairwise_ambiguity = _pa;
-	}
-
-	static void fx(double _fx) {
-		falloff_exponent = _fx;
-	}
-
-	static void nw() {
-		normalize_weights = 1;
-	}
-
-	static void no_nw() {
-		normalize_weights = 0;
-	}
-
-	static const d2::image *view(unsigned int n) {
-
-		assert (n < d2::image_rw::count());
-
-		pt _pt = align::projective(n);
-
-		return view(_pt, n);
-	}
-
-	/*
 	 * Generate an depth image from a specified view.
 	 */
 	static const d2::image *depth(pt _pt, int n = -1) {
@@ -1880,7 +1811,10 @@ public:
 
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
-			if (weights->pix(i, j).min_norm() < encounter_threshold) {
+
+			point w = _pt.pw_scaled(point(i, j, im->pix(i, j)[0] / weights->pix(i, j)[0]));
+
+			if (weights->pix(i, j).min_norm() < encounter_threshold || excluded(w)) {
 				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
 				weights->pix(i, j) = d2::pixel::zero();
 			} else if (normalize_weights)
@@ -1899,6 +1833,119 @@ public:
 		pt _pt = align::projective(n);
 
 		return depth(_pt, n);
+	}
+
+	/*
+	 * Generate an image from a specified view.
+	 */
+	static const d2::image *view(pt _pt, int n = -1) {
+		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
+
+		if (n >= 0) {
+			assert((int) floor(d2::align::of(n).scaled_height())
+			     == (int) floor(_pt.scaled_height()));
+			assert((int) floor(d2::align::of(n).scaled_width())
+			     == (int) floor(_pt.scaled_width()));
+		}
+
+		const d2::image *depths = NULL;
+
+		if (d3px_count > 0)
+			depths = depth(_pt, n);
+
+		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+				               (int) floor(_pt.scaled_width()), 3);
+
+		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
+
+		/*
+		 * Use adaptive subspace data.
+		 */
+
+		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+						(int) floor(_pt.scaled_width()), 3);
+
+		/*
+		 * Iterate through subspaces.
+		 */
+
+		space_iterate si(_pt);
+
+		view_recurse(0, im, weights, si, _pt);
+
+		for (unsigned int i = 0; i < im->height(); i++)
+		for (unsigned int j = 0; j < im->width();  j++) {
+			if (weights->pix(i, j).min_norm() < encounter_threshold
+			 || (d3px_count > 0 && isnan(depths->pix(i, j)[0]))) {
+				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
+				weights->pix(i, j) = d2::pixel::zero();
+			} else if (normalize_weights)
+				im->pix(i, j) /= weights->pix(i, j);
+		}
+
+		if (d3px_count > 0)
+			delete depths;
+
+		delete weights;
+
+		return im;
+	}
+
+	static void tcem(double _tcem) {
+		tc_multiplier = _tcem;
+	}
+
+	static void oui(unsigned int _oui) {
+		ou_iterations = _oui;
+	}
+
+	static void pa(unsigned int _pa) {
+		pairwise_ambiguity = _pa;
+	}
+
+	static void pc(const char *_pc) {
+		pairwise_comparisons = _pc;
+	}
+
+	static void d3px(int _d3px_count, double *_d3px_parameters) {
+		d3px_count = _d3px_count;
+		d3px_parameters = _d3px_parameters;
+	}
+
+	static void fx(double _fx) {
+		falloff_exponent = _fx;
+	}
+
+	static void nw() {
+		normalize_weights = 1;
+	}
+
+	static void no_nw() {
+		normalize_weights = 0;
+	}
+
+	static int excluded(point p) {
+		for (int n = 0; n < d3px_count; n++) {
+			double *region = d3px_parameters + (6 * n);
+			if (p[0] >= region[0]
+			 && p[0] <= region[1]
+			 && p[1] >= region[2]
+			 && p[1] <= region[3]
+			 && p[2] >= region[4]
+			 && p[2] <= region[5])
+				return 1;
+		}
+
+		return 0;
+	}
+
+	static const d2::image *view(unsigned int n) {
+
+		assert (n < d2::image_rw::count());
+
+		pt _pt = align::projective(n);
+
+		return view(_pt, n);
 	}
 
 	/*
@@ -2471,7 +2518,9 @@ public:
 	 * Initialize space and identify regions of interest for the adaptive
 	 * subspace model.
 	 */
-	static void make_space() {
+	static void make_space(const char *d_out[], const char *v_out[],
+			std::map<const char *, pt> *d3_depth_pt,
+			std::map<const char *, pt> *d3_output_pt) {
 
 		fprintf(stderr, "Subdividing 3D space");
 
@@ -2489,6 +2538,10 @@ public:
 		for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++)
 		for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
 			if (f1 == f2)
+				continue;
+
+			if (!d_out[f1] && !v_out[f1] && !d3_depth_pt->size()
+			 && !d3_output_pt->size() && strcmp(pairwise_comparisons, "all"))
 				continue;
 
 			const d2::image *if1 = d2::image_rw::open(f1);
@@ -2548,10 +2601,7 @@ public:
 	 * even a 'search depth' any longer, since there is no longer any
 	 * bounded DFS occurring.
 	 */
-	static void reduce_cost_to_search_depth(const char *d_out[], const char *v_out[], 
-			std::map<const char *, pt> *d3_depth_pt,
-			std::map<const char *, pt> *d3_output_pt,
-			d2::exposure *exp_out, int inc_bit) {
+	static void reduce_cost_to_search_depth(d2::exposure *exp_out, int inc_bit) {
 
 		/*
 		 * Subspace model
