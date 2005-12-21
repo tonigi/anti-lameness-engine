@@ -1,5 +1,14 @@
 0.8.3
 
+o	Add option --3dpx to specify 3D regions to exclude during final
+	rendering, using a single depth for each pixel in each frame of
+	rendered output.  (Evaluates at the depth used in depth-rendering.)
+
+o	Add option --pc to specify which pairwise comparisons should be
+	performed.
+
+o	Add --et option to specify encounter thresholds.
+
 o	Clean up d3::scene to remove triangle-mesh code.
 
 o	Add an option --def-nn to allow definition of pixels in output images
