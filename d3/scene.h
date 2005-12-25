@@ -2514,6 +2514,44 @@ public:
 		}
 	}
 
+	static void refine_space_for_output(pt _pt, space_traverse st = space_traverse::root()) {
+		if (!spatial_info_map.count(st.get_space())) {
+			if (st.get_space()->positive)
+				refine_space_for_output(_pt, st.positive());
+			if (st.get_space()->negative)
+				refine_space_for_output(_pt, st.negative());
+			return;
+		}
+
+		point bb[2];
+		st.get_view_local_bb(_pt, bb);
+
+		if (bb[0].xy().lengthtosq(bb[1].xy()) < 1)
+			return;
+
+		spatial_info_map[st.positive().get_space()];
+		spatial_info_map[st.negative().get_space()];
+
+		refine_space_for_output(_pt, st.positive());
+		refine_space_for_output(_pt, st.negative());
+	}
+
+	static void refine_space_for_output(const char *d_out[], const char *v_out[],
+			std::map<const char *, pt> *d3_depth_pt,
+			std::map<const char *, pt> *d3_output_pt) {
+
+		for (unsigned int f = 0; f < d2::image_rw::count(); f++) 
+			if (d_out[f] || v_out[f])
+				refine_space_for_output(d3::align::projective(f));
+
+		for (std::map<const char *, pt>::iterator i = d3_depth_pt->begin(); i != d3_depth_pt->end(); i++)
+			refine_space_for_output(i->second);
+
+		for (std::map<const char *, pt>::iterator i = d3_output_pt->begin(); i != d3_depth_pt->end(); i++)
+			refine_space_for_output(i->second);
+	}
+
+
 	/*
 	 * Initialize space and identify regions of interest for the adaptive
 	 * subspace model.
@@ -2581,6 +2619,8 @@ public:
 			d2::image_rw::close(f2);
 			d2::image_rw::close(f1);
 		}
+
+		refine_space_for_output(d_out, v_out, d3_depth_pt, d3_output_pt);
 
 		fprintf(stderr, ".\n");
 	}
