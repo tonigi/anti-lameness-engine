@@ -673,7 +673,7 @@ class scene {
 //			if (weight_sum == 0)
 //				return undefined;
 
-			if (used == 0)
+			if (used == 0 || used == 1)
 				return undefined;
 
 			if (weight_sum == 0) {
@@ -793,7 +793,7 @@ class scene {
 		 */
 		spatial_info() {
 			color = d2::pixel::zero();
-			occupancy = 0.5;
+			occupancy = 0;
 			pocc_density = 0;
 			socc_density = 0;
 		}
@@ -860,7 +860,7 @@ class scene {
 			if (isnan(o))
 				o = find_median(&occupancy_weights_2, occ_att);
 			if (isnan(o))
-				o = 0.5;
+				o = 0;
 
 			occupancy = o;
 
