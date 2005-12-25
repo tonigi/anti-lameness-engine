@@ -2529,6 +2529,9 @@ public:
 		if (bb[0].xy().lengthtosq(bb[1].xy()) < 1)
 			return;
 
+		if (!_pt.scaled_in_bounds(bb[0]) || !_pt.scaled_in_bounds(bb[1]))
+			return;
+
 		spatial_info_map[st.positive().get_space()];
 		spatial_info_map[st.negative().get_space()];
 
