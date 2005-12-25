@@ -2547,7 +2547,7 @@ public:
 		for (std::map<const char *, pt>::iterator i = d3_depth_pt->begin(); i != d3_depth_pt->end(); i++)
 			refine_space_for_output(i->second);
 
-		for (std::map<const char *, pt>::iterator i = d3_output_pt->begin(); i != d3_depth_pt->end(); i++)
+		for (std::map<const char *, pt>::iterator i = d3_output_pt->begin(); i != d3_output_pt->end(); i++)
 			refine_space_for_output(i->second);
 	}
 
