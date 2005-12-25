@@ -2635,7 +2635,11 @@ public:
 			d2::image_rw::close(f1);
 		}
 
-		refine_space_for_output(d_out, v_out, d3_depth_pt, d3_output_pt);
+		/*
+		 * This is expensive.
+		 */
+
+		// refine_space_for_output(d_out, v_out, d3_depth_pt, d3_output_pt);
 
 		fprintf(stderr, ".\n");
 	}
