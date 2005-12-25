@@ -587,15 +587,23 @@ class scene {
 			return data[i * 2 + 1];
 		}
 
-		void double_capacity() {
-			data = (ale_real *) realloc(data, sizeof(ale_real) * 2 * (size * 2));
+		void increase_capacity() {
+
+			if (size > 0)
+				size *= 2;
+			else
+				size = 1;
+
+			data = (ale_real *) realloc(data, sizeof(ale_real) * 2 * (size * 1));
+
+			assert(data);
+			assert (size > used);
+
 			if (!data) {
 				fprintf(stderr, "Unable to allocate %d bytes of memory\n",
-						sizeof(ale_real) * 2 * (size * 2));
+						sizeof(ale_real) * 2 * (size * 1));
+				exit(1);
 			} 
-			assert(data);
-			size *= 2;
-			assert (size > used);
 		}
 
 		void insert_weight(unsigned int i, ale_real v, ale_real w) {
@@ -641,13 +649,13 @@ class scene {
 				}
 				if (_d(i) > v) {
 					if (used == size)
-						double_capacity();
+						increase_capacity();
 					insert_weight(i, v, w);
 					return;
 				}
 			}
 			if (used == size)
-				double_capacity();
+				increase_capacity();
 			insert_weight(used, v, w);
 		}
 
@@ -704,15 +712,19 @@ class scene {
 
 		wml(int initial_size = 0) {
 
-			if (initial_size == 0) {
-				initial_size = (int) (d2::image_rw::count() * 1.5);
-			}
+//			if (initial_size == 0) {
+//				initial_size = (int) (d2::image_rw::count() * 1.5);
+//			}
 
 			size = initial_size;
 			used = 0;
-			data = (ale_real *) malloc(initial_size * sizeof(ale_real) * 2);
 
-			assert(data);
+			if (size > 0) {
+				data = (ale_real *) malloc(size * sizeof(ale_real) * 2);
+				assert(data);
+			} else {
+				data = NULL;
+			}
 		}
 
 		/*
