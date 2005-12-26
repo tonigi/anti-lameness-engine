@@ -1379,10 +1379,10 @@ public:
 			 && max[1] > min[1]) {
 				d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_bl(interp));
 				d2::pixel pcolor = im->get_bl(interp);
-				d2::pixel colordiff = color - pcolor;
+				d2::pixel colordiff = (color - pcolor) * (ale_real) 256;
 
 				if (falloff_exponent != 0) {
-					d2::pixel max_diff = im->get_max_diff(interp);
+					d2::pixel max_diff = im->get_max_diff(interp) * (ale_real) 256;
 
 					for (int k = 0; k < 3; k++)
 					if (max_diff[k] > 1)
@@ -1391,10 +1391,8 @@ public:
 
 //					fprintf(stderr, "color_interp=(%f, %f, %f)\n", pcolor[0], pcolor[1], pcolor[2]);
 
-				ale_real exp_scale = 256 * 256;
-
 //					sn->accumulate_color_2(pcolor, encounter);
-				d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
+				d2::pixel channel_occ = pexp(-colordiff * colordiff);
 //					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
 //					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
 
@@ -1474,10 +1472,10 @@ public:
 					continue;
 
 				d2::pixel pcolor = im->get_pixel(i, j);
-				d2::pixel colordiff = color - pcolor;
+				d2::pixel colordiff = (color - pcolor) * (ale_real) 256;
 
 				if (falloff_exponent != 0) {
-					d2::pixel max_diff = im->get_max_diff(interp);
+					d2::pixel max_diff = im->get_max_diff(interp) * (ale_real) 256;
 
 					for (int k = 0; k < 3; k++)
 					if (max_diff[k] > 1)
@@ -1493,12 +1491,6 @@ public:
 				 */
 
 				d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j));
-
-				/*
-				 * Scale for encounter probability exponent.
-				 */
-
-				ale_real exp_scale = 256 * 256;
 
 				/*
 				 * Check for higher-resolution modifications.
@@ -1519,7 +1511,7 @@ public:
 				 */
 
 				sn->accumulate_color_1(f, i, j, pcolor, encounter);
-				d2::pixel channel_occ = pexp(-colordiff * colordiff * exp_scale);
+				d2::pixel channel_occ = pexp(-colordiff * colordiff);
 //					fprintf(stderr, "encounter=(%f, %f, %f)\n", encounter[0], encounter[1], encounter[2]);
 //					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
 //					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
