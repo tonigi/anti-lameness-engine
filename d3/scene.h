@@ -1987,9 +1987,6 @@ public:
 		point p1 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j,  1000)));
 		point p2 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j, -1000)));
 
-		// fprintf(stderr, "%d->%d (%d, %d) point pair: (%d, %d, %d -> %f, %f), (%d, %d, %d -> %f, %f)\n",
-		//		f1, f2, i, j, i, j, 1000, p1[0], p1[1], i, j, -1000, p2[0], p2[1]);
-
 		/*
 		 * For cases where the mapped points define a
 		 * line and where points on the line fall
@@ -2022,41 +2019,26 @@ public:
 			slope = 0;
 		}
 
-		// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
-
 		ale_pos top_intersect = p1[1] - p1[0] * slope;
 		ale_pos lef_intersect = p1[0] - p1[1] / slope;
 		ale_pos rig_intersect = p1[0] - (p1[1] - if2->width() + 2) / slope;
 		ale_pos sp_i, sp_j;
 
-		// fprintf(stderr, "slope == %f\n", slope);
-
-
 		if (slope == 0) {
-			// fprintf(stderr, "case 0\n");
 			sp_i = lef_intersect;
 			sp_j = 0;
 		} else if (finite(slope) && top_intersect >= 0 && top_intersect < if2->width() - 1) {
-			// fprintf(stderr, "case 1\n");
 			sp_i = 0;
 			sp_j = top_intersect;
 		} else if (slope > 0 && lef_intersect >= 0 && lef_intersect <= if2->height() - 1) {
-			// fprintf(stderr, "case 2\n");
 			sp_i = lef_intersect;
 			sp_j = 0;
 		} else if (slope < 0 && rig_intersect >= 0 && rig_intersect <= if2->height() - 1) {
-			// fprintf(stderr, "case 3\n");
 			sp_i = rig_intersect;
 			sp_j = if2->width() - 2;
 		} else {
-			// fprintf(stderr, "case 4\n");
-			// fprintf(stderr, "%d->%d (%d, %d) does not intersect the defined area\n",
-			// 		f1, f2, i, j);
 			return result;
 		}
-
-
-		// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 		/*
 		 * Determine increment values for examining
@@ -2077,9 +2059,6 @@ public:
 			incr_j = -1;
 		}
 		
-		// fprintf(stderr, "%d->%d (%d, %d) increments are (%f, %f)\n",
-		// 		f1, f2, i, j, incr_i, incr_j);
-
 		/*
 		 * Examine regions near the projected line.
 		 */
@@ -2087,52 +2066,6 @@ public:
 		for (ale_pos ii = sp_i, jj = sp_j; 
 			ii <= if2->height() - 1 && jj <= if2->width() - 1 && ii >= 0 && jj >= 0; 
 			ii += incr_i, jj += incr_j) {
-
-			// fprintf(stderr, "%d->%d (%d, %d) checking (%f, %f)\n", 
-			//		f1, f2, i, j, ii, jj);
-
-#if 0
-			/*
-			 * Check for higher, lower, and nearby points.
-			 *
-			 * 	Red   = 2^0
-			 * 	Green = 2^1
-			 * 	Blue  = 2^2
-			 */
-
-			int higher = 0, lower = 0, nearby = 0;
-
-			for (int iii = 0; iii < 2; iii++)
-			for (int jjj = 0; jjj < 2; jjj++) {
-				d2::pixel p = if2->get_pixel((int) floor(ii) + iii, (int) floor(jj) + jjj);
-
-				for (int k = 0; k < 3; k++) {
-					int bitmask = (int) pow(2, k);
-
-					if (p[k] > color_primary[k])
-						higher |= bitmask;
-					if (p[k] < color_primary[k])
-						lower  |= bitmask;
-					if (fabs(p[k] - color_primary[k]) < nearness)
-						nearby |= bitmask;
-				}
-			}
-
-			/*
-			 * If this is not a region of interest,
-			 * then continue.
-			 */
-
-
-			fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
-
-			// if (((higher & lower) | nearby) != 0x7)
-			//	continue;
-#endif
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
-
-			// fprintf(stderr, "%d->%d (%d, %d) accepted (%f, %f)\n", 
-			//		f1, f2, i, j, ii, jj);
 
 			/*
 			 * Create an orthonormal basis to
@@ -2143,22 +2076,11 @@ public:
 			point bp1 = _pt1.pw_unscaled(point(i, j, 10));
 			point bp2 = _pt2.pw_unscaled(point(ii, jj, 0));
 
-			point foo = _pt1.wp_unscaled(bp0);
-			// fprintf(stderr, "(%d, %d, 0) transformed to world and back is: (%f, %f, %f)\n",
-			//		i, j, foo[0], foo[1], foo[2]);
-
-			foo = _pt1.wp_unscaled(bp1);
-			// fprintf(stderr, "(%d, %d, 10)  transformed to world and back is: (%f, %f, %f)\n",
-			//		i, j, foo[0], foo[1], foo[2]);
-
 			point b0  = (bp1 - bp0).normalize();
 			point b1n = bp2 - bp0;
 			point b1  = (b1n - b1n.dproduct(b0) * b0).normalize();
 			point b2  = point(0, 0, 0).xproduct(b0, b1).normalize(); // Should already have norm=1
 			
-
-			foo = _pt1.wp_unscaled(bp0 + 30 * b0);
-
 			/*
 			 * Select a fourth point to define a second line.
 			 */
@@ -2189,14 +2111,8 @@ public:
 			 * rejection.
 			 */
 
-
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
-
 			if (np3[1] - nbp2[1] == 0)
 				continue;
-
-
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			d2::point intersection = d2::point(nbp2[0] 
 					+ (nbp0[1] - nbp2[1]) * (np3[0] - nbp2[0]) / (np3[1] - nbp2[1]),
@@ -2220,27 +2136,16 @@ public:
 			point ics = _pt2.wc(iw);
 
 
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
-
 			if (icp[2] >= 0 || ics[2] >= 0)
 				continue;
-
-
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			/*
 			 * Reject clipping plane violations.
 			 */
 
-
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
-
 			if (iw[2] > front_clip
 			 || iw[2] < rear_clip)
 				continue;
-
-
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			/*
 			 * Score the point.
@@ -2268,9 +2173,6 @@ public:
 				score += (1 - l1_multiplier)
 				       * (if1->get_bl(ip.xy()) - if2->get_bl(is.xy())).normsq();
 			}
-
-
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			for (int iii = -1; iii <= 1; iii++)
 			for (int jjj = -1; jjj <= 1; jjj++) {
@@ -2312,63 +2214,19 @@ public:
 					 * (if1->get_bl(ip.xy()) - cl->reference[f]->get_bl(p.xy())).normsq();
 			}
 
-			
-
-
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
-
 			/*
 			 * Reject points with undefined score.
 			 */
 
-
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
-
 			if (!finite(score / divisor))
 				continue;
-
-
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
-
-#if 0
-			/*
-			 * XXX: reject points not on the z=-27.882252 plane.
-			 */
-
-
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
-
-			if (_a.ip[2] > -27 || _a.ip[2] < -28)
-				continue;
-#endif
-
-
-			// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
 
 			/*
 			 * Add the point to the score map.
 			 */
 
-//			d2::pixel c_ip = if1->in_bounds(ip.xy()) ? if1->get_bl(ip.xy())
-//				                                 : d2::pixel();
-//			d2::pixel c_is = if2->in_bounds(is.xy()) ? if2->get_bl(is.xy())
-//				                                 : d2::pixel();
-
-//			fprintf(stderr, "Candidate subspace: f1=%u f2=%u i=%u j=%u ii=%f jj=%f"
-//					"cp=[%f %f %f] cs=[%f %f %f]\n",
-//					f1, f2, i, j, ii, jj, c_ip[0], c_ip[1], c_ip[2],
-//					c_is[0], c_is[1], c_is[2]);
-
 			result.insert(score_map_element(score / divisor, _a));
 		}
-
-//		fprintf(stderr, "Iterating through the score map:\n");
-//
-//		for (score_map::iterator smi = result.begin(); smi != result.end(); smi++) {
-//			fprintf(stderr, "%f ", smi->first);
-//		}
-//
-//		fprintf(stderr, "\n");
 
 		return result;
 	}
