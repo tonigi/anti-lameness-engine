@@ -1962,6 +1962,166 @@ public:
 	typedef std::multimap<ale_real,analytic> score_map;
 	typedef std::pair<ale_real,analytic> score_map_element;
 
+	static void solve_point_pair(unsigned int f1, unsigned int f2, int i, int j, ale_pos ii, ale_pos jj, 
+			ale_real *normalized_score, analytic *_a, 
+			const pt &_pt1, const pt &_pt2, const d2::image *if1, const d2::image *if2) {
+
+		*normalized_score = 0;
+		*normalized_score /= *normalized_score;
+		assert(isnan(*normalized_score));
+
+		/*
+		 * Create an orthonormal basis to
+		 * determine line intersection.
+		 */
+
+		point bp0 = _pt1.pw_unscaled(point(i, j, 0));
+		point bp1 = _pt1.pw_unscaled(point(i, j, 10));
+		point bp2 = _pt2.pw_unscaled(point(ii, jj, 0));
+
+		point b0  = (bp1 - bp0).normalize();
+		point b1n = bp2 - bp0;
+		point b1  = (b1n - b1n.dproduct(b0) * b0).normalize();
+		point b2  = point(0, 0, 0).xproduct(b0, b1).normalize(); // Should already have norm=1
+		
+		/*
+		 * Select a fourth point to define a second line.
+		 */
+
+		point p3  = _pt2.pw_unscaled(point(ii, jj, 10));
+
+		/*
+		 * Representation in the new basis.
+		 */
+
+		d2::point nbp0 = d2::point(bp0.dproduct(b0), bp0.dproduct(b1));
+		// d2::point nbp1 = d2::point(bp1.dproduct(b0), bp1.dproduct(b1));
+		d2::point nbp2 = d2::point(bp2.dproduct(b0), bp2.dproduct(b1));
+		d2::point np3  = d2::point( p3.dproduct(b0),  p3.dproduct(b1));
+
+		/*
+		 * Determine intersection of line
+		 * (nbp0, nbp1), which is parallel to
+		 * b0, with line (nbp2, np3).
+		 */
+
+		/*
+		 * XXX: a stronger check would be
+		 * better here, e.g., involving the
+		 * ratio (np3[0] - nbp2[0]) / (np3[1] -
+		 * nbp2[1]).  Also, acceptance of these
+		 * cases is probably better than
+		 * rejection.
+		 */
+
+		if (np3[1] - nbp2[1] == 0)
+			return;
+
+		d2::point intersection = d2::point(nbp2[0] 
+				+ (nbp0[1] - nbp2[1]) * (np3[0] - nbp2[0]) / (np3[1] - nbp2[1]),
+				nbp0[1]);
+
+		ale_pos b2_offset = b2.dproduct(bp0);
+
+		/*
+		 * Map the intersection back to the world
+		 * basis.
+		 */
+
+		point iw = intersection[0] * b0 + intersection[1] * b1 + b2_offset * b2;
+
+		/*
+		 * Reject intersection points behind a
+		 * camera.
+		 */
+
+		point icp = _pt1.wc(iw);
+		point ics = _pt2.wc(iw);
+
+
+		if (icp[2] >= 0 || ics[2] >= 0)
+			return;
+
+		/*
+		 * Reject clipping plane violations.
+		 */
+
+		if (iw[2] > front_clip
+		 || iw[2] < rear_clip)
+			return;
+
+		/*
+		 * Score the point.
+		 */
+
+		point ip = _pt1.wp_unscaled(iw);
+
+		point is = _pt2.wp_unscaled(iw);
+
+		_a->iw = iw;
+		_a->ip = ip;
+		_a->is = is;
+
+		/*
+		 * Calculate score from color match.  Assume for now
+		 * that the transformation can be approximated locally
+		 * with a translation.
+		 */
+
+		ale_pos score = 0;
+		ale_pos divisor = 0;
+		ale_pos l1_multiplier = 0.125;
+
+		if (if1->in_bounds(ip.xy())
+		 && if2->in_bounds(is.xy())) {
+			divisor += 1 - l1_multiplier;
+			score += (1 - l1_multiplier)
+			       * (if1->get_bl(ip.xy()) - if2->get_bl(is.xy())).normsq();
+		}
+
+		for (int iii = -1; iii <= 1; iii++)
+		for (int jjj = -1; jjj <= 1; jjj++) {
+			d2::point t(iii, jjj);
+
+			if (!if1->in_bounds(ip.xy() + t)
+			 || !if2->in_bounds(is.xy() + t))
+				continue;
+
+			divisor += l1_multiplier;
+			score   += l1_multiplier
+				 * (if1->get_bl(ip.xy() + t) - if2->get_bl(is.xy() + t)).normsq();
+				 
+		}
+
+		/*
+		 * Include third-camera contributions in the score.
+		 */
+
+		if (tc_multiplier != 0)
+		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+			if (f == f1 || f == f2)
+				continue;
+
+			assert(cl);
+			assert(cl->reference);
+			assert(cl->reference[f]);
+
+			pt _ptf = align::projective(f);
+
+			point p = _ptf.wp_unscaled(iw);
+
+			if (!cl->reference[f]->in_bounds(p.xy())
+			 || !if2->in_bounds(ip.xy()))
+				continue;
+
+			divisor += tc_multiplier;
+			score   += tc_multiplier
+				 * (if1->get_bl(ip.xy()) - cl->reference[f]->get_bl(p.xy())).normsq();
+		}
+
+		*normalized_score = score / divisor;
+	}
+
 	/*
 	 * Generate a map from scores to 3D points for various depths at point (i, j) in f1.
 	 */
@@ -2067,165 +2227,23 @@ public:
 			ii <= if2->height() - 1 && jj <= if2->width() - 1 && ii >= 0 && jj >= 0; 
 			ii += incr_i, jj += incr_j) {
 
-			/*
-			 * Create an orthonormal basis to
-			 * determine line intersection.
-			 */
+			ale_real normalized_score;
+			analytic _a;
 
-			point bp0 = _pt1.pw_unscaled(point(i, j, 0));
-			point bp1 = _pt1.pw_unscaled(point(i, j, 10));
-			point bp2 = _pt2.pw_unscaled(point(ii, jj, 0));
-
-			point b0  = (bp1 - bp0).normalize();
-			point b1n = bp2 - bp0;
-			point b1  = (b1n - b1n.dproduct(b0) * b0).normalize();
-			point b2  = point(0, 0, 0).xproduct(b0, b1).normalize(); // Should already have norm=1
-			
-			/*
-			 * Select a fourth point to define a second line.
-			 */
-
-			point p3  = _pt2.pw_unscaled(point(ii, jj, 10));
-
-			/*
-			 * Representation in the new basis.
-			 */
-
-			d2::point nbp0 = d2::point(bp0.dproduct(b0), bp0.dproduct(b1));
-			// d2::point nbp1 = d2::point(bp1.dproduct(b0), bp1.dproduct(b1));
-			d2::point nbp2 = d2::point(bp2.dproduct(b0), bp2.dproduct(b1));
-			d2::point np3  = d2::point( p3.dproduct(b0),  p3.dproduct(b1));
-
-			/*
-			 * Determine intersection of line
-			 * (nbp0, nbp1), which is parallel to
-			 * b0, with line (nbp2, np3).
-			 */
-
-			/*
-			 * XXX: a stronger check would be
-			 * better here, e.g., involving the
-			 * ratio (np3[0] - nbp2[0]) / (np3[1] -
-			 * nbp2[1]).  Also, acceptance of these
-			 * cases is probably better than
-			 * rejection.
-			 */
-
-			if (np3[1] - nbp2[1] == 0)
-				continue;
-
-			d2::point intersection = d2::point(nbp2[0] 
-					+ (nbp0[1] - nbp2[1]) * (np3[0] - nbp2[0]) / (np3[1] - nbp2[1]),
-					nbp0[1]);
-
-			ale_pos b2_offset = b2.dproduct(bp0);
-
-			/*
-			 * Map the intersection back to the world
-			 * basis.
-			 */
-
-			point iw = intersection[0] * b0 + intersection[1] * b1 + b2_offset * b2;
-
-			/*
-			 * Reject intersection points behind a
-			 * camera.
-			 */
-
-			point icp = _pt1.wc(iw);
-			point ics = _pt2.wc(iw);
-
-
-			if (icp[2] >= 0 || ics[2] >= 0)
-				continue;
-
-			/*
-			 * Reject clipping plane violations.
-			 */
-
-			if (iw[2] > front_clip
-			 || iw[2] < rear_clip)
-				continue;
-
-			/*
-			 * Score the point.
-			 */
-
-			point ip = _pt1.wp_unscaled(iw);
-
-			point is = _pt2.wp_unscaled(iw);
-
-			analytic _a = { iw, ip, is };
-
-			/*
-			 * Calculate score from color match.  Assume for now
-			 * that the transformation can be approximated locally
-			 * with a translation.
-			 */
-
-			ale_pos score = 0;
-			ale_pos divisor = 0;
-			ale_pos l1_multiplier = 0.125;
-
-			if (if1->in_bounds(ip.xy())
-			 && if2->in_bounds(is.xy())) {
-				divisor += 1 - l1_multiplier;
-				score += (1 - l1_multiplier)
-				       * (if1->get_bl(ip.xy()) - if2->get_bl(is.xy())).normsq();
-			}
-
-			for (int iii = -1; iii <= 1; iii++)
-			for (int jjj = -1; jjj <= 1; jjj++) {
-				d2::point t(iii, jjj);
-
-				if (!if1->in_bounds(ip.xy() + t)
-				 || !if2->in_bounds(is.xy() + t))
-					continue;
-
-				divisor += l1_multiplier;
-				score   += l1_multiplier
-					 * (if1->get_bl(ip.xy() + t) - if2->get_bl(is.xy() + t)).normsq();
-					 
-			}
-
-			/*
-			 * Include third-camera contributions in the score.
-			 */
-
-			if (tc_multiplier != 0)
-			for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
-				if (f == f1 || f == f2)
-					continue;
-
-				assert(cl);
-				assert(cl->reference);
-				assert(cl->reference[f]);
-
-				pt _ptf = align::projective(f);
-
-				point p = _ptf.wp_unscaled(iw);
-
-				if (!cl->reference[f]->in_bounds(p.xy())
-				 || !if2->in_bounds(ip.xy()))
-					continue;
-
-				divisor += tc_multiplier;
-				score   += tc_multiplier
-					 * (if1->get_bl(ip.xy()) - cl->reference[f]->get_bl(p.xy())).normsq();
-			}
+			solve_point_pair(f1, f2, i, j, ii, jj, &normalized_score, &_a, _pt1, _pt2, if1, if2);
 
 			/*
 			 * Reject points with undefined score.
 			 */
 
-			if (!finite(score / divisor))
+			if (!finite(normalized_score))
 				continue;
 
 			/*
 			 * Add the point to the score map.
 			 */
 
-			result.insert(score_map_element(score / divisor, _a));
+			result.insert(score_map_element(normalized_score, _a));
 		}
 
 		return result;
