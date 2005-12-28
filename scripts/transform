@@ -6,7 +6,7 @@
 # like this:
 # 
 # $ ale --trans-save=a.t --projective 1.jpg 2.jpg 3.jpg a.jpg
-# $ transform `grep -A1 1.jpg a.t | tail -1` < a.t > b.t
+# $ transform `grep -A1 2.jpg a.t | tail -1` < a.t > b.t
 # $ ale --trans-load=b.t --projective 1.jpg 2.jpg 3.jpg c.jpg
 #
 
