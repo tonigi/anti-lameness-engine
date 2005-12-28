@@ -2246,6 +2246,35 @@ public:
 			result.insert(score_map_element(normalized_score, _a));
 		}
 
+		/*
+		 * Iterate through regions and add new locations with sub-pixel resolution
+		 */
+		int accumulated_passes = 0;
+		int max_acc_passes = pairwise_ambiguity;
+		for (score_map::iterator smi = result.begin(); smi != result.end(); smi++) {
+			point is = smi->second.is;
+
+			if (accumulated_passes++ >= max_acc_passes)
+				break;
+
+			for (ale_pos epsilon = -0.5; epsilon <= 0.5; epsilon += 0.125) {
+
+				if (fabs(epsilon) < 0.001)
+					continue;
+
+				ale_real normalized_score;
+				analytic _a;
+
+				solve_point_pair(f1, f2, i, j, is[0] + epsilon * incr_i, is[1] + epsilon * incr_j,
+						&normalized_score, &_a, _pt1, _pt2, if1, if2);
+
+				if (!finite(normalized_score))
+					continue;
+
+				result.insert(score_map_element(normalized_score, _a));
+			}
+		}
+
 		return result;
 	}
 
