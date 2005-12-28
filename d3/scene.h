@@ -1364,6 +1364,7 @@ public:
 
 //				fprintf(stderr, "interp=(%f, %f)\n", interp[0], interp[1]);
 
+#if 0
 			/*
 			 * For interpolation points, ensure that the
 			 * bounding box area is at least 0.25. XXX: Why?
@@ -1413,7 +1414,9 @@ public:
 					sn->accumulate_occupancy_2(channel_occ[k], encounter[k]);
 #endif
 			}
-
+#endif
+			
+			
 			/*
 			 * Data structure to check modification of weights by
 			 * higher-resolution subspaces.
@@ -2435,7 +2438,7 @@ public:
 		point bb[2];
 		st.get_view_local_bb(_pt, bb);
 
-		if (bb[0].xy().lengthtosq(bb[1].xy()) < 1)
+		if (bb[0].xy().lengthtosq(bb[1].xy()) < 2)
 			return;
 
 		if (!_pt.scaled_in_bounds(bb[0]) || !_pt.scaled_in_bounds(bb[1]))
