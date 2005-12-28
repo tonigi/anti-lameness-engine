@@ -1,0 +1,41 @@
+#!/usr/bin/perl -w
+
+#
+# This script accepts as input a transformation file, applying the inverse
+# of the specified projective transformation.
+#
+
+if (defined $ARGV[0] && $ARGV[0] =~ /^P/) {
+	shift;
+}
+
+@ARGV == 10 or die "usage: $0 <projective-args>\n";
+
+while (<STDIN>) {
+
+	$line = $_;
+
+	if ($line =~ /^V 2/) {
+		print "V 3\n";
+		$line = "P $ARGV[0] $ARGV[1] 0 0 0 $ARGV[1] $ARGV[0] $ARGV[1] $ARGV[0] 0\n";
+	}
+
+	if (!($line =~ /^P (.*)/)) {
+		print $line;
+		next;
+	}
+
+	@new_args = split / /, $1;
+
+	print "P " . $new_args[0] . " " . $new_args[1] . " ";
+	shift @new_args; shift @new_args;
+
+	while (@new_args > 0) {
+		$result = `echo @ARGV $new_args[0] $new_args[1] | ale --ptcalc 2> /dev/null | grep INVERSE`;
+		$result =~ /.*\((.*), (.*)\)/;
+		print $1 . " " . $2 . " ";
+		shift @new_args; shift @new_args;
+	}
+
+	print "\n";
+}
