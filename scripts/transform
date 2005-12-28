@@ -2,7 +2,12 @@
 
 #
 # This script accepts as input a transformation file, applying the inverse
-# of the specified projective transformation.
+# of the specified projective transformation.  This script can be used, e.g.,
+# like this:
+# 
+# $ ale --trans-save=a.t --projective 1.jpg 2.jpg 3.jpg a.jpg
+# $ transform `grep -A1 1.jpg a.t | tail -1` < a.t > b.t
+# $ ale --trans-load=b.t --projective 1.jpg 2.jpg 3.jpg c.jpg
 #
 
 if (defined $ARGV[0] && $ARGV[0] =~ /^P/) {
