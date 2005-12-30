@@ -31,6 +31,7 @@ scene::lod *scene::bl;
 ale_pos scene::edge_cost_multiplier = 0;
 ale_pos scene::angle_cost_multiplier = 0;
 ale_pos scene::front_clip = 0;
+ale_pos scene::decimation_exponent = 0;
 ale_pos scene::rear_clip = 0;
 ale_pos scene::mpl_value = 1;
 ale_pos scene::mpu_value = 25;

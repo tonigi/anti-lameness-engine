@@ -63,6 +63,11 @@ class scene {
 	static ale_pos rear_clip;
 
 	/*
+	 * Decimation for geometry
+	 */
+	static ale_pos decimation_exponent;
+
+	/*
 	 * Perturb bounds
 	 *
 	 * Bound types:
@@ -255,12 +260,6 @@ class scene {
 	 */
 
 	static struct lod *cl;
-
-	/*
-	 * Base level-of-detail
-	 */
-
-	static struct lod *bl;
 
 	/*
 	 * Structure to hold a subdivisible region of space.
@@ -1078,6 +1077,10 @@ public:
 		front_clip = fc;
 	}
 
+	static void dgi(ale_pos _dgi) {
+		decimation_exponent = _dgi;
+	}
+
 	static void rc(ale_pos rc) {
 		rear_clip = rc;
 	}
@@ -1090,6 +1093,67 @@ public:
 		angle_cost_multiplier = acm;
 	}
 	
+	/*
+	 * Reduce the level of detail.  Return 0 when no further reduction
+	 * is possible.
+	 */
+	static int reduce_lod() {
+
+		assert(cl);
+		assert(cl->reference);
+
+		/*
+		 * Create a new structure for the reduced LOD.
+		 */
+		struct lod *nl = new lod;
+
+		/*
+		 * Find out how many input frames there are.
+		 */
+
+		int N = d2::image_rw::count();
+
+		/*
+		 * Create scaled reference image array
+		 */
+
+		nl->reference = (d2::image **) malloc(N * sizeof(d2::image *));
+
+		assert(nl->reference);
+
+		for (int n = 0; n < N; n++) {
+
+			if (nl->reference[n]->height() < 2
+			 || nl->reference[n]->width() < 2) {
+				for (int nn = 0; nn < n; nn++)
+					delete nl->reference[nn];
+				free(nl->reference);
+				return 0;
+			}
+			
+			assert(cl->reference[n]);
+
+			nl->reference[n] = cl->reference[n]->scale_by_half("3D, reduced LOD");
+
+			assert(nl->reference[n]);
+		}
+
+		nl->sf = cl->sf * 0.5;
+
+		nl->next = NULL;
+
+		for (int n = 0; n < N; n++)
+			delete cl->reference[n];
+
+		free(cl->reference);
+
+		delete cl;
+
+		cl = nl;
+
+		return 1;
+	}
+
 	/*
 	 * Initialize 3D scene from 2D scene, using 2D and 3D alignment
 	 * information.
@@ -1117,174 +1181,65 @@ public:
 		front_clip = front_clip * cp_scalar - cp_scalar;
 		rear_clip = rear_clip * cp_scalar - cp_scalar;
 
-		/*
-		 * Find out how many input frames there are.
-		 */
-
-		int N = d2::image_rw::count();
 
 		/*
-		 * Initialize the base level of detail
+		 * Allocate image structures, if necessary.
 		 */
 
-		cl = new lod;
-		cl->reference = NULL;
-		cl->next = NULL;
-		cl->sf = 1;
+		if (tc_multiplier != 0) {
 
-		/*
-		 * Initialize reference images.
-		 */
+			/*
+			 * Find out how many input frames there are.
+			 */
 
-		cl->reference = (d2::image **) malloc(N * sizeof(d2::image *));
+			int N = d2::image_rw::count();
 
-		assert(cl->reference);
+			/*
+			 * Initialize the base level of detail
+			 */
 
-		for (int n = 0; n < N; n++) {
-			cl->reference[n] = d2::image_rw::copy(n, "3D scene reference");
-			assert(cl->reference[n]);
-		}
+			cl = new lod;
+			cl->reference = NULL;
+			cl->next = NULL;
+			cl->sf = 1;
 
-		bl = cl;
+			/*
+			 * Initialize reference images.
+			 */
 
-		/*
-		 * If there is a file to load scene data from, then use it.
-		 */
+			cl->reference = (d2::image **) malloc(N * sizeof(d2::image *));
 
-#if 0
-		if (load_model_name) {
-			read_model_file();
-			return;
-		}
+			assert(cl->reference);
 
-		/*
-		 * Otherwise, initialize the model explicitly.
-		 */
-
-		/*
-		 * Determine the bounding box of the intersections of the view
-		 * pyramids with the estimated scene plane, and construct an
-		 * initial (planar) triangular decomposition of the scene.
-		 */
-
-		d2::point min = d2::point(0, 0);
-		d2::point max = d2::point(0, 0);
-
-		point scene_plane[3] = {point(0, 0, 0), point(1, 0, 0), point(0, 1, 0)};
-
-		for (int n = 0; n < N; n++) {
-
-			pt t = align::projective(n);
-
-			point tsp[3];
-
-			for (int p = 0; p < 3; p++)
-				tsp[p] = t.wc(scene_plane[p]);
-
-			point a[4];
-
-			a[0] = point(0, 0, -1);
-			a[1] = point(t.scaled_height() - 1, 0, -1);
-			a[2] = point(t.scaled_height() - 1, t.scaled_width() - 1, -1);
-			a[3] = point(0, t.scaled_width() - 1, -1);
-
-			for (int p = 0; p < 4; p++) {
-				a[p] = t.pc_scaled(a[p]);
-				a[p] = rt_intersect(a[p], tsp);
+			for (int n = 0; n < N; n++) {
+				cl->reference[n] = d2::image_rw::copy(n, "3D scene reference");
+				assert(cl->reference[n]);
 			}
 
-			for (int p = 0; p < 4; p++)
-			for (int d = 0; d < 2; d++) {
-				if (a[p][d] < min[d])
-					min[d] = a[p][d];
-				if (a[p][d] > max[d])
-					max[d] = a[p][d];
+			/*
+			 * Scale image structures according to the decimation exponent.
+			 */
+
+			ale_pos decimation_index = decimation_exponent;
+			while (decimation_index > 0 && reduce_lod())
+				decimation_index -= 1;
+
+			if (decimation_index > 0) {
+				fprintf("Error: --gdi argument is too large.\n");
+				exit(1);
 			}
 		}
-
-		for (int head = 0; head < 2; head++) {
-			triangle_head[head] = new triangle;
-			assert(triangle_head[head]);
-			if (!triangle_head[head])
-				ui::get()->memory_error("triangular approximation of 3D scene");
-		}
-
-		triangle_head[0]->vertices[0] = new point(min[0], min[1], 0);
-		triangle_head[0]->vertices[1] = new point(max[0], min[1], 0);
-		triangle_head[0]->vertices[2] = new point(min[0], max[1], 0);
-
-		triangle_head[0]->neighbors[0] = triangle_head[1];
-
-		triangle_head[1]->vertices[0] = new point(max[0], max[1], 0);
-		triangle_head[1]->vertices[1] = triangle_head[0]->vertices[2];
-		triangle_head[1]->vertices[2] = triangle_head[0]->vertices[1];
-
-		triangle_head[1]->neighbors[0] = triangle_head[0];
-
-		triangle::fix_vertex(triangle_head[0]->vertices[0]);
-		triangle::fix_vertex(triangle_head[0]->vertices[1]);
-		triangle::fix_vertex(triangle_head[0]->vertices[2]);
-
-		triangle::fix_vertex(triangle_head[1]->vertices[0]);
-		triangle::fix_vertex(triangle_head[1]->vertices[1]);
-		triangle::fix_vertex(triangle_head[1]->vertices[2]);
-#endif
-	}
-
-	/*
-	 * Reduce the level of detail.  Return 0 when no further reduction
-	 * is possible.
-	 */
-	static int reduce_lod() {
-
-		int result = 1;
-
-		/*
-		 * Create a new structure for the reduced LOD.
-		 */
-		struct lod *nl = new lod;
-
-		/*
-		 * Find out how many input frames there are.
-		 */
-
-		int N = d2::image_rw::count();
-
-		/*
-		 * Initialize reference images and partial z-buffer arrays.
-		 */
-
-		nl->reference = (d2::image **) malloc(N * sizeof(d2::image *));
-
-		assert(nl->reference);
-
-		for (int n = 0; n < N; n++) {
-			nl->reference[n] = cl->reference[n]->scale_by_half("3D, reduced LOD");
-
-			assert(nl->reference[n]);
-
-			if (nl->reference[n]->height() < 4
-			 || nl->reference[n]->width () < 4)
-				result = 0;
-
-			if (nl->reference[n]->height() < 2
-			 || nl->reference[n]->width () < 2)
-				assert(0);
-		}
-
-		nl->sf = cl->sf * 0.5;
-
-		nl->next = cl;
-
-		cl = nl;
-
-		return result;
 	}
 
 	/*
 	 * Increase the level of detail.  
 	 */
 	static void increase_lod() {
+
+		assert(0);
+
+		assert(cl);
+
 		/*
 		 * Pointer to the next higher LOD.
 		 */
@@ -1552,12 +1507,7 @@ public:
 			 * Get transformation data.
 			 */
 			pt _pt = align::projective(f);
-			_pt.scale(1 / _pt.scale_2d());
-
-			assert((int) floor(d2::align::of(f).unscaled_height())
-			     == (int) floor(_pt.scaled_height()));
-			assert((int) floor(d2::align::of(f).unscaled_width())
-			     == (int) floor(_pt.scaled_width()));
+			_pt.scale(1 / _pt.scale_2d() / pow(2, ceil(decimation_exponent)));
 
 			/*
 			 * Get color data for the frames.
@@ -1978,9 +1928,9 @@ public:
 		 * determine line intersection.
 		 */
 
-		point bp0 = _pt1.pw_unscaled(point(i, j, 0));
-		point bp1 = _pt1.pw_unscaled(point(i, j, 10));
-		point bp2 = _pt2.pw_unscaled(point(ii, jj, 0));
+		point bp0 = _pt1.pw_scaled(point(i, j, 0));
+		point bp1 = _pt1.pw_scaled(point(i, j, 10));
+		point bp2 = _pt2.pw_scaled(point(ii, jj, 0));
 
 		point b0  = (bp1 - bp0).normalize();
 		point b1n = bp2 - bp0;
@@ -1991,7 +1941,7 @@ public:
 		 * Select a fourth point to define a second line.
 		 */
 
-		point p3  = _pt2.pw_unscaled(point(ii, jj, 10));
+		point p3  = _pt2.pw_scaled(point(ii, jj, 10));
 
 		/*
 		 * Representation in the new basis.
@@ -2057,9 +2007,9 @@ public:
 		 * Score the point.
 		 */
 
-		point ip = _pt1.wp_unscaled(iw);
+		point ip = _pt1.wp_scaled(iw);
 
-		point is = _pt2.wp_unscaled(iw);
+		point is = _pt2.wp_scaled(iw);
 
 		_a->iw = iw;
 		_a->ip = ip;
@@ -2110,8 +2060,9 @@ public:
 			assert(cl->reference[f]);
 
 			pt _ptf = align::projective(f);
+			_ptf.scale(1 / _ptf.scale_2d() / pow(2, ceil(decimation_exponent)));
 
-			point p = _ptf.wp_unscaled(iw);
+			point p = _ptf.wp_scaled(iw);
 
 			if (!cl->reference[f]->in_bounds(p.xy())
 			 || !if2->in_bounds(ip.xy()))
@@ -2147,8 +2098,8 @@ public:
 		 * Map two depths to the secondary frame.
 		 */
 
-		point p1 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j,  1000)));
-		point p2 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j, -1000)));
+		point p1 = _pt2.wp_scaled(_pt1.pw_scaled(point(i, j,  1000)));
+		point p2 = _pt2.wp_scaled(_pt1.pw_scaled(point(i, j, -1000)));
 
 		/*
 		 * For cases where the mapped points define a
@@ -2323,7 +2274,7 @@ public:
 			for (int kbit = 0; kbit < 2; kbit++) {
 				point pp = point(p[ibit][0], p[jbit][1], p[kbit][2]);
 
-				point ppp[2] = {_pt1.wp_unscaled(pp), _pt2.wp_unscaled(pp)};
+				point ppp[2] = {_pt1.wp_scaled(pp), _pt2.wp_scaled(pp)};
 
 				for (int f = 0; f < 2; f++)
 				for (int d = 0; d < 3; d++) {
@@ -2488,51 +2439,96 @@ public:
 		 * of frames.
 		 */
 
-		for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++)
-		for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
-			if (f1 == f2)
-				continue;
+		for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++) {
 
 			if (!d_out[f1] && !v_out[f1] && !d3_depth_pt->size()
 			 && !d3_output_pt->size() && strcmp(pairwise_comparisons, "all"))
 				continue;
 
-			const d2::image *if1 = d2::image_rw::open(f1);
-			const d2::image *if2 = d2::image_rw::open(f2);
+			d2::image *if1 = d2::image_rw::copy(f1);
 
-			pt _pt1 = align::projective(f1);
-			pt _pt2 = align::projective(f2);
+			assert(if1);
 
-			/*
-			 * Iterate over all points in the primary frame.
-			 */
-
-			for (unsigned int i = 0; i < if1->height(); i++)
-			for (unsigned int j = 0; j < if1->width();  j++) {
-
-				total_pixels++;
-
-				/*
-				 * Generate a map from scores to 3D points for
-				 * various depths in f1.
-				 */
-
-				score_map _sm = p2f_score_map(f1, f2, _pt1, _pt2, if1, if2, i, j);
-
-				/*
-				 * Analyze space in a manner dependent on the score map.
-				 */
-
-				analyze_space_from_map(f1, f2, i, j, _pt1, _pt2, _sm);
-
+			ale_pos decimation_index = decimation_exponent;
+			while (decimation_index > 0
+			    && if1->height() > 2
+			    && if1->width() > 2) {
+				d2::image iif1 = if1->scale_by_half("3D, reduced LOD");
+				assert(iif1);
+				delete if1;
+				if1 = iif1;
+				decimation_index -= 1;
 			}
 
-			/*
-			 * This ordering should ensure that image f1 is cached.
-			 */
+			assert(if1);
 
-			d2::image_rw::close(f2);
-			d2::image_rw::close(f1);
+			if (decimation_index > 0) {
+				fprintf("Error: --gdi argument is too large.\n");
+				exit(1);
+			}
+
+
+			for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+
+				if (f1 == f2)
+					continue;
+
+				d2::image *if2 = d2::image_rw::copy(f2);
+
+				assert(if2);
+
+				ale_pos decimation_index = decimation_exponent;
+				while (decimation_index > 0
+				    && if2->height() > 2
+				    && if2->width() > 2) {
+					d2::image iif2 = if2->scale_by_half("3D, reduced LOD");
+					assert(iif2);
+					delete if2;
+					if2 = iif2;
+					decimation_index -= 1;
+				}
+
+				assert(if2);
+
+				if (decimation_index > 0) {
+					fprintf("Error: --gdi argument is too large.\n");
+					exit(1);
+				}
+
+				pt _pt1 = align::projective(f1);
+				pt _pt2 = align::projective(f2);
+
+				_pt1.scale(1 / _pt1.scale_2d() / pow(2, ceil(decimation_exponent)));
+				_pt2.scale(1 / _pt2.scale_2d() / pow(2, ceil(decimation_exponent)));
+
+				/*
+				 * Iterate over all points in the primary frame.
+				 */
+
+				for (unsigned int i = 0; i < if1->height(); i++)
+				for (unsigned int j = 0; j < if1->width();  j++) {
+
+					total_pixels++;
+
+					/*
+					 * Generate a map from scores to 3D points for
+					 * various depths in f1.
+					 */
+
+					score_map _sm = p2f_score_map(f1, f2, _pt1, _pt2, if1, if2, i, j);
+
+					/*
+					 * Analyze space in a manner dependent on the score map.
+					 */
+
+					analyze_space_from_map(f1, f2, i, j, _pt1, _pt2, _sm);
+
+				}
+
+				delete if2;
+			}
+
+			delete if1;
 		}
 
 		/*

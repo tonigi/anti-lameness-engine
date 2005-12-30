@@ -735,6 +735,14 @@ int main(int argc, const char *argv[]){
 			sscanf(argv[i+1], "%lf", &rc_parameter);
 			i += 1;
 			d3::scene::rc(rc_parameter);
+		} else if (!strcmp(argv[i], "--dgi")) {
+			if (i + 1 >= argc)
+				not_enough("--dgi");
+
+			double dgi_parameter;
+			sscanf(argv[i+1], "%lf", &dgi_parameter);
+			i += 1;
+			d3::scene::dgi(dgi_parameter);
 		} else if (!strcmp(argv[i], "--fc")) {
 			if (i + 1 >= argc)
 				not_enough("--fc");
