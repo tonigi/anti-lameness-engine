@@ -27,7 +27,6 @@
 
 scene::lod *scene::cl;
 ale_pos scene::perturb;
-scene::lod *scene::bl;
 ale_pos scene::edge_cost_multiplier = 0;
 ale_pos scene::angle_cost_multiplier = 0;
 ale_pos scene::front_clip = 0;

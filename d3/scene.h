@@ -1225,7 +1225,7 @@ public:
 				decimation_index -= 1;
 
 			if (decimation_index > 0) {
-				fprintf("Error: --gdi argument is too large.\n");
+				fprintf(stderr, "Error: --gdi argument is too large.\n");
 				exit(1);
 			}
 		}
@@ -2445,7 +2445,7 @@ public:
 			 && !d3_output_pt->size() && strcmp(pairwise_comparisons, "all"))
 				continue;
 
-			d2::image *if1 = d2::image_rw::copy(f1);
+			d2::image *if1 = d2::image_rw::copy(f1, "3D reference image");
 
 			assert(if1);
 
@@ -2453,7 +2453,7 @@ public:
 			while (decimation_index > 0
 			    && if1->height() > 2
 			    && if1->width() > 2) {
-				d2::image iif1 = if1->scale_by_half("3D, reduced LOD");
+				d2::image *iif1 = if1->scale_by_half("3D, reduced LOD");
 				assert(iif1);
 				delete if1;
 				if1 = iif1;
@@ -2463,7 +2463,7 @@ public:
 			assert(if1);
 
 			if (decimation_index > 0) {
-				fprintf("Error: --gdi argument is too large.\n");
+				fprintf(stderr, "Error: --gdi argument is too large.\n");
 				exit(1);
 			}
 
@@ -2473,7 +2473,7 @@ public:
 				if (f1 == f2)
 					continue;
 
-				d2::image *if2 = d2::image_rw::copy(f2);
+				d2::image *if2 = d2::image_rw::copy(f2, "3D reference image");
 
 				assert(if2);
 
@@ -2481,7 +2481,7 @@ public:
 				while (decimation_index > 0
 				    && if2->height() > 2
 				    && if2->width() > 2) {
-					d2::image iif2 = if2->scale_by_half("3D, reduced LOD");
+					d2::image *iif2 = if2->scale_by_half("3D, reduced LOD");
 					assert(iif2);
 					delete if2;
 					if2 = iif2;
@@ -2491,7 +2491,7 @@ public:
 				assert(if2);
 
 				if (decimation_index > 0) {
-					fprintf("Error: --gdi argument is too large.\n");
+					fprintf(stderr, "Error: --gdi argument is too large.\n");
 					exit(1);
 				}
 
