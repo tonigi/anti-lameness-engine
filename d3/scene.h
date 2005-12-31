@@ -1736,7 +1736,6 @@ public:
 					 * (xoff, yoff, 0) triple
 					 */
 
-					ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
 					weights->pix(i, j)[0] += encounter[0];
 					if (weights->pix(i, j)[1] < encounter[0]) {
 						weights->pix(i, j)[1] = encounter[0];
