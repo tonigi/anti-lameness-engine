@@ -1519,8 +1519,7 @@ public:
 
 			subspace_info_update(space_iterate(_pt), f, weights, im, _pt);
 
-			d2::image_rw::close(f);
-
+			delete im;
 			delete weights;
 		}
 
