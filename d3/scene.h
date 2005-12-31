@@ -1715,6 +1715,36 @@ public:
 					weights->pix(i, j) += encounter;
 					im->pix(i, j)      += encounter * contribution_value;
 
+				} else if (type == 6) {
+					
+					/*
+					 * (Depth, xres, yres) triple
+					 */
+
+					ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
+					weights->pix(i, j)[0] += encounter[0];
+					if (weights->pix(i, j)[1] < encounter[0]) {
+						weights->pix(i, j)[1] = encounter[0];
+						im->pix(i, j)[0] = depth_value;
+						im->pix(i, j)[1] = max[0] - min[0];
+						im->pix(i, j)[2] = max[1] - min[1];
+					}
+
+				} else if (type == 7) {
+					
+					/*
+					 * (xoff, yoff, 0) triple
+					 */
+
+					ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
+					weights->pix(i, j)[0] += encounter[0];
+					if (weights->pix(i, j)[1] < encounter[0]) {
+						weights->pix(i, j)[1] = encounter[0];
+						im->pix(i, j)[0] = i - min[0];
+						im->pix(i, j)[1] = j - min[1];
+						im->pix(i, j)[2] = 0;
+					}
+
 				} else 
 					assert(0);
 			}
