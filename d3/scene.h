@@ -199,31 +199,6 @@ class scene {
 	}
 
 	/*
-	 * Pyramid bounds check.
-	 */
-	static int pyramid_bounds_check(point w) {
-		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
-			pt _pt = align::projective(n);
-			_pt.scale(1 / _pt.scale_2d());
-
-			point p = _pt.wp_scaled(w);
-
-			/*
-			 * Check the four closest points.
-			 */
-
-			int p_int[2] = { (int) floor(p[0]), (int) floor(p[1]) };
-
-			if (p_int[0] >= 0
-			 && p_int[1] >= 0
-			 && p_int[0] <= _pt.scaled_height() - 2
-			 && p_int[1] <= _pt.scaled_width() - 2)
-				return 1;
-		}
-		return 0;
-	}
-
-	/*
 	 * Structure to hold input frame information for a given level of
 	 * detail.
 	 */
