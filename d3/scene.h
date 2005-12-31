@@ -1725,7 +1725,7 @@ public:
 					weights->pix(i, j)[0] += encounter[0];
 					if (weights->pix(i, j)[1] < encounter[0]) {
 						weights->pix(i, j)[1] = encounter[0];
-						im->pix(i, j)[0] = depth_value;
+						im->pix(i, j)[0] = weights->pix(i, j)[1] * depth_value;
 						im->pix(i, j)[1] = max[0] - min[0];
 						im->pix(i, j)[2] = max[1] - min[1];
 					}
@@ -1763,7 +1763,13 @@ public:
 			     == (int) floor(_pt.scaled_width()));
 		}
 
-		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+		d2::image *im1 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+				               (int) floor(_pt.scaled_width()), 3);
+
+		d2::image *im2 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+				               (int) floor(_pt.scaled_width()), 3);
+
+		d2::image *im3 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
 				               (int) floor(_pt.scaled_width()), 3);
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
@@ -1781,23 +1787,78 @@ public:
 
 		space_iterate si(_pt);
 
-		view_recurse(1, im, weights, si, _pt);
+		view_recurse(6, im1, weights, si, _pt);
 
-		for (unsigned int i = 0; i < im->height(); i++)
-		for (unsigned int j = 0; j < im->width();  j++) {
+		delete weights;
+		weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+						(int) floor(_pt.scaled_width()), 3);
 
-			point w = _pt.pw_scaled(point(i, j, im->pix(i, j)[0] / weights->pix(i, j)[0]));
+		view_recurse(7, im2, weights, si, _pt);
 
-			if (weights->pix(i, j).min_norm() < encounter_threshold || excluded(w)) {
-				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
-				weights->pix(i, j) = d2::pixel::zero();
-			} else if (normalize_weights)
-				im->pix(i, j) /= weights->pix(i, j);
+		/*
+		 * Normalize depths by weights
+		 */
+
+		if (normalize_weights)
+		for (unsigned int i = 0; i < im1->height(); i++)
+		for (unsigned int j = 0; j < im1->width();  j++)
+			im1->pix(i, j)[0] /= weights->pix(i, j)[1];
+
+	
+		for (unsigned int i = 0; i < im1->height(); i++)
+		for (unsigned int j = 0; j < im1->width();  j++) {
+
+			/*
+			 * Handle interpolation.
+			 */
+
+			d2::point x;
+			d2::point blx;
+			d2::point res(im1->pix(i, j)[1], im1->pix(i, j)[2]);
+
+			for (int d = 0; d < 2; d++) {
+
+				if (im2->pix(i, j)[d] < res[d] / 2)
+					x[d] = (ale_pos) (d?j:i) - res[d] / 2 - im2->pix(i, j)[d];
+				else
+					x[d] = (ale_pos) (d?j:i) + res[d] / 2 - im2->pix(i, j)[d];
+
+				blx[d] = 1 - ((d?j:i) - x[d]) / res[d];
+			}
+
+			ale_real depth_val = 0;
+			ale_real depth_weight = 0;
+
+			for (int ii = 0; ii < 2; ii++)
+			for (int jj = 0; jj < 2; jj++) {
+				d2::point p = x + d2::point(ii, jj) * res;
+				if (im1->in_bounds(p)) {
+					ale_real w = ((ii ? (1 - blx[0]) : blx[0]) * (jj ? (1 - blx[1]) : blx[1]));
+					depth_weight += w;
+					depth_val += w * im1->get_bl(p)[0];
+				}
+			}
+
+			ale_real depth = depth_val / depth_weight;
+
+			/*
+			 * Handle exclusions and encounter thresholds
+			 */
+
+			point w = _pt.pw_scaled(point(i, j, depth));
+
+			if (weights->pix(i, j)[0] < encounter_threshold || excluded(w)) {
+				im3->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
+			} else {
+				im3->pix(i, j) = d2::pixel(1, 1, 1) * depth;
+			}
 		}
 
 		delete weights;
+		delete im1;
+		delete im2;
 
-		return im;
+		return im3;
 	}
 
 	static const d2::image *depth(unsigned int n) {
