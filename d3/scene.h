@@ -1487,7 +1487,21 @@ public:
 			/*
 			 * Get color data for the frames.
 			 */
-			const d2::image *im = d2::image_rw::open(f);
+
+			d2::image *im = d2::image_rw::copy(f, "3D reference image");
+
+			assert(im);
+
+			ale_pos decimation_index = decimation_exponent;
+			while (decimation_index > 0
+			    && im->height() > 2
+			    && im->width() > 2) {
+				d2::image *iim = im->scale_by_half("3D, reduced LOD");
+				assert(iim);
+				delete im;
+				im = iim;
+				decimation_index -= 1;
+			}
 
 			assert(im);
 
