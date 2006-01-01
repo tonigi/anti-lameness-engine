@@ -2321,7 +2321,7 @@ public:
 	 * for two cameras, resulting in four resolutions in total.
 	 */
 
-	static void refine_space(point iw, pt _pt1, pt _pt2) {
+	static void refine_space(point iw, pt _pt1, pt _pt2, std::vector<pt> pt_outputs) {
 
 		space_traverse st = space_traverse::root();
 
@@ -2333,6 +2333,12 @@ public:
 		int camera_highres[2] = {0, 0};
 		int camera_lowres[2] = {0, 0};
 
+		std::vector<int> output_highres;
+		std::vector<int> output_lowres;
+
+		output_highres.resize(pt_outputs.size(), 0);
+		output_lowres.resize(pt_outputs.size(), 0);
+
 		/*
 		 * Loop until all resolutions of interest have been generated.
 		 */
@@ -2341,6 +2347,12 @@ public:
 
 			point frame_min[2] = { point::posinf(), point::posinf() },
 			      frame_max[2] = { point::neginf(), point::neginf() };
+
+			std::vector<point> output_max;
+			std::vector<point> output_min;
+
+			output_max.resize(pt_outputs.size(), point::posinf());
+			output_min.resize(pt_outputs.size(), point::neginf());
 
 			point p[2] = { st.get_min(), st.get_max() };
 
@@ -2360,6 +2372,10 @@ public:
 
 				point ppp[2] = {_pt1.wp_scaled(pp), _pt2.wp_scaled(pp)};
 
+				/*
+				 * Inputs
+				 */
+
 				for (int f = 0; f < 2; f++)
 				for (int d = 0; d < 3; d++) {
 					if (ppp[f][d] < frame_min[f][d] || isnan(ppp[f][d]))
@@ -2367,10 +2383,30 @@ public:
 					if (ppp[f][d] > frame_max[f][d] || isnan(ppp[f][d]))
 						frame_max[f][d] = ppp[f][d];
 				}
+
+				/*
+				 * Outputs
+				 */
+
+				for (unsigned int n = 0; n < pt_outputs.size(); n++) {
+
+					point ppp_pt = pt_outputs[n].wp_scaled(pp);
+
+					for (int d = 0; d < 3; d++) {
+						if (ppp_pt[d] < output_min[n][d] || isnan(ppp_pt[d]))
+							output_min[n][d] = ppp_pt[d];
+						if (ppp_pt[d] > output_max[n][d] || isnan(ppp_pt[d]))
+							output_max[n][d] = ppp_pt[d];
+					}
+				}
 			}
 
 			/*
 			 * Generate any new desired spatial registers.
+			 */
+
+			/*
+			 * Inputs
 			 */
 
 			for (int f = 0; f < 2; f++) {
@@ -2399,13 +2435,44 @@ public:
 			}
 
 			/*
+			 * Outputs
+			 */
+
+			for (unsigned int n = 0; n < pt_outputs.size(); n++) {
+
+				/*
+				 * Low resolution
+				 */
+
+				if (output_max[n][0] - output_min[n][0] < 2
+				 && output_max[n][1] - output_min[n][1] < 2
+				 && output_lowres[n] == 0) {
+					spatial_info_map[st.get_space()];
+					output_lowres[n] = 1;
+				}
+
+				/*
+				 * High resolution.
+				 */
+
+				if (output_max[n][0] - output_min[n][0] < 1
+				 && output_max[n][1] - output_min[n][1] < 1
+				 && camera_highres[n] == 0) {
+					spatial_info_map[st.get_space()];
+					output_highres[n] = 1;
+				}
+			}
+
+			/*
 			 * Check for completion
 			 */
 
 			if (camera_highres[0]
 			 && camera_highres[1]
 			 && camera_lowres[0]
-			 && camera_lowres[1])
+			 && camera_lowres[1]
+			 && !count(output_lowres.begin(), output_lowres.end(), 0)
+			 && !count(output_highres.begin(), output_highres.end(), 0));
 				return;
 
 			/*
@@ -2437,7 +2504,7 @@ public:
 	 */
 
 	static void analyze_space_from_map(unsigned int f1, unsigned int f2, unsigned int i, 
-			unsigned int j, pt _pt1, pt _pt2, score_map _sm) {
+			unsigned int j, pt _pt1, pt _pt2, score_map _sm, std::vector<pt> pt_outputs) {
 
 		int accumulated_ambiguity = 0;
 		int max_acc_amb = pairwise_ambiguity;
@@ -2457,7 +2524,7 @@ public:
 			 * Attempt to refine space around the intersection point.
 			 */
 
-			refine_space(iw, _pt1, _pt2);
+			refine_space(iw, _pt1, _pt2, pt_outputs);
 		}
 	}
 
@@ -2501,6 +2568,32 @@ public:
 			refine_space_for_output(i->second);
 	}
 
+	/*
+	 * Make pt list.
+	 */
+	static std::vector<pt> make_pt_list(const char *d_out[], const char *v_out[],
+			std::map<const char *, pt> *d3_depth_pt,
+			std::map<const char *, pt> *d3_output_pt) {
+
+		std::vector<pt> result;
+
+		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+			if (d_out[n] || v_out[n]) {
+				result.push_back(align::projective(n));
+			}
+		}
+
+		for (std::map<const char *, pt>::iterator i = d3_depth_pt->begin(); i != d3_depth_pt->end(); i++) {
+			result.push_back(i->second);
+		}
+
+		for (std::map<const char *, pt>::iterator i = d3_output_pt->begin(); i != d3_output_pt->end(); i++) {
+			result.push_back(i->second);
+		}
+
+		return result;
+	}
+
 
 	/*
 	 * Initialize space and identify regions of interest for the adaptive
@@ -2511,6 +2604,8 @@ public:
 			std::map<const char *, pt> *d3_output_pt) {
 
 		fprintf(stderr, "Subdividing 3D space");
+
+		std::vector<pt> pt_outputs = make_pt_list(d_out, v_out, d3_depth_pt, d3_output_pt);
 
 		/*
 		 * Initialize root space.
@@ -2605,13 +2700,10 @@ public:
 					 * Analyze space in a manner dependent on the score map.
 					 */
 
-					analyze_space_from_map(f1, f2, i, j, _pt1, _pt2, _sm);
-
+					analyze_space_from_map(f1, f2, i, j, _pt1, _pt2, _sm, pt_outputs);
 				}
-
 				delete if2;
 			}
-
 			delete if1;
 		}
 
