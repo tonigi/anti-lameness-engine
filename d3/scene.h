@@ -1833,9 +1833,15 @@ public:
 			for (int jj = 0; jj < 2; jj++) {
 				d2::point p = x + d2::point(ii, jj) * res;
 				if (im1->in_bounds(p)) {
+
+					ale_real d = im1->get_bl(p)[0];
+
+					if (isnan(d))
+						continue;
+
 					ale_real w = ((ii ? (1 - blx[0]) : blx[0]) * (jj ? (1 - blx[1]) : blx[1]));
 					depth_weight += w;
-					depth_val += w * im1->get_bl(p)[0];
+					depth_val += w * d;
 				}
 			}
 
