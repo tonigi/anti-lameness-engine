@@ -341,6 +341,7 @@ int main(int argc, const char *argv[]){
 	d2::render **ochain = NULL;
 	const char **ochain_names = NULL;
 	const char **ochain_types = NULL;
+	const char *d3chain_type = "zero";
 	int oc_count = 0;
 	const char **visp = NULL;
 	int vise_count = 0;
@@ -1040,6 +1041,11 @@ int main(int argc, const char *argv[]){
 				bad_arg("--wt");
 
 			d2::render::set_wt(wt);
+			i++;
+		} else if (!strcmp(argv[i], "--3d-chain")) {
+			if (i + 1 >= argc)
+				not_enough("--3d-chain");
+			d3chain_type = argv[i+1];
 			i++;
 		} else if (!strcmp(argv[i], "--dchain")) {
 			if (i + 1 >= argc)

@@ -355,6 +355,7 @@ public:
 			"--ochain <g> <o>  Use chain <g> to render output file <o>.\n"
 			"--achain <g>      Use chain <g> to render the alignment reference image.\n"
 			"--afilter <s>     Use SSF <s> to interpolate points in alignment.\n"
+			"--3d-chain <g>    Use chain <g> by default to render 3d output.\n"
 			"                  Example chains:\n"
 			"                     triangle:2                   ALE 0.6.0 merging (roughly)\n"
 			"                     fine:box:1                   Drizzling (roughly)\n"
