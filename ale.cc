@@ -735,14 +735,14 @@ int main(int argc, const char *argv[]){
 			sscanf(argv[i+1], "%lf", &rc_parameter);
 			i += 1;
 			d3::scene::rc(rc_parameter);
-		} else if (!strcmp(argv[i], "--dgi")) {
+		} else if (!strcmp(argv[i], "--dsg")) {
 			if (i + 1 >= argc)
-				not_enough("--dgi");
+				not_enough("--dsg");
 
-			double dgi_parameter;
-			sscanf(argv[i+1], "%lf", &dgi_parameter);
+			double dsg_parameter;
+			sscanf(argv[i+1], "%lf", &dsg_parameter);
 			i += 1;
-			d3::scene::dgi(dgi_parameter);
+			d3::scene::dsg(dsg_parameter);
 		} else if (!strcmp(argv[i], "--fc")) {
 			if (i + 1 >= argc)
 				not_enough("--fc");

@@ -1052,8 +1052,8 @@ public:
 		front_clip = fc;
 	}
 
-	static void dgi(ale_pos _dgi) {
-		decimation_exponent = _dgi;
+	static void dsg(ale_pos _dsg) {
+		decimation_exponent = _dsg;
 	}
 
 	static void rc(ale_pos rc) {
