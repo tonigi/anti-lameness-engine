@@ -620,7 +620,10 @@ public:
 			BETWEEN_SECTIONS
 			"Model rules:\n"
 			HEADER_SPACE
-			"--dsg <x>         Decimate scene geometry scale by 2^x             [default is 0]\n"
+			"--dgi <x>         Decimate geometry scene inputs by up to 2^x      [default is 0]\n"
+			"--dgo <x>         Decimate scene geometry for output by 2^x        [default is 0]\n"
+			"--oc              Clip scene to output regions.\n"
+			"--no-oc           Do not clip scene to output regions.                  [default]\n"
 			"--fc <x>          Set front-clip to <x> (0 < x < 1)                [default is 0]\n"
 			"--rc <x>          Set rear-clip to <x> (1 < x < inf)             [default is inf]\n"
 			"--fx <x>          Set falloff exponent to <x>                      [default is 0]\n"

@@ -65,7 +65,13 @@ class scene {
 	/*
 	 * Decimation for geometry
 	 */
-	static ale_pos decimation_exponent;
+	static ale_pos input_decimation_exponent;
+	static ale_pos output_decimation_exponent;
+
+	/*
+	 * Output clipping
+	 */
+	static int output_clip;
 
 	/*
 	 * Perturb bounds
@@ -1052,8 +1058,20 @@ public:
 		front_clip = fc;
 	}
 
-	static void dsg(ale_pos _dsg) {
-		decimation_exponent = _dsg;
+	static void dgi(ale_pos _dgi) {
+		input_decimation_exponent = _dgi;
+	}
+
+	static void dgo(ale_pos _dgo) {
+		output_decimation_exponent = _dgo;
+	}
+
+	static void oc() {
+		output_clip = 1;
+	}
+
+	static void no_oc() {
+		output_clip = 0;
 	}
 
 	static void rc(ale_pos rc) {
@@ -1195,7 +1213,7 @@ public:
 			 * Scale image structures according to the decimation exponent.
 			 */
 
-			ale_pos decimation_index = decimation_exponent;
+			ale_pos decimation_index = input_decimation_exponent;
 			while (decimation_index > 0 && reduce_lod())
 				decimation_index -= 1;
 
@@ -1482,7 +1500,7 @@ public:
 			 * Get transformation data.
 			 */
 			pt _pt = align::projective(f);
-			_pt.scale(1 / _pt.scale_2d() / pow(2, ceil(decimation_exponent)));
+			_pt.scale(1 / _pt.scale_2d() / pow(2, ceil(input_decimation_exponent)));
 
 			/*
 			 * Get color data for the frames.
@@ -1492,7 +1510,7 @@ public:
 
 			assert(im);
 
-			ale_pos decimation_index = decimation_exponent;
+			ale_pos decimation_index = input_decimation_exponent;
 			while (decimation_index > 0
 			    && im->height() > 2
 			    && im->width() > 2) {
@@ -2144,7 +2162,7 @@ public:
 			assert(cl->reference[f]);
 
 			pt _ptf = align::projective(f);
-			_ptf.scale(1 / _ptf.scale_2d() / pow(2, ceil(decimation_exponent)));
+			_ptf.scale(1 / _ptf.scale_2d() / pow(2, ceil(input_decimation_exponent)));
 
 			point p = _ptf.wp_scaled(iw);
 
@@ -2628,7 +2646,7 @@ public:
 
 			assert(if1);
 
-			ale_pos decimation_index = decimation_exponent;
+			ale_pos decimation_index = input_decimation_exponent;
 			while (decimation_index > 0
 			    && if1->height() > 2
 			    && if1->width() > 2) {
@@ -2656,7 +2674,7 @@ public:
 
 				assert(if2);
 
-				ale_pos decimation_index = decimation_exponent;
+				ale_pos decimation_index = input_decimation_exponent;
 				while (decimation_index > 0
 				    && if2->height() > 2
 				    && if2->width() > 2) {
@@ -2677,8 +2695,8 @@ public:
 				pt _pt1 = align::projective(f1);
 				pt _pt2 = align::projective(f2);
 
-				_pt1.scale(1 / _pt1.scale_2d() / pow(2, ceil(decimation_exponent)));
-				_pt2.scale(1 / _pt2.scale_2d() / pow(2, ceil(decimation_exponent)));
+				_pt1.scale(1 / _pt1.scale_2d() / pow(2, ceil(input_decimation_exponent)));
+				_pt2.scale(1 / _pt2.scale_2d() / pow(2, ceil(input_decimation_exponent)));
 
 				/*
 				 * Iterate over all points in the primary frame.

@@ -479,6 +479,10 @@ int main(int argc, const char *argv[]){
 			extend = 1;
 		} else if (!strcmp(argv[i], "--no-mc")) {
 			d2::align::no_mc();
+		} else if (!strcmp(argv[i], "--oc")) {
+			d3::scene::oc();
+		} else if (!strcmp(argv[i], "--no-oc")) {
+			d3::scene::no_oc();
 		} else if (!strcmp(argv[i], "--gs")) {
 			if (i + 1 >= argc)
 				not_enough("--gs");
@@ -735,14 +739,22 @@ int main(int argc, const char *argv[]){
 			sscanf(argv[i+1], "%lf", &rc_parameter);
 			i += 1;
 			d3::scene::rc(rc_parameter);
-		} else if (!strcmp(argv[i], "--dsg")) {
+		} else if (!strcmp(argv[i], "--dgo")) {
 			if (i + 1 >= argc)
-				not_enough("--dsg");
+				not_enough("--dgo");
 
-			double dsg_parameter;
-			sscanf(argv[i+1], "%lf", &dsg_parameter);
+			double dgo_parameter;
+			sscanf(argv[i+1], "%lf", &dgo_parameter);
 			i += 1;
-			d3::scene::dsg(dsg_parameter);
+			d3::scene::dgo(dgo_parameter);
+		} else if (!strcmp(argv[i], "--dgi")) {
+			if (i + 1 >= argc)
+				not_enough("--dgi");
+
+			double dgi_parameter;
+			sscanf(argv[i+1], "%lf", &dgi_parameter);
+			i += 1;
+			d3::scene::dgi(dgi_parameter);
 		} else if (!strcmp(argv[i], "--fc")) {
 			if (i + 1 >= argc)
 				not_enough("--fc");
