@@ -621,8 +621,9 @@ public:
 			BETWEEN_SECTIONS
 			"Model rules:\n"
 			HEADER_SPACE
-			"--dgi <x>         Decimate geometry scene inputs by up to 2^x      [default is 0]\n"
-			"--dgo <x>         Decimate scene geometry for output by 2^x        [default is 0]\n"
+			"--di <x>          Decimate input resolution by at most 2^x         [default is 0]\n"
+			"--do <x>          Decimate output resolution by 2^x if possible    [default is 0]\n"
+			"--idiv <x>        Set input resolution divisor minimum x           [default is 0]\n"
 			"--oc              Clip scene to output regions.\n"
 			"--no-oc           Do not clip scene to output regions.                  [default]\n"
 			"--fc <x>          Set front-clip to <x> (0 < x < 1)                [default is 0]\n"

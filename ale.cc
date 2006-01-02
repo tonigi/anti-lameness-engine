@@ -732,6 +732,14 @@ int main(int argc, const char *argv[]){
 
 			i += 1;
 #endif
+		} else if (!strcmp(argv[i], "--idiv")) {
+			if (i + 1 >= argc)
+				not_enough("--idiv");
+
+			double idiv_parameter;
+			sscanf(argv[i+1], "%lf", &idiv_parameter);
+			i += 1;
+			d3::scene::idiv(idiv_parameter);
 		} else if (!strcmp(argv[i], "--rc")) {
 			if (i + 1 >= argc)
 				not_enough("--rc");
@@ -740,17 +748,17 @@ int main(int argc, const char *argv[]){
 			sscanf(argv[i+1], "%lf", &rc_parameter);
 			i += 1;
 			d3::scene::rc(rc_parameter);
-		} else if (!strcmp(argv[i], "--dgo")) {
+		} else if (!strcmp(argv[i], "--do")) {
 			if (i + 1 >= argc)
-				not_enough("--dgo");
+				not_enough("--do");
 
 			double dgo_parameter;
 			sscanf(argv[i+1], "%lf", &dgo_parameter);
 			i += 1;
 			d3::scene::dgo(dgo_parameter);
-		} else if (!strcmp(argv[i], "--dgi")) {
+		} else if (!strcmp(argv[i], "--di")) {
 			if (i + 1 >= argc)
-				not_enough("--dgi");
+				not_enough("--di");
 
 			double dgi_parameter;
 			sscanf(argv[i+1], "%lf", &dgi_parameter);
