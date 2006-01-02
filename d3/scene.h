@@ -69,6 +69,11 @@ class scene {
 	static ale_pos output_decimation_exponent;
 
 	/*
+	 * Input resolution divisor
+	 */
+	static ale_pos input_resolution_divisor;
+
+	/*
 	 * Output clipping
 	 */
 	static int output_clip;
@@ -1064,6 +1069,10 @@ public:
 
 	static void dgo(ale_pos _dgo) {
 		output_decimation_exponent = _dgo;
+	}
+
+	static void idiv(ale_pos _idiv) {
+		input_resolution_divisor = _idiv;
 	}
 
 	static void oc() {
