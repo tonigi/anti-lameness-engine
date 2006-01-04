@@ -63,10 +63,11 @@ class scene {
 	static ale_pos rear_clip;
 
 	/*
-	 * Decimation for geometry
+	 * Decimation exponents for geometry
 	 */
-	static ale_pos input_decimation_exponent;
-	static ale_pos output_decimation_exponent;
+	static ale_pos primary_decimation_upper;
+	static ale_pos input_decimation_lower;
+	static ale_pos output_decimation_preferred;
 
 	/*
 	 * Input resolution divisor
@@ -208,6 +209,93 @@ class scene {
 
 		return k;
 	}
+
+	/*
+	 * Structure to hold input frame information at levels of 
+	 * detail between full detail and full decimation.
+	 */
+	class lod_image {
+		int f;
+		unsigned int scale;
+		const d2::image *im;
+		lod_image *next;
+		pt transformation;
+
+	public:
+		lod_image(int _f, const d2::image *_im, pt t, lod_image *_next, unsigned int _scale) {
+			f = _f;
+			im = _im;
+			transformation = t;
+			next = _next;
+			scale = _scale;
+		}
+
+		lod_image(int _f) {
+			
+			f = _f;
+			im = d2::image_rw::copy(f, "3D reference image");
+			assert(im);
+			next = NULL;
+			scale = 0;
+			transformation = d3::align::projective(f);
+			transformation.scale(1 / _pt.scale_2d());
+
+			while (scale < input_decimation_exponent) {
+				lod_image *new_lod_image = new lod_image(f, im, transformation, next, scale);
+
+				next = new_lod_image;
+				im = im->scale_by_half("3D, reduced LOD");
+				assert(im);
+				transformation.scale(1 / _pt.scale_2d() / pow(2, scale + 1));
+
+				scale += 1;
+			}
+		}
+
+		/*
+		 * Get the image index.
+		 */
+		int index() {
+			return f;
+		}
+
+		/*
+		 * Get the image.
+		 */
+		const d2::image *get_image() {
+			return im;
+		}
+
+		/*
+		 * Get the transformation
+		 */
+		pt get_t() {
+			return transformation;
+		}
+
+		/*
+		 * Get the scale number.
+		 */
+		unsigned int get_scale() {
+			return scale;
+		}
+
+		/*
+		 * Get the next scale
+		 */
+
+		lod_scale *get_next() {
+			return next;
+		}
+
+		~lod_image() {
+			while (next) {
+				lod_image *next_next = next->next;
+				delete next;
+				next = next_next;
+			}
+		}
+	};
 
 	/*
 	 * Structure to hold input frame information for a given level of
@@ -1063,16 +1151,16 @@ public:
 		front_clip = fc;
 	}
 
-	static void dgi(ale_pos _dgi) {
-		input_decimation_exponent = _dgi;
+	static void di_upper(ale_pos _dgi) {
+		primary_decimation_upper = _dgi;
 	}
 
-	static void dgo(ale_pos _dgo) {
-		output_decimation_exponent = _dgo;
+	static void do_try(ale_pos _dgo) {
+		output_decimation_preferred = _dgo;
 	}
 
-	static void idiv(ale_pos _idiv) {
-		input_resolution_divisor = _idiv;
+	static void di_lower(ale_pos _idiv) {
+		input_decimation_lower = _idiv;
 	}
 
 	static void oc() {
@@ -2190,20 +2278,10 @@ public:
 	/*
 	 * Generate a map from scores to 3D points for various depths at point (i, j) in f1.
 	 */
-	static score_map p2f_score_map(unsigned int f1, unsigned int f2, pt _pt1, pt _pt2, 
-			const d2::image *if1, const d2::image *if2, unsigned int i, unsigned int j) {
+	static score_map p2f_score_map(unsigned int i, unsigned int j, lod_image *if1, lod_image *if2,
+			std::vector<pt> pt_outputs) {
 
 		score_map result;
-
-		// fprintf(stderr, "generating score map (i, j) == (%u, %u)\n", i, j);
-
-		// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
-
-		/*
-		 * Get the pixel color in the primary frame
-		 */
-
-		// d2::pixel color_primary = if1->get_pixel(i, j);
 
 		/*
 		 * Map two depths to the secondary frame.
@@ -2651,25 +2729,24 @@ public:
 			 && !d3_output_pt->size() && strcmp(pairwise_comparisons, "all"))
 				continue;
 
-			d2::image *if1 = d2::image_rw::copy(f1, "3D reference image");
+			std::vector<const d2::image *> if1;
 
-			assert(if1);
+			if1.push_back(d2::image_rw::copy(f1, "3D reference image"));
+			assert(if1.back());
 
 			ale_pos decimation_index = input_decimation_exponent;
 			while (decimation_index > 0
 			    && if1->height() > 2
 			    && if1->width() > 2) {
-				d2::image *iif1 = if1->scale_by_half("3D, reduced LOD");
-				assert(iif1);
-				delete if1;
-				if1 = iif1;
+
+				if1.push_back(if1.back()->scale_by_half("3D, reduced LOD"));
+				assert(if1.back());
+				
 				decimation_index -= 1;
 			}
 
-			assert(if1);
-
 			if (decimation_index > 0) {
-				fprintf(stderr, "Error: --gdi argument is too large.\n");
+				fprintf(stderr, "Error: --di argument is too large.\n");
 				exit(1);
 			}
 
@@ -2679,25 +2756,24 @@ public:
 				if (f1 == f2)
 					continue;
 
-				d2::image *if2 = d2::image_rw::copy(f2, "3D reference image");
+				std::vector<const d2::image *> if2;
 
-				assert(if2);
+				if2.push_back(d2::image_rw::copy(f2, "3D reference image"));
+				assert(if2.back());
 
 				ale_pos decimation_index = input_decimation_exponent;
 				while (decimation_index > 0
 				    && if2->height() > 2
 				    && if2->width() > 2) {
-					d2::image *iif2 = if2->scale_by_half("3D, reduced LOD");
-					assert(iif2);
-					delete if2;
-					if2 = iif2;
+
+					if2.push_back(if2.back()->scale_by_half("3D, reduced LOD"));
+					assert(if2.back());
+
 					decimation_index -= 1;
 				}
 
-				assert(if2);
-
 				if (decimation_index > 0) {
-					fprintf(stderr, "Error: --gdi argument is too large.\n");
+					fprintf(stderr, "Error: --di argument is too large.\n");
 					exit(1);
 				}
 
@@ -2721,7 +2797,7 @@ public:
 					 * various depths in f1.
 					 */
 
-					score_map _sm = p2f_score_map(f1, f2, _pt1, _pt2, if1, if2, i, j);
+					score_map _sm = p2f_score_map(i, j, if1, if2, pt_outputs);
 
 					/*
 					 * Analyze space in a manner dependent on the score map.

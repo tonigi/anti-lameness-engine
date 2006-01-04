@@ -732,14 +732,14 @@ int main(int argc, const char *argv[]){
 
 			i += 1;
 #endif
-		} else if (!strcmp(argv[i], "--idiv")) {
+		} else if (!strcmp(argv[i], "--di-lower")) {
 			if (i + 1 >= argc)
-				not_enough("--idiv");
+				not_enough("--di-lower");
 
-			double idiv_parameter;
-			sscanf(argv[i+1], "%lf", &idiv_parameter);
+			double di_parameter;
+			sscanf(argv[i+1], "%lf", &di_parameter);
 			i += 1;
-			d3::scene::idiv(idiv_parameter);
+			d3::scene::di_lower(di_parameter);
 		} else if (!strcmp(argv[i], "--rc")) {
 			if (i + 1 >= argc)
 				not_enough("--rc");
@@ -748,22 +748,22 @@ int main(int argc, const char *argv[]){
 			sscanf(argv[i+1], "%lf", &rc_parameter);
 			i += 1;
 			d3::scene::rc(rc_parameter);
-		} else if (!strcmp(argv[i], "--do")) {
+		} else if (!strcmp(argv[i], "--do-try")) {
 			if (i + 1 >= argc)
-				not_enough("--do");
+				not_enough("--do-try");
 
-			double dgo_parameter;
-			sscanf(argv[i+1], "%lf", &dgo_parameter);
+			double do_parameter;
+			sscanf(argv[i+1], "%lf", &do_parameter);
 			i += 1;
-			d3::scene::dgo(dgo_parameter);
-		} else if (!strcmp(argv[i], "--di")) {
+			d3::scene::do_try(do_parameter);
+		} else if (!strcmp(argv[i], "--di-upper")) {
 			if (i + 1 >= argc)
-				not_enough("--di");
+				not_enough("--di-upper");
 
-			double dgi_parameter;
-			sscanf(argv[i+1], "%lf", &dgi_parameter);
+			double di_parameter;
+			sscanf(argv[i+1], "%lf", &di_parameter);
 			i += 1;
-			d3::scene::dgi(dgi_parameter);
+			d3::scene::di_upper(dgi_parameter);
 		} else if (!strcmp(argv[i], "--fc")) {
 			if (i + 1 >= argc)
 				not_enough("--fc");
