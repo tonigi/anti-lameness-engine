@@ -215,84 +215,65 @@ class scene {
 	 * detail between full detail and full decimation.
 	 */
 	class lod_image {
-		int f;
-		unsigned int scale;
-		const d2::image *im;
-		lod_image *next;
-		pt transformation;
+		unsigned int f;
+		unsigned int entries;
+		std::vector<const d2::image *> im;
+		std::vector<pt> transformation;
 
 	public:
-		lod_image(int _f, const d2::image *_im, pt t, lod_image *_next, unsigned int _scale) {
-			f = _f;
-			im = _im;
-			transformation = t;
-			next = _next;
-			scale = _scale;
-		}
+		lod_image(unsigned int _f) {
 
-		lod_image(int _f) {
+			pt _pt;
 			
 			f = _f;
-			im = d2::image_rw::copy(f, "3D reference image");
-			assert(im);
-			next = NULL;
-			scale = 0;
-			transformation = d3::align::projective(f);
-			transformation.scale(1 / _pt.scale_2d());
+			im.push_back(d2::image_rw::copy(f, "3D reference image"));
+			assert(im.back());
+			entries = 1;
+			_pt = d2::align::projective(f);
+			_pt.scale(1 / _pt.scale_2d());
+			transformation.push_back(_pt);
 
-			while (scale < input_decimation_exponent) {
-				lod_image *new_lod_image = new lod_image(f, im, transformation, next, scale);
+			while (im.back()->height() > 4
+			    && im.back()->width() > 4) {
 
-				next = new_lod_image;
-				im = im->scale_by_half("3D, reduced LOD");
-				assert(im);
-				transformation.scale(1 / _pt.scale_2d() / pow(2, scale + 1));
+				im.push_back(im.back()->scale_by_half("3D, reduced LOD"));
+				assert(im.back());
 
-				scale += 1;
+				_pt.scale(1 / _pt.scale_2d() / pow(2, entries));
+				transformation.push_back(_pt);
+
+				entries += 1;
 			}
 		}
 
 		/*
-		 * Get the image index.
+		 * Get the number of scales
 		 */
-		int index() {
-			return f;
+		unsigned int count() {
+			return entries;
 		}
 
 		/*
-		 * Get the image.
+		 * Get an image.
 		 */
-		const d2::image *get_image() {
-			return im;
+		const d2::image *get_image(unsigned int i) {
+			assert(i >= 0);
+			assert(i < entries);
+			return im[i];
 		}
 
 		/*
 		 * Get the transformation
 		 */
-		pt get_t() {
-			return transformation;
-		}
-
-		/*
-		 * Get the scale number.
-		 */
-		unsigned int get_scale() {
-			return scale;
-		}
-
-		/*
-		 * Get the next scale
-		 */
-
-		lod_scale *get_next() {
-			return next;
+		pt get_t(unsigned int i) {
+			assert(i >= 0);
+			assert(i < entries);
+			return transformation[i];
 		}
 
 		~lod_image() {
-			while (next) {
-				lod_image *next_next = next->next;
-				delete next;
-				next = next_next;
+			for (int i = 0; i < entries; i++) {
+				delete im[i];
 			}
 		}
 	};
