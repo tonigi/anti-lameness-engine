@@ -67,20 +67,6 @@ class scene {
 	static int output_clip;
 
 	/*
-	 * Perturb bounds
-	 *
-	 * Bound types:
-	 *
-	 * 	0	Absolute bound (projected pixel units [model units])
-	 * 	1	Relative bound (model top-level diameter percentage)
-	 *
-	 */
-	static ale_pos mpl_value;
-	static int mpl_type;
-	static ale_pos mpu_value;
-	static int mpu_type;
-
-	/*
 	 * Model files
 	 */
 	static const char *load_model_name;
@@ -968,26 +954,6 @@ public:
 
 	static void save_model(const char *name) {
 		save_model_name = name;
-	}
-
-	static void mpl_absolute(ale_real value) {
-		mpl_value = value;
-		mpl_type = 0;
-	}
-
-	static void mpu_absolute(ale_real value) {
-		mpu_value = value;
-		mpu_type = 0;
-	}
-
-	static void mpl_percent(ale_real value) {
-		mpl_value = value;
-		mpl_type = 1;
-	}
-
-	static void mpu_percent(ale_real value) {
-		mpu_value = value;
-		mpu_type = 1;
 	}
 
 	static void fc(ale_pos fc) {

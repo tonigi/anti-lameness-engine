@@ -704,34 +704,6 @@ int main(int argc, const char *argv[]){
 			sscanf(argv[i+1], "%lf", &st_parameter);
 			i += 1;
 			d3::cpf::st(st_parameter);
-#if 0
-		} else if (!strcmp(argv[i], "--mpu")) {
-			if (i + 1 >= argc)
-				not_enough("--mpu");
-
-			double mpu_parameter;
-			int characters;
-			sscanf(argv[i+1], "%lf%n", &mpu_parameter, &characters);
-			if (*(argv[i+1] + characters) == '%')
-				d3::scene::mpu_percent(mpu_parameter);
-			else
-				d3::scene::mpu_absolute(mpu_parameter);
-
-			i += 1;
-		} else if (!strcmp(argv[i], "--mpl")) {
-			if (i + 1 >= argc)
-				not_enough("--mpl");
-
-			double mpl_parameter;
-			int characters;
-			sscanf(argv[i+1], "%lf%n", &mpl_parameter, &characters);
-			if (*(argv[i+1] + characters) == '%')
-				d3::scene::mpl_percent(mpl_parameter);
-			else
-				d3::scene::mpl_absolute(mpl_parameter);
-
-			i += 1;
-#endif
 		} else if (!strcmp(argv[i], "--di-lower")) {
 			if (i + 1 >= argc)
 				not_enough("--di-lower");
