@@ -154,63 +154,6 @@ class scene {
 	static double encounter_threshold;
 
 	/*
-	 * Ray-Triangle intersection utility function
-	 *
-	 * Variables should be specified in cartesian coordinates (not
-	 * projective coordinates).
-	 *
-	 * Return value elements are:
-	 *
-	 * 	0: v[1] - v[0] component
-	 * 	1: v[2] - v[0] component
-	 * 	2: ray multiplier
-	 */
-	static point rt_intersect(point r, point vertices[3]) {
-		point a = vertices[0];
-		point b = vertices[1];
-		point c = vertices[2];
-		point d = a - b;
-		point e = a - c;
-
-		/*
-		ale_pos m[3][3] = {
-			{ r[0], r[1], r[2] },
-			{ d[0], d[1], d[2] },
-			{ e[0], e[1], e[2] }
-		};
-		*/
-
-		ale_pos m_det = r[0] * d[1] * e[2] 
-			      + r[1] * d[2] * e[0]
-			      + r[2] * d[0] * e[1]
-			      - e[0] * d[1] * r[2]
-			      - d[0] * r[1] * e[2]
-			      - r[0] * e[1] * d[2];
-
-		ale_pos m_inverse_t[3][3] = {
-			{
-				(d[1] * e[2] - d[2] * e[1]) / m_det,
-				(d[2] * e[0] - d[0] * e[2]) / m_det,
-				(d[0] * e[1] - d[1] * e[0]) / m_det
-			}, {
-				(e[1] * r[2] - e[2] * r[1]) / m_det,
-				(e[2] * r[0] - e[0] * r[2]) / m_det,
-				(e[0] * r[1] - e[1] * r[0]) / m_det,
-			}, {
-				(r[1] * d[2] - r[2] * d[1]) / m_det,
-				(r[2] * d[0] - r[0] * d[2]) / m_det,
-				(r[0] * d[1] - r[1] * d[0]) / m_det,
-			}
-		};
-
-		point k(a[0] * m_inverse_t[1][0] + a[1] * m_inverse_t[1][1] + a[2] * m_inverse_t[1][2],
-			a[0] * m_inverse_t[2][0] + a[1] * m_inverse_t[2][1] + a[2] * m_inverse_t[2][2],
-			a[0] * m_inverse_t[0][0] + a[1] * m_inverse_t[0][1] + a[2] * m_inverse_t[0][2]);
-
-		return k;
-	}
-
-	/*
 	 * Structure to hold input frame information at levels of 
 	 * detail between full detail and full decimation.
 	 */
@@ -1013,100 +956,8 @@ class scene {
 
 	static std::map<struct space *, spatial_info> spatial_info_map;
 
-	/*
-	 * Use a pair of trees to store the triangles.
-	 */
-	static struct triangle *triangle_head[2];
-
-#if 0
-	/*
-	 * Map view B and pixel A(i, j) within view A to a set of depths where
-	 * A(i, j) matches a point in image B.
-	 */
-	std::set<ale_pos> depth_match_set(int B, int A, int i, int j) {
-	}
-#endif
-
-	/*
-	 * Vector test for interiority in local cartesian space.
-	 *
-	 * P is a set of triangle vertex points.  R is a ray endpoint.  The
-	 * intersection of R and the plane defined by P is the point being
-	 * tested for interiority.
-	 */
-	 static int is_interior_c(point p_c[3], point r_c, int print_on_failure = 0) {
-
-		point multipliers = rt_intersect(r_c, p_c);
-
-		if (multipliers[0] >= 0
-		 && multipliers[1] >= 0
-		 && (multipliers[0] + multipliers[1] <= 1))
-			return 1;
-
-		if (print_on_failure && 0) {
-			 fprintf(stderr, "is_interior_c({{%f, %f}, {%f, %f}, {%f, %f}}, {%f, %f})",
-					 p_c[0][0], p_c[0][1],
-					 p_c[1][0], p_c[1][1],
-					 p_c[2][0], p_c[2][1],
-					 r_c[0], r_c[1]);
-			fprintf(stderr, " = 0\n");
-		}
-
-		return 0;
-	}
-
-	/*
-	 * Upper/lower test for interiority.
-	 *
-	 * P is a set of triangle vertex points mapped into image space.
-	 * TEST_POINT is a test point at distance 1 from a camera.
-	 */
-	 static int is_interior(point p[3], point test_point, int print_on_failure = 0) {
-
-		int lower[2] = {0, 0};
-		int upper[2] = {0, 0};
-
-		for (int v = 0; v < 3; v++) {
-			point cv = p[v];
-			point nv = p[(v + 1) % 3];
-
-			for (int d = 0; d < 2; d++) {
-				int e = (d + 1) % 2;
-
-				if ((test_point[d] - cv[d]) * (test_point[d] - nv[d]) <= 0
-				 && nv[d] - cv[d] != 0) {
-					ale_pos travel = (test_point[d] - cv[d]) / (nv[d] - cv[d]);
-					ale_pos intersect = cv[e] + travel * (nv[e] - cv[e]);
-					if (intersect <= test_point[e]) 
-						lower[e] = 1;
-					if (intersect >= test_point[e])
-						upper[e] = 1;
-				}
-				if (nv[d] - cv[d] == 0 && test_point[d] == nv[d]) {
-					lower[d] = 1;
-					upper[d] = 1;
-				}
-
-			}
-		}
-
-		if (!lower[0] || !upper[0] || !lower[1] || !upper[1]) {
-			if (print_on_failure && 0) {
-				 fprintf(stderr, "is_interior({{%f, %f}, {%f, %f}, {%f, %f}}, {%f, %f})",
-						 p[0][0], p[0][1],
-						 p[1][0], p[1][1],
-						 p[2][0], p[2][1],
-						 test_point[0], test_point[1]);
-				fprintf(stderr, " = 0\n");
-			}
-
-			return 0;
-		}
-
-		return 1;
-	}
-
 public:
+
 	/*
 	 * Debugging variables.
 	 */
@@ -2692,15 +2543,7 @@ public:
 
 
 	/*
-	 * When using a 3D scene data structure, improvements should occur in 
-	 * two passes:
-	 *
-	 * 	(a) Moving vertices to reduce error
-	 *
-	 * 	(b) Attempting to subdivide triangles by adding new vertices 
-	 *
-	 * When neither of these approaches results in improvement, then the
-	 * level of detail can be increased.
+	 * Update spatial information structures.
 	 *
 	 * XXX: the name of this function is horribly misleading.  There isn't
 	 * even a 'search depth' any longer, since there is no longer any
