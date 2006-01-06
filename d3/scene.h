@@ -279,29 +279,53 @@ class scene {
 	};
 
 	/*
-	 * Structure to hold input frame information for a given level of
-	 * detail.
+	 * Structure to hold input frame information at all levels of detail.
 	 */
-	struct lod {
+	class lod_images {
 
 		/*
-		 * Reference image for each frame.
+		 * All images.
 		 */
 
-		d2::image **reference;
+		std::vector<lod_image *> images;
 
-		/*
-		 * Scale factor
-		 */
+	public:
 
-		double sf;
+		lod_images() {
+			images.resize(d2::image_rw::count(), NULL);
+		}
 
-		/*
-		 * Next element
-		 */
+		void open(unsigned int f) {
+			assert (images[f] = NULL);
 
-		struct lod *next;
+			if (images[f] == NULL)
+				images[f] = new lod_image(f);
+		}
 
+		void open_all() {
+			for (int f = 0; f < d2::image_rw::count(); f++)
+				open(f);
+		}
+
+		lod_image *get(unsigned int f) {
+			assert (images[f] != NULL);
+			return images[f];
+		}
+
+		void close(unsigned int f) {
+			assert (images[f] != NULL);
+			delete images[f];
+			images[f] = NULL;
+		}
+
+		void close_all() {
+			for (int f = 0; f < d2::image_rw::count(); f++)
+				close(f);
+		}
+
+		~lod_images() {
+			close_all();
+		}
 	};
 
 	/*
@@ -311,10 +335,10 @@ class scene {
 	static ale_pos perturb;
 
 	/*
-	 * Current level-of-detail
+	 * All levels-of-detail
 	 */
 
-	static struct lod *cl;
+	static struct lod_images *al;
 
 	/*
 	 * Structure to hold a subdivisible region of space.
@@ -1165,67 +1189,6 @@ public:
 	}
 	
 	/*
-	 * Reduce the level of detail.  Return 0 when no further reduction
-	 * is possible.
-	 */
-	static int reduce_lod() {
-
-		assert(cl);
-		assert(cl->reference);
-
-		/*
-		 * Create a new structure for the reduced LOD.
-		 */
-		struct lod *nl = new lod;
-
-		/*
-		 * Find out how many input frames there are.
-		 */
-
-		int N = d2::image_rw::count();
-
-		/*
-		 * Create scaled reference image array
-		 */
-
-		nl->reference = (d2::image **) malloc(N * sizeof(d2::image *));
-
-		assert(nl->reference);
-
-		for (int n = 0; n < N; n++) {
-
-			if (nl->reference[n]->height() < 2
-			 || nl->reference[n]->width() < 2) {
-				for (int nn = 0; nn < n; nn++)
-					delete nl->reference[nn];
-				free(nl->reference);
-				return 0;
-			}
-			
-			assert(cl->reference[n]);
-
-			nl->reference[n] = cl->reference[n]->scale_by_half("3D, reduced LOD");
-
-			assert(nl->reference[n]);
-		}
-
-		nl->sf = cl->sf * 0.5;
-
-		nl->next = NULL;
-
-		for (int n = 0; n < N; n++)
-			delete cl->reference[n];
-
-		free(cl->reference);
-
-		delete cl;
-
-		cl = nl;
-
-		return 1;
-	}
-
-	/*
 	 * Initialize 3D scene from 2D scene, using 2D and 3D alignment
 	 * information.
 	 */
@@ -1254,88 +1217,15 @@ public:
 
 
 		/*
-		 * Allocate image structures, if necessary.
+		 * Allocate image structures.
 		 */
+
+		al = new lod_images;
 
 		if (tc_multiplier != 0) {
-
-			/*
-			 * Find out how many input frames there are.
-			 */
-
-			int N = d2::image_rw::count();
-
-			/*
-			 * Initialize the base level of detail
-			 */
-
-			cl = new lod;
-			cl->reference = NULL;
-			cl->next = NULL;
-			cl->sf = 1;
-
-			/*
-			 * Initialize reference images.
-			 */
-
-			cl->reference = (d2::image **) malloc(N * sizeof(d2::image *));
-
-			assert(cl->reference);
-
-			for (int n = 0; n < N; n++) {
-				cl->reference[n] = d2::image_rw::copy(n, "3D scene reference");
-				assert(cl->reference[n]);
-			}
-
-			/*
-			 * Scale image structures according to the decimation exponent.
-			 */
-
-			ale_pos decimation_index = input_decimation_exponent;
-			while (decimation_index > 0 && reduce_lod())
-				decimation_index -= 1;
-
-			if (decimation_index > 0) {
-				fprintf(stderr, "Error: --gdi argument is too large.\n");
-				exit(1);
-			}
+			al->open_all();
 		}
 	}
-
-	/*
-	 * Increase the level of detail.  
-	 */
-	static void increase_lod() {
-
-		assert(0);
-
-		assert(cl);
-
-		/*
-		 * Pointer to the next higher LOD.
-		 */
-		struct lod *nl = cl->next;
-
-		assert (nl != NULL);
-
-		/*
-		 * Find out how many input frames there are.
-		 */
-
-		int N = d2::image_rw::count();
-
-		/*
-		 * Delete the current LOD.
-		 */
-
-		for (int n = 0; n < N; n++)
-			delete cl->reference[n];
-
-		delete cl;
-
-		cl = nl;
-	}
-
 
 	/*
 	 * Perform spatial_info updating on a given subspace, for given

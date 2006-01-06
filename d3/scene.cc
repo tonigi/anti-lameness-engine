@@ -25,7 +25,7 @@
  * See scene.h for details on these variables.
  */
 
-scene::lod *scene::cl;
+scene::lod_images *scene::al;
 ale_pos scene::perturb;
 ale_pos scene::edge_cost_multiplier = 0;
 ale_pos scene::angle_cost_multiplier = 0;
