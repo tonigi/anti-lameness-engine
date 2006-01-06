@@ -43,19 +43,6 @@ class scene {
 
 	struct space;
 
-
-	/*
-	 * Multiplier used in calculating the edge-length contribution to 
-	 * model cost.
-	 */
-	static ale_pos edge_cost_multiplier;
-
-	/*
-	 * Multiplier used in calculating the maximum angle contribution to
-	 * model cost.
-	 */
-	static ale_pos angle_cost_multiplier;
-
 	/*
 	 * Clipping planes
 	 */
@@ -1031,14 +1018,6 @@ public:
 		rear_clip = rc;
 	}
 
-	static void ecm(ale_pos ecm) {
-		edge_cost_multiplier = ecm;
-	}
-
-	static void acm(ale_pos acm) {
-		angle_cost_multiplier = acm;
-	}
-	
 	/*
 	 * Initialize 3D scene from 2D scene, using 2D and 3D alignment
 	 * information.

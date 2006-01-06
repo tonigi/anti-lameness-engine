@@ -774,26 +774,8 @@ int main(int argc, const char *argv[]){
 			d3::scene::fc(fc_parameter);
 		} else if (!strcmp(argv[i], "--ecm")) {
 			unsupported::discontinued("--ecm <x>");
-#if 0
-			if (i + 1 >= argc)
-				not_enough("--ecm");
-
-			double ecm_parameter;
-			sscanf(argv[i+1], "%lf", &ecm_parameter);
-			i += 1;
-			d3::scene::ecm(ecm_parameter);
-#endif
 		} else if (!strcmp(argv[i], "--acm")) {
 			unsupported::discontinued("--acm <x>");
-#if 0
-			if (i + 1 >= argc)
-				not_enough("--acm");
-
-			double acm_parameter;
-			sscanf(argv[i+1], "%lf", &acm_parameter);
-			i += 1;
-			d3::scene::acm(acm_parameter);
-#endif
 		} else if (!strcmp(argv[i], "--def-nn")) {
 			if (i + 1 >= argc)
 				not_enough("--def-nn");
