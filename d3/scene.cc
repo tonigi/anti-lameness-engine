@@ -26,17 +26,12 @@
  */
 
 scene::lod_images *scene::al;
-ale_pos scene::perturb;
 ale_pos scene::front_clip = 0;
 ale_pos scene::input_decimation_lower = 0;
 ale_pos scene::output_decimation_preferred = 0;
 ale_pos scene::primary_decimation_upper = 0;
 int scene::output_clip = 0;
 ale_pos scene::rear_clip = 0;
-ale_pos scene::mpl_value = 1;
-ale_pos scene::mpu_value = 25;
-int scene::mpl_type = 0;
-int scene::mpu_type = 1;
 const char *scene::load_model_name = NULL;
 const char *scene::save_model_name = NULL;
 const ale_real scene::nearness = 0.01;

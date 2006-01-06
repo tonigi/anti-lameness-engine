@@ -145,7 +145,7 @@ class scene {
 			im.push_back(d2::image_rw::copy(f, "3D reference image"));
 			assert(im.back());
 			entries = 1;
-			_pt = d2::align::projective(f);
+			_pt = d3::align::projective(f);
 			_pt.scale(1 / _pt.scale_2d());
 			transformation.push_back(_pt);
 
@@ -188,7 +188,7 @@ class scene {
 		}
 
 		~lod_image() {
-			for (int i = 0; i < entries; i++) {
+			for (unsigned int i = 0; i < entries; i++) {
 				delete im[i];
 			}
 		}
@@ -219,7 +219,7 @@ class scene {
 		}
 
 		void open_all() {
-			for (int f = 0; f < d2::image_rw::count(); f++)
+			for (unsigned int f = 0; f < d2::image_rw::count(); f++)
 				open(f);
 		}
 
@@ -235,7 +235,7 @@ class scene {
 		}
 
 		void close_all() {
-			for (int f = 0; f < d2::image_rw::count(); f++)
+			for (unsigned int f = 0; f < d2::image_rw::count(); f++)
 				close(f);
 		}
 
@@ -243,12 +243,6 @@ class scene {
 			close_all();
 		}
 	};
-
-	/*
-	 * Perturbation amount
-	 */
-
-	static ale_pos perturb;
 
 	/*
 	 * All levels-of-detail
