@@ -44,6 +44,7 @@ private:
 	et euclidean;
 	ale_real _view_angle;		/* XXX: should be ale_pos */
 	ale_pos scale_factor;
+	ale_pos diag_per_depth;
 
 public:	
 
@@ -54,6 +55,7 @@ public:
 	pt() {
 		_view_angle = M_PI / 4;
 		scale_factor = 1;
+		diag_per_depth = 0;
 	}
 
 	pt(d2::transformation t, et e, ale_real va, ale_pos sf = 1) {
@@ -61,6 +63,7 @@ public:
 		euclidean = e;
 		_view_angle = va;
 		scale_factor = sf;
+		diag_per_depth = 0;
 	}
 
 	/*
@@ -82,6 +85,7 @@ public:
 	 * Modify or get view angle
 	 */
 	void view_angle(ale_pos va) {
+		diag_per_depth = 0;
 		_view_angle = va;
 	}
 
@@ -286,6 +290,51 @@ public:
 		else
 			return c_density_scaled(c2);
 	}
+
+private:
+	void calculate_diag_per_depth() {
+		if (diag_per_depth != 0)
+			return;
+		ale_pos w = unscaled_width();
+		ale_pos h = unscaled_height();
+
+		diag_per_depth = sqrt(2) * (2 * tan(view_angle / 2)) / sqrt(w*w + h*h);
+	}
+
+public:
+
+	/*
+	 * Get a trilinear coordinate for a given position in the world and
+	 * a given 2D diagonal distance.
+	 */
+	ale_pos trilinear_coordinate(point w, ale_pos diagonal) {
+		calculate_diag_per_depth();
+
+		ale_pos depth = wc(w)[2];
+
+		ale_pos coord = log(diagonal / (depth * diag_per_depth)) / log(2);
+
+		coord = round(coord);
+
+		if (coord < 0)
+			coord = 0;
+
+		return coord;
+	}
+
+	/*
+	 * Get a diagonal distance for a given position in the world
+	 * and a given trilinear coordinate.
+	 */
+	ale_pos diagonal_distance(point w, ale_pos coordinate) {
+		calculate_diag_per_depth();
+
+		ale_pos depth = wc(w)[2];
+		ale_pos diagonal = pow(2, coordinate) * depth * diag_per_depth;
+
+		return diagonal;
+	}
+
 };
 
 #endif

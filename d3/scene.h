@@ -129,7 +129,6 @@ class scene {
 		unsigned int entries;
 		std::vector<const d2::image *> im;
 		std::vector<pt> transformation;
-		ale_pos diag_per_depth;
 
 	public:
 		/*
@@ -158,40 +157,6 @@ class scene {
 
 				entries += 1;
 			}
-
-			diag_per_depth = transformation[0].pw_unscaled(point(0, 0, 1))
-			       .lengthto(transformation[0].pw_unscaled(point(1, 1, 1)));
-		}
-
-		/*
-		 * Get a trilinear coordinate for a given position in the world and
-		 * a given 2D diagonal distance.
-		 */
-		ale_pos trilinear_coordinate(point w, ale_pos diagonal) {
-			ale_pos depth = transformation[0].wc(w)[2];
-
-			ale_pos coord = log(diagonal / (depth * diag_per_depth)) / log(2);
-
-			coord = round(coord);
-
-			if (coord > im.size() - 1)
-				coord = im.size() - 1;
-
-			if (coord < 0)
-				coord = 0;
-
-			return coord;
-		}
-
-		/*
-		 * Get a diagonal distance for a given position in the world
-		 * and a given trilinear coordinate.
-		 */
-		ale_pos diagonal_distance(point w, ale_pos coordinate) {
-			ale_pos depth = transformation[0].wc(w)[2];
-			ale_pos diagonal = pow(2, coordinate) * depth * diag_per_depth;
-
-			return diagonal;
 		}
 
 		/*
