@@ -323,6 +323,19 @@ public:
 	}
 
 	/*
+	 * Get a trilinear coordinate for a given subspace.
+	 */
+	ale_pos trilinear_coordinate(const space::traverse &st) {
+		point min = st.min();
+		point max = st.max();
+		point avg = (min + max) / (ale_pos) 2;
+
+		ale_pos diagonal = min.lengthto(max) * sqrt(2) / sqrt(3);
+
+		return trilinear_coordinate(avg, diagonal);
+	}
+
+	/*
 	 * Get a diagonal distance for a given position in the world
 	 * and a given trilinear coordinate.
 	 */

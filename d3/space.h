@@ -185,11 +185,11 @@ public:
 			return result;
 		}
 
-		point get_min() {
+		point get_min() const {
 			return min;
 		}
 
-		point get_max() {
+		point get_max() const {
 			return max;
 		}
 
