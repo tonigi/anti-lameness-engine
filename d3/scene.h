@@ -38,12 +38,6 @@
 class scene {
 
 	/*
-	 * Subspace model structure.
-	 */
-
-	struct space;
-
-	/*
 	 * Clipping planes
 	 */
 	static ale_pos front_clip;
@@ -165,8 +159,8 @@ class scene {
 				entries += 1;
 			}
 
-			diag_per_depth = transformation[0].pw(point(0, 0, 1))
-			       .lengthto(transformation[0].pw(point(1, 1, 1)));
+			diag_per_depth = transformation[0].pw_unscaled(point(0, 0, 1))
+			       .lengthto(transformation[0].pw_unscaled(point(1, 1, 1)));
 		}
 
 		/*
@@ -290,313 +284,6 @@ class scene {
 	 */
 
 	static struct lod_images *al;
-
-	/*
-	 * Structure to hold a subdivisible region of space.
-	 */
-
-	struct space {
-		struct space *positive;
-		struct space *negative;
-
-		space() {
-			positive = NULL;
-			negative = NULL;
-		}
-	};
-
-	/*
-	 * Space root pointer
-	 */
-	static space *root_space;
-
-	/*
-	 * Space traversal and navigation class.
-	 */
-
-	class space_traverse {
-		space *current;
-		point min, max;
-
-	public:
-
-		int get_next_split() {
-
-			/*
-			 * Double-infinite case.
-			 */
-
-			for (int d = 0; d < 3; d++)
-			if (isinf(max[d]) && isinf(min[d]))
-				return d;
-
-			/*
-			 * Finite or single-infinite case
-			 */
-
-			if (max[0] - min[0] >= max[1] - min[1]
-			 && (max[0] >= max[1] || !isinf(min[1]))
-			 && (min[0] <= min[1] || !isinf(max[1]))
-			 && max[0] - min[0] >= max[2] - max[2]
-			 && (max[0] >= max[2] || !isinf(min[2]))
-			 && (min[0] <= min[2] || !isinf(max[2])))
-				return 0;
-
-			if (max[1] - min[1] > max[2] - min[2]
-			 && (max[1] >= max[2] || !isinf(min[2]))
-			 && (min[1] <= min[2] || !isinf(max[2])))
-				return 1;
-
-			return 2;
-		}
-
-		static space_traverse root() {
-
-			space_traverse result;
-
-			result.current = root_space;
-			result.min = point::neginf();
-			result.max = point::posinf();
-
-			assert(result.current);
-
-			return result;
-		}
-
-		ale_pos split_coordinate(int d) {
-			if (isinf(max[d]) && isinf(min[d]))
-				return 0;
-
-			if (isinf(max[d]))
-				return tan((atan(min[d]) + M_PI/2) / 2);
-
-			if (isinf(min[d]))
-				return tan((atan(max[d]) - M_PI/2) / 2);
-
-			return (min[d] + max[d]) / 2;
-		}
-
-		ale_pos split_coordinate() {
-			int next_split = get_next_split();
-			return split_coordinate(next_split);
-		}
-
-		int precision_wall() {
-			int next_split = get_next_split();
-			ale_pos split_point = split_coordinate(next_split);
-
-			assert(split_point <= max[next_split]);
-			assert(split_point >= min[next_split]);
-			
-			if (split_point == min[next_split] || split_point == max[next_split]) 
-				return 1;
-
-			return 0;
-		}
-
-		space_traverse positive() {
-
-			assert(current);
-
-			int next_split = get_next_split();
-
-			if (current->positive == NULL) {
-				current->positive = new space;
-				total_divisions++;
-			}
-			
-			space_traverse result;
-
-			result.current = current->positive;
-			result.min = min;
-			result.max = max;
-
-			result.min[next_split] = split_coordinate(next_split);
-
-			assert(result.current);
-
-			return result;
-		}
-
-		space_traverse negative() {
-
-			assert(current);
-
-			int next_split = get_next_split();
-
-			if (current->negative == NULL) {
-				current->negative = new space;
-				total_divisions++;
-			}
-			
-			space_traverse result;
-
-			result.current = current->negative;
-			result.min = min;
-			result.max = max;
-
-			result.max[next_split] = split_coordinate(next_split);
-
-			assert(result.current);
-
-			return result;
-		}
-
-		point get_min() {
-			return min;
-		}
-
-		point get_max() {
-			return max;
-		}
-
-		/*
-		 * Get bounding box for projection onto a plane.
-		 */
-
-		void get_view_local_bb(pt _pt, point bb[2]) {
-
-			point min = point::posinf();
-			point max = point::neginf();
-
-			point wbb[2] = { get_min(), get_max() };
-
-
-			for (int x = 0; x < 2; x++)
-			for (int y = 0; y < 2; y++)
-			for (int z = 0; z < 2; z++) {
-				point p = _pt.wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
-
-				if (p[0] < min[0])
-					min[0] = p[0];
-				if (p[0] > max[0])
-					max[0] = p[0];
-				if (p[1] < min[1])
-					min[1] = p[1];
-				if (p[1] > max[1])
-					max[1] = p[1];
-				if (p[2] < min[2])
-					min[2] = p[2];
-				if (p[2] > max[2])
-					max[2] = p[2];
-			}
-
-			/*
-			 * Clip bounding box to image extents.
-			 */
-
-			if (min[0] < 0)
-				min[0] = 0;
-			if (min[1] < 0)
-				min[1] = 0;
-			if (max[0] > _pt.scaled_height() - 1)
-				max[0] = _pt.scaled_height() - 1;
-			if (max[1] > _pt.scaled_width() - 1)
-				max[1] = _pt.scaled_width() - 1;
-
-			bb[0] = min;
-			bb[1] = max;
-		}
-
-		int includes(point p) {
-
-			for (int d = 0; d < 3; d++) {
-				if (p[d] > max[d])
-					return 0;
-				if (p[d] < min[d])
-					return 0;
-				if (isnan(p[d]))
-					return 0;
-			}
-
-			return 1;
-		}
-
-		space *get_space() {
-			assert(current);
-			return current;
-		}
-
-	};
-
-	/*
-	 * Class to iterate through subspaces based on proximity to a camera.
-	 */
-
-	class space_iterate {
-		std::stack<space_traverse> space_stack;
-		point camera_origin;
-
-		space_iterate(point co, space_traverse top) {
-			camera_origin = co;
-			space_stack.push(top);
-		}
-
-	public:
-		space_iterate(pt _pt, space_traverse top = space_traverse::root()) {
-			camera_origin = _pt.cw(point(0, 0, 0));
-			space_stack.push(top);
-		}
-
-		int next() {
-			if (space_stack.empty())
-				return 0;
-
-			space_traverse st = space_stack.top();
-
-			int d = st.get_next_split();
-
-			ale_pos split_coordinate = st.split_coordinate();
-
-			space *n = st.get_space()->negative;
-			space *p = st.get_space()->positive;
-
-			if (camera_origin[d] > split_coordinate) {
-				if (n) {
-					space_stack.top() = st.negative();
-					if (p)
-						space_stack.push(st.positive());
-				} else {
-					if (p)
-						space_stack.top() = st.positive();
-					else
-						space_stack.pop();
-				}
-			} else {
-				if (p) {
-					space_stack.top() = st.positive();
-					if (n)
-						space_stack.push(st.negative());
-				} else {
-					if (n)
-						space_stack.top() = st.negative();
-					else
-						space_stack.pop();
-				}
-			}
-
-			return (!space_stack.empty());
-		}
-
-		space_iterate cleave() {
-			assert (!space_stack.empty());
-
-			space_iterate result(camera_origin, space_stack.top());
-			
-			space_stack.pop();
-
-			return result;
-		}
-
-		int done() {
-			return space_stack.empty();
-		}
-
-		space_traverse get() {
-			assert (!space_stack.empty());
-			return space_stack.top();
-		}
-	};
 
 	/*
 	 * List for calculating weighted median.
@@ -941,14 +628,6 @@ class scene {
 	};
 
 	/*
-	 * DEBUG: This is a debugging variable, added for the sake of
-	 * tracking particular occupancy registers, when such tracking is
-	 * desired.
-	 */
-
-//	static spatial_info *tracked_space;
-
-	/*
 	 * Map spatial regions of interest to spatial info structures.  XXX:
 	 * This may get very poor cache behavior in comparison with, say, an
 	 * array.  Unfortunately, there is no immediately obvious array
@@ -962,7 +641,9 @@ class scene {
 	 * of depth.
 	 */
 
-	static std::map<struct space *, spatial_info> spatial_info_map;
+	typedef std::map<struct space::node *, spatial_info> spatial_info_map_t;
+
+	static spatial_info_map_t spatial_info_map;
 
 public:
 
@@ -1062,21 +743,21 @@ public:
 	 * Perform spatial_info updating on a given subspace, for given
 	 * parameters.
 	 */
-	static void subspace_info_update(space_iterate si, int f, d2::image *weights, const d2::image *im, pt _pt) {
+	static void subspace_info_update(space::iterate si, int f, d2::image *weights, const d2::image *im, pt _pt) {
 		while(!si.done()) {
 
-			space_traverse st = si.get();
+			space::traverse st = si.get();
 
 			/*
 			 * XXX: This could be more efficient, perhaps.
 			 */
 
-			if (spatial_info_map.count(st.get_space()) == 0) {
+			if (spatial_info_map.count(st.get_node()) == 0) {
 				si.next();
 				continue;
 			}
 
-			spatial_info *sn = &spatial_info_map[st.get_space()];
+			spatial_info *sn = &spatial_info_map[st.get_node()];
 
 			/*
 			 * Get information on the subspace.
@@ -1098,10 +779,10 @@ public:
 			point max = bb[1];
 
 //				fprintf(stderr, "frame %d color update space pointer %p, bb (%f, %f) -> (%f, %f)\n", 
-//						f, st.get_space(), min[0], min[1], max[0], max[1]);
+//						f, st.get_node(), min[0], min[1], max[0], max[1]);
 //
-//				fprintf(stderr, "space %p c=[%f %f %f]\n", st.get_space(), color[0], color[1], color[2]);
-//				fprintf(stderr, "space %p occ=[%g]\n", st.get_space(), occupancy);
+//				fprintf(stderr, "space %p c=[%f %f %f]\n", st.get_node(), color[0], color[1], color[2]);
+//				fprintf(stderr, "space %p occ=[%g]\n", st.get_node(), occupancy);
 
 			/*
 			 * Use the center of the bounding box to grab interpolation data.
@@ -1176,8 +857,8 @@ public:
 			 * update the space iterator.
 			 */
 
-			if (st.get_space()->positive
-			 || st.get_space()->negative) {
+			if (st.get_node()->positive
+			 || st.get_node()->negative) {
 
 				/*
 				 * Store information about current weights,
@@ -1198,7 +879,7 @@ public:
 				 * process that later.
 				 */
 
-				space_iterate cleaved_space = si.cleave();
+				space::iterate cleaved_space = si.cleave();
 
 				cleaved_space.next();
 
@@ -1334,7 +1015,7 @@ public:
 			 * Call subspace_info_update for the root space.
 			 */
 
-			subspace_info_update(space_iterate(_pt), f, weights, im, _pt);
+			subspace_info_update(space::iterate(_pt), f, weights, im, _pt);
 
 			delete im;
 			delete weights;
@@ -1343,7 +1024,7 @@ public:
 		/*
 		 * Update all spatial_info structures.
 		 */
-		for (std::map<space *,spatial_info>::iterator i = spatial_info_map.begin(); i != spatial_info_map.end(); i++) {
+		for (spatial_info_map_t::iterator i = spatial_info_map.begin(); i != spatial_info_map.end(); i++) {
 			i->second.update_color();
 			i->second.update_occupancy();
 
@@ -1359,27 +1040,27 @@ public:
 	 * Support function for view() and depth().
 	 */
 
-	static const void view_recurse(int type, d2::image *im, d2::image *weights, space_iterate si, pt _pt) {
+	static const void view_recurse(int type, d2::image *im, d2::image *weights, space::iterate si, pt _pt) {
 		while (!si.done()) {
-			space_traverse st = si.get();
+			space::traverse st = si.get();
 
 			/*
 			 * XXX: This could be more efficient, perhaps.
 			 */
 
-			if (spatial_info_map.count(st.get_space()) == 0) {
+			if (spatial_info_map.count(st.get_node()) == 0) {
 				si.next();
 				continue;
 			}
 
-			spatial_info sn = spatial_info_map[st.get_space()];
+			spatial_info sn = spatial_info_map[st.get_node()];
 
 			/*
 			 * Get information on the subspace.
 			 */
 
 			d2::pixel color = sn.get_color();
-			// d2::pixel color = d2::pixel(1, 1, 1) * (double) (((unsigned int) (st.get_space()) / sizeof(space)) % 65535);
+			// d2::pixel color = d2::pixel(1, 1, 1) * (double) (((unsigned int) (st.get_node()) / sizeof(space)) % 65535);
 			ale_real occupancy = sn.get_occupancy();
 
 			/*
@@ -1406,8 +1087,8 @@ public:
 			 * update the space iterator.
 			 */
 
-			if (st.get_space()->positive
-			 || st.get_space()->negative) {
+			if (st.get_node()->positive
+			 || st.get_node()->negative) {
 
 				/*
 				 * Store information about current weights,
@@ -1425,7 +1106,7 @@ public:
 				 * process that afterward.
 				 */
 
-				space_iterate cleaved_space = si.cleave();
+				space::iterate cleaved_space = si.cleave();
 
 				cleaved_space.next();
 
@@ -1602,7 +1283,7 @@ public:
 		 * Iterate through subspaces.
 		 */
 
-		space_iterate si(_pt);
+		space::iterate si(_pt);
 
 		view_recurse(6, im1, weights, si, _pt);
 
@@ -1727,7 +1408,7 @@ public:
 		 * Iterate through subspaces.
 		 */
 
-		space_iterate si(_pt);
+		space::iterate si(_pt);
 
 		view_recurse(0, im, weights, si, _pt);
 
@@ -2130,7 +1811,7 @@ public:
 
 	static void refine_space(point iw, pt _pt1, pt _pt2, std::vector<pt> pt_outputs) {
 
-		space_traverse st = space_traverse::root();
+		space::traverse st = space::traverse::root();
 
 		if (!st.includes(iw)) {
 			assert(0);
@@ -2225,7 +1906,7 @@ public:
 				if (frame_max[f][0] - frame_min[f][0] < 2
 				 && frame_max[f][1] - frame_min[f][1] < 2
 				 && camera_lowres[f] == 0) {
-					spatial_info_map[st.get_space()];
+					spatial_info_map[st.get_node()];
 					camera_lowres[f] = 1;
 				}
 
@@ -2236,7 +1917,7 @@ public:
 				if (frame_max[f][0] - frame_min[f][0] < 1
 				 && frame_max[f][1] - frame_min[f][1] < 1
 				 && camera_highres[f] == 0) {
-					spatial_info_map[st.get_space()];
+					spatial_info_map[st.get_node()];
 					camera_highres[f] = 1;
 				}
 			}
@@ -2254,7 +1935,7 @@ public:
 				if (output_max[n][0] - output_min[n][0] < 2
 				 && output_max[n][1] - output_min[n][1] < 2
 				 && output_lowres[n] == 0) {
-					spatial_info_map[st.get_space()];
+					spatial_info_map[st.get_node()];
 					output_lowres[n] = 1;
 				}
 
@@ -2265,7 +1946,7 @@ public:
 				if (output_max[n][0] - output_min[n][0] < 1
 				 && output_max[n][1] - output_min[n][1] < 1
 				 && camera_highres[n] == 0) {
-					spatial_info_map[st.get_space()];
+					spatial_info_map[st.get_node()];
 					output_highres[n] = 1;
 				}
 			}
@@ -2335,11 +2016,11 @@ public:
 		}
 	}
 
-	static void refine_space_for_output(pt _pt, space_traverse st = space_traverse::root()) {
-		if (!spatial_info_map.count(st.get_space())) {
-			if (st.get_space()->positive)
+	static void refine_space_for_output(pt _pt, space::traverse st = space::traverse::root()) {
+		if (!spatial_info_map.count(st.get_node())) {
+			if (st.get_node()->positive)
 				refine_space_for_output(_pt, st.positive());
-			if (st.get_space()->negative)
+			if (st.get_node()->negative)
 				refine_space_for_output(_pt, st.negative());
 			return;
 		}
@@ -2353,8 +2034,8 @@ public:
 		if (!_pt.scaled_in_bounds(bb[0]) || !_pt.scaled_in_bounds(bb[1]))
 			return;
 
-		spatial_info_map[st.positive().get_space()];
-		spatial_info_map[st.negative().get_space()];
+		spatial_info_map[st.positive().get_node()];
+		spatial_info_map[st.negative().get_node()];
 
 		refine_space_for_output(_pt, st.positive());
 		refine_space_for_output(_pt, st.negative());
@@ -2418,7 +2099,7 @@ public:
 		 * Initialize root space.
 		 */
 
-		root_space = new space;
+		space::init_root();
 
 		/*
 		 * Subdivide space to resolve intensity matches between pairs

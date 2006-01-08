@@ -1,5 +1,6 @@
-// Copyright 2003 David Hilvert <dhilvert@auricle.dyndns.org>, 
-//                              <dhilvert@ugcs.caltech.edu>
+// Copyright 2003, 2004, 2005 David Hilvert <dhilvert@gmail.com>,
+//                                          <dhilvert@auricle.dyndns.org>,
+//                                          <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
 
@@ -18,29 +19,10 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include "space.h"
+
 /*
- * Top-level header file for classes treating scenes as three-dimensional data.
+ * See space.h for details on these variables.
  */
 
-#include <map>
-#include <set>
-#include <iterator>
-#include <vector>
-#include <queue>
-#include <stack>
-#include <algorithm>
-#include "time.h"
-#include "d2.h"
-
-namespace d3 {
-
-#include "d3/align.h"
-#include "d3/et.h"
-#include "d3/tfile.h"
-#include "d3/point.h"
-#include "d3/cpf.h"
-#include "d3/pt.h"
-#include "d3/space.h"
-#include "d3/scene.h"
-	
-}
+scene::space *scene::root_space = NULL;
