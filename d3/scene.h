@@ -182,9 +182,9 @@ class scene {
 
 		/*
 		 * Get a 'trilinear' color.  We currently don't do interpolation
-		 * between levels of detail.
+		 * between levels of detail; hence, it's discontinuous in tl_coord.
 		 */
-		pixel get_tl(d2::point p, ale_pos tl_coord) {
+		d2::pixel get_tl(d2::point p, ale_pos tl_coord) {
 
 			assert(in_bounds(p));
 
@@ -231,6 +231,99 @@ class scene {
 		~lod_image() {
 			for (unsigned int i = 0; i < entries; i++) {
 				delete im[i];
+			}
+		}
+	};
+
+	/*
+	 * Structure to hold weight information for reference images at varying
+	 * levels of detail.
+	 */
+	class ref_weights {
+		unsigned int f;
+		std::vector<const d2::image *> weights;
+		pt transformation;
+		unsigned int entries;
+
+	public:
+		/*
+		 * Constructor
+		 */
+		ref_weights(unsigned int _f) {
+
+			pt _pt;
+			
+			f = _f;
+			transformation = _pt = d3::align::projective(f);
+			weights.push_back(new d2::image_ale_real(_pt.unscaled_height(), _pt.unscaled_width(), 3));
+			assert(weights.back());
+			entries = 1;
+
+			for (int lod = 1; lod <= primary_decimation_upper; lod++) {
+
+				weights.push_back(weights.back()->scale_by_half("3D, reduced LOD"));
+				assert(im.back());
+
+				entries += 1;
+			}
+
+			for (int lod = 0; lod < primary_decimation_upper; lod++) {
+			}
+		}
+
+		int in_bounds(d2::point p) {
+			return im->in_bounds(p);
+		}
+
+		/*
+		 * Get a 'trilinear' color.  We currently don't do interpolation
+		 * between levels of detail; hence, it's discontinuous in tl_coord.
+		 */
+		d2::pixel get_tl(d2::point p, ale_pos tl_coord) {
+
+			assert(in_bounds(p));
+
+			if (tl_coord >= entries)
+				tl_coord = entries;
+			if (tl_coord < 0)
+				tl_coord = 0;
+			tl_coord = round(tl_coord);
+
+			p /= (ale_pos) tl_coord;
+
+			unsigned int itlc = (unsigned int) tl_coord;
+
+			if (p[0] > im[itlc]->height() - 1)
+				p[0] = im[itlc]->height() - 1;
+			if (p[1] > im[itlc]->width() - 1)
+				p[1] = im[itlc]->width() - 1;
+
+			assert(p[0] >= 0);
+			assert(p[1] >= 0);
+
+			return im[itlc]->get_bl(p);
+		}
+
+		/*
+		 * Get the transformation
+		 */
+		pt get_t() {
+			return transformation;
+		}
+
+		/*
+		 * Get the camera origin in world coordinates
+		 */
+		point origin() {
+			return transformation.cw(point(0, 0, 0));
+		}
+
+		/*
+		 * Destructor
+		 */
+		~ref_weights() {
+			for (unsigned int i = 0; i < entries; i++) {
+				delete weights[i];
 			}
 		}
 	};
