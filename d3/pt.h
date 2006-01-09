@@ -25,6 +25,7 @@
 #ifndef __pt_h__
 #define __pt_h__
 
+#include "space.h"
 #include "et.h"
 
 /*
@@ -346,6 +347,54 @@ public:
 		ale_pos diagonal = pow(2, coordinate) * depth * diag_per_depth;
 
 		return diagonal;
+	}
+
+	/*
+	 * Get bounding box for projection of a subspace.
+	 */
+
+	void get_view_local_bb(space::traverse st, point bb[2]) {
+
+		point min = point::posinf();
+		point max = point::neginf();
+
+		point wbb[2] = { st.get_min(), st.get_max() };
+
+
+		for (int x = 0; x < 2; x++)
+		for (int y = 0; y < 2; y++)
+		for (int z = 0; z < 2; z++) {
+			point p = wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
+
+			if (p[0] < min[0])
+				min[0] = p[0];
+			if (p[0] > max[0])
+				max[0] = p[0];
+			if (p[1] < min[1])
+				min[1] = p[1];
+			if (p[1] > max[1])
+				max[1] = p[1];
+			if (p[2] < min[2])
+				min[2] = p[2];
+			if (p[2] > max[2])
+				max[2] = p[2];
+		}
+
+		/*
+		 * Clip bounding box to image extents.
+		 */
+
+		if (min[0] < 0)
+			min[0] = 0;
+		if (min[1] < 0)
+			min[1] = 0;
+		if (max[0] > scaled_height() - 1)
+			max[0] = scaled_height() - 1;
+		if (max[1] > _pt.scaled_width() - 1)
+			max[1] = scaled_width() - 1;
+
+		bb[0] = min;
+		bb[1] = max;
 	}
 
 };

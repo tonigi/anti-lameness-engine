@@ -738,7 +738,7 @@ public:
 
 			point bb[2];
 
-			st.get_view_local_bb(_pt, bb);
+			_pt.get_view_local_bb(st, bb);
 
 			point min = bb[0];
 			point max = bb[1];
@@ -1035,7 +1035,7 @@ public:
 
 			point bb[2];
 
-			st.get_view_local_bb(_pt, bb);
+			_pt.get_view_local_bb(st, bb);
 
 			point min = bb[0];
 			point max = bb[1];
@@ -1991,7 +1991,7 @@ public:
 		}
 
 		point bb[2];
-		st.get_view_local_bb(_pt, bb);
+		_pt.get_view_local_bb(st, bb);
 
 		if (bb[0].xy().lengthtosq(bb[1].xy()) < 2)
 			return;
