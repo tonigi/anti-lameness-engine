@@ -222,14 +222,9 @@ public:
 		std::stack<traverse> node_stack;
 		point camera_origin;
 
-		iterate(point co, traverse top) {
-			camera_origin = co;
-			node_stack.push(top);
-		}
-
 	public:
-		iterate(pt _pt, traverse top = traverse::root()) {
-			camera_origin = _pt.cw(point(0, 0, 0));
+		iterate(point co, traverse top = traverse::root()) {
+			camera_origin = co;
 			node_stack.push(top);
 		}
 

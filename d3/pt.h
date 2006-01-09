@@ -299,7 +299,7 @@ private:
 		ale_pos w = unscaled_width();
 		ale_pos h = unscaled_height();
 
-		diag_per_depth = sqrt(2) * (2 * tan(view_angle / 2)) / sqrt(w*w + h*h);
+		diag_per_depth = sqrt(2) * (2 * tan(_view_angle / 2)) / sqrt(w*w + h*h);
 	}
 
 public:
@@ -327,8 +327,8 @@ public:
 	 * Get a trilinear coordinate for a given subspace.
 	 */
 	ale_pos trilinear_coordinate(const space::traverse &st) {
-		point min = st.min();
-		point max = st.max();
+		point min = st.get_min();
+		point max = st.get_max();
 		point avg = (min + max) / (ale_pos) 2;
 
 		ale_pos diagonal = min.lengthto(max) * sqrt(2) / sqrt(3);
@@ -390,7 +390,7 @@ public:
 			min[1] = 0;
 		if (max[0] > scaled_height() - 1)
 			max[0] = scaled_height() - 1;
-		if (max[1] > _pt.scaled_width() - 1)
+		if (max[1] > scaled_width() - 1)
 			max[1] = scaled_width() - 1;
 
 		bb[0] = min;
