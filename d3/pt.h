@@ -315,11 +315,6 @@ public:
 
 		ale_pos coord = log(diagonal / (depth * diag_per_depth)) / log(2);
 
-		coord = round(coord);
-
-		if (coord < 0)
-			coord = 0;
-
 		return coord;
 	}
 

@@ -188,13 +188,14 @@ class scene {
 
 			assert(in_bounds(p));
 
+			tl_coord = round(tl_coord);
+
 			if (tl_coord >= entries)
 				tl_coord = entries;
 			if (tl_coord < 0)
 				tl_coord = 0;
-			tl_coord = round(tl_coord);
 
-			p /= (ale_pos) tl_coord;
+			p = p / (ale_pos) pow(2, tl_coord);
 
 			unsigned int itlc = (unsigned int) tl_coord;
 
@@ -236,93 +237,59 @@ class scene {
 	};
 
 	/*
-	 * Structure to hold weight information for reference images at varying
-	 * levels of detail.
+	 * Structure to hold weight information for reference images.
 	 */
 	class ref_weights {
 		unsigned int f;
-		std::vector<const d2::image *> weights;
+		std::vector<d2::image *> weights;
 		pt transformation;
-		unsigned int entries;
+		int res_low;
+		int res_high;
+		int initialized;
+
+		void set_image(d2::image *im, ale_real value) {
+			for (unsigned int i = 0; i < im->height(); i++)
+			for (unsigned int j = 0; i < im->width(); j++)
+				im->pix(i, j) = d2::pixel(value, value, value);
+		}
 
 	public:
 		/*
 		 * Constructor
 		 */
 		ref_weights(unsigned int _f) {
-
-			pt _pt;
-			
 			f = _f;
-			transformation = _pt = d3::align::projective(f);
-			weights.push_back(new d2::image_ale_real(_pt.unscaled_height(), _pt.unscaled_width(), 3));
-			assert(weights.back());
-			entries = 1;
-
-			for (int lod = 1; lod <= primary_decimation_upper; lod++) {
-
-				weights.push_back(weights.back()->scale_by_half("3D, reduced LOD"));
-				assert(im.back());
-
-				entries += 1;
-			}
-
-			for (int lod = 0; lod < primary_decimation_upper; lod++) {
-			}
-		}
-
-		int in_bounds(d2::point p) {
-			return im->in_bounds(p);
+			transformation = d3::align::projective(f);
+			initialized = 0;
 		}
 
 		/*
-		 * Get a 'trilinear' color.  We currently don't do interpolation
-		 * between levels of detail; hence, it's discontinuous in tl_coord.
+		 * Bounds check for spatial and resolution bounds
 		 */
-		d2::pixel get_tl(d2::point p, ale_pos tl_coord) {
-
-			assert(in_bounds(p));
-
-			if (tl_coord >= entries)
-				tl_coord = entries;
-			if (tl_coord < 0)
-				tl_coord = 0;
-			tl_coord = round(tl_coord);
-
-			p /= (ale_pos) tl_coord;
-
-			unsigned int itlc = (unsigned int) tl_coord;
-
-			if (p[0] > im[itlc]->height() - 1)
-				p[0] = im[itlc]->height() - 1;
-			if (p[1] > im[itlc]->width() - 1)
-				p[1] = im[itlc]->width() - 1;
-
-			assert(p[0] >= 0);
-			assert(p[1] >= 0);
-
-			return im[itlc]->get_bl(p);
+		int in_bounds(const space::traverse &t) {
+			ale_pos tc = transformation.trilinear_coordinate(t);
+			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
+			assert(0);
 		}
 
 		/*
-		 * Get the transformation
+		 * Add weight.
 		 */
-		pt get_t() {
-			return transformation;
+		void add_weight(const space::traverse &t, ale_real weight) {
 		}
 
 		/*
-		 * Get the camera origin in world coordinates
+		 * Get weight
 		 */
-		point origin() {
-			return transformation.cw(point(0, 0, 0));
+		ale_real get_weight(const space::traverse &t) {
+			assert(0);
 		}
 
 		/*
 		 * Destructor
 		 */
 		~ref_weights() {
-			for (unsigned int i = 0; i < entries; i++) {
+			for (unsigned int i = 0; i < weights.size(); i++) {
 				delete weights[i];
 			}
 		}

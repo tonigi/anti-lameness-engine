@@ -193,6 +193,10 @@ public:
 			return max;
 		}
 
+		point get_centroid() const {
+			return (max + min) / 2;
+		}
+
 		int includes(point p) {
 
 			for (int d = 0; d < 3; d++) {
