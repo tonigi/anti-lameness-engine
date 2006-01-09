@@ -175,6 +175,40 @@ class scene {
 			return im[i];
 		}
 
+
+		int in_bounds(d2::point p) {
+			return im[0]->in_bounds(p);
+		}
+
+		/*
+		 * Get a 'trilinear' color.  We currently don't do interpolation
+		 * between levels of detail.
+		 */
+		pixel get_tl(d2::point p, ale_pos tl_coord) {
+
+			assert(in_bounds(p));
+
+			if (tl_coord >= entries)
+				tl_coord = entries;
+			if (tl_coord < 0)
+				tl_coord = 0;
+			tl_coord = round(tl_coord);
+
+			p /= (ale_pos) tl_coord;
+
+			unsigned int itlc = (unsigned int) tl_coord;
+
+			if (p[0] > im[itlc]->height() - 1)
+				p[0] = im[itlc]->height() - 1;
+			if (p[1] > im[itlc]->width() - 1)
+				p[1] = im[itlc]->width() - 1;
+
+			assert(p[0] >= 0);
+			assert(p[1] >= 0);
+
+			return im[itlc]->get_bl(p);
+		}
+
 		/*
 		 * Get the transformation
 		 */
@@ -182,6 +216,13 @@ class scene {
 			assert(i >= 0);
 			assert(i < entries);
 			return transformation[i];
+		}
+
+		/*
+		 * Get the camera origin in world coordinates
+		 */
+		point origin() {
+			return transformation[0].cw(point(0, 0, 0));
 		}
 
 		/*
@@ -941,32 +982,13 @@ public:
 		 * Iterate through each frame.
 		 */
 		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
-			/*
-			 * Get transformation data.
-			 */
-			pt _pt = align::projective(f);
-			_pt.scale(1 / _pt.scale_2d() / pow(2, ceil(input_decimation_exponent)));
 
 			/*
-			 * Get color data for the frames.
+			 * Open the frame and transformation.
 			 */
 
-			d2::image *im = d2::image_rw::copy(f, "3D reference image");
-
-			assert(im);
-
-			ale_pos decimation_index = input_decimation_exponent;
-			while (decimation_index > 0
-			    && im->height() > 2
-			    && im->width() > 2) {
-				d2::image *iim = im->scale_by_half("3D, reduced LOD");
-				assert(iim);
-				delete im;
-				im = iim;
-				decimation_index -= 1;
-			}
-
-			assert(im);
+			if (tc_multiplier == 0)
+				al->open(f);
 
 			/*
 			 * Allocate an image for storing encounter probabilities.
@@ -980,10 +1002,12 @@ public:
 			 * Call subspace_info_update for the root space.
 			 */
 
-			subspace_info_update(space::iterate(_pt), f, weights, im, _pt);
+			subspace_info_update(space::iterate(al->get(f)->origin()), f, weights, _pt);
 
-			delete im;
 			delete weights;
+
+			if (tc_multiplier == 0)
+				al->close(f);
 		}
 
 		/*
