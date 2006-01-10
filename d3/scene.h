@@ -264,25 +264,44 @@ class scene {
 		}
 
 		/*
-		 * Bounds check for spatial and resolution bounds
+		 * Check spatial bounds.
 		 */
-		int in_bounds(const space::traverse &t) {
-			ale_pos tc = transformation.trilinear_coordinate(t);
+		int in_spatial_bounds(d2::point p) {
+			if (p[0] < 0)
+				return 0;
+			if (p[1] < 0)
+				return 0;
+			if (p[0] > transformation.unscaled_height() - 1)
+				return 0;
+			if (p[1] > transformation.unscaled_width() - 1)
+				return 0;
+			if (p[2] >= 0)
+				return 0;
+
+			return 1;
+		}
+
+		int in_spatial_bounds(const space::traverse &t) {
 			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
-			assert(0);
+			return in_spatial_bounds(p);
 		}
 
 		/*
 		 * Add weight.
 		 */
 		void add_weight(const space::traverse &t, ale_real weight) {
+			ale_pos tc = transformation.trilinear_coordinate(t);
+			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
+			assert(in_spatial_bounds(p));
 		}
 
 		/*
 		 * Get weight
 		 */
 		ale_real get_weight(const space::traverse &t) {
-			assert(0);
+			ale_pos tc = transformation.trilinear_coordinate(t);
+			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
+			assert(in_spatial_bounds(p));
 		}
 
 		/*
@@ -294,6 +313,14 @@ class scene {
 			}
 		}
 	};
+
+	/*
+	 * Resolution check.
+	 */
+	int resolution_ok(transformation t, const space::traverse &t) {
+		ale_pos tc = transformation.trilinear_coordinate(t);
+		assert(0);
+	}
 
 	/*
 	 * Structure to hold input frame information at all levels of detail.
