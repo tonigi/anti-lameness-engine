@@ -243,14 +243,25 @@ class scene {
 		unsigned int f;
 		std::vector<d2::image *> weights;
 		pt transformation;
-		int res_low;
-		int res_high;
+		int tc_low;
+		int tc_high;
 		int initialized;
 
 		void set_image(d2::image *im, ale_real value) {
 			for (unsigned int i = 0; i < im->height(); i++)
 			for (unsigned int j = 0; i < im->width(); j++)
 				im->pix(i, j) = d2::pixel(value, value, value);
+		}
+
+		d2::image *make_image(ale_pos sf, ale_real init_value = 0) {
+			d2::image *result = new d2::image_ale_real(
+					(unsigned int) ceil(transformation.unscaled_height() * sf),
+					(unsigned int) ceil(transformation.unscaled_width() * sf), 3);
+
+			if (init_value != 0)
+				set_image(result, init_value);
+
+			return result;
 		}
 
 	public:
@@ -293,6 +304,49 @@ class scene {
 			ale_pos tc = transformation.trilinear_coordinate(t);
 			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
 			assert(in_spatial_bounds(p));
+
+			tc = round(tc);
+
+			/*
+			 * Establish a reasonable (?) upper bound on resolution.
+			 */
+
+			if (tc < input_decimation_lower)
+				tc = input_decimation_lower;
+
+			/*
+			 * Initialize, if necessary.
+			 */
+
+			if (!initialized) {
+				tc_low = tc_high = tc;
+
+				ale_real sf = pow(2, -tc);
+
+				weights[0] = make_image(sf);
+			}
+
+			assert (tc_low <= tc_high);
+
+			/*
+			 * Generate additional levels of detail, if necessary.
+			 */
+
+			while (tc < tc_low) {
+				tc_low--;
+
+				ale_real sf = pow(2, -tc_low);
+
+				weights.insert(weights.begin(), make_image(sf));
+			}
+
+			while (tc > tc_high) {
+				tc_high++;
+
+				ale_real sf = pow(2, -tc_high);
+
+				weights.push_back(make_image(sf, -1));
+			}
 		}
 
 		/*
@@ -302,6 +356,9 @@ class scene {
 			ale_pos tc = transformation.trilinear_coordinate(t);
 			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
 			assert(in_spatial_bounds(p));
+
+			if (!initialized)
+				return 0;
 		}
 
 		/*
