@@ -298,9 +298,173 @@ class scene {
 		}
 
 		/*
+		 * Increase resolution to the given level.
+		 */
+		void increase_resolution(int tc, unsigned int i, unsigned int j) {
+			d2::image *im = weights[tc - input_decimation_lower];
+			assert(im);
+			assert(i <= im->height() - 1);
+			assert(j <= im->width() - 1);
+
+			/*
+			 * Check for the cases known to have no lower level of detail.
+			 */
+
+			if (im->pix(i, j) == -1)
+				return;
+
+			if (tc == tc_high)
+				return;
+
+			increase_resolution(tc + 1, i / 2, j / 2);
+
+			/*
+			 * Load the lower-level image structure.
+			 */
+
+			d2::image *iim = weights[tc + 1 - input_decimation_lower];
+
+			assert(iim);
+			assert(i / 2 <= iim->height() - 1);
+			assert(j / 2 <= iim->width() - 1);
+
+			/*
+			 * Check for the case where no lower level of detail is
+			 * available.
+			 */
+
+			if (iim->pix(i / 2, j / 2) == -1)
+				return;
+
+			/*
+			 * Spread out the lower level of detail among (uninitialized)
+			 * peer values.
+			 */
+
+			for (unsigned int ii = (i / 2) * 2; ii < (i / 2) * 2 + 1; ii++)
+			for (unsigned int jj = (j / 2) * 2; jj < (j / 2) * 2 + 1; jj++) {
+				assert(ii <= im->height() - 1);
+				assert(jj <= im->width() - 1);
+				assert(im->pix(ii, jj) == 0);
+
+				im->pix(ii, jj) = iim->pix(i / 2, j / 2);
+			}
+
+			/*
+			 * Set the lower level of detail to point here.
+			 */
+
+			iim->pix(i / 2, j / 2) = -1;
+		}
+
+		/*
+		 * Add weights to positive higher-resolution pixels where
+		 * found; set negative pixels to zero and return 0 if no
+		 * positive higher-resolution pixels are found.
+		 */
+		int add_partial(tc, unsigned int i, unsigned int j, ale_real weight) {
+			d2::image *im = weights[tc - input_decimation_lower];
+			assert(im);
+			assert(i <= im->height() - 1);
+			assert(j <= im->width() - 1);
+
+			/*
+			 * Check for positive values.
+			 */
+
+			if (im->pix(i, j) > 0) {
+				im->pix(i, j) += weight;
+				return 1;
+			}
+
+			/*
+			 * Handle the case where there are no higher levels of detail.
+			 */
+
+			if (tc == tc_low) {
+				assert(im->pix(i, j) == 0);
+				return 0;
+			}
+
+			/*
+			 * Handle the case where higher levels of detail are available.
+			 */
+
+			int success[2][2];
+
+			for (int ii = 0; ii < 2; ii++)
+			for (int jj = 0; jj < 2; jj++)
+				success[ii][jj] = add_partial(tc - 1, i * 2 + ii, j * 2 + jj, weight);
+
+			if (!success[0][0]
+			 && !success[0][1]
+			 && !success[1][0]
+			 && !success[1][1]) {
+				im->pix(i, j) = 0;
+				return 0;
+			}
+
+			d2::image *iim = weights[tc - 1 - input_decimation_lower];
+			assert(iim);
+
+			for (int ii = 0; ii < 2; ii++)
+			for (int jj = 0; jj < 2; jj++)
+				if (success[ii][jj] == 0) {
+					assert(i * 2 + ii < iim->height());
+					assert(j * 2 + jj < iim->width());
+
+					im->pix(i * 2 + ii, j * 2 + jj) = weight;
+				}
+
+			im->pix(i, j) = -1;
+		}
+
+		/*
 		 * Add weight.
 		 */
+		void add_weight(int tc, unsigned int i, unsigned int j, ale_real weight) {
+			d2::image *im = weights[tc - input_decimation_lower];
+			assert(im);
+			assert(i <= im->height() - 1);
+			assert(j <= im->width() - 1);
+
+			/*
+			 * Increase resolution, if necessary
+			 */
+
+			increase_resolution(tc, i, j);
+
+			/*
+			 * Attempt to add the weight at levels of detail
+			 * where weight is defined.
+			 */
+
+			if (add_partial(tc, i, j, weight))
+				return;
+
+			/*
+			 * If no weights are defined at any level of detail,
+			 * then set the weight here.
+			 */
+
+			im->pix(i, j) = weight;
+		}
+
+		void add_weight(int tc, d2::point p, ale_real weight) {
+
+			p /= pow(2, tc);
+
+			unsigned int i = (unsigned int) floor(p[0]);
+			unsigned int j = (unsigned int) floor(p[1]);
+
+			add_weight(tc, i, j, weight);
+		}
+
 		void add_weight(const space::traverse &t, ale_real weight) {
+
+			if (weight == 0)
+				return;
+			
 			ale_pos tc = transformation.trilinear_coordinate(t);
 			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
 			assert(in_spatial_bounds(p));
@@ -311,8 +475,10 @@ class scene {
 			 * Establish a reasonable (?) upper bound on resolution.
 			 */
 
-			if (tc < input_decimation_lower)
+			if (tc < input_decimation_lower) {
+				weight /= pow(4, (input_decimation_lower - tc));
 				tc = input_decimation_lower;
+			}
 
 			/*
 			 * Initialize, if necessary.
@@ -325,6 +491,10 @@ class scene {
 
 				weights[0] = make_image(sf);
 			}
+
+			/*
+			 * Check resolution bounds
+			 */
 
 			assert (tc_low <= tc_high);
 
@@ -347,6 +517,8 @@ class scene {
 
 				weights.push_back(make_image(sf, -1));
 			}
+
+			add_weight((int) tc, p, weight);			
 		}
 
 		/*
