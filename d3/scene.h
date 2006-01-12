@@ -301,7 +301,7 @@ class scene {
 		 * Increase resolution to the given level.
 		 */
 		void increase_resolution(int tc, unsigned int i, unsigned int j) {
-			d2::image *im = weights[tc - input_decimation_lower];
+			d2::image *im = weights[tc - tc_low];
 			assert(im);
 			assert(i <= im->height() - 1);
 			assert(j <= im->width() - 1);
@@ -322,7 +322,7 @@ class scene {
 			 * Load the lower-level image structure.
 			 */
 
-			d2::image *iim = weights[tc + 1 - input_decimation_lower];
+			d2::image *iim = weights[tc + 1 - tc_low];
 
 			assert(iim);
 			assert(i / 2 <= iim->height() - 1);
@@ -363,7 +363,7 @@ class scene {
 		 * positive higher-resolution pixels are found.
 		 */
 		int add_partial(tc, unsigned int i, unsigned int j, ale_real weight) {
-			d2::image *im = weights[tc - input_decimation_lower];
+			d2::image *im = weights[tc - tc_low];
 			assert(im);
 			assert(i <= im->height() - 1);
 			assert(j <= im->width() - 1);
@@ -404,7 +404,7 @@ class scene {
 				return 0;
 			}
 
-			d2::image *iim = weights[tc - 1 - input_decimation_lower];
+			d2::image *iim = weights[tc - 1 - tc_low];
 			assert(iim);
 
 			for (int ii = 0; ii < 2; ii++)
@@ -423,7 +423,7 @@ class scene {
 		 * Add weight.
 		 */
 		void add_weight(int tc, unsigned int i, unsigned int j, ale_real weight) {
-			d2::image *im = weights[tc - input_decimation_lower];
+			d2::image *im = weights[tc - tc_low];
 			assert(im);
 			assert(i <= im->height() - 1);
 			assert(j <= im->width() - 1);
