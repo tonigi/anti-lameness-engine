@@ -602,7 +602,15 @@ class scene {
 	 */
 	int resolution_ok(pt transformation, const space::traverse &t) {
 		ale_pos tc = transformation.trilinear_coordinate(t);
-		assert(0);
+
+		if (pow(2, tc) > transformation.unscaled_height()
+		 || pow(2, tc) > transformation.unscaled_width())
+			return 0;
+
+		if (tc < input_decimation_lower)
+			return 0;
+
+		return 1;
 	}
 
 	/*
