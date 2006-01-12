@@ -524,6 +524,36 @@ class scene {
 		/*
 		 * Get weight
 		 */
+		ale_real get_weight(int tc, unsigned int i, unsigned int j) {
+			d2::image *im = weights[tc - tc_low];
+			assert(im);
+			assert(i < im->height());
+			assert(j < im->width());
+
+			if (im->pix(i, j)[0] == -1) {
+				return get_weight(tc - 1, i * 2 + 0, j * 2 + 0)
+				     + get_weight(tc - 1, i * 2 + 1, j * 2 + 0)
+				     + get_weight(tc - 1, i * 2 + 1, j * 2 + 1)
+				     + get_weight(tc - 1, i * 2 + 0, j * 2 + 1);
+			}
+
+			if (im->pix(i, j)[0] == 0) {
+				return get_weight(tc + 1, i / 2, j / 2);
+			}
+
+			return im->pix(i, j)[0];
+		}
+
+		ale_real get_weight(int tc, d2::point p) {
+
+			p *= pow(2, -tc);
+
+			unsigned int i = (unsigned int) floor(p[0]);
+			unsigned int j = (unsigned int) floor(p[1]);
+
+			return get_weight(tc, i, j);
+		}
+
 		ale_real get_weight(const space::traverse &t) {
 			ale_pos tc = transformation.trilinear_coordinate(t);
 			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
@@ -531,6 +561,30 @@ class scene {
 
 			if (!initialized)
 				return 0;
+
+			tc = round(tc);
+
+			if (tc < tc_low) {
+				tc = tc_low;
+			}
+
+			if (tc <= tc_high) {
+				return get_weight((int) tc, p);
+			}
+
+			assert(tc > tc_high);
+
+			int multiplier = (int) pow(2, (tc - tc_high));
+			ale_real result = 0;
+
+			for (int i = 0; i < multiplier; i++)
+			for (int j = 0; j < multiplier; j++) {
+				result += get_weight(tc_high,
+						(unsigned int) floor(p[0]) * multiplier + i,
+						(unsigned int) floor(p[1]) * multiplier + j);
+			}
+
+			return result;
 		}
 
 		/*
