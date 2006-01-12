@@ -310,7 +310,7 @@ class scene {
 			 * Check for the cases known to have no lower level of detail.
 			 */
 
-			if (im->pix(i, j) == -1)
+			if (im->pix(i, j)[0] == -1)
 				return;
 
 			if (tc == tc_high)
@@ -333,7 +333,7 @@ class scene {
 			 * available.
 			 */
 
-			if (iim->pix(i / 2, j / 2) == -1)
+			if (iim->pix(i / 2, j / 2)[0] == -1)
 				return;
 
 			/*
@@ -345,7 +345,7 @@ class scene {
 			for (unsigned int jj = (j / 2) * 2; jj < (j / 2) * 2 + 1; jj++) {
 				assert(ii <= im->height() - 1);
 				assert(jj <= im->width() - 1);
-				assert(im->pix(ii, jj) == 0);
+				assert(im->pix(ii, jj)[0] == 0);
 
 				im->pix(ii, jj) = iim->pix(i / 2, j / 2);
 			}
@@ -354,7 +354,7 @@ class scene {
 			 * Set the lower level of detail to point here.
 			 */
 
-			iim->pix(i / 2, j / 2) = -1;
+			iim->pix(i / 2, j / 2)[0] = -1;
 		}
 
 		/*
@@ -362,7 +362,7 @@ class scene {
 		 * found; set negative pixels to zero and return 0 if no
 		 * positive higher-resolution pixels are found.
 		 */
-		int add_partial(tc, unsigned int i, unsigned int j, ale_real weight) {
+		int add_partial(int tc, unsigned int i, unsigned int j, ale_real weight) {
 			d2::image *im = weights[tc - tc_low];
 			assert(im);
 			assert(i <= im->height() - 1);
@@ -372,8 +372,8 @@ class scene {
 			 * Check for positive values.
 			 */
 
-			if (im->pix(i, j) > 0) {
-				im->pix(i, j) += weight;
+			if (im->pix(i, j)[0] > 0) {
+				im->pix(i, j)[0] += weight;
 				return 1;
 			}
 
@@ -382,7 +382,7 @@ class scene {
 			 */
 
 			if (tc == tc_low) {
-				assert(im->pix(i, j) == 0);
+				assert(im->pix(i, j)[0] == 0);
 				return 0;
 			}
 
@@ -400,7 +400,7 @@ class scene {
 			 && !success[0][1]
 			 && !success[1][0]
 			 && !success[1][1]) {
-				im->pix(i, j) = 0;
+				im->pix(i, j)[0] = 0;
 				return 0;
 			}
 
@@ -413,10 +413,10 @@ class scene {
 					assert(i * 2 + ii < iim->height());
 					assert(j * 2 + jj < iim->width());
 
-					im->pix(i * 2 + ii, j * 2 + jj) = weight;
+					im->pix(i * 2 + ii, j * 2 + jj)[0] = weight;
 				}
 
-			im->pix(i, j) = -1;
+			im->pix(i, j)[0] = -1;
 		}
 
 		/*
@@ -447,12 +447,12 @@ class scene {
 			 * then set the weight here.
 			 */
 
-			im->pix(i, j) = weight;
+			im->pix(i, j)[0] = weight;
 		}
 
 		void add_weight(int tc, d2::point p, ale_real weight) {
 
-			p /= pow(2, tc);
+			p *= pow(2, -tc);
 
 			unsigned int i = (unsigned int) floor(p[0]);
 			unsigned int j = (unsigned int) floor(p[1]);
@@ -485,7 +485,7 @@ class scene {
 			 */
 
 			if (!initialized) {
-				tc_low = tc_high = tc;
+				tc_low = tc_high = (int) tc;
 
 				ale_real sf = pow(2, -tc);
 
@@ -546,7 +546,7 @@ class scene {
 	/*
 	 * Resolution check.
 	 */
-	int resolution_ok(transformation t, const space::traverse &t) {
+	int resolution_ok(pt transformation, const space::traverse &t) {
 		ale_pos tc = transformation.trilinear_coordinate(t);
 		assert(0);
 	}
