@@ -348,7 +348,7 @@ public:
 	 * Get bounding box for projection of a subspace.
 	 */
 
-	void get_view_local_bb(space::traverse st, point bb[2]) {
+	void get_view_local_bb(const space::traverse &st, point bb[2]) {
 
 		point min = point::posinf();
 		point max = point::neginf();
@@ -390,6 +390,25 @@ public:
 
 		bb[0] = min;
 		bb[1] = max;
+	}
+
+	/*
+	 * Get the in-bounds centroid for a subspace, if one exists.
+	 */
+
+	point centroid(const space::traverse &t) {
+		point bb[2];
+
+		get_view_local_bb(t, bb);
+
+		for (int d = 0; d < 2; d++)
+		if (min[d] > max[d])
+			return point::undefined();
+
+		if (min[2] > 0)
+			return point::undefined();
+
+		return (bb[0] + bb[1]) / 2;
 	}
 
 };

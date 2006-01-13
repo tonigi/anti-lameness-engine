@@ -531,10 +531,10 @@ class scene {
 			assert(j < im->width());
 
 			if (im->pix(i, j)[0] == -1) {
-				return get_weight(tc - 1, i * 2 + 0, j * 2 + 0)
-				     + get_weight(tc - 1, i * 2 + 1, j * 2 + 0)
-				     + get_weight(tc - 1, i * 2 + 1, j * 2 + 1)
-				     + get_weight(tc - 1, i * 2 + 0, j * 2 + 1);
+				return (get_weight(tc - 1, i * 2 + 0, j * 2 + 0)
+				      + get_weight(tc - 1, i * 2 + 1, j * 2 + 0)
+				      + get_weight(tc - 1, i * 2 + 1, j * 2 + 1)
+				      + get_weight(tc - 1, i * 2 + 0, j * 2 + 1)) / 4;
 			}
 
 			if (im->pix(i, j)[0] == 0) {
@@ -1127,12 +1127,14 @@ public:
 	 * Perform spatial_info updating on a given subspace, for given
 	 * parameters.
 	 */
-	static void subspace_info_update(space::iterate si, int f, d2::image *weights, const d2::image *im, pt _pt) {
+	static void subspace_info_update(space::iterate si, int f, ref_weights *weights, const d2::image *im, pt _pt) {
 		while(!si.done()) {
 
 			space::traverse st = si.get();
 
 			/*
+			 * Skip spaces with no color information.
+			 *
 			 * XXX: This could be more efficient, perhaps.
 			 */
 
@@ -1141,100 +1143,31 @@ public:
 				continue;
 			}
 
-			spatial_info *sn = &spatial_info_map[st.get_node()];
+			/*
+			 * Get in-bounds centroid, if one exists.
+			 */
 
+			point p = al->get(f)->get_t(0).centroid(st);
+
+			if (!p.defined()) {
+				si.next();
+				continue;
+			}
+				
 			/*
 			 * Get information on the subspace.
 			 */
 
+			spatial_info *sn = &spatial_info_map[st.get_node()];
 			d2::pixel color = sn->get_color();
 			ale_real occupancy = sn->get_occupancy();
 
 			/*
-			 * Determine the view-local bounding box for the
-			 * subspace.
+			 * Store current weight so we can later check for
+			 * modification by higher-resolution subspaces.
 			 */
 
-			point bb[2];
-
-			_pt.get_view_local_bb(st, bb);
-
-			point min = bb[0];
-			point max = bb[1];
-
-//				fprintf(stderr, "frame %d color update space pointer %p, bb (%f, %f) -> (%f, %f)\n", 
-//						f, st.get_node(), min[0], min[1], max[0], max[1]);
-//
-//				fprintf(stderr, "space %p c=[%f %f %f]\n", st.get_node(), color[0], color[1], color[2]);
-//				fprintf(stderr, "space %p occ=[%g]\n", st.get_node(), occupancy);
-
-			/*
-			 * Use the center of the bounding box to grab interpolation data.
-			 */
-
-			d2::point interp((min[0] + max[0]) / 2, (min[1] + max[1]) / 2);
-
-//				fprintf(stderr, "interp=(%f, %f)\n", interp[0], interp[1]);
-
-#if 0
-			/*
-			 * For interpolation points, ensure that the
-			 * bounding box area is at least 0.25. XXX: Why?
-			 * Remove this constraint.
-			 *
-			 * XXX: Is interpolation useful for anything, given
-			 * that we're using spatial info registers at multiple
-			 * resolutions?
-			 */
-
-			if (/* (max[0] - min[0]) * (max[1] - min[1]) > 0.25
-			 && */ max[0] > min[0]
-			 && max[1] > min[1]) {
-				d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_bl(interp));
-				d2::pixel pcolor = im->get_bl(interp);
-				d2::pixel colordiff = (color - pcolor) * (ale_real) 256;
-
-				if (falloff_exponent != 0) {
-					d2::pixel max_diff = im->get_max_diff(interp) * (ale_real) 256;
-
-					for (int k = 0; k < 3; k++)
-					if (max_diff[k] > 1)
-						colordiff[k] /= pow(max_diff[k], falloff_exponent);
-				}
-
-//					fprintf(stderr, "color_interp=(%f, %f, %f)\n", pcolor[0], pcolor[1], pcolor[2]);
-
-//					sn->accumulate_color_2(pcolor, encounter);
-				d2::pixel channel_occ = pexp(-colordiff * colordiff);
-//					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
-//					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
-
-				/*
-				 * XXX: the best approach is probably to use 3 separate occupancy
-				 * data sets, just as there are 3 separate color data sets.
-				 */
-
-				ale_accum occ = channel_occ[0];
-
-				for (int k = 1; k < 3; k++)
-					if (channel_occ[k] < occ)
-						occ = channel_occ[k];
-
-				sn->accumulate_occupancy_2(occ, encounter[0]);
-#if 0
-				for (int k = 0; k < 3; k++)
-					sn->accumulate_occupancy_2(channel_occ[k], encounter[k]);
-#endif
-			}
-#endif
-			
-			
-			/*
-			 * Data structure to check modification of weights by
-			 * higher-resolution subspaces.
-			 */
-
-			std::queue<d2::pixel> weight_queue;
+			ale_real old_weight = weights->get_weight(st);
 
 			/*
 			 * Check for higher resolution subspaces, and
@@ -1244,19 +1177,6 @@ public:
 			if (st.get_node()->positive
 			 || st.get_node()->negative) {
 
-				/*
-				 * Store information about current weights,
-				 * so we will know which areas have been
-				 * covered by higher-resolution subspaces.
-				 */
-
-				for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
-				for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++) {
-					if (i < 0 || j < 0)
-						continue;
-					weight_queue.push(weights->get_pixel(i, j));
-				}
-				
 				/*
 				 * Cleave space for the higher-resolution pass,
 				 * skipping the current space, since we will
@@ -1268,86 +1188,70 @@ public:
 				cleaved_space.next();
 
 				subspace_info_update(cleaved_space, f, weights, im, _pt);
+
 			} else {
 				si.next();
 			}
-				
 
 			/*
-			 * Iterate over pixels in the bounding box,
-			 * adding new data to the subspace.  XXX:
-			 * assume for now that all pixels in the
-			 * bounding box intersect the subspace.
+			 * Add new data on the subspace and update weights.
 			 */
 
-			for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
-			for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++) {
+			d2::pixel pcolor = al->get(f);
+			d2::pixel colordiff = (color - pcolor) * (ale_real) 256;
 
-				if (i < 0 || j < 0)
-					continue;
+			if (falloff_exponent != 0) {
+				d2::pixel max_diff = im->get_max_diff(interp) * (ale_real) 256;
 
-				d2::pixel pcolor = im->get_pixel(i, j);
-				d2::pixel colordiff = (color - pcolor) * (ale_real) 256;
-
-				if (falloff_exponent != 0) {
-					d2::pixel max_diff = im->get_max_diff(interp) * (ale_real) 256;
-
-					for (int k = 0; k < 3; k++)
-					if (max_diff[k] > 1)
-						colordiff[k] /= pow(max_diff[k], falloff_exponent);
-				}
-
-//					fprintf(stderr, "(i, j) == (%d, %d); c=[%f %f %f]\n",
-//							i, j, pcolor[0], pcolor[1], pcolor[2]);
-
-				/*
-				 * Determine the probability of
-				 * encounter, divided by the occupancy.
-				 */
-
-				d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j));
-
-				/*
-				 * Check for higher-resolution modifications.
-				 */
-
-				int high_res_mod = 0;
-
-				if (weight_queue.size()) {
-					if (weight_queue.front() != weights->get_pixel(i, j)) {
-						high_res_mod = 1;
-						encounter = d2::pixel(1, 1, 1) - weight_queue.front();
-					}
-					weight_queue.pop();
-				}
-
-				/*
-				 * Update subspace.
-				 */
-
-				sn->accumulate_color_1(f, i, j, pcolor, encounter);
-				d2::pixel channel_occ = pexp(-colordiff * colordiff);
-//					fprintf(stderr, "encounter=(%f, %f, %f)\n", encounter[0], encounter[1], encounter[2]);
-//					fprintf(stderr, "color_diff=(%f, %f, %f)\n", colordiff[0], colordiff[1], colordiff[2]);
-//					fprintf(stderr, "channel_occ=(%g, %g, %g)\n", channel_occ[0], channel_occ[1], channel_occ[2]);
-
-				ale_accum occ = channel_occ[0];
-
-				for (int k = 1; k < 3; k++)
-					if (channel_occ[k] < occ)
-						occ = channel_occ[k];
-
-				sn->accumulate_occupancy_1(f, i, j, occ, encounter[0]);
-
-				/*
-				 * If weights have not been updated by
-				 * higher-resolution cells, then update
-				 * weights at the current resolution.
-				 */
-
-				if (!high_res_mod)
-					weights->pix(i, j) += encounter * occupancy;
+				for (int k = 0; k < 3; k++)
+				if (max_diff[k] > 1)
+					colordiff[k] /= pow(max_diff[k], falloff_exponent);
 			}
+
+			/*
+			 * Determine the probability of
+			 * encounter, divided by the occupancy.
+			 */
+
+			d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j));
+
+			/*
+			 * Check for higher-resolution modifications.
+			 */
+
+			int high_res_mod = 0;
+
+			if (weight_queue.size()) {
+				if (weight_queue.front() != weights->get_pixel(i, j)) {
+					high_res_mod = 1;
+					encounter = d2::pixel(1, 1, 1) - weight_queue.front();
+				}
+				weight_queue.pop();
+			}
+
+			/*
+			 * Update subspace.
+			 */
+
+			sn->accumulate_color_1(f, i, j, pcolor, encounter);
+			d2::pixel channel_occ = pexp(-colordiff * colordiff);
+
+			ale_accum occ = channel_occ[0];
+
+			for (int k = 1; k < 3; k++)
+				if (channel_occ[k] < occ)
+					occ = channel_occ[k];
+
+			sn->accumulate_occupancy_1(f, i, j, occ, encounter[0]);
+
+			/*
+			 * If weights have not been updated by
+			 * higher-resolution cells, then update
+			 * weights at the current resolution.
+			 */
+
+			if (!high_res_mod)
+				weights->pix(i, j) += encounter * occupancy;
 
 		}
 	}
@@ -1369,12 +1273,11 @@ public:
 				al->open(f);
 
 			/*
-			 * Allocate an image for storing encounter probabilities.
+			 * Allocate weights data structure for storing encounter
+			 * probabilities.
 			 */
-			d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()), 
-					(int) floor(_pt.scaled_width()), 3);
 
-			assert(weights);
+			ref_weights *weights = new ref_weights(f);
 
 			/*
 			 * Call subspace_info_update for the root space.
@@ -1382,7 +1285,15 @@ public:
 
 			subspace_info_update(space::iterate(al->get(f)->origin()), f, weights, _pt);
 
+			/*
+			 * Free weights.
+			 */
+
 			delete weights;
+
+			/*
+			 * Close the frame and transformation.
+			 */
 
 			if (tc_multiplier == 0)
 				al->close(f);
