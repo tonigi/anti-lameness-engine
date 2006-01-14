@@ -401,6 +401,9 @@ public:
 
 		get_view_local_bb(t, bb);
 
+		point min = bb[0];
+		point max = bb[1];
+
 		for (int d = 0; d < 2; d++)
 		if (min[d] > max[d])
 			return point::undefined();

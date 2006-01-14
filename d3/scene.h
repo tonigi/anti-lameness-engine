@@ -175,7 +175,6 @@ class scene {
 			return im[i];
 		}
 
-
 		int in_bounds(d2::point p) {
 			return im[0]->in_bounds(p);
 		}
@@ -208,6 +207,31 @@ class scene {
 			assert(p[1] >= 0);
 
 			return im[itlc]->get_bl(p);
+		}
+
+		d2::pixel get_max_diff(d2::point p, ale_pos tl_coord) {
+			assert(in_bounds(p));
+
+			tl_coord = round(tl_coord);
+
+			if (tl_coord >= entries)
+				tl_coord = entries;
+			if (tl_coord < 0)
+				tl_coord = 0;
+
+			p = p / (ale_pos) pow(2, tl_coord);
+
+			unsigned int itlc = (unsigned int) tl_coord;
+
+			if (p[0] > im[itlc]->height() - 1)
+				p[0] = im[itlc]->height() - 1;
+			if (p[1] > im[itlc]->width() - 1)
+				p[1] = im[itlc]->width() - 1;
+
+			assert(p[0] >= 0);
+			assert(p[1] >= 0);
+
+			return im[itlc]->get_max_diff(p);
 		}
 
 		/*
@@ -1197,11 +1221,12 @@ public:
 			 * Add new data on the subspace and update weights.
 			 */
 
-			d2::pixel pcolor = al->get(f);
+			ale_pos tc = al->get(f)->get_t(0).trilinear_coordinate(st);
+			d2::pixel pcolor = al->get(f)->get_tl(p.xy(), tc);
 			d2::pixel colordiff = (color - pcolor) * (ale_real) 256;
 
 			if (falloff_exponent != 0) {
-				d2::pixel max_diff = im->get_max_diff(interp) * (ale_real) 256;
+				d2::pixel max_diff = al->get(f)->get_max_diff(p.xy(), tc) * (ale_real) 256;
 
 				for (int k = 0; k < 3; k++)
 				if (max_diff[k] > 1)
@@ -1213,7 +1238,7 @@ public:
 			 * encounter, divided by the occupancy.
 			 */
 
-			d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j));
+			d2::pixel encounter = d2::pixel(1, 1, 1) * (1 - weights->get_weight(st));
 
 			/*
 			 * Check for higher-resolution modifications.
