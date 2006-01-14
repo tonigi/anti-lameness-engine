@@ -289,6 +289,23 @@ class scene {
 		}
 
 	public:
+
+		/*
+		 * Weight subtree
+		 */
+		struct subtree {
+			ale_real node_value;
+			subtree *children[2][2];
+
+			subtree(ale_real nv, subtree *a, subtree *b, subtree *c, subtree *d) {
+				node_value = nv;
+				children[0][0] = a;
+				children[0][1] = b;
+				children[1][0] = c;
+				children[1][1] = d;
+			}
+		};
+
 		/*
 		 * Constructor
 		 */
@@ -609,6 +626,43 @@ class scene {
 			}
 
 			return result;
+		}
+
+		/*
+		 * Get a weight subtree.
+		 */
+		subtree *get_subtree(int tc, unsigned int i, unsigned int j) {
+			if (tc > 
+			assert(tc >= tc_low);
+
+		}
+
+		subtree *get_subtree(int tc, d2::point p) {
+			p *= pow(2, -tc);
+
+			unsigned int i = (unsigned int) floor(p[0]);
+			unsigned int j = (unsigned int) floor(p[1]);
+
+			return get_subtree(tc, i, j);
+		}
+
+		subtree *get_subtree(const space::traverse &t) {
+			ale_pos tc = transformation.trilinear_coordinate(t);
+			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
+			assert(in_spatial_bounds(p));
+
+			if (!initialized)
+				return NULL;
+
+			if (tc < input_decimation_lower)
+				tc = input_decimation_lower;
+
+			tc = round(tc);
+
+			if (tc < tc_low)
+				return NULL;
+
+			return get_subtree(tc, p);
 		}
 
 		/*
