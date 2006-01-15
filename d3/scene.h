@@ -629,6 +629,22 @@ class scene {
 		}
 
 		/*
+		 * Check whether a subtree is simple.
+		 */
+		int is_simple(subtree *s) {
+			assert (s);
+
+			if (s->node_value == -1
+			 && s->children[0][0] == NULL
+			 && s->children[0][1] == NULL
+			 && s->children[1][0] == NULL
+			 && s->children[1][1] == NULL)
+				return 1;
+
+			return 0;
+		}
+
+		/*
 		 * Get a weight subtree.
 		 */
 		subtree *get_subtree(int tc, unsigned int i, unsigned int j) {
@@ -637,12 +653,20 @@ class scene {
 			 * tc > tc_high is handled recursively.
 			 */
 
-			if (tc > tc_high)
-				return new subtree(-1, 
+			if (tc > tc_high) {
+				subtree *result = new subtree(-1, 
 						get_subtree(tc - 1, i * 2 + 0, j * 2 + 0),
 						get_subtree(tc - 1, i * 2 + 0, j * 2 + 1),
 						get_subtree(tc - 1, i * 2 + 1, j * 2 + 0),
 						get_subtree(tc - 1, i * 2 + 1, j * 2 + 1));
+
+				if (is_simple(result)) {
+					delete result;
+					return NULL;
+				}
+
+				return result;
+			}
 
 			assert(tc >= tc_low);
 			assert(weights[tc - tc_low]);
@@ -663,12 +687,21 @@ class scene {
 			 * -1 weights are handled recursively
 			 */
 
-			if (im->pix(i, j)[0] == -1)
-				return new subtree(-1, 
+			if (im->pix(i, j)[0] == -1) {
+				subtree *result = new subtree(-1, 
 						get_subtree(tc - 1, i * 2 + 0, j * 2 + 0),
 						get_subtree(tc - 1, i * 2 + 0, j * 2 + 1),
 						get_subtree(tc - 1, i * 2 + 1, j * 2 + 0),
 						get_subtree(tc - 1, i * 2 + 1, j * 2 + 1));
+
+				if (is_simple(result)) {
+					im->pix(i, j)[0] = 0;
+					delete result;
+					return NULL;
+				}
+
+				return result;
+			}
 
 			/*
 			 * Zero weights have NULL subtrees.
