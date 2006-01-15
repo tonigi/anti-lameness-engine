@@ -632,9 +632,56 @@ class scene {
 		 * Get a weight subtree.
 		 */
 		subtree *get_subtree(int tc, unsigned int i, unsigned int j) {
-			if (tc > 
-			assert(tc >= tc_low);
 
+			/*
+			 * tc > tc_high is handled recursively.
+			 */
+
+			if (tc > tc_high)
+				return new subtree(-1, 
+						get_subtree(tc - 1, i * 2 + 0, j * 2 + 0),
+						get_subtree(tc - 1, i * 2 + 0, j * 2 + 1),
+						get_subtree(tc - 1, i * 2 + 1, j * 2 + 0),
+						get_subtree(tc - 1, i * 2 + 1, j * 2 + 1));
+
+			assert(tc >= tc_low);
+			assert(weights[tc - tc_low]);
+
+			d2::image *im = weights[tc - tc_low];
+
+			/*
+			 * Rectangular images will, in general, have
+			 * out-of-bounds tree sections.  Handle this case.
+			 */
+
+			if (i >= im->height())
+				return NULL;
+			if (j >= im->width())
+				return NULL;
+
+			/*
+			 * -1 weights are handled recursively
+			 */
+
+			if (im->pix(i, j)[0] == -1)
+				return new subtree(-1, 
+						get_subtree(tc - 1, i * 2 + 0, j * 2 + 0),
+						get_subtree(tc - 1, i * 2 + 0, j * 2 + 1),
+						get_subtree(tc - 1, i * 2 + 1, j * 2 + 0),
+						get_subtree(tc - 1, i * 2 + 1, j * 2 + 1));
+
+			/*
+			 * Zero weights have NULL subtrees.
+			 */
+
+			if (im->pix(i, j)[0] == 0)
+				return NULL;
+
+			/*
+			 * Handle the remaining case.
+			 */
+
+			return new subtree(im->pix(i, j)[0], NULL, NULL, NULL, NULL);
 		}
 
 		subtree *get_subtree(int tc, d2::point p) {
@@ -662,7 +709,7 @@ class scene {
 			if (tc < tc_low)
 				return NULL;
 
-			return get_subtree(tc, p);
+			return get_subtree((int) tc, p);
 		}
 
 		/*
