@@ -247,7 +247,7 @@ class scene {
 		 * Get the camera origin in world coordinates
 		 */
 		point origin() {
-			return transformation[0].cw(point(0, 0, 0));
+			return transformation[0].origin();
 		}
 
 		/*
@@ -291,7 +291,7 @@ class scene {
 	public:
 
 		/*
-		 * Weight subtree
+		 * Explicit weight subtree
 		 */
 		struct subtree {
 			ale_real node_value;
@@ -303,6 +303,12 @@ class scene {
 				children[0][1] = b;
 				children[1][0] = c;
 				children[1][1] = d;
+			}
+
+			~subtree() {
+				for (int i = 0; i < 2; i++)
+				for (int j = 0; j < 2; j++)
+					delete children[i][j];
 			}
 		};
 
@@ -400,10 +406,11 @@ class scene {
 
 		/*
 		 * Add weights to positive higher-resolution pixels where
-		 * found; set negative pixels to zero and return 0 if no
-		 * positive higher-resolution pixels are found.
+		 * found when their current values match the given subtree
+		 * values; set negative pixels to zero and return 0 if no
+		 * positive higher-resolution pixels are found.  
 		 */
-		int add_partial(int tc, unsigned int i, unsigned int j, ale_real weight) {
+		int add_partial(int tc, unsigned int i, unsigned int j, ale_real weight, subtree *st) {
 			d2::image *im = weights[tc - tc_low];
 			assert(im);
 			assert(i <= im->height() - 1);
@@ -414,7 +421,8 @@ class scene {
 			 */
 
 			if (im->pix(i, j)[0] > 0) {
-				im->pix(i, j)[0] += weight;
+				if (st && st->node_value == im->pix(i, j)[0])
+					im->pix(i, j)[0] += weight;
 				return 1;
 			}
 
@@ -435,7 +443,8 @@ class scene {
 
 			for (int ii = 0; ii < 2; ii++)
 			for (int jj = 0; jj < 2; jj++)
-				success[ii][jj] = add_partial(tc - 1, i * 2 + ii, j * 2 + jj, weight);
+				success[ii][jj] = add_partial(tc - 1, i * 2 + ii, j * 2 + jj, weight, 
+						st ? st->children[ii][jj] : NULL);
 
 			if (!success[0][0]
 			 && !success[0][1]
@@ -463,7 +472,7 @@ class scene {
 		/*
 		 * Add weight.
 		 */
-		void add_weight(int tc, unsigned int i, unsigned int j, ale_real weight) {
+		void add_weight(int tc, unsigned int i, unsigned int j, ale_real weight, subtree *st) {
 			d2::image *im = weights[tc - tc_low];
 			assert(im);
 			assert(i <= im->height() - 1);
@@ -480,7 +489,7 @@ class scene {
 			 * where weight is defined.
 			 */
 
-			if (add_partial(tc, i, j, weight))
+			if (add_partial(tc, i, j, weight, st))
 				return;
 
 			/*
@@ -491,17 +500,17 @@ class scene {
 			im->pix(i, j)[0] = weight;
 		}
 
-		void add_weight(int tc, d2::point p, ale_real weight) {
+		void add_weight(int tc, d2::point p, ale_real weight, subtree *st) {
 
 			p *= pow(2, -tc);
 
 			unsigned int i = (unsigned int) floor(p[0]);
 			unsigned int j = (unsigned int) floor(p[1]);
 
-			add_weight(tc, i, j, weight);
+			add_weight(tc, i, j, weight, st);
 		}
 
-		void add_weight(const space::traverse &t, ale_real weight) {
+		void add_weight(const space::traverse &t, ale_real weight, subtree *st) {
 
 			if (weight == 0)
 				return;
@@ -559,7 +568,7 @@ class scene {
 				weights.push_back(make_image(sf, -1));
 			}
 
-			add_weight((int) tc, p, weight);			
+			add_weight((int) tc, p, weight, st);
 		}
 
 		/*
@@ -789,7 +798,7 @@ class scene {
 		}
 
 		void open(unsigned int f) {
-			assert (images[f] = NULL);
+			assert (images[f] == NULL);
 
 			if (images[f] == NULL)
 				images[f] = new lod_image(f);
@@ -1071,7 +1080,7 @@ class scene {
 		/*
 		 * Accumulate color; primary data set.
 		 */
-		void accumulate_color_1(int f, int i, int j, d2::pixel color, d2::pixel weight) {
+		void accumulate_color_1(int f, d2::pixel color, d2::pixel weight) {
 			for (int k = 0; k < 3; k++)
 				insert_weight(&color_weights_1[k], color[k], weight[k]);
 		}
@@ -1087,7 +1096,7 @@ class scene {
 		/*
 		 * Accumulate occupancy; primary data set.
 		 */
-		void accumulate_occupancy_1(int f, int i, int j, ale_real occupancy, ale_real weight) {
+		void accumulate_occupancy_1(int f, ale_real occupancy, ale_real weight) {
 			insert_weight(&occupancy_weights_1, occupancy, weight);
 		}
 
@@ -1285,7 +1294,7 @@ public:
 	 * Perform spatial_info updating on a given subspace, for given
 	 * parameters.
 	 */
-	static void subspace_info_update(space::iterate si, int f, ref_weights *weights, const d2::image *im, pt _pt) {
+	static void subspace_info_update(space::iterate si, int f, ref_weights *weights) {
 		while(!si.done()) {
 
 			space::traverse st = si.get();
@@ -1325,7 +1334,7 @@ public:
 			 * modification by higher-resolution subspaces.
 			 */
 
-			ale_real old_weight = weights->get_weight(st);
+			ref_weights::subtree *tree = weights->get_subtree(st);
 
 			/*
 			 * Check for higher resolution subspaces, and
@@ -1345,7 +1354,7 @@ public:
 
 				cleaved_space.next();
 
-				subspace_info_update(cleaved_space, f, weights, im, _pt);
+				subspace_info_update(cleaved_space, f, weights);
 
 			} else {
 				si.next();
@@ -1375,24 +1384,10 @@ public:
 			d2::pixel encounter = d2::pixel(1, 1, 1) * (1 - weights->get_weight(st));
 
 			/*
-			 * Check for higher-resolution modifications.
-			 */
-
-			int high_res_mod = 0;
-
-			if (weight_queue.size()) {
-				if (weight_queue.front() != weights->get_pixel(i, j)) {
-					high_res_mod = 1;
-					encounter = d2::pixel(1, 1, 1) - weight_queue.front();
-				}
-				weight_queue.pop();
-			}
-
-			/*
 			 * Update subspace.
 			 */
 
-			sn->accumulate_color_1(f, i, j, pcolor, encounter);
+			sn->accumulate_color_1(f, pcolor, encounter);
 			d2::pixel channel_occ = pexp(-colordiff * colordiff);
 
 			ale_accum occ = channel_occ[0];
@@ -1401,17 +1396,19 @@ public:
 				if (channel_occ[k] < occ)
 					occ = channel_occ[k];
 
-			sn->accumulate_occupancy_1(f, i, j, occ, encounter[0]);
+			sn->accumulate_occupancy_1(f, occ, encounter[0]);
 
 			/*
-			 * If weights have not been updated by
-			 * higher-resolution cells, then update
-			 * weights at the current resolution.
+			 * Update weights
 			 */
 
-			if (!high_res_mod)
-				weights->pix(i, j) += encounter * occupancy;
+			weights->add_weight(st, (encounter * occupancy)[0], tree);
 
+			/*
+			 * Delete the subtree, if necessary.
+			 */
+
+			delete tree;
 		}
 	}
 
@@ -1442,7 +1439,7 @@ public:
 			 * Call subspace_info_update for the root space.
 			 */
 
-			subspace_info_update(space::iterate(al->get(f)->origin()), f, weights, _pt);
+			subspace_info_update(space::iterate(al->get(f)->origin()), f, weights);
 
 			/*
 			 * Free weights.
@@ -1720,7 +1717,7 @@ public:
 		 * Iterate through subspaces.
 		 */
 
-		space::iterate si(_pt);
+		space::iterate si(_pt.origin());
 
 		view_recurse(6, im1, weights, si, _pt);
 
@@ -1845,7 +1842,7 @@ public:
 		 * Iterate through subspaces.
 		 */
 
-		space::iterate si(_pt);
+		space::iterate si(_pt.origin());
 
 		view_recurse(0, im, weights, si, _pt);
 

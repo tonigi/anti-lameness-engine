@@ -414,6 +414,14 @@ public:
 		return (bb[0] + bb[1]) / 2;
 	}
 
+	/*
+	 * Get the local space origin in world space.
+	 */
+
+	point origin() {
+		return cw(point(0, 0, 0));
+	}
+
 };
 
 #endif
