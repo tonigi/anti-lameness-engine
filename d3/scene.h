@@ -767,8 +767,7 @@ class scene {
 	/*
 	 * Resolution check.
 	 */
-	int resolution_ok(pt transformation, const space::traverse &t) {
-		ale_pos tc = transformation.trilinear_coordinate(t);
+	static int resolution_ok(pt transformation, ale_pos tc) {
 
 		if (pow(2, tc) > transformation.unscaled_height()
 		 || pow(2, tc) > transformation.unscaled_width())
@@ -1384,6 +1383,26 @@ public:
 			d2::pixel encounter = d2::pixel(1, 1, 1) * (1 - weights->get_weight(st));
 
 			/*
+			 * Update weights
+			 */
+
+			weights->add_weight(st, (encounter * occupancy)[0], tree);
+
+			/*
+			 * Delete the subtree, if necessary.
+			 */
+
+			delete tree;
+
+			/*
+			 * Check for cases in which the subspace should not be
+			 * updated.
+			 */
+
+			if (!resolution_ok(al->get(f)->get_t(0), tc))
+				return;
+
+			/*
 			 * Update subspace.
 			 */
 
@@ -1398,17 +1417,6 @@ public:
 
 			sn->accumulate_occupancy_1(f, occ, encounter[0]);
 
-			/*
-			 * Update weights
-			 */
-
-			weights->add_weight(st, (encounter * occupancy)[0], tree);
-
-			/*
-			 * Delete the subtree, if necessary.
-			 */
-
-			delete tree;
 		}
 	}
 
@@ -2070,10 +2078,6 @@ public:
 		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 			if (f == f1 || f == f2)
 				continue;
-
-			assert(cl);
-			assert(cl->reference);
-			assert(cl->reference[f]);
 
 			pt _ptf = align::projective(f);
 			_ptf.scale(1 / _ptf.scale_2d() / pow(2, ceil(input_decimation_exponent)));
