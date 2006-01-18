@@ -46,14 +46,9 @@ class scene {
 	/*
 	 * Decimation exponents for geometry
 	 */
-	static ale_pos primary_decimation_upper;
-	static ale_pos input_decimation_lower;
-	static ale_pos output_decimation_preferred;
-
-	/*
-	 * Input resolution divisor
-	 */
-	static ale_pos input_resolution_divisor;
+	static int primary_decimation_upper;
+	static int input_decimation_lower;
+	static int output_decimation_preferred;
 
 	/*
 	 * Output clipping
@@ -839,7 +834,7 @@ class scene {
 	 * Data structure for storing best encountered subspace candidates.
 	 */
 	class candidates {
-		std::vector<std::vector<std::pair<ale_pos, ale_real>>> levels;
+		std::vector<std::vector<std::pair<ale_pos, ale_real> > > levels;
 		int image_index;
 		unsigned int height;
 		unsigned int width;
@@ -935,8 +930,8 @@ class scene {
 		candidates(int f) {
 
 			image_index = f;
-			height = al->get(f)->get_t(0).unscaled_height();
-			width = al->get(f)->get_t(0).unscaled_width();
+			height = (unsigned int) al->get(f)->get_t(0).unscaled_height();
+			width = (unsigned int) al->get(f)->get_t(0).unscaled_width();
 
 			/*
 			 * Is this necessary?
@@ -957,7 +952,7 @@ class scene {
 		 * Point p is expected to be in local projective coordinates.
 		 */
 
-		void add_candidate(point p, ale_pos tc, ale_real score) {
+		void add_candidate(point p, int tc, ale_real score) {
 			assert(tc <= primary_decimation_upper);
 			assert(tc >= input_decimation_lower);
 			assert(p[2] < 0);
@@ -969,7 +964,7 @@ class scene {
 			assert(i < floor(height / pow(2, tc)));
 			assert(j < floor(width / pow(2, tc)));
 
-			for (int k = 0; k < pairwise_ambiguity; k++) {
+			for (unsigned int k = 0; k < pairwise_ambiguity; k++) {
 				std::pair<ale_pos, ale_real> *pk =
 					&(levels[tc][i * width * pairwise_ambiguity + j * pairwise_ambiguity]);
 
@@ -1006,13 +1001,14 @@ class scene {
 					ale_pos si = i * pow(2, l) + ((l > 0) ? pow(2, l - 1) : 0);
 					ale_pos sj = j * pow(2, l) + ((l > 0) ? pow(2, l - 1) : 0);
 
-					point p = al->get(f)->get_t(0).pw_unscaled(point(si, sj, pk->first));
+					point p = al->get(image_index)->get_t(0).pw_unscaled(point(si, sj, pk->first));
 
-					generate_subspace(p, al->get(f)->get_t(0).diagonal_distance_3d(pk->first, l));
+					generate_subspace(p, 
+							al->get(image_index)->get_t(0).diagonal_distance_3d(pk->first, l));
 				}
 			}
 		}
-	}
+	};
 
 	/*
 	 * List for calculating weighted median.
@@ -1406,15 +1402,15 @@ public:
 	}
 
 	static void di_upper(ale_pos _dgi) {
-		primary_decimation_upper = _dgi;
+		primary_decimation_upper = (int) round(_dgi);
 	}
 
 	static void do_try(ale_pos _dgo) {
-		output_decimation_preferred = _dgo;
+		output_decimation_preferred = (int) round(_dgo);
 	}
 
 	static void di_lower(ale_pos _idiv) {
-		input_decimation_lower = _idiv;
+		input_decimation_lower = (int) round(_idiv);
 	}
 
 	static void oc() {
