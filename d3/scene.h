@@ -844,6 +844,93 @@ class scene {
 		unsigned int height;
 		unsigned int width;
 
+		/*
+		 * Point p is in world coordinates.
+		 */
+		void generate_subspace(point iw, ale_pos diagonal) {
+
+			space::traverse st = space::traverse::root();
+
+			if (!st.includes(iw)) {
+				assert(0);
+				return;
+			}
+
+			int highres = 0;
+			int lowres = 0;
+
+			/*
+			 * Loop until resolutions of interest have been generated.
+			 */
+			
+			for(;;) {
+
+				ale_pos current_diagonal = (st.get_max() - st.get_min()).norm();
+
+				assert(!isnan(current_diagonal));
+
+				/*
+				 * Generate any new desired spatial registers.
+				 */
+
+				/*
+				 * Inputs
+				 */
+
+				for (int f = 0; f < 2; f++) {
+
+					/*
+					 * Low resolution
+					 */
+
+					if (current_diagonal < 2 * diagonal
+					 && lowres == 0) {
+						spatial_info_map[st.get_node()];
+						lowres = 1;
+					}
+
+					/*
+					 * High resolution.
+					 */
+
+					if (current_diagonal < diagonal
+					 && highres == 0) {
+						spatial_info_map[st.get_node()];
+						highres = 1;
+					}
+				}
+
+				/*
+				 * Check for completion
+				 */
+
+				if (highres && lowres)
+					return;
+
+				/*
+				 * Check precision before analyzing space further.
+				 */
+
+				if (st.precision_wall()) {
+					fprintf(stderr, "\n\n*** Error: reached subspace precision wall ***\n\n");
+					assert(0);
+					return;
+				}
+
+				if (st.positive().includes(iw)) {
+					st = st.positive();
+					total_tsteps++;
+				} else if (st.negative().includes(iw)) {
+					st = st.negative();
+					total_tsteps++;
+				} else {
+					fprintf(stderr, "failed iw = (%f, %f, %f)\n", 
+							iw[0], iw[1], iw[2]);
+					assert(0);
+				}
+			}
+		}
+
 	public:
 		candidates(int f) {
 
@@ -905,7 +992,25 @@ class scene {
 		 */
 
 		void generate_subspaces() {
-			assert(0);
+			for (int l = input_decimation_lower; l <= primary_decimation_upper; l++) {
+				for (unsigned int i = 0; i < (unsigned int) floor(height / pow(2, l)); i++)
+				for (unsigned int j = 0; j < (unsigned int) floor(width / pow(2, l)); j++)
+				for (unsigned int k = 0; k < pairwise_ambiguity; k++) {
+					std::pair<ale_pos, ale_real> *pk =
+						&(levels[l - input_decimation_lower]
+						        [i * width * pairwise_ambiguity + j * pairwise_ambiguity]);
+
+					if (pk->first == 0)
+						continue;
+
+					ale_pos si = i * pow(2, l) + ((l > 0) ? pow(2, l - 1) : 0);
+					ale_pos sj = j * pow(2, l) + ((l > 0) ? pow(2, l - 1) : 0);
+
+					point p = al->get(f)->get_t(0).pw_unscaled(point(si, sj, pk->first));
+
+					generate_subspace(p, al->get(f)->get_t(0).diagonal_distance_3d(pk->first, l));
+				}
+			}
 		}
 	}
 
@@ -2497,75 +2602,6 @@ public:
 				assert(0);
 			}
 		}
-	}
-
-	/*
-	 * Analyze space in a manner dependent on the score map.
-	 */
-
-	static void analyze_space_from_map(unsigned int f1, unsigned int f2, unsigned int i, 
-			unsigned int j, pt _pt1, pt _pt2, score_map _sm, std::vector<pt> pt_outputs) {
-
-		int accumulated_ambiguity = 0;
-		int max_acc_amb = pairwise_ambiguity;
-
-		for(score_map::iterator smi = _sm.begin(); smi != _sm.end(); smi++) {
-
-			point iw = smi->second.iw;
-			point ip = smi->second.ip;
-			// point is = smi->second.is;
-
-			if (accumulated_ambiguity++ >= max_acc_amb)
-				break;
-
-			total_ambiguity++;
-
-			/*
-			 * Attempt to refine space around the intersection point.
-			 */
-
-			refine_space(iw, _pt1, _pt2, pt_outputs);
-		}
-	}
-
-	static void refine_space_for_output(pt _pt, space::traverse st = space::traverse::root()) {
-		if (!spatial_info_map.count(st.get_node())) {
-			if (st.get_node()->positive)
-				refine_space_for_output(_pt, st.positive());
-			if (st.get_node()->negative)
-				refine_space_for_output(_pt, st.negative());
-			return;
-		}
-
-		point bb[2];
-		_pt.get_view_local_bb(st, bb);
-
-		if (bb[0].xy().lengthtosq(bb[1].xy()) < 2)
-			return;
-
-		if (!_pt.scaled_in_bounds(bb[0]) || !_pt.scaled_in_bounds(bb[1]))
-			return;
-
-		spatial_info_map[st.positive().get_node()];
-		spatial_info_map[st.negative().get_node()];
-
-		refine_space_for_output(_pt, st.positive());
-		refine_space_for_output(_pt, st.negative());
-	}
-
-	static void refine_space_for_output(const char *d_out[], const char *v_out[],
-			std::map<const char *, pt> *d3_depth_pt,
-			std::map<const char *, pt> *d3_output_pt) {
-
-		for (unsigned int f = 0; f < d2::image_rw::count(); f++) 
-			if (d_out[f] || v_out[f])
-				refine_space_for_output(d3::align::projective(f));
-
-		for (std::map<const char *, pt>::iterator i = d3_depth_pt->begin(); i != d3_depth_pt->end(); i++)
-			refine_space_for_output(i->second);
-
-		for (std::map<const char *, pt>::iterator i = d3_output_pt->begin(); i != d3_output_pt->end(); i++)
-			refine_space_for_output(i->second);
 	}
 
 	/*

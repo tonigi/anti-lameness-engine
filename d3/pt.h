@@ -345,6 +345,13 @@ public:
 	}
 
 	/*
+	 * Get the 3D diagonal for a given depth and trilinear coordinate.
+	 */
+	ale_pos diagonal_distance_3d(ale_pos depth, ale_pos coordinate) {
+		return pow(2, coordinate) * depth * diag_per_depth * sqrt(3) / sqrt(2);
+	}
+
+	/*
 	 * Get bounding box for projection of a subspace.
 	 */
 
