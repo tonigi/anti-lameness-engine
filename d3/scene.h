@@ -836,6 +836,80 @@ class scene {
 	static struct lod_images *al;
 
 	/*
+	 * Data structure for storing best encountered subspace candidates.
+	 */
+	class candidates {
+		std::vector<std::vector<std::pair<ale_pos, ale_real>>> levels;
+		int image_index;
+		unsigned int height;
+		unsigned int width;
+
+	public:
+		candidates(int f) {
+
+			image_index = f;
+			height = al->get(f)->get_t(0).unscaled_height();
+			width = al->get(f)->get_t(0).unscaled_width();
+
+			/*
+			 * Is this necessary?
+			 */
+
+			levels.resize(primary_decimation_upper - input_decimation_lower + 1);
+			for (int l = input_decimation_lower; l <= primary_decimation_upper; l++) {
+				for (unsigned int i = 0; i < (unsigned int) floor(height / pow(2, l)); i++) 
+				for (unsigned int j = 0; j < (unsigned int) floor(width / pow(2, l));  j++)
+				for (unsigned int k = 0; k < pairwise_ambiguity; k++) {
+					levels[l][i * width * pairwise_ambiguity + j * pairwise_ambiguity + k] = 
+						std::pair<ale_pos, ale_real>(0, 0);
+				}
+			}
+		}
+
+		/*
+		 * Point p is expected to be in local projective coordinates.
+		 */
+
+		void add_candidate(point p, ale_pos tc, ale_real score) {
+			assert(tc <= primary_decimation_upper);
+			assert(tc >= input_decimation_lower);
+			assert(p[2] < 0);
+			assert(score >= 0);
+
+			int i = (unsigned int) floor(p[0] / pow(2, tc));
+			int j = (unsigned int) floor(p[1] / pow(2, tc));
+
+			assert(i < floor(height / pow(2, tc)));
+			assert(j < floor(width / pow(2, tc)));
+
+			for (int k = 0; k < pairwise_ambiguity; k++) {
+				std::pair<ale_pos, ale_real> *pk =
+					&(levels[tc][i * width * pairwise_ambiguity + j * pairwise_ambiguity]);
+
+				if (pk->first != 0 && score >= pk->second)
+					continue;
+
+				ale_pos tp = pk->first;
+				ale_real tr = pk->second;
+
+				pk->first = p[2];
+				pk->second = score;
+
+				p[2] = tp;
+				score = tr;
+			}
+		}
+
+		/*
+		 * Generate subspaces for candidates.
+		 */
+
+		void generate_subspaces() {
+			assert(0);
+		}
+	}
+
+	/*
 	 * List for calculating weighted median.
 	 */
 	class wml {
