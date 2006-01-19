@@ -2526,11 +2526,19 @@ public:
 		assert(0);
 	}
 
+	int completely_clipped(point min, point max) {
+		return (min[2] > front_clip
+		     || max[2] < rear_clip)
+	}
+
 	/*
 	 * Find candidates for subspace creation.
 	 */
 	static void find_candidates(unsigned int f1, unsigned int f2, candidates *c, point min, point max,
 			const std::vector<pt> &pt_outputs) {
+
+		if (completely_clipped(min, max))
+			return;
 
 		if (!input_might_be_visible(f1, min, max)
 		 || !input_might_be_visible(f2, min, max))
