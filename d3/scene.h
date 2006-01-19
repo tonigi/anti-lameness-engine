@@ -2418,189 +2418,6 @@ public:
 	}
 
 	/*
-	 * Attempt to refine space around a point, to high and low resolutions
-	 * for two cameras, resulting in four resolutions in total.
-	 */
-
-	static void refine_space(point iw, pt _pt1, pt _pt2, std::vector<pt> pt_outputs) {
-
-		space::traverse st = space::traverse::root();
-
-		if (!st.includes(iw)) {
-			assert(0);
-			return;
-		}
-
-		int camera_highres[2] = {0, 0};
-		int camera_lowres[2] = {0, 0};
-
-		std::vector<int> output_highres;
-		std::vector<int> output_lowres;
-
-		output_highres.resize(pt_outputs.size(), 0);
-		output_lowres.resize(pt_outputs.size(), 0);
-
-		/*
-		 * Loop until all resolutions of interest have been generated.
-		 */
-		
-		for(;;) {
-
-			point frame_min[2] = { point::posinf(), point::posinf() },
-			      frame_max[2] = { point::neginf(), point::neginf() };
-
-			std::vector<point> output_max;
-			std::vector<point> output_min;
-
-			output_max.resize(pt_outputs.size(), point::posinf());
-			output_min.resize(pt_outputs.size(), point::neginf());
-
-			point p[2] = { st.get_min(), st.get_max() };
-
-			/*
-			 * Cycle through the corner points bounding the
-			 * subspace to determine a bounding box.  
-			 *
-			 * NB: This code is not identical to
-			 * get_view_local_bb(), as it does not clip the
-			 * results.
-			 */
-
-			for (int ibit = 0; ibit < 2; ibit++)
-			for (int jbit = 0; jbit < 2; jbit++)
-			for (int kbit = 0; kbit < 2; kbit++) {
-				point pp = point(p[ibit][0], p[jbit][1], p[kbit][2]);
-
-				point ppp[2] = {_pt1.wp_scaled(pp), _pt2.wp_scaled(pp)};
-
-				/*
-				 * Inputs
-				 */
-
-				for (int f = 0; f < 2; f++)
-				for (int d = 0; d < 3; d++) {
-					if (ppp[f][d] < frame_min[f][d] || isnan(ppp[f][d]))
-						frame_min[f][d] = ppp[f][d];
-					if (ppp[f][d] > frame_max[f][d] || isnan(ppp[f][d]))
-						frame_max[f][d] = ppp[f][d];
-				}
-
-				/*
-				 * Outputs
-				 */
-
-				for (unsigned int n = 0; n < pt_outputs.size(); n++) {
-
-					point ppp_pt = pt_outputs[n].wp_scaled(pp);
-
-					for (int d = 0; d < 3; d++) {
-						if (ppp_pt[d] < output_min[n][d] || isnan(ppp_pt[d]))
-							output_min[n][d] = ppp_pt[d];
-						if (ppp_pt[d] > output_max[n][d] || isnan(ppp_pt[d]))
-							output_max[n][d] = ppp_pt[d];
-					}
-				}
-			}
-
-			/*
-			 * Generate any new desired spatial registers.
-			 */
-
-			/*
-			 * Inputs
-			 */
-
-			for (int f = 0; f < 2; f++) {
-
-				/*
-				 * Low resolution
-				 */
-
-				if (frame_max[f][0] - frame_min[f][0] < 2
-				 && frame_max[f][1] - frame_min[f][1] < 2
-				 && camera_lowres[f] == 0) {
-					spatial_info_map[st.get_node()];
-					camera_lowres[f] = 1;
-				}
-
-				/*
-				 * High resolution.
-				 */
-
-				if (frame_max[f][0] - frame_min[f][0] < 1
-				 && frame_max[f][1] - frame_min[f][1] < 1
-				 && camera_highres[f] == 0) {
-					spatial_info_map[st.get_node()];
-					camera_highres[f] = 1;
-				}
-			}
-
-			/*
-			 * Outputs
-			 */
-
-			for (unsigned int n = 0; n < pt_outputs.size(); n++) {
-
-				/*
-				 * Low resolution
-				 */
-
-				if (output_max[n][0] - output_min[n][0] < 2
-				 && output_max[n][1] - output_min[n][1] < 2
-				 && output_lowres[n] == 0) {
-					spatial_info_map[st.get_node()];
-					output_lowres[n] = 1;
-				}
-
-				/*
-				 * High resolution.
-				 */
-
-				if (output_max[n][0] - output_min[n][0] < 1
-				 && output_max[n][1] - output_min[n][1] < 1
-				 && camera_highres[n] == 0) {
-					spatial_info_map[st.get_node()];
-					output_highres[n] = 1;
-				}
-			}
-
-			/*
-			 * Check for completion
-			 */
-
-			if (camera_highres[0]
-			 && camera_highres[1]
-			 && camera_lowres[0]
-			 && camera_lowres[1]
-			 && !count(output_lowres.begin(), output_lowres.end(), 0)
-			 && !count(output_highres.begin(), output_highres.end(), 0));
-				return;
-
-			/*
-			 * Check precision before analyzing space further.
-			 */
-
-			if (st.precision_wall()) {
-				fprintf(stderr, "\n\n*** Error: reached subspace precision wall ***\n\n");
-				assert(0);
-				return;
-			}
-
-			if (st.positive().includes(iw)) {
-				st = st.positive();
-				total_tsteps++;
-			} else if (st.negative().includes(iw)) {
-				st = st.negative();
-				total_tsteps++;
-			} else {
-				fprintf(stderr, "failed iw = (%f, %f, %f)\n", 
-						iw[0], iw[1], iw[2]);
-				assert(0);
-			}
-		}
-	}
-
-	/*
 	 * Make pt list.
 	 */
 	static std::vector<pt> make_pt_list(const char *d_out[], const char *v_out[],
@@ -2627,16 +2444,60 @@ public:
 	}
 
 	/*
-	 * Check whether a cell is visible from a given viewpoint.
+	 * Check whether a cell is visible from a given viewpoint.  This function
+	 * is guaranteed to return 1 when a cell is visible, but it is not guaranteed
+	 * to return 0 when a cell is invisible.
 	 */
-	static void pt_visible(const pt &viewpoint, point min, point max) {
-		assert(0);
+	static int pt_might_be_visible(const pt &viewpoint, point min, point max) {
+
+		point cell[2] = {min, max};
+
+		/*
+		 * Cycle through all vertices of the cell to check certain
+		 * properties.
+		 */
+		int pos[3];
+		int neg[3];
+		for (int i = 0; i < 2; i++)
+		for (int j = 0; j < 2; j++)
+		for (int k = 0; k < 2; k++) {
+			point p = viewpoint.wp_unscaled(point(cell[i][0], cell[j][1], cell[k][2]));
+			if (viewpoint.unscaled_in_bounds(p))
+				return 1;
+
+			for (int d = 0; d < 3; d++)
+				if (p[d] >= 0)
+					pos[d] = 1;
+
+			if (p[0] <= viewpoint.unscaled_height() - 1)
+				neg[0] = 1;
+
+			if (p[1] <= viewpoint.unscaled_width() - 1)
+				neg[1] = 1;
+
+			if (p[2] <= 0)
+				neg[2] = 1;
+		}
+		
+		if (!neg[2])
+			return 0;
+
+		if (pos[2] && neg[2])
+			return 1;
+
+		if (!pos[0]
+		 || !neg[0]
+		 || !pos[1]
+		 || !neg[1])
+			return 0;
+
+		return 1;
 	}
 
 	/*
 	 * Check whether a cell is output-visible.
 	 */
-	static void output_visible(const std::vector<pt> &pt_outputs, point min, point max) {
+	static void output_might_be_visible(const std::vector<pt> &pt_outputs, point min, point max) {
 		for (int n = 0; n < pt_outputs.size(); n++)
 			if (pt_visible(pt_outputs[n], min, max))
 				return 1;
@@ -2646,8 +2507,23 @@ public:
 	/*
 	 * Check whether a cell is input-visible.
 	 */
-	static void input_visible(unsigned int f, point min, point max) {
+	static void input_might_be_visible(unsigned int f, point min, point max) {
 		return pt_visible(align::projective(f), min, max);
+	}
+
+	/*
+	 * Check lower-bound resolution constraints 
+	 */
+	int exceeds_resolution_lower_bounds(unsigned int f1, unsigned int f2,
+			point min, point max, const std::vector<pt> &pt_outputs) {
+		assert(0);
+	}
+
+	/*
+	 * Try the candidate nearest to the specified cell.
+	 */
+	static void try_nearest_candidate(unsigned int f1, unsigned int f2, candidates *c, point min, point max) {
+		assert(0);
 	}
 
 	/*
@@ -2656,16 +2532,15 @@ public:
 	static void find_candidates(unsigned int f1, unsigned int f2, candidates *c, point min, point max,
 			const std::vector<pt> &pt_outputs) {
 
-		if (!input_visible(f1, min, max)
-		 || !input_visible(f2, min, max))
+		if (!input_might_be_visible(f1, min, max)
+		 || !input_might_be_visible(f2, min, max))
 			return;
 
-		if (output_clip && !output_visible(pt_outputs, min, max))
+		if (output_clip && !output_might_be_visible(pt_outputs, min, max))
 			return;
 
-		if (exceeds_input_resolution(f1, f2, min, max) 
-		 || satisfies_output_resolution(f1, f2, min, max, pt_outputs)) {
-			add_candidate(f1, f2, c, min, max);
+		if (exceeds_resolution_lower_bounds(f1, f2, min, max, pt_outputs)) {
+			try_nearest_candidate(f1, f2, c, min, max);
 			return;
 		}
 

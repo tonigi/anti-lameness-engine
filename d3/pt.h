@@ -161,6 +161,11 @@ public:
 		     && p[1] >= 0 && p[1] <= scaled_width() - 1);
 	}
 
+	int unscaled_in_bounds(point p) const {
+		return (p[0] >= 0 && p[0] <= unscaled_height() - 1
+		     && p[1] >= 0 && p[1] <= unscaled_width() - 1);
+	}
+
 	ale_pos unscaled_width() const {
 		return t.unscaled_width() * scale_factor;
 	}

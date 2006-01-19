@@ -265,6 +265,19 @@ public:
 	ale_pos dproduct(const point &p) {
 		return x[0] * p[0] + x[1] * p[1] + x[2] * p[2];
 	}
+
+	/*
+	 * Determine whether the point is inside a given volume
+	 */
+	int inside(const point &min, const point &max) {
+		for (int d = 0; d < 3; d++) {
+			if (min[d] > x[d])
+				return 0;
+			if (max[d] < x[d])
+				return 0;
+		}
+		
+	}
 };
 
 inline point operator*(const point &p, double d) {
