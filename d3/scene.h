@@ -2626,6 +2626,56 @@ public:
 		return result;
 	}
 
+	/*
+	 * Check whether a cell is visible from a given viewpoint.
+	 */
+	static void pt_visible(const pt &viewpoint, point min, point max) {
+		assert(0);
+	}
+
+	/*
+	 * Check whether a cell is output-visible.
+	 */
+	static void output_visible(const std::vector<pt> &pt_outputs, point min, point max) {
+		for (int n = 0; n < pt_outputs.size(); n++)
+			if (pt_visible(pt_outputs[n], min, max))
+				return 1;
+		return 0;
+	}
+
+	/*
+	 * Check whether a cell is input-visible.
+	 */
+	static void input_visible(unsigned int f, point min, point max) {
+		return pt_visible(align::projective(f), min, max);
+	}
+
+	/*
+	 * Find candidates for subspace creation.
+	 */
+	static void find_candidates(unsigned int f1, unsigned int f2, candidates *c, point min, point max,
+			const std::vector<pt> &pt_outputs) {
+
+		if (!input_visible(f1, min, max)
+		 || !input_visible(f2, min, max))
+			return;
+
+		if (output_clip && !output_visible(pt_outputs, min, max))
+			return;
+
+		if (exceeds_input_resolution(f1, f2, min, max) 
+		 || satisfies_output_resolution(f1, f2, min, max, pt_outputs)) {
+			add_candidate(f1, f2, c, min, max);
+			return;
+		}
+
+		point new_cells[2][2];
+
+		space::traverse::get_next_cells(min, max, cells);
+
+		find_candidates(f1, f2, c, new_cells[0][0], new_cells[0][1]);
+		find_candidates(f1, f2, c, new_cells[1][0], new_cells[1][1]);
+	}
 
 	/*
 	 * Initialize space and identify regions of interest for the adaptive
@@ -2652,96 +2702,25 @@ public:
 
 		for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++) {
 
-			if (!d_out[f1] && !v_out[f1] && !d3_depth_pt->size()
-			 && !d3_output_pt->size() && strcmp(pairwise_comparisons, "all"))
-				continue;
-
-			std::vector<const d2::image *> if1;
-
-			if1.push_back(d2::image_rw::copy(f1, "3D reference image"));
-			assert(if1.back());
-
-			ale_pos decimation_index = input_decimation_exponent;
-			while (decimation_index > 0
-			    && if1->height() > 2
-			    && if1->width() > 2) {
-
-				if1.push_back(if1.back()->scale_by_half("3D, reduced LOD"));
-				assert(if1.back());
-				
-				decimation_index -= 1;
-			}
-
-			if (decimation_index > 0) {
-				fprintf(stderr, "Error: --di argument is too large.\n");
-				exit(1);
-			}
-
+			if (tc_multiplier == 0)
+				al->open(f1);
 
 			for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
 
 				if (f1 == f2)
 					continue;
 
-				std::vector<const d2::image *> if2;
+				if (tc_multiplier == 0)
+					al->open(f2);
 
-				if2.push_back(d2::image_rw::copy(f2, "3D reference image"));
-				assert(if2.back());
+				candidates *c = new candidates(f1);
 
-				ale_pos decimation_index = input_decimation_exponent;
-				while (decimation_index > 0
-				    && if2->height() > 2
-				    && if2->width() > 2) {
+				find_candidates(f1, f2, c, point::neginf(), point::posinf(), pt_outputs);
 
-					if2.push_back(if2.back()->scale_by_half("3D, reduced LOD"));
-					assert(if2.back());
-
-					decimation_index -= 1;
-				}
-
-				if (decimation_index > 0) {
-					fprintf(stderr, "Error: --di argument is too large.\n");
-					exit(1);
-				}
-
-				pt _pt1 = align::projective(f1);
-				pt _pt2 = align::projective(f2);
-
-				_pt1.scale(1 / _pt1.scale_2d() / pow(2, ceil(input_decimation_exponent)));
-				_pt2.scale(1 / _pt2.scale_2d() / pow(2, ceil(input_decimation_exponent)));
-
-				/*
-				 * Iterate over all points in the primary frame.
-				 */
-
-				for (unsigned int i = 0; i < if1->height(); i++)
-				for (unsigned int j = 0; j < if1->width();  j++) {
-
-					total_pixels++;
-
-					/*
-					 * Generate a map from scores to 3D points for
-					 * various depths in f1.
-					 */
-
-					score_map _sm = p2f_score_map(i, j, if1, if2, pt_outputs);
-
-					/*
-					 * Analyze space in a manner dependent on the score map.
-					 */
-
-					analyze_space_from_map(f1, f2, i, j, _pt1, _pt2, _sm, pt_outputs);
-				}
-				delete if2;
+				c->generate_subspaces();
 			}
 			delete if1;
 		}
-
-		/*
-		 * This is expensive.
-		 */
-
-		// refine_space_for_output(d_out, v_out, d3_depth_pt, d3_output_pt);
 
 		fprintf(stderr, ".\n");
 	}
