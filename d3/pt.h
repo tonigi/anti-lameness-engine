@@ -316,7 +316,7 @@ public:
 	ale_pos trilinear_coordinate(point w, ale_pos diagonal) {
 		calculate_diag_per_depth();
 
-		ale_pos depth = wc(w)[2];
+		ale_pos depth = fabs(wc(w)[2]);
 
 		ale_pos coord = log(diagonal / (depth * diag_per_depth)) / log(2);
 
@@ -343,7 +343,7 @@ public:
 	ale_pos diagonal_distance(point w, ale_pos coordinate) {
 		calculate_diag_per_depth();
 
-		ale_pos depth = wc(w)[2];
+		ale_pos depth = fabs(wc(w)[2]);
 		ale_pos diagonal = pow(2, coordinate) * depth * diag_per_depth;
 
 		return diagonal;
@@ -353,7 +353,7 @@ public:
 	 * Get the 3D diagonal for a given depth and trilinear coordinate.
 	 */
 	ale_pos diagonal_distance_3d(ale_pos depth, ale_pos coordinate) {
-		return pow(2, coordinate) * depth * diag_per_depth * sqrt(3) / sqrt(2);
+		return pow(2, coordinate) * fabs(depth) * diag_per_depth * sqrt(3) / sqrt(2);
 	}
 
 	/*
@@ -408,14 +408,7 @@ public:
 	 * Get the in-bounds centroid for a subspace, if one exists.
 	 */
 
-	point centroid(const space::traverse &t) {
-		point bb[2];
-
-		get_view_local_bb(t, bb);
-
-		point min = bb[0];
-		point max = bb[1];
-
+	point centroid(point min, point max) {
 		for (int d = 0; d < 2; d++)
 		if (min[d] > max[d])
 			return point::undefined();
@@ -424,6 +417,14 @@ public:
 			return point::undefined();
 
 		return (bb[0] + bb[1]) / 2;
+	}
+
+	point centroid(const space::traverse &t) {
+		point bb[2];
+
+		get_view_local_bb(t, bb);
+
+		return centroid(bb[0], bb[1]);
 	}
 
 	/*

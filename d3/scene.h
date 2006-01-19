@@ -2511,12 +2511,29 @@ public:
 		return pt_visible(align::projective(f), min, max);
 	}
 
+	int fails_output_resolution_bound(point min, point max, const std::vector<pt> &pt_outputs) {
+		assert(0);
+	}
+
 	/*
 	 * Check lower-bound resolution constraints 
 	 */
 	int exceeds_resolution_lower_bounds(unsigned int f1, unsigned int f2,
 			point min, point max, const std::vector<pt> &pt_outputs) {
-		assert(0);
+
+		pt _pt = al->get(f1)->get_t(0);
+		point p = _pt.centroid(min, max);
+
+		if ((min - max).norm() < _pt.diagonal_distance_3d(p[2], input_decimation_lower))
+			return 1;
+
+		if (fails_output_resolution_bound(min, max, pt_outputs))
+			return 0;
+
+		if ((min - max).norm() < _pt.diagonal_distance_3d(p[2], primary_decimation_upper))
+			return 1;
+
+		return 0;
 	}
 
 	/*
