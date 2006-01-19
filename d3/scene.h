@@ -2554,7 +2554,8 @@ public:
 
 		point new_cells[2][2];
 
-		space::traverse::get_next_cells(min, max, cells);
+		if (!space::traverse::get_next_cells(min, max, new_cells))
+			return;
 
 		find_candidates(f1, f2, c, new_cells[0][0], new_cells[0][1]);
 		find_candidates(f1, f2, c, new_cells[1][0], new_cells[1][1]);

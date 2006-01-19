@@ -98,7 +98,20 @@ public:
 			return 2;
 		}
 
-		static void get_next_cells(point min, point max, point cells[2][2]) {
+		ale_pos split_coordinate(int d, point min, point max) {
+			if (isinf(max[d]) && isinf(min[d]))
+				return 0;
+
+			if (isinf(max[d]))
+				return tan((atan(min[d]) + M_PI/2) / 2);
+
+			if (isinf(min[d]))
+				return tan((atan(max[d]) - M_PI/2) / 2);
+
+			return (min[d] + max[d]) / 2;
+		}
+
+		static int get_next_cells(point min, point max, point cells[2][2]) {
 			cells[0][0] = min;
 			cells[0][1] = max;
 			cells[1][0] = min;
@@ -106,14 +119,30 @@ public:
 
 			int d = get_next_split(min, max);
 
-			ale_pos split_point = (min[d] + max[d]) / 2;
+			ale_pos split_point = split_coordinate(d, min, max);
+
+			if (split_point == min[d]
+			 || split_point == max[d]
+			 || !finite(split_point))
+				return 0;
 
 			cells[0][1][d] = split_point;
 			cells[1][0][d] = split_point;
+
+			return 1;
 		}
 
 		int get_next_split() {
 			return get_next_split(min, max);
+		}
+
+		ale_pos split_coordinate(int d) {
+			return split_coordinate(d, min, max);
+		}
+
+		ale_pos split_coordinate() {
+			int next_split = get_next_split();
+			return split_coordinate(next_split);
 		}
 
 		static traverse root() {
@@ -127,24 +156,6 @@ public:
 			assert(result.current);
 
 			return result;
-		}
-
-		ale_pos split_coordinate(int d) {
-			if (isinf(max[d]) && isinf(min[d]))
-				return 0;
-
-			if (isinf(max[d]))
-				return tan((atan(min[d]) + M_PI/2) / 2);
-
-			if (isinf(min[d]))
-				return tan((atan(max[d]) - M_PI/2) / 2);
-
-			return (min[d] + max[d]) / 2;
-		}
-
-		ale_pos split_coordinate() {
-			int next_split = get_next_split();
-			return split_coordinate(next_split);
 		}
 
 		int precision_wall() {
