@@ -360,31 +360,25 @@ public:
 	 * Get bounding box for projection of a subspace.
 	 */
 
-	void get_view_local_bb(const space::traverse &st, point bb[2]) {
+	void get_view_local_bb(point volume_min, point volume_max, point bb[2], int scaled) {
 
 		point min = point::posinf();
 		point max = point::neginf();
 
-		point wbb[2] = { st.get_min(), st.get_max() };
-
+		point wbb[2] = { volume_min, volume_max };
 
 		for (int x = 0; x < 2; x++)
 		for (int y = 0; y < 2; y++)
 		for (int z = 0; z < 2; z++) {
-			point p = wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
-
-			if (p[0] < min[0])
-				min[0] = p[0];
-			if (p[0] > max[0])
-				max[0] = p[0];
-			if (p[1] < min[1])
-				min[1] = p[1];
-			if (p[1] > max[1])
-				max[1] = p[1];
-			if (p[2] < min[2])
-				min[2] = p[2];
-			if (p[2] > max[2])
-				max[2] = p[2];
+			point p = scaled ? wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]))
+				         : wp_unscaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
+			
+			for (int d = 0; d < 3; d++) {
+				if (p[d] < min[d])
+					min[d] = p[d];
+				if (p[d] > max[d])
+					max[d] = p[d];
+			}
 		}
 
 		/*
@@ -404,27 +398,48 @@ public:
 		bb[1] = max;
 	}
 
+	void get_view_local_bb_unscaled(point volume_min, point volume_max, point bb[2]) {
+		get_view_local_bb(volume_min, volume_max, bb, 0);
+	}
+
+	void get_view_local_bb_scaled(point volume_min, point volume_max, point bb[2]) {
+		get_view_local_bb(volume_min, volume_max, bb, 1);
+	}
+
+	void get_view_local_bb_scaled(const space::traverse &st, point bb[2]) {
+		get_view_local_bb_scaled(st.get_min(), st.get_max(), bb);
+	}
+
+	void get_view_local_bb_unscaled(const space::traverse &t, point bb[2]) {
+		get_view_local_bb_unscaled(st.get_min(), st.get_max(), bb);
+	}
+
 	/*
 	 * Get the in-bounds centroid for a subspace, if one exists.
 	 */
 
-	point centroid(point min, point max) {
+	point centroid(point volume_min, point volume_max) {
+
+		get_view_local_bb(volume_min, volume_max, bb);
+
+		point min = bb[0];
+		point max = bb[1];
+
 		for (int d = 0; d < 2; d++)
 		if (min[d] > max[d])
 			return point::undefined();
 
-		if (min[2] > 0)
+		if (min[2] >= 0)
 			return point::undefined();
 
-		return (bb[0] + bb[1]) / 2;
+		if (max[2] > 0)
+			max[2] = 0;
+
+		return (max + min) / 2;
 	}
 
 	point centroid(const space::traverse &t) {
-		point bb[2];
-
-		get_view_local_bb(t, bb);
-
-		return centroid(bb[0], bb[1]);
+		return centroid(t.get_min(), t.get_max());
 	}
 
 	/*

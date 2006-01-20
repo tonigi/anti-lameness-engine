@@ -2114,309 +2114,6 @@ public:
 	typedef std::multimap<ale_real,analytic> score_map;
 	typedef std::pair<ale_real,analytic> score_map_element;
 
-	static void solve_point_pair(unsigned int f1, unsigned int f2, int i, int j, ale_pos ii, ale_pos jj, 
-			ale_real *normalized_score, analytic *_a, 
-			const pt &_pt1, const pt &_pt2, const d2::image *if1, const d2::image *if2) {
-
-		*normalized_score = 0;
-		*normalized_score /= *normalized_score;
-		assert(isnan(*normalized_score));
-
-		/*
-		 * Create an orthonormal basis to
-		 * determine line intersection.
-		 */
-
-		point bp0 = _pt1.pw_scaled(point(i, j, 0));
-		point bp1 = _pt1.pw_scaled(point(i, j, 10));
-		point bp2 = _pt2.pw_scaled(point(ii, jj, 0));
-
-		point b0  = (bp1 - bp0).normalize();
-		point b1n = bp2 - bp0;
-		point b1  = (b1n - b1n.dproduct(b0) * b0).normalize();
-		point b2  = point(0, 0, 0).xproduct(b0, b1).normalize(); // Should already have norm=1
-		
-		/*
-		 * Select a fourth point to define a second line.
-		 */
-
-		point p3  = _pt2.pw_scaled(point(ii, jj, 10));
-
-		/*
-		 * Representation in the new basis.
-		 */
-
-		d2::point nbp0 = d2::point(bp0.dproduct(b0), bp0.dproduct(b1));
-		// d2::point nbp1 = d2::point(bp1.dproduct(b0), bp1.dproduct(b1));
-		d2::point nbp2 = d2::point(bp2.dproduct(b0), bp2.dproduct(b1));
-		d2::point np3  = d2::point( p3.dproduct(b0),  p3.dproduct(b1));
-
-		/*
-		 * Determine intersection of line
-		 * (nbp0, nbp1), which is parallel to
-		 * b0, with line (nbp2, np3).
-		 */
-
-		/*
-		 * XXX: a stronger check would be
-		 * better here, e.g., involving the
-		 * ratio (np3[0] - nbp2[0]) / (np3[1] -
-		 * nbp2[1]).  Also, acceptance of these
-		 * cases is probably better than
-		 * rejection.
-		 */
-
-		if (np3[1] - nbp2[1] == 0)
-			return;
-
-		d2::point intersection = d2::point(nbp2[0] 
-				+ (nbp0[1] - nbp2[1]) * (np3[0] - nbp2[0]) / (np3[1] - nbp2[1]),
-				nbp0[1]);
-
-		ale_pos b2_offset = b2.dproduct(bp0);
-
-		/*
-		 * Map the intersection back to the world
-		 * basis.
-		 */
-
-		point iw = intersection[0] * b0 + intersection[1] * b1 + b2_offset * b2;
-
-		/*
-		 * Reject intersection points behind a
-		 * camera.
-		 */
-
-		point icp = _pt1.wc(iw);
-		point ics = _pt2.wc(iw);
-
-
-		if (icp[2] >= 0 || ics[2] >= 0)
-			return;
-
-		/*
-		 * Reject clipping plane violations.
-		 */
-
-		if (iw[2] > front_clip
-		 || iw[2] < rear_clip)
-			return;
-
-		/*
-		 * Score the point.
-		 */
-
-		point ip = _pt1.wp_scaled(iw);
-
-		point is = _pt2.wp_scaled(iw);
-
-		_a->iw = iw;
-		_a->ip = ip;
-		_a->is = is;
-
-		/*
-		 * Calculate score from color match.  Assume for now
-		 * that the transformation can be approximated locally
-		 * with a translation.
-		 */
-
-		ale_pos score = 0;
-		ale_pos divisor = 0;
-		ale_pos l1_multiplier = 0.125;
-
-		if (if1->in_bounds(ip.xy())
-		 && if2->in_bounds(is.xy())) {
-			divisor += 1 - l1_multiplier;
-			score += (1 - l1_multiplier)
-			       * (if1->get_bl(ip.xy()) - if2->get_bl(is.xy())).normsq();
-		}
-
-		for (int iii = -1; iii <= 1; iii++)
-		for (int jjj = -1; jjj <= 1; jjj++) {
-			d2::point t(iii, jjj);
-
-			if (!if1->in_bounds(ip.xy() + t)
-			 || !if2->in_bounds(is.xy() + t))
-				continue;
-
-			divisor += l1_multiplier;
-			score   += l1_multiplier
-				 * (if1->get_bl(ip.xy() + t) - if2->get_bl(is.xy() + t)).normsq();
-				 
-		}
-
-		/*
-		 * Include third-camera contributions in the score.
-		 */
-
-		if (tc_multiplier != 0)
-		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
-			if (f == f1 || f == f2)
-				continue;
-
-			pt _ptf = align::projective(f);
-			_ptf.scale(1 / _ptf.scale_2d() / pow(2, ceil(input_decimation_exponent)));
-
-			point p = _ptf.wp_scaled(iw);
-
-			if (!cl->reference[f]->in_bounds(p.xy())
-			 || !if2->in_bounds(ip.xy()))
-				continue;
-
-			divisor += tc_multiplier;
-			score   += tc_multiplier
-				 * (if1->get_bl(ip.xy()) - cl->reference[f]->get_bl(p.xy())).normsq();
-		}
-
-		*normalized_score = score / divisor;
-	}
-
-	/*
-	 * Generate a map from scores to 3D points for various depths at point (i, j) in f1.
-	 */
-	static score_map p2f_score_map(unsigned int i, unsigned int j, lod_image *if1, lod_image *if2,
-			std::vector<pt> pt_outputs) {
-
-		score_map result;
-
-		/*
-		 * Map two depths to the secondary frame.
-		 */
-
-		point p1 = _pt2.wp_scaled(_pt1.pw_scaled(point(i, j,  1000)));
-		point p2 = _pt2.wp_scaled(_pt1.pw_scaled(point(i, j, -1000)));
-
-		/*
-		 * For cases where the mapped points define a
-		 * line and where points on the line fall
-		 * within the defined area of the frame,
-		 * determine the starting point for inspection.
-		 * In other cases, continue to the next pixel.
-		 */
-
-		ale_pos diff_i = p2[0] - p1[0];
-		ale_pos diff_j = p2[1] - p1[1];
-		ale_pos slope = diff_j / diff_i;
-
-		if (isnan(slope)) {
-			fprintf(stderr, "%d->%d (%d, %d) has undefined slope\n",
-					f1, f2, i, j);
-			return result;
-		}
-
-		/*
-		 * Make absurdly large/small slopes either infinity, negative infinity, or zero.
-		 */
-
-		if (fabs(slope) > if2->width() * 100) {
-			double zero = 0;
-			double one  = 1;
-			double inf  = one / zero;
-			slope = inf;
-		} else if (slope < 1 / (double) if2->height() / 100
-		        && slope > -1/ (double) if2->height() / 100) {
-			slope = 0;
-		}
-
-		ale_pos top_intersect = p1[1] - p1[0] * slope;
-		ale_pos lef_intersect = p1[0] - p1[1] / slope;
-		ale_pos rig_intersect = p1[0] - (p1[1] - if2->width() + 2) / slope;
-		ale_pos sp_i, sp_j;
-
-		if (slope == 0) {
-			sp_i = lef_intersect;
-			sp_j = 0;
-		} else if (finite(slope) && top_intersect >= 0 && top_intersect < if2->width() - 1) {
-			sp_i = 0;
-			sp_j = top_intersect;
-		} else if (slope > 0 && lef_intersect >= 0 && lef_intersect <= if2->height() - 1) {
-			sp_i = lef_intersect;
-			sp_j = 0;
-		} else if (slope < 0 && rig_intersect >= 0 && rig_intersect <= if2->height() - 1) {
-			sp_i = rig_intersect;
-			sp_j = if2->width() - 2;
-		} else {
-			return result;
-		}
-
-		/*
-		 * Determine increment values for examining
-		 * point, ensuring that incr_i is always
-		 * positive.
-		 */
-
-		ale_pos incr_i, incr_j;
-
-		if (fabs(diff_i) > fabs(diff_j)) {
-			incr_i = 1;
-			incr_j = slope;
-		} else if (slope > 0) {
-			incr_i = 1 / slope;
-			incr_j = 1;
-		} else {
-			incr_i = -1 / slope;
-			incr_j = -1;
-		}
-		
-		/*
-		 * Examine regions near the projected line.
-		 */
-
-		for (ale_pos ii = sp_i, jj = sp_j; 
-			ii <= if2->height() - 1 && jj <= if2->width() - 1 && ii >= 0 && jj >= 0; 
-			ii += incr_i, jj += incr_j) {
-
-			ale_real normalized_score;
-			analytic _a;
-
-			solve_point_pair(f1, f2, i, j, ii, jj, &normalized_score, &_a, _pt1, _pt2, if1, if2);
-
-			/*
-			 * Reject points with undefined score.
-			 */
-
-			if (!finite(normalized_score))
-				continue;
-
-			/*
-			 * Add the point to the score map.
-			 */
-
-			result.insert(score_map_element(normalized_score, _a));
-		}
-
-		/*
-		 * Iterate through regions and add new locations with sub-pixel resolution
-		 */
-		int accumulated_passes = 0;
-		int max_acc_passes = pairwise_ambiguity;
-		for (score_map::iterator smi = result.begin(); smi != result.end(); smi++) {
-			point is = smi->second.is;
-
-			if (accumulated_passes++ >= max_acc_passes)
-				break;
-
-			for (ale_pos epsilon = -0.5; epsilon <= 0.5; epsilon += 0.125) {
-
-				if (fabs(epsilon) < 0.001)
-					continue;
-
-				ale_real normalized_score;
-				analytic _a;
-
-				solve_point_pair(f1, f2, i, j, is[0] + epsilon * incr_i, is[1] + epsilon * incr_j,
-						&normalized_score, &_a, _pt1, _pt2, if1, if2);
-
-				if (!finite(normalized_score))
-					continue;
-
-				result.insert(score_map_element(normalized_score, _a));
-			}
-		}
-
-		return result;
-	}
-
 	/*
 	 * Make pt list.
 	 */
@@ -2511,33 +2208,21 @@ public:
 		return pt_visible(align::projective(f), min, max);
 	}
 
+	/*
+	 * Return true if a cell fails an output resolution bound.
+	 */
 	int fails_output_resolution_bound(point min, point max, const std::vector<pt> &pt_outputs) {
 		for (int n = 0; n < pt_outputs.size(); n++) {
 
-			d2::point pmin = d2::point::posinf();
-			d2::point pmax = d2::point::neginf();
-			int camera_front = 0;
+			point p = pt_outputs[n].centroid(min, max);
 
-			for (int i = 0; i < 2; i++)
-			for (int j = 0; j < 2; j++)
-			for (int k = 0; k < 2; k++) {
-				point p = pt_outputs[n].wp_unscaled(point(cell[i][0], cell[j][1], cell[k][2]));
+			if (!p.defined())
+				continue;
 
-				if (p[2] < 0)
-					camera_front = 1;
-
-				for (int d = 0; d < 2; d++) {
-					if (p[d] < pmin[d])
-						pmin[d] = p[d];
-					if (p[d] > pmax[d])
-						pmax[d] = p[d];
-				}
-			}
-
-			if (camera_front && (pmin - pmax).norm() > sqrt(2))
+			if ((max - min).norm() > pt_outputs[n].diagonal_distance_3d(p[2], output_decimation_preferred))
 				return 1;
 		}
-
+		
 		return 0;
 	}
 
@@ -2550,13 +2235,13 @@ public:
 		pt _pt = al->get(f1)->get_t(0);
 		point p = _pt.centroid(min, max);
 
-		if ((min - max).norm() < _pt.diagonal_distance_3d(p[2], input_decimation_lower))
+		if ((max - min).norm() < _pt.diagonal_distance_3d(p[2], input_decimation_lower))
 			return 1;
 
 		if (fails_output_resolution_bound(min, max, pt_outputs))
 			return 0;
 
-		if ((min - max).norm() < _pt.diagonal_distance_3d(p[2], primary_decimation_upper))
+		if ((max - min).norm() < _pt.diagonal_distance_3d(p[2], primary_decimation_upper))
 			return 1;
 
 		return 0;
@@ -2566,9 +2251,109 @@ public:
 	 * Try the candidate nearest to the specified cell.
 	 */
 	static void try_nearest_candidate(unsigned int f1, unsigned int f2, candidates *c, point min, point max) {
-		assert(0);
+		point centroid = (max - min) / 2;
+		pt _pt[2];
+		point p[2];
+
+		/*
+		 * Reject clipping plane violations.
+		 */
+
+		if (centroid[2] > front_clip
+		 || centroid[2] < rear_clip)
+			return;
+
+		/*
+		 * Calculate projections.
+		 */
+
+		for (int n = 0; n < 2; n++) {
+			_pt[n] = al->get(n)->get_t(0);
+			p[n] = _pt[n].wp_unscaled(centroid);
+
+			if (!_pt[n].in_bounds(p[n]))
+				return;
+
+			if (p[n][2] >= 0)
+				return;
+		}
+
+		ale_pos tc = _pt[0].trilinear_coordinate(p[0], (max - min) * sqrt(2) / sqrt(3));
+		ale_pos stc = _pt[1].trilinear_coordinate(p[0], (max - min) * sqrt(2) / sqrt(3));
+
+		while (tc < input_decimation_lower || stc < input_decimation_lower) {
+			tc++;
+			stc++;
+		}
+
+		if (tc > primary_decimation_upper)
+			return;
+
+		/*
+		 * Calculate score from color match.  Assume for now
+		 * that the transformation can be approximated locally
+		 * with a translation.
+		 */
+
+		ale_pos score = 0;
+		ale_pos divisor = 0;
+		ale_pos l1_multiplier = 0.125;
+		lod_image *if1 = al->get(f1);
+		lod_image *if2 = al->get(f2);
+
+		if (if1->in_bounds(p[0])
+		 && if2->in_bounds(p[1])) {
+			divisor += 1 - l1_multiplier;
+			score += (1 - l1_multiplier)
+			       * (if1->get_tl(p[0], tc) - if2->get_tl(p[1], stc)).normsq();
+		}
+
+		for (int iii = -1; iii <= 1; iii++)
+		for (int jjj = -1; jjj <= 1; jjj++) {
+			point t(iii, jjj, 0);
+
+			if (!if1->in_bounds(p[0] + t)
+			 || !if2->in_bounds(p[1] + t))
+				continue;
+
+			divisor += l1_multiplier;
+			score   += l1_multiplier
+				 * (if1->get_tl(p[0] + t, tc) - if2->get_bl(p[1] + t, tc)).normsq();
+				 
+		}
+
+		/*
+		 * Include third-camera contributions in the score.
+		 */
+
+		if (tc_multiplier != 0)
+		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+			if (f == f1 || f == f2)
+				continue;
+
+			lod_image *ifn = al->get(n);
+			pt _ptn = ifn->get_t(0);
+			point pn = _ptn.wp_unscaled(centroid);
+
+			if (!_ptn.in_bounds(pn))
+				continue;
+
+			if (pn[2] >= 0)
+				continue;
+
+			ale_pos ttc = _ptn.trilinear_coordinate(pn, (max - min) * sqrt(2) / sqrt(3));
+
+			divisor += tc_multiplier;
+			score   += tc_multiplier
+				 * (if1->get_tl(p[0], tc) - cl->reference[f]->get_bl(pn, ttc)).normsq();
+		}
+
+		c->add_candidate(p[0], tc, score / divisor);
 	}
 
+	/*
+	 * Check for cells that are completely clipped.
+	 */
 	int completely_clipped(point min, point max) {
 		return (min[2] > front_clip
 		     || max[2] < rear_clip)
