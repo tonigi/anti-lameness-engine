@@ -98,7 +98,7 @@ public:
 			return 2;
 		}
 
-		ale_pos split_coordinate(int d, point min, point max) {
+		static ale_pos split_coordinate(int d, point min, point max) {
 			if (isinf(max[d]) && isinf(min[d]))
 				return 0;
 

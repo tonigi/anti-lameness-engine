@@ -1687,7 +1687,7 @@ public:
 
 			point bb[2];
 
-			_pt.get_view_local_bb(st, bb);
+			_pt.get_view_local_bb_scaled(st, bb);
 
 			point min = bb[0];
 			point max = bb[1];
@@ -2194,9 +2194,9 @@ public:
 	/*
 	 * Check whether a cell is output-visible.
 	 */
-	static void output_might_be_visible(const std::vector<pt> &pt_outputs, point min, point max) {
-		for (int n = 0; n < pt_outputs.size(); n++)
-			if (pt_visible(pt_outputs[n], min, max))
+	static int output_might_be_visible(const std::vector<pt> &pt_outputs, point min, point max) {
+		for (unsigned int n = 0; n < pt_outputs.size(); n++)
+			if (pt_might_be_visible(pt_outputs[n], min, max))
 				return 1;
 		return 0;
 	}
@@ -2204,15 +2204,15 @@ public:
 	/*
 	 * Check whether a cell is input-visible.
 	 */
-	static void input_might_be_visible(unsigned int f, point min, point max) {
-		return pt_visible(align::projective(f), min, max);
+	static int input_might_be_visible(unsigned int f, point min, point max) {
+		return pt_might_be_visible(align::projective(f), min, max);
 	}
 
 	/*
 	 * Return true if a cell fails an output resolution bound.
 	 */
 	int fails_output_resolution_bound(point min, point max, const std::vector<pt> &pt_outputs) {
-		for (int n = 0; n < pt_outputs.size(); n++) {
+		for (unsigned int n = 0; n < pt_outputs.size(); n++) {
 
 			point p = pt_outputs[n].centroid(min, max);
 
@@ -2271,7 +2271,7 @@ public:
 			_pt[n] = al->get(n)->get_t(0);
 			p[n] = _pt[n].wp_unscaled(centroid);
 
-			if (!_pt[n].in_bounds(p[n]))
+			if (!_pt[n].unscaled_in_bounds(p[n]))
 				return;
 
 			if (p[n][2] >= 0)

@@ -45,7 +45,7 @@ private:
 	et euclidean;
 	ale_real _view_angle;		/* XXX: should be ale_pos */
 	ale_pos scale_factor;
-	ale_pos diag_per_depth;
+	mutable ale_pos diag_per_depth;
 
 public:	
 
@@ -298,7 +298,7 @@ public:
 	}
 
 private:
-	void calculate_diag_per_depth() {
+	void calculate_diag_per_depth() const {
 		if (diag_per_depth != 0)
 			return;
 		ale_pos w = unscaled_width();
@@ -340,7 +340,7 @@ public:
 	 * Get a diagonal distance for a given position in the world
 	 * and a given trilinear coordinate.
 	 */
-	ale_pos diagonal_distance(point w, ale_pos coordinate) {
+	ale_pos diagonal_distance(point w, ale_pos coordinate) const {
 		calculate_diag_per_depth();
 
 		ale_pos depth = fabs(wc(w)[2]);
@@ -352,7 +352,7 @@ public:
 	/*
 	 * Get the 3D diagonal for a given depth and trilinear coordinate.
 	 */
-	ale_pos diagonal_distance_3d(ale_pos depth, ale_pos coordinate) {
+	ale_pos diagonal_distance_3d(ale_pos depth, ale_pos coordinate) const {
 		return pow(2, coordinate) * fabs(depth) * diag_per_depth * sqrt(3) / sqrt(2);
 	}
 
@@ -360,7 +360,7 @@ public:
 	 * Get bounding box for projection of a subspace.
 	 */
 
-	void get_view_local_bb(point volume_min, point volume_max, point bb[2], int scaled) {
+	void get_view_local_bb(point volume_min, point volume_max, point bb[2], int scaled) const {
 
 		point min = point::posinf();
 		point max = point::neginf();
@@ -398,29 +398,31 @@ public:
 		bb[1] = max;
 	}
 
-	void get_view_local_bb_unscaled(point volume_min, point volume_max, point bb[2]) {
+	void get_view_local_bb_unscaled(point volume_min, point volume_max, point bb[2]) const {
 		get_view_local_bb(volume_min, volume_max, bb, 0);
 	}
 
-	void get_view_local_bb_scaled(point volume_min, point volume_max, point bb[2]) {
+	void get_view_local_bb_scaled(point volume_min, point volume_max, point bb[2]) const {
 		get_view_local_bb(volume_min, volume_max, bb, 1);
 	}
 
-	void get_view_local_bb_scaled(const space::traverse &st, point bb[2]) {
+	void get_view_local_bb_scaled(const space::traverse &st, point bb[2]) const {
 		get_view_local_bb_scaled(st.get_min(), st.get_max(), bb);
 	}
 
-	void get_view_local_bb_unscaled(const space::traverse &t, point bb[2]) {
-		get_view_local_bb_unscaled(st.get_min(), st.get_max(), bb);
+	void get_view_local_bb_unscaled(const space::traverse &t, point bb[2]) const {
+		get_view_local_bb_unscaled(t.get_min(), t.get_max(), bb);
 	}
 
 	/*
 	 * Get the in-bounds centroid for a subspace, if one exists.
 	 */
 
-	point centroid(point volume_min, point volume_max) {
+	point centroid(point volume_min, point volume_max) const {
 
-		get_view_local_bb(volume_min, volume_max, bb);
+		point bb[2];
+
+		get_view_local_bb_unscaled(volume_min, volume_max, bb);
 
 		point min = bb[0];
 		point max = bb[1];
