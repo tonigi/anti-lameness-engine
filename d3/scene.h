@@ -2512,7 +2512,33 @@ public:
 	}
 
 	int fails_output_resolution_bound(point min, point max, const std::vector<pt> &pt_outputs) {
-		assert(0);
+		for (int n = 0; n < pt_outputs.size(); n++) {
+
+			d2::point pmin = d2::point::posinf();
+			d2::point pmax = d2::point::neginf();
+			int camera_front = 0;
+
+			for (int i = 0; i < 2; i++)
+			for (int j = 0; j < 2; j++)
+			for (int k = 0; k < 2; k++) {
+				point p = pt_outputs[n].wp_unscaled(point(cell[i][0], cell[j][1], cell[k][2]));
+
+				if (p[2] < 0)
+					camera_front = 1;
+
+				for (int d = 0; d < 2; d++) {
+					if (p[d] < pmin[d])
+						pmin[d] = p[d];
+					if (p[d] > pmax[d])
+						pmax[d] = p[d];
+				}
+			}
+
+			if (camera_front && (pmin - pmax).norm() > sqrt(2))
+				return 1;
+		}
+
+		return 0;
 	}
 
 	/*
