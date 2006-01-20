@@ -28,6 +28,7 @@
 namespace d3 {
 	#include "d3/align.cc"
 	#include "d3/cpf.cc"
+	#include "d3/space.cc"
 	#include "d3/scene.cc"
 	#include "d3/tfile.cc"
 }

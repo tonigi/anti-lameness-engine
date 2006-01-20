@@ -25,4 +25,4 @@
  * See space.h for details on these variables.
  */
 
-scene::space *scene::root_space = NULL;
+space::node *space::root_node = NULL;

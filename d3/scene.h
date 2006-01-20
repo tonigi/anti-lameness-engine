@@ -462,6 +462,8 @@ class scene {
 				}
 
 			im->pix(i, j)[0] = -1;
+
+			return 1;
 		}
 
 		/*
@@ -2153,8 +2155,8 @@ public:
 		 * Cycle through all vertices of the cell to check certain
 		 * properties.
 		 */
-		int pos[3];
-		int neg[3];
+		int pos[3] = {0, 0, 0};
+		int neg[3] = {0, 0, 0};
 		for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 2; j++)
 		for (int k = 0; k < 2; k++) {
@@ -2211,7 +2213,7 @@ public:
 	/*
 	 * Return true if a cell fails an output resolution bound.
 	 */
-	int fails_output_resolution_bound(point min, point max, const std::vector<pt> &pt_outputs) {
+	static int fails_output_resolution_bound(point min, point max, const std::vector<pt> &pt_outputs) {
 		for (unsigned int n = 0; n < pt_outputs.size(); n++) {
 
 			point p = pt_outputs[n].centroid(min, max);
@@ -2229,7 +2231,7 @@ public:
 	/*
 	 * Check lower-bound resolution constraints 
 	 */
-	int exceeds_resolution_lower_bounds(unsigned int f1, unsigned int f2,
+	static int exceeds_resolution_lower_bounds(unsigned int f1, unsigned int f2,
 			point min, point max, const std::vector<pt> &pt_outputs) {
 
 		pt _pt = al->get(f1)->get_t(0);
@@ -2278,8 +2280,8 @@ public:
 				return;
 		}
 
-		ale_pos tc = _pt[0].trilinear_coordinate(p[0], (max - min) * sqrt(2) / sqrt(3));
-		ale_pos stc = _pt[1].trilinear_coordinate(p[0], (max - min) * sqrt(2) / sqrt(3));
+		int tc = (int) round(_pt[0].trilinear_coordinate(p[0], (max - min).norm() * sqrt(2) / sqrt(3)));
+		int stc = (int) round(_pt[1].trilinear_coordinate(p[0], (max - min).norm() * sqrt(2) / sqrt(3)));
 
 		while (tc < input_decimation_lower || stc < input_decimation_lower) {
 			tc++;
@@ -2301,24 +2303,24 @@ public:
 		lod_image *if1 = al->get(f1);
 		lod_image *if2 = al->get(f2);
 
-		if (if1->in_bounds(p[0])
-		 && if2->in_bounds(p[1])) {
+		if (if1->in_bounds(p[0].xy())
+		 && if2->in_bounds(p[1].xy())) {
 			divisor += 1 - l1_multiplier;
 			score += (1 - l1_multiplier)
-			       * (if1->get_tl(p[0], tc) - if2->get_tl(p[1], stc)).normsq();
+			       * (if1->get_tl(p[0].xy(), tc) - if2->get_tl(p[1].xy(), stc)).normsq();
 		}
 
 		for (int iii = -1; iii <= 1; iii++)
 		for (int jjj = -1; jjj <= 1; jjj++) {
-			point t(iii, jjj, 0);
+			d2::point t(iii, jjj);
 
-			if (!if1->in_bounds(p[0] + t)
-			 || !if2->in_bounds(p[1] + t))
+			if (!if1->in_bounds(p[0].xy() + t)
+			 || !if2->in_bounds(p[1].xy() + t))
 				continue;
 
 			divisor += l1_multiplier;
 			score   += l1_multiplier
-				 * (if1->get_tl(p[0] + t, tc) - if2->get_bl(p[1] + t, tc)).normsq();
+				 * (if1->get_tl(p[0].xy() + t, tc) - if2->get_tl(p[1].xy() + t, tc)).normsq();
 				 
 		}
 
@@ -2327,25 +2329,25 @@ public:
 		 */
 
 		if (tc_multiplier != 0)
-		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
-			if (f == f1 || f == f2)
+		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+			if (n == f1 || n == f2)
 				continue;
 
 			lod_image *ifn = al->get(n);
 			pt _ptn = ifn->get_t(0);
 			point pn = _ptn.wp_unscaled(centroid);
 
-			if (!_ptn.in_bounds(pn))
+			if (!_ptn.unscaled_in_bounds(pn))
 				continue;
 
 			if (pn[2] >= 0)
 				continue;
 
-			ale_pos ttc = _ptn.trilinear_coordinate(pn, (max - min) * sqrt(2) / sqrt(3));
+			ale_pos ttc = _ptn.trilinear_coordinate(pn, (max - min).norm() * sqrt(2) / sqrt(3));
 
 			divisor += tc_multiplier;
 			score   += tc_multiplier
-				 * (if1->get_tl(p[0], tc) - cl->reference[f]->get_bl(pn, ttc)).normsq();
+				 * (if1->get_tl(p[0].xy(), tc) - ifn->get_tl(pn.xy(), ttc)).normsq();
 		}
 
 		c->add_candidate(p[0], tc, score / divisor);
@@ -2354,9 +2356,9 @@ public:
 	/*
 	 * Check for cells that are completely clipped.
 	 */
-	int completely_clipped(point min, point max) {
+	static int completely_clipped(point min, point max) {
 		return (min[2] > front_clip
-		     || max[2] < rear_clip)
+		     || max[2] < rear_clip);
 	}
 
 	/*
@@ -2385,8 +2387,8 @@ public:
 		if (!space::traverse::get_next_cells(min, max, new_cells))
 			return;
 
-		find_candidates(f1, f2, c, new_cells[0][0], new_cells[0][1]);
-		find_candidates(f1, f2, c, new_cells[1][0], new_cells[1][1]);
+		find_candidates(f1, f2, c, new_cells[0][0], new_cells[0][1], pt_outputs);
+		find_candidates(f1, f2, c, new_cells[1][0], new_cells[1][1], pt_outputs);
 	}
 
 	/*
@@ -2430,8 +2432,13 @@ public:
 				find_candidates(f1, f2, c, point::neginf(), point::posinf(), pt_outputs);
 
 				c->generate_subspaces();
+
+				if (tc_multiplier == 0)
+					al->close(f2);
 			}
-			delete if1;
+
+			if (tc_multiplier == 0)
+				al->close(f1);
 		}
 
 		fprintf(stderr, ".\n");

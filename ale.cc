@@ -732,8 +732,8 @@ int main(int argc, const char *argv[]){
 			if (i + 1 >= argc)
 				not_enough("--di-upper");
 
-			double di_parameter;
-			sscanf(argv[i+1], "%lf", &di_parameter);
+			double dgi_parameter;
+			sscanf(argv[i+1], "%lf", &dgi_parameter);
 			i += 1;
 			d3::scene::di_upper(dgi_parameter);
 		} else if (!strcmp(argv[i], "--fc")) {
