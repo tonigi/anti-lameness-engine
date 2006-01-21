@@ -941,12 +941,10 @@ class scene {
 
 			levels.resize(primary_decimation_upper - input_decimation_lower + 1);
 			for (int l = input_decimation_lower; l <= primary_decimation_upper; l++) {
-				for (unsigned int i = 0; i < (unsigned int) floor(height / pow(2, l)); i++) 
-				for (unsigned int j = 0; j < (unsigned int) floor(width / pow(2, l));  j++)
-				for (unsigned int k = 0; k < pairwise_ambiguity; k++) {
-					levels[l][i * width * pairwise_ambiguity + j * pairwise_ambiguity + k] = 
-						std::pair<ale_pos, ale_real>(0, 0);
-				}
+				levels[l].resize((unsigned int) (floor(height / pow(2, l))
+					                       * floor(width / pow(2, l))
+							       * pairwise_ambiguity),
+						 std::pair<ale_pos, ale_real>(0, 0));
 			}
 		}
 
