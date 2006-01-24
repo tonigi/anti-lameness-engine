@@ -2147,6 +2147,11 @@ public:
 	 */
 	static int pt_might_be_visible(const pt &viewpoint, point min, point max) {
 
+		int doc = (rand() % 100000) ? 0 : 1;
+
+		if (doc)
+			fprintf(stderr, "checking visibility:\n");
+
 		point cell[2] = {min, max};
 
 		/*
@@ -2159,8 +2164,23 @@ public:
 		for (int j = 0; j < 2; j++)
 		for (int k = 0; k < 2; k++) {
 			point p = viewpoint.wp_unscaled(point(cell[i][0], cell[j][1], cell[k][2]));
-			if (viewpoint.unscaled_in_bounds(p))
+
+			if (doc)
+				fprintf(stderr, "\t[%f %f %f] --> [%f %f %f]\n", 
+						cell[i][0], cell[j][1], cell[k][2],
+						p[0], p[1], p[2]);
+
+			if (p[2] < 0 && viewpoint.unscaled_in_bounds(p))
 				return 1;
+
+			if (isnan(p[0])
+			 || isnan(p[1])
+			 || isnan(p[2]))
+				return 1;
+
+			if (p[2] < 0)
+				for (int d = 0; d < 2; d++)
+					p[d] *= -1;
 
 			for (int d = 0; d < 3; d++)
 				if (p[d] >= 0)
@@ -2365,6 +2385,12 @@ public:
 	static void find_candidates(unsigned int f1, unsigned int f2, candidates *c, point min, point max,
 			const std::vector<pt> &pt_outputs) {
 
+		if (!(rand() % 100000))
+			fprintf(stderr, "([%f %f %f], [%f %f %f]) at %d\n", 
+					min[0], min[1], min[2],
+					max[0], max[1], max[2],
+					__LINE__);
+
 		if (completely_clipped(min, max))
 			return;
 
@@ -2458,6 +2484,8 @@ public:
 
 		for (unsigned int i = 0; i < ou_iterations; i++)
 			spatial_info_update();
+
+		fprintf(stderr, "Final spatial map size: %u\n", spatial_info_map.size());
 	}
 
 #if 0

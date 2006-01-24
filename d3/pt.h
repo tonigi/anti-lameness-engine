@@ -353,6 +353,7 @@ public:
 	 * Get the 3D diagonal for a given depth and trilinear coordinate.
 	 */
 	ale_pos diagonal_distance_3d(ale_pos depth, ale_pos coordinate) const {
+		calculate_diag_per_depth();
 		return pow(2, coordinate) * fabs(depth) * diag_per_depth * sqrt(3) / sqrt(2);
 	}
 
