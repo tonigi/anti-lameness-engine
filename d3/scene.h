@@ -2178,7 +2178,7 @@ public:
 			 || isnan(p[2]))
 				return 1;
 
-			if (p[2] < 0)
+			if (p[2] > 0)
 				for (int d = 0; d < 2; d++)
 					p[d] *= -1;
 
