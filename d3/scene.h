@@ -2165,11 +2165,6 @@ public:
 		for (int k = 0; k < 2; k++) {
 			point p = viewpoint.wp_unscaled(point(cell[i][0], cell[j][1], cell[k][2]));
 
-			if (doc)
-				fprintf(stderr, "\t[%f %f %f] --> [%f %f %f]\n", 
-						cell[i][0], cell[j][1], cell[k][2],
-						p[0], p[1], p[2]);
-
 			if (p[2] < 0 && viewpoint.unscaled_in_bounds(p))
 				return 1;
 
@@ -2181,6 +2176,11 @@ public:
 			if (p[2] > 0)
 				for (int d = 0; d < 2; d++)
 					p[d] *= -1;
+
+			if (doc)
+				fprintf(stderr, "\t[%f %f %f] --> [%f %f %f]\n", 
+						cell[i][0], cell[j][1], cell[k][2],
+						p[0], p[1], p[2]);
 
 			for (int d = 0; d < 3; d++)
 				if (p[d] >= 0)
@@ -2198,9 +2198,6 @@ public:
 		
 		if (!neg[2])
 			return 0;
-
-		if (pos[2] && neg[2])
-			return 1;
 
 		if (!pos[0]
 		 || !neg[0]
