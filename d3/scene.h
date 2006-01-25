@@ -2269,7 +2269,7 @@ public:
 	 */
 	static void try_nearest_candidate(unsigned int f1, unsigned int f2, candidates *c, point min, point max) {
 		point centroid = (max - min) / 2;
-		pt _pt[2];
+		pt _pt[2] = { al->get(f1)->get_t(0), al->get(f2)->get_t(0) };
 		point p[2];
 
 		/*
@@ -2285,7 +2285,7 @@ public:
 		 */
 
 		for (int n = 0; n < 2; n++) {
-			_pt[n] = al->get(n)->get_t(0);
+
 			p[n] = _pt[n].wp_unscaled(centroid);
 
 			if (!_pt[n].unscaled_in_bounds(p[n]))
@@ -2296,7 +2296,7 @@ public:
 		}
 
 		int tc = (int) round(_pt[0].trilinear_coordinate(p[0], (max - min).norm() * sqrt(2) / sqrt(3)));
-		int stc = (int) round(_pt[1].trilinear_coordinate(p[0], (max - min).norm() * sqrt(2) / sqrt(3)));
+		int stc = (int) round(_pt[1].trilinear_coordinate(p[1], (max - min).norm() * sqrt(2) / sqrt(3)));
 
 		while (tc < input_decimation_lower || stc < input_decimation_lower) {
 			tc++;
