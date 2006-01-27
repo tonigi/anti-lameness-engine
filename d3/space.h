@@ -111,13 +111,11 @@ public:
 			return (min[d] + max[d]) / 2;
 		}
 
-		static int get_next_cells(point min, point max, point cells[2][2]) {
+		static int get_next_cells(int d, point min, point max, point cells[2][2]) {
 			cells[0][0] = min;
 			cells[0][1] = max;
 			cells[1][0] = min;
 			cells[1][1] = max;
-
-			int d = get_next_split(min, max);
 
 			ale_pos split_point = split_coordinate(d, min, max);
 
