@@ -2379,7 +2379,7 @@ public:
 	/*
 	 * Get the split coordinate.
 	 */
-	static int get_split_coordinate(point min, point max) {
+	static int get_split_coordinate(int f1, int f2, point min, point max, const std::vector<pt> &pt_outputs) {
 		for (int d = 0; d < 3; d++)
 			if (isinf(min[d]) || isinf(max[d]))
 				return d3::space::get_split_coordinate(min, max);
@@ -2416,7 +2416,7 @@ public:
 
 		point new_cells[2][2];
 
-		if (!space::traverse::get_next_cells(get_split_coordinate(min, max), min, max, new_cells))
+		if (!space::traverse::get_next_cells(get_split_coordinate(f1, f2, min, max, pt_outputs), min, max, new_cells))
 			return;
 
 		find_candidates(f1, f2, c, new_cells[0][0], new_cells[0][1], pt_outputs);
@@ -2447,6 +2447,12 @@ public:
 		 */
 
 		for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++) {
+
+			if (d3_depth_pt.size() == 0
+			 && d3_output_pt.size() == 0
+			 && d_out[f1] == NULL
+			 && v_out[f1] == NULL)
+				continue;
 
 			if (tc_multiplier == 0)
 				al->open(f1);
