@@ -2383,15 +2383,20 @@ public:
 
 		point local_min, local_max;
 
-		local_min = _pt.wp(min);
-		local_max = _pt.wp(min);
+		local_min = _pt.wp_unscaled(min);
+		local_max = _pt.wp_unscaled(min);
 
 		point cell[2] = {min, max};
 
 		int near_vertex = 0;
 
+		/*
+		 * Determine the view-local extrema in all dimensions, and
+		 * determine the vertex of closest z coordinate.
+		 */
+
 		for (int r = 1; r < 8; r++) {
-			point local = _pt.wp(point(cell[r>>2][0], cell[(r>>1)%2][1], cell[r%2][2]));
+			point local = _pt.wp_unscaled(point(cell[r>>2][0], cell[(r>>1)%2][1], cell[r%2][2]));
 			
 			for (int d = 0; d < 3; d++) {
 				if (local[d] < local_min[d])
@@ -2400,7 +2405,7 @@ public:
 					local_max[d] = local[d];
 			}
 
-			if (local[d] == local_max[d])
+			if (local[2] == local_max[2])
 				near_vertex = r;
 		}
 
@@ -2412,13 +2417,15 @@ public:
 
 		for (int d = 0; d < 3; d++) {
 
+			int r = near_vertex;
+
 			int p1[3] = {r>>2, (r>>1)%2, r%2};
 			int p2[3] = {r>>2, (r>>1)%2, r%2};
 
 			p2[d] = 1 - p2[d];
 
-			ale_pos local_distance = (_pt.wp(point(cell[p1[0]][0], cell[p1[1]][1], cell[p1[2]][2]))
-					        - _pt.wp(point(cell[p2[0]][0], cell[p2[1]][1], cell[p2[2]][2]))).norm();
+			ale_pos local_distance = (_pt.wp_unscaled(point(cell[p1[0]][0], cell[p1[1]][1], cell[p1[2]][2]))
+					        - _pt.wp_unscaled(point(cell[p2[0]][0], cell[p2[1]][1], cell[p2[2]][2]))).norm();
 
 			if (local_distance / diameter > *extreme_ratio) {
 				*extreme_ratio = local_distance / diameter;
@@ -2428,12 +2435,12 @@ public:
 	}
 
 	/*
-	 * Get the split coordinate.
+	 * Get the next split dimension.
 	 */
-	static int get_split_coordinate(int f1, int f2, point min, point max, const std::vector<pt> &pt_outputs) {
+	static int get_next_split(int f1, int f2, point min, point max, const std::vector<pt> &pt_outputs) {
 		for (int d = 0; d < 3; d++)
 			if (isinf(min[d]) || isinf(max[d]))
-				return d3::space::get_split_coordinate(min, max);
+				return space::traverse::get_next_split(min, max);
 
 		int extreme_dim = 0;
 		ale_pos extreme_ratio = 0;
@@ -2441,7 +2448,7 @@ public:
 		update_extrema(min, max, al->get(f1)->get_t(0), &extreme_dim, &extreme_ratio);
 		update_extrema(min, max, al->get(f2)->get_t(0), &extreme_dim, &extreme_ratio);
 
-		for (int n = 0; n < pt_outputs.size; n++) {
+		for (unsigned int n = 0; n < pt_outputs.size(); n++) {
 			update_extrema(min, max, pt_outputs[n], &extreme_dim, &extreme_ratio);
 		}
 
@@ -2477,7 +2484,7 @@ public:
 
 		point new_cells[2][2];
 
-		if (!space::traverse::get_next_cells(get_split_coordinate(f1, f2, min, max, pt_outputs), min, max, new_cells))
+		if (!space::traverse::get_next_cells(get_next_split(f1, f2, min, max, pt_outputs), min, max, new_cells))
 			return;
 
 		find_candidates(f1, f2, c, new_cells[0][0], new_cells[0][1], pt_outputs);
@@ -2509,8 +2516,8 @@ public:
 
 		for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++) {
 
-			if (d3_depth_pt.size() == 0
-			 && d3_output_pt.size() == 0
+			if (d3_depth_pt->size() == 0
+			 && d3_output_pt->size() == 0
 			 && d_out[f1] == NULL
 			 && v_out[f1] == NULL)
 				continue;
