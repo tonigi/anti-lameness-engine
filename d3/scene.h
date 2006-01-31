@@ -2377,6 +2377,57 @@ public:
 	}
 
 	/*
+	 * Update extremum variables for cell points mapped to a particular view.
+	 */
+	static void update_extrema(point min, point max, pt _pt, int *extreme_dim, ale_pos *extreme_ratio) {
+
+		point local_min, local_max;
+
+		local_min = _pt.wp(min);
+		local_max = _pt.wp(min);
+
+		point cell[2] = {min, max};
+
+		int near_vertex = 0;
+
+		for (int r = 1; r < 8; r++) {
+			point local = _pt.wp(point(cell[r>>2][0], cell[(r>>1)%2][1], cell[r%2][2]));
+			
+			for (int d = 0; d < 3; d++) {
+				if (local[d] < local_min[d])
+					local_min[d] = local[d];
+				if (local[d] > local_max[d])
+					local_max[d] = local[d];
+			}
+
+			if (local[d] == local_max[d])
+				near_vertex = r;
+		}
+
+		ale_pos diameter = (local_max - local_min).norm();
+
+		/*
+		 * Update extrema as necessary for each dimension.
+		 */
+
+		for (int d = 0; d < 3; d++) {
+
+			int p1[3] = {r>>2, (r>>1)%2, r%2};
+			int p2[3] = {r>>2, (r>>1)%2, r%2};
+
+			p2[d] = 1 - p2[d];
+
+			ale_pos local_distance = (_pt.wp(point(cell[p1[0]][0], cell[p1[1]][1], cell[p1[2]][2]))
+					        - _pt.wp(point(cell[p2[0]][0], cell[p2[1]][1], cell[p2[2]][2]))).norm();
+
+			if (local_distance / diameter > *extreme_ratio) {
+				*extreme_ratio = local_distance / diameter;
+				*extreme_dim = d;
+			}
+		}
+	}
+
+	/*
 	 * Get the split coordinate.
 	 */
 	static int get_split_coordinate(int f1, int f2, point min, point max, const std::vector<pt> &pt_outputs) {
@@ -2384,7 +2435,17 @@ public:
 			if (isinf(min[d]) || isinf(max[d]))
 				return d3::space::get_split_coordinate(min, max);
 
-		assert(0);
+		int extreme_dim = 0;
+		ale_pos extreme_ratio = 0;
+
+		update_extrema(min, max, al->get(f1)->get_t(0), &extreme_dim, &extreme_ratio);
+		update_extrema(min, max, al->get(f2)->get_t(0), &extreme_dim, &extreme_ratio);
+
+		for (int n = 0; n < pt_outputs.size; n++) {
+			update_extrema(min, max, pt_outputs[n], &extreme_dim, &extreme_ratio);
+		}
+
+		return extreme_dim;
 	}
 
 	/*
