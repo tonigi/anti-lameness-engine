@@ -2141,6 +2141,13 @@ public:
 	}
 
 	/*
+	 * Get a trilinear coordinate for an anisotropic candidate cell.
+	 */
+	static ale_pos get_trilinear_coordinate(point min, point max, pt _pt) {
+		assert(0);
+	}
+
+	/*
 	 * Check whether a cell is visible from a given viewpoint.  This function
 	 * is guaranteed to return 1 when a cell is visible, but it is not guaranteed
 	 * to return 0 when a cell is invisible.
@@ -2236,7 +2243,7 @@ public:
 			if (!p.defined())
 				continue;
 
-			if ((max - min).norm() > pt_outputs[n].diagonal_distance_3d(p[2], output_decimation_preferred))
+			if (get_trilinear_coordinate(min, max, pt_outputs[n]) < output_decimation_preferred)
 				return 1;
 		}
 		
@@ -2252,13 +2259,13 @@ public:
 		pt _pt = al->get(f1)->get_t(0);
 		point p = _pt.centroid(min, max);
 
-		if ((max - min).norm() < _pt.diagonal_distance_3d(p[2], input_decimation_lower))
+		if (get_trilinear_coordinate(min, max, _pt) < input_decimation_lower)
 			return 1;
 
 		if (fails_output_resolution_bound(min, max, pt_outputs))
 			return 0;
 
-		if ((max - min).norm() < _pt.diagonal_distance_3d(p[2], primary_decimation_upper))
+		if (get_trilinear_coordinate(min, max, _pt) < primary_decimation_upper)
 			return 1;
 
 		return 0;
@@ -2295,8 +2302,8 @@ public:
 				return;
 		}
 
-		int tc = (int) round(_pt[0].trilinear_coordinate(p[0], (max - min).norm() * sqrt(2) / sqrt(3)));
-		int stc = (int) round(_pt[1].trilinear_coordinate(p[1], (max - min).norm() * sqrt(2) / sqrt(3)));
+		int tc = (int) round(get_trilinear_coordinate(min, max, _pt[0]));
+		int stc = (int) round(get_trilinear_coordinate(min, max, _pt[1]));
 
 		while (tc < input_decimation_lower || stc < input_decimation_lower) {
 			tc++;
@@ -2358,7 +2365,7 @@ public:
 			if (pn[2] >= 0)
 				continue;
 
-			ale_pos ttc = _ptn.trilinear_coordinate(pn, (max - min).norm() * sqrt(2) / sqrt(3));
+			ale_pos ttc = get_trilinear_coordinate(min, max, _ptn);
 
 			divisor += tc_multiplier;
 			score   += tc_multiplier
