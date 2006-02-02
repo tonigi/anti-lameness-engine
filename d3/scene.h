@@ -2144,7 +2144,32 @@ public:
 	 * Get a trilinear coordinate for an anisotropic candidate cell.
 	 */
 	static ale_pos get_trilinear_coordinate(point min, point max, pt _pt) {
-		assert(0);
+
+		d2::point local_min, local_max;
+
+		local_min = _pt.wp_unscaled(min).xy();
+		local_max = _pt.wp_unscaled(min).xy();
+
+		point cell[2] = {min, max};
+
+		/*
+		 * Determine the view-local extrema in 2 dimensions.
+		 */
+
+		for (int r = 1; r < 8; r++) {
+			point local = _pt.wp_unscaled(point(cell[r>>2][0], cell[(r>>1)%2][1], cell[r%2][2]));
+			
+			for (int d = 0; d < 2; d++) {
+				if (local[d] < local_min[d])
+					local_min[d] = local[d];
+				if (local[d] > local_max[d])
+					local_max[d] = local[d];
+			}
+		}
+
+		ale_pos diameter = (local_max - local_min).norm();
+
+		return log(diameter) / log(2);
 	}
 
 	/*
