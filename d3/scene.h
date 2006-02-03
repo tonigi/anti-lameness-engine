@@ -2441,7 +2441,7 @@ public:
 				near_vertex = r;
 		}
 
-		ale_pos diameter = (local_max - local_min).norm();
+		ale_pos diameter = (local_max.xy() - local_min.xy()).norm();
 
 		/*
 		 * Update extrema as necessary for each dimension.
@@ -2456,8 +2456,8 @@ public:
 
 			p2[d] = 1 - p2[d];
 
-			ale_pos local_distance = (_pt.wp_unscaled(point(cell[p1[0]][0], cell[p1[1]][1], cell[p1[2]][2]))
-					        - _pt.wp_unscaled(point(cell[p2[0]][0], cell[p2[1]][1], cell[p2[2]][2]))).norm();
+			ale_pos local_distance = (_pt.wp_unscaled(point(cell[p1[0]][0], cell[p1[1]][1], cell[p1[2]][2])).xy()
+					        - _pt.wp_unscaled(point(cell[p2[0]][0], cell[p2[1]][1], cell[p2[2]][2])).xy()).norm();
 
 			if (local_distance / diameter > *extreme_ratio) {
 				*extreme_ratio = local_distance / diameter;
