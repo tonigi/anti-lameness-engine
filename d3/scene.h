@@ -2169,7 +2169,7 @@ public:
 
 		ale_pos diameter = (local_max - local_min).norm();
 
-		return log(diameter) / log(2);
+		return log(diameter / sqrt(2)) / log(2);
 	}
 
 	/*
@@ -2493,12 +2493,6 @@ public:
 	static void find_candidates(unsigned int f1, unsigned int f2, candidates *c, point min, point max,
 			const std::vector<pt> &pt_outputs) {
 
-		if (!(rand() % 100000))
-			fprintf(stderr, "([%f %f %f], [%f %f %f]) at %d\n", 
-					min[0], min[1], min[2],
-					max[0], max[1], max[2],
-					__LINE__);
-
 		if (completely_clipped(min, max))
 			return;
 
@@ -2510,6 +2504,12 @@ public:
 			return;
 
 		if (exceeds_resolution_lower_bounds(f1, f2, min, max, pt_outputs)) {
+			if (!(rand() % 100000))
+				fprintf(stderr, "([%f %f %f], [%f %f %f]) at %d\n", 
+						min[0], min[1], min[2],
+						max[0], max[1], max[2],
+						__LINE__);
+
 			try_nearest_candidate(f1, f2, c, min, max);
 			return;
 		}
