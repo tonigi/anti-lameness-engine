@@ -734,7 +734,7 @@ class scene {
 
 		subtree *get_subtree(const space::traverse &t) {
 			ale_pos tc = transformation.trilinear_coordinate(t);
-			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
+			d2::point p = transformation.centroid(t).xy();
 			assert(in_spatial_bounds(p));
 
 			if (!initialized)
