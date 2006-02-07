@@ -83,6 +83,7 @@ private:
 			fprintf(stderr, "get_atomic type %s\n", orig_type);
 			syntax_error("Unable to get filter.");
 		}
+		assert(0);
 	}
 
 	/*

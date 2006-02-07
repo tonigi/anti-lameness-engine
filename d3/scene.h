@@ -319,7 +319,11 @@ class scene {
 		/*
 		 * Check spatial bounds.
 		 */
-		int in_spatial_bounds(d2::point p) {
+		int in_spatial_bounds(point p) {
+
+			if (!p.defined())
+				return 0;
+
 			if (p[0] < 0)
 				return 0;
 			if (p[1] < 0)
@@ -335,7 +339,7 @@ class scene {
 		}
 
 		int in_spatial_bounds(const space::traverse &t) {
-			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
+			point p = transformation.centroid(t);
 			return in_spatial_bounds(p);
 		}
 
@@ -513,7 +517,7 @@ class scene {
 				return;
 			
 			ale_pos tc = transformation.trilinear_coordinate(t);
-			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
+			point p = transformation.centroid(t);
 			assert(in_spatial_bounds(p));
 
 			tc = round(tc);
@@ -565,7 +569,7 @@ class scene {
 				weights.push_back(make_image(sf, -1));
 			}
 
-			add_weight((int) tc, p, weight, st);
+			add_weight((int) tc, p.xy(), weight, st);
 		}
 
 		/*
@@ -603,7 +607,7 @@ class scene {
 
 		ale_real get_weight(const space::traverse &t) {
 			ale_pos tc = transformation.trilinear_coordinate(t);
-			d2::point p = transformation.wp_unscaled(t.get_centroid()).xy();
+			point p = transformation.centroid(t);
 			assert(in_spatial_bounds(p));
 
 			if (!initialized)
@@ -616,7 +620,7 @@ class scene {
 			}
 
 			if (tc <= tc_high) {
-				return get_weight((int) tc, p);
+				return get_weight((int) tc, p.xy());
 			}
 
 			assert(tc > tc_high);
@@ -734,7 +738,7 @@ class scene {
 
 		subtree *get_subtree(const space::traverse &t) {
 			ale_pos tc = transformation.trilinear_coordinate(t);
-			d2::point p = transformation.centroid(t).xy();
+			point p = transformation.centroid(t);
 			assert(in_spatial_bounds(p));
 
 			if (!initialized)
@@ -748,7 +752,7 @@ class scene {
 			if (tc < tc_low)
 				return NULL;
 
-			return get_subtree((int) tc, p);
+			return get_subtree((int) tc, p.xy());
 		}
 
 		/*
