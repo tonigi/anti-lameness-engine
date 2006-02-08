@@ -268,7 +268,7 @@ class scene {
 
 		void set_image(d2::image *im, ale_real value) {
 			for (unsigned int i = 0; i < im->height(); i++)
-			for (unsigned int j = 0; i < im->width(); j++)
+			for (unsigned int j = 0; j < im->width(); j++)
 				im->pix(i, j) = d2::pixel(value, value, value);
 		}
 
