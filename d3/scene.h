@@ -852,6 +852,8 @@ class scene {
 		 */
 		void generate_subspace(point iw, ale_pos diagonal) {
 
+			fprintf(stderr, "*");
+
 			space::traverse st = space::traverse::root();
 
 			if (!st.includes(iw)) {
@@ -993,13 +995,14 @@ class scene {
 		 */
 
 		void generate_subspaces() {
+			fprintf(stderr, "+");
 			for (int l = input_decimation_lower; l <= primary_decimation_upper; l++) {
 				for (unsigned int i = 0; i < (unsigned int) floor(height / pow(2, l)); i++)
 				for (unsigned int j = 0; j < (unsigned int) floor(width / pow(2, l)); j++)
 				for (unsigned int k = 0; k < pairwise_ambiguity; k++) {
 					std::pair<ale_pos, ale_real> *pk =
 						&(levels[l - input_decimation_lower]
-						        [i * width * pairwise_ambiguity + j * pairwise_ambiguity]);
+						        [i * width * pairwise_ambiguity + j * pairwise_ambiguity + k]);
 
 					if (pk->first == 0)
 						continue;
