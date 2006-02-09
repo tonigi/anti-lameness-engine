@@ -267,6 +267,7 @@ class scene {
 		int initialized;
 
 		void set_image(d2::image *im, ale_real value) {
+			assert(im);
 			for (unsigned int i = 0; i < im->height(); i++)
 			for (unsigned int j = 0; j < im->width(); j++)
 				im->pix(i, j) = d2::pixel(value, value, value);
@@ -276,6 +277,7 @@ class scene {
 			d2::image *result = new d2::image_ale_real(
 					(unsigned int) ceil(transformation.unscaled_height() * sf),
 					(unsigned int) ceil(transformation.unscaled_width() * sf), 3);
+			assert(result);
 
 			if (init_value != 0)
 				set_image(result, init_value);
@@ -540,7 +542,7 @@ class scene {
 
 				ale_real sf = pow(2, -tc);
 
-				weights[0] = make_image(sf);
+				weights.push_back(make_image(sf));
 			}
 
 			/*
