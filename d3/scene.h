@@ -966,15 +966,22 @@ class scene {
 			assert(p[2] < 0);
 			assert(score >= 0);
 
+			fprintf(stderr, "[ac p=%f %f %f tc=%d s=%f",
+					p[0], p[1], p[2], tc, score);
+
 			int i = (unsigned int) floor(p[0] / pow(2, tc));
 			int j = (unsigned int) floor(p[1] / pow(2, tc));
 
 			assert(i < floor(height / pow(2, tc)));
 			assert(j < floor(width / pow(2, tc)));
 
+			fprintf(stderr, " i=%d j=%d", i, j);
+
 			for (unsigned int k = 0; k < pairwise_ambiguity; k++) {
 				std::pair<ale_pos, ale_real> *pk =
 					&(levels[tc][i * width * pairwise_ambiguity + j * pairwise_ambiguity + k]);
+
+				fprintf(stderr, " d=%f", pk->first);
 
 				if (pk->first != 0 && score >= pk->second)
 					continue;
@@ -991,6 +998,8 @@ class scene {
 				if (p[2] == 0)
 					break;
 			}
+
+			fprintf(stderr, "]\n");
 		}
 
 		/*
@@ -2316,7 +2325,7 @@ public:
 	 * Try the candidate nearest to the specified cell.
 	 */
 	static void try_nearest_candidate(unsigned int f1, unsigned int f2, candidates *c, point min, point max) {
-		point centroid = (max - min) / 2;
+		point centroid = (max + min) / 2;
 		pt _pt[2] = { al->get(f1)->get_t(0), al->get(f2)->get_t(0) };
 		point p[2];
 
@@ -2414,6 +2423,9 @@ public:
 		}
 
 		c->add_candidate(p[0], tc, score / divisor);
+		fprintf(stderr, "[acbb n=%f %f %f x=%f %f %f]\n", 
+				min[0], min[1], min[2],
+				max[0], max[1], max[2]);
 	}
 
 	/*
