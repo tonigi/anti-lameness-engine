@@ -961,7 +961,6 @@ class scene {
 		 */
 
 		void add_candidate(point p, int tc, ale_real score) {
-			fprintf(stderr, "@");
 			assert(tc <= primary_decimation_upper);
 			assert(tc >= input_decimation_lower);
 			assert(p[2] < 0);
