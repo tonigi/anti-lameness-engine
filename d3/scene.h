@@ -961,6 +961,7 @@ class scene {
 		 */
 
 		void add_candidate(point p, int tc, ale_real score) {
+			fprintf(stderr, "@");
 			assert(tc <= primary_decimation_upper);
 			assert(tc >= input_decimation_lower);
 			assert(p[2] < 0);
@@ -974,7 +975,7 @@ class scene {
 
 			for (unsigned int k = 0; k < pairwise_ambiguity; k++) {
 				std::pair<ale_pos, ale_real> *pk =
-					&(levels[tc][i * width * pairwise_ambiguity + j * pairwise_ambiguity]);
+					&(levels[tc][i * width * pairwise_ambiguity + j * pairwise_ambiguity + k]);
 
 				if (pk->first != 0 && score >= pk->second)
 					continue;
@@ -987,6 +988,9 @@ class scene {
 
 				p[2] = tp;
 				score = tr;
+
+				if (p[2] == 0)
+					break;
 			}
 		}
 
@@ -1004,8 +1008,12 @@ class scene {
 						&(levels[l - input_decimation_lower]
 						        [i * width * pairwise_ambiguity + j * pairwise_ambiguity + k]);
 
-					if (pk->first == 0)
+					if (pk->first == 0) {
+						fprintf(stderr, "o");
 						continue;
+					} else {
+						fprintf(stderr, "|");
+					}
 
 					ale_pos si = i * pow(2, l) + ((l > 0) ? pow(2, l - 1) : 0);
 					ale_pos sj = j * pow(2, l) + ((l > 0) ? pow(2, l - 1) : 0);
