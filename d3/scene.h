@@ -852,6 +852,9 @@ class scene {
 		 */
 		void generate_subspace(point iw, ale_pos diagonal) {
 
+			fprintf(stderr, "[gs iw=%f %f %f d=%f]\n", 
+					iw[0], iw[1], iw[2], diagonal);
+
 			fprintf(stderr, "*");
 
 			space::traverse st = space::traverse::root();
@@ -949,7 +952,7 @@ class scene {
 
 			levels.resize(primary_decimation_upper - input_decimation_lower + 1);
 			for (int l = input_decimation_lower; l <= primary_decimation_upper; l++) {
-				levels[l].resize((unsigned int) (floor(height / pow(2, l))
+				levels[l - input_decimation_lower].resize((unsigned int) (floor(height / pow(2, l))
 					                       * floor(width / pow(2, l))
 							       * pairwise_ambiguity),
 						 std::pair<ale_pos, ale_real>(0, 0));
@@ -974,10 +977,12 @@ class scene {
 
 			for (unsigned int k = 0; k < pairwise_ambiguity; k++) {
 				std::pair<ale_pos, ale_real> *pk =
-					&(levels[tc][i * width * pairwise_ambiguity + j * pairwise_ambiguity + k]);
+					&(levels[tc - input_decimation_lower][i * width * pairwise_ambiguity + j * pairwise_ambiguity + k]);
 
 				if (pk->first != 0 && score >= pk->second)
 					continue;
+
+				fprintf(stderr, "[ac p2=%f score=%f]\n", p[2], score);
 
 				ale_pos tp = pk->first;
 				ale_real tr = pk->second;
@@ -1016,6 +1021,8 @@ class scene {
 
 					ale_pos si = i * pow(2, l) + ((l > 0) ? pow(2, l - 1) : 0);
 					ale_pos sj = j * pow(2, l) + ((l > 0) ? pow(2, l - 1) : 0);
+
+					fprintf(stderr, "[gss l=%d i=%d j=%d d=%f]\n", l, i, j, pk->first);
 
 					point p = al->get(image_index)->get_t(0).pw_unscaled(point(si, sj, pk->first));
 
@@ -1468,6 +1475,7 @@ public:
 		front_clip = front_clip * cp_scalar - cp_scalar;
 		rear_clip = rear_clip * cp_scalar - cp_scalar;
 
+		fprintf(stderr, "front_clip=%f rear_clip=%f\n", front_clip, rear_clip);
 
 		/*
 		 * Allocate image structures.
@@ -2320,6 +2328,8 @@ public:
 		pt _pt[2] = { al->get(f1)->get_t(0), al->get(f2)->get_t(0) };
 		point p[2];
 
+		fprintf(stderr, "[tnc n=%f %f %f x=%f %f %f]\n", min[0], min[1], min[2], max[0], max[1], max[2]);
+
 		/*
 		 * Reject clipping plane violations.
 		 */
@@ -2339,9 +2349,12 @@ public:
 			if (!_pt[n].unscaled_in_bounds(p[n]))
 				return;
 
+			fprintf(stderr, ":");
+
 			if (p[n][2] >= 0)
 				return;
 		}
+
 
 		int tc = (int) round(get_trilinear_coordinate(min, max, _pt[0]));
 		int stc = (int) round(get_trilinear_coordinate(min, max, _pt[1]));
@@ -2594,6 +2607,9 @@ public:
 			if (tc_multiplier == 0)
 				al->close(f1);
 		}
+
+		fprintf(stderr, "Final spatial map size: %u\n", spatial_info_map.size());
+		assert(0);
 
 		fprintf(stderr, ".\n");
 	}
