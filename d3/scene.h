@@ -972,12 +972,15 @@ class scene {
 			int i = (unsigned int) floor(p[0] / pow(2, tc));
 			int j = (unsigned int) floor(p[1] / pow(2, tc));
 
-			assert(i < floor(height / pow(2, tc)));
-			assert(j < floor(width / pow(2, tc)));
+			int sheight = (int) floor(height / pow(2, tc));
+			int swidth  = (int) floor(width / pow(2, tc));
+
+			assert(i < sheight);
+			assert(j < swidth);
 
 			for (unsigned int k = 0; k < pairwise_ambiguity; k++) {
 				std::pair<ale_pos, ale_real> *pk =
-					&(levels[tc - input_decimation_lower][i * width * pairwise_ambiguity + j * pairwise_ambiguity + k]);
+					&(levels[tc - input_decimation_lower][i * swidth * pairwise_ambiguity + j * pairwise_ambiguity + k]);
 
 				if (pk->first != 0 && score >= pk->second)
 					continue;
