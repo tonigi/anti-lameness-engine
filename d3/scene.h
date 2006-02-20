@@ -985,7 +985,7 @@ class scene {
 				if (pk->first != 0 && score >= pk->second)
 					continue;
 
-				fprintf(stderr, "[ac p2=%f score=%f]\n", p[2], score);
+				// fprintf(stderr, "[ac p2=%f score=%f]\n", p[2], score);
 
 				ale_pos tp = pk->first;
 				ale_real tr = pk->second;
@@ -2191,6 +2191,8 @@ public:
 					local_min[d] = local[d];
 				if (local[d] > local_max[d])
 					local_max[d] = local[d];
+				if (isnan(local[d])) 
+					return local[d];
 			}
 		}
 
@@ -2331,7 +2333,7 @@ public:
 		pt _pt[2] = { al->get(f1)->get_t(0), al->get(f2)->get_t(0) };
 		point p[2];
 
-		fprintf(stderr, "[tnc n=%f %f %f x=%f %f %f]\n", min[0], min[1], min[2], max[0], max[1], max[2]);
+		// fprintf(stderr, "[tnc n=%f %f %f x=%f %f %f]\n", min[0], min[1], min[2], max[0], max[1], max[2]);
 
 		/*
 		 * Reject clipping plane violations.
@@ -2352,7 +2354,7 @@ public:
 			if (!_pt[n].unscaled_in_bounds(p[n]))
 				return;
 
-			fprintf(stderr, ":");
+			// fprintf(stderr, ":");
 
 			if (p[n][2] >= 0)
 				return;
@@ -2523,17 +2525,41 @@ public:
 	 * Find candidates for subspace creation.
 	 */
 	static void find_candidates(unsigned int f1, unsigned int f2, candidates *c, point min, point max,
-			const std::vector<pt> &pt_outputs) {
+			const std::vector<pt> &pt_outputs, int depth = 0) {
 
-		if (completely_clipped(min, max))
+		int print = 0;
+
+		if (min[0] < 10.0001 && max[0] > 10.0001
+		 && min[1] < 10.0001 && max[1] > 10.0001
+		 && min[2] < 0.0001 && max[2] > 0.0001)
+			print = 1;
+
+		if (print) {
+			for (int i = depth; i > 0; i--) {
+				fprintf(stderr, "+");
+			}
+			fprintf(stderr, "[fc n=%f %f %f x=%f %f %f]\n",
+					min[0], min[1], min[2], max[0], max[1], max[2]);
+		}
+
+		if (completely_clipped(min, max)) {
+			if (print)
+				fprintf(stderr, "c");
 			return;
+		}
 
 		if (!input_might_be_visible(f1, min, max)
-		 || !input_might_be_visible(f2, min, max))
+		 || !input_might_be_visible(f2, min, max)) {
+			if (print)
+				fprintf(stderr, "v");
 			return;
+		}
 
-		if (output_clip && !output_might_be_visible(pt_outputs, min, max))
+		if (output_clip && !output_might_be_visible(pt_outputs, min, max)) {
+			if (print)
+				fprintf(stderr, "o");
 			return;
+		}
 
 		if (exceeds_resolution_lower_bounds(f1, f2, min, max, pt_outputs)) {
 			if (!(rand() % 100000))
@@ -2542,17 +2568,39 @@ public:
 						max[0], max[1], max[2],
 						__LINE__);
 
+			if (print)
+				fprintf(stderr, "t");
+
 			try_nearest_candidate(f1, f2, c, min, max);
 			return;
 		}
 
 		point new_cells[2][2];
 
-		if (!space::traverse::get_next_cells(get_next_split(f1, f2, min, max, pt_outputs), min, max, new_cells))
+		if (!space::traverse::get_next_cells(get_next_split(f1, f2, min, max, pt_outputs), min, max, new_cells)) {
+			if (print)
+				fprintf(stderr, "n");
 			return;
+		}
 
-		find_candidates(f1, f2, c, new_cells[0][0], new_cells[0][1], pt_outputs);
-		find_candidates(f1, f2, c, new_cells[1][0], new_cells[1][1], pt_outputs);
+		if (print) {
+			fprintf(stderr, "nc[0][0]=%f %f %f nc[0][1]=%f %f %f nc[1][0]=%f %f %f nc[1][1]=%f %f %f\n",
+					new_cells[0][0][0],
+					new_cells[0][0][1],
+					new_cells[0][0][2],
+					new_cells[0][1][0],
+					new_cells[0][1][1],
+					new_cells[0][1][2],
+					new_cells[1][0][0],
+					new_cells[1][0][1],
+					new_cells[1][0][2],
+					new_cells[1][1][0],
+					new_cells[1][1][1],
+					new_cells[1][1][2]);
+		}
+
+		find_candidates(f1, f2, c, new_cells[0][0], new_cells[0][1], pt_outputs, depth + 1);
+		find_candidates(f1, f2, c, new_cells[1][0], new_cells[1][1], pt_outputs, depth + 1);
 	}
 
 	/*
