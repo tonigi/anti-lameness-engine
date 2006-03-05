@@ -1010,12 +1010,15 @@ class scene {
 
 			fprintf(stderr, "+");
 			for (int l = input_decimation_lower; l <= primary_decimation_upper; l++) {
-				for (unsigned int i = 0; i < (unsigned int) floor(height / pow(2, l)); i++)
-				for (unsigned int j = 0; j < (unsigned int) floor(width / pow(2, l)); j++)
+				unsigned int sheight = (unsigned int) floor(height / pow(2, l));
+				unsigned int swidth  = (unsigned int) floor(width  / pow(2, l));
+
+				for (unsigned int i = 0; i < sheight; i++)
+				for (unsigned int j = 0; j < swidth; j++)
 				for (unsigned int k = 0; k < pairwise_ambiguity; k++) {
 					std::pair<ale_pos, ale_real> *pk =
 						&(levels[l - input_decimation_lower]
-						        [i * width * pairwise_ambiguity + j * pairwise_ambiguity + k]);
+						        [i * swidth * pairwise_ambiguity + j * pairwise_ambiguity + k]);
 
 					if (pk->first == 0) {
 						fprintf(stderr, "o");
