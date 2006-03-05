@@ -2667,7 +2667,6 @@ public:
 		}
 
 		fprintf(stderr, "Final spatial map size: %u\n", spatial_info_map.size());
-		assert(0);
 
 		fprintf(stderr, ".\n");
 	}
