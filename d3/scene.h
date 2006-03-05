@@ -985,7 +985,8 @@ class scene {
 				if (pk->first != 0 && score >= pk->second)
 					continue;
 
-				// fprintf(stderr, "[ac p2=%f score=%f]\n", p[2], score);
+				if (i == 1 && j == 1 && tc == 4)
+					fprintf(stderr, "[ac p2=%f score=%f]\n", p[2], score);
 
 				ale_pos tp = pk->first;
 				ale_real tr = pk->second;
@@ -1006,6 +1007,7 @@ class scene {
 		 */
 
 		void generate_subspaces() {
+
 			fprintf(stderr, "+");
 			for (int l = input_decimation_lower; l <= primary_decimation_upper; l++) {
 				for (unsigned int i = 0; i < (unsigned int) floor(height / pow(2, l)); i++)
@@ -1025,7 +1027,7 @@ class scene {
 					ale_pos si = i * pow(2, l) + ((l > 0) ? pow(2, l - 1) : 0);
 					ale_pos sj = j * pow(2, l) + ((l > 0) ? pow(2, l - 1) : 0);
 
-					fprintf(stderr, "[gss l=%d i=%d j=%d d=%f]\n", l, i, j, pk->first);
+					fprintf(stderr, "[gss l=%d i=%d j=%d d=%g]\n", l, i, j, pk->first);
 
 					point p = al->get(image_index)->get_t(0).pw_unscaled(point(si, sj, pk->first));
 
@@ -2529,8 +2531,8 @@ public:
 
 		int print = 0;
 
-		if (min[0] < 10.0001 && max[0] > 10.0001
-		 && min[1] < 10.0001 && max[1] > 10.0001
+		if (min[0] < 20.0001 && max[0] > 20.0001
+		 && min[1] < 20.0001 && max[1] > 20.0001
 		 && min[2] < 0.0001 && max[2] > 0.0001)
 			print = 1;
 
@@ -2648,6 +2650,8 @@ public:
 				candidates *c = new candidates(f1);
 
 				find_candidates(f1, f2, c, point::neginf(), point::posinf(), pt_outputs);
+
+
 
 				c->generate_subspaces();
 
