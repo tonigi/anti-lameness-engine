@@ -282,6 +282,26 @@ class scene {
 			if (init_value != 0)
 				set_image(result, init_value);
 
+			fprintf(stderr, "make_image(%f)\n", sf);
+
+			if (initialized) {
+
+				fprintf(stderr, "Current image list: ");
+
+				for (int i = tc_low; i <= tc_high; i++) {
+					fprintf(stderr, "[tc=%d imax=%d jmax=%d] ",
+							i, weights[i - tc_low]->height(),
+							   weights[i - tc_low]->width());
+				}
+
+				fprintf(stderr, "\n");
+
+			}
+
+			fprintf(stderr, "New image: [tc=%f imax=%d jmax=%d]\n",
+					sf, result->height(), result->width());
+
+
 			return result;
 		}
 
@@ -476,8 +496,13 @@ class scene {
 		 * Add weight.
 		 */
 		void add_weight(int tc, unsigned int i, unsigned int j, ale_real weight, subtree *st) {
+
 			d2::image *im = weights[tc - tc_low];
 			assert(im);
+
+			fprintf(stderr, "[aw tc=%d i=%d j=%d imax=%d jmax=%d]\n",
+					tc, i, j, im->height(), im->width());
+			
 			assert(i <= im->height() - 1);
 			assert(j <= im->width() - 1);
 
@@ -543,6 +568,8 @@ class scene {
 				ale_real sf = pow(2, -tc);
 
 				weights.push_back(make_image(sf));
+
+				initialized = 1;
 			}
 
 			/*
@@ -578,6 +605,22 @@ class scene {
 		 * Get weight
 		 */
 		ale_real get_weight(int tc, unsigned int i, unsigned int j) {
+
+			fprintf(stderr, "[gw tc=%d i=%u j=%u tclow=%d tchigh=%d]\n", 
+					tc, i, j, tc_low, tc_high);
+
+			if (tc < tc_low || !initialized)
+				return 0;
+
+			if (tc > tc_high) {
+				return (get_weight(tc - 1, i * 2 + 0, j * 2 + 0)
+				      + get_weight(tc - 1, i * 2 + 1, j * 2 + 0)
+				      + get_weight(tc - 1, i * 2 + 1, j * 2 + 1)
+				      + get_weight(tc - 1, i * 2 + 0, j * 2 + 1)) / 4;
+			}
+
+			assert(weights.size() > (unsigned int) (tc - tc_low));
+
 			d2::image *im = weights[tc - tc_low];
 			assert(im);
 			assert(i < im->height());
@@ -591,6 +634,10 @@ class scene {
 			}
 
 			if (im->pix(i, j)[0] == 0) {
+				if (tc == tc_high)
+					return 0;
+				if (weights[tc - tc_low + 1]->pix(i / 2, j / 2)[0] == -1)
+					return 0;
 				return get_weight(tc + 1, i / 2, j / 2);
 			}
 
