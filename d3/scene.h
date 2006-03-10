@@ -434,6 +434,15 @@ class scene {
 		int add_partial(int tc, unsigned int i, unsigned int j, ale_real weight, subtree *st) {
 			d2::image *im = weights[tc - tc_low];
 			assert(im);
+
+			fprintf(stderr, "[ap tc=%d i=%d j=%d imax=%d jmax=%d]\n",
+					tc, i, j, im->height(), im->width());
+
+			if (i == im->height() - 1
+			 || j == im->width() - 1) {
+				return 1;
+			}
+
 			assert(i <= im->height() - 1);
 			assert(j <= im->width() - 1);
 
