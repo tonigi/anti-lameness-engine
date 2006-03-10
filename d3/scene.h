@@ -493,7 +493,7 @@ class scene {
 					assert(i * 2 + ii < iim->height());
 					assert(j * 2 + jj < iim->width());
 
-					im->pix(i * 2 + ii, j * 2 + jj)[0] = weight;
+					iim->pix(i * 2 + ii, j * 2 + jj)[0] = weight;
 				}
 
 			im->pix(i, j)[0] = -1;
