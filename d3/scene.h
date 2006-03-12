@@ -435,8 +435,8 @@ class scene {
 			d2::image *im = weights[tc - tc_low];
 			assert(im);
 
-			fprintf(stderr, "[ap tc=%d i=%d j=%d imax=%d jmax=%d]\n",
-					tc, i, j, im->height(), im->width());
+//			fprintf(stderr, "[ap tc=%d i=%d j=%d imax=%d jmax=%d]\n",
+//					tc, i, j, im->height(), im->width());
 
 			if (i == im->height() - 1
 			 || j == im->width() - 1) {
@@ -509,8 +509,8 @@ class scene {
 			d2::image *im = weights[tc - tc_low];
 			assert(im);
 
-			fprintf(stderr, "[aw tc=%d i=%d j=%d imax=%d jmax=%d]\n",
-					tc, i, j, im->height(), im->width());
+//			fprintf(stderr, "[aw tc=%d i=%d j=%d imax=%d jmax=%d]\n",
+//					tc, i, j, im->height(), im->width());
 			
 			assert(i <= im->height() - 1);
 			assert(j <= im->width() - 1);
@@ -615,8 +615,8 @@ class scene {
 		 */
 		ale_real get_weight(int tc, unsigned int i, unsigned int j) {
 
-			fprintf(stderr, "[gw tc=%d i=%u j=%u tclow=%d tchigh=%d]\n", 
-					tc, i, j, tc_low, tc_high);
+//			fprintf(stderr, "[gw tc=%d i=%u j=%u tclow=%d tchigh=%d]\n", 
+//					tc, i, j, tc_low, tc_high);
 
 			if (tc < tc_low || !initialized)
 				return 0;
@@ -908,8 +908,8 @@ class scene {
 		 */
 		void generate_subspace(point iw, ale_pos diagonal) {
 
-			fprintf(stderr, "[gs iw=%f %f %f d=%f]\n", 
-					iw[0], iw[1], iw[2], diagonal);
+//			fprintf(stderr, "[gs iw=%f %f %f d=%f]\n", 
+//					iw[0], iw[1], iw[2], diagonal);
 
 			fprintf(stderr, "*");
 
@@ -1086,7 +1086,7 @@ class scene {
 					ale_pos si = i * pow(2, l) + ((l > 0) ? pow(2, l - 1) : 0);
 					ale_pos sj = j * pow(2, l) + ((l > 0) ? pow(2, l - 1) : 0);
 
-					fprintf(stderr, "[gss l=%d i=%d j=%d d=%g]\n", l, i, j, pk->first);
+//					fprintf(stderr, "[gss l=%d i=%d j=%d d=%g]\n", l, i, j, pk->first);
 
 					point p = al->get(image_index)->get_t(0).pw_unscaled(point(si, sj, pk->first));
 
@@ -1423,6 +1423,7 @@ class scene {
 		 * Get current occupancy.
 		 */
 		ale_real get_occupancy() {
+			assert (finite(occupancy));
 			return occupancy;
 		}
 
@@ -1904,9 +1905,12 @@ public:
 					 * Weighted (transparent) contribution display
 					 */
 
-					ale_pos contribution_value = sn.get_pocc_density() + sn.get_socc_density();
+					ale_pos contribution_value = sn.get_pocc_density() /* + sn.get_socc_density() */;
 					weights->pix(i, j) += encounter;
 					im->pix(i, j)      += encounter * contribution_value;
+
+					assert (finite(encounter[0]));
+					assert (finite(contribution_value));
 
 				} else if (type == 5) {
 
@@ -1996,7 +2000,12 @@ public:
 		weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
 						(int) floor(_pt.scaled_width()), 3);
 
+#if 1
 		view_recurse(7, im2, weights, si, _pt);
+#else
+		view_recurse(4, im2, weights, si, _pt);
+		return im2;
+#endif
 
 		/*
 		 * Normalize depths by weights
@@ -2672,6 +2681,8 @@ public:
 			std::map<const char *, pt> *d3_depth_pt,
 			std::map<const char *, pt> *d3_output_pt) {
 
+		fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
+
 		fprintf(stderr, "Subdividing 3D space");
 
 		std::vector<pt> pt_outputs = make_pt_list(d_out, v_out, d3_depth_pt, d3_output_pt);
@@ -2725,6 +2736,7 @@ public:
 		fprintf(stderr, "Final spatial map size: %u\n", spatial_info_map.size());
 
 		fprintf(stderr, ".\n");
+		fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
 	}
 
 
@@ -2737,6 +2749,7 @@ public:
 	 */
 	static void reduce_cost_to_search_depth(d2::exposure *exp_out, int inc_bit) {
 
+		fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
 		/*
 		 * Subspace model
 		 */
@@ -2745,6 +2758,7 @@ public:
 			spatial_info_update();
 
 		fprintf(stderr, "Final spatial map size: %u\n", spatial_info_map.size());
+		fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
 	}
 
 #if 0
