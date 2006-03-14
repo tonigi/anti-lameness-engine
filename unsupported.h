@@ -42,6 +42,14 @@ public:
 	}
 
 	/*
+	 * Describe an option that is undocumented.
+	 */
+	static void undocumented(const char *description) {
+		fprintf(stderr, "\n\n");
+		fprintf(stderr, "Warning: %s is undocumented.\n", description);
+	}
+
+	/*
 	 * Describe an option that is no longer supported.
 	 */
 	static void discontinued(const char *description, const char *alternative = NULL, const char *alternative2 = NULL) {

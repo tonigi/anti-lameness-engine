@@ -1184,6 +1184,9 @@ int main(int argc, const char *argv[]){
 			d2::align::exp_meta_only();
 		} else if (!strcmp(argv[i], "--drizzle-only")) {
 			unsupported::discontinued("--drizzle-only", "--dchain box:1");
+		} else if (!strcmp(argv[i], "--subspace-traverse")) {
+			unsupported::undocumented("--subspace-traverse");
+			d3::scene::set_subspace_traverse();
 		} else if (!strcmp(argv[i], "--occ-norm")) {
 			d3::scene::nw();
 		} else if (!strcmp(argv[i], "--occ-nonorm")) {

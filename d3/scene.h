@@ -116,6 +116,11 @@ class scene {
 	static double encounter_threshold;
 
 	/*
+	 * Flag for subspace traversal.
+	 */
+	static int subspace_traverse;
+
+	/*
 	 * Structure to hold input frame information at levels of 
 	 * detail between full detail and full decimation.
 	 */
@@ -2175,6 +2180,10 @@ public:
 
 	static void no_nw() {
 		normalize_weights = 0;
+	}
+
+	static void set_subspace_traverse() {
+		subspace_traverse = 1;
 	}
 
 	static int excluded(point p) {

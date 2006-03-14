@@ -658,6 +658,10 @@ public:
 			"Projective transformation calculator:\n"
 			HEADER_SPACE
 			"--ptcalc\n"
+			BETWEEN_SECTIONS
+			"Traverse subspaces for 3D candidate selection:\n"
+			HEADER_SPACE
+			"--subspace-traverse\n"
 			"\n"
 			);
 	}
