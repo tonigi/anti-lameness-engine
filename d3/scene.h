@@ -2703,49 +2703,112 @@ public:
 		space::init_root();
 
 		/*
+		 * Special handling for experimental option 'subspace_traverse'.
+		 */
+
+		if (subspace_traverse) {
+			/*
+			 * Subdivide space to resolve intensity matches between pairs
+			 * of frames.
+			 */
+
+			for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++) {
+
+				if (d3_depth_pt->size() == 0
+				 && d3_output_pt->size() == 0
+				 && d_out[f1] == NULL
+				 && v_out[f1] == NULL)
+					continue;
+
+				if (tc_multiplier == 0)
+					al->open(f1);
+
+				for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+
+					if (f1 == f2)
+						continue;
+
+					if (tc_multiplier == 0)
+						al->open(f2);
+
+					candidates *c = new candidates(f1);
+
+					find_candidates(f1, f2, c, point::neginf(), point::posinf(), pt_outputs);
+
+
+
+					c->generate_subspaces();
+
+					if (tc_multiplier == 0)
+						al->close(f2);
+				}
+
+				if (tc_multiplier == 0)
+					al->close(f1);
+			}
+
+			fprintf(stderr, "Final spatial map size: %u\n", spatial_info_map.size());
+
+			fprintf(stderr, ".\n");
+			fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
+
+			return;
+		}
+
+		/*
 		 * Subdivide space to resolve intensity matches between pairs
 		 * of frames.
 		 */
 
-		for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++) {
-
-			if (d3_depth_pt->size() == 0
-			 && d3_output_pt->size() == 0
-			 && d_out[f1] == NULL
-			 && v_out[f1] == NULL)
+		for (unsigned int f1 = 0; f1 < d2::image_rw::count(); f1++)
+		for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
+			if (f1 == f2)
 				continue;
 
-			if (tc_multiplier == 0)
+			if (!d_out[f1] && !v_out[f1] && !d3_depth_pt->size()
+			 && !d3_output_pt->size() && strcmp(pairwise_comparisons, "all"))
+				continue;
+
+			if (tc_multiplier == 0) {
 				al->open(f1);
-
-			for (unsigned int f2 = 0; f2 < d2::image_rw::count(); f2++) {
-
-				if (f1 == f2)
-					continue;
-
-				if (tc_multiplier == 0)
-					al->open(f2);
-
-				candidates *c = new candidates(f1);
-
-				find_candidates(f1, f2, c, point::neginf(), point::posinf(), pt_outputs);
-
-
-
-				c->generate_subspaces();
-
-				if (tc_multiplier == 0)
-					al->close(f2);
+				al->open(f2);
 			}
 
-			if (tc_multiplier == 0)
+			/*
+			 * Iterate over all points in the primary frame.
+			 */
+
+			for (unsigned int i = 0; i < if1->height(); i++)
+			for (unsigned int j = 0; j < if1->width();  j++) {
+
+				total_pixels++;
+
+				/*
+				 * Generate a map from scores to 3D points for
+				 * various depths in f1.
+				 */
+
+				score_map _sm = p2f_score_map(f1, f2, i, j);
+
+				/*
+				 * Analyze space in a manner dependent on the score map.
+				 */
+
+				analyze_space_from_map(f1, f2, i, j, _sm);
+
+			}
+
+			/*
+			 * This ordering may encourage image f1 to be cached.
+			 */
+
+			if (tc_multiplier == 0) {
+				al->close(f2);
 				al->close(f1);
+			}
 		}
 
-		fprintf(stderr, "Final spatial map size: %u\n", spatial_info_map.size());
-
 		fprintf(stderr, ".\n");
-		fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
 	}
 
 
