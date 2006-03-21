@@ -2683,11 +2683,18 @@ public:
 	}
 
 	/*
-	 * Generate a map from scores to 3D points for various depths at point (i, j) in f1.
+	 * Generate a map from scores to 3D points for various depths at point (i, j) in f1, at 
+	 * lowest resolution.
 	 */
 	static score_map p2f_score_map(unsigned int f1, unsigned int f2, unsigned int i, unsigned int j) {
 
 		score_map result;
+
+		pt _pt1 = al->get(primary_decimation_upper)->get_t(f1);
+		pt _pt2 = al->get(primary_decimation_upper)->get_t(f2);
+
+		const d2::image *if1 = al->get(primary_decimation_upper)->get_image(f1);
+		const d2::image *if2 = al->get(primary_decimation_upper)->get_image(f2);
 
 		// fprintf(stderr, "generating score map (i, j) == (%u, %u)\n", i, j);
 
@@ -3014,21 +3021,18 @@ public:
 				if (f == f1 || f == f2)
 					continue;
 
-				assert(cl);
-				assert(cl->reference);
-				assert(cl->reference[f]);
+				const d2::image *if3 = al->get(primary_decimation_upper)->get_image(f);
+				pt _pt3 = al->get(primary_decimation_upper)->get_t(f);
 
-				pt _ptf = align::projective(f);
+				point p = _pt3.wp_unscaled(iw);
 
-				point p = _ptf.wp_unscaled(iw);
-
-				if (!cl->reference[f]->in_bounds(p.xy())
+				if (!if3->in_bounds(p.xy())
 				 || !if2->in_bounds(ip.xy()))
 					continue;
 
 				divisor += tc_multiplier;
 				score   += tc_multiplier
-					 * (if1->get_bl(ip.xy()) - cl->reference[f]->get_bl(p.xy())).normsq();
+					 * (if1->get_bl(ip.xy()) - if3->get_bl(p.xy())).normsq();
 			}
 
 			
