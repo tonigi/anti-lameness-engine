@@ -3098,6 +3098,122 @@ public:
 
 
 	/*
+	 * Attempt to refine space around a point, to high and low resolutions
+	 * for two cameras, resulting in four resolutions in total.
+	 */
+
+	static void refine_space(point iw, pt _pt1, pt _pt2) {
+
+		space_traverse st = space_traverse::root();
+
+		if (!st.includes(iw)) {
+			assert(0);
+			return;
+		}
+
+		int camera_highres[2] = {0, 0};
+		int camera_lowres[2] = {0, 0};
+
+		/*
+		 * Loop until all resolutions of interest have been generated.
+		 */
+		
+		for(;;) {
+
+			point frame_min[2] = { point::posinf(), point::posinf() },
+			      frame_max[2] = { point::neginf(), point::neginf() };
+
+			point p[2] = { st.get_min(), st.get_max() };
+
+			/*
+			 * Cycle through the corner points bounding the
+			 * subspace to determine a bounding box.  
+			 *
+			 * NB: This code is not identical to
+			 * get_view_local_bb(), as it does not clip the
+			 * results.
+			 */
+
+			for (int ibit = 0; ibit < 2; ibit++)
+			for (int jbit = 0; jbit < 2; jbit++)
+			for (int kbit = 0; kbit < 2; kbit++) {
+				point pp = point(p[ibit][0], p[jbit][1], p[kbit][2]);
+
+				point ppp[2] = {_pt1.wp_unscaled(pp), _pt2.wp_unscaled(pp)};
+
+				for (int f = 0; f < 2; f++)
+				for (int d = 0; d < 3; d++) {
+					if (ppp[f][d] < frame_min[f][d] || isnan(ppp[f][d]))
+						frame_min[f][d] = ppp[f][d];
+					if (ppp[f][d] > frame_max[f][d] || isnan(ppp[f][d]))
+						frame_max[f][d] = ppp[f][d];
+				}
+			}
+
+			/*
+			 * Generate any new desired spatial registers.
+			 */
+
+			for (int f = 0; f < 2; f++) {
+
+				/*
+				 * Low resolution
+				 */
+
+				if (frame_max[f][0] - frame_min[f][0] < 2
+				 && frame_max[f][1] - frame_min[f][1] < 2
+				 && camera_lowres[f] == 0) {
+					spatial_info_map[st.get_space()];
+					camera_lowres[f] = 1;
+				}
+
+				/*
+				 * High resolution.
+				 */
+
+				if (frame_max[f][0] - frame_min[f][0] < 1
+				 && frame_max[f][1] - frame_min[f][1] < 1
+				 && camera_highres[f] == 0) {
+					spatial_info_map[st.get_space()];
+					camera_highres[f] = 1;
+				}
+			}
+
+			/*
+			 * Check for completion
+			 */
+
+			if (camera_highres[0]
+			 && camera_highres[1]
+			 && camera_lowres[0]
+			 && camera_lowres[1])
+				return;
+
+			/*
+			 * Check precision before analyzing space further.
+			 */
+
+			if (st.precision_wall()) {
+				fprintf(stderr, "\n\n*** Error: reached subspace precision wall ***\n\n");
+				assert(0);
+				return;
+			}
+
+			if (st.positive().includes(iw)) {
+				st = st.positive();
+				total_tsteps++;
+			} else if (st.negative().includes(iw)) {
+				st = st.negative();
+				total_tsteps++;
+			} else {
+				fprintf(stderr, "failed iw = (%f, %f, %f)\n", 
+						iw[0], iw[1], iw[2]);
+				assert(0);
+			}
+		}
+	}
+
+	/*
 	 * Analyze space in a manner dependent on the score map.
 	 */
 
