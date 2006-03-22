@@ -3104,7 +3104,7 @@ public:
 
 	static void refine_space(point iw, pt _pt1, pt _pt2) {
 
-		space_traverse st = space_traverse::root();
+		space::traverse st = space::traverse::root();
 
 		if (!st.includes(iw)) {
 			assert(0);
@@ -3163,7 +3163,7 @@ public:
 				if (frame_max[f][0] - frame_min[f][0] < 2
 				 && frame_max[f][1] - frame_min[f][1] < 2
 				 && camera_lowres[f] == 0) {
-					spatial_info_map[st.get_space()];
+					spatial_info_map[st.get_node()];
 					camera_lowres[f] = 1;
 				}
 
@@ -3174,7 +3174,7 @@ public:
 				if (frame_max[f][0] - frame_min[f][0] < 1
 				 && frame_max[f][1] - frame_min[f][1] < 1
 				 && camera_highres[f] == 0) {
-					spatial_info_map[st.get_space()];
+					spatial_info_map[st.get_node()];
 					camera_highres[f] = 1;
 				}
 			}
@@ -3221,6 +3221,9 @@ public:
 
 		int accumulated_ambiguity = 0;
 		int max_acc_amb = pairwise_ambiguity;
+
+		pt _pt1 = al->get(primary_decimation_upper)->get_t(f1);
+		pt _pt2 = al->get(primary_decimation_upper)->get_t(f2);
 
 		for(score_map::iterator smi = _sm.begin(); smi != _sm.end(); smi++) {
 
@@ -3338,8 +3341,8 @@ public:
 			 * Iterate over all points in the primary frame.
 			 */
 
-			for (unsigned int i = 0; i < if1->height(); i++)
-			for (unsigned int j = 0; j < if1->width();  j++) {
+			for (unsigned int i = 0; i < al->get(primary_decimation_upper)->get_image(f1)->height(); i++)
+			for (unsigned int j = 0; j < al->get(primary_decimation_upper)->get_image(f1)->width();  j++) {
 
 				total_pixels++;
 
