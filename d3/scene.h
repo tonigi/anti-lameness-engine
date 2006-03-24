@@ -3027,7 +3027,7 @@ public:
 				point p = _pt3.wp_unscaled(iw);
 
 				if (!if3->in_bounds(p.xy())
-				 || !if2->in_bounds(ip.xy()))
+				 || !if1->in_bounds(ip.xy()))
 					continue;
 
 				divisor += tc_multiplier;

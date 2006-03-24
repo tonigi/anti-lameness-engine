@@ -367,6 +367,8 @@ public:
 		 || x[0] > height() - 1
 		 || x[1] > width() - 1)
 			return 0;
+		if (!x.defined())
+			return 0;
 		return 1;
 	}
 
