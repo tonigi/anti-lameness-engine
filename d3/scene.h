@@ -2709,10 +2709,10 @@ public:
 		point p1 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j, 1000)));
 		point p2 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j, -1000)));
 
-		fprintf(stderr, "%d->%d (%d, %d) point pair: (%d, %d, %d -> %f, %f), (%d, %d, %d -> %f, %f)\n",
-				f1, f2, i, j, i, j, 1000, p1[0], p1[1], i, j, -1000, p2[0], p2[1]);
-		_pt1.debug_output();
-		_pt2.debug_output();
+//		fprintf(stderr, "%d->%d (%d, %d) point pair: (%d, %d, %d -> %f, %f), (%d, %d, %d -> %f, %f)\n",
+//				f1, f2, i, j, i, j, 1000, p1[0], p1[1], i, j, -1000, p2[0], p2[1]);
+//		_pt1.debug_output();
+//		_pt2.debug_output();
 
 
 		/*
