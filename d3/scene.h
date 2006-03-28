@@ -2690,15 +2690,11 @@ public:
 
 		score_map result;
 
-		pt _pt1 = al->get(primary_decimation_upper)->get_t(f1);
-		pt _pt2 = al->get(primary_decimation_upper)->get_t(f2);
+		pt _pt1 = al->get(f1)->get_t(primary_decimation_upper);
+		pt _pt2 = al->get(f2)->get_t(primary_decimation_upper);
 
-		const d2::image *if1 = al->get(primary_decimation_upper)->get_image(f1);
-		const d2::image *if2 = al->get(primary_decimation_upper)->get_image(f2);
-
-		// fprintf(stderr, "generating score map (i, j) == (%u, %u)\n", i, j);
-
-		// fprintf(stderr, "score map (%u, %u) line %u\n", i, j, __LINE__);
+		const d2::image *if1 = al->get(f1)->get_image(primary_decimation_upper);
+		const d2::image *if2 = al->get(f2)->get_image(primary_decimation_upper);
 
 		/*
 		 * Get the pixel color in the primary frame
@@ -2710,11 +2706,14 @@ public:
 		 * Map two depths to the secondary frame.
 		 */
 
-		point p1 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j,  1000)));
+		point p1 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j, 1000)));
 		point p2 = _pt2.wp_unscaled(_pt1.pw_unscaled(point(i, j, -1000)));
 
-		// fprintf(stderr, "%d->%d (%d, %d) point pair: (%d, %d, %d -> %f, %f), (%d, %d, %d -> %f, %f)\n",
-		//		f1, f2, i, j, i, j, 1000, p1[0], p1[1], i, j, -1000, p2[0], p2[1]);
+		fprintf(stderr, "%d->%d (%d, %d) point pair: (%d, %d, %d -> %f, %f), (%d, %d, %d -> %f, %f)\n",
+				f1, f2, i, j, i, j, 1000, p1[0], p1[1], i, j, -1000, p2[0], p2[1]);
+		_pt1.debug_output();
+		_pt2.debug_output();
+
 
 		/*
 		 * For cases where the mapped points define a
@@ -2729,6 +2728,7 @@ public:
 		ale_pos slope = diff_j / diff_i;
 
 		if (isnan(slope)) {
+			assert(0);
 			fprintf(stderr, "%d->%d (%d, %d) has undefined slope\n",
 					f1, f2, i, j);
 			return result;
@@ -3021,8 +3021,8 @@ public:
 				if (f == f1 || f == f2)
 					continue;
 
-				const d2::image *if3 = al->get(primary_decimation_upper)->get_image(f);
-				pt _pt3 = al->get(primary_decimation_upper)->get_t(f);
+				const d2::image *if3 = al->get(f)->get_image(primary_decimation_upper);
+				pt _pt3 = al->get(f)->get_t(primary_decimation_upper);
 
 				point p = _pt3.wp_unscaled(iw);
 
@@ -3222,8 +3222,8 @@ public:
 		int accumulated_ambiguity = 0;
 		int max_acc_amb = pairwise_ambiguity;
 
-		pt _pt1 = al->get(primary_decimation_upper)->get_t(f1);
-		pt _pt2 = al->get(primary_decimation_upper)->get_t(f2);
+		pt _pt1 = al->get(f1)->get_t(primary_decimation_upper);
+		pt _pt2 = al->get(f1)->get_t(primary_decimation_upper);
 
 		for(score_map::iterator smi = _sm.begin(); smi != _sm.end(); smi++) {
 
@@ -3341,8 +3341,8 @@ public:
 			 * Iterate over all points in the primary frame.
 			 */
 
-			for (unsigned int i = 0; i < al->get(primary_decimation_upper)->get_image(f1)->height(); i++)
-			for (unsigned int j = 0; j < al->get(primary_decimation_upper)->get_image(f1)->width();  j++) {
+			for (unsigned int i = 0; i < al->get(f1)->get_image(primary_decimation_upper)->height(); i++)
+			for (unsigned int j = 0; j < al->get(f1)->get_image(primary_decimation_upper)->width();  j++) {
 
 				total_pixels++;
 

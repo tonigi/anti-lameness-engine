@@ -68,6 +68,17 @@ public:
 	}
 
 	/*
+	 * Output function
+	 */
+
+	void debug_output() {
+		t.debug_output();
+		euclidean.debug_output();
+		fprintf(stderr, "[pt.do va=%f sf=%f dpd=%f\n]",
+				_view_angle, scale_factor, diag_per_depth);
+	}
+
+	/*
 	 * Get euclidean transformation reference.
 	 */
 

@@ -1109,6 +1109,25 @@ public:
 
 	}
 
+	void debug_output() {
+		fprintf(stderr, "[t.do ih=%u, iw=%d x=[[%f %f] [%f %f] [%f %f] [%f %f]] eu=[%f %f %f]\n"
+				"      a-f=[%f %f %f %f %f %f %f %f] _a-_f=[%f %f %f %f %f %f %f %f]\n"
+				"      bdcnm=%d ip=%d rm=%d rim=%d sf=%f]\n", 
+				input_height, input_width, 
+				x[0][0], x[0][1], 
+				x[1][0], x[1][1], 
+				x[2][0], x[2][1], 
+				x[3][0], x[3][1], 
+				eu[0], eu[1], eu[2],
+				a, b, c, d, e, f, g, h,
+				_a, _b, _c, _d, _e, _f, _g, _h,
+				bdcnum,
+				_is_projective,
+				resultant_memo,
+				resultant_inverse_memo,
+				scale_factor);
+	}
+
 };
 
 #endif
