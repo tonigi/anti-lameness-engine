@@ -837,7 +837,7 @@ class scene {
 		 || pow(2, tc) > transformation.unscaled_width())
 			return 0;
 
-		if (tc < input_decimation_lower)
+		if (tc < input_decimation_lower - 1)
 			return 0;
 
 		return 1;
@@ -1668,10 +1668,8 @@ public:
 			 * updated.
 			 */
 
-#if 0
 			if (!resolution_ok(al->get(f)->get_t(0), tc))
 				return;
-#endif
 
 
 			/*
