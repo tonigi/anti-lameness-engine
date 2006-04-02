@@ -3154,7 +3154,7 @@ public:
 				if (frame_max[f][0] - frame_min[f][0] < 2
 				 && frame_max[f][1] - frame_min[f][1] < 2
 				 && camera_lowres[f] == 0) {
-					spatial_info_map[st.get_node()];
+				//	spatial_info_map[st.get_node()];
 					camera_lowres[f] = 1;
 				}
 
