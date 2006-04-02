@@ -637,6 +637,12 @@ class scene {
 
 			d2::image *im = weights[tc - tc_low];
 			assert(im);
+
+			if (i == im->height())
+				return 1;
+			if (j == im->width())
+				return 1;
+
 			assert(i < im->height());
 			assert(j < im->width());
 
@@ -682,23 +688,7 @@ class scene {
 				tc = tc_low;
 			}
 
-			if (tc <= tc_high) {
-				return get_weight((int) tc, p.xy());
-			}
-
-			assert(tc > tc_high);
-
-			int multiplier = (int) pow(2, (tc - tc_high));
-			ale_real result = 0;
-
-			for (int i = 0; i < multiplier; i++)
-			for (int j = 0; j < multiplier; j++) {
-				result += get_weight(tc_high,
-						(unsigned int) floor(p[0]) * multiplier + i,
-						(unsigned int) floor(p[1]) * multiplier + j);
-			}
-
-			return result;
+			return get_weight((int) tc, p.xy());
 		}
 
 		/*
