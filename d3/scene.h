@@ -3245,6 +3245,11 @@ public:
 			std::map<const char *, pt> *d3_depth_pt,
 			std::map<const char *, pt> *d3_output_pt) {
 
+		/*
+		 * Variable indicating whether low-resolution filler space
+		 * is required to avoid aliased gaps in surfaces.
+		 */
+
 		int filler_required = d3_depth_pt->size() != 0
 			           || d3_output_pt->size() != 0
 				   || output_decimation_preferred < 0
