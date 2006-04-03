@@ -3093,7 +3093,7 @@ public:
 	 * for two cameras, resulting in four resolutions in total.
 	 */
 
-	static void refine_space(point iw, pt _pt1, pt _pt2, int filler_required) {
+	static void refine_space(point iw, pt _pt1, pt _pt2, int use_filler) {
 
 		space::traverse st = space::traverse::root();
 
@@ -3102,8 +3102,11 @@ public:
 			return;
 		}
 
+		if (_pt1.scale_2d() != 1)
+			use_filler = 1;
+
 		int camera_highres[2] = {0, 0};
-		int camera_lowres[2] = {!filler_required, !filler_required};
+		int camera_lowres[2] = {!use_filler, !use_filler};
 
 		/*
 		 * Loop until all resolutions of interest have been generated.
@@ -3209,7 +3212,7 @@ public:
 	 */
 
 	static void analyze_space_from_map(unsigned int f1, unsigned int f2, unsigned int i, unsigned int j, score_map _sm,
-			                   int filler_required) {
+			                   int use_filler) {
 
 		int accumulated_ambiguity = 0;
 		int max_acc_amb = pairwise_ambiguity;
@@ -3232,7 +3235,7 @@ public:
 			 * Attempt to refine space around the intersection point.
 			 */
 
-			refine_space(iw, _pt1, _pt2, filler_required);
+			refine_space(iw, _pt1, _pt2, use_filler);
 		}
 	}
 
@@ -3247,13 +3250,13 @@ public:
 
 		/*
 		 * Variable indicating whether low-resolution filler space
-		 * is required to avoid aliased gaps in surfaces.
+		 * is desired to avoid aliased gaps in surfaces.
 		 */
 
-		int filler_required = d3_depth_pt->size() != 0
+		int use_filler = d3_depth_pt->size() != 0
 			           || d3_output_pt->size() != 0
-				   || output_decimation_preferred < 0
-				   || primary_decimation_upper < 0;
+				   || output_decimation_preferred > 0
+				   || input_decimation_lower > 0;
 
 		fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
 
@@ -3359,7 +3362,7 @@ public:
 				 * Analyze space in a manner dependent on the score map.
 				 */
 
-				analyze_space_from_map(f1, f2, i, j, _sm, filler_required);
+				analyze_space_from_map(f1, f2, i, j, _sm, use_filler);
 
 			}
 
