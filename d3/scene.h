@@ -3093,7 +3093,7 @@ public:
 	 * for two cameras, resulting in four resolutions in total.
 	 */
 
-	static void refine_space(point iw, pt _pt1, pt _pt2) {
+	static void refine_space(point iw, pt _pt1, pt _pt2, int filler_required) {
 
 		space::traverse st = space::traverse::root();
 
@@ -3103,7 +3103,7 @@ public:
 		}
 
 		int camera_highres[2] = {0, 0};
-		int camera_lowres[2] = {0, 0};
+		int camera_lowres[2] = {!filler_required, !filler_required};
 
 		/*
 		 * Loop until all resolutions of interest have been generated.
@@ -3154,7 +3154,7 @@ public:
 				if (frame_max[f][0] - frame_min[f][0] < 2
 				 && frame_max[f][1] - frame_min[f][1] < 2
 				 && camera_lowres[f] == 0) {
-				//	spatial_info_map[st.get_node()];
+					spatial_info_map[st.get_node()];
 					camera_lowres[f] = 1;
 				}
 
@@ -3208,13 +3208,14 @@ public:
 	 * Analyze space in a manner dependent on the score map.
 	 */
 
-	static void analyze_space_from_map(unsigned int f1, unsigned int f2, unsigned int i, unsigned int j, score_map _sm) {
+	static void analyze_space_from_map(unsigned int f1, unsigned int f2, unsigned int i, unsigned int j, score_map _sm,
+			                   int filler_required) {
 
 		int accumulated_ambiguity = 0;
 		int max_acc_amb = pairwise_ambiguity;
 
 		pt _pt1 = al->get(f1)->get_t(primary_decimation_upper);
-		pt _pt2 = al->get(f1)->get_t(primary_decimation_upper);
+		pt _pt2 = al->get(f2)->get_t(primary_decimation_upper);
 
 		for(score_map::iterator smi = _sm.begin(); smi != _sm.end(); smi++) {
 
@@ -3231,7 +3232,7 @@ public:
 			 * Attempt to refine space around the intersection point.
 			 */
 
-			refine_space(iw, _pt1, _pt2);
+			refine_space(iw, _pt1, _pt2, filler_required);
 		}
 	}
 
@@ -3243,6 +3244,11 @@ public:
 	static void make_space(const char *d_out[], const char *v_out[],
 			std::map<const char *, pt> *d3_depth_pt,
 			std::map<const char *, pt> *d3_output_pt) {
+
+		int filler_required = d3_depth_pt->size() != 0
+			           || d3_output_pt->size() != 0
+				   || output_decimation_preferred < 0
+				   || primary_decimation_upper < 0;
 
 		fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
 
@@ -3348,7 +3354,7 @@ public:
 				 * Analyze space in a manner dependent on the score map.
 				 */
 
-				analyze_space_from_map(f1, f2, i, j, _sm);
+				analyze_space_from_map(f1, f2, i, j, _sm, filler_required);
 
 			}
 
