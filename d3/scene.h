@@ -3209,14 +3209,36 @@ public:
 
 			total_ambiguity++;
 
-			/*
-			 * Determine the desired resolution at the 
+			ale_pos depth = _pt1.wc(iw)[2];
 
-			/*
-			 * Attempt to refine space around the intersection point.
-			 */
+			ale_pos target_dim = calc_target_dim(iw, _pt1, d_out, v_out, d3_depth_pt, d3_output_pt);
+			ale_pos depth_range = calc_depth_range(iw, _pt1, _pt2);
+			int lod = calc_lod(depth, _pt1, target_dim);
 
-			refine_space(iw, _pt1, _pt2, use_filler || _pt1.scale_2d() != 1);
+			if (lod > primary_decimation_upper)
+				lod = primary_decimation_upper;
+
+			int multiplier = (unsigned int) floor(pow(2, primary_decimation_upper - lod));
+
+			pt _pt1_lod = al->get(f1)->get_t(lod);
+			pt _pt2_lod = al->get(f2)->get_t(lod);
+
+			int im = i * multiplier;
+			int jm = j * multiplier;
+
+			for (int ii = 0; ii < multiplier; ii += 1)
+			for (int jj = 0; jj < multiplier; jj += 1) {
+
+				point refined_point = get_refined_point(_pt1_lod, _pt2_lod, im + ii, jm + jj, f1, f2, lod,
+						depth, depth_range);
+				
+				/*
+				 * Attempt to refine space around the intersection point.
+				 */
+
+				refine_space(refined_point, target_dim, use_filler || _pt1.scale_2d() != 1);
+			}
+
 		}
 	}
 
