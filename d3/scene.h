@@ -3090,10 +3090,10 @@ public:
 
 	/*
 	 * Attempt to refine space around a point, to high and low resolutions
-	 * for two cameras, resulting in four resolutions in total.
+	 * resulting in two resolutions in total.
 	 */
 
-	static void refine_space(point iw, pt _pt1, pt _pt2, int use_filler) {
+	static void refine_space(point iw, ale_pos target_dim, int use_filler) {
 
 		space::traverse st = space::traverse::root();
 
@@ -3105,8 +3105,8 @@ public:
 		if (_pt1.scale_2d() != 1)
 			use_filler = 1;
 
-		int camera_highres[2] = {0, 0};
-		int camera_lowres[2] = {!use_filler, !use_filler};
+		int hr_done = 0;
+		int lr_done = !use_filler;
 
 		/*
 		 * Loop until all resolutions of interest have been generated.
@@ -3114,34 +3114,14 @@ public:
 		
 		for(;;) {
 
-			point frame_min[2] = { point::posinf(), point::posinf() },
-			      frame_max[2] = { point::neginf(), point::neginf() };
-
 			point p[2] = { st.get_min(), st.get_max() };
 
-			/*
-			 * Cycle through the corner points bounding the
-			 * subspace to determine a bounding box.  
-			 *
-			 * NB: This code is not identical to
-			 * get_view_local_bb(), as it does not clip the
-			 * results.
-			 */
+			ale_pos dim_max = 0;
 
-			for (int ibit = 0; ibit < 2; ibit++)
-			for (int jbit = 0; jbit < 2; jbit++)
-			for (int kbit = 0; kbit < 2; kbit++) {
-				point pp = point(p[ibit][0], p[jbit][1], p[kbit][2]);
-
-				point ppp[2] = {_pt1.wp_unscaled(pp), _pt2.wp_unscaled(pp)};
-
-				for (int f = 0; f < 2; f++)
-				for (int d = 0; d < 3; d++) {
-					if (ppp[f][d] < frame_min[f][d] || isnan(ppp[f][d]))
-						frame_min[f][d] = ppp[f][d];
-					if (ppp[f][d] > frame_max[f][d] || isnan(ppp[f][d]))
-						frame_max[f][d] = ppp[f][d];
-				}
+			for (int d = 0; d < 3; d++) {
+				ale_pos d_value = fabs(p[0][d] - p[1][d]);
+				if (d_value > dim_max)
+					dim_max = d_value;
 			}
 
 			/*
@@ -3154,22 +3134,20 @@ public:
 				 * Low resolution
 				 */
 
-				if (frame_max[f][0] - frame_min[f][0] < 2
-				 && frame_max[f][1] - frame_min[f][1] < 2
-				 && camera_lowres[f] == 0) {
+				if (dim_max < 2 * target_dim
+				 && lr_done == 0) {
 					spatial_info_map[st.get_node()];
-					camera_lowres[f] = 1;
+					lr_done = 1;
 				}
 
 				/*
 				 * High resolution.
 				 */
 
-				if (frame_max[f][0] - frame_min[f][0] < 1
-				 && frame_max[f][1] - frame_min[f][1] < 1
-				 && camera_highres[f] == 0) {
+				if (dim_max < target_dim
+				 && hr_done == 0) {
 					spatial_info_map[st.get_node()];
-					camera_highres[f] = 1;
+					hr_done = 1;
 				}
 			}
 
@@ -3177,10 +3155,7 @@ public:
 			 * Check for completion
 			 */
 
-			if (camera_highres[0]
-			 && camera_highres[1]
-			 && camera_lowres[0]
-			 && camera_lowres[1])
+			if (lr_done && hr_done)
 				return;
 
 			/*
@@ -3211,8 +3186,11 @@ public:
 	 * Analyze space in a manner dependent on the score map.
 	 */
 
-	static void analyze_space_from_map(unsigned int f1, unsigned int f2, unsigned int i, unsigned int j, score_map _sm,
-			                   int use_filler) {
+	static void analyze_space_from_map(const char *d_out[], const char *v_out[],
+			               std::map<const char *, pt> *d3_depth_pt,
+				       std::map<const char *, pt> *d3_output_pt,
+				       unsigned int f1, unsigned int f2, 
+				       unsigned int i, unsigned int j, score_map _sm, int use_filler) {
 
 		int accumulated_ambiguity = 0;
 		int max_acc_amb = pairwise_ambiguity;
@@ -3232,10 +3210,13 @@ public:
 			total_ambiguity++;
 
 			/*
+			 * Determine the desired resolution at the 
+
+			/*
 			 * Attempt to refine space around the intersection point.
 			 */
 
-			refine_space(iw, _pt1, _pt2, use_filler);
+			refine_space(iw, _pt1, _pt2, use_filler || _pt1.scale_2d() != 1);
 		}
 	}
 
