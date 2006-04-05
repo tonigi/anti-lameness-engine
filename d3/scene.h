@@ -3102,9 +3102,6 @@ public:
 			return;
 		}
 
-		if (_pt1.scale_2d() != 1)
-			use_filler = 1;
-
 		int hr_done = 0;
 		int lr_done = !use_filler;
 
@@ -3183,6 +3180,41 @@ public:
 	}
 
 	/*
+	 * Calculate target dimension
+	 */
+
+	static ale_pos calc_target_dim(point iw, const char *d_out[], const char *v_out[], 
+			std::map<const char *, pt> *d3_depth_pt, 
+			std::map<const char *, pt> *d3_output_pt) {
+		assert(0);
+	}
+
+	/*
+	 * Calculate level of detail for a given viewpoint.
+	 */
+
+	static int calc_lod(ale_pos depth1, pt _pt, ale_pos target_dim) {
+		assert(0);
+	}
+
+	/*
+	 * Calculate depth range for a given pair of viewpoints.
+	 */
+
+	static ale_pos calc_depth_range(point iw, pt _pt1, pt _pt2) {
+		assert(0);
+	}
+
+	/*
+	 * Calculate a refined point for a given set of parameters.
+	 */
+
+	static point get_refined_point(pt _pt1, pt _pt2, int i, int j, int f1, int f2, int lod1, int lod2, ale_pos depth,
+			ale_pos depth_range) {
+		assert(0);
+	}
+
+	/*
 	 * Analyze space in a manner dependent on the score map.
 	 */
 
@@ -3198,6 +3230,9 @@ public:
 		pt _pt1 = al->get(f1)->get_t(primary_decimation_upper);
 		pt _pt2 = al->get(f2)->get_t(primary_decimation_upper);
 
+		if (_pt1.scale_2d() != 1)
+			use_filler = 1;
+
 		for(score_map::iterator smi = _sm.begin(); smi != _sm.end(); smi++) {
 
 			point iw = smi->second.iw;
@@ -3209,28 +3244,34 @@ public:
 
 			total_ambiguity++;
 
-			ale_pos depth = _pt1.wc(iw)[2];
+			ale_pos depth1 = _pt1.wc(iw)[2];
+			ale_pos depth2 = _pt2.wc(iw)[2];
 
-			ale_pos target_dim = calc_target_dim(iw, _pt1, d_out, v_out, d3_depth_pt, d3_output_pt);
-			ale_pos depth_range = calc_depth_range(iw, _pt1, _pt2);
-			int lod = calc_lod(depth, _pt1, target_dim);
+			ale_pos target_dim = calc_target_dim(iw, d_out, v_out, d3_depth_pt, d3_output_pt);
+			int lod1 = calc_lod(depth1, _pt1, target_dim);
+			int lod2 = calc_lod(depth2, _pt2, target_dim);
 
-			if (lod > primary_decimation_upper)
-				lod = primary_decimation_upper;
+			if (lod1 < input_decimation_lower
+			 || lod1 > primary_decimation_upper
+			 || lod2 < input_decimation_lower
+			 || lod2 > (int) al->get(f2)->count())
+				continue;
 
-			int multiplier = (unsigned int) floor(pow(2, primary_decimation_upper - lod));
+			int multiplier = (unsigned int) floor(pow(2, primary_decimation_upper - lod1));
 
-			pt _pt1_lod = al->get(f1)->get_t(lod);
-			pt _pt2_lod = al->get(f2)->get_t(lod);
+			pt _pt1_lod = al->get(f1)->get_t(lod1);
+			pt _pt2_lod = al->get(f2)->get_t(lod2);
 
+			ale_pos depth_range = calc_depth_range(iw, _pt1_lod, _pt2_lod);
+			
 			int im = i * multiplier;
 			int jm = j * multiplier;
 
 			for (int ii = 0; ii < multiplier; ii += 1)
 			for (int jj = 0; jj < multiplier; jj += 1) {
 
-				point refined_point = get_refined_point(_pt1_lod, _pt2_lod, im + ii, jm + jj, f1, f2, lod,
-						depth, depth_range);
+				point refined_point = get_refined_point(_pt1_lod, _pt2_lod, im + ii, jm + jj, 
+						f1, f2, lod1, lod2, depth1, depth_range);
 				
 				/*
 				 * Attempt to refine space around the intersection point.
@@ -3365,7 +3406,8 @@ public:
 				 * Analyze space in a manner dependent on the score map.
 				 */
 
-				analyze_space_from_map(f1, f2, i, j, _sm, use_filler);
+				analyze_space_from_map(d_out, v_out, d3_depth_pt, d3_output_pt, 
+						f1, f2, i, j, _sm, use_filler);
 
 			}
 
