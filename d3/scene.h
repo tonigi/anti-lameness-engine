@@ -3270,6 +3270,8 @@ public:
 			ale_pos depth2 = _pt2.wc(iw)[2];
 
 			ale_pos target_dim = calc_target_dim(iw, _pt1, d_out, v_out, d3_depth_pt, d3_output_pt);
+			
+			assert(target_dim > 0);
 
 			int lod1 = calc_lod(depth1, _pt1, target_dim);
 			int lod2 = calc_lod(depth2, _pt2, target_dim);
@@ -3281,6 +3283,8 @@ public:
 				target_dim *= 2;
 				lod1 = calc_lod(depth1, _pt1, target_dim);
 				lod2 = calc_lod(depth2, _pt2, target_dim);
+
+				fprintf(stderr, "[td=%f lod1=%d lod2=%d]\n", target_dim, lod1, lod2);
 			}
 
 
