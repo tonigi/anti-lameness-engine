@@ -326,7 +326,7 @@ public:
 	ale_pos trilinear_coordinate(ale_pos depth, ale_pos diagonal) {
 		calculate_diag_per_depth();
 
-		return log(diagonal / (depth * diag_per_depth)) / log(2);
+		return log(diagonal / (fabs(depth) * diag_per_depth)) / log(2);
 
 	}
 
@@ -335,7 +335,7 @@ public:
 	 * a given 2D diagonal distance.
 	 */
 	ale_pos trilinear_coordinate(point w, ale_pos diagonal) {
-		return trilinear_coordinate(fabs(wc(w)[2]), diagonal);
+		return trilinear_coordinate(wc(w)[2], diagonal);
 	}
 
 	/*

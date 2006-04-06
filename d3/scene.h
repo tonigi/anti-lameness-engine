@@ -3283,8 +3283,6 @@ public:
 				target_dim *= 2;
 				lod1 = calc_lod(depth1, _pt1, target_dim);
 				lod2 = calc_lod(depth2, _pt2, target_dim);
-
-				fprintf(stderr, "[td=%f lod1=%d lod2=%d]\n", target_dim, lod1, lod2);
 			}
 
 
