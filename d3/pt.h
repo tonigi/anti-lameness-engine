@@ -369,6 +369,20 @@ public:
 	}
 
 	/*
+	 * Get the 1D distance for a given depth and trilinear coordinate.
+	 */
+	ale_pos distance_1d(ale_pos depth, ale_pos coordinate) const {
+		calculate_diag_per_depth();
+		return pow(2, coordinate) * fabs(depth) * diag_per_depth / sqrt(2);
+	}
+
+	ale_pos distance_1d(point iw, ale_pos coordinate) const {
+		if (wc(iw)[2] >= 0)
+			return point::undefined();
+		return distance_1d(-wc(iw)[2], coordinate);
+	}
+
+	/*
 	 * Get bounding box for projection of a subspace.
 	 */
 

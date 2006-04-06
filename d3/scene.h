@@ -3183,10 +3183,32 @@ public:
 	 * Calculate target dimension
 	 */
 
-	static ale_pos calc_target_dim(point iw, const char *d_out[], const char *v_out[], 
+	static ale_pos calc_target_dim(point iw, pt _pt, const char *d_out[], const char *v_out[], 
 			std::map<const char *, pt> *d3_depth_pt, 
 			std::map<const char *, pt> *d3_output_pt) {
-		assert(0);
+
+		ale_pos result = _pt.distance_1d(iw, primary_decimation_upper);
+
+		for (int n = 0; n < d2::image_rw::count(); n++) {
+			if (d_out[n] && align::pt(n).distance_1d(iw, 0) < result)
+				result = align::pt(n).distance_1d(iw, 0);
+			if (v_out[n] && align::pt(n).distance_1d(iw, 0) < result)
+				result = align::pt(n).distance_1d(iw, 0);
+		}
+
+		for (std::map<const char *, pt>::iterator i = d3_output_pt.begin(); i != d3_output_pt.end(); i++) {
+			if (i.second.distance_1d(iw, 0) < result)
+				result = i.second.distance_1d(iw, 0);
+		}
+
+		for (std::map<const char *, pt>::iterator i = d3_depth_pt.begin(); i != d3_depth_pt.end(); i++) {
+			if (i.second.distance_1d(iw, 0) < result)
+				result = i.second.distance_1d(iw, 0);
+		}
+
+		assert (result > 0);
+
+		return result;
 	}
 
 	/*
@@ -3247,7 +3269,7 @@ public:
 			ale_pos depth1 = _pt1.wc(iw)[2];
 			ale_pos depth2 = _pt2.wc(iw)[2];
 
-			ale_pos target_dim = calc_target_dim(iw, d_out, v_out, d3_depth_pt, d3_output_pt);
+			ale_pos target_dim = calc_target_dim(iw, _pt1, d_out, v_out, d3_depth_pt, d3_output_pt);
 			int lod1 = calc_lod(depth1, _pt1, target_dim);
 			int lod2 = calc_lod(depth2, _pt2, target_dim);
 
