@@ -3189,21 +3189,21 @@ public:
 
 		ale_pos result = _pt.distance_1d(iw, primary_decimation_upper);
 
-		for (int n = 0; n < d2::image_rw::count(); n++) {
-			if (d_out[n] && align::pt(n).distance_1d(iw, 0) < result)
-				result = align::pt(n).distance_1d(iw, 0);
-			if (v_out[n] && align::pt(n).distance_1d(iw, 0) < result)
-				result = align::pt(n).distance_1d(iw, 0);
+		for (unsigned int n = 0; n < d2::image_rw::count(); n++) {
+			if (d_out[n] && align::projective(n).distance_1d(iw, 0) < result)
+				result = align::projective(n).distance_1d(iw, 0);
+			if (v_out[n] && align::projective(n).distance_1d(iw, 0) < result)
+				result = align::projective(n).distance_1d(iw, 0);
 		}
 
-		for (std::map<const char *, pt>::iterator i = d3_output_pt.begin(); i != d3_output_pt.end(); i++) {
-			if (i.second.distance_1d(iw, 0) < result)
-				result = i.second.distance_1d(iw, 0);
+		for (std::map<const char *, pt>::iterator i = d3_output_pt->begin(); i != d3_output_pt->end(); i++) {
+			if (i->second.distance_1d(iw, 0) < result)
+				result = i->second.distance_1d(iw, 0);
 		}
 
-		for (std::map<const char *, pt>::iterator i = d3_depth_pt.begin(); i != d3_depth_pt.end(); i++) {
-			if (i.second.distance_1d(iw, 0) < result)
-				result = i.second.distance_1d(iw, 0);
+		for (std::map<const char *, pt>::iterator i = d3_depth_pt->begin(); i != d3_depth_pt->end(); i++) {
+			if (i->second.distance_1d(iw, 0) < result)
+				result = i->second.distance_1d(iw, 0);
 		}
 
 		assert (result > 0);
@@ -3216,7 +3216,7 @@ public:
 	 */
 
 	static int calc_lod(ale_pos depth1, pt _pt, ale_pos target_dim) {
-		assert(0);
+		return (int) _pt.trilinear_coordinate(depth1, target_dim * sqrt(2));
 	}
 
 	/*
@@ -3270,13 +3270,22 @@ public:
 			ale_pos depth2 = _pt2.wc(iw)[2];
 
 			ale_pos target_dim = calc_target_dim(iw, _pt1, d_out, v_out, d3_depth_pt, d3_output_pt);
+
 			int lod1 = calc_lod(depth1, _pt1, target_dim);
 			int lod2 = calc_lod(depth2, _pt2, target_dim);
 
-			if (lod1 < input_decimation_lower
-			 || lod1 > primary_decimation_upper
-			 || lod2 < input_decimation_lower
-			 || lod2 > (int) al->get(f2)->count())
+			fprintf(stderr, ".");
+
+			while (lod1 < input_decimation_lower
+			    || lod2 < input_decimation_lower) {
+				target_dim *= 2;
+				lod1 = calc_lod(depth1, _pt1, target_dim);
+				lod2 = calc_lod(depth2, _pt2, target_dim);
+			}
+
+
+			if (lod1 >= (int) al->get(f1)->count()
+			 || lod2 >= (int) al->get(f2)->count())
 				continue;
 
 			int multiplier = (unsigned int) floor(pow(2, primary_decimation_upper - lod1));

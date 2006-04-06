@@ -321,17 +321,21 @@ private:
 public:
 
 	/*
+	 * Get a trilinear coordinate for a given depth.
+	 */
+	ale_pos trilinear_coordinate(ale_pos depth, ale_pos diagonal) {
+		calculate_diag_per_depth();
+
+		return log(diagonal / (depth * diag_per_depth)) / log(2);
+
+	}
+
+	/*
 	 * Get a trilinear coordinate for a given position in the world and
 	 * a given 2D diagonal distance.
 	 */
 	ale_pos trilinear_coordinate(point w, ale_pos diagonal) {
-		calculate_diag_per_depth();
-
-		ale_pos depth = fabs(wc(w)[2]);
-
-		ale_pos coord = log(diagonal / (depth * diag_per_depth)) / log(2);
-
-		return coord;
+		return trilinear_coordinate(fabs(wc(w)[2]), diagonal);
 	}
 
 	/*
@@ -378,7 +382,7 @@ public:
 
 	ale_pos distance_1d(point iw, ale_pos coordinate) const {
 		if (wc(iw)[2] >= 0)
-			return point::undefined();
+			return point::undefined()[0];
 		return distance_1d(-wc(iw)[2], coordinate);
 	}
 
