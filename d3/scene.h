@@ -3227,7 +3227,7 @@ public:
 
 		point ip = _pt1.wc(iw);
 
-		ale_pos reference_change = fabs(ip[2] / 10);
+		ale_pos reference_change = fabs(ip[2] / 1000);
 
 		point iw1 = _pt1.cw(iw + point(0, 0, reference_change));
 		point iw2 = _pt1.cw(iw - point(0, 0, reference_change));
@@ -3324,11 +3324,11 @@ public:
 
 			int multiplier = (unsigned int) floor(pow(2, primary_decimation_upper - lod1));
 
+			ale_pos depth_range = calc_depth_range(iw, _pt1, _pt2);
+
 			pt _pt1_lod = al->get(f1)->get_t(lod1);
 			pt _pt2_lod = al->get(f2)->get_t(lod2);
 
-			ale_pos depth_range = calc_depth_range(iw, _pt1_lod, _pt2_lod);
-			
 			int im = i * multiplier;
 			int jm = j * multiplier;
 
