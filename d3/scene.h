@@ -3229,8 +3229,8 @@ public:
 
 		ale_pos reference_change = fabs(ip[2] / 10);
 
-		point iw1 = _pt1.cw(iw + point(0, 0, reference_change);
-		point iw2 = _pt1.cw(iw - point(0, 0, reference_change);
+		point iw1 = _pt1.cw(iw + point(0, 0, reference_change));
+		point iw2 = _pt1.cw(iw - point(0, 0, reference_change));
 
 		point is = _pt2.wc(iw);
 		point is1 = _pt2.wc(iw1);
