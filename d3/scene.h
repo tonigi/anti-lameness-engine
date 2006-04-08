@@ -3276,7 +3276,10 @@ public:
 			point iw = _pt1.pw_unscaled(point(i, j, d));
 			point is = _pt2.wp_unscaled(iw);
 
-			ale_pos error = (comparison_color - al->get(lod2)->get_image(f2)->get_bl(is.xy())).norm();
+			if (!al->get(f2)->get_image(lod2)->in_bounds(is.xy()))
+				continue;
+
+			ale_pos error = (comparison_color - al->get(f2)->get_image(lod2)->get_bl(is.xy())).norm();
 
 			if (error < best || best == -1) {
 				best = error;
