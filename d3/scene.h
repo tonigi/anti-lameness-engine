@@ -446,6 +446,10 @@ class scene {
 			 */
 
 			if (tc == tc_low) {
+				if (im->pix(i, j)[0] != 0) {
+					fprintf(stderr, "failing assertion: im->pix(%d, %d)[0] == %g\n", i, j, 
+							im->pix(i, j)[0]);
+				}
 				assert(im->pix(i, j)[0] == 0);
 				return 0;
 			}
