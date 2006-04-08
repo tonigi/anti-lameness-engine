@@ -287,26 +287,6 @@ class scene {
 			if (init_value != 0)
 				set_image(result, init_value);
 
-			fprintf(stderr, "make_image(%f)\n", sf);
-
-			if (initialized) {
-
-				fprintf(stderr, "Current image list: ");
-
-				for (int i = tc_low; i <= tc_high; i++) {
-					fprintf(stderr, "[tc=%d imax=%d jmax=%d] ",
-							i, weights[i - tc_low]->height(),
-							   weights[i - tc_low]->width());
-				}
-
-				fprintf(stderr, "\n");
-
-			}
-
-			fprintf(stderr, "New image: [tc=%f imax=%d jmax=%d]\n",
-					sf, result->height(), result->width());
-
-
 			return result;
 		}
 
