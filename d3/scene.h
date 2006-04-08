@@ -3263,9 +3263,28 @@ public:
 	 * Calculate a refined point for a given set of parameters.
 	 */
 
-	static point get_refined_point(pt _pt1, pt _pt2, int i, int j, int f1, int f2, int lod1, int lod2, ale_pos depth,
+	static point get_refined_point(pt _pt1, pt _pt2, int i, int j, 
+			int f1, int f2, int lod1, int lod2, ale_pos depth,
 			ale_pos depth_range) {
-		assert(0);
+
+		d2::pixel comparison_color = al->get(lod1)->get_image(f1)->get_pixel(i, j);
+
+		ale_pos best = -1;
+		ale_pos best_depth = depth;
+
+		for (ale_pos d = depth - depth_range; d < depth + depth_range; d += depth_range / 10) {
+			point iw = _pt1.pw_unscaled(point(i, j, d));
+			point is = _pt2.wp_unscaled(iw);
+
+			ale_pos error = (comparison_color - al->get(lod2)->get_image(f2)->get_bl(is.xy())).norm();
+
+			if (error < best || best == -1) {
+				best = error;
+				best_depth = d;
+			}
+		}
+
+		return _pt1.pw_unscaled(point(i, j, best_depth));
 	}
 
 	/*
