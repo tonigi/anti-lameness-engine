@@ -886,8 +886,6 @@ class scene {
 //			fprintf(stderr, "[gs iw=%f %f %f d=%f]\n", 
 //					iw[0], iw[1], iw[2], diagonal);
 
-			fprintf(stderr, "*");
-
 			space::traverse st = space::traverse::root();
 
 			if (!st.includes(iw)) {
@@ -3309,8 +3307,6 @@ public:
 
 			int lod1 = calc_lod(depth1, _pt1, target_dim);
 			int lod2 = calc_lod(depth2, _pt2, target_dim);
-
-			fprintf(stderr, ".");
 
 			while (lod1 < input_decimation_lower
 			    || lod2 < input_decimation_lower) {
