@@ -3267,7 +3267,7 @@ public:
 			int f1, int f2, int lod1, int lod2, ale_pos depth,
 			ale_pos depth_range) {
 
-		d2::pixel comparison_color = al->get(lod1)->get_image(f1)->get_pixel(i, j);
+		d2::pixel comparison_color = al->get(f1)->get_image(lod1)->get_pixel(i, j);
 
 		ale_pos best = -1;
 		ale_pos best_depth = depth;
