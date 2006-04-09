@@ -431,6 +431,11 @@ class scene {
 			assert(i <= im->height() - 1);
 			assert(j <= im->width() - 1);
 
+			if (i == 44 && j == 65) {
+				fprintf(stderr, "im[%d]->pix(44, 65) == %g; adding %g\n", 
+						tc, im->pix(44, 65)[0], weight);
+			}
+
 			/*
 			 * Check for positive values.
 			 */
@@ -447,7 +452,7 @@ class scene {
 
 			if (tc == tc_low) {
 				if (im->pix(i, j)[0] != 0) {
-					fprintf(stderr, "failing assertion: im->pix(%d, %d)[0] == %g\n", i, j, 
+					fprintf(stderr, "failing assertion: im[%d]->pix(%d, %d)[0] == %g\n", tc, i, j, 
 							im->pix(i, j)[0]);
 				}
 				assert(im->pix(i, j)[0] == 0);
@@ -495,6 +500,8 @@ class scene {
 		 */
 		void add_weight(int tc, unsigned int i, unsigned int j, ale_real weight, subtree *st) {
 
+			assert (weight >= 0);
+
 			d2::image *im = weights[tc - tc_low];
 			assert(im);
 
@@ -523,10 +530,14 @@ class scene {
 			 * then set the weight here.
 			 */
 
+			fprintf(stderr, "im[%d]->pix(%d, %d) initialized to %g\n", tc, i, j, weight);
+
 			im->pix(i, j)[0] = weight;
 		}
 
 		void add_weight(int tc, d2::point p, ale_real weight, subtree *st) {
+
+			assert (weight >= 0);
 
 			p *= pow(2, -tc);
 
@@ -537,6 +548,8 @@ class scene {
 		}
 
 		void add_weight(const space::traverse &t, ale_real weight, subtree *st) {
+
+			assert (weight >= 0);
 
 			if (weight == 0)
 				return;
@@ -603,6 +616,11 @@ class scene {
 		 * Get weight
 		 */
 		ale_real get_weight(int tc, unsigned int i, unsigned int j) {
+
+			if (tc <= tc_high) {
+				fprintf(stderr, "[gw weight[%d]->pix(%d, %d) == %g]\n", tc, i, j, 
+						weights[tc - tc_low]->pix(i, j)[0]);
+			}
 
 //			fprintf(stderr, "[gw tc=%d i=%u j=%u tclow=%d tchigh=%d]\n", 
 //					tc, i, j, tc_low, tc_high);
@@ -1626,6 +1644,14 @@ public:
 			/*
 			 * Update weights
 			 */
+
+			ale_pos update_value = (encounter * occupancy)[0];
+
+			assert (encounter[0] >= 0);
+			assert (occupancy >= 0);
+			assert (update_value >= 0);
+
+			fprintf(stderr, "[siu aw=%g]\n", (encounter * occupancy)[0]);
 
 			weights->add_weight(st, (encounter * occupancy)[0], tree);
 
