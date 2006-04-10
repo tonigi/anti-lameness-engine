@@ -420,9 +420,6 @@ class scene {
 			d2::image *im = weights[tc - tc_low];
 			assert(im);
 
-//			fprintf(stderr, "[ap tc=%d i=%d j=%d imax=%d jmax=%d]\n",
-//					tc, i, j, im->height(), im->width());
-
 			if (i == im->height() - 1
 			 || j == im->width() - 1) {
 				return 1;
@@ -430,11 +427,6 @@ class scene {
 
 			assert(i <= im->height() - 1);
 			assert(j <= im->width() - 1);
-
-			if (i == 44 && j == 65) {
-				fprintf(stderr, "im[%d]->pix(44, 65) == %g; adding %g\n", 
-						tc, im->pix(44, 65)[0], weight);
-			}
 
 			/*
 			 * Check for positive values.
