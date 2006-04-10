@@ -1630,6 +1630,12 @@ public:
 			}
 
 			/*
+			 * Determine the probability of encounter.
+			 */
+
+			d2::pixel encounter = d2::pixel(1, 1, 1) * (1 - weights->get_weight(st));
+
+			/*
 			 * Update weights
 			 */
 
@@ -1648,7 +1654,6 @@ public:
 
 			if (!resolution_ok(al->get(f)->get_t(0), tc))
 				return;
-
 
 			/*
 			 * Update subspace.
