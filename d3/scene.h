@@ -442,7 +442,7 @@ class scene {
 
 			if (im->pix(i, j)[0] > 0) {
 				if (st && st->node_value == im->pix(i, j)[0])
-					im->pix(i, j)[0] += weight;
+					im->pix(i, j)[0] += weight * (1 - im->pix(i, j)[0]);
 				return 1;
 			}
 
@@ -616,11 +616,6 @@ class scene {
 		 * Get weight
 		 */
 		ale_real get_weight(int tc, unsigned int i, unsigned int j) {
-
-			if (tc <= tc_high) {
-				fprintf(stderr, "[gw weight[%d]->pix(%d, %d) == %g]\n", tc, i, j, 
-						weights[tc - tc_low]->pix(i, j)[0]);
-			}
 
 //			fprintf(stderr, "[gw tc=%d i=%u j=%u tclow=%d tchigh=%d]\n", 
 //					tc, i, j, tc_low, tc_high);
@@ -1635,25 +1630,10 @@ public:
 			}
 
 			/*
-			 * Determine the probability of
-			 * encounter, divided by the occupancy.
-			 */
-
-			d2::pixel encounter = d2::pixel(1, 1, 1) * (1 - weights->get_weight(st));
-
-			/*
 			 * Update weights
 			 */
 
-			ale_pos update_value = (encounter * occupancy)[0];
-
-			assert (encounter[0] >= 0);
-			assert (occupancy >= 0);
-			assert (update_value >= 0);
-
-			fprintf(stderr, "[siu aw=%g]\n", (encounter * occupancy)[0]);
-
-			weights->add_weight(st, (encounter * occupancy)[0], tree);
+			weights->add_weight(st, occupancy, tree);
 
 			/*
 			 * Delete the subtree, if necessary.
