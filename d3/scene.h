@@ -530,8 +530,6 @@ class scene {
 			 * then set the weight here.
 			 */
 
-			fprintf(stderr, "im[%d]->pix(%d, %d) initialized to %g\n", tc, i, j, weight);
-
 			im->pix(i, j)[0] = weight;
 		}
 
