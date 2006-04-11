@@ -3076,16 +3076,15 @@ public:
 	 * resulting in two resolutions in total.
 	 */
 
-	static void refine_space(point iw, ale_pos target_dim, int use_filler) {
+	static space::traverse refine_space(point iw, ale_pos target_dim, int use_filler) {
 
 		space::traverse st = space::traverse::root();
 
 		if (!st.includes(iw)) {
 			assert(0);
-			return;
+			return st;
 		}
 
-		int hr_done = 0;
 		int lr_done = !use_filler;
 
 		/*
@@ -3124,19 +3123,11 @@ public:
 				 * High resolution.
 				 */
 
-				if (dim_max < target_dim
-				 && hr_done == 0) {
+				if (dim_max < target_dim) {
 					spatial_info_map[st.get_node()];
-					hr_done = 1;
+					return st;
 				}
 			}
-
-			/*
-			 * Check for completion
-			 */
-
-			if (lr_done && hr_done)
-				return;
 
 			/*
 			 * Check precision before analyzing space further.
@@ -3145,7 +3136,7 @@ public:
 			if (st.precision_wall()) {
 				fprintf(stderr, "\n\n*** Error: reached subspace precision wall ***\n\n");
 				assert(0);
-				return;
+				return st;
 			}
 
 			if (st.positive().includes(iw)) {
@@ -3307,6 +3298,8 @@ public:
 			ale_pos depth2 = _pt2.wc(iw)[2];
 
 			ale_pos target_dim = calc_target_dim(iw, _pt1, d_out, v_out, d3_depth_pt, d3_output_pt);
+
+			fprintf(stderr, "[asfm td=%g]\n", target_dim);
 			
 			assert(target_dim > 0);
 
@@ -3345,7 +3338,10 @@ public:
 				 * Attempt to refine space around the intersection point.
 				 */
 
-				refine_space(refined_point, target_dim, use_filler || _pt1.scale_2d() != 1);
+				space::traverse st = 
+					refine_space(refined_point, target_dim, use_filler || _pt1.scale_2d() != 1);
+
+				assert (resolution_ok(_pt1_lod, al->get(f1)->get_t(0).trilinear_coordinate(st)));
 			}
 
 		}
