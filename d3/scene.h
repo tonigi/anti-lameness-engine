@@ -3277,8 +3277,8 @@ public:
 		int accumulated_ambiguity = 0;
 		int max_acc_amb = pairwise_ambiguity;
 
-		pt _pt1 = al->get(f1)->get_t(primary_decimation_upper);
-		pt _pt2 = al->get(f2)->get_t(primary_decimation_upper);
+		pt _pt1 = al->get(f1)->get_t(0);
+		pt _pt2 = al->get(f2)->get_t(0);
 
 		if (_pt1.scale_2d() != 1)
 			use_filler = 1;
