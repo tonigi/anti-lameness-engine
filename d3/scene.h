@@ -1642,8 +1642,10 @@ public:
 			 * updated.
 			 */
 
+#if 0
 			if (!resolution_ok(al->get(f)->get_t(0), tc))
 				return;
+#endif
 
 			/*
 			 * Update subspace.
@@ -3299,8 +3301,6 @@ public:
 
 			ale_pos target_dim = calc_target_dim(iw, _pt1, d_out, v_out, d3_depth_pt, d3_output_pt);
 
-			fprintf(stderr, "[asfm td=%g]\n", target_dim);
-			
 			assert(target_dim > 0);
 
 			int lod1 = calc_lod(depth1, _pt1, target_dim);
@@ -3340,8 +3340,6 @@ public:
 
 				space::traverse st = 
 					refine_space(refined_point, target_dim, use_filler || _pt1.scale_2d() != 1);
-
-				assert (resolution_ok(_pt1_lod, al->get(f1)->get_t(0).trilinear_coordinate(st)));
 			}
 
 		}
