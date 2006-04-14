@@ -1642,10 +1642,8 @@ public:
 			 * updated.
 			 */
 
-#if 0
 			if (!resolution_ok(al->get(f)->get_t(0), tc))
 				return;
-#endif
 
 			/*
 			 * Update subspace.
