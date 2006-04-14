@@ -85,7 +85,7 @@ public:
 			if (max[0] - min[0] >= max[1] - min[1]
 			 && (max[0] >= max[1] || !isinf(min[1]))
 			 && (min[0] <= min[1] || !isinf(max[1]))
-			 && max[0] - min[0] >= max[2] - max[2]
+			 && max[0] - min[0] >= max[2] - min[2]
 			 && (max[0] >= max[2] || !isinf(min[2]))
 			 && (min[0] <= min[2] || !isinf(max[2])))
 				return 0;
