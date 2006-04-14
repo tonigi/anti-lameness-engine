@@ -3097,9 +3097,6 @@ public:
 
 			point diff = st.get_max() - st.get_min();
 
-			fprintf(stderr, "[rs diff=[%g %g %g]]\n", 
-					diff[0], diff[1], diff[2]);
-
 			point p[2] = { st.get_min(), st.get_max() };
 
 			ale_pos dim_max = 0;
@@ -3304,9 +3301,7 @@ public:
 			ale_pos depth1 = _pt1.wc(iw)[2];
 			ale_pos depth2 = _pt2.wc(iw)[2];
 
-			fprintf(stderr, "[asfm td]\n");
 			ale_pos target_dim = calc_target_dim(iw, _pt1, d_out, v_out, d3_depth_pt, d3_output_pt);
-			fprintf(stderr, "[asfm td=%g]\n", target_dim);
 
 			assert(target_dim > 0);
 
@@ -3345,13 +3340,11 @@ public:
 				 * Attempt to refine space around the intersection point.
 				 */
 
-				fprintf(stderr, "[asfm td=%g]\n", target_dim);
 				space::traverse st = 
 					refine_space(refined_point, target_dim, use_filler || _pt1.scale_2d() != 1);
 
 				ale_pos tc = al->get(f1)->get_t(0).trilinear_coordinate(st);
 
-				fprintf(stderr, "[asfm tc=%g]\n", tc);
 
 				assert(resolution_ok(al->get(f1)->get_t(0), tc));
 			}

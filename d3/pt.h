@@ -324,7 +324,6 @@ public:
 	 * Get a trilinear coordinate for a given depth.
 	 */
 	ale_pos trilinear_coordinate(ale_pos depth, ale_pos diagonal) {
-		fprintf(stderr, "[tc d=%g]\n", depth);
 		calculate_diag_per_depth();
 
 		return log(diagonal / (fabs(depth) * diag_per_depth)) / log(2);
@@ -350,12 +349,6 @@ public:
 		ale_pos diagonal = min.lengthto(max) * sqrt(2) / sqrt(3);
 
 		point diff = (max - min);
-
-		fprintf(stderr, "[tc min=[%g %g %g] max=[%g %g %g] diff=[%g %g %g] mtm=%g]\n",
-				min[0], min[1], min[2],
-				max[0], max[1], max[2],
-				diff[0], diff[1], diff[2],
-				diagonal);
 
 		return trilinear_coordinate(avg, diagonal);
 	}
@@ -386,7 +379,6 @@ public:
 	 */
 	ale_pos distance_1d(ale_pos depth, ale_pos coordinate) const {
 		calculate_diag_per_depth();
-		fprintf(stderr, "[d1d d=%g]\n", depth);
 		return pow(2, coordinate) * fabs(depth) * diag_per_depth / sqrt(2);
 	}
 
