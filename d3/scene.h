@@ -814,7 +814,7 @@ class scene {
 		 || pow(2, tc) > transformation.unscaled_width())
 			return 0;
 
-		if (tc < input_decimation_lower - 1)
+		if (tc < input_decimation_lower - 1.5)
 			return 0;
 
 		return 1;
@@ -3192,7 +3192,7 @@ public:
 	 */
 
 	static int calc_lod(ale_pos depth1, pt _pt, ale_pos target_dim) {
-		return (int) round(_pt.trilinear_coordinate(depth1, target_dim * sqrt(2)));
+		return (int) floor(_pt.trilinear_coordinate(depth1, target_dim * sqrt(2)));
 	}
 
 	/*
