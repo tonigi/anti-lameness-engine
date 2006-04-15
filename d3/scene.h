@@ -3192,7 +3192,7 @@ public:
 	 */
 
 	static int calc_lod(ale_pos depth1, pt _pt, ale_pos target_dim) {
-		return (int) floor(_pt.trilinear_coordinate(depth1, target_dim * sqrt(2)));
+		return (int) round(_pt.trilinear_coordinate(depth1, target_dim * sqrt(2)));
 	}
 
 	/*
@@ -3360,10 +3360,12 @@ public:
 				space::traverse st = 
 					refine_space(refined_point, target_dim_, use_filler || _pt1.scale_2d() != 1);
 
-				ale_pos tc = al->get(f1)->get_t(0).trilinear_coordinate(st);
+				ale_pos tc1 = al->get(f1)->get_t(0).trilinear_coordinate(st);
+				ale_pos tc2 = al->get(f2)->get_t(0).trilinear_coordinate(st);
 
 
-				assert(resolution_ok(al->get(f1)->get_t(0), tc));
+				assert(resolution_ok(al->get(f1)->get_t(0), tc1));
+				assert(resolution_ok(al->get(f2)->get_t(0), tc2));
 			}
 
 		}
