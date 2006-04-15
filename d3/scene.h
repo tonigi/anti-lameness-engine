@@ -3340,14 +3340,17 @@ public:
 				ale_pos target_dim_ = 
 					calc_target_dim(refined_point, _pt1, d_out, v_out, d3_depth_pt, d3_output_pt);
 
-				int lod1_ = calc_lod(depth1, _pt1, target_dim_);
-				int lod2_ = calc_lod(depth2, _pt2, target_dim_);
+				ale_pos depth1_ = _pt1.wc(refined_point)[2];
+				ale_pos depth2_ = _pt2.wc(refined_point)[2];
+
+				int lod1_ = calc_lod(depth1_, _pt1, target_dim_);
+				int lod2_ = calc_lod(depth2_, _pt2, target_dim_);
 
 				while (lod1_ < input_decimation_lower
 				    || lod2_ < input_decimation_lower) {
 					target_dim_ *= 2;
-					lod1_ = calc_lod(depth1, _pt1, target_dim_);
-					lod2_ = calc_lod(depth2, _pt2, target_dim_);
+					lod1_ = calc_lod(depth1_, _pt1, target_dim_);
+					lod2_ = calc_lod(depth2_, _pt2, target_dim_);
 				}
 
 				/*
