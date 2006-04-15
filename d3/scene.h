@@ -3334,6 +3334,12 @@ public:
 						f1, f2, lod1, lod2, depth1, depth_range);
 				
 				/*
+				 * Re-evaluate target dimension.
+				 */
+
+				target_dim = calc_target_dim(refined_point, _pt1, d_out, v_out, d3_depth_pt, d3_output_pt);
+
+				/*
 				 * Attempt to refine space around the intersection point.
 				 */
 
