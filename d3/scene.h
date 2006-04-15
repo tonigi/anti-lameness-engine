@@ -3201,12 +3201,12 @@ public:
 
 	static ale_pos calc_depth_range(point iw, pt _pt1, pt _pt2) {
 
-		point ip = _pt1.wc(iw);
+		point ip = _pt1.wp_unscaled(iw);
 
 		ale_pos reference_change = fabs(ip[2] / 1000);
 
-		point iw1 = _pt1.cw(iw + point(0, 0, reference_change));
-		point iw2 = _pt1.cw(iw - point(0, 0, reference_change));
+		point iw1 = _pt1.pw_scaled(ip + point(0, 0, reference_change));
+		point iw2 = _pt1.pw_scaled(ip - point(0, 0, reference_change));
 
 		point is = _pt2.wc(iw);
 		point is1 = _pt2.wc(iw1);
@@ -3214,9 +3214,10 @@ public:
 
 		assert(is[2] < 0);
 
+		ale_pos d1 = (is1.xy() - is.xy()).norm();
+		ale_pos d2 = (is2.xy() - is.xy()).norm();
+
 		if (is1[2] < 0 && is2[2] < 0) {
-			ale_pos d1 = (is1 - is).norm();
-			ale_pos d2 = (is2 - is).norm();
 
 			if (d1 > d2)
 				return reference_change / d1;
@@ -3224,13 +3225,11 @@ public:
 				return reference_change / d2;
 		}
 
-
-
 		if (is1[2] < 0)
-			return reference_change / (is1 - is).norm();
+			return reference_change / d1;
 
 		if (is2[2] < 0)
-			return reference_change / (is2 - is).norm();
+			return reference_change / d2;
 
 		return 0;
 	}
