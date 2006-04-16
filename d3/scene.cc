@@ -49,7 +49,7 @@ double scene::occ_att = 0.50;
 
 int scene::normalize_weights = 1;
 int scene::use_filter = 1;
-d2::render scene::d3chain = NULL;
+d2::render *scene::d3chain = NULL;
 
 double scene::falloff_exponent = 0;
 double scene::tc_multiplier = 0;

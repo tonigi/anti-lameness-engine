@@ -78,7 +78,7 @@ class scene {
 	 */
 
 	static int use_filter;
-	d2::render *d3chain;
+	static d2::render *d3chain;
 
 	/*
 	 * Falloff exponent
