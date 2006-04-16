@@ -589,6 +589,8 @@ public:
 			"                  reconstruction, assuming a single depth at each point\n"
 			"                  in the output.  <args> are:\n"
 			"                         <xmin> <xmax> <ymin> <ymax> <zmin> <zmax>\n"
+			"--3d-filter       Use filtering for 3D color output.                    [default]\n"
+			"--3d-nofilter     Don't use filtering for 3D color output.\n"
 			BETWEEN_SECTIONS
 			"Camera parameters:\n"
 			HEADER_SPACE
@@ -611,13 +613,6 @@ public:
 			HEADER_SPACE
 			"--3d-trans-load=x Load initial transformation settings from file x\n"
 			"--3d-trans-save=x Save final transformation data in file x\n"
-#if 0
-			BETWEEN_SECTIONS
-			"Model costs:\n"
-			HEADER_SPACE
-			"--ecm <x>         Set edge length cost multiplier <x>.             [default is 0]\n"
-			"--acm <x>         Set angle cost multiplier <x>.                   [default is 0]\n"
-#endif
 			BETWEEN_SECTIONS
 			"Model rules:\n"
 			HEADER_SPACE
@@ -635,12 +630,6 @@ public:
 			"--pc <type>       Set the type of pairwise comparisons:\n"
 			"                     auto     Determine comparisons automatically.      [default]\n"
 			"                     all      Perform all comparisons.\n"
-#if 0
-			"--mpu <x>         Set model perturb upper bound to <x>           [default is 25%%]\n"
-			"--mpl <x>         Set model perturb lower bound to <x>             [default is 1]\n"
-			"--model-save=<x>  Save model data to file <x>.\n"
-			"--model-load=<x>  Load model data from file <x>.\n"
-#endif
 			"\n");
 	}
 	void undocumented() {

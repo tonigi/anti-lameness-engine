@@ -74,6 +74,12 @@ class scene {
 	static int normalize_weights;
 
 	/*
+	 * Flag for filtering
+	 */
+
+	static int use_filter;
+
+	/*
 	 * Falloff exponent
 	 */
 
@@ -2154,6 +2160,14 @@ public:
 
 	static void no_nw() {
 		normalize_weights = 0;
+	}
+
+	static void nofilter() {
+		use_filter = 0;
+	}
+
+	static void filter() {
+		use_filter = 1;
 	}
 
 	static void set_subspace_traverse() {
