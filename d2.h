@@ -30,6 +30,9 @@
 #include <string.h>
 #include <limits.h>
 
+#include <vector>
+#include <algorithm>
+
 #include "ale_real.h"
 #include "ale_accum.h"
 #include "ale_pos.h"

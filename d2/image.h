@@ -407,6 +407,120 @@ public:
 	virtual image *scale_generator(int height, int width, int depth, char *name) const = 0;
 
 	/*
+	 * Generate an image of medians within a given radius
+	 */
+
+	image *medians(int radius) const {
+
+		assert (radius >= 0);
+		
+		image *is = scale_generator(height(), width(), depth(), "median");
+		assert(is);
+
+		for (unsigned int i = 0; i < height(); i++)
+		for (unsigned int j = 0; j < width(); j++) {
+
+			std::vector<ale_real> p[3];
+
+			for (int ii = -radius; ii <= radius; ii++)
+			for (int jj = -radius; jj <= radius; jj++) {
+				int iii = i + ii;
+				int jjj = j + jj;
+
+				if (in_bounds(point(iii, jjj)))
+					for (int k = 0; k < 3; k++)
+						p[k].push_back(get_pixel(iii, jjj)[0]);
+			}
+
+			for (int k = 0; k < 3; k++) {
+				std::sort(p[k].begin(), p[k].end());
+
+				unsigned int pkc = p[k].size();
+
+				assert (pkc > 0);
+
+				if (pkc % 2 == 0) 
+					is->chan(i, j, k) = (p[k][pkc / 2] + p[k][pkc / 2 - 1]) / 2;
+				else
+					is->chan(i, j, k) = p[k][pkc / 2];
+			}
+		}
+	}
+
+	/*
+	 * Generate an image of differences of the first channel.  The first
+	 * coordinate differences are stored in the first channel, second in the
+	 * second channel.
+	 */
+
+	image *fcdiffs() const {
+		image *is = scale_generator(height(), width(), depth(), "diff");
+
+		assert(is);
+
+		for (unsigned int i = 0; i < height(); i++)
+		for (unsigned int j = 0; j < width(); j++) {
+
+			if (i + 1 < height()
+			 && i - 1 >= 0) {
+
+				is->chan(i, j, 0) = ((chan(i, j, 0) - chan(i - 1, j, 0))
+						   + (chan(i + 1, j, 0) - chan(i, j, 0))) / 2;
+
+			} else if (i + 1 < height()) {
+
+				is->chan(i, j, 0) = chan(i, j, 0) - chan(i - 1, j, 0);
+
+			} else if (i - 1 >= 0) {
+				 
+				is->chan(i, j, 0) = chan(i + 1, j, 0) - chan(i, j, 0);
+
+			} else {
+
+				is->chan(i, j, 0) = 0;
+			}
+
+			if (j + 1 < width()
+			 && j - 1 >= 0) {
+
+				is->chan(i, j, 1) = ((chan(i, j, 0) - chan(i, j - 1, 0))
+						   + (chan(i, j + 1, 0) - chan(i, j, 0))) / 2;
+
+			} else if (j + 1 < width()) {
+
+				is->chan(i, j, 1) = chan(i, j, 0) - chan(i, j - 1, 0);
+
+			} else if (j - 1 >= 0) {
+				 
+				is->chan(i, j, 1) = chan(i, j + 1, 0) - chan(i, j, 0);
+
+			} else {
+
+				is->chan(i, j, 1) = 0;
+			}
+		}
+	}
+
+	/*
+	 * Generate an image of median (within a given radius) difference of the
+	 * first channel.
+	 */
+
+	image *fcdiff_median(int radius) const {
+		image *diff = fcdiffs();
+
+		assert(diff);
+
+		image *median = diff->medians(radius);
+
+		assert(median);
+
+		delete diff;
+
+		return median;
+	}
+
+	/*
 	 * Scale by half.  We use the following filter:
 	 *
 	 * 	1/16	1/8	1/16
