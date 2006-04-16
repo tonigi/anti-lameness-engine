@@ -74,10 +74,11 @@ class scene {
 	static int normalize_weights;
 
 	/*
-	 * Flag for filtering
+	 * Filtering data
 	 */
 
 	static int use_filter;
+	d2::render *d3chain;
 
 	/*
 	 * Falloff exponent
@@ -2164,6 +2165,10 @@ public:
 
 	static void nofilter() {
 		use_filter = 0;
+	}
+
+	static void set_filter(d2::render *chain) {
+		d3chain = chain;
 	}
 
 	static void filter() {

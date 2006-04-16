@@ -341,7 +341,7 @@ int main(int argc, const char *argv[]){
 	d2::render **ochain = NULL;
 	const char **ochain_names = NULL;
 	const char **ochain_types = NULL;
-	const char *d3chain_type = "zero";
+	const char *d3chain_type = NULL;
 	int oc_count = 0;
 	const char **visp = NULL;
 	int vise_count = 0;
@@ -422,6 +422,12 @@ int main(int argc, const char *argv[]){
 		d2::image_rw::exp_noscale();
 		cx_parameter = 0;
 	}
+
+	/*
+	 * Set default d3chain to default ochain[0].
+	 */
+
+	d3chain_type = ochain_types[0];
 
 	/* 
 	 * Iterate through arguments until we reach the first file 
@@ -1782,6 +1788,8 @@ int main(int argc, const char *argv[]){
 				}
 
 				d3::align::write_alignments();
+
+				d3::scene::set_filter(d2::render_parse::get(d3chain_type));
 
 				d3::scene::init_from_d2();
 
