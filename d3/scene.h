@@ -2077,7 +2077,12 @@ public:
 	/*
 	 * Generate an image from a specified view.
 	 */
-	static const d2::image *view(pt _pt, int n = -1) {
+
+	/*
+	 * Unfiltered function
+	 */
+	static const d2::image *view_nofilter(pt _pt, int n) {
+
 		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
 		if (n >= 0) {
@@ -2130,6 +2135,66 @@ public:
 		return im;
 	}
 
+	/*
+	 * Filtered function.
+	 */
+	static const d2::image *view_filter(pt _pt, int n) {
+
+		/*
+		 * Comments on implementation:
+		 *
+		 * Consider that for each pixel in each view, there is a 'most
+		 * visible' (or at least one equally most visible) subspace,
+		 * the subspace that represents most of the weight of the
+		 * pixel.  In determining whether this space is visible from
+		 * another frame, the correct approach is probably to compile a
+		 * list of such subspaces for each frame against which a given
+		 * most-visible subspace for a pixel of interest can be
+		 * compared.  This determines visibility from a given frame.
+		 * Beyond this, the only requirement for mapping points
+		 * frame-to-frame in 2d (for using d2::ssfe, etc.) is to use
+		 * the estimated position and slope of the depth surface to map
+		 * four points from one frame to the other using the given 3D
+		 * transformation -- this defines a 2D projective
+		 * transformation.  (Values for the aforementioned estimates
+		 * are provided below, using the d2::image functions
+		 * fcdiff_median() and medians().)
+		 */
+
+		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
+
+		fprintf(stderr, "\n\nError: filtered output not supported yet.  Use --3d-nofilter.\n");
+		assert(0);
+
+		exit(1);
+
+		const d2::image *depths = depth(_pt, n);
+
+		d2::image *median_diffs = depths->fcdiff_median(2);
+		d2::image *median_depths = depths->medians(0);
+
+		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+				               (int) floor(_pt.scaled_width()), 3);
+
+		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
+
+		return NULL;
+	}
+
+	/*
+	 * Generic function.
+	 */
+	static const d2::image *view(pt _pt, int n = -1) {
+
+		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
+
+		if (use_filter) {
+			return view_filter(_pt, n);
+		} else {
+			return view_nofilter(_pt, n);
+		}
+	}
+		
 	static void tcem(double _tcem) {
 		tc_multiplier = _tcem;
 	}

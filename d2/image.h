@@ -445,6 +445,8 @@ public:
 					is->chan(i, j, k) = p[k][pkc / 2];
 			}
 		}
+
+		return is;
 	}
 
 	/*
@@ -499,6 +501,8 @@ public:
 				is->chan(i, j, 1) = 0;
 			}
 		}
+
+		return is;
 	}
 
 	/*
