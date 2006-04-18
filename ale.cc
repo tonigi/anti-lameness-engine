@@ -1789,7 +1789,7 @@ int main(int argc, const char *argv[]){
 
 				d3::align::write_alignments();
 
-				d3::scene::set_filter(d2::render_parse::get(d3chain_type));
+				d3::scene::set_filter_type(d3chain_type);
 
 				d3::scene::init_from_d2();
 

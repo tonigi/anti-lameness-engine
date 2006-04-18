@@ -286,6 +286,12 @@ public:
 		if (directory[i] != NULL)
 			directory[i]->free_memory();
 	}
+
+	static void reset() {
+		free_all_memory();
+		for (i = 0; i < ACTIVE_RENDERER_COUNT; i++)
+			directory[i] = NULL;
+	}
 };
 
 #endif

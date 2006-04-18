@@ -78,7 +78,7 @@ class scene {
 	 */
 
 	static int use_filter;
-	static d2::render *d3chain;
+	static const char *d3chain_type;
 
 	/*
 	 * Falloff exponent
@@ -2178,6 +2178,13 @@ public:
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
+		std::vector<space *> mv = most_visible(_pt);
+
+		for (int f = 0; f < d2::image_rw::count(); f++) {
+			std::vector<space *> fmv = most_visible(f);
+			std::sort(fmv.begin, fmv.end());
+		}
+
 		return NULL;
 	}
 
@@ -2232,8 +2239,8 @@ public:
 		use_filter = 0;
 	}
 
-	static void set_filter(d2::render *chain) {
-		d3chain = chain;
+	static void set_filter_type(const char *type) {
+		d3chain_type = type;
 	}
 
 	static void filter() {
