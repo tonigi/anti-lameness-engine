@@ -275,6 +275,26 @@ public:
 		return 0;
 	}
 
+	/*
+	 * Set point rendering bounds, if possible.
+	 */
+
+	virtual void set_point_render_bounds(const image *im) {
+		assert(0);
+		fprintf(stderr, "Error: set_point_render_bounds() not supported by this renderer\n");
+		exit(1);
+	}
+
+	/*
+	 * Point render.
+	 */
+
+	virtual void point_render(unsigned int i, unsigned int j, unsigned int f, transformation t) {
+		assert(0);
+		fprintf(stderr, "Error: point_render() not supported by this renderer\n");
+		exit(1);
+	}
+
 	virtual ~render() {
 		directory[entry_number] = NULL;
 	}
@@ -289,7 +309,7 @@ public:
 
 	static void reset() {
 		free_all_memory();
-		for (i = 0; i < ACTIVE_RENDERER_COUNT; i++)
+		for (int i = 0; i < ACTIVE_RENDERER_COUNT; i++)
 			directory[i] = NULL;
 	}
 };

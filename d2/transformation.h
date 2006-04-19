@@ -594,6 +594,11 @@ public:
 
 	}
 
+	void gpt_set(point x1, point x2, point x3, point x4) {
+		point x[4] = {x1, x2, x3, x4};
+		gpt_set(x);
+	}
+
 	/*
 	 * Get the specified projective parameter
 	 */

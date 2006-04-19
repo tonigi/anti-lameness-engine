@@ -2168,6 +2168,18 @@ public:
 
 		exit(1);
 
+		/*
+		 * Generate a new 2D renderer for filtering.
+		 */
+
+		d2::render::reset();
+		d2::render *renderer = d2::render_parse::get(d3chain_type);
+
+		/*
+		 * Get depth image in order to estimate normals (and hence
+		 * transformations).
+		 */
+
 		const d2::image *depths = depth(_pt, n);
 
 		d2::image *median_diffs = depths->fcdiff_median(2);
@@ -2176,13 +2188,86 @@ public:
 		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
 				               (int) floor(_pt.scaled_width()), 3);
 
+		renderer->set_point_render_bounds(im);
+
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
-		std::vector<space *> mv = most_visible(_pt);
+		std::vector<space *> mv = most_visible_scaled(_pt);
 
-		for (int f = 0; f < d2::image_rw::count(); f++) {
-			std::vector<space *> fmv = most_visible(f);
-			std::sort(fmv.begin, fmv.end());
+		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+
+			pt _ptf = al->get(f)->get_t(0);
+
+			std::vector<space *> fmv = most_visible_unscaled(_ptf);
+			std::sort(fmv.begin(), fmv.end());
+
+			for (unsigned int i = 0; i < im->height(); i++)
+			for (unsigned int j = 0; j < im->width(); j++) {
+
+				/*
+				 * Check visibility.
+				 */
+
+				int n = i * im->width() + j;
+
+				if (!std::binary_search(fmv.begin(), fmv.end(), mv[n]))
+					continue;
+
+				/*
+				 * Find depth and diff at this point, and
+				 * generate projections of the image corners on
+				 * the estimated normal surface.
+				 */
+
+				d2::pixel depth = median_depths->pix(i, j);
+				d2::pixel diff = median_diffs->pix(i, j);
+
+				point projections[4] = { point(0, 0, depth[0] 
+						                   - i * diff[0] 
+								   - j * diff[1]),
+					                 point(im->height(), 0, depth[0] 
+							           + (im->height() - i) * diff[0]
+								   - j * diff[1]),
+							 point(im->height(), im->width(), depth[0]
+							           + (im->height() - i) * diff[0]
+								   + (im->width() - j) *diff[1]),
+							 point(0, im->width(), depth[0]
+							           - i * diff[0]
+								   + (im->width() - j) * diff[1])  
+				};
+
+				/*
+				 * Determine transformation at (i, j).  First
+				 * determine transformation from the output to
+				 * the input, then invert this, as we need the
+				 * inverse transformation for filtering.
+				 */
+
+				d2::transformation ft = d2::transformation::gpt_identity(im, 1);
+
+				ft.gpt_set(_ptf.wp_unscaled(_pt.pw_scaled(point(projections[0]))).xy(),
+				           _ptf.wp_unscaled(_pt.pw_scaled(point(projections[1]))).xy(),
+					   _ptf.wp_unscaled(_pt.pw_scaled(point(projections[2]))).xy(),
+					   _ptf.wp_unscaled(_pt.pw_scaled(point(projections[3]))).xy());
+
+				const d2::image *imf = d2::image_rw::open(f);
+
+				d2::transformation inv_t = d2::transformation::gpt_identity(imf, 1);
+
+				inv_t.gpt_set(ft.unscaled_inverse_transform(d2::point(0, 0)),
+					      ft.unscaled_inverse_transform(d2::point(imf->height(), 0)),
+					      ft.unscaled_inverse_transform(d2::point(imf->height(), imf->width())),
+					      ft.unscaled_inverse_transform(d2::point(0, imf->width())));
+
+				d2::image_rw::close(f);
+
+				/*
+				 * Perform render step for the given frame,
+				 * transformation, and point.
+				 */
+
+				renderer->point_render(i, j, f, inv_t);
+			}
 		}
 
 		return NULL;
