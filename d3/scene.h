@@ -2135,18 +2135,6 @@ public:
 		return im;
 	}
 
-	static std::vector<space::node *> most_visible_generic(pt _pt, int scaled) {
-		assert(0);
-	}
-
-	static std::vector<space::node *> most_visible_scaled(pt _pt) {
-		return most_visible_generic(_pt, 1);
-	}
-
-	static std::vector<space::node *> most_visible_unscaled(pt _pt) {
-		return most_visible_generic(_pt, 0);
-	}
-
 	/*
 	 * Filtered function.
 	 */
@@ -2204,13 +2192,13 @@ public:
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
-		std::vector<space::node *> mv = most_visible_scaled(_pt);
+		std::vector<space *> mv = most_visible_scaled(_pt);
 
 		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 
 			pt _ptf = al->get(f)->get_t(0);
 
-			std::vector<space::node *> fmv = most_visible_unscaled(_ptf);
+			std::vector<space *> fmv = most_visible_unscaled(_ptf);
 			std::sort(fmv.begin(), fmv.end());
 
 			for (unsigned int i = 0; i < im->height(); i++)
