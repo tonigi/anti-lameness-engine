@@ -996,7 +996,7 @@ class scene {
 			levels.resize(primary_decimation_upper - input_decimation_lower + 1);
 			for (int l = input_decimation_lower; l <= primary_decimation_upper; l++) {
 				levels[l - input_decimation_lower].resize((unsigned int) (floor(height / pow(2, l))
-					                       * floor(width / pow(2, l))
+							       * floor(width / pow(2, l))
 							       * pairwise_ambiguity),
 						 std::pair<ale_pos, ale_real>(0, 0));
 			}
@@ -1061,7 +1061,7 @@ class scene {
 				for (unsigned int k = 0; k < pairwise_ambiguity; k++) {
 					std::pair<ale_pos, ale_real> *pk =
 						&(levels[l - input_decimation_lower]
-						        [i * swidth * pairwise_ambiguity + j * pairwise_ambiguity + k]);
+							[i * swidth * pairwise_ambiguity + j * pairwise_ambiguity + k]);
 
 					if (pk->first == 0) {
 						fprintf(stderr, "o");
@@ -1957,13 +1957,13 @@ public:
 		}
 
 		d2::image *im1 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-				               (int) floor(_pt.scaled_width()), 3);
+					       (int) floor(_pt.scaled_width()), 3);
 
 		d2::image *im2 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-				               (int) floor(_pt.scaled_width()), 3);
+					       (int) floor(_pt.scaled_width()), 3);
 
 		d2::image *im3 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-				               (int) floor(_pt.scaled_width()), 3);
+					       (int) floor(_pt.scaled_width()), 3);
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
@@ -2098,7 +2098,7 @@ public:
 			depths = depth(_pt, n);
 
 		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-				               (int) floor(_pt.scaled_width()), 3);
+					       (int) floor(_pt.scaled_width()), 3);
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
@@ -2135,16 +2135,144 @@ public:
 		return im;
 	}
 
-	static std::vector<space::node *> most_visible_generic(pt _pt, int scaled) {
+	static void  most_visible_generic(std::vector<space::node *> &results, d2::image *weights, 
+			space::iterate si, pt _pt, int scaled) {
 		assert(0);
+		while (!si.done()) {
+			space::traverse st = si.get();
+
+			/*
+			 * XXX: This could be more efficient, perhaps.
+			 */
+
+			if (spatial_info_map.count(st.get_node()) == 0) {
+				si.next();
+				continue;
+			}
+
+			spatial_info sn = spatial_info_map[st.get_node()];
+
+			/*
+			 * Get information on the subspace.
+			 */
+
+			ale_real occupancy = sn.get_occupancy();
+
+			/*
+			 * Determine the view-local bounding box for the
+			 * subspace.
+			 */
+
+			point bb[2];
+
+			_pt.get_view_local_bb_scaled(st, bb);
+
+			point min = bb[0];
+			point max = bb[1];
+
+			/*
+			 * Data structure to check modification of weights by
+			 * higher-resolution subspaces.
+			 */
+
+			std::queue<d2::pixel> weight_queue;
+
+			/*
+			 * Check for higher resolution subspaces, and
+			 * update the space iterator.
+			 */
+
+			if (st.get_node()->positive
+			 || st.get_node()->negative) {
+
+				/*
+				 * Store information about current weights,
+				 * so we will know which areas have been
+				 * covered by higher-resolution subspaces.
+				 */
+
+				for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
+				for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++)
+					weight_queue.push(weights->get_pixel(i, j));
+				
+				/*
+				 * Cleave space for the higher-resolution pass,
+				 * skipping the current space, since we will
+				 * process that afterward.
+				 */
+
+				space::iterate cleaved_space = si.cleave();
+
+				cleaved_space.next();
+
+				most_visible_generic(results, weights, cleaved_space, _pt, scaled);
+
+			} else {
+				si.next();
+			}
+				
+
+			/*
+			 * Iterate over pixels in the bounding box, finding
+			 * pixels that intersect the subspace.  XXX: assume
+			 * for now that all pixels in the bounding box
+			 * intersect the subspace.
+			 */
+
+			for (int i = (int) ceil(min[0]); i <= (int) floor(max[0]); i++)
+			for (int j = (int) ceil(min[1]); j <= (int) floor(max[1]); j++) {
+
+				/*
+				 * Check for higher-resolution updates.
+				 */
+
+				if (weight_queue.size()) {
+					if (weight_queue.front() != weights->get_pixel(i, j)) {
+						weight_queue.pop();
+						continue;
+					}
+					weight_queue.pop();
+				}
+
+				/*
+				 * Determine the probability of encounter.
+				 */
+
+				ale_pos encounter = (1 - weights->get_pixel(i, j)[0]) * occupancy;
+
+				/*
+				 * weights[0] stores the cumulative weight; weights[1] stores the maximum.
+				 */
+
+				if (encounter > weights->get_pixel(i, j)[1]
+				 || results[i * weights->width() + j] == NULL) {
+					results[i * weights->width() + j] = st.get_node();
+					weights->chan(i, j, 1) = encounter;
+				}
+
+				weights->chan(i, j, 0) += encounter;
+			}
+		}
 	}
 
 	static std::vector<space::node *> most_visible_scaled(pt _pt) {
-		return most_visible_generic(_pt, 1);
+		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()), 
+				(int) floor(_pt.scaled_width()), 3);
+		std::vector<space::node *> results;
+	
+		most_visible_generic(results, weights, space::iterate(_pt.origin()), _pt, 1);
+		
+		return results;
 	}
 
 	static std::vector<space::node *> most_visible_unscaled(pt _pt) {
-		return most_visible_generic(_pt, 0);
+		d2::image *weights = new d2::image_ale_real((int) floor(_pt.unscaled_height()), 
+				(int) floor(_pt.unscaled_width()), 3);
+		std::vector<space::node *> results;
+		
+		most_visible_generic(results, weights, space::iterate(_pt.origin()), _pt, 0);
+		
+		return results;
 	}
 
 	/*
@@ -2198,7 +2326,7 @@ public:
 		d2::image *median_depths = depths->medians(0);
 
 		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-				               (int) floor(_pt.scaled_width()), 3);
+					       (int) floor(_pt.scaled_width()), 3);
 
 		renderer->set_point_render_bounds(im);
 
@@ -2235,16 +2363,16 @@ public:
 				d2::pixel diff = median_diffs->pix(i, j);
 
 				point projections[4] = { point(0, 0, depth[0] 
-						                   - i * diff[0] 
+								   - i * diff[0] 
 								   - j * diff[1]),
-					                 point(im->height(), 0, depth[0] 
-							           + (im->height() - i) * diff[0]
+							 point(im->height(), 0, depth[0] 
+								   + (im->height() - i) * diff[0]
 								   - j * diff[1]),
 							 point(im->height(), im->width(), depth[0]
-							           + (im->height() - i) * diff[0]
+								   + (im->height() - i) * diff[0]
 								   + (im->width() - j) *diff[1]),
 							 point(0, im->width(), depth[0]
-							           - i * diff[0]
+								   - i * diff[0]
 								   + (im->width() - j) * diff[1])  
 				};
 
@@ -2258,7 +2386,7 @@ public:
 				d2::transformation ft = d2::transformation::gpt_identity(im, 1);
 
 				ft.gpt_set(_ptf.wp_unscaled(_pt.pw_scaled(point(projections[0]))).xy(),
-				           _ptf.wp_unscaled(_pt.pw_scaled(point(projections[1]))).xy(),
+					   _ptf.wp_unscaled(_pt.pw_scaled(point(projections[1]))).xy(),
 					   _ptf.wp_unscaled(_pt.pw_scaled(point(projections[2]))).xy(),
 					   _ptf.wp_unscaled(_pt.pw_scaled(point(projections[3]))).xy());
 
@@ -2732,7 +2860,7 @@ public:
 			p2[d] = 1 - p2[d];
 
 			ale_pos local_distance = (_pt.wp_unscaled(point(cell[p1[0]][0], cell[p1[1]][1], cell[p1[2]][2])).xy()
-					        - _pt.wp_unscaled(point(cell[p2[0]][0], cell[p2[1]][1], cell[p2[2]][2])).xy()).norm();
+						- _pt.wp_unscaled(point(cell[p2[0]][0], cell[p2[1]][1], cell[p2[2]][2])).xy()).norm();
 
 			if (local_distance / diameter > *extreme_ratio) {
 				*extreme_ratio = local_distance / diameter;
@@ -2906,7 +3034,7 @@ public:
 			double inf  = one / zero;
 			slope = inf;
 		} else if (slope < 1 / (double) if2->height() / 100
-		        && slope > -1/ (double) if2->height() / 100) {
+			&& slope > -1/ (double) if2->height() / 100) {
 			slope = 0;
 		}
 
@@ -2939,7 +3067,7 @@ public:
 		} else {
 			// fprintf(stderr, "case 4\n");
 			// fprintf(stderr, "%d->%d (%d, %d) does not intersect the defined area\n",
-			// 		f1, f2, i, j);
+			//		f1, f2, i, j);
 			return result;
 		}
 
@@ -2966,7 +3094,7 @@ public:
 		}
 		
 		// fprintf(stderr, "%d->%d (%d, %d) increments are (%f, %f)\n",
-		// 		f1, f2, i, j, incr_i, incr_j);
+		//		f1, f2, i, j, incr_i, incr_j);
 
 		/*
 		 * Examine regions near the projected line.
@@ -2983,9 +3111,9 @@ public:
 			/*
 			 * Check for higher, lower, and nearby points.
 			 *
-			 * 	Red   = 2^0
-			 * 	Green = 2^1
-			 * 	Blue  = 2^2
+			 *	Red   = 2^0
+			 *	Green = 2^1
+			 *	Blue  = 2^2
 			 */
 
 			int higher = 0, lower = 0, nearby = 0;
@@ -3235,9 +3363,9 @@ public:
 			 */
 
 //			d2::pixel c_ip = if1->in_bounds(ip.xy()) ? if1->get_bl(ip.xy())
-//				                                 : d2::pixel();
+//								 : d2::pixel();
 //			d2::pixel c_is = if2->in_bounds(is.xy()) ? if2->get_bl(is.xy())
-//				                                 : d2::pixel();
+//								 : d2::pixel();
 
 //			fprintf(stderr, "Candidate subspace: f1=%u f2=%u i=%u j=%u ii=%f jj=%f"
 //					"cp=[%f %f %f] cs=[%f %f %f]\n",
@@ -3458,7 +3586,7 @@ public:
 	 */
 
 	static void analyze_space_from_map(const char *d_out[], const char *v_out[],
-			               std::map<const char *, pt> *d3_depth_pt,
+				       std::map<const char *, pt> *d3_depth_pt,
 				       std::map<const char *, pt> *d3_output_pt,
 				       unsigned int f1, unsigned int f2, 
 				       unsigned int i, unsigned int j, score_map _sm, int use_filler) {
@@ -3574,7 +3702,7 @@ public:
 		 */
 
 		int use_filler = d3_depth_pt->size() != 0
-			           || d3_output_pt->size() != 0
+				   || d3_output_pt->size() != 0
 				   || output_decimation_preferred > 0
 				   || input_decimation_lower > 0;
 
