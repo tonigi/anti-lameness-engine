@@ -2325,10 +2325,10 @@ public:
 		d2::image *median_diffs = depths->fcdiff_median(2);
 		d2::image *median_depths = depths->medians(0);
 
-		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-					       (int) floor(_pt.scaled_width()), 3);
+		unsigned int height = (unsigned int) floor(_pt.scaled_height());
+		unsigned int width = (unsigned int) floor(_pt.scaled_width());
 
-		renderer->set_point_render_bounds(im);
+		renderer->init_point_renderer(height, width, 3);
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
@@ -2341,14 +2341,14 @@ public:
 			std::vector<space::node *> fmv = most_visible_unscaled(_ptf);
 			std::sort(fmv.begin(), fmv.end());
 
-			for (unsigned int i = 0; i < im->height(); i++)
-			for (unsigned int j = 0; j < im->width(); j++) {
+			for (unsigned int i = 0; i < height; i++)
+			for (unsigned int j = 0; j < width; j++) {
 
 				/*
 				 * Check visibility.
 				 */
 
-				int n = i * im->width() + j;
+				int n = i * width + j;
 
 				if (!std::binary_search(fmv.begin(), fmv.end(), mv[n]))
 					continue;
@@ -2365,15 +2365,15 @@ public:
 				point projections[4] = { point(0, 0, depth[0] 
 								   - i * diff[0] 
 								   - j * diff[1]),
-							 point(im->height(), 0, depth[0] 
-								   + (im->height() - i) * diff[0]
+							 point(height, 0, depth[0] 
+								   + (height - i) * diff[0]
 								   - j * diff[1]),
-							 point(im->height(), im->width(), depth[0]
-								   + (im->height() - i) * diff[0]
-								   + (im->width() - j) *diff[1]),
-							 point(0, im->width(), depth[0]
+							 point(height, width, depth[0]
+								   + (height - i) * diff[0]
+								   + (width - j) *diff[1]),
+							 point(0, width, depth[0]
 								   - i * diff[0]
-								   + (im->width() - j) * diff[1])  
+								   + (width - j) * diff[1])  
 				};
 
 				/*
@@ -2383,7 +2383,7 @@ public:
 				 * inverse transformation for filtering.
 				 */
 
-				d2::transformation ft = d2::transformation::gpt_identity(im, 1);
+				d2::transformation ft = d2::transformation::gpt_identity(renderer->get_image(), 1);
 
 				ft.gpt_set(_ptf.wp_unscaled(_pt.pw_scaled(point(projections[0]))).xy(),
 					   _ptf.wp_unscaled(_pt.pw_scaled(point(projections[1]))).xy(),
@@ -2410,7 +2410,9 @@ public:
 			}
 		}
 
-		return NULL;
+		renderer->finish_point_rendering();
+
+		return renderer->get_image();
 	}
 
 	/*

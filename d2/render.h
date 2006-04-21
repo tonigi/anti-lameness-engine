@@ -279,9 +279,9 @@ public:
 	 * Set point rendering bounds, if possible.
 	 */
 
-	virtual void set_point_render_bounds(const image *im) {
+	virtual void init_point_renderer(unsigned int h, unsigned int w, unsigned int d) {
 		assert(0);
-		fprintf(stderr, "Error: set_point_render_bounds() not supported by this renderer\n");
+		fprintf(stderr, "Error: init_point_renderer() not supported by this renderer\n");
 		exit(1);
 	}
 
@@ -292,6 +292,16 @@ public:
 	virtual void point_render(unsigned int i, unsigned int j, unsigned int f, transformation t) {
 		assert(0);
 		fprintf(stderr, "Error: point_render() not supported by this renderer\n");
+		exit(1);
+	}
+
+	/*
+	 * Finish point rendering.
+	 */
+
+	virtual void finish_point_rendering() {
+		assert(0);
+		fprintf(stderr, "Error: finish_point_rendering() not supported by this renderer\n");
 		exit(1);
 	}
 

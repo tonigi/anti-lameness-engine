@@ -273,6 +273,26 @@ public:
 		}
 	}
 
+
+	virtual void init_point_renderer(unsigned int h, unsigned int w, unsigned int d) {
+		assert(accum_image = NULL);
+
+		if (inv->is_median())
+			accum_image = new image_weighted_median(h, w, d);
+		else
+			accum_image = new image_weighted_simple(h, w, d, inv);
+
+		assert(accum_image);
+	}
+	
+	virtual void point_render(unsigned int i, unsigned int j, unsigned int f, transformation t) {
+		assert(0);
+	}
+
+	virtual void finish_point_rendering() {
+		return;
+	}
+
 	void free_memory() {
 		delete accum_image;
 	}

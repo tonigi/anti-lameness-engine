@@ -147,6 +147,33 @@ public:
 	virtual void step() {
 	}
 
+	virtual void init_point_renderer(unsigned int h, unsigned int w, unsigned int d) {
+		_default->init_point_renderer(h, w, d);
+		partial->init_point_renderer(h, w, d);
+		output_image = new image_zero(h, w, d);
+		defined_image = new image_zero(h, w, d);
+	}
+
+	virtual void point_render(unsigned int i, unsigned int j, unsigned int f, transformation t) {
+		_default->point_render(i, j, f, t);
+		partial->point_render(i, j, f, t);
+	}
+
+	virtual void finish_point_rendering() {
+		_default->finish_point_rendering();
+		partial->finish_point_rendering();
+		delete defined_image;
+		delete output_image;
+
+		/*
+		 * These will be generated upon a call to get_image() or
+		 * get_defined().
+		 */
+
+		defined_image = NULL;
+		output_image = NULL;
+	}
+
 	const render *get_default() const {
 		return _default;
 	}
