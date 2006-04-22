@@ -2337,6 +2337,9 @@ public:
 
 		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 
+			if (tc_multiplier == 0)
+				al->open(f);
+
 			pt _ptf = al->get(f)->get_t(0);
 
 			std::vector<space::node *> fmv = most_visible_unscaled(_ptf);
@@ -2409,6 +2412,9 @@ public:
 
 				renderer->point_render(i, j, f, inv_t);
 			}
+
+			if (tc_multiplier == 0) 
+				al->close(f);
 		}
 
 		renderer->finish_point_rendering();
