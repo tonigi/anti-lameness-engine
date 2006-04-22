@@ -259,7 +259,7 @@ public:
 	 */
 
 	virtual const image *get_image() {
-		assert (get_step() >= 0);
+		assert (accum_image != NULL);
 		return accum_image->get_colors();
 	}
 
@@ -269,7 +269,7 @@ public:
 	 */
 
 	virtual const image *get_defined() {
-		assert (get_step() >= 0);
+		assert (accum_image != NULL);
 		return accum_image->get_weights();
 	}
 
