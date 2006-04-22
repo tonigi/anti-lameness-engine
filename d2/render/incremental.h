@@ -167,6 +167,29 @@ protected:
 	}	
 
 	/*
+	 * Merge operation for a single pixel in the accumulated image.
+	 */
+	void _merge_pixel(int frame, const image *delta, transformation t, int i, int j, const filter::ssfe *_ssfe) {
+
+		if (_ssfe->ex_is_honored() && is_excluded(i, j, frame))
+			return;
+
+		if (accum_image->accumulate_norender(i, j))
+			return;
+		
+		/*
+		 * Pixel value to be merged, and the associated
+		 * confidence
+		 */
+
+		pixel value, confidence;
+
+		_ssfe->filtered(i, j, frame, &value, &confidence);
+
+		accum_image->accumulate(i, j, frame, value, confidence);
+	}
+
+	/*
 	 * Merge part of a delta frame with part of the accumulated image using
 	 * the specified transformation.
 	 */
@@ -185,6 +208,15 @@ protected:
 		for (unsigned int i = 0; i < accum_image->height(); i++)
 		for (unsigned int j = 0; j < accum_image->width(); j++) {
 
+#if 0
+			/*
+			 * This is untested, but it should work, and is less
+			 * verbose than what follows.
+			 */
+
+			_merge_pixel(frame, delta, t, i, j, _ssfe);
+#else
+
 			if (_ssfe->ex_is_honored() && is_excluded(i, j, frame))
 				continue;
 
@@ -201,6 +233,7 @@ protected:
 			_ssfe->filtered(i, j, frame, &value, &confidence);
 
 			accum_image->accumulate(i, j, frame, value, confidence);
+#endif
 		}
 	}
 
@@ -286,7 +319,15 @@ public:
 	}
 	
 	virtual void point_render(unsigned int i, unsigned int j, unsigned int f, transformation t) {
-		assert(0);
+
+		const image *im = image_rw::open(f);
+		const filter::ssfe *_ssfe = inv->ssfe();
+
+		_ssfe->set_parameters(t, im, accum_image->offset());
+		_merge_pixel(f, im, t, i, j, _ssfe);
+
+		image_rw::close(f);
+
 	}
 
 	virtual void finish_point_rendering() {
