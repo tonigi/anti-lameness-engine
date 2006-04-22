@@ -2137,7 +2137,7 @@ public:
 
 	static void  most_visible_generic(std::vector<space::node *> &results, d2::image *weights, 
 			space::iterate si, pt _pt, int scaled) {
-		assert(0);
+
 		while (!si.done()) {
 			space::traverse st = si.get();
 
