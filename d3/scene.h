@@ -2262,7 +2262,7 @@ public:
 				(int) floor(_pt.scaled_width()), 3);
 		std::vector<space::node *> results;
 
-		results.resize(weights->height() * weights->width, 0);
+		results.resize(weights->height() * weights->width(), 0);
 	
 		most_visible_generic(results, weights, space::iterate(_pt.origin()), _pt, 1);
 		
@@ -2274,7 +2274,7 @@ public:
 				(int) floor(_pt.unscaled_width()), 3);
 		std::vector<space::node *> results;
 		
-		results.resize(weights->height() * weights->width, 0);
+		results.resize(weights->height() * weights->width(), 0);
 
 		most_visible_generic(results, weights, space::iterate(_pt.origin()), _pt, 0);
 		
