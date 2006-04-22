@@ -308,7 +308,7 @@ public:
 
 
 	virtual void init_point_renderer(unsigned int h, unsigned int w, unsigned int d) {
-		assert(accum_image = NULL);
+		assert(accum_image == NULL);
 
 		if (inv->is_median())
 			accum_image = new image_weighted_median(h, w, d);
