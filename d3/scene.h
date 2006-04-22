@@ -2138,6 +2138,8 @@ public:
 	static void  most_visible_generic(std::vector<space::node *> &results, d2::image *weights, 
 			space::iterate si, pt _pt, int scaled) {
 
+		assert (results.size() == weights->height() * weights->width());
+
 		while (!si.done()) {
 			space::traverse st = si.get();
 
@@ -2259,6 +2261,8 @@ public:
 		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()), 
 				(int) floor(_pt.scaled_width()), 3);
 		std::vector<space::node *> results;
+
+		results.resize(weights->height() * weights->width, 0);
 	
 		most_visible_generic(results, weights, space::iterate(_pt.origin()), _pt, 1);
 		
@@ -2270,6 +2274,8 @@ public:
 				(int) floor(_pt.unscaled_width()), 3);
 		std::vector<space::node *> results;
 		
+		results.resize(weights->height() * weights->width, 0);
+
 		most_visible_generic(results, weights, space::iterate(_pt.origin()), _pt, 0);
 		
 		return results;
