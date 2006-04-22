@@ -312,15 +312,20 @@ public:
 	virtual void free_memory() = 0;
 
 	static void free_all_memory() {
+
 		for (int i = 0; i < ACTIVE_RENDERER_COUNT; i++)
-		if (directory[i] != NULL)
-			directory[i]->free_memory();
+			if (directory[i] != NULL) {
+				directory[i]->free_memory();
+				delete directory[i];
+				directory[i] = NULL;
+			}
+
+		directory_length = 0;
+
 	}
 
 	static void reset() {
 		free_all_memory();
-		for (int i = 0; i < ACTIVE_RENDERER_COUNT; i++)
-			directory[i] = NULL;
 	}
 };
 

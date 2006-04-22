@@ -464,18 +464,18 @@ public:
 		for (unsigned int j = 0; j < width(); j++) {
 
 			if (i + 1 < height()
-			 && i - 1 >= 0) {
+			 && i > 0) {
 
 				is->chan(i, j, 0) = ((chan(i, j, 0) - chan(i - 1, j, 0))
 						   + (chan(i + 1, j, 0) - chan(i, j, 0))) / 2;
 
 			} else if (i + 1 < height()) {
 
-				is->chan(i, j, 0) = chan(i, j, 0) - chan(i - 1, j, 0);
-
-			} else if (i - 1 >= 0) {
-				 
 				is->chan(i, j, 0) = chan(i + 1, j, 0) - chan(i, j, 0);
+
+			} else if (i > 0) {
+				 
+				is->chan(i, j, 0) = chan(i, j, 0) - chan(i - 1, j, 0);
 
 			} else {
 
@@ -483,18 +483,18 @@ public:
 			}
 
 			if (j + 1 < width()
-			 && j - 1 >= 0) {
+			 && j > 0) {
 
 				is->chan(i, j, 1) = ((chan(i, j, 0) - chan(i, j - 1, 0))
 						   + (chan(i, j + 1, 0) - chan(i, j, 0))) / 2;
 
 			} else if (j + 1 < width()) {
 
-				is->chan(i, j, 1) = chan(i, j, 0) - chan(i, j - 1, 0);
-
-			} else if (j - 1 >= 0) {
-				 
 				is->chan(i, j, 1) = chan(i, j + 1, 0) - chan(i, j, 0);
+
+			} else if (j > 0) {
+				 
+				is->chan(i, j, 1) = chan(i, j, 0) - chan(i, j - 1, 0);
 
 			} else {
 

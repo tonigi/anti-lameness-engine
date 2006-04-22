@@ -336,6 +336,7 @@ public:
 
 	void free_memory() {
 		delete accum_image;
+		accum_image = NULL;
 	}
 };
 

@@ -2303,11 +2303,6 @@ public:
 
 		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
-		fprintf(stderr, "\n\nError: filtered output not supported yet.  Use --3d-nofilter.\n");
-		assert(0);
-
-		exit(1);
-
 		/*
 		 * Generate a new 2D renderer for filtering.
 		 */

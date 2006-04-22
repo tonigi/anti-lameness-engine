@@ -185,6 +185,8 @@ public:
 	void free_memory() {
 		delete output_image;
 		delete defined_image;
+		output_image = NULL;
+		defined_image = NULL;
 	}
 };
 
