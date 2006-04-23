@@ -429,7 +429,8 @@ public:
 
 				if (in_bounds(point(iii, jjj)))
 					for (int k = 0; k < 3; k++)
-						p[k].push_back(get_pixel(iii, jjj)[0]);
+						if (finite(get_pixel(iii, jjj)[k]))
+							p[k].push_back(get_pixel(iii, jjj)[k]);
 			}
 
 			for (int k = 0; k < 3; k++) {

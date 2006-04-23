@@ -2358,13 +2358,17 @@ public:
 					continue;
 
 				/*
-				 * Find depth and diff at this point, and
-				 * generate projections of the image corners on
-				 * the estimated normal surface.
+				 * Find depth and diff at this point, check for
+				 * undefined values, and generate projections
+				 * of the image corners on the estimated normal
+				 * surface.
 				 */
 
 				d2::pixel depth = median_depths->pix(i, j);
 				d2::pixel diff = median_diffs->pix(i, j);
+
+				if (!finite(depth) || !finite(diff))
+					continue;
 
 				point projections[4] = { point(0, 0, depth[0] 
 								   - i * diff[0] 
