@@ -201,6 +201,12 @@ public:
 	int finite() {
 		return ::finite(x[0]) && ::finite(x[1]) && ::finite(x[2]);
 	}
+
+	static pixel undefined() {
+		ale_real zero = 0;
+		return pixel(zero / zero, zero / zero, zero / zero);
+
+	}
 };
 
 inline pixel operator*(const pixel &p, float d) {

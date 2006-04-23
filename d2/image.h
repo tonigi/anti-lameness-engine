@@ -433,12 +433,15 @@ public:
 							p[k].push_back(get_pixel(iii, jjj)[k]);
 			}
 
+			is->pix(i, j) = d2::pixel::undefined();
+
 			for (int k = 0; k < 3; k++) {
 				std::sort(p[k].begin(), p[k].end());
 
 				unsigned int pkc = p[k].size();
 
-				assert (pkc > 0);
+				if (pkc == 0)
+					continue;
 
 				if (pkc % 2 == 0) 
 					is->chan(i, j, k) = (p[k][pkc / 2] + p[k][pkc / 2 - 1]) / 2;
