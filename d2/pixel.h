@@ -197,6 +197,10 @@ public:
 	int operator!=(const pixel &p) {
 		return !operator==(p);
 	}
+
+	int finite() {
+		return ::finite(x[0]) && ::finite(x[1]) && ::finite(x[2]);
+	}
 };
 
 inline pixel operator*(const pixel &p, float d) {

@@ -2367,7 +2367,7 @@ public:
 				d2::pixel depth = median_depths->pix(i, j);
 				d2::pixel diff = median_diffs->pix(i, j);
 
-				if (!finite(depth) || !finite(diff))
+				if (!depth.finite() || !diff.finite())
 					continue;
 
 				point projections[4] = { point(0, 0, depth[0] 
