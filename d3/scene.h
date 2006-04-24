@@ -2366,22 +2366,15 @@ public:
 
 				d2::pixel depth = median_depths->pix(i, j);
 				d2::pixel diff = median_diffs->pix(i, j);
+				// d2::pixel diff = d2::pixel(0, 0, 0);
 
 				if (!depth.finite() || !diff.finite())
 					continue;
 
-				point projections[4] = { point(0, 0, depth[0] 
-								   - i * diff[0] 
-								   - j * diff[1]),
-							 point(height, 0, depth[0] 
-								   + (height - i) * diff[0]
-								   - j * diff[1]),
-							 point(height, width, depth[0]
-								   + (height - i) * diff[0]
-								   + (width - j) *diff[1]),
-							 point(0, width, depth[0]
-								   - i * diff[0]
-								   + (width - j) * diff[1])  
+				point local_points[3] = { 
+					point(i,     j,     depth[0]),
+				        point(i + 1, j,     depth[0] + diff[0]),
+				        point(i + 1, j + 1, depth[0] + diff[1])
 				};
 
 				/*
@@ -2391,21 +2384,63 @@ public:
 				 * inverse transformation for filtering.
 				 */
 
-				d2::transformation ft = d2::transformation::gpt_identity(renderer->get_image(), 1);
+				d2::point remote_points[3] = {
+					_ptf.wp_unscaled(_pt.pw_scaled(point(local_points[0]))).xy(),
+					_ptf.wp_unscaled(_pt.pw_scaled(point(local_points[1]))).xy(),
+					_ptf.wp_unscaled(_pt.pw_scaled(point(local_points[2]))).xy()
+				};
 
-				ft.gpt_set(_ptf.wp_unscaled(_pt.pw_scaled(point(projections[0]))).xy(),
-					   _ptf.wp_unscaled(_pt.pw_scaled(point(projections[1]))).xy(),
-					   _ptf.wp_unscaled(_pt.pw_scaled(point(projections[2]))).xy(),
-					   _ptf.wp_unscaled(_pt.pw_scaled(point(projections[3]))).xy());
+				/*
+				 * Forward matrix for the linear component of the 
+				 * transformation.
+				 */
 
+				d2::point forward_matrix[2] = {
+					remote_points[1] - remote_points[0],
+					remote_points[2] - remote_points[0]
+				};
+
+				/*
+				 * Inverse matrix for the linear component of
+				 * the transformation.  Calculate using the
+				 * determinant D.
+				 */
+
+				ale_pos D = forward_matrix[0][0] * forward_matrix[1][1]
+					  - forward_matrix[0][1] * forward_matrix[1][0];
+
+				if (D == 0)
+					continue;
+
+				d2::point inverse_matrix[2] = {
+					d2::point( forward_matrix[1][1] / D, -forward_matrix[1][0] / D),
+					d2::point(-forward_matrix[0][1] / D,  forward_matrix[0][0] / D)
+				};
+
+				/*
+				 * Determine the projective transformation parameters for the
+				 * inverse transformation.
+				 */
+				
 				const d2::image *imf = d2::image_rw::open(f);
 
 				d2::transformation inv_t = d2::transformation::gpt_identity(imf, 1);
 
-				inv_t.gpt_set(ft.unscaled_inverse_transform(d2::point(0, 0)),
-					      ft.unscaled_inverse_transform(d2::point(imf->height(), 0)),
-					      ft.unscaled_inverse_transform(d2::point(imf->height(), imf->width())),
-					      ft.unscaled_inverse_transform(d2::point(0, imf->width())));
+				d2::point local_bounds[4];
+
+				for (int n = 0; n < 4; n++) {
+					d2::point remote_bound = d2::point((n == 1 || n == 2) ? imf->height() : 0,
+							                   (n == 2 || n == 3) ? imf->width()  : 0)
+							       - remote_points[0];
+
+					local_bounds[n] = local_points[0].xy()
+						        + d2::point(remote_bound[0] * inverse_matrix[0][0]
+							          + remote_bound[1] * inverse_matrix[1][0],
+								    remote_bound[0] * inverse_matrix[0][1]
+								  + remote_bound[1] * inverse_matrix[1][1]);
+				}
+
+				inv_t.gpt_set(local_bounds);
 
 				d2::image_rw::close(f);
 
