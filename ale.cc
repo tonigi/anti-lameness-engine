@@ -692,6 +692,26 @@ int main(int argc, const char *argv[]){
 			ui::set_stream();
 		} else if (!strcmp(argv[i], "--ui=tty")) {
 			ui::set_tty();
+		} else if (!strcmp(argv[i], "--3d-fmr")) {
+
+			if (i + 1 >= argc)
+				not_enough("--3d-fmr");
+
+			double fmr_parameter;
+			sscanf(argv[i+1], "%lf", &fmr_parameter);
+			i += 1;
+			d3::scene::fmr(fmr_parameter);
+
+		} else if (!strcmp(argv[i], "--3d-dmr")) {
+
+			if (i + 1 >= argc)
+				not_enough("--3d-dmr");
+
+			double dmr_parameter;
+			sscanf(argv[i+1], "%lf", &dmr_parameter);
+			i += 1;
+			d3::scene::dmr(dmr_parameter);
+
 		} else if (!strcmp(argv[i], "--et")) {
 
 			if (i + 1 >= argc)

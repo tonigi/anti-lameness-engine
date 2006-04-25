@@ -123,6 +123,12 @@ class scene {
 	static double encounter_threshold;
 
 	/*
+	 * Median calculation radii.
+	 */
+	static double depth_median_radius;
+	static double diff_median_radius;
+
+	/*
 	 * Flag for subspace traversal.
 	 */
 	static int subspace_traverse;
@@ -1464,6 +1470,14 @@ public:
 		encounter_threshold = et_parameter;
 	}
 
+	static void dmr(double dmr_parameter) {
+		depth_median_radius = dmr_parameter;
+	}
+
+	static void fmr(double fmr_parameter) {
+		diff_median_radius = fmr_parameter;
+	}
+
 	static void load_model(const char *name) {
 		load_model_name = name;
 	}
@@ -2323,8 +2337,8 @@ public:
 
 		const d2::image *depths = depth(_pt, n);
 
-		d2::image *median_diffs = depths->fcdiff_median(2);
-		d2::image *median_depths = depths->medians(0);
+		d2::image *median_diffs = depths->fcdiff_median((int) floor(diff_median_radius));
+		d2::image *median_depths = depths->medians((int) floor(depth_median_radius));
 
 		unsigned int height = (unsigned int) floor(_pt.scaled_height());
 		unsigned int width = (unsigned int) floor(_pt.scaled_width());

@@ -59,6 +59,8 @@ const char *scene::pairwise_comparisons = "auto";
 int scene::d3px_count;
 double *scene::d3px_parameters;
 double scene::encounter_threshold = 0;
+double scene::depth_median_radius = 0;
+double scene::diff_median_radius = 2;
 int scene::subspace_traverse = 0;
 
 /*

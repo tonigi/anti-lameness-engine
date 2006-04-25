@@ -596,6 +596,8 @@ public:
 			"                         <xmin> <xmax> <ymin> <ymax> <zmin> <zmax>\n"
 			"--3d-filter       Use filtering for 3D color output.                    [default]\n"
 			"--3d-nofilter     Don't use filtering for 3D color output.\n"
+			"--3d-dmr <x>      Set radius for determining median depth to <x>      [default 0]\n"
+			"--3d-fmr <x>      Set radius for determining median diff to <x>       [default 2]\n"
 			BETWEEN_SECTIONS
 			"Camera parameters:\n"
 			HEADER_SPACE
