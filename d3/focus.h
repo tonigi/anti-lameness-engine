@@ -1,5 +1,5 @@
-// Copyright 2003 David Hilvert <dhilvert@auricle.dyndns.org>, 
-//                              <dhilvert@ugcs.caltech.edu>
+// Copyright 2003, 2004, 2005 David Hilvert <dhilvert@auricle.dyndns.org>,
+//                                          <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
 
@@ -19,29 +19,26 @@
 */
 
 /*
- * Top-level header file for classes treating scenes as three-dimensional data.
+ * d3/focus.h: Implementation of defocusing logic.
  */
 
-#include <map>
-#include <set>
-#include <iterator>
-#include <vector>
-#include <queue>
-#include <stack>
-#include <algorithm>
-#include "time.h"
-#include "d2.h"
+#ifndef __focus_h__
+#define __focus_h__
 
-namespace d3 {
+class focus {
 
-#include "d3/align.h"
-#include "d3/et.h"
-#include "d3/tfile.h"
-#include "d3/point.h"
-#include "d3/cpf.h"
-#include "d3/pt.h"
-#include "d3/space.h"
-#include "d3/focus.h"
-#include "d3/scene.h"
-	
-}
+public:
+	static d2::image *add_region(unsigned int ci, double sd, double sr, double ed, double er, double vt, double ht) {
+		assert(0);
+
+		return NULL;
+	}
+
+	static d2::image *defocus(const d2::image *defocus_prior, const d2::image *depth) {
+		assert(0);
+
+		return NULL;
+	}
+};
+
+#endif

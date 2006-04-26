@@ -2140,7 +2140,7 @@ public:
 
 		delete weights;
 
-		image *defocused = focus::defocus(im, depths);
+		d2::image *defocused = focus::defocus(im, depths);
 
 		delete depths;
 		delete im;
@@ -2471,9 +2471,9 @@ public:
 
 		renderer->finish_point_rendering();
 
-		const image *defocus_prior = renderer->get_image();
+		const d2::image *defocus_prior = renderer->get_image();
 
-		image *defocused = focus::defocus(result, median_depths);
+		d2::image *defocused = focus::defocus(defocus_prior, median_depths);
 
 		return defocused;
 	}
