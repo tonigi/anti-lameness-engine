@@ -508,6 +508,31 @@ int main(int argc, const char *argv[]){
 			d2::align::gs_mo(mo_parameter);
 			i += 1;
 
+		} else if (!strcmp(argv[i], "--focus")) {
+
+			/*
+			 * Check for argument availability
+			 */
+
+			if (i + 7 >= argc) 
+				not_enough(argv[i]);
+
+			unsigned int ci;
+			double sd, sr, ed, er, vt, ht;
+
+			if (sscanf(argv[i+1], "%u", &ci) != 1
+			 || sscanf(argv[i+2], "%lf", &sd) != 1
+			 || sscanf(argv[i+3], "%lf", &sr) != 1
+			 || sscanf(argv[i+4], "%lf", &ed) != 1
+			 || sscanf(argv[i+5], "%lf", &er) != 1
+			 || sscanf(argv[i+6], "%lf", &vt) != 1
+			 || sscanf(argv[i+7], "%lf", &ht) != 1)
+				bad_arg(argv[i]);
+
+			d3::focus::add_region(ci, sd,sr, ed, er, vt, ht);
+
+
+			i+=7;
 		} else if (!strcmp(argv[i], "--3ddp") || !strcmp(argv[i], "--3dvp")) {
 			d2::align::keep();
 

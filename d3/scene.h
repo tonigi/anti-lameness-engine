@@ -2106,10 +2106,7 @@ public:
 			     == (int) floor(_pt.scaled_width()));
 		}
 
-		const d2::image *depths = NULL;
-
-		if (d3px_count > 0)
-			depths = depth(_pt, n);
+		const d2::image *depths = depth(_pt, n);
 
 		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
 					       (int) floor(_pt.scaled_width()), 3);
@@ -2141,12 +2138,14 @@ public:
 				im->pix(i, j) /= weights->pix(i, j);
 		}
 
-		if (d3px_count > 0)
-			delete depths;
-
 		delete weights;
 
-		return im;
+		image *defocused = focus::defocus(im, depths);
+
+		delete depths;
+		delete im;
+
+		return defocused;
 	}
 
 	static void  most_visible_generic(std::vector<space::node *> &results, d2::image *weights, 
@@ -2472,7 +2471,11 @@ public:
 
 		renderer->finish_point_rendering();
 
-		return renderer->get_image();
+		const image *defocus_prior = renderer->get_image();
+
+		image *defocused = focus::defocus(result, median_depths);
+
+		return defocused;
 	}
 
 	/*

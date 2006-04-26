@@ -598,6 +598,15 @@ public:
 			"--3d-nofilter     Don't use filtering for 3D color output.\n"
 			"--3d-dmr <x>      Set radius for determining median depth to <x>      [default 0]\n"
 			"--3d-fmr <x>      Set radius for determining median diff to <x>       [default 2]\n"
+			"--focus <args>    Create linearly varying artifical defocus region; <args> are:\n"
+			"                     <ci> <sd> <sr> <ed> <er> <vt> <ht>:\n"
+			"                         <ci>  camera index\n"
+			"                         <sd>  start depth (at frame center)\n"
+			"                         <sr>  start radius (of circle of confusion)\n"
+			"                         <ed>  end depth (at frame center)\n"
+			"                         <er>  end radius (of circle of confusion)\n"
+			"                         <vt>  vertical tilt gradient\n"
+			"                         <ht>  horizontal tilt gradient\n"
 			BETWEEN_SECTIONS
 			"Camera parameters:\n"
 			HEADER_SPACE
