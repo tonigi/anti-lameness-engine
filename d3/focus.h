@@ -45,14 +45,10 @@ public:
 
 		if (focus_list.size() <= ci)
 			focus_list.resize(ci + 1);
+
+		entry e = { sd, ed, fd, cc, df, vt, ht };
 		
-		focus_list[ci].start_depth = sd;
-		focus_list[ci].end_depth = ed;
-		focus_list[ci].focal_distance = fd;
-		focus_list[ci].confusion_diameter = cc;
-		focus_list[ci].dof_expansion = df;
-		focus_list[ci].vertical_gradient = vt;
-		focus_list[ci].horizontal_gradient = ht;
+		focus_list[ci].push_back(e);
 	}
 
 	static d2::image *defocus(const d2::image *defocus_prior, const d2::image *depth) {
