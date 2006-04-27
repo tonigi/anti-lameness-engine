@@ -518,21 +518,21 @@ int main(int argc, const char *argv[]){
 				not_enough(argv[i]);
 
 			unsigned int ci;
-			double sd, sr, ed, er, vt, ht;
+			double sd, ed, fd, cc, df, vt, ht;
 
 			if (sscanf(argv[i+1], "%u", &ci) != 1
 			 || sscanf(argv[i+2], "%lf", &sd) != 1
-			 || sscanf(argv[i+3], "%lf", &sr) != 1
-			 || sscanf(argv[i+4], "%lf", &ed) != 1
-			 || sscanf(argv[i+5], "%lf", &er) != 1
-			 || sscanf(argv[i+6], "%lf", &vt) != 1
-			 || sscanf(argv[i+7], "%lf", &ht) != 1)
+			 || sscanf(argv[i+3], "%lf", &ed) != 1
+			 || sscanf(argv[i+4], "%lf", &fd) != 1
+			 || sscanf(argv[i+5], "%lf", &cc) != 1
+			 || sscanf(argv[i+6], "%lf", &df) != 1
+			 || sscanf(argv[i+7], "%lf", &vt) != 1
+			 || sscanf(argv[i+8], "%lf", &ht) != 1)
 				bad_arg(argv[i]);
 
-			d3::focus::add_region(ci, sd,sr, ed, er, vt, ht);
+			d3::focus::add_region(ci, sd, ed, fd, cc, df, vt, ht);
 
-
-			i+=7;
+			i+=8;
 		} else if (!strcmp(argv[i], "--3ddp") || !strcmp(argv[i], "--3dvp")) {
 			d2::align::keep();
 
@@ -1855,6 +1855,7 @@ int main(int argc, const char *argv[]){
 
 				fprintf(stderr, "Writing 3D output");
 				d3::scene::d3px(d3px_count, d3px_parameters);
+				int view_count = 0;
 				for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
 					assert (i < d3_count);
 
@@ -1868,6 +1869,7 @@ int main(int argc, const char *argv[]){
 						const d2::image *im = d3::scene::view(i);
 						d2::image_rw::write_image(d3_output[i], im, output_exposure);
 						delete im;
+						d3::focus::set_camera(view_count++);
 					}
 
 					for (std::map<const char *, d3::pt>::iterator i = d3_output_pt.begin();
@@ -1876,6 +1878,7 @@ int main(int argc, const char *argv[]){
 						const d2::image *im = d3::scene::view(i->second);
 						d2::image_rw::write_image(i->first, im, output_exposure);
 						delete im;
+						d3::focus::set_camera(view_count++);
 					}
 
 					for (std::map<const char *, d3::pt>::iterator i = d3_depth_pt.begin();

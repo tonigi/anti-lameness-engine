@@ -26,18 +26,43 @@
 #define __focus_h__
 
 class focus {
+	struct entry {
+		double start_depth;
+		double end_depth;
+		double focal_distance;
+		double confusion_diameter;
+		double dof_expansion;
+		double vertical_gradient;
+		double horizontal_gradient;
+	};
+
+	static unsigned int camera_index;
+	static std::vector<std::vector<entry> > focus_list;
 
 public:
-	static d2::image *add_region(unsigned int ci, double sd, double sr, double ed, double er, double vt, double ht) {
-		assert(0);
+	static void add_region(unsigned int ci, double sd, double ed, double fd, 
+			double cc, double df, double vt, double ht) {
 
-		return NULL;
+		if (focus_list.size() <= ci)
+			focus_list.resize(ci + 1);
+		
+		focus_list[ci].start_depth = sd;
+		focus_list[ci].end_depth = ed;
+		focus_list[ci].focal_distance = fd;
+		focus_list[ci].confusion_diameter = cc;
+		focus_list[ci].dof_expansion = df;
+		focus_list[ci].vertical_gradient = vt;
+		focus_list[ci].horizontal_gradient = ht;
 	}
 
 	static d2::image *defocus(const d2::image *defocus_prior, const d2::image *depth) {
 		assert(0);
 
 		return NULL;
+	}
+
+	static void set_camera(unsigned int c) {
+		camera_index = c;
 	}
 };
 
