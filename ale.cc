@@ -514,25 +514,101 @@ int main(int argc, const char *argv[]){
 			 * Check for argument availability
 			 */
 
-			if (i + 7 >= argc) 
+			if (i + 1 >= argc) 
 				not_enough(argv[i]);
 
-			unsigned int ci;
-			double sd, ed, fd, cc, df, vt, ht;
+			double one = +1;
+			double zero = +0;
+			double inf = one / zero;
 
-			if (sscanf(argv[i+1], "%u", &ci) != 1
-			 || sscanf(argv[i+2], "%lf", &sd) != 1
-			 || sscanf(argv[i+3], "%lf", &ed) != 1
-			 || sscanf(argv[i+4], "%lf", &fd) != 1
-			 || sscanf(argv[i+5], "%lf", &cc) != 1
-			 || sscanf(argv[i+6], "%lf", &df) != 1
-			 || sscanf(argv[i+7], "%lf", &vt) != 1
-			 || sscanf(argv[i+8], "%lf", &ht) != 1)
+			assert (isinf(inf) == +1);
+
+			/*
+			 * Focus type
+			 */
+
+			unsigned int type = 0;
+			double distance;
+			double px, py;
+
+			if (!strcmp(argv[i+1], "d")) {
+
+				type = 0;
+
+				if (i + 2 > argc) 
+					not_enough("--focus d");
+
+				if (sscanf(argv[i+2], "%lf", &distance) != 1)
+					bad_arg("--focus d");
+
+				i += 2;
+
+			} else if (!strcmp(argv[i+1], "p")) {
+
+				type = 1;
+
+				if (i + 3 > argc) 
+					not_enough("--focus");
+
+				if (sscanf(argv[i+2], "%lf", &px) != 1
+				 || sscanf(argv[i+3], "%lf", &py) != 1)
+					bad_arg("--focus");
+
+				i += 3;
+
+			} else {
 				bad_arg(argv[i]);
+			}
 
-			d3::focus::add_region(ci, sd, ed, fd, cc, df, vt, ht);
+			/*
+			 * Options
+			 */
 
-			i+=8;
+			unsigned int ci = 0;
+			double fr = 0;
+			double ht = 0;
+			double vt = 0;
+			double sd = 0;
+			double ed = inf;
+			double ap = 3;
+			double sc = 3;
+
+			int options = 1; 
+
+			while (options && i < argc) {
+				if (strncmp(argv[i], "ci=", 3)) {
+					if(sscanf(argv[i] + 3, "%u", &ci) != 1)
+						bad_arg("--focus");
+				} else if (strncmp(argv[i], "fr=", 3)) {
+					if(sscanf(argv[i] + 3, "%lf", &fr) != 1)
+						bad_arg("--focus");
+				} else if (strncmp(argv[i], "ht=", 3)) {
+					if(sscanf(argv[i] + 3, "%lf", &ht) != 1)
+						bad_arg("--focus");
+				} else if (strncmp(argv[i], "vt=", 3)) {
+					if(sscanf(argv[i] + 3, "%lf", &vt) != 1)
+						bad_arg("--focus");
+				} else if (strncmp(argv[i], "sd=", 3)) {
+					if(sscanf(argv[i] + 3, "%lf", &sd) != 1)
+						bad_arg("--focus");
+				} else if (strncmp(argv[i], "ed=", 3)) {
+					if(sscanf(argv[i] + 3, "%lf", &ed) != 1)
+						bad_arg("--focus");
+				} else if (strncmp(argv[i], "ap=", 3)) {
+					if(sscanf(argv[i] + 3, "%lf", &ap) != 1)
+						bad_arg("--focus");
+				} else if (strncmp(argv[i], "sc=", 3)) {
+					if(sscanf(argv[i] + 3, "%lf", &sc) != 1)
+						bad_arg("--focus");
+				} else
+					options = 0;
+
+				if (options)
+					i++;
+			}
+
+			d3::focus::add_region(type, distance, px, py, ci, fr, ht, vt, sd, ed, ap, sc);
+
 		} else if (!strcmp(argv[i], "--3ddp") || !strcmp(argv[i], "--3dvp")) {
 			d2::align::keep();
 

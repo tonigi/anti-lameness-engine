@@ -2140,12 +2140,9 @@ public:
 
 		delete weights;
 
-		d2::image *defocused = focus::defocus(im, depths);
-
 		delete depths;
-		delete im;
 
-		return defocused;
+		return im;
 	}
 
 	static void  most_visible_generic(std::vector<space::node *> &results, d2::image *weights, 
@@ -2471,11 +2468,7 @@ public:
 
 		renderer->finish_point_rendering();
 
-		const d2::image *defocus_prior = renderer->get_image();
-
-		d2::image *defocused = focus::defocus(defocus_prior, median_depths);
-
-		return defocused;
+		return renderer->get_image();
 	}
 
 	/*

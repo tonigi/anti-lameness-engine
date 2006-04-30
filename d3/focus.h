@@ -26,35 +26,54 @@
 #define __focus_h__
 
 class focus {
+private:
 	struct entry {
-		double start_depth;
-		double end_depth;
-		double focal_distance;
-		double confusion_diameter;
-		double dof_expansion;
+		int type;
+		double distance;
+		double px, py;
+		double focal_range;
 		double vertical_gradient;
 		double horizontal_gradient;
+		double start_depth;
+		double end_depth;
+		double aperture;
+		double sample_count;
 	};
 
 	static unsigned int camera_index;
 	static std::vector<std::vector<entry> > focus_list;
 
 public:
-	static void add_region(unsigned int ci, double sd, double ed, double fd, 
-			double cc, double df, double vt, double ht) {
+
+	struct result {
+		double focal_depth;
+		double aperture;
+		double sample_count;
+	};
+
+	static void add_region(unsigned int type, double distance, double px, double py, 
+			unsigned int ci, double fr, double ht, double vt, double sd, double ed,
+			double ap, double sc) {
 
 		if (focus_list.size() <= ci)
 			focus_list.resize(ci + 1);
 
-		entry e = { sd, ed, fd, cc, df, vt, ht };
+		entry e = { type, distance, px, py, fr, ht, vt, sd, ed, ap, sc };
 		
 		focus_list[ci].push_back(e);
 	}
 
-	static d2::image *defocus(const d2::image *defocus_prior, const d2::image *depth) {
-		assert(0);
+	static result get(const d2::image *depth, int i, int j) {
 
-		return NULL;
+		assert(0);
+		
+		/*
+		 * Trivial implementation
+		 */
+
+		result r = { depth->get_pixel(i, j)[0], 0, 1 };
+
+		return r;
 	}
 
 	static void set_camera(unsigned int c) {
