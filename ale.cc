@@ -570,6 +570,10 @@ int main(int argc, const char *argv[]){
 			double vt = 0;
 			double sd = 0;
 			double ed = inf;
+			double sx = -inf;
+			double ex = inf;
+			double sy = -inf;
+			double ey = inf;
 			double ap = 3;
 			double sc = 3;
 
@@ -587,6 +591,18 @@ int main(int argc, const char *argv[]){
 						bad_arg("--focus");
 				} else if (strncmp(argv[i], "vt=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &vt) != 1)
+						bad_arg("--focus");
+				} else if (strncmp(argv[i], "sy=", 3)) {
+					if(sscanf(argv[i] + 3, "%lf", &sy) != 1)
+						bad_arg("--focus");
+				} else if (strncmp(argv[i], "ey=", 3)) {
+					if(sscanf(argv[i] + 3, "%lf", &ey) != 1)
+						bad_arg("--focus");
+				} else if (strncmp(argv[i], "sx=", 3)) {
+					if(sscanf(argv[i] + 3, "%lf", &sx) != 1)
+						bad_arg("--focus");
+				} else if (strncmp(argv[i], "ex=", 3)) {
+					if(sscanf(argv[i] + 3, "%lf", &ex) != 1)
 						bad_arg("--focus");
 				} else if (strncmp(argv[i], "sd=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &sd) != 1)
@@ -607,7 +623,7 @@ int main(int argc, const char *argv[]){
 					i++;
 			}
 
-			d3::focus::add_region(type, distance, px, py, ci, fr, ht, vt, sd, ed, ap, sc);
+			d3::focus::add_region(type, distance, px, py, ci, fr, ht, vt, sd, ed, sx, ex, sy, ey, ap, sc);
 
 		} else if (!strcmp(argv[i], "--3ddp") || !strcmp(argv[i], "--3dvp")) {
 			d2::align::keep();

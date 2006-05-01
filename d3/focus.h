@@ -36,6 +36,10 @@ private:
 		double horizontal_gradient;
 		double start_depth;
 		double end_depth;
+		double start_x;
+		double end_x;
+		double start_y;
+		double end_y;
 		double aperture;
 		double sample_count;
 	};
@@ -53,12 +57,12 @@ public:
 
 	static void add_region(unsigned int type, double distance, double px, double py, 
 			unsigned int ci, double fr, double ht, double vt, double sd, double ed,
-			double ap, double sc) {
+			double sx, double ex, double sy, double ey, double ap, double sc) {
 
 		if (focus_list.size() <= ci)
 			focus_list.resize(ci + 1);
 
-		entry e = { type, distance, px, py, fr, ht, vt, sd, ed, ap, sc };
+		entry e = { type, distance, px, py, fr, ht, vt, sd, ed, sx, ex, sy, ey, ap, sc };
 		
 		focus_list[ci].push_back(e);
 	}
