@@ -100,7 +100,7 @@ public:
 					 * Distance at frame center.
 					 */
 					focus_origin = d2::point(depth->height() / 2, depth->width() / 2);
-					distance_at_focus_origin = e->distance;
+					distance_at_focus_origin = -e->distance;
 				} else if (e->type == 1) {
 					/*
 					 * Distance at a given point.
@@ -111,8 +111,22 @@ public:
 					assert(0);
 
 				r.focal_distance = distance_at_focus_origin + (d2::point(i, j) - focus_origin)
-					                             .dproduct(d2::point(e->vertical_gradient,
-											e->horizontal_gradient));
+					                             .dproduct(d2::point(-e->vertical_gradient,
+											 -e->horizontal_gradient));
+
+				/*
+				 * Adjust according to focal_range.
+				 */
+
+				ale_pos rel_dist = d - r.focal_distance;
+
+				if (rel_dist < e->focal_range / 2) {
+					r.focal_distance = d;
+				} else if (rel_dist > 0) {
+					r.focal_distance += e->focal_range / 2;
+				} else if (rel_dist < 0) {
+					r.focal_distance -= e->focal_range / 2;
+				}
 
 				r.aperture = e->aperture;
 				r.sample_count = e->sample_count;
