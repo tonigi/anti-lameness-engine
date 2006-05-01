@@ -50,7 +50,7 @@ private:
 public:
 
 	struct result {
-		double focal_depth;
+		double focal_distance;
 		double aperture;
 		double sample_count;
 	};
@@ -69,13 +69,57 @@ public:
 
 	static result get(const d2::image *depth, int i, int j) {
 
-		assert(0);
-		
+		ale_pos d = depth->get_pixel(i, j)[0];
+
+		std::vector<entry> *l = &(focus_list[camera_index]);
+
 		/*
-		 * Trivial implementation
+		 * Initialize default focus result.
 		 */
 
-		result r = { depth->get_pixel(i, j)[0], 0, 1 };
+		result r = { d, 0, 1 };
+
+		/*
+		 * Check for relevant focus regions.
+		 */
+
+		for (unsigned int n = 0; n < l->size(); n++) {
+			entry *e = &((*l)[n]);
+
+			if (i >= e->start_y
+			 && i <= e->end_y
+			 && j >= e->start_x
+			 && j <= e->end_x
+			 && d >= -e->end_depth
+			 && d <= -e->start_depth) {
+				d2::point focus_origin;
+				ale_pos distance_at_focus_origin;
+
+				if (e->type == 0) {
+					/*
+					 * Distance at frame center.
+					 */
+					focus_origin = d2::point(depth->height() / 2, depth->width() / 2);
+					distance_at_focus_origin = e->distance;
+				} else if (e->type == 1) {
+					/*
+					 * Distance at a given point.
+					 */
+					focus_origin = d2::point(e->py, e->px);
+					distance_at_focus_origin = depth->get_bl(d2::point(e->py, e->px))[0];
+				} else 
+					assert(0);
+
+				r.focal_distance = distance_at_focus_origin + (d2::point(i, j) - focus_origin)
+					                             .dproduct(d2::point(e->vertical_gradient,
+											e->horizontal_gradient));
+
+				r.aperture = e->aperture;
+				r.sample_count = e->sample_count;
+
+				break;
+			}
+		}
 
 		return r;
 	}

@@ -120,6 +120,10 @@ public:
 		return sqrt(lengthtosq(p));
 	}
 
+	ale_pos dproduct(point p) const {
+		return (x[0] * p[0] + x[1] * p[1]);
+	}
+
 	ale_pos anglebetw(point p, point q) {
 		/*
 		 * by the law of cosines, the cosine is equal to:
