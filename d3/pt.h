@@ -438,6 +438,14 @@ public:
 		return check_inclusion(volume_min, volume_max, pc, 0);
 	}
 
+	int check_inclusion_unscaled(const space::traverse &st, d2::point pc) const {
+		return check_inclusion_unscaled(st.get_min(), st.get_max(), pc);
+	}
+
+	int check_inclusion_scaled(const space::traverse &st, d2::point pc) const {
+		return check_inclusion_scaled(st.get_min(), st.get_max(), pc);
+	}
+
 
 
 	/*

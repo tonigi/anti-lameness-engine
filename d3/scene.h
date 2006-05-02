@@ -2145,6 +2145,103 @@ public:
 		return im;
 	}
 
+	/*
+	 * This is a _scaled function.  We leave the _scaled implicit because there is currently no
+	 * need for an _unscaled version.
+	 */
+
+	static void space::node *most_visible_pointwise(d2::pixel *weight, space::iterate si, pt _pt, d2::point p) {
+
+		space::node *result = NULL;
+
+		while (!si.done()) {
+			space::traverse st = si.get();
+
+			/*
+			 * Prune certain regions known to be uninteresting.
+			 */
+
+			if (!_pt.check_inclusion_scaled(st, p)) {
+				st.cleave();
+				continue;
+			}
+
+			/*
+			 * XXX: This could be more efficient, perhaps.
+			 */
+
+			if (spatial_info_map.count(st.get_node()) == 0) {
+				si.next();
+				continue;
+			}
+
+			spatial_info sn = spatial_info_map[st.get_node()];
+
+			/*
+			 * Get information on the subspace.
+			 */
+
+			ale_real occupancy = sn.get_occupancy();
+
+			/*
+			 * Preserve current weight in order to check for
+			 * modification by higher-resolution subspaces.
+			 */
+
+			d2::pixel old_weight = *weight;
+
+			/*
+			 * Check for higher resolution subspaces, and
+			 * update the space iterator.
+			 */
+
+			if (st.get_node()->positive
+			 || st.get_node()->negative) {
+
+				/*
+				 * Cleave space for the higher-resolution pass,
+				 * skipping the current space, since we will
+				 * process that afterward.
+				 */
+
+				space::iterate cleaved_space = si.cleave();
+
+				cleaved_space.next();
+
+				most_visible_pointwise(weight, cleaved_space, _pt, p);
+
+			} else {
+				si.next();
+			}
+				
+
+			/*
+			 * Check for higher-resolution updates.
+			 */
+
+			if (old_weight != *weight)
+				continue;
+
+			/*
+			 * Determine the probability of encounter.
+			 */
+
+			ale_pos encounter = (1 - (*weight)[0]) * occupancy;
+
+			/*
+			 * (*weight)[0] stores the cumulative weight; (*weight)[1] stores the maximum.
+			 */
+
+			if (encounter > (*weight)[1]
+			 || result == NULL) {
+				result = st.get_node();
+				(*weight)[1] = encounter;
+			}
+
+			(*weight)[0] += encounter;
+		}
+	}
+
 	static void  most_visible_generic(std::vector<space::node *> &results, d2::image *weights, 
 			space::iterate si, pt _pt, int scaled) {
 
