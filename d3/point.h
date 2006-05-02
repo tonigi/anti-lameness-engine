@@ -104,9 +104,9 @@ public:
 	}
 
 	int finite() const {
-		return (finite(x[0])
-		     && finite(x[1])
-		     && finite(x[2]));
+		return (::finite(x[0])
+		     && ::finite(x[1])
+		     && ::finite(x[2]));
 	}
 
 	static int defined(const point &p) {

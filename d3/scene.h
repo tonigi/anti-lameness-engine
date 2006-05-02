@@ -1747,7 +1747,7 @@ public:
 	 */
 
 	static const void view_recurse(int type, d2::image *im, d2::image *weights, space::iterate si, pt _pt, 
-			int prune = 0, d2::point pl = point(0, 0), d2::point ph = point(0, 0)) {
+			int prune = 0, d2::point pl = d2::point(0, 0), d2::point ph = d2::point(0, 0)) {
 		while (!si.done()) {
 			space::traverse st = si.get();
 
@@ -1756,7 +1756,7 @@ public:
 			 */
 
 			if (prune && !_pt.check_inclusion_scaled(st, pl, ph)) {
-				st.cleave();
+				si.cleave();
 				continue;
 			}
 
@@ -1885,7 +1885,7 @@ public:
 				 */
 
 				d2::pixel encounter = (d2::pixel(1, 1, 1) 
-						     - weights->get_pixel(i, j) 
+						     - weights->get_pixel(i, j)) 
 					            * occupancy;
 
 				/*
@@ -1998,7 +1998,7 @@ public:
 	 * Generate an depth image from a specified view.
 	 */
 	static const d2::image *depth(pt _pt, int n = -1, int prune = 0, 
-			d2::point pl = d2::point(0, 0), d2::prune ph = d2::point(0, 0)) {
+			d2::point pl = d2::point(0, 0), d2::point ph = d2::point(0, 0)) {
 		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
@@ -2207,30 +2207,33 @@ public:
 				 * Generate a new view from the given offset.
 				 */
 
-				point offset = _pt.ew(point(ofx, ofy, 0));
+				point offset = _pt.cw(point(ofx, ofy, 0));
 				pt _pt_new = _pt;
 				for (int d = 0; d < 3; d++)
-					_pt_new.modify_translation(d, offset[d]);
+					_pt_new.e().modify_translation(d, offset[d]);
 
 				/*
 				 * Map the focused point to the new view.
 				 */
 
-				point p = _pt_new.wp_scaled(pw_scaled(point(i, j, _focus.focal_distance));
-				point p_int((int) floor(p[0]), (int) floor(p[1]));
+				point p = _pt_new.wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
+				d2::point p_int((int) floor(p[0]), (int) floor(p[1]));
 
 				/*
 				 * Determine weight and color for the given point.
 				 */
 
-				d2::image *im_point = new image_ale_real(1, 1, 3);
-				d2::image *wt_point = new image_ale_real(1, 1, 3);
+				d2::image *im_point = new d2::image_ale_real(1, 1, 3);
+				d2::image *wt_point = new d2::image_ale_real(1, 1, 3);
 
 				view_recurse(0, im_point, wt_point, space::iterate(_pt_new.origin()),
 					_pt_new, 1, p_int, p_int);
 
 				im->pix(i, j) += im_point->pix(0, 0);
-				weight->pix(i, j) += wt_point->pix(0, 0);
+				weights->pix(i, j) += wt_point->pix(0, 0);
+
+				delete im_point;
+				delete wt_point;
 			}
 
 			if (weights->pix(i, j).min_norm() < encounter_threshold
@@ -2304,7 +2307,7 @@ public:
 		return im;
 	}
 
-	static void space::node *most_visible_pointwise(d2::pixel *weight, space::iterate si, pt _pt, d2::point p) {
+	static space::node *most_visible_pointwise(d2::pixel *weight, space::iterate si, pt _pt, d2::point p) {
 
 		space::node *result = NULL;
 
@@ -2316,7 +2319,7 @@ public:
 			 */
 
 			if (!_pt.check_inclusion_scaled(st, p)) {
-				st.cleave();
+				si.cleave();
 				continue;
 			}
 
@@ -2394,6 +2397,8 @@ public:
 
 			(*weight)[0] += encounter;
 		}
+
+		return result;
 	}
 
 	static void  most_visible_generic(std::vector<space::node *> &results, d2::image *weights, 
@@ -2608,16 +2613,16 @@ public:
 					 * Generate a new view from the given offset.
 					 */
 
-					point offset = _pt.ew(point(ofx, ofy, 0));
+					point offset = _pt.cw(point(ofx, ofy, 0));
 					pt _pt_new = _pt;
 					for (int d = 0; d < 3; d++)
-						_pt_new.modify_translation(d, offset[d]);
+						_pt_new.e().modify_translation(d, offset[d]);
 
 					/*
 					 * Map the focused point to the new view.
 					 */
 
-					point p = _pt_new.wp_scaled(pw_scaled(point(i, j, _focus.focal_distance));
+					point p = _pt_new.wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
 
 					/*
 					 * Check visibility.
@@ -2625,7 +2630,7 @@ public:
 
 					d2::pixel weight(0, 0, 0);
 					space::node *mv = most_visible_pointwise(&weight, space::iterate(_pt.origin()), 
-						_pt_new, p);
+						_pt_new, p.xy());
 
 					if (!std::binary_search(fmv.begin(), fmv.end(), mv))
 						continue;
@@ -2637,7 +2642,7 @@ public:
 					ale_pos radius = diff_median_radius + depth_median_radius;
 					d2::point pl = p.xy() - d2::point(radius, radius);
 					d2::point ph = p.xy() + d2::point(radius, radius);
-					d2::image *local_depth = depth(_pt_new, -1, 1, pl, ph);
+					const d2::image *local_depth = depth(_pt_new, -1, 1, pl, ph);
 
 					/*
 					 * Find depth and diff at this point, check for
@@ -2651,6 +2656,10 @@ public:
 
 					d2::pixel depth = median_depths->pix((int) radius, (int) radius);
 					d2::pixel diff = median_diffs->pix((int) radius, (int) radius);
+
+					delete median_diffs;
+					delete median_depths;
+					delete local_depth;
 
 					if (!depth.finite() || !diff.finite())
 						continue;

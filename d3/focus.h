@@ -67,7 +67,7 @@ public:
 		focus_list[ci].push_back(e);
 	}
 
-	static result int is_trivial() {
+	static int is_trivial() {
 		return (focus_list.size() == 0);
 	}
 

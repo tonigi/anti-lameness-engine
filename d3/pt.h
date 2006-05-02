@@ -449,12 +449,12 @@ public:
 		return check_inclusion_scaled(st.get_min(), st.get_max(), pc_min, pc_max);
 	}
 
-	int check_inclusion scaled(const space::traverse &st, d2::point pc) {
-		check_inclusion_scaled(st, pc, pc);
+	int check_inclusion_scaled(const space::traverse &st, d2::point pc) {
+		return check_inclusion_scaled(st, pc, pc);
 	}
 
 	int check_inclusion_unscaled(const space::traverse &st, d2::point pc) {
-		check_inclusion_unscaled(st, pc, pc);
+		return check_inclusion_unscaled(st, pc, pc);
 	}
 
 	/*
