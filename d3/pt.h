@@ -395,7 +395,10 @@ public:
 	 * is behind the point of projection.
 	 */
 
-	int check_inclusion(point volume_min, point volume_max, d2::point pc, int scaled) const {
+	int check_inclusion(point volume_min, point volume_max, d2::point pc_min, d2::point pc_max, int scaled) const {
+
+		assert(pc_min[0] <= pc_max[0]);
+		assert(pc_min[1] <= pc_max[1]);
 
 		int test[2][2] = {{0, 0}, {0, 0}};
 
@@ -415,9 +418,9 @@ public:
 				return 1;
 
 			for (int d = 0; d < 2; d++) {
-				if (p[d] <= pc[d])
+				if (p[d] <= pc_max[d])
 					test[d][0] = 1;
-				if (p[d] >= pc[d])
+				if (p[d] >= pc_min[d])
 					test[d][1] = 1;
 			}
 		}
@@ -430,23 +433,29 @@ public:
 		return 1;
 	}
 
-	int check_inclusion_scaled(point volume_min, point volume_max, d2::point pc) const {
-		return check_inclusion(volume_min, volume_max, pc, 1);
+	int check_inclusion_scaled(point volume_min, point volume_max, d2::point pc_min, d2::point pc_max) const {
+		return check_inclusion(volume_min, volume_max, pc_min, pc_max, 1);
 	}
 
-	int check_inclusion_unscaled(point volume_min, point volume_max, d2::point pc) const {
-		return check_inclusion(volume_min, volume_max, pc, 0);
+	int check_inclusion_unscaled(point volume_min, point volume_max, d2::point pc_min, d2::point pc_max) const {
+		return check_inclusion(volume_min, volume_max, pc_min, pc_max, 0);
 	}
 
-	int check_inclusion_unscaled(const space::traverse &st, d2::point pc) const {
-		return check_inclusion_unscaled(st.get_min(), st.get_max(), pc);
+	int check_inclusion_unscaled(const space::traverse &st, d2::point pc_min, d2::point pc_max) const {
+		return check_inclusion_unscaled(st.get_min(), st.get_max(), pc_min, pc_max);
 	}
 
-	int check_inclusion_scaled(const space::traverse &st, d2::point pc) const {
-		return check_inclusion_scaled(st.get_min(), st.get_max(), pc);
+	int check_inclusion_scaled(const space::traverse &st, d2::point pc_min, d2::point pc_max) const {
+		return check_inclusion_scaled(st.get_min(), st.get_max(), pc_min, pc_max);
 	}
 
+	int check_inclusion scaled(const space::traverse &st, d2::point pc) {
+		check_inclusion_scaled(st, pc, pc);
+	}
 
+	int check_inclusion_unscaled(const space::traverse &st, d2::point pc) {
+		check_inclusion_unscaled(st, pc, pc);
+	}
 
 	/*
 	 * Get bounding box for projection of a subspace.
@@ -543,7 +552,6 @@ public:
 	point origin() {
 		return cw(point(0, 0, 0));
 	}
-
 };
 
 #endif

@@ -1746,9 +1746,19 @@ public:
 	 * Support function for view() and depth().
 	 */
 
-	static const void view_recurse(int type, d2::image *im, d2::image *weights, space::iterate si, pt _pt) {
+	static const void view_recurse(int type, d2::image *im, d2::image *weights, space::iterate si, pt _pt, 
+			int prune = 0, d2::point pl = point(0, 0), d2::point ph = point(0, 0)) {
 		while (!si.done()) {
 			space::traverse st = si.get();
+
+			/*
+			 * Prune.
+			 */
+
+			if (prune && !_pt.check_inclusion_scaled(st, pl, ph)) {
+				st.cleave();
+				continue;
+			}
 
 			/*
 			 * XXX: This could be more efficient, perhaps.
@@ -1780,6 +1790,31 @@ public:
 
 			point min = bb[0];
 			point max = bb[1];
+
+			if (prune) {
+				if (min[0] > ph[0])
+					continue;
+				if (min[1] > ph[1])
+					continue;
+				if (min[0] < pl[0])
+					min[0] = pl[0];
+				if (min[1] < pl[1])
+					min[1] = pl[1];
+
+				if (max[0] < pl[0])
+					continue;
+				if (max[1] < pl[1])
+					continue;
+				if (max[0] > ph[0])
+					max[0] = ph[0];
+				if (max[1] > ph[1])
+					max[1] = ph[1];
+
+				min[0] -= pl[0];
+				min[1] -= pl[1];
+				max[0] -= pl[0];
+				max[1] -= pl[1];
+			}
 
 			/*
 			 * Data structure to check modification of weights by
@@ -1816,7 +1851,7 @@ public:
 
 				cleaved_space.next();
 
-				view_recurse(type, im, weights, cleaved_space, _pt);
+				view_recurse(type, im, weights, cleaved_space, _pt, prune, pl, ph);
 
 			} else {
 				si.next();
@@ -1849,7 +1884,9 @@ public:
 				 * Determine the probability of encounter.
 				 */
 
-				d2::pixel encounter = (d2::pixel(1, 1, 1) - weights->get_pixel(i, j)) * occupancy;
+				d2::pixel encounter = (d2::pixel(1, 1, 1) 
+						     - weights->get_pixel(i, j) 
+					            * occupancy;
 
 				/*
 				 * Update images.
@@ -1960,8 +1997,11 @@ public:
 	/*
 	 * Generate an depth image from a specified view.
 	 */
-	static const d2::image *depth(pt _pt, int n = -1) {
+	static const d2::image *depth(pt _pt, int n = -1, int prune = 0, 
+			d2::point pl = d2::point(0, 0), d2::prune ph = d2::point(0, 0)) {
 		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
+
+		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
 		if (n >= 0) {
 			assert((int) floor(d2::align::of(n).scaled_height())
@@ -1970,23 +2010,36 @@ public:
 			     == (int) floor(_pt.scaled_width()));
 		}
 
-		d2::image *im1 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-					       (int) floor(_pt.scaled_width()), 3);
+		d2::image *im1, *im2, *im3, *weights;;
 
-		d2::image *im2 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-					       (int) floor(_pt.scaled_width()), 3);
+		if (prune) {
 
-		d2::image *im3 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-					       (int) floor(_pt.scaled_width()), 3);
+			im1 = new d2::image_ale_real((int) floor(ph[0] - pl[0]),
+					(int) floor(ph[1] - pl[1]), 3);
 
-		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
+			im2 = new d2::image_ale_real((int) floor(ph[0] - pl[0]),
+					(int) floor(ph[1] - pl[1]), 3);
 
-		/*
-		 * Use adaptive subspace data.
-		 */
+			im3 = new d2::image_ale_real((int) floor(ph[0] - pl[0]),
+					(int) floor(ph[1] - pl[1]), 3);
 
-		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-						(int) floor(_pt.scaled_width()), 3);
+			weights = new d2::image_ale_real((int) floor(ph[0] - pl[0]),
+					(int) floor(ph[1] - pl[1]), 3);
+
+		} else {
+
+			im1 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+			     	       (int) floor(_pt.scaled_width()), 3);
+
+			im2 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+			     	       (int) floor(_pt.scaled_width()), 3);
+
+			im3 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+			     	       (int) floor(_pt.scaled_width()), 3);
+
+			weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+							(int) floor(_pt.scaled_width()), 3);
+		}
 
 		/*
 		 * Iterate through subspaces.
@@ -1994,16 +2047,23 @@ public:
 
 		space::iterate si(_pt.origin());
 
-		view_recurse(6, im1, weights, si, _pt);
+		view_recurse(6, im1, weights, si, _pt, prune, pl, ph);
 
 		delete weights;
 		weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
 						(int) floor(_pt.scaled_width()), 3);
+		if (prune) {
+			weights = new d2::image_ale_real((int) floor(ph[0] - pl[0]),
+					(int) floor(ph[1] - pl[1]), 3);
+		} else {
+			weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+							(int) floor(_pt.scaled_width()), 3);
+		}
 
 #if 1
-		view_recurse(7, im2, weights, si, _pt);
+		view_recurse(7, im2, weights, si, _pt, prune, pl, ph);
 #else
-		view_recurse(4, im2, weights, si, _pt);
+		view_recurse(4, im2, weights, si, _pt, prune, pl, ph);
 		return im2;
 #endif
 
@@ -2063,7 +2123,7 @@ public:
 			 * Handle exclusions and encounter thresholds
 			 */
 
-			point w = _pt.pw_scaled(point(i, j, depth));
+			point w = _pt.pw_scaled(point(i + pl[0], j + pl[1], depth));
 
 			if (weights->pix(i, j)[0] < encounter_threshold || excluded(w)) {
 				im3->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
@@ -2095,7 +2155,106 @@ public:
 	/*
 	 * Unfiltered function
 	 */
+	static const d2::image *view_nofilter_focus(pt _pt, int n) {
+
+		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
+
+		if (n >= 0) {
+			assert((int) floor(d2::align::of(n).scaled_height())
+			     == (int) floor(_pt.scaled_height()));
+			assert((int) floor(d2::align::of(n).scaled_width())
+			     == (int) floor(_pt.scaled_width()));
+		}
+
+		const d2::image *depths = depth(_pt, n);
+
+		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+					       (int) floor(_pt.scaled_width()), 3);
+
+		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
+
+		/*
+		 * Use adaptive subspace data.
+		 */
+
+		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+						(int) floor(_pt.scaled_width()), 3);
+
+		for (unsigned int i = 0; i < im->height(); i++)
+		for (unsigned int j = 0; j < im->width();  j++) {
+
+			focus::result _focus = focus::get(depths, i, j);
+
+			/*
+			 * Iterate over views for this focus region.
+			 */
+
+			for (unsigned int v = 0; v < _focus.sample_count; v++) {
+
+				/*
+				 * Determine the (x, y) offset for this view.
+				 */
+
+				ale_pos ofx = _focus.aperture;
+				ale_pos ofy = _focus.aperture;
+
+				while (ofx * ofx + ofy * ofy > _focus.aperture * _focus.aperture) {
+					ofx = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
+					ofy = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
+				}
+
+				/*
+				 * Generate a new view from the given offset.
+				 */
+
+				point offset = _pt.ew(point(ofx, ofy, 0));
+				pt _pt_new = _pt;
+				for (int d = 0; d < 3; d++)
+					_pt_new.modify_translation(d, offset[d]);
+
+				/*
+				 * Map the focused point to the new view.
+				 */
+
+				point p = _pt_new.wp_scaled(pw_scaled(point(i, j, _focus.focal_distance));
+				point p_int((int) floor(p[0]), (int) floor(p[1]));
+
+				/*
+				 * Determine weight and color for the given point.
+				 */
+
+				d2::image *im_point = new image_ale_real(1, 1, 3);
+				d2::image *wt_point = new image_ale_real(1, 1, 3);
+
+				view_recurse(0, im_point, wt_point, space::iterate(_pt_new.origin()),
+					_pt_new, 1, p_int, p_int);
+
+				im->pix(i, j) += im_point->pix(0, 0);
+				weight->pix(i, j) += wt_point->pix(0, 0);
+			}
+
+			if (weights->pix(i, j).min_norm() < encounter_threshold
+			 || (d3px_count > 0 && isnan(depths->pix(i, j)[0]))) {
+				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
+				weights->pix(i, j) = d2::pixel::zero();
+			} else if (normalize_weights)
+				im->pix(i, j) /= weights->pix(i, j);
+		}
+
+		delete weights;
+
+		delete depths;
+
+		return im;
+	}
+
+	/*
+	 * Unfiltered function
+	 */
 	static const d2::image *view_nofilter(pt _pt, int n) {
+
+		if (!focus::is_trivial())
+			return view_filter_focus(_pt, n);
 
 		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
@@ -2144,11 +2303,6 @@ public:
 
 		return im;
 	}
-
-	/*
-	 * This is a _scaled function.  We leave the _scaled implicit because there is currently no
-	 * need for an _unscaled version.
-	 */
 
 	static void space::node *most_visible_pointwise(d2::pixel *weight, space::iterate si, pt _pt, d2::point p) {
 
@@ -2391,28 +2545,211 @@ public:
 	/*
 	 * Filtered function.
 	 */
-	static const d2::image *view_filter(pt _pt, int n) {
+	static const d2::image *view_filter_focus(pt _pt, int n) {
+
+		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
 		/*
-		 * Comments on implementation:
-		 *
-		 * Consider that for each pixel in each view, there is a 'most
-		 * visible' (or at least one equally most visible) subspace,
-		 * the subspace that represents most of the weight of the
-		 * pixel.  In determining whether this space is visible from
-		 * another frame, the correct approach is probably to compile a
-		 * list of such subspaces for each frame against which a given
-		 * most-visible subspace for a pixel of interest can be
-		 * compared.  This determines visibility from a given frame.
-		 * Beyond this, the only requirement for mapping points
-		 * frame-to-frame in 2d (for using d2::ssfe, etc.) is to use
-		 * the estimated position and slope of the depth surface to map
-		 * four points from one frame to the other using the given 3D
-		 * transformation -- this defines a 2D projective
-		 * transformation.  (Values for the aforementioned estimates
-		 * are provided below, using the d2::image functions
-		 * fcdiff_median() and medians().)
+		 * Generate a new 2D renderer for filtering.
 		 */
+
+		d2::render::reset();
+		d2::render *renderer = d2::render_parse::get(d3chain_type);
+
+		/*
+		 * Get depth image for focus region determination.
+		 */
+
+		const d2::image *depths = depth(_pt, n);
+
+		unsigned int height = (unsigned int) floor(_pt.scaled_height());
+		unsigned int width = (unsigned int) floor(_pt.scaled_width());
+
+		renderer->init_point_renderer(height, width, 3);
+
+		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
+
+		std::vector<space::node *> mv = most_visible_scaled(_pt);
+
+		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+
+			if (tc_multiplier == 0)
+				al->open(f);
+
+			pt _ptf = al->get(f)->get_t(0);
+
+			std::vector<space::node *> fmv = most_visible_unscaled(_ptf);
+			std::sort(fmv.begin(), fmv.end());
+
+			for (unsigned int i = 0; i < height; i++)
+			for (unsigned int j = 0; j < width; j++) {
+
+				focus::result _focus = focus::get(depths, i, j);
+
+				/*
+				 * Iterate over views for this focus region.
+				 */
+
+				for (unsigned int v = 0; v < _focus.sample_count; v++) {
+
+					/*
+					 * Determine the (x, y) offset for this view.
+					 */
+
+					ale_pos ofx = _focus.aperture;
+					ale_pos ofy = _focus.aperture;
+
+					while (ofx * ofx + ofy * ofy > _focus.aperture * _focus.aperture) {
+						ofx = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
+						ofy = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
+					}
+
+					/*
+					 * Generate a new view from the given offset.
+					 */
+
+					point offset = _pt.ew(point(ofx, ofy, 0));
+					pt _pt_new = _pt;
+					for (int d = 0; d < 3; d++)
+						_pt_new.modify_translation(d, offset[d]);
+
+					/*
+					 * Map the focused point to the new view.
+					 */
+
+					point p = _pt_new.wp_scaled(pw_scaled(point(i, j, _focus.focal_distance));
+
+					/*
+					 * Check visibility.
+					 */
+
+					d2::pixel weight(0, 0, 0);
+					space::node *mv = most_visible_pointwise(&weight, space::iterate(_pt.origin()), 
+						_pt_new, p);
+
+					if (!std::binary_search(fmv.begin(), fmv.end(), mv))
+						continue;
+
+					/*
+					 * Generate local depth image.
+					 */
+
+					ale_pos radius = diff_median_radius + depth_median_radius;
+					d2::point pl = p.xy() - d2::point(radius, radius);
+					d2::point ph = p.xy() + d2::point(radius, radius);
+					d2::image *local_depth = depth(_pt_new, -1, 1, pl, ph);
+
+					/*
+					 * Find depth and diff at this point, check for
+					 * undefined values, and generate projections
+					 * of the image corners on the estimated normal
+					 * surface.
+					 */
+
+					d2::image *median_diffs = local_depth->fcdiff_median((int) floor(diff_median_radius));
+					d2::image *median_depths = local_depth->medians((int) floor(depth_median_radius));
+
+					d2::pixel depth = median_depths->pix((int) radius, (int) radius);
+					d2::pixel diff = median_diffs->pix((int) radius, (int) radius);
+
+					if (!depth.finite() || !diff.finite())
+						continue;
+
+					point local_points[3] = { 
+						point(p[0],     p[1],     depth[0]),
+						point(p[0] + 1, p[1],     depth[0] + diff[0]),
+						point(p[0],     p[1] + 1, depth[0] + diff[1])
+					};
+
+					/*
+					 * Determine transformation at (i, j).  First
+					 * determine transformation from the output to
+					 * the input, then invert this, as we need the
+					 * inverse transformation for filtering.
+					 */
+
+					d2::point remote_points[3] = {
+						_ptf.wp_unscaled(_pt_new.pw_scaled(point(local_points[0]))).xy(),
+						_ptf.wp_unscaled(_pt_new.pw_scaled(point(local_points[1]))).xy(),
+						_ptf.wp_unscaled(_pt_new.pw_scaled(point(local_points[2]))).xy()
+					};
+
+					/*
+					 * Forward matrix for the linear component of the 
+					 * transformation.
+					 */
+
+					d2::point forward_matrix[2] = {
+						remote_points[1] - remote_points[0],
+						remote_points[2] - remote_points[0]
+					};
+
+					/*
+					 * Inverse matrix for the linear component of
+					 * the transformation.  Calculate using the
+					 * determinant D.
+					 */
+
+					ale_pos D = forward_matrix[0][0] * forward_matrix[1][1]
+						  - forward_matrix[0][1] * forward_matrix[1][0];
+
+					if (D == 0)
+						continue;
+
+					d2::point inverse_matrix[2] = {
+						d2::point( forward_matrix[1][1] / D, -forward_matrix[1][0] / D),
+						d2::point(-forward_matrix[0][1] / D,  forward_matrix[0][0] / D)
+					};
+
+					/*
+					 * Determine the projective transformation parameters for the
+					 * inverse transformation.
+					 */
+					
+					const d2::image *imf = d2::image_rw::open(f);
+
+					d2::transformation inv_t = d2::transformation::gpt_identity(imf, 1);
+
+					d2::point local_bounds[4];
+
+					for (int n = 0; n < 4; n++) {
+						d2::point remote_bound = d2::point((n == 1 || n == 2) ? imf->height() : 0,
+										   (n == 2 || n == 3) ? imf->width()  : 0)
+								       - remote_points[0];
+
+						local_bounds[n] = d2::point(i, j)
+								+ d2::point(remote_bound[0] * inverse_matrix[0][0]
+									  + remote_bound[1] * inverse_matrix[1][0],
+									    remote_bound[0] * inverse_matrix[0][1]
+									  + remote_bound[1] * inverse_matrix[1][1]);
+					}
+
+					inv_t.gpt_set(local_bounds);
+
+					d2::image_rw::close(f);
+
+					/*
+					 * Perform render step for the given frame,
+					 * transformation, and point.
+					 */
+
+					renderer->point_render(i, j, f, inv_t);
+				}
+			}
+
+			if (tc_multiplier == 0) 
+				al->close(f);
+		}
+
+		renderer->finish_point_rendering();
+
+		return renderer->get_image();
+	}
+
+	static const d2::image *view_filter(pt _pt, int n) {
+
+		if (!focus::is_trivial())
+			return view_filter_focus(_pt, n);
 
 		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
@@ -2481,7 +2818,7 @@ public:
 				point local_points[3] = { 
 					point(i,     j,     depth[0]),
 				        point(i + 1, j,     depth[0] + diff[0]),
-				        point(i + 1, j + 1, depth[0] + diff[1])
+				        point(i    , j + 1, depth[0] + diff[1])
 				};
 
 				/*

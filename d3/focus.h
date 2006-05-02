@@ -67,6 +67,10 @@ public:
 		focus_list[ci].push_back(e);
 	}
 
+	static result int is_trivial() {
+		return (focus_list.size() == 0);
+	}
+
 	static result get(const d2::image *depth, int i, int j) {
 
 		ale_pos d = depth->get_pixel(i, j)[0];
