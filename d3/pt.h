@@ -389,6 +389,58 @@ public:
 	}
 
 	/*
+	 * Check for inclusion of a point in the bounding box of projected
+	 * vertices.  This function returns non-zero when a point is included,
+	 * when one of the vertices is infinite or undefined, or when a vertex
+	 * is behind the point of projection.
+	 */
+
+	int check_inclusion(point volume_min, point volume_max, d2::point pc, int scaled) const {
+
+		int test[2][2] = {{0, 0}, {0, 0}};
+
+		point wbb[2] = { volume_min, volume_max };
+
+		for (int x = 0; x < 2; x++)
+		for (int y = 0; y < 2; y++)
+		for (int z = 0; z < 2; z++) {
+
+			point p = scaled ? wp_scaled(point(wbb[x][0], wbb[y][1], wbb[z][2]))
+				         : wp_unscaled(point(wbb[x][0], wbb[y][1], wbb[z][2]));
+
+			if (!p.finite())
+				return 1;
+
+			if (p[2] > 0)
+				return 1;
+
+			for (int d = 0; d < 2; d++) {
+				if (p[d] <= pc[d])
+					test[d][0] = 1;
+				if (p[d] >= pc[d])
+					test[d][1] = 1;
+			}
+		}
+
+		for (int d = 0; d < 2; d++)
+		for (int c = 0; c < 2; c++)
+			if (test[d][c] == 0)
+				return 0;
+
+		return 1;
+	}
+
+	int check_inclusion_scaled(point volume_min, point volume_max, d2::point pc) const {
+		return check_inclusion(volume_min, volume_max, pc, 1);
+	}
+
+	int check_inclusion_unscaled(point volume_min, point volume_max, d2::point pc) const {
+		return check_inclusion(volume_min, volume_max, pc, 0);
+	}
+
+
+
+	/*
 	 * Get bounding box for projection of a subspace.
 	 */
 
