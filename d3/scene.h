@@ -2185,6 +2185,9 @@ public:
 
 			focus::result _focus = focus::get(depths, i, j);
 
+			if (!finite(_focus.focal_distance))
+				continue;
+
 			/*
 			 * Iterate over views for this focus region.
 			 */
@@ -2257,7 +2260,7 @@ public:
 	static const d2::image *view_nofilter(pt _pt, int n) {
 
 		if (!focus::is_trivial())
-			return view_filter_focus(_pt, n);
+			return view_nofilter_focus(_pt, n);
 
 		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
@@ -2591,6 +2594,14 @@ public:
 
 				focus::result _focus = focus::get(depths, i, j);
 
+				if (!finite(_focus.focal_distance))
+					continue;
+
+//				fprintf(stderr, "[vff f.fd=%f, f.a=%f, f.sc=%f]\n", 
+//						_focus.focal_distance,
+//						_focus.aperture,
+//						_focus.sample_count);
+
 				/*
 				 * Iterate over views for this focus region.
 				 */
@@ -2623,6 +2634,9 @@ public:
 					 */
 
 					point p = _pt_new.wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
+
+//					fprintf(stderr, "[vff i=%d j=%d p=[%f %f %f]]\n",
+//							i, j, p[0], p[1], p[2]);
 
 					/*
 					 * Check visibility.
