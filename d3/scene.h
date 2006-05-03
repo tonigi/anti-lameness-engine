@@ -2201,19 +2201,23 @@ public:
 				ale_pos ofx = _focus.aperture;
 				ale_pos ofy = _focus.aperture;
 
-				while (ofx * ofx + ofy * ofy > _focus.aperture * _focus.aperture) {
+				while (ofx * ofx + ofy * ofy > _focus.aperture * _focus.aperture / 4) {
 					ofx = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
 					ofy = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
 				}
+
+				// fprintf(stderr, "[vnff ofx=%f ofy=%f]\n", ofx, ofy);
 
 				/*
 				 * Generate a new view from the given offset.
 				 */
 
-				point offset = _pt.cw(point(ofx, ofy, 0));
+				point new_view = _pt.cw(point(ofx, ofy, 0));
 				pt _pt_new = _pt;
 				for (int d = 0; d < 3; d++)
-					_pt_new.e().modify_translation(d, offset[d]);
+					_pt_new.e().set_translation(d, -new_view[d]);
+
+				// fprintf(stderr, "[vnff nv=[%f %f %f]]\n", new_view[0], new_view[1], new_view[2]);
 
 				/*
 				 * Map the focused point to the new view.
@@ -2221,6 +2225,9 @@ public:
 
 				point p = _pt_new.wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
 				d2::point p_int((int) floor(p[0]), (int) floor(p[1]));
+
+//				fprintf(stderr, "[vnff p=[%f %f %f] p_int=[%f %f]]\n",
+//						p[0], p[1], p[2], p_int[0], p_int[1]);
 
 				/*
 				 * Determine weight and color for the given point.
@@ -2615,7 +2622,7 @@ public:
 					ale_pos ofx = _focus.aperture;
 					ale_pos ofy = _focus.aperture;
 
-					while (ofx * ofx + ofy * ofy > _focus.aperture * _focus.aperture) {
+					while (ofx * ofx + ofy * ofy > _focus.aperture * _focus.aperture / 4) {
 						ofx = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
 						ofy = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
 					}
@@ -2624,10 +2631,10 @@ public:
 					 * Generate a new view from the given offset.
 					 */
 
-					point offset = _pt.cw(point(ofx, ofy, 0));
+					point new_view = _pt.cw(point(ofx, ofy, 0));
 					pt _pt_new = _pt;
 					for (int d = 0; d < 3; d++)
-						_pt_new.e().modify_translation(d, offset[d]);
+						_pt_new.e().set_translation(d, -new_view[d]);
 
 					/*
 					 * Map the focused point to the new view.
