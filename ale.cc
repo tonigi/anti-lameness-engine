@@ -580,40 +580,40 @@ int main(int argc, const char *argv[]){
 			int options = 1; 
 
 			while (options && i < argc) {
-				if (strncmp(argv[i], "ci=", 3)) {
+				if (!strncmp(argv[i], "ci=", 3)) {
 					if(sscanf(argv[i] + 3, "%u", &ci) != 1)
 						bad_arg("--focus");
-				} else if (strncmp(argv[i], "fr=", 3)) {
+				} else if (!strncmp(argv[i], "fr=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &fr) != 1)
 						bad_arg("--focus");
-				} else if (strncmp(argv[i], "ht=", 3)) {
+				} else if (!strncmp(argv[i], "ht=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &ht) != 1)
 						bad_arg("--focus");
-				} else if (strncmp(argv[i], "vt=", 3)) {
+				} else if (!strncmp(argv[i], "vt=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &vt) != 1)
 						bad_arg("--focus");
-				} else if (strncmp(argv[i], "sy=", 3)) {
+				} else if (!strncmp(argv[i], "sy=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &sy) != 1)
 						bad_arg("--focus");
-				} else if (strncmp(argv[i], "ey=", 3)) {
+				} else if (!strncmp(argv[i], "ey=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &ey) != 1)
 						bad_arg("--focus");
-				} else if (strncmp(argv[i], "sx=", 3)) {
+				} else if (!strncmp(argv[i], "sx=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &sx) != 1)
 						bad_arg("--focus");
-				} else if (strncmp(argv[i], "ex=", 3)) {
+				} else if (!strncmp(argv[i], "ex=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &ex) != 1)
 						bad_arg("--focus");
-				} else if (strncmp(argv[i], "sd=", 3)) {
+				} else if (!strncmp(argv[i], "sd=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &sd) != 1)
 						bad_arg("--focus");
-				} else if (strncmp(argv[i], "ed=", 3)) {
+				} else if (!strncmp(argv[i], "ed=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &ed) != 1)
 						bad_arg("--focus");
-				} else if (strncmp(argv[i], "ap=", 3)) {
+				} else if (!strncmp(argv[i], "ap=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &ap) != 1)
 						bad_arg("--focus");
-				} else if (strncmp(argv[i], "sc=", 3)) {
+				} else if (!strncmp(argv[i], "sc=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &sc) != 1)
 						bad_arg("--focus");
 				} else
