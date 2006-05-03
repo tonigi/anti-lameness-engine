@@ -124,7 +124,7 @@ public:
 
 				ale_pos rel_dist = d - r.focal_distance;
 
-				if (rel_dist < e->focal_range / 2) {
+				if (fabs(rel_dist) < e->focal_range / 2) {
 					r.focal_distance = d;
 				} else if (rel_dist > 0) {
 					r.focal_distance += e->focal_range / 2;
