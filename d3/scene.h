@@ -1792,19 +1792,18 @@ public:
 			point max = bb[1];
 
 			if (prune) {
-				if (min[0] > ph[0])
+				if (min[0] > ph[0]
+				 || min[1] > ph[1]
+				 || max[0] < pl[0]
+				 || max[1] < pl[1]) {
+					si.next();
 					continue;
-				if (min[1] > ph[1])
-					continue;
+				}
+
 				if (min[0] < pl[0])
 					min[0] = pl[0];
 				if (min[1] < pl[1])
 					min[1] = pl[1];
-
-				if (max[0] < pl[0])
-					continue;
-				if (max[1] < pl[1])
-					continue;
 				if (max[0] > ph[0])
 					max[0] = ph[0];
 				if (max[1] > ph[1])
@@ -2224,10 +2223,6 @@ public:
 				 */
 
 				point p = _pt_new.wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
-				d2::point p_int((int) floor(p[0]), (int) floor(p[1]));
-
-//				fprintf(stderr, "[vnff p=[%f %f %f] p_int=[%f %f]]\n",
-//						p[0], p[1], p[2], p_int[0], p_int[1]);
 
 				/*
 				 * Determine weight and color for the given point.
@@ -2237,7 +2232,7 @@ public:
 				d2::image *wt_point = new d2::image_ale_real(1, 1, 3);
 
 				view_recurse(0, im_point, wt_point, space::iterate(_pt_new.origin()),
-					_pt_new, 1, p_int, p_int);
+					_pt_new, 1, p.xy(), p.xy());
 
 				im->pix(i, j) += im_point->pix(0, 0);
 				weights->pix(i, j) += wt_point->pix(0, 0);
