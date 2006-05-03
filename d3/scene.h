@@ -2965,12 +2965,12 @@ public:
 		use_filter = 0;
 	}
 
-	static void set_filter_type(const char *type) {
-		d3chain_type = type;
-	}
-
 	static void filter() {
 		use_filter = 1;
+	}
+
+	static void set_filter_type(const char *type) {
+		d3chain_type = type;
 	}
 
 	static void set_subspace_traverse() {

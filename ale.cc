@@ -1331,9 +1331,9 @@ int main(int argc, const char *argv[]){
 			unsupported::undocumented("--subspace-traverse");
 			d3::scene::set_subspace_traverse();
 		} else if (!strcmp(argv[i], "--3d-nofilter")) {
-			d3::scene::filter();
-		} else if (!strcmp(argv[i], "--3d-filter")) {
 			d3::scene::nofilter();
+		} else if (!strcmp(argv[i], "--3d-filter")) {
+			d3::scene::filter();
 		} else if (!strcmp(argv[i], "--occ-norm")) {
 			d3::scene::nw();
 		} else if (!strcmp(argv[i], "--occ-nonorm")) {
