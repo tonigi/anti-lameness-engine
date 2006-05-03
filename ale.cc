@@ -579,6 +579,8 @@ int main(int argc, const char *argv[]){
 
 			int options = 1; 
 
+			i++;
+
 			while (options && i < argc) {
 				if (!strncmp(argv[i], "ci=", 3)) {
 					if(sscanf(argv[i] + 3, "%u", &ci) != 1)
@@ -622,6 +624,8 @@ int main(int argc, const char *argv[]){
 				if (options)
 					i++;
 			}
+
+			i--;
 
 			d3::focus::add_region(type, distance, px, py, ci, fr, ht, vt, sd, ed, sx, ex, sy, ey, ap, sc);
 
