@@ -4221,7 +4221,8 @@ public:
 		int use_filler = d3_depth_pt->size() != 0
 				   || d3_output_pt->size() != 0
 				   || output_decimation_preferred > 0
-				   || input_decimation_lower > 0;
+				   || input_decimation_lower > 0
+				   || !focus::is_trivial();
 
 		fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
 
