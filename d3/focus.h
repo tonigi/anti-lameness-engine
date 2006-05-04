@@ -94,8 +94,10 @@ public:
 			 && i <= e->end_y
 			 && j >= e->start_x
 			 && j <= e->end_x
-			 && d >= -e->end_depth
-			 && d <= -e->start_depth) {
+			 && ((d >= -e->end_depth
+			   && d <= -e->start_depth)
+			  || (isnan(d) && (isnan(e->end_depth)
+				        || isnan(e->start_depth))))) {
 				d2::point focus_origin;
 				ale_pos distance_at_focus_origin;
 
