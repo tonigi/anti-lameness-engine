@@ -2013,17 +2013,17 @@ public:
 
 		if (prune) {
 
-			im1 = new d2::image_ale_real((int) floor(ph[0] - pl[0]),
-					(int) floor(ph[1] - pl[1]), 3);
+			im1 = new d2::image_ale_real((int) floor(ph[0] - pl[0]) + 1,
+					(int) floor(ph[1] - pl[1]) + 1, 3);
 
-			im2 = new d2::image_ale_real((int) floor(ph[0] - pl[0]),
-					(int) floor(ph[1] - pl[1]), 3);
+			im2 = new d2::image_ale_real((int) floor(ph[0] - pl[0]) + 1,
+					(int) floor(ph[1] - pl[1]) + 1, 3);
 
-			im3 = new d2::image_ale_real((int) floor(ph[0] - pl[0]),
-					(int) floor(ph[1] - pl[1]), 3);
+			im3 = new d2::image_ale_real((int) floor(ph[0] - pl[0]) + 1,
+					(int) floor(ph[1] - pl[1]) + 1, 3);
 
-			weights = new d2::image_ale_real((int) floor(ph[0] - pl[0]),
-					(int) floor(ph[1] - pl[1]), 3);
+			weights = new d2::image_ale_real((int) floor(ph[0] - pl[0]) + 1,
+					(int) floor(ph[1] - pl[1]) + 1, 3);
 
 		} else {
 
@@ -2049,11 +2049,10 @@ public:
 		view_recurse(6, im1, weights, si, _pt, prune, pl, ph);
 
 		delete weights;
-		weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-						(int) floor(_pt.scaled_width()), 3);
+
 		if (prune) {
-			weights = new d2::image_ale_real((int) floor(ph[0] - pl[0]),
-					(int) floor(ph[1] - pl[1]), 3);
+			weights = new d2::image_ale_real((int) floor(ph[0] - pl[0]) + 1,
+					(int) floor(ph[1] - pl[1]), 3) + 1;
 		} else {
 			weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
 							(int) floor(_pt.scaled_width()), 3);
