@@ -2052,7 +2052,7 @@ public:
 
 		if (prune) {
 			weights = new d2::image_ale_real((int) floor(ph[0] - pl[0]) + 1,
-					(int) floor(ph[1] - pl[1]), 3) + 1;
+					(int) floor(ph[1] - pl[1]) + 1, 3);
 		} else {
 			weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
 							(int) floor(_pt.scaled_width()), 3);
