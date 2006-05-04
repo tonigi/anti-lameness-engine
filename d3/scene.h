@@ -2551,6 +2551,19 @@ public:
 		return results;
 	}
 
+	static const int visibility_search(const std::vector<space::node *> &fmv, space::node *mv) {
+
+		if (mv == NULL)
+			return 0;
+
+		if (std::binary_search(fmv.begin(), fmv.end(), mv))
+			return 1;
+
+		return (visibility_search(fmv, mv->positive)
+		     || visibility_search(fmv, mv->negative));
+
+	}
+
 	/*
 	 * Filtered function.
 	 */
@@ -2647,7 +2660,7 @@ public:
 					space::node *mv = most_visible_pointwise(&weight, space::iterate(_pt.origin()), 
 						_pt_new, p.xy());
 
-					if (!std::binary_search(fmv.begin(), fmv.end(), mv))
+					if (!visibility_search(fmv, mv))
 						continue;
 
 					/*
@@ -2828,7 +2841,7 @@ public:
 
 				int n = i * width + j;
 
-				if (!std::binary_search(fmv.begin(), fmv.end(), mv[n]))
+				if (!visibility_search(fmv, mv[n]))
 					continue;
 
 				/*
