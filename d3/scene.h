@@ -2654,7 +2654,13 @@ public:
 					 * Generate local depth image.
 					 */
 
-					ale_pos radius = diff_median_radius + depth_median_radius;
+					ale_pos radius = 1;
+
+					if (diff_median_radius > radius)
+						radius = diff_median_radius + 1;
+					if (depth_median_radius > radius)
+						radius = depth_median_radius;
+
 					d2::point pl = p.xy() - d2::point(radius, radius);
 					d2::point ph = p.xy() + d2::point(radius, radius);
 					const d2::image *local_depth = depth(_pt_new, -1, 1, pl, ph);
