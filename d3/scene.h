@@ -2369,7 +2369,10 @@ public:
 
 				cleaved_space.next();
 
-				most_visible_pointwise(weight, cleaved_space, _pt, p);
+				space::node *r = most_visible_pointwise(weight, cleaved_space, _pt, p);
+
+				if (old_weight != *weight)
+					result = r;
 
 			} else {
 				si.next();
