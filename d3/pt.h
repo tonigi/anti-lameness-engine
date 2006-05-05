@@ -393,16 +393,16 @@ public:
 	 * vertices.  This function returns non-zero when a point is included,
 	 * when one of the vertices is infinite or undefined, or when a vertex
 	 * is behind the point of projection.
+	 * 
+	 * WBB is assumed to contain {volume_min, volume_max}.
 	 */
 
-	int check_inclusion(point volume_min, point volume_max, d2::point pc_min, d2::point pc_max, int scaled) const {
+	int check_inclusion(const point *wbb, const d2::point &pc_min, const d2::point &pc_max, int scaled) const {
 
 		assert(pc_min[0] <= pc_max[0]);
 		assert(pc_min[1] <= pc_max[1]);
 
 		int test[2][2] = {{0, 0}, {0, 0}};
-
-		point wbb[2] = { volume_min, volume_max };
 
 		for (int x = 0; x < 2; x++)
 		for (int y = 0; y < 2; y++)
@@ -433,28 +433,16 @@ public:
 		return 1;
 	}
 
-	int check_inclusion_scaled(point volume_min, point volume_max, d2::point pc_min, d2::point pc_max) const {
-		return check_inclusion(volume_min, volume_max, pc_min, pc_max, 1);
-	}
-
-	int check_inclusion_unscaled(point volume_min, point volume_max, d2::point pc_min, d2::point pc_max) const {
-		return check_inclusion(volume_min, volume_max, pc_min, pc_max, 0);
-	}
-
-	int check_inclusion_unscaled(const space::traverse &st, d2::point pc_min, d2::point pc_max) const {
-		return check_inclusion_unscaled(st.get_min(), st.get_max(), pc_min, pc_max);
+	int check_inclusion_scaled(const point *wbb, d2::point pc_min, d2::point pc_max) const {
+		return check_inclusion(wbb, pc_min, pc_max, 1);
 	}
 
 	int check_inclusion_scaled(const space::traverse &st, d2::point pc_min, d2::point pc_max) const {
-		return check_inclusion_scaled(st.get_min(), st.get_max(), pc_min, pc_max);
+		return check_inclusion_scaled(st.get_bounds(), pc_min, pc_max);
 	}
 
 	int check_inclusion_scaled(const space::traverse &st, d2::point pc) {
 		return check_inclusion_scaled(st, pc, pc);
-	}
-
-	int check_inclusion_unscaled(const space::traverse &st, d2::point pc) {
-		return check_inclusion_unscaled(st, pc, pc);
 	}
 
 	/*

@@ -61,8 +61,8 @@ public:
 
 	class traverse {
 		node *current;
-		point min, max;
-
+		point bounds[2];
+	
 	public:
 
 		static int get_next_split(point min, point max) {
@@ -131,11 +131,11 @@ public:
 		}
 
 		int get_next_split() {
-			return get_next_split(min, max);
+			return get_next_split(bounds[0], bounds[1]);
 		}
 
 		ale_pos split_coordinate(int d) {
-			return split_coordinate(d, min, max);
+			return split_coordinate(d, bounds[0], bounds[1]);
 		}
 
 		ale_pos split_coordinate() {
@@ -148,8 +148,8 @@ public:
 			traverse result;
 
 			result.current = root_node;
-			result.min = point::neginf();
-			result.max = point::posinf();
+			result.bounds[0] = point::neginf();
+			result.bounds[1] = point::posinf();
 
 			assert(result.current);
 
@@ -159,6 +159,9 @@ public:
 		int precision_wall() {
 			int next_split = get_next_split();
 			ale_pos split_point = split_coordinate(next_split);
+
+			point &min = bounds[0];
+			point &max = bounds[1];
 
 			assert(split_point <= max[next_split]);
 			assert(split_point >= min[next_split]);
@@ -182,10 +185,10 @@ public:
 			traverse result;
 
 			result.current = current->positive;
-			result.min = min;
-			result.max = max;
+			result.bounds[0] = bounds[0];
+			result.bounds[1] = bounds[1];
 
-			result.min[next_split] = split_coordinate(next_split);
+			result.bounds[0][next_split] = split_coordinate(next_split);
 
 			assert(result.current);
 
@@ -205,10 +208,10 @@ public:
 			traverse result;
 
 			result.current = current->negative;
-			result.min = min;
-			result.max = max;
+			result.bounds[0] = bounds[0];
+			result.bounds[1] = bounds[1];
 
-			result.max[next_split] = split_coordinate(next_split);
+			result.bounds[1][next_split] = split_coordinate(next_split);
 
 			assert(result.current);
 
@@ -216,23 +219,27 @@ public:
 		}
 
 		point get_min() const {
-			return min;
+			return bounds[0];
 		}
 
 		point get_max() const {
-			return max;
+			return bounds[1];
+		}
+
+		const point *get_bounds() const {
+			return bounds;
 		}
 
 		point get_centroid() const {
-			return (max + min) / 2;
+			return (bounds[0] + bounds[1]) / 2;
 		}
 
 		int includes(point p) {
 
 			for (int d = 0; d < 3; d++) {
-				if (p[d] > max[d])
+				if (p[d] > bounds[1][d])
 					return 0;
-				if (p[d] < min[d])
+				if (p[d] < bounds[0][d])
 					return 0;
 				if (isnan(p[d]))
 					return 0;
