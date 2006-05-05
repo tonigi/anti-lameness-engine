@@ -1447,7 +1447,20 @@ class scene {
 	 * of depth.
 	 */
 
+#if !defined(HASH_MAP_GNU) && !defined(HASH_MAP_STD)
 	typedef std::map<struct space::node *, spatial_info> spatial_info_map_t;
+#elif defined(HASH_MAP_GNU)
+        struct node_hash
+        {
+                size_t operator()(struct space::node *n) const
+                {
+                        return __gnu_cxx::hash<long>()((long) n);
+                }
+        };
+	typedef __gnu_cxx::hash_map<struct space::node *, spatial_info, node_hash > spatial_info_map_t;
+#elif defined(HASH_MAP_STD)
+	typedef std::hash_map<struct space::node *, spatial_info> spatial_info_map_t;
+#endif
 
 	static spatial_info_map_t spatial_info_map;
 

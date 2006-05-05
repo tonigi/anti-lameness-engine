@@ -22,6 +22,11 @@
  * Top-level header file for classes treating scenes as three-dimensional data.
  */
 
+
+#if defined(HASH_MAP_GNU) || defined(HASH_MAP_STD)
+#include <ext/hash_map>
+#endif
+
 #include <map>
 #include <set>
 #include <iterator>
