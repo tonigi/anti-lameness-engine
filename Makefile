@@ -29,7 +29,7 @@ IOCTL=0
 COLORS=SINGLE
 COORDINATES=SINGLE
 OPTIMIZATIONS=1
-HASH_MAP=GNU
+HASH_MAP=NONE
 
 #
 # Variable that is false when ImageMagick is not being used
