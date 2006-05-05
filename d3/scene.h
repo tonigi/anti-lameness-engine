@@ -2349,7 +2349,7 @@ public:
 			 * Prune certain regions known to be uninteresting.
 			 */
 
-			if (if (excluded(st) || !_pt.check_inclusion_scaled(st, p)) {
+			if (excluded(st) || !_pt.check_inclusion_scaled(st, p)) {
 				si.cleave();
 				continue;
 			}
