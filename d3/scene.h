@@ -2371,7 +2371,7 @@ public:
 
 				space::node *r = most_visible_pointwise(weight, cleaved_space, _pt, p);
 
-				if (old_weight != *weight)
+				if (old_weight[1] != (*weight)[1])
 					result = r;
 
 			} else {
