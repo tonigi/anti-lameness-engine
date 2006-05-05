@@ -1756,13 +1756,23 @@ public:
 	}
 
 	/*
-	 * Support function for view() and depth().
+	 * Support function for view() and depth().  This function
+	 * always performs exclusion.
 	 */
 
 	static const void view_recurse(int type, d2::image *im, d2::image *weights, space::iterate si, pt _pt, 
 			int prune = 0, d2::point pl = d2::point(0, 0), d2::point ph = d2::point(0, 0)) {
 		while (!si.done()) {
 			space::traverse st = si.get();
+
+			/*
+			 * Remove excluded regions.
+			 */
+
+			if (excluded(st)) {
+				si.cleave();
+				continue;
+			}
 
 			/*
 			 * Prune.
@@ -2131,12 +2141,12 @@ public:
 			ale_real depth = depth_val / depth_weight;
 
 			/*
-			 * Handle exclusions and encounter thresholds
+			 * Handle encounter thresholds
 			 */
 
 			point w = _pt.pw_scaled(point(i + pl[0], j + pl[1], depth));
 
-			if (weights->pix(i, j)[0] < encounter_threshold || excluded(w)) {
+			if (weights->pix(i, j)[0] < encounter_threshold) {
 				im3->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
 			} else {
 				im3->pix(i, j) = d2::pixel(1, 1, 1) * depth;
@@ -2324,6 +2334,10 @@ public:
 		return im;
 	}
 
+	/*
+	 * This function always performs exclusion.
+	 */
+
 	static space::node *most_visible_pointwise(d2::pixel *weight, space::iterate si, pt _pt, d2::point p) {
 
 		space::node *result = NULL;
@@ -2335,7 +2349,7 @@ public:
 			 * Prune certain regions known to be uninteresting.
 			 */
 
-			if (!_pt.check_inclusion_scaled(st, p)) {
+			if (if (excluded(st) || !_pt.check_inclusion_scaled(st, p)) {
 				si.cleave();
 				continue;
 			}
@@ -2420,6 +2434,9 @@ public:
 		return result;
 	}
 
+	/*
+	 * This function performs exclusion iff SCALED is true.
+	 */
 	static void  most_visible_generic(std::vector<space::node *> &results, d2::image *weights, 
 			space::iterate si, pt _pt, int scaled) {
 
@@ -2427,6 +2444,11 @@ public:
 
 		while (!si.done()) {
 			space::traverse st = si.get();
+
+			if (scaled && excluded(st)) {
+				si.cleave();
+				continue;
+			}
 
 			/*
 			 * XXX: This could be more efficient, perhaps.
@@ -3035,6 +3057,24 @@ public:
 			 && p[1] <= region[3]
 			 && p[2] >= region[4]
 			 && p[2] <= region[5])
+				return 1;
+		}
+
+		return 0;
+	}
+
+	/*
+	 * This function returns true if a space is completely excluded.
+	 */
+	static int excluded(const space::traverse &st) {
+		for (int n = 0; n < d3px_count; n++) {
+			double *region = d3px_parameters + (6 * n);
+			if (st.get_min()[0] >= region[0]
+			 && st.get_max()[0] <= region[1]
+			 && st.get_min()[1] >= region[2]
+			 && st.get_max()[1] <= region[3]
+			 && st.get_min()[2] >= region[4]
+			 && st.get_max()[2] <= region[5])
 				return 1;
 		}
 
