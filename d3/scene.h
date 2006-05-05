@@ -2409,8 +2409,7 @@ public:
 			 * (*weight)[0] stores the cumulative weight; (*weight)[1] stores the maximum.
 			 */
 
-			if (encounter > (*weight)[1]
-			 || result == NULL) {
+			if (encounter > (*weight)[1]) {
 				result = st.get_node();
 				(*weight)[1] = encounter;
 			}
