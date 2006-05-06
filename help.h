@@ -614,6 +614,9 @@ public:
 			"                        ey=<ey>  end y coordinate         [default Inf]\n"
 			"                        sd=<sd>  start depth                [default 0]\n"
 			"                        ed=<ed>  end depth                [default Inf]\n"
+			"                        fs=<fs>  focal statistic, one of:\n"
+			"                            mean      mean of views           [default]\n"
+			"                            median    median of views\n"
 			"\n"                                 
 			BETWEEN_SECTIONS
 			"Camera parameters:\n"

@@ -576,6 +576,7 @@ int main(int argc, const char *argv[]){
 			double ey = inf;
 			double ap = 3;
 			double sc = 3;
+			unsigned int fs = 0;
 
 			int options = 1; 
 
@@ -618,6 +619,13 @@ int main(int argc, const char *argv[]){
 				} else if (!strncmp(argv[i], "sc=", 3)) {
 					if(sscanf(argv[i] + 3, "%lf", &sc) != 1)
 						bad_arg("--focus");
+				} else if (!strncmp(argv[i], "fs=", 3)) {
+					if (!strcmp(argv[i], "fs=mean")) {
+						fs = 0;
+					} else if (!strcmp(argv[i], "fs=median")) {
+						fs = 1;
+					} else 
+						bad_arg("--focus");
 				} else
 					options = 0;
 
@@ -627,7 +635,7 @@ int main(int argc, const char *argv[]){
 
 			i--;
 
-			d3::focus::add_region(type, distance, px, py, ci, fr, ht, vt, sd, ed, sx, ex, sy, ey, ap, sc);
+			d3::focus::add_region(type, distance, px, py, ci, fr, ht, vt, sd, ed, sx, ex, sy, ey, ap, sc, fs);
 
 		} else if (!strcmp(argv[i], "--3ddp") || !strcmp(argv[i], "--3dvp")) {
 			d2::align::keep();

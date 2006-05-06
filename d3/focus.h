@@ -42,8 +42,10 @@ private:
 		double end_y;
 		double aperture;
 		double sample_count;
+		unsigned int focal_statistic;
 	};
 
+	static unsigned int _uses_medians;
 	static unsigned int camera_index;
 	static std::vector<std::vector<entry> > focus_list;
 
@@ -53,22 +55,30 @@ public:
 		double focal_distance;
 		double aperture;
 		double sample_count;
+		unsigned int statistic;
 	};
 
 	static void add_region(unsigned int type, double distance, double px, double py, 
 			unsigned int ci, double fr, double ht, double vt, double sd, double ed,
-			double sx, double ex, double sy, double ey, double ap, double sc) {
+			double sx, double ex, double sy, double ey, double ap, double sc, unsigned int fs) {
+
+		if (fs)
+			_uses_medians = 1;
 
 		if (focus_list.size() <= ci)
 			focus_list.resize(ci + 1);
 
-		entry e = { type, distance, px, py, fr, ht, vt, sd, ed, sx, ex, sy, ey, ap, sc };
+		entry e = { type, distance, px, py, fr, ht, vt, sd, ed, sx, ex, sy, ey, ap, sc, fs };
 		
 		focus_list[ci].push_back(e);
 	}
 
 	static int is_trivial() {
 		return (focus_list.size() == 0);
+	}
+
+	static int uses_medians() {
+		return _uses_medians;
 	}
 
 	static result get(const d2::image *depth, int i, int j) {
@@ -136,6 +146,7 @@ public:
 
 				r.aperture = e->aperture;
 				r.sample_count = e->sample_count;
+				r.statistic = e->focal_statistic;
 
 				break;
 			}
