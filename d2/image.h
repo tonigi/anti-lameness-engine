@@ -475,8 +475,8 @@ public:
 
 			} else if (i + 1 < height()
 			        && i > 0
-			        && finite(chan(i + 1, j, 0)
-			        && finite(chan(i - 1, j, 0)) {
+			        && finite(chan(i + 1, j, 0))
+			        && finite(chan(i - 1, j, 0))) {
 
 				is->chan(i, j, 0) = ((chan(i, j, 0) - chan(i - 1, j, 0))
 						   + (chan(i + 1, j, 0) - chan(i, j, 0))) / 2;
@@ -503,19 +503,17 @@ public:
 
 			} else if (j + 1 < width()
 			        && j > 0
-			        && finite(chan(i, j + 1, 0)
-			        && finite(chan(i, j - 1, 0)) {
+			        && finite(chan(i, j + 1, 0))
+			        && finite(chan(i, j - 1, 0))) {
 
 				is->chan(i, j, 1) = ((chan(i, j, 0) - chan(i, j - 1, 0))
 						   + (chan(i, j + 1, 0) - chan(i, j, 0))) / 2;
 
-			} else if (j + 1 < width()
-				&& finite(chan(i, j + 1, 0))) {
+			} else if (j + 1 < width() && finite(chan(i, j + 1, 0))) {
 
 				is->chan(i, j, 1) = chan(i, j + 1, 0) - chan(i, j, 0);
 
-			} else if (j > 0
-				&& finite(chan(i, j - 1, 0))) {
+			} else if (j > 0 && finite(chan(i, j - 1, 0))) {
 				 
 				is->chan(i, j, 1) = chan(i, j, 0) - chan(i, j - 1, 0);
 
