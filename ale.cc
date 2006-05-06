@@ -575,7 +575,7 @@ int main(int argc, const char *argv[]){
 			double sy = -inf;
 			double ey = inf;
 			double ap = 3;
-			double sc = 3;
+			unsigned int sc = 3;
 			unsigned int fs = 0;
 
 			int options = 1; 
@@ -617,7 +617,7 @@ int main(int argc, const char *argv[]){
 					if(sscanf(argv[i] + 3, "%lf", &ap) != 1)
 						bad_arg("--focus");
 				} else if (!strncmp(argv[i], "sc=", 3)) {
-					if(sscanf(argv[i] + 3, "%lf", &sc) != 1)
+					if(sscanf(argv[i] + 3, "%u", &sc) != 1)
 						bad_arg("--focus");
 				} else if (!strncmp(argv[i], "fs=", 3)) {
 					if (!strcmp(argv[i], "fs=mean")) {

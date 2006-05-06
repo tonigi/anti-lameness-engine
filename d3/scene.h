@@ -2202,9 +2202,6 @@ public:
 		 * Use adaptive subspace data.
 		 */
 
-		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-						(int) floor(_pt.scaled_width()), 3);
-
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
 
@@ -2212,6 +2209,17 @@ public:
 
 			if (!finite(_focus.focal_distance))
 				continue;
+
+			/*
+			 * Data structures for calculating focal statistics.
+			 */
+			
+			d2::pixel color, weight;
+			d2::image_weighted_median *iwm = NULL;
+
+			if (_focus.statistic == 1) {
+				iwm = new d2::image_weighted_median(1, 1, 3, _focus.sample_count);
+			}
 
 			/*
 			 * Iterate over views for this focus region.
@@ -2260,22 +2268,32 @@ public:
 				view_recurse(0, im_point, wt_point, space::iterate(_pt_new.origin()),
 					_pt_new, 1, p.xy(), p.xy());
 
-				im->pix(i, j) += im_point->pix(0, 0);
-				weights->pix(i, j) += wt_point->pix(0, 0);
+				if (_focus.statistic == 0) {
+					color += im_point->pix(0, 0);
+					weight += im_point->pix(0, 0);
+				} else if (_focus.statistic == 1) {
+					iwm->accumulate(0, 0, v, color, weight);
+				} else
+					assert(0);
 
 				delete im_point;
 				delete wt_point;
 			}
 
-			if (weights->pix(i, j).min_norm() < encounter_threshold
+			if (_focus.statistic == 1) {
+				weight = iwm->get_weights()->get_pixel(0, 0);
+				color = iwm->get_pixel(0, 0);
+				delete iwm;
+			}
+
+			if (weight.min_norm() < encounter_threshold
 			 || (d3px_count > 0 && isnan(depths->pix(i, j)[0]))) {
 				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
-				weights->pix(i, j) = d2::pixel::zero();
 			} else if (normalize_weights)
-				im->pix(i, j) /= weights->pix(i, j);
+				im->pix(i, j) = color / weight;
+			else
+				im->pix(i, j) = color;
 		}
-
-		delete weights;
 
 		delete depths;
 

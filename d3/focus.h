@@ -41,7 +41,7 @@ private:
 		double start_y;
 		double end_y;
 		double aperture;
-		double sample_count;
+		unsigned int sample_count;
 		unsigned int focal_statistic;
 	};
 
@@ -54,13 +54,13 @@ public:
 	struct result {
 		double focal_distance;
 		double aperture;
-		double sample_count;
+		unsigned int sample_count;
 		unsigned int statistic;
 	};
 
 	static void add_region(unsigned int type, double distance, double px, double py, 
 			unsigned int ci, double fr, double ht, double vt, double sd, double ed,
-			double sx, double ex, double sy, double ey, double ap, double sc, unsigned int fs) {
+			double sx, double ex, double sy, double ey, double ap, unsigned int sc, unsigned int fs) {
 
 		if (fs)
 			_uses_medians = 1;

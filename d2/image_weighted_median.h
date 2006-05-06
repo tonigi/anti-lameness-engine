@@ -68,8 +68,8 @@ public:
 		} else
 			assert(0);
 
-		colors  = (image_ale_real **) malloc(capacity * sizeof(image_ale_real *));
-		weights = (image_ale_real **) malloc(capacity * sizeof(image_ale_real *));
+		colors  = (image_ale_real **) malloc(this->capacity * sizeof(image_ale_real *));
+		weights = (image_ale_real **) malloc(this->capacity * sizeof(image_ale_real *));
 
 		assert(colors);
 		assert(weights);
@@ -79,7 +79,7 @@ public:
 			exit(1);
 		}
 
-		for (unsigned int f = 0; f < capacity; f++) {
+		for (unsigned int f = 0; f < this->capacity; f++) {
 			colors[f] = new image_ale_real(dimy, dimx, depth);
 			weights[f] = new image_ale_real(dimy, dimx, depth);
 
