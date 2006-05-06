@@ -2286,8 +2286,7 @@ public:
 				delete iwm;
 			}
 
-			if (weight.min_norm() < encounter_threshold
-			 || (d3px_count > 0 && isnan(depths->pix(i, j)[0]))) {
+			if (weight.min_norm() < encounter_threshold) {
 				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
 			} else if (normalize_weights)
 				im->pix(i, j) = color / weight;
