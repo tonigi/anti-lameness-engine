@@ -319,15 +319,12 @@ public:
 	}
 	
 	virtual void point_render(unsigned int i, unsigned int j, unsigned int f, transformation t) {
+		const image *im = d2::image_rw::get_open(f);
 
-		const image *im = image_rw::open(f);
 		const filter::ssfe *_ssfe = inv->ssfe();
 
 		_ssfe->set_parameters(t, im, accum_image->offset());
 		_merge_pixel(f, im, t, i, j, _ssfe);
-
-		image_rw::close(f);
-
 	}
 
 	virtual void finish_point_rendering() {

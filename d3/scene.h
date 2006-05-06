@@ -850,6 +850,10 @@ class scene {
 			images.resize(d2::image_rw::count(), NULL);
 		}
 
+		unsigned int count() {
+			return d2::image_rw::count();
+		}
+
 		void open(unsigned int f) {
 			assert (images[f] == NULL);
 
@@ -2628,118 +2632,139 @@ public:
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
-		std::vector<space::node *> mv = most_visible_scaled(_pt);
+		/*
+		 * Prepare view data.
+		 */
 
-		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+		if (tc_multiplier == 0)
+			al->open_all();
 
-			if (tc_multiplier == 0)
-				al->open(f);
+		pt *_ptf = new pt[al->count()];
+		std::vector<space::node *> *fmv = new std::vector<space::node *>[al->count()];
 
-			pt _ptf = al->get(f)->get_t(0);
+		for (unsigned int f = 0; f < al->count(); f++) {
+			_ptf[f] = al->get(f)->get_t(0);
+			fmv[f] = most_visible_unscaled(_ptf[f]);
+			std::sort(fmv[f].begin(), fmv[f].end());
+		}
 
-			std::vector<space::node *> fmv = most_visible_unscaled(_ptf);
-			std::sort(fmv.begin(), fmv.end());
+		if (tc_multiplier == 0)
+			al->close_all();
 
-			for (unsigned int i = 0; i < height; i++)
-			for (unsigned int j = 0; j < width; j++) {
+		/*
+		 * Open all files for rendering.
+		 */
 
-				focus::result _focus = focus::get(depths, i, j);
+		d2::image_rw::open_all();
 
-				if (!finite(_focus.focal_distance))
-					continue;
+		/*
+		 * Iterate over output points.
+		 */
+		
+		for (unsigned int i = 0; i < height; i++)
+		for (unsigned int j = 0; j < width; j++) {
 
-//				fprintf(stderr, "[vff f.fd=%f, f.a=%f, f.sc=%f]\n", 
-//						_focus.focal_distance,
-//						_focus.aperture,
-//						_focus.sample_count);
+			focus::result _focus = focus::get(depths, i, j);
+
+			if (!finite(_focus.focal_distance))
+				continue;
+
+			/*
+			 * Iterate over views for this focus region.
+			 */
+
+			for (unsigned int v = 0; v < _focus.sample_count; v++) {
 
 				/*
-				 * Iterate over views for this focus region.
+				 * Determine the (x, y) offset for this view.
 				 */
 
-				for (unsigned int v = 0; v < _focus.sample_count; v++) {
+				ale_pos ofx = _focus.aperture;
+				ale_pos ofy = _focus.aperture;
 
-					/*
-					 * Determine the (x, y) offset for this view.
-					 */
+				while (ofx * ofx + ofy * ofy > _focus.aperture * _focus.aperture / 4) {
+					ofx = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
+					ofy = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
+				}
 
-					ale_pos ofx = _focus.aperture;
-					ale_pos ofy = _focus.aperture;
+				/*
+				 * Generate a new view from the given offset.
+				 */
 
-					while (ofx * ofx + ofy * ofy > _focus.aperture * _focus.aperture / 4) {
-						ofx = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
-						ofy = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
-					}
+				point new_view = _pt.cw(point(ofx, ofy, 0));
+				pt _pt_new = _pt;
+				for (int d = 0; d < 3; d++)
+					_pt_new.e().set_translation(d, -new_view[d]);
 
-					/*
-					 * Generate a new view from the given offset.
-					 */
+				/*
+				 * Map the focused point to the new view.
+				 */
 
-					point new_view = _pt.cw(point(ofx, ofy, 0));
-					pt _pt_new = _pt;
-					for (int d = 0; d < 3; d++)
-						_pt_new.e().set_translation(d, -new_view[d]);
-
-					/*
-					 * Map the focused point to the new view.
-					 */
-
-					point p = _pt_new.wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
+				point p = _pt_new.wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
 
 //					fprintf(stderr, "[vff i=%d j=%d p=[%f %f %f]]\n",
 //							i, j, p[0], p[1], p[2]);
 
-					/*
-					 * Check visibility.
-					 */
+				/*
+				 * Determine the most-visible subspace.
+				 */
 
-					d2::pixel weight(0, 0, 0);
-					space::node *mv = most_visible_pointwise(&weight, space::iterate(_pt.origin()), 
-						_pt_new, p.xy());
+				d2::pixel weight(0, 0, 0);
+				space::node *mv = most_visible_pointwise(&weight, space::iterate(_pt.origin()), 
+					_pt_new, p.xy());
 
-					if (!visibility_search(fmv, mv))
+				if (mv == NULL)
+					continue;
+
+				/*
+				 * Generate a local depth image of required radius.
+				 */
+
+				ale_pos radius = 1;
+
+				if (diff_median_radius + 1 > radius)
+					radius = diff_median_radius + 1;
+				if (depth_median_radius > radius)
+					radius = depth_median_radius;
+
+				d2::point pl = p.xy() - d2::point(radius, radius);
+				d2::point ph = p.xy() + d2::point(radius, radius);
+				const d2::image *local_depth = depth(_pt_new, -1, 1, pl, ph);
+
+				/*
+				 * Find depth and diff at this point, check for
+				 * undefined values, and generate projections
+				 * of the image corners on the estimated normal
+				 * surface.
+				 */
+
+				d2::image *median_diffs = local_depth->fcdiff_median((int) floor(diff_median_radius));
+				d2::image *median_depths = local_depth->medians((int) floor(depth_median_radius));
+
+				d2::pixel depth = median_depths->pix((int) radius, (int) radius);
+				d2::pixel diff = median_diffs->pix((int) radius, (int) radius);
+
+				delete median_diffs;
+				delete median_depths;
+				delete local_depth;
+
+				if (!depth.finite() || !diff.finite())
+					continue;
+
+				point local_points[3] = { 
+					point(p[0],     p[1],     depth[0]),
+					point(p[0] + 1, p[1],     depth[0] + diff[0]),
+					point(p[0],     p[1] + 1, depth[0] + diff[1])
+				};
+
+				/*
+				 * Iterate over files.
+				 */
+
+				for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
+
+					if (!visibility_search(fmv[f], mv))
 						continue;
-
-					/*
-					 * Generate local depth image.
-					 */
-
-					ale_pos radius = 1;
-
-					if (diff_median_radius > radius)
-						radius = diff_median_radius + 1;
-					if (depth_median_radius > radius)
-						radius = depth_median_radius;
-
-					d2::point pl = p.xy() - d2::point(radius, radius);
-					d2::point ph = p.xy() + d2::point(radius, radius);
-					const d2::image *local_depth = depth(_pt_new, -1, 1, pl, ph);
-
-					/*
-					 * Find depth and diff at this point, check for
-					 * undefined values, and generate projections
-					 * of the image corners on the estimated normal
-					 * surface.
-					 */
-
-					d2::image *median_diffs = local_depth->fcdiff_median((int) floor(diff_median_radius));
-					d2::image *median_depths = local_depth->medians((int) floor(depth_median_radius));
-
-					d2::pixel depth = median_depths->pix((int) radius, (int) radius);
-					d2::pixel diff = median_diffs->pix((int) radius, (int) radius);
-
-					delete median_diffs;
-					delete median_depths;
-					delete local_depth;
-
-					if (!depth.finite() || !diff.finite())
-						continue;
-
-					point local_points[3] = { 
-						point(p[0],     p[1],     depth[0]),
-						point(p[0] + 1, p[1],     depth[0] + diff[0]),
-						point(p[0],     p[1] + 1, depth[0] + diff[1])
-					};
 
 					/*
 					 * Determine transformation at (i, j).  First
@@ -2749,9 +2774,9 @@ public:
 					 */
 
 					d2::point remote_points[3] = {
-						_ptf.wp_unscaled(_pt_new.pw_scaled(point(local_points[0]))).xy(),
-						_ptf.wp_unscaled(_pt_new.pw_scaled(point(local_points[1]))).xy(),
-						_ptf.wp_unscaled(_pt_new.pw_scaled(point(local_points[2]))).xy()
+						_ptf[f].wp_unscaled(_pt_new.pw_scaled(point(local_points[0]))).xy(),
+						_ptf[f].wp_unscaled(_pt_new.pw_scaled(point(local_points[1]))).xy(),
+						_ptf[f].wp_unscaled(_pt_new.pw_scaled(point(local_points[2]))).xy()
 					};
 
 					/*
@@ -2786,7 +2811,7 @@ public:
 					 * inverse transformation.
 					 */
 					
-					const d2::image *imf = d2::image_rw::open(f);
+					const d2::image *imf = d2::image_rw::get_open(f);
 
 					d2::transformation inv_t = d2::transformation::gpt_identity(imf, 1);
 
@@ -2806,8 +2831,6 @@ public:
 
 					inv_t.gpt_set(local_bounds);
 
-					d2::image_rw::close(f);
-
 					/*
 					 * Perform render step for the given frame,
 					 * transformation, and point.
@@ -2816,10 +2839,13 @@ public:
 					renderer->point_render(i, j, f, inv_t);
 				}
 			}
-
-			if (tc_multiplier == 0) 
-				al->close(f);
 		}
+
+		/*
+		 * Close all files and finish rendering.
+		 */
+
+		d2::image_rw::close_all();
 
 		renderer->finish_point_rendering();
 
@@ -2973,7 +2999,9 @@ public:
 				 * transformation, and point.
 				 */
 
+				d2::image_rw::open(f);
 				renderer->point_render(i, j, f, inv_t);
+				d2::image_rw::close(f);
 			}
 
 			if (tc_multiplier == 0) 

@@ -550,6 +550,16 @@ public:
 		return images[n];
 	}
 
+	static void open_all() {
+		for (unsigned int n = 0; n < file_count; n++) 
+			open(n);
+	}
+
+	static const image *get_open(unsigned int n) {
+		assert (files_open[n]);
+		return images[n];
+	}
+
 	static image *copy(unsigned int n, char *name) {
 		assert (n <  file_count);
 
@@ -571,6 +581,11 @@ public:
 		latest_close_num = image;
 
 		files_open[image] = 0;
+	}
+
+	static void close_all() {
+		for (unsigned int n = 0; n < file_count; n++) 
+			close(n);
 	}
 
 };
