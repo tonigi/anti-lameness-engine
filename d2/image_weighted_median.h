@@ -54,14 +54,22 @@ private:
 	 */
 	image_ale_real **colors;
 	image_ale_real **weights;
+	unsigned int capacity;
 
 public:
 	image_weighted_median (unsigned int dimy, unsigned int dimx, unsigned int
-			depth, char *name = "anonymous") 
+			depth, int capacity = -1, char *name = "anonymous") 
 			: image_weighted_avg(dimy, dimx, depth, name) {
 
-		colors  = (image_ale_real **) malloc(image_rw::count() * sizeof(image_ale_real *));
-		weights = (image_ale_real **) malloc(image_rw::count() * sizeof(image_ale_real *));
+		if (capacity == -1) {
+			this->capacity = image_rw::count();
+		} else if (capacity >= 0) {
+			this->capacity = (unsigned int) capacity;
+		} else
+			assert(0);
+
+		colors  = (image_ale_real **) malloc(capacity * sizeof(image_ale_real *));
+		weights = (image_ale_real **) malloc(capacity * sizeof(image_ale_real *));
 
 		assert(colors);
 		assert(weights);
@@ -71,7 +79,7 @@ public:
 			exit(1);
 		}
 
-		for (unsigned int f = 0; f < image_rw::count(); f++) {
+		for (unsigned int f = 0; f < capacity; f++) {
 			colors[f] = new image_ale_real(dimy, dimx, depth);
 			weights[f] = new image_ale_real(dimy, dimx, depth);
 
@@ -86,7 +94,7 @@ public:
 	}
 
 	virtual ~image_weighted_median() {
-		for (unsigned int f = 0; f < image_rw::count(); f++) {
+		for (unsigned int f = 0; f < capacity; f++) {
 			delete colors[f];
 			delete weights[f];
 		}
@@ -102,7 +110,7 @@ public:
 	 */
 	void extend(int top, int bottom, int left, int right) {
 
-		for (unsigned int f = 0; f < image_rw::count(); f++) {
+		for (unsigned int f = 0; f < capacity; f++) {
 			colors[f]->extend(top, bottom, left, right);
 			weights[f]->extend(top, bottom, left, right);
 		}
@@ -129,7 +137,7 @@ public:
 			 * XXX: This initialization should not be necessary.
 			 */
 			if (f == 0)
-			for (unsigned int ff = 0; ff < image_rw::count(); ff++)
+			for (unsigned int ff = 0; ff < capacity; ff++)
 				weights[ff]->pix(i, j)[k] = 0;
 
 			assert (finite(new_weight[k]));
@@ -137,9 +145,9 @@ public:
 			if (new_weight[k] <= 0)
 				continue;
 
-			for (unsigned int ff = 0; ff < image_rw::count(); ff++) {
+			for (unsigned int ff = 0; ff < capacity; ff++) {
 				assert (ff <= (unsigned int) f);
-				if (ff == image_rw::count() - 1) {
+				if (ff == capacity - 1) {
 					colors[ff]->pix(i, j)[k] = new_value[k];
 					weights[ff]->pix(i, j)[k] += new_weight[k];
 					break;
@@ -147,17 +155,17 @@ public:
 				if ((ff == 0 && weights[ff]->pix(i, j)[k] == 0)
 				 || (ff >  0 && weights[ff]->pix(i, j)[k] == weights[ff - 1]->pix(i, j)[k])) {
 					colors[ff]->pix(i, j)[k] = new_value[k];
-					for (unsigned int fff = ff; fff < image_rw::count(); fff++)
+					for (unsigned int fff = ff; fff < capacity; fff++)
 						weights[fff]->pix(i, j)[k] += new_weight[k];
 					break;
 				}
 				if (colors[ff]->pix(i, j)[k] == new_value[k]) {
-					for (unsigned int fff = ff; fff < image_rw::count(); fff++)
+					for (unsigned int fff = ff; fff < capacity; fff++)
 						weights[fff]->pix(i, j)[k] += new_weight[k];
 					break;
 				}
 				if (colors[ff]->pix(i, j)[k] > new_value[k]) {
-					for (unsigned int fff = image_rw::count() - 1; fff > ff; fff--) {
+					for (unsigned int fff = capacity - 1; fff > ff; fff--) {
 						weights[fff]->pix(i, j)[k] = weights[fff - 1]->pix(i, j)[k] + new_weight[k];
 						colors[fff]->pix(i, j)[k]  = colors[fff - 1]->pix(i, j)[k];
 					}
@@ -179,7 +187,7 @@ public:
 		pixel result;
 
 		for (int k = 0; k < 3; k++) {
-			ale_real midpoint = weights[image_rw::count() - 1]->chan(y, x, k) / 2;
+			ale_real midpoint = weights[capacity - 1]->chan(y, x, k) / 2;
 
 			if (midpoint == 0)
 				return pixel::zero();
@@ -189,7 +197,7 @@ public:
 			 */
 
 			unsigned int l = 0;
-			unsigned int h = image_rw::count() - 1;
+			unsigned int h = capacity - 1;
 			unsigned int m = h / 2;
 
 			while (h > l + 1) {
@@ -216,7 +224,7 @@ public:
 	}
 
 	image *get_weights() {
-		return weights[image_rw::count() - 1];
+		return weights[capacity - 1];
 	}
 
 	image *get_colors() {
