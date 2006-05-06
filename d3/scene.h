@@ -4182,8 +4182,15 @@ public:
 		ale_pos best_depth = depth;
 
 		for (ale_pos d = depth - depth_range; d < depth + depth_range; d += depth_range / 10) {
+
+			if (!(d < 0))
+				continue;
+			
 			point iw = _pt1.pw_unscaled(point(i, j, d));
 			point is = _pt2.wp_unscaled(iw);
+
+			if (!(is[2] < 0))
+				continue;
 
 			if (!al->get(f2)->get_image(lod2)->in_bounds(is.xy()))
 				continue;
