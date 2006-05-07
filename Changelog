@@ -1,4 +1,56 @@
-0.8.3
+0.8.4 Prerelease
+
+o	Modify --3dpx to exclude scene geometry rather than rendered
+	pixels.  In certain cases, this change should allow synthetic removal
+	of objects close to the camera, hence revealing objects further away.
+
+o	Add to the Makefile a HASH_MAP option that can be used to assign the
+	3D spatial info structure a hash map type instead of the standard STL
+	map type.  As this is likely to break things, it is currently
+	undocumented.  HASH_MAP=GNU seems to compile with g++ 4.0.x but
+	has not otherwise been tested.
+
+o	Add support for synthetic focus via the --focus option, including
+	focus with horizontal and vertical tilt.  Adding simulated focus
+	effects, including tilted and swung focal planes, was suggested by
+	Gregory Maxwell.
+
+o	Add support for filtering 3D output with --3d-filter.  This
+	is now the default behavior.  Add an option --3d-chain for selecting
+	the filter chain used for 3D output.  (See --hl and --hq for details.)
+
+o	Fix dimension comparison bug in d3::space::traverse::get_next_split().
+
+o	Implement an experimental approach to 3D subspace candidate selection;
+	this seems to perform poorly in most cases due to parallax effects.
+	See the source code for details.  (Option --subspace-traverse)
+
+o	Add adaptive weight decomposition to 3D occupancy algorithms.
+
+o	Move low-level code concerning scale and level-of-detail from
+	d3::scene to d3::pt.
+
+o	Move code concerning the nature of space from d3::scene to 
+	d3::space.
+
+o	Interpolate to generate smooth 3D depth output.
+
+o	Remove older 3D rendering code. 
+
+o	Add decimation options --di-upper, --di-lower, and --do-try for
+	reducing the complexity of 3D scene geometry, hence reducing the
+	number of operations required for occupancy updating.
+
+o	Add a script 'transform' for applying an inverse projective
+	transformation.  Recalculation of transformations was suggested by Rob
+	Stewart (ALE mailing list message, 2005-Dec-28).
+
+o	Add dates to the Changelog, using dates in comments in the download
+	page on the website for versions prior to 0.8.0, and using dates from
+	the darcs repository for versions 0.8.0 and later.
+
+
+0.8.3 2005-Dec-23
 
 o	Add option --3dpx to specify 3D regions to exclude during final
 	rendering, using a single depth for each pixel in each frame of
@@ -32,7 +84,8 @@ o	Add option --oui for determining occupancy update iterations.
 o	Add option --tcem for scoring point candidates by third-camera
 	views.  The default of 0 preserves existing default behavior.
 
-0.8.2
+
+0.8.2 2005-Nov-22
 
 o	Add magical file 'dump:' for listing color values numerically
 	to stderr.
@@ -48,7 +101,8 @@ o	Add clipping plane options for 3D modeling.
 o	Fix various bugs in control-point alignment reported by Gregory
 	Maxwell.
 
-0.8.1
+
+0.8.1 2005-May-6
 
 o	Modify --q1 to use median-value incremental rendering.
 
@@ -76,7 +130,8 @@ o	For 3D scene reconstruction, use a new unified surface model in place
 	of the depth-based multi-model approach used in 0.8.0.  The new model
 	is adjusted on the basis of edge, angle, and color measures.
 
-0.8.0
+
+0.8.0 2005-Jan-12
 
 o	Add a flag --exp-meta-only which causes tonal registration to be
 	performed only on the basis of exposure metadata (e.g., data encoded
@@ -156,7 +211,8 @@ o	Modify rx_parameters in d2/render.h to use the ale_pos data type
 	instead of int.  This should allow exclusion regions to be calculated
 	more accurately.
 
-0.7.3
+
+0.7.3 2004-Dec-1
 
 o	Add incremental 3D reconstruction output.
 
@@ -210,7 +266,8 @@ o	Add a check to ensure that at most one --q* option is specified.
 	ALE mailing list by Viktors Rotanovs.  As there is currently no
 	support for this, generating an error message is appropriate.
 
-0.7.2
+
+0.7.2 2004-Oct-26
 
 o	Add cost-minimizing code to reconstruct 3D scenes from 2D inputs.
 	(This code is currently very experimental.)
@@ -255,7 +312,8 @@ o	Add experimental options --perturb-source and --perturb-output, which
 	allow some refinement of the manner in which perturbation occurs.
 	(from 0.7.1-patch1)
 
-0.7.1
+
+0.7.1 2004-Aug-27
 
 o	Fix --visp segfault when not using last: filters.
 
@@ -291,7 +349,8 @@ o	Add speed optimizations for filtering in the Euclidean case, but
 	leave these disabled, since they are not safe.  (Also included
 	in 0.7.0-patch1.)
 
-0.7.0
+
+0.7.0 2004-Aug-06
 
 o	Add support for algorithmic alignment weights.  This requires 
 	POSIX fork() and execlp(), so add a Makefile variable for POSIX.
@@ -360,7 +419,7 @@ o	Report unrecognized transformation file commands as errors instead of
 o	In the transformation data file handler, report incompatible
 	transformation types as an error instead of as a warning.
 
-0.6.0
+0.6.0 2004-Feb-10
 
 o	Add a generalized, but rudimentary, implementation of Steve Mann's
 	notion of 'certainty'.  For more details, see
@@ -461,7 +520,7 @@ o	Move classes treating snapshots as two-dimensional data to directory
 	'd2' and create an associated C++ namespace.  We can't use '2d' to
 	label the namespace, because the C++ grammar won't allow it.
 
-0.5.1
+0.5.1 2003-Nov-19
 
 o	Several of the changes below are based on a suggestion by Bert
 	Douglas regarding support for 16-bit-per-channel color.  See the README
@@ -500,7 +559,8 @@ o	Add a file 'channel.h' to describe the color channel data type and
 	valid range, both being dependent on whether BITS_16 is defined.  Use
 	these generic values, where appropriate, throughout the ALE codebase.
 
-0.5.0
+
+0.5.0 2003-Nov-02
 
 o	Remove certain cloning operations from align.h, but since cursory tests
 	indicate that scaling with --scale is much more expensive than cloning,
@@ -530,7 +590,8 @@ o	Remove certain unsafe assumptions from ipc/* (now render/ipc/*); this
 
 o	Change documentation for --replace.
 
-0.4.8
+
+0.4.8 2003-Aug-01
 
 o	Modify Irani-Peleg renderer to produce incremental output.
 
@@ -551,7 +612,8 @@ o	Add an option to adjust the maximum level of detail used.  The default
 
 o	Modify names of temporary files used in the calibration script.
 
-0.4.7
+
+0.4.7 2003-Jul-27
 
 o	Add a replacement option suggested by Jeff Treece.  This option can
 	be used to facilitate video stabilization.
@@ -570,7 +632,8 @@ o	Irani-Peleg: don't multiply the weight function by a scale correction
 o	Rename render::operator()() to render::sync().  Update subclasses
 	accordingly.
 
-0.4.6
+
+0.4.6 2003-Jul-01
 
 o	Allow --ip and --hf-enhance to be used together.  [Modify
 	ip::operator() and hf_filter::operator() so that multiple
@@ -582,7 +645,8 @@ o	Initialize the drizzled image to be uniformly black.  This fixes
 o	Allocate the correct size image for drizzling.  This fixes a bug
 	introduced in 0.4.5.
 
-0.4.5
+
+0.4.5 2003-Jun-23
 
 o	Ensure correct transformation scaling and difference calculation after
 	alignment is complete, even if alignment terminates with a reduced
@@ -615,7 +679,8 @@ o	Modify image file handler interface so that input files are not scaled.
 	unscaled data is needed by the drizzling and Irani-Peleg code, this
 	fixes bugs in those modules.  
 
-0.4.4
+
+0.4.4 2003-Jun-06
 
 o	Modify the Monte Carlo pixel selection algorithm so that the expected
 	number of sampled pixels more closely matches the specified number in
@@ -624,14 +689,16 @@ o	Modify the Monte Carlo pixel selection algorithm so that the expected
 o	Specify the binary mode flag to fopen() calls in the PPM file handler.
 	This change resolves a bug discovered by Benjamin Hill.
 
-0.4.3
+
+0.4.3 2003-May-30
 
 o	Add support for Monte Carlo alignment of images, in which only a
 	random subset of pixels is sampled.
 
 o	Add an option to disable incremental image output.
 
-0.4.2
+
+0.4.2 2003-May-23
 
 o	Implement an image reconstruction option based on the work of Irani and
 	Peleg.
@@ -650,7 +717,8 @@ o	Make changes to gpt.h that may reduce the Euclidean alignment time.
 
 o	Move ale.c to ale.cc to follow one of the many C++ naming conventions.
 
-0.4.1
+
+0.4.1 2003-Apr-28
 
 o	Change language to C++.
 
@@ -683,13 +751,15 @@ o	Modify the transformation algorithm to use transformations from the
 o	Add version information to transformation files and update the version
 	from 0 to 2.
 
-0.4.0p1
+
+0.4.0p1 2003-Apr-04
 
 o	Merge a bugfix from Debian ALE package version 0.4.0-1.  Without this
 	fix, an assertion failure can occur when ImageMagick support is
 	enabled.  Original fix implemented by Nick Rusnov.  
 
-0.4.0
+
+0.4.0 2003-Mar-30
 
 o	Add support for general scaling parameters (i.e. all scale 
 	factors >= 1.0).  --scale2, --scale4, and --scale8 are now deprecated, 
@@ -704,12 +774,15 @@ o	Modify the high-frequency filter algorithm to support filtering near
 o	Modify the high-frequency filter function so that the response is now
 	(4/n)^2 times what it used to be, where n is the scale factor.  
 
-0.3.2
+
+0.3.2 2003-Mar-26
 
 o	Don't filter high frequencies if we're not enhancing them.  This 
 	improves efficiency, but should not affect output.
 
-0.3.1
+
+
+0.3.1 2003-Mar-25
 
 o	Output average match statistic.
 
@@ -718,7 +791,8 @@ o	Update informational output to transformation files to include original
 
 o	Add support for post-enhancement of high-frequency details.
 
-0.3.0
+
+0.3.0 2003-Jan-17
 
 o	Add support for loading and saving transformation data.
 
@@ -730,7 +804,8 @@ o	Modify Makefile to compile with size optimization, since this
 o	Move transformation data structure and related functions to 
 	a separate header file.
 
-0.2.0
+
+0.2.0 2003-Jan-01
 
 o	Add support for general projective transformations, and change/add
 	options as follows:
@@ -739,7 +814,8 @@ o	Add support for general projective transformations, and change/add
 		'--euclidean'	used to be 	'--rotate'
 		'--projective'	is a new option
 
-0.1.2
+
+0.1.2 2002-Dec-13
 
 o	Add optional support for .jpg, .png, .tiff, and other file formats
 	through ImageMagick.  Inspired by a translation script idea suggested
@@ -747,7 +823,8 @@ o	Add optional support for .jpg, .png, .tiff, and other file formats
 
 o	Don't segfault if a file can't be opened.
 
-0.1.1
+
+0.1.1 2002-Dec-09
 
 o	Use reduced levels of detail in coarser alignment steps to increase
 	speed.
@@ -763,7 +840,8 @@ o	Change perturbation initial value to 32 pixels from
 o	Modify scale function so that the borders aren't 
 	corrupted (too badly).
 
-0.1.0
+
+0.1.0 2002-Nov-26
 
 o	Add support for correction of rotation about the lens axis.
 
@@ -782,5 +860,7 @@ o	Display information about how well a new image matches
 
 o	Add a rule for ale.exe to the Makefile.  
 
-0.0.0
-	Initial release.
+
+0.0.0 2002-Oct-11
+
+o	Initial release.
