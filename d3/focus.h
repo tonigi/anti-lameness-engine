@@ -46,6 +46,7 @@ private:
 	};
 
 	static unsigned int _uses_medians;
+	static unsigned int _max_samples;
 	static unsigned int camera_index;
 	static std::vector<std::vector<entry> > focus_list;
 
@@ -65,6 +66,9 @@ public:
 		if (fs)
 			_uses_medians = 1;
 
+		if (sc > _max_samples)
+			_max_samples = sc;
+
 		if (focus_list.size() <= ci)
 			focus_list.resize(ci + 1);
 
@@ -79,6 +83,10 @@ public:
 
 	static int uses_medians() {
 		return _uses_medians;
+	}
+
+	static int max_samples() {
+		return _max_samples;
 	}
 
 	static result get(const d2::image *depth, int i, int j) {

@@ -2673,18 +2673,18 @@ public:
 		d2::image_weighted_avg *iwa;
 
 		if (d3::focus::uses_medians()) {
-			iwa = new d2::image_weighted_median(height, width, 3, _focus.sample_count);
+			iwa = new d2::image_weighted_median(height, width, 3, focus::max_samples());
 		} else {
 			iwa = new d2::image_weighted_simple(height, width, 3, new d2::filter::invariant(NULL));
 		}
 
 		/*
-		 * Render each view separately.  This is spacewise inefficient,
+		 * Render views separately.  This is spacewise inefficient,
 		 * but is easy to implement given the current operation of the
 		 * renderers.
 		 */
 
-		for (unsigned int v = 0; v < _focus.sample_count; v++) {
+		for (unsigned int v = 0; v < focus::max_samples(); v++) {
 
 			/*
 			 * Generate a new 2D renderer for filtering.
@@ -2705,6 +2705,9 @@ public:
 			for (unsigned int j = 0; j < width; j++) {
 
 				focus::result _focus = focus::get(depths, i, j);
+
+				if (v >= _focus.sample_count)
+					continue;
 
 				if (!finite(_focus.focal_distance))
 					continue;
