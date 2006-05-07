@@ -2675,7 +2675,7 @@ public:
 		if (d3::focus::uses_medians()) {
 			iwa = new d2::image_weighted_median(height, width, 3, focus::max_samples());
 		} else {
-			iwa = new d2::image_weighted_simple(height, width, 3, new d2::filter::invariant(NULL));
+			iwa = new d2::image_weighted_simple(height, width, 3, new d2::invariant(NULL));
 		}
 
 		/*
@@ -2884,9 +2884,9 @@ public:
 
 			for (unsigned int i = 0; i < height; i++)
 			for (unsigned int j = 0; j < width; j++) {
-				if (df->get_pixel(i, j).defined()
+				if (df->get_pixel(i, j).finite()
 				 && df->get_pixel(i, j)[0] > 0)
-					iwa->accumulate(i, j, v, im->get_pixel(i, j), pixel(1, 1, 1));
+					iwa->accumulate(i, j, v, im->get_pixel(i, j), d2::pixel(1, 1, 1));
 			}
 		}
 

@@ -85,7 +85,7 @@ public:
 		return _uses_medians;
 	}
 
-	static int max_samples() {
+	static unsigned int max_samples() {
 		return _max_samples;
 	}
 
