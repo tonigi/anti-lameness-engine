@@ -419,6 +419,7 @@ o	Report unrecognized transformation file commands as errors instead of
 o	In the transformation data file handler, report incompatible
 	transformation types as an error instead of as a warning.
 
+
 0.6.0 2004-Feb-10
 
 o	Add a generalized, but rudimentary, implementation of Steve Mann's
@@ -519,6 +520,7 @@ o	Fix offset calculation in d2/render/ipc.h.  This is necessary for
 o	Move classes treating snapshots as two-dimensional data to directory
 	'd2' and create an associated C++ namespace.  We can't use '2d' to
 	label the namespace, because the C++ grammar won't allow it.
+
 
 0.5.1 2003-Nov-19
 
