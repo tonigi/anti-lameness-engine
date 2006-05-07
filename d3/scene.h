@@ -2630,13 +2630,6 @@ public:
 		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
 
 		/*
-		 * Generate a new 2D renderer for filtering.
-		 */
-
-		d2::render::reset();
-		d2::render *renderer = d2::render_parse::get(d3chain_type);
-
-		/*
 		 * Get depth image for focus region determination.
 		 */
 
@@ -2645,12 +2638,8 @@ public:
 		unsigned int height = (unsigned int) floor(_pt.scaled_height());
 		unsigned int width = (unsigned int) floor(_pt.scaled_width());
 
-		renderer->init_point_renderer(height, width, 3);
-
-		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
-
 		/*
-		 * Prepare view data.
+		 * Prepare input frame data.
 		 */
 
 		if (tc_multiplier == 0)
@@ -2675,22 +2664,50 @@ public:
 		d2::image_rw::open_all();
 
 		/*
-		 * Iterate over output points.
+		 * Prepare data structures for averaging views, as we render
+		 * each view separately.  This is spacewise inefficient, but
+		 * is easy to implement given the current operation of the
+		 * renderers.
 		 */
-		
-		for (unsigned int i = 0; i < height; i++)
-		for (unsigned int j = 0; j < width; j++) {
 
-			focus::result _focus = focus::get(depths, i, j);
+		d2::image_weighted_avg *iwa;
 
-			if (!finite(_focus.focal_distance))
-				continue;
+		if (d3::focus::uses_medians()) {
+			iwa = new d2::image_weighted_median(height, width, 3, _focus.sample_count);
+		} else {
+			iwa = new d2::image_weighted_simple(height, width, 3, new d2::filter::invariant(NULL));
+		}
+
+		/*
+		 * Render each view separately.  This is spacewise inefficient,
+		 * but is easy to implement given the current operation of the
+		 * renderers.
+		 */
+
+		for (unsigned int v = 0; v < _focus.sample_count; v++) {
 
 			/*
-			 * Iterate over views for this focus region.
+			 * Generate a new 2D renderer for filtering.
 			 */
 
-			for (unsigned int v = 0; v < _focus.sample_count; v++) {
+			d2::render::reset();
+			d2::render *renderer = d2::render_parse::get(d3chain_type);
+
+			renderer->init_point_renderer(height, width, 3);
+
+			_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
+
+			/*
+			 * Iterate over output points.
+			 */
+			
+			for (unsigned int i = 0; i < height; i++)
+			for (unsigned int j = 0; j < width; j++) {
+
+				focus::result _focus = focus::get(depths, i, j);
+
+				if (!finite(_focus.focal_distance))
+					continue;
 
 				/*
 				 * Determine the (x, y) offset for this view.
@@ -2856,17 +2873,27 @@ public:
 					renderer->point_render(i, j, f, inv_t);
 				}
 			}
+
+			renderer->finish_point_rendering();
+
+			const d2::image *im = renderer->get_image();
+			const d2::image *df = renderer->get_defined();
+
+			for (unsigned int i = 0; i < height; i++)
+			for (unsigned int j = 0; j < width; j++) {
+				if (df->get_pixel(i, j).defined()
+				 && df->get_pixel(i, j)[0] > 0)
+					iwa->accumulate(i, j, v, im->get_pixel(i, j), pixel(1, 1, 1));
+			}
 		}
 
 		/*
-		 * Close all files and finish rendering.
+		 * Close all files and return the result.
 		 */
 
 		d2::image_rw::close_all();
 
-		renderer->finish_point_rendering();
-
-		return renderer->get_image();
+		return iwa;
 	}
 
 	static const d2::image *view_filter(pt _pt, int n) {
