@@ -269,10 +269,6 @@ private:
 			} else
 				write_all();
 
-			if (format[strlen(format) - 1] == '\n') {
-				fprintf(stderr, "YYY");
-			}
-
 		} else {
 			/*
 			 * The message does not fit in the buffer, so write any
