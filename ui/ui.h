@@ -55,24 +55,60 @@ protected:
 	FILE *ui_stream;
 
 	struct status_type {
-		enum { UNDEFINED, LOAD_FILE, EXPOSURE_PASS_1,
+		enum { 
+			/*
+			 * Special
+			 */
+			
+			UNDEFINED, 
+			
+			/*
+			 * Incremental rendering.
+			 */
+			
+			LOAD_FILE, EXPOSURE_PASS_1,
 			LODCLUSTER_CREATE, PREMATCH, ALIGN, POSTMATCH,
 			EXPOSURE_PASS_2, RENDERA, RENDERD, RENDERO, WRITED,
-			WRITEO, FRAME_DONE, SET_DONE, IP_RENDER, 
-			IP_STEP_DONE, IP_UPDATE, IP_WRITE } code, orender_current;
+			WRITEO, FRAME_DONE, SET_DONE, 
+			
+			/*
+			 * Irani-Peleg rendering.
+			 */
+			
+			IP_RENDER, IP_STEP_DONE, IP_UPDATE, IP_WRITE,
+
+			/*
+			 * 3D.
+			 */
+
+			D3_CONTROL_POINT_SOLVE, D3_SUBDIVIDING_SPACE,
+			D3_UPDATING_OCCUPANCY, D3_RENDER
+
+		} code, orender_current;
+
 		int arender_current;
 		double match_value;
 		int onum;
-		int perturb_steps;
-		int perturb_steps_completed;
+		int steps;
+		int steps_completed;
 		double exp_multiplier[3];
 		double perturb_size;
 		double align_lod;
-		unsigned int ip_frame_num;
+		unsigned int frame_num;
+		unsigned int secondary_frame_num;
+		unsigned int view_num;
+		unsigned int x_coordinate, y_coordinate;;
+		unsigned int filtering, focusing;
+		unsigned int space_num;
+		unsigned int total_spaces;
+		double cp_max_perturb;
+		double cp_min_perturb;
+		double cp_cur_perturb;
+		double cp_cur_error;
 
 		status_type() {
 			code = UNDEFINED;
-			perturb_steps_completed = 0;
+			steps_completed = 0;
 
 			for (int k = 0; k < 3; k++)
 				exp_multiplier[k] = 1;
@@ -141,8 +177,12 @@ public:
 			status.exp_multiplier[k] = mult[k];
 	}
 
-	void set_perturb_steps(int count) {
-		status.perturb_steps = count;
+	void set_steps(int count) {
+		status.steps = count;
+	}
+
+	void set_steps_completed(int count) {
+		status.steps_completed = count;
 	}
 
 	void set_match(double match) {
@@ -228,6 +268,67 @@ public:
 		update();
 	}
 
+	void d3_control_point_data(double max_perturbation, double min_perturbation, double cur_perturbation, 
+			double current_error) {
+		status.cp_max_perturb = max_perturbation;
+		status.cp_min_perturb = min_perturbation;
+		status.cp_cur_perturb = cur_perturbation;
+		status.cp_cur_error   = current_error;
+		update();
+	}
+
+	void d3_control_point_step() {
+		printf(".");
+		update();
+	}
+
+	void d3_subdivision_status(unsigned int primary_frame, unsigned int secondary_frame,
+			unsigned int i, unsigned int j) {
+		status.code = status.D3_SUBDIVIDING_SPACE;
+		status.frame_num = primary_frame;
+		status.secondary_frame_num = secondary_frame;
+		status.y_coordinate = i;
+		status.x_coordinate = j;
+
+		update();
+	}
+
+	void d3_total_spaces(int total_spaces) {
+		status.total_spaces = total_spaces;
+	}
+
+	void d3_increment_spaces() {
+		status.total_spaces++;
+	}
+
+	void d3_occupancy_status(int frame) {
+		status.code = status.D3_UPDATING_OCCUPANCY;
+		status.frame_num = frame;
+		update();
+	}
+
+	void d3_increment_space_num() {
+		status.space_num++;
+		update();
+	}
+
+	void d3_render_status(int filter, int focus, int frame, int view, int i, int j, int space) {
+		status.code = status.D3_RENDER;
+
+		status.filtering = filter;
+		status.focusing = focus;
+
+		status.frame_num = frame;
+		status.view_num = view;
+		status.y_coordinate = i;
+		status.x_coordinate = j;
+
+		status.space_num = space;
+
+		update();
+	}
+
+
 	/*
 	 * Informational output
 	 */
@@ -238,7 +339,7 @@ public:
 
 	void ip_frame_start(unsigned int num) {
 		status.code = status.IP_RENDER;
-		status.ip_frame_num = num;
+		status.frame_num = num;
 		update();
 	}
 
@@ -281,7 +382,7 @@ public:
 		}
 
 		status.code = status.UNDEFINED;
-		status.perturb_steps_completed = 0;
+		status.steps_completed = 0;
 		printf(" '%s'", name);
 	}
 
@@ -293,7 +394,7 @@ public:
 	void alignment_perturbation_level(ale_pos perturb, ale_pos lod) {
 		status.perturb_size = perturb;
 		status.align_lod = lod;
-		status.perturb_steps_completed++;
+		status.steps_completed++;
 		printf(".");
 	}
 
@@ -311,6 +412,73 @@ public:
 		status.code = status.UNDEFINED;
 		printf("Average match: %f%%", value);
 		status.code = status.SET_DONE;
+		update();
+	}
+
+	void d3_control_point_solve() {
+		status.code = status.D3_CONTROL_POINT_SOLVE;
+		printf("Aligning cameras to control points");
+		update();
+	}
+
+	void d3_init_view_angle(double angle) {
+		status.code = status.UNDEFINED;
+		printf("Initial view angle: %f\n", angle);
+		update();
+	}
+
+	void d3_final_view_angle(double angle) {
+		status.code = status.UNDEFINED;
+		printf("Final view angle: %f\n", angle);
+		update();
+	}
+
+	void d3_control_point_solve_done() {
+		status.code = status.UNDEFINED;
+		printf("\n");
+		update();
+	}
+
+	void d3_subdividing_space() {
+		status.code = status.D3_SUBDIVIDING_SPACE;
+		printf("Subdividing 3D space");
+		update();
+	}
+
+	void d3_subdividing_space_done() {
+		status.code = status.UNDEFINED;
+		printf(".\n");
+		update();
+	}
+
+	void d3_updating_occupancy() {
+		status.code = status.D3_UPDATING_OCCUPANCY;
+		printf("Updating spatial occupancy values");
+		update();
+	}
+
+	void d3_updating_occupancy_done() {
+		status.code = status.UNDEFINED;
+		printf(".\n");
+		update();
+	}
+
+	void d3_writing_output(const char *name) {
+		static int section_announced = 0;
+
+		if (!section_announced) {
+			printf("Rendering output from 3D geometry:\n");
+			section_announced = 1;
+		}
+
+		printf(" '%s'", name);
+
+		update();
+	}
+
+	void d3_writing_output_done() {
+		status.code = status.UNDEFINED;
+		printf("\n");
 		update();
 	}
 

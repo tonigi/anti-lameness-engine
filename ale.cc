@@ -1930,11 +1930,17 @@ int main(int argc, const char *argv[]){
 
 				d3::align::init_angle(view_angle);
 
+				ui::get()->d3_init_view_angle(view_angle / M_PI * 180);
+
 				d3::align::init_from_d2();
 
 				if (d3::cpf::count() > 0) {
+					ui::get()->d3_control_point_solve();
 					d3::cpf::solve_3d();
+					ui::get()->d3_control_point_solve_done();
 				}
+
+				ui::get()->d3_final_view_angle(d3::align::angle_of(0) / M_PI * 180);
 
 				d3::align::write_alignments();
 
@@ -1942,58 +1948,59 @@ int main(int argc, const char *argv[]){
 
 				d3::scene::init_from_d2();
 
-//				d3::scene::add_control_points();
-
-//				d3::scene::relax_triangle_model();
-
+				ui::get()->d3_subdividing_space();
 				d3::scene::make_space(d3_depth, d3_output, &d3_depth_pt, &d3_output_pt);
+				ui::get()->d3_subdividing_space_done();
 
-//				fprintf(stderr, "Total pixels: %lu\n", d3::scene::total_pixels);
-//				fprintf(stderr, "Total ambiguity: %lu\n", d3::scene::total_ambiguity);
-//				fprintf(stderr, "Total tsteps: %lu\n", d3::scene::total_tsteps);
-//				fprintf(stderr, "Total divisions: %lu\n", d3::scene::total_divisions);
-
-				fprintf(stderr, "Updating occupancy values");
+				ui::get()->d3_updating_occupancy();
 				d3::scene::reduce_cost_to_search_depth(output_exposure, inc);
-				fprintf(stderr, ".\n");
+				ui::get()->d3_updating_occupancy_done();
 
-				fprintf(stderr, "Writing 3D output");
 				d3::scene::d3px(d3px_count, d3px_parameters);
 				int view_count = 0;
 				for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
 					assert (i < d3_count);
 
 					if (d3_depth[i] != NULL) {
+						ui::get()->d3_writing_output(d3_depth[i]);
+						ui::get()->d3_render_status(0, 0, -1, -1, -1, -1, 0);
 						const d2::image *im = d3::scene::depth(i);
 						d2::image_rw::write_image(d3_depth[i], im, output_exposure, 1, 1);
 						delete im;
+						ui::get()->d3_writing_output_done();
 					}
 
 					if (d3_output[i] != NULL) {
+						ui::get()->d3_writing_output(d3_output[i]);
 						const d2::image *im = d3::scene::view(i);
 						d2::image_rw::write_image(d3_output[i], im, output_exposure);
 						delete im;
 						d3::focus::set_camera(view_count++);
+						ui::get()->d3_writing_output_done();
 					}
 
 					for (std::map<const char *, d3::pt>::iterator i = d3_output_pt.begin();
 							i != d3_output_pt.end(); i++) {
 
+						ui::get()->d3_writing_output(i->first);
 						const d2::image *im = d3::scene::view(i->second);
 						d2::image_rw::write_image(i->first, im, output_exposure);
 						delete im;
 						d3::focus::set_camera(view_count++);
+						ui::get()->d3_writing_output_done();
 					}
 
 					for (std::map<const char *, d3::pt>::iterator i = d3_depth_pt.begin();
 							i != d3_depth_pt.end(); i++) {
 
+						ui::get()->d3_writing_output(i->first);
+						ui::get()->d3_render_status(0, 0, -1, -1, -1, -1, 0);
 						const d2::image *im = d3::scene::depth(i->second);
 						d2::image_rw::write_image(i->first, im, output_exposure, 1, 1);
 						delete im;
+						ui::get()->d3_writing_output_done();
 					}
 				}
-				fprintf(stderr, ".\n");
 
 				for (unsigned int i = d2::image_rw::count(); i < d3_count; i++) {
 					if (d3_depth[i] != NULL) {

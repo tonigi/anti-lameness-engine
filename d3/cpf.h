@@ -449,6 +449,8 @@ public:
 		ale_pos min_perturbation = cpp_lower;
 		ale_pos perturbation = max_perturbation;
 
+		ui::get()->d3_control_point_data(max_perturbation, min_perturbation, perturbation, current_error);
+
 		/*
 		 * XXX: Does this ever execute?
 		 */
@@ -461,8 +463,6 @@ public:
 			// fprintf(stderr, " (skipping adjustment)");
 			return;
 		}
-
-		fprintf(stderr, "Adjusting cameras to match control points");
 
 		while (perturbation >= min_perturbation) {
 
@@ -534,15 +534,13 @@ public:
 
 //			fprintf(stderr, "E %f\n", current_error);
 
-			fprintf(stderr, ".");
-
 			perturbation /= 2;
+
+			ui::get()->d3_control_point_data(max_perturbation, min_perturbation, perturbation, current_error);
+			ui::get()->d3_control_point_step();
 		}
 
 		solve_total_system();
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "Final view angle: %f\n", d3::align::angle_of(0) / M_PI * 180);
 	}
 
 	static void st(ale_pos _st) {

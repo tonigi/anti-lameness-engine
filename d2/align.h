@@ -1069,7 +1069,7 @@ private:
 			step_count++;
 		}
 
-		ui::get()->set_perturb_steps(step_count);
+		ui::get()->set_steps(step_count);
 
 		ale_pos perturb = local_upper;
 		transformation offset;

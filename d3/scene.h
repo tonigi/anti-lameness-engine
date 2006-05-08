@@ -946,7 +946,10 @@ class scene {
 
 					if (current_diagonal < 2 * diagonal
 					 && lowres == 0) {
-						spatial_info_map[st.get_node()];
+						if (spatial_info_map.find(st.get_node()) == spatial_info_map.end()) {
+							spatial_info_map[st.get_node()];
+							ui::get()->d3_increment_spaces();
+						}
 						lowres = 1;
 					}
 
@@ -956,7 +959,10 @@ class scene {
 
 					if (current_diagonal < diagonal
 					 && highres == 0) {
-						spatial_info_map[st.get_node()];
+						if (spatial_info_map.find(st.get_node()) == spatial_info_map.end()) {
+							spatial_info_map[st.get_node()];
+							ui::get()->d3_increment_spaces();
+						}
 						highres = 1;
 					}
 				}
@@ -1558,8 +1564,6 @@ public:
 		front_clip = front_clip * cp_scalar - cp_scalar;
 		rear_clip = rear_clip * cp_scalar - cp_scalar;
 
-		fprintf(stderr, "front_clip=%f rear_clip=%f\n", front_clip, rear_clip);
-
 		/*
 		 * Allocate image structures.
 		 */
@@ -1576,6 +1580,7 @@ public:
 	 * parameters.
 	 */
 	static void subspace_info_update(space::iterate si, int f, ref_weights *weights) {
+
 		while(!si.done()) {
 
 			space::traverse st = si.get();
@@ -1590,6 +1595,9 @@ public:
 				si.next();
 				continue;
 			}
+
+			ui::get()->d3_increment_space_num();
+
 
 			/*
 			 * Get in-bounds centroid, if one exists.
@@ -1710,6 +1718,8 @@ public:
 		 */
 		for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 
+			ui::get()->d3_occupancy_status(f);
+
 			/*
 			 * Open the frame and transformation.
 			 */
@@ -1795,6 +1805,8 @@ public:
 				si.next();
 				continue;
 			}
+
+			ui::get()->d3_increment_space_num();
 
 			spatial_info sn = spatial_info_map[st.get_node()];
 
@@ -2227,6 +2239,8 @@ public:
 
 			for (unsigned int v = 0; v < _focus.sample_count; v++) {
 
+				ui::get()->d3_render_status(0, 1, -1, v, i, j, -1);
+
 				/*
 				 * Determine the (x, y) offset for this view.
 				 */
@@ -2335,6 +2349,8 @@ public:
 		 */
 
 		space::iterate si(_pt.origin());
+
+		ui::get()->d3_render_status(0, 0, -1, -1, -1, -1, 0);
 
 		view_recurse(0, im, weights, si, _pt);
 
@@ -2800,6 +2816,8 @@ public:
 
 				for (unsigned int f = 0; f < d2::image_rw::count(); f++) {
 
+					ui::get()->d3_render_status(1, 1, f, v, i, j, -1);
+
 					if (!visibility_search(fmv[f], mv))
 						continue;
 
@@ -2944,6 +2962,8 @@ public:
 
 			for (unsigned int i = 0; i < height; i++)
 			for (unsigned int j = 0; j < width; j++) {
+
+				ui::get()->d3_render_status(1, 0, f, -1, i, j, -1);
 
 				/*
 				 * Check visibility.
@@ -3163,12 +3183,6 @@ public:
 		pt _pt = align::projective(n);
 
 		return view(_pt, n);
-	}
-
-	/*
-	 * Add specified control points to the model
-	 */
-	static void add_control_points() {
 	}
 
 	typedef struct {point iw; point ip, is;} analytic;
@@ -4098,7 +4112,10 @@ public:
 
 				if (dim_max < 2 * target_dim
 				 && lr_done == 0) {
-					spatial_info_map[st.get_node()];
+					if (spatial_info_map.find(st.get_node()) == spatial_info_map.end()) {
+						spatial_info_map[st.get_node()];
+						ui::get()->d3_increment_spaces();
+					}
 					lr_done = 1;
 				}
 
@@ -4107,7 +4124,10 @@ public:
 				 */
 
 				if (dim_max < target_dim) {
-					spatial_info_map[st.get_node()];
+					if (spatial_info_map.find(st.get_node()) == spatial_info_map.end()) {
+						spatial_info_map[st.get_node()];
+						ui::get()->d3_increment_spaces();
+					}
 					return st;
 				}
 			}
@@ -4368,6 +4388,8 @@ public:
 			std::map<const char *, pt> *d3_depth_pt,
 			std::map<const char *, pt> *d3_output_pt) {
 
+		ui::get()->d3_total_spaces(0);
+
 		/*
 		 * Variable indicating whether low-resolution filler space
 		 * is desired to avoid aliased gaps in surfaces.
@@ -4378,10 +4400,6 @@ public:
 				   || output_decimation_preferred > 0
 				   || input_decimation_lower > 0
 				   || !focus::is_trivial();
-
-		fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
-
-		fprintf(stderr, "Subdividing 3D space");
 
 		std::vector<pt> pt_outputs = make_pt_list(d_out, v_out, d3_depth_pt, d3_output_pt);
 
@@ -4436,11 +4454,6 @@ public:
 					al->close(f1);
 			}
 
-			fprintf(stderr, "Final spatial map size: %u\n", spatial_info_map.size());
-
-			fprintf(stderr, ".\n");
-			fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
-
 			return;
 		}
 
@@ -4470,6 +4483,8 @@ public:
 			for (unsigned int i = 0; i < al->get(f1)->get_image(primary_decimation_upper)->height(); i++)
 			for (unsigned int j = 0; j < al->get(f1)->get_image(primary_decimation_upper)->width();  j++) {
 
+				ui::get()->d3_subdivision_status(f1, f2, i, j);
+
 				total_pixels++;
 
 				/*
@@ -4497,8 +4512,6 @@ public:
 				al->close(f1);
 			}
 		}
-
-		fprintf(stderr, ".\n");
 	}
 
 
@@ -4511,16 +4524,17 @@ public:
 	 */
 	static void reduce_cost_to_search_depth(d2::exposure *exp_out, int inc_bit) {
 
-		fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
 		/*
 		 * Subspace model
 		 */
 
-		for (unsigned int i = 0; i < ou_iterations; i++)
-			spatial_info_update();
+		ui::get()->set_steps(ou_iterations);
 
-		fprintf(stderr, "Final spatial map size: %u\n", spatial_info_map.size());
-		fprintf(stderr, "[T=%lu]\n", (long unsigned) time(NULL));
+		for (unsigned int i = 0; i < ou_iterations; i++) {
+			ui::get()->set_steps_completed(i);
+			spatial_info_update();
+		}
+
 	}
 
 #if 0

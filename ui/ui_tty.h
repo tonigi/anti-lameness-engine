@@ -114,7 +114,7 @@ private:
 	}
 
 	void pad_align_status() {
-		for (int i = 0; i < status.perturb_steps - status.perturb_steps_completed; i++) {
+		for (int i = 0; i < status.steps - status.steps_completed; i++) {
 			status_printf(1, " ");
 		}
 	}
@@ -191,7 +191,7 @@ private:
 				status_printf(3, "Writing image for chain %d", "Writing", "write-o%d", status.onum);
 				break;
 			case status_type::IP_RENDER:
-				status_printf(2, "Processing frame '%s'", "Processing", d2::image_rw::name(status.ip_frame_num));
+				status_printf(2, "Processing frame '%s'", "Processing", d2::image_rw::name(status.frame_num));
 				break;
 			case status_type::IP_UPDATE:
 				status_printf(3, "Updating approximation", "Updating", "update");
@@ -199,6 +199,39 @@ private:
 			case status_type::IP_WRITE:
 				status_printf(3, "Writing '%s'", "Writing", "write", d2::image_rw::output_name());
 				break;
+			case status_type::D3_CONTROL_POINT_SOLVE:
+				status_printf(1, "%f%% done, error=%f", 
+						log(status.cp_cur_perturb / status.cp_max_perturb) 
+					      / log(status.cp_min_perturb / status.cp_max_perturb), 
+					        status.cp_cur_error);
+				break;
+			case status_type::D3_SUBDIVIDING_SPACE:
+				status_printf(1, "frame pair (%u, %u), y=%u, x=%u, spaces=%u", status.frame_num,
+						status.secondary_frame_num, status.y_coordinate, status.x_coordinate,
+						status.total_spaces);
+				break;
+			case status_type::D3_UPDATING_OCCUPANCY:
+				status_printf(1, "step %u/%u, frame %u, space %u/%u", status.steps_completed,
+						status.steps, status.frame_num, 
+						status.space_num, status.total_spaces);
+				break;
+			case status_type::D3_RENDER:
+				if (status.filtering == 0 && status.focusing == 0) {
+					status_printf(1, "space %u/%u", 
+							status.space_num, status.total_spaces);
+				} else if (status.filtering == 1 && status.focusing == 0) {
+					status_printf(1, "frame %u, y=%u, x=%u",
+							status.frame_num, status.y_coordinate, status.x_coordinate);
+				} else if (status.filtering == 0 && status.focusing == 1) {
+					status_printf(1, "y=%u, x=%u, view=%u", status.y_coordinate, status.x_coordinate,
+							status.view_num);
+				} else if (status.filtering == 1 && status.focusing == 1) {
+					status_printf(1, "view=%u, y=%u, x=%u, frame=%u",
+							status.view_num, status.y_coordinate, status.x_coordinate, 
+							status.frame_num);
+				}
+				break;
+
 			default:
 				break;
 		}
@@ -216,7 +249,7 @@ private:
 		va_list ap;
 		int n = -1;
 
-		if (buffer_index >= 0 && buffer_index < terminal_width && format[strlen(format) - 1] != '\n') {
+		if (buffer_index >= 0 && buffer_index < terminal_width /* && format[strlen(format) - 1] != '\n' */) {
 			va_start(ap, format);
 			n = vsnprintf(buffer + buffer_index, terminal_width - buffer_index, format, ap);
 			va_end(ap);
@@ -227,8 +260,19 @@ private:
 			 * The message fits in the buffer, so update the index
 			 * and write buffer and status information.
 			 */
+
 			buffer_index += n;
-			write_all();
+
+			if (format[strlen(format) - 1] == '\n') {
+				status_clear();
+				write_buffer();
+			} else
+				write_all();
+
+			if (format[strlen(format) - 1] == '\n') {
+				fprintf(stderr, "YYY");
+			}
+
 		} else {
 			/*
 			 * The message does not fit in the buffer, so write any
@@ -256,18 +300,38 @@ private:
 	}
 
 	void update() {
+		static time_t last_update = 0;
+		time_t now = time(NULL);
+
+		/*
+		 * Handle DONE status.
+		 */
+
 		if (status.code == status_type::FRAME_DONE) {
 			printf(".");
 			fputc('\n', ui_stream);
 			buffer_index = 0;
 			buffer[0] = '\0';
-		} else if (status.code == status_type::SET_DONE) {
+			return;
+		}
+
+		if (status.code == status_type::SET_DONE) {
 			fputc('\n', ui_stream);
 			buffer_index = 0;
 			buffer[0] = '\0';
-		} else {
-			write_all();
-		}
+			return;
+		} 
+
+		/*
+		 * Handle optional output.
+		 */
+
+		if (now == last_update)
+			return;
+		else
+			last_update = now;
+
+		write_all();
 	}
 
 public:
