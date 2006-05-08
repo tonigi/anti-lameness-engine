@@ -1,5 +1,7 @@
 0.8.4 Prerelease
 
+o	Add fine-grain updates for 3D operations when using ui=tty.
+
 o	Modify --3dpx to exclude scene geometry rather than rendered
 	pixels.  In certain cases, this change should allow synthetic removal
 	of objects close to the camera, hence revealing objects further away.
