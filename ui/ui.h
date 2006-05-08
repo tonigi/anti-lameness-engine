@@ -304,6 +304,7 @@ public:
 	void d3_occupancy_status(int frame) {
 		status.code = status.D3_UPDATING_OCCUPANCY;
 		status.frame_num = frame;
+		status.space_num = 0;
 		update();
 	}
 
