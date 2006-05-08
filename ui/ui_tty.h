@@ -61,6 +61,13 @@ private:
 		}
 	}
 
+	void line_clear() {
+		fputc('\r', ui_stream);
+		for (int i = 0; i < terminal_width; i++) {
+			fprintf(ui_stream, " ");
+		}
+	}
+
 
 	void status_printf(int count, ...) {
 
@@ -264,7 +271,7 @@ private:
 			buffer_index += n;
 
 			if (format[strlen(format) - 1] == '\n') {
-				status_clear();
+				line_clear();
 				write_buffer();
 			} else
 				write_all();
