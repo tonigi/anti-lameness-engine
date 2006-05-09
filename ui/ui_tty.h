@@ -207,18 +207,20 @@ private:
 				status_printf(3, "Writing '%s'", "Writing", "write", d2::image_rw::output_name());
 				break;
 			case status_type::D3_CONTROL_POINT_SOLVE:
-				status_printf(1, "%f%% done, error=%f", 
+				status_printf(1, "Aligning control points, %f%% done, error=%f", 
 						log(status.cp_cur_perturb / status.cp_max_perturb) 
 					      / log(status.cp_min_perturb / status.cp_max_perturb), 
 					        status.cp_cur_error);
 				break;
 			case status_type::D3_SUBDIVIDING_SPACE:
-				status_printf(1, "frame pair (%u, %u), y=%u, x=%u, spaces=%u", status.frame_num,
+				status_printf(2, "Subdividing space, frame pair (%u, %u), y=%u, x=%u, spaces=%u", 
+						"Subdividing space", status.frame_num,
 						status.secondary_frame_num, status.y_coordinate, status.x_coordinate,
 						status.total_spaces);
 				break;
 			case status_type::D3_UPDATING_OCCUPANCY:
-				status_printf(1, "step %u/%u, frame %u, space %u/%u", status.steps_completed,
+				status_printf(2, "Updating occupancy, step %u/%u, frame %u, space %u/%u", 
+						"Updating occupancy", status.steps_completed,
 						status.steps, status.frame_num, 
 						status.space_num, status.total_spaces);
 				break;

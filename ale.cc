@@ -1918,7 +1918,7 @@ int main(int argc, const char *argv[]){
 			 * Output a summary match statistic.
 			 */
 
-			ui::get()->ale_done((double) d2::align::match_summary());
+			ui::get()->ale_2d_done((double) d2::align::match_summary());
 
 			/*
 			 * Perform any 3D tasks
@@ -1927,6 +1927,8 @@ int main(int argc, const char *argv[]){
 			optimizations::begin_3d_work();
 
 			if (d3_count > 0) {
+
+				ui::get()->d3_start();
 
 				d3::align::init_angle(view_angle);
 

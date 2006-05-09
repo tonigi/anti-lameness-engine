@@ -409,58 +409,56 @@ public:
 		printf(format_string_no_match(), status.match_value);
 	}
 
-	void ale_done(double value) {
+	void ale_2d_done(double value) {
 		status.code = status.UNDEFINED;
 		printf("Average match: %f%%", value);
 		status.code = status.SET_DONE;
 		update();
 	}
 
+	void d3_start() {
+		status.code = status.UNDEFINED;
+		printf("Rendering 3D");
+		update();
+	}
+
 	void d3_control_point_solve() {
 		status.code = status.D3_CONTROL_POINT_SOLVE;
-		printf("Aligning cameras to control points");
 		update();
 	}
 
 	void d3_init_view_angle(double angle) {
 		status.code = status.UNDEFINED;
-		printf("Initial view angle: %f\n", angle);
 		update();
 	}
 
 	void d3_final_view_angle(double angle) {
 		status.code = status.UNDEFINED;
-		printf("Final view angle: %f\n", angle);
 		update();
 	}
 
 	void d3_control_point_solve_done() {
 		status.code = status.UNDEFINED;
-		printf("\n");
 		update();
 	}
 
 	void d3_subdividing_space() {
 		status.code = status.D3_SUBDIVIDING_SPACE;
-		printf("Subdividing 3D space");
 		update();
 	}
 
 	void d3_subdividing_space_done() {
 		status.code = status.UNDEFINED;
-		printf(".\n");
 		update();
 	}
 
 	void d3_updating_occupancy() {
 		status.code = status.D3_UPDATING_OCCUPANCY;
-		printf("Updating spatial occupancy values");
 		update();
 	}
 
 	void d3_updating_occupancy_done() {
 		status.code = status.UNDEFINED;
-		printf(".\n");
 		update();
 	}
 
@@ -468,7 +466,7 @@ public:
 		static int section_announced = 0;
 
 		if (!section_announced) {
-			printf("Rendering output from 3D geometry:\n");
+			printf(":\n");
 			section_announced = 1;
 		}
 
