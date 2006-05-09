@@ -477,7 +477,7 @@ public:
 
 	void d3_writing_output_done() {
 		status.code = status.UNDEFINED;
-		printf("\n");
+		printf(".\n");
 		update();
 	}
 
