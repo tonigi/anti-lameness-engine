@@ -1,10 +1,11 @@
 0.8.4 Prerelease
 
-o	Add fine-grain updates for 3D operations when using ui=tty.
+o	Add fine-grain UI updates for 3D operations when using ui=tty.  Reduce
+	tty UI status update frequency to at most once per second.
 
-o	Modify --3dpx to exclude scene geometry rather than rendered
-	pixels.  In certain cases, this change should allow synthetic removal
-	of objects close to the camera, hence revealing objects further away.
+o	Modify --3dpx to affect scene geometry rather than rendered
+	pixels.  In certain cases, this change should allow removal of objects
+	close to the camera, hence revealing objects further away.
 
 o	Add to the Makefile a HASH_MAP option that can be used to assign the
 	3D spatial info structure a hash map type instead of the standard STL
