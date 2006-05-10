@@ -43,6 +43,7 @@ private:
 		double aperture;
 		unsigned int sample_count;
 		unsigned int focal_statistic;
+		unsigned int sample_randomization;
 	};
 
 	static unsigned int _uses_medians;
@@ -57,11 +58,13 @@ public:
 		double aperture;
 		unsigned int sample_count;
 		unsigned int statistic;
+		unsigned int randomization;
 	};
 
 	static void add_region(unsigned int type, double distance, double px, double py, 
 			unsigned int ci, double fr, double ht, double vt, double sd, double ed,
-			double sx, double ex, double sy, double ey, double ap, unsigned int sc, unsigned int fs) {
+			double sx, double ex, double sy, double ey, double ap, unsigned int sc, unsigned int fs,
+			unsigned int sr) {
 
 		if (fs)
 			_uses_medians = 1;
@@ -72,7 +75,7 @@ public:
 		if (focus_list.size() <= ci)
 			focus_list.resize(ci + 1);
 
-		entry e = { type, distance, px, py, fr, ht, vt, sd, ed, sx, ex, sy, ey, ap, sc, fs };
+		entry e = { type, distance, px, py, fr, ht, vt, sd, ed, sx, ex, sy, ey, ap, sc, fs, sr };
 		
 		focus_list[ci].push_back(e);
 	}
@@ -99,7 +102,7 @@ public:
 		 * Initialize default focus result.
 		 */
 
-		result r = { d, 0, 1 };
+		result r = { d, 0, 1, 0, 0 };
 
 		/*
 		 * Check for relevant focus regions.
@@ -155,6 +158,7 @@ public:
 				r.aperture = e->aperture;
 				r.sample_count = e->sample_count;
 				r.statistic = e->focal_statistic;
+				r.randomization = e->sample_randomization;
 
 				break;
 			}

@@ -2185,9 +2185,142 @@ public:
 		return depth(_pt, n);
 	}
 
+
 	/*
-	 * Generate an image from a specified view.
+	 * Class to generate focal sample views.
 	 */
+
+	class view_generator {
+
+		/*
+		 * Original projective transformation.
+		 */
+
+		pt original_pt;
+
+		/*
+		 * Data type for shared view data.
+		 */
+
+		class shared_view {
+			pt _pt;
+			std::vector<space::node *> mv;
+			d2::image *color;
+			d2::depth *depth;
+		}
+
+		/*
+		 * Shared view array, indexed by aperture radius and view number.
+		 */
+
+		std::map<ale_pos, std::vector<shared_view> > radius_to_shared_views_map;
+
+		/*
+		 * Method to generate a new stochastic focal view. 
+		 */
+
+		pt get_new_view(ale_pos aperture) {
+
+			ale_pos ofx = aperture;
+			ale_pos ofy = aperture;
+
+			while (ofx * ofx + ofy * ofy > aperture * aperture / 4) {
+				ofx = (rand() * aperture) / RAND_MAX - aperture / 2;
+				ofy = (rand() * aperture) / RAND_MAX - aperture / 2;
+			}
+
+			/*
+			 * Generate a new view from the given offset.
+			 */
+
+			point new_view = original_pt.cw(point(ofx, ofy, 0));
+			pt _pt_new = original_pt;
+			for (int d = 0; d < 3; d++)
+				_pt_new.e().set_translation(d, -new_view[d]);
+
+			return _pt_new;
+		}
+
+	public:
+
+		/*
+		 * Result type.
+		 */
+
+		class view {
+			shared_view *sv;
+			pt _pt;
+
+		public:
+
+			view(shared_view *sv, pt _pt = pt()) {
+				this->sv = sv;
+				this->_pt = _pt;
+			}
+
+			pt get_pt() {
+				if (sv) {
+					return sv->_pt;
+				}
+
+				return _pt;
+			}
+
+			space::node *get_most_visible(unsigned int i, unsigned int j) {
+				assert (sv);
+				return sv->get_most_visible(i, j);
+			}
+
+			space::node *get_most_visible(point p) {
+				if (sv) {
+					return sv->get_most_visible(p);
+				}
+
+				d2::pixel weight(0, 0, 0);
+
+				return most_visible_pointwise(&weight, space::iterate(_pt.origin()), _pt, p);
+
+			}
+
+			d2::pixel *get_color(unsigned int i, unsigned int j) {
+				return sv->get_color(i, j);
+			}
+
+			d2::pixel *get_color(d2::point p) {
+				if (sv) {
+					return sv->get_color(p);
+				}
+
+				assert(0);
+			}
+
+			d2::pixel *get_depth(unsigned int i, unsigned int j) {
+				assert(sv);
+				return sv->get_depth(i, j);
+			}
+
+			d2::pixel *get_depth(d2::point p) {
+				if (sv) {
+					return sv->get_depth(p);
+				}
+				
+				assert(0);
+			}
+		};
+
+		view get_view(ale_pos aperture, unsigned index, unsigned int randomization) {
+
+			view result;
+
+			if (randomization == 0) {
+			}
+
+		}
+
+		view_generator(pt original_pt) {
+			this->original_pt = original_pt;
+		}
+	}
 
 	/*
 	 * Unfiltered function
@@ -2209,10 +2342,6 @@ public:
 					       (int) floor(_pt.scaled_width()), 3);
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
-
-		/*
-		 * Use adaptive subspace data.
-		 */
 
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
@@ -2245,26 +2374,7 @@ public:
 				 * Determine the (x, y) offset for this view.
 				 */
 
-				ale_pos ofx = _focus.aperture;
-				ale_pos ofy = _focus.aperture;
-
-				while (ofx * ofx + ofy * ofy > _focus.aperture * _focus.aperture / 4) {
-					ofx = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
-					ofy = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
-				}
-
-				// fprintf(stderr, "[vnff ofx=%f ofy=%f]\n", ofx, ofy);
-
-				/*
-				 * Generate a new view from the given offset.
-				 */
-
-				point new_view = _pt.cw(point(ofx, ofy, 0));
-				pt _pt_new = _pt;
-				for (int d = 0; d < 3; d++)
-					_pt_new.e().set_translation(d, -new_view[d]);
-
-				// fprintf(stderr, "[vnff nv=[%f %f %f]]\n", new_view[0], new_view[1], new_view[2]);
+				pt _pt_new = get_view(_pt, _focus.aperture);
 
 				/*
 				 * Map the focused point to the new view.
@@ -2714,6 +2824,12 @@ public:
 			_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
 
 			/*
+			 * If we retain the same view for all pixels, then define it now.
+			 */
+
+			std::vector<space::node *> mv_array = NULL;
+			
+			/*
 			 * Iterate over output points.
 			 */
 			
@@ -2748,6 +2864,8 @@ public:
 				pt _pt_new = _pt;
 				for (int d = 0; d < 3; d++)
 					_pt_new.e().set_translation(d, -new_view[d]);
+
+				pt _pt_new = get_view(pt, _focus.aperture);
 
 				/*
 				 * Map the focused point to the new view.
