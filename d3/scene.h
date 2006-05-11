@@ -2187,301 +2187,6 @@ public:
 
 
 	/*
-	 * Class to generate focal sample views.
-	 */
-
-	class view_generator {
-
-		/*
-		 * Original projective transformation.
-		 */
-
-		pt original_pt;
-
-		/*
-		 * Data type for shared view data.
-		 */
-
-		class shared_view {
-			pt _pt;
-			std::vector<space::node *> mv;
-			d2::image *color;
-			d2::depth *depth;
-		}
-
-		/*
-		 * Shared view array, indexed by aperture radius and view number.
-		 */
-
-		std::map<ale_pos, std::vector<shared_view> > radius_to_shared_views_map;
-
-		/*
-		 * Method to generate a new stochastic focal view. 
-		 */
-
-		pt get_new_view(ale_pos aperture) {
-
-			ale_pos ofx = aperture;
-			ale_pos ofy = aperture;
-
-			while (ofx * ofx + ofy * ofy > aperture * aperture / 4) {
-				ofx = (rand() * aperture) / RAND_MAX - aperture / 2;
-				ofy = (rand() * aperture) / RAND_MAX - aperture / 2;
-			}
-
-			/*
-			 * Generate a new view from the given offset.
-			 */
-
-			point new_view = original_pt.cw(point(ofx, ofy, 0));
-			pt _pt_new = original_pt;
-			for (int d = 0; d < 3; d++)
-				_pt_new.e().set_translation(d, -new_view[d]);
-
-			return _pt_new;
-		}
-
-	public:
-
-		/*
-		 * Result type.
-		 */
-
-		class view {
-			shared_view *sv;
-			pt _pt;
-
-		public:
-
-			view(shared_view *sv, pt _pt = pt()) {
-				this->sv = sv;
-				this->_pt = _pt;
-			}
-
-			pt get_pt() {
-				if (sv) {
-					return sv->_pt;
-				}
-
-				return _pt;
-			}
-
-			space::node *get_most_visible(unsigned int i, unsigned int j) {
-				assert (sv);
-				return sv->get_most_visible(i, j);
-			}
-
-			space::node *get_most_visible(point p) {
-				if (sv) {
-					return sv->get_most_visible(p);
-				}
-
-				d2::pixel weight(0, 0, 0);
-
-				return most_visible_pointwise(&weight, space::iterate(_pt.origin()), _pt, p);
-
-			}
-
-			d2::pixel *get_color(unsigned int i, unsigned int j) {
-				return sv->get_color(i, j);
-			}
-
-			d2::pixel *get_color(d2::point p) {
-				if (sv) {
-					return sv->get_color(p);
-				}
-
-				assert(0);
-			}
-
-			d2::pixel *get_depth(unsigned int i, unsigned int j) {
-				assert(sv);
-				return sv->get_depth(i, j);
-			}
-
-			d2::pixel *get_depth(d2::point p) {
-				if (sv) {
-					return sv->get_depth(p);
-				}
-				
-				assert(0);
-			}
-		};
-
-		view get_view(ale_pos aperture, unsigned index, unsigned int randomization) {
-
-			view result;
-
-			if (randomization == 0) {
-			}
-
-		}
-
-		view_generator(pt original_pt) {
-			this->original_pt = original_pt;
-		}
-	}
-
-	/*
-	 * Unfiltered function
-	 */
-	static const d2::image *view_nofilter_focus(pt _pt, int n) {
-
-		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
-
-		if (n >= 0) {
-			assert((int) floor(d2::align::of(n).scaled_height())
-			     == (int) floor(_pt.scaled_height()));
-			assert((int) floor(d2::align::of(n).scaled_width())
-			     == (int) floor(_pt.scaled_width()));
-		}
-
-		const d2::image *depths = depth(_pt, n);
-
-		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-					       (int) floor(_pt.scaled_width()), 3);
-
-		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
-
-		for (unsigned int i = 0; i < im->height(); i++)
-		for (unsigned int j = 0; j < im->width();  j++) {
-
-			focus::result _focus = focus::get(depths, i, j);
-
-			if (!finite(_focus.focal_distance))
-				continue;
-
-			/*
-			 * Data structures for calculating focal statistics.
-			 */
-			
-			d2::pixel color, weight;
-			d2::image_weighted_median *iwm = NULL;
-
-			if (_focus.statistic == 1) {
-				iwm = new d2::image_weighted_median(1, 1, 3, _focus.sample_count);
-			}
-
-			/*
-			 * Iterate over views for this focus region.
-			 */
-
-			for (unsigned int v = 0; v < _focus.sample_count; v++) {
-
-				ui::get()->d3_render_status(0, 1, -1, v, i, j, -1);
-
-				/*
-				 * Determine the (x, y) offset for this view.
-				 */
-
-				pt _pt_new = get_view(_pt, _focus.aperture);
-
-				/*
-				 * Map the focused point to the new view.
-				 */
-
-				point p = _pt_new.wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
-
-				/*
-				 * Determine weight and color for the given point.
-				 */
-
-				d2::image *im_point = new d2::image_ale_real(1, 1, 3);
-				d2::image *wt_point = new d2::image_ale_real(1, 1, 3);
-
-				view_recurse(0, im_point, wt_point, space::iterate(_pt_new.origin()),
-					_pt_new, 1, p.xy(), p.xy());
-
-				if (_focus.statistic == 0) {
-					color += im_point->pix(0, 0);
-					weight += im_point->pix(0, 0);
-				} else if (_focus.statistic == 1) {
-					iwm->accumulate(0, 0, v, color, weight);
-				} else
-					assert(0);
-
-				delete im_point;
-				delete wt_point;
-			}
-
-			if (_focus.statistic == 1) {
-				weight = iwm->get_weights()->get_pixel(0, 0);
-				color = iwm->get_pixel(0, 0);
-				delete iwm;
-			}
-
-			if (weight.min_norm() < encounter_threshold) {
-				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
-			} else if (normalize_weights)
-				im->pix(i, j) = color / weight;
-			else
-				im->pix(i, j) = color;
-		}
-
-		delete depths;
-
-		return im;
-	}
-
-	/*
-	 * Unfiltered function
-	 */
-	static const d2::image *view_nofilter(pt _pt, int n) {
-
-		if (!focus::is_trivial())
-			return view_nofilter_focus(_pt, n);
-
-		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
-
-		if (n >= 0) {
-			assert((int) floor(d2::align::of(n).scaled_height())
-			     == (int) floor(_pt.scaled_height()));
-			assert((int) floor(d2::align::of(n).scaled_width())
-			     == (int) floor(_pt.scaled_width()));
-		}
-
-		const d2::image *depths = depth(_pt, n);
-
-		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-					       (int) floor(_pt.scaled_width()), 3);
-
-		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
-
-		/*
-		 * Use adaptive subspace data.
-		 */
-
-		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-						(int) floor(_pt.scaled_width()), 3);
-
-		/*
-		 * Iterate through subspaces.
-		 */
-
-		space::iterate si(_pt.origin());
-
-		ui::get()->d3_render_status(0, 0, -1, -1, -1, -1, 0);
-
-		view_recurse(0, im, weights, si, _pt);
-
-		for (unsigned int i = 0; i < im->height(); i++)
-		for (unsigned int j = 0; j < im->width();  j++) {
-			if (weights->pix(i, j).min_norm() < encounter_threshold
-			 || (d3px_count > 0 && isnan(depths->pix(i, j)[0]))) {
-				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
-				weights->pix(i, j) = d2::pixel::zero();
-			} else if (normalize_weights)
-				im->pix(i, j) /= weights->pix(i, j);
-		}
-
-		delete weights;
-
-		delete depths;
-
-		return im;
-	}
-
-	/*
 	 * This function always performs exclusion.
 	 */
 
@@ -2749,6 +2454,423 @@ public:
 	}
 
 	/*
+	 * Class to generate focal sample views.
+	 */
+
+	class view_generator {
+
+		/*
+		 * Original projective transformation.
+		 */
+
+		pt original_pt;
+
+		/*
+		 * Data type for shared view data.
+		 */
+
+		class shared_view {
+			pt _pt;
+			std::vector<space::node *> mv;
+			d2::image *color;
+			d2::image *color_weights;
+			d2::image *depth;
+
+		public:
+			shared_view(pt _pt) {
+				this->_pt = _pt;
+				color = NULL;
+				depth = NULL;
+			}
+
+			~shared_view() {
+				delete color;
+				delete depth;
+			}
+
+			void get_view_recurse(d2::image *data, d2::image *weights, int type) {
+				/*
+				 * Iterate through subspaces.
+				 */
+
+				space::iterate si(_pt.origin());
+
+				ui::get()->d3_render_status(0, 0, -1, -1, -1, -1, 0);
+
+				view_recurse(type, data, weights, si, _pt);
+			}
+
+			void init_color() {
+				color = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+								(int) floor(_pt.scaled_width()), 3);
+
+				color_weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+								(int) floor(_pt.scaled_width()), 3);
+
+				get_view_recurse(color, color_weights, 0);
+			}
+
+			void init_depth() {
+				depth = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+								(int) floor(_pt.scaled_width()), 3);
+
+				d2::image *temp_weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+								(int) floor(_pt.scaled_width()), 3);
+
+				get_view_recurse(depth, temp_weights, 6);
+
+				delete temp_weights;
+			}
+
+		public:
+			pt get_pt() {
+				return _pt;
+			}
+
+			space::node *get_most_visible(unsigned int i, unsigned int j) {
+				unsigned int width  = (int) floor(_pt.scaled_width());
+
+				if (i * width + j >= mv.size()) {
+					mv = most_visible_scaled(_pt);
+				}
+
+				assert (i * width + j < mv.size());
+
+				return mv[i * width + j];
+			}
+
+			space::node *get_most_visible(d2::point p) {
+				unsigned int i = (unsigned int) round (p[0]);
+				unsigned int j = (unsigned int) round (p[1]);
+
+				return get_most_visible(i, j);
+			}
+
+			d2::pixel get_color(unsigned int i, unsigned int j) {
+				if (color == NULL) {
+					init_color();
+				}
+
+				assert (color != NULL);
+
+				return color->get_pixel(i, j);
+			}
+
+			d2::pixel get_depth(unsigned int i, unsigned int j) {
+				if (depth == NULL) {
+					init_depth();
+				}
+
+				assert (depth != NULL);
+
+				return depth->get_pixel(i, j);
+			}
+
+			void get_color_and_weight(d2::pixel *c, d2::pixel *w, d2::point p) {
+				if (color == NULL) {
+					init_color();
+				}
+
+				assert (color != NULL);
+
+				*c = color->get_bl(p);
+				*w = color_weights->get_bl(p);
+			}
+
+			d2::pixel get_depth(d2::point p) {
+				if (depth == NULL) {
+					init_depth();
+				}
+
+				assert (depth != NULL);
+
+				return depth->get_bl(p);
+			}
+		};
+
+		/*
+		 * Shared view array, indexed by aperture diameter and view number.
+		 */
+
+		std::map<ale_pos, std::vector<shared_view> > aperture_to_shared_views_map;
+
+		/*
+		 * Method to generate a new stochastic focal view. 
+		 */
+
+		pt get_new_view(ale_pos aperture) {
+
+			ale_pos ofx = aperture;
+			ale_pos ofy = aperture;
+
+			while (ofx * ofx + ofy * ofy > aperture * aperture / 4) {
+				ofx = (rand() * aperture) / RAND_MAX - aperture / 2;
+				ofy = (rand() * aperture) / RAND_MAX - aperture / 2;
+			}
+
+			/*
+			 * Generate a new view from the given offset.
+			 */
+
+			point new_view = original_pt.cw(point(ofx, ofy, 0));
+			pt _pt_new = original_pt;
+			for (int d = 0; d < 3; d++)
+				_pt_new.e().set_translation(d, -new_view[d]);
+
+			return _pt_new;
+		}
+
+	public:
+
+		/*
+		 * Result type.
+		 */
+
+		class view {
+			shared_view *sv;
+			pt _pt;
+
+		public:
+
+			view(shared_view *sv, pt _pt = pt()) {
+				this->sv = sv;
+				this->_pt = _pt;
+			}
+
+			pt get_pt() {
+				if (sv) {
+					return sv->get_pt();
+				}
+
+				return _pt;
+			}
+
+			space::node *get_most_visible(unsigned int i, unsigned int j) {
+				assert (sv);
+				return sv->get_most_visible(i, j);
+			}
+
+			space::node *get_most_visible(d2::point p) {
+				if (sv) {
+					return sv->get_most_visible(p);
+				}
+
+				d2::pixel weight(0, 0, 0);
+
+				return most_visible_pointwise(&weight, space::iterate(_pt.origin()), _pt, p);
+
+			}
+
+			d2::pixel get_color(unsigned int i, unsigned int j) {
+				return sv->get_color(i, j);
+			}
+
+			void get_color_and_weight(d2::pixel *color, d2::pixel *weight, d2::point p) {
+				if (sv) {
+					sv->get_color_and_weight(color, weight, p);
+					return;
+				}
+
+				/*
+				 * Determine weight and color for the given point.
+				 */
+
+				d2::image *im_point = new d2::image_ale_real(1, 1, 3);
+				d2::image *wt_point = new d2::image_ale_real(1, 1, 3);
+
+				view_recurse(0, im_point, wt_point, space::iterate(_pt.origin()), _pt, 1, p, p);
+
+				*color = im_point->pix(0, 0);
+				*weight = wt_point->pix(0, 0);
+
+				return;
+			}
+
+			d2::pixel get_depth(unsigned int i, unsigned int j) {
+				assert(sv);
+				return sv->get_depth(i, j);
+			}
+
+			d2::pixel get_depth(d2::point p) {
+				if (sv) {
+					return sv->get_depth(p);
+				}
+				
+				assert(0);
+			}
+		};
+
+		view get_view(ale_pos aperture, unsigned index, unsigned int randomization) {
+			if (randomization == 0) {
+				while (aperture_to_shared_views_map[aperture].size() <= index) {
+					aperture_to_shared_views_map[aperture].push_back(shared_view(get_new_view(aperture)));
+				}
+
+				return view(&(aperture_to_shared_views_map[aperture][index]));
+			}
+
+			return view(NULL, get_new_view(aperture));
+		}
+
+		view_generator(pt original_pt) {
+			this->original_pt = original_pt;
+		}
+	};
+
+	/*
+	 * Unfiltered function
+	 */
+	static const d2::image *view_nofilter_focus(pt _pt, int n) {
+
+		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
+
+		if (n >= 0) {
+			assert((int) floor(d2::align::of(n).scaled_height())
+			     == (int) floor(_pt.scaled_height()));
+			assert((int) floor(d2::align::of(n).scaled_width())
+			     == (int) floor(_pt.scaled_width()));
+		}
+
+		const d2::image *depths = depth(_pt, n);
+
+		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+					       (int) floor(_pt.scaled_width()), 3);
+
+		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
+
+		view_generator vg(_pt);
+
+		for (unsigned int i = 0; i < im->height(); i++)
+		for (unsigned int j = 0; j < im->width();  j++) {
+
+			focus::result _focus = focus::get(depths, i, j);
+
+			if (!finite(_focus.focal_distance))
+				continue;
+
+			/*
+			 * Data structures for calculating focal statistics.
+			 */
+			
+			d2::pixel color, weight;
+			d2::image_weighted_median *iwm = NULL;
+
+			if (_focus.statistic == 1) {
+				iwm = new d2::image_weighted_median(1, 1, 3, _focus.sample_count);
+			}
+
+			/*
+			 * Iterate over views for this focus region.
+			 */
+
+			for (unsigned int v = 0; v < _focus.sample_count; v++) {
+
+				view_generator::view vw = vg.get_view(_focus.aperture, v, _focus.randomization);
+
+				ui::get()->d3_render_status(0, 1, -1, v, i, j, -1);
+
+
+				/*
+				 * Map the focused point to the new view.
+				 */
+
+				point p = vw.get_pt().wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
+
+				/*
+				 * Determine weight and color for the given point.
+				 */
+
+				d2::pixel view_weight, view_color;
+
+				vw.get_color_and_weight(&view_color, &view_weight, p.xy());
+
+				if (_focus.statistic == 0) {
+					color += view_color;
+					weight += view_weight;
+				} else if (_focus.statistic == 1) {
+					iwm->accumulate(0, 0, v, view_color, view_weight);
+				} else
+					assert(0);
+			}
+
+			if (_focus.statistic == 1) {
+				weight = iwm->get_weights()->get_pixel(0, 0);
+				color = iwm->get_pixel(0, 0);
+				delete iwm;
+			}
+
+			if (weight.min_norm() < encounter_threshold) {
+				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
+			} else if (normalize_weights)
+				im->pix(i, j) = color / weight;
+			else
+				im->pix(i, j) = color;
+		}
+
+		delete depths;
+
+		return im;
+	}
+
+	/*
+	 * Unfiltered function
+	 */
+	static const d2::image *view_nofilter(pt _pt, int n) {
+
+		if (!focus::is_trivial())
+			return view_nofilter_focus(_pt, n);
+
+		assert ((unsigned int) n < d2::image_rw::count() || n < 0);
+
+		if (n >= 0) {
+			assert((int) floor(d2::align::of(n).scaled_height())
+			     == (int) floor(_pt.scaled_height()));
+			assert((int) floor(d2::align::of(n).scaled_width())
+			     == (int) floor(_pt.scaled_width()));
+		}
+
+		const d2::image *depths = depth(_pt, n);
+
+		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+					       (int) floor(_pt.scaled_width()), 3);
+
+		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
+
+		/*
+		 * Use adaptive subspace data.
+		 */
+
+		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+						(int) floor(_pt.scaled_width()), 3);
+
+		/*
+		 * Iterate through subspaces.
+		 */
+
+		space::iterate si(_pt.origin());
+
+		ui::get()->d3_render_status(0, 0, -1, -1, -1, -1, 0);
+
+		view_recurse(0, im, weights, si, _pt);
+
+		for (unsigned int i = 0; i < im->height(); i++)
+		for (unsigned int j = 0; j < im->width();  j++) {
+			if (weights->pix(i, j).min_norm() < encounter_threshold
+			 || (d3px_count > 0 && isnan(depths->pix(i, j)[0]))) {
+				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
+				weights->pix(i, j) = d2::pixel::zero();
+			} else if (normalize_weights)
+				im->pix(i, j) /= weights->pix(i, j);
+		}
+
+		delete weights;
+
+		delete depths;
+
+		return im;
+	}
+
+	/*
 	 * Filtered function.
 	 */
 	static const d2::image *view_filter_focus(pt _pt, int n) {
@@ -2804,6 +2926,14 @@ public:
 			iwa = new d2::image_weighted_simple(height, width, 3, new d2::invariant(NULL));
 		}
 
+		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
+
+		/*
+		 * Prepare view generator.
+		 */
+
+		view_generator vg(_pt);
+
 		/*
 		 * Render views separately.  This is spacewise inefficient,
 		 * but is easy to implement given the current operation of the
@@ -2821,14 +2951,6 @@ public:
 
 			renderer->init_point_renderer(height, width, 3);
 
-			_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
-
-			/*
-			 * If we retain the same view for all pixels, then define it now.
-			 */
-
-			std::vector<space::node *> mv_array = NULL;
-			
 			/*
 			 * Iterate over output points.
 			 */
@@ -2844,45 +2966,15 @@ public:
 				if (!finite(_focus.focal_distance))
 					continue;
 
-				/*
-				 * Determine the (x, y) offset for this view.
-				 */
+				view_generator::view vw = vg.get_view(_focus.aperture, v, _focus.focal_distance);
 
-				ale_pos ofx = _focus.aperture;
-				ale_pos ofy = _focus.aperture;
-
-				while (ofx * ofx + ofy * ofy > _focus.aperture * _focus.aperture / 4) {
-					ofx = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
-					ofy = (rand() * _focus.aperture) / RAND_MAX - _focus.aperture / 2;
-				}
-
-				/*
-				 * Generate a new view from the given offset.
-				 */
-
-				point new_view = _pt.cw(point(ofx, ofy, 0));
-				pt _pt_new = _pt;
-				for (int d = 0; d < 3; d++)
-					_pt_new.e().set_translation(d, -new_view[d]);
-
-				pt _pt_new = get_view(pt, _focus.aperture);
-
-				/*
-				 * Map the focused point to the new view.
-				 */
-
-				point p = _pt_new.wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
-
-//					fprintf(stderr, "[vff i=%d j=%d p=[%f %f %f]]\n",
-//							i, j, p[0], p[1], p[2]);
+				point p = vw.get_pt().wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
 
 				/*
 				 * Determine the most-visible subspace.
 				 */
 
-				d2::pixel weight(0, 0, 0);
-				space::node *mv = most_visible_pointwise(&weight, space::iterate(_pt.origin()), 
-					_pt_new, p.xy());
+				space::node *mv = vw.get_most_visible(p.xy());
 
 				if (mv == NULL)
 					continue;
