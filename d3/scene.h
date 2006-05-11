@@ -2475,17 +2475,25 @@ public:
 			d2::image *color;
 			d2::image *color_weights;
 			d2::image *depth;
+			d2::image *median_depth;
+			d2::image *median_diff;
 
 		public:
 			shared_view(pt _pt) {
 				this->_pt = _pt;
 				color = NULL;
+				color_weights = NULL;
 				depth = NULL;
+				median_depth = NULL;
+				median_diff = NULL;
 			}
 
 			~shared_view() {
 				delete color;
 				delete depth;
+				delete color_weights;
+				delete median_diff;
+				delete median_depth;
 			}
 
 			void get_view_recurse(d2::image *data, d2::image *weights, int type) {
@@ -2520,6 +2528,19 @@ public:
 				get_view_recurse(depth, temp_weights, 6);
 
 				delete temp_weights;
+			}
+
+			void init_medians() {
+				if (!depth)
+					init_depth();
+
+				assert(depth);
+
+				median_diff = depth->fcdiff_median((int) floor(diff_median_radius));
+				median_depth = depth->medians((int) floor(depth_median_radius));
+
+				assert(median_diff);
+				assert(median_depth);
 			}
 
 		public:
@@ -2566,6 +2587,16 @@ public:
 				return depth->get_pixel(i, j);
 			}
 
+			d2::pixel get_median_depth_and_diff(d2::pixel *t, d2::pixel *f, unsigned int i, unsigned int j) {
+				if (median_depth == NULL && median_diff == NULL) 
+					init_medians();
+
+				assert (median_depth && median_diff);
+
+				*t = median_depth->get_pixel(i, j);
+				*f = median_diff->get_pixel(i, j);
+			}
+
 			void get_color_and_weight(d2::pixel *c, d2::pixel *w, d2::point p) {
 				if (color == NULL) {
 					init_color();
@@ -2586,6 +2617,17 @@ public:
 
 				return depth->get_bl(p);
 			}
+
+			void get_median_depth_and_diff(d2::pixel *t, d2::pixel *f, d2::point p) {
+				if (median_diff == NULL && median_depth == NULL)
+					init_medians();
+
+				assert (median_diff != NULL && median_depth != NULL);
+
+				*t = median_depth->get_bl(p);
+				*f = median_diff->get_bl(p);
+			}
+
 		};
 
 		/*
@@ -2691,12 +2733,48 @@ public:
 				return sv->get_depth(i, j);
 			}
 
-			d2::pixel get_depth(d2::point p) {
+			void get_median_depth_and_diff(d2::pixel *depth, d2::pixel *diff, unsigned int i, unsigned int j) {
+				assert(sv);
+				sv->get_median_depth_and_diff(depth, diff, i, j);
+			}
+
+			void get_median_depth_and_diff(d2::pixel *_depth, d2::pixel *_diff, d2::point p) {
 				if (sv) {
-					return sv->get_depth(p);
+					sv->get_median_depth_and_diff(_depth, _diff, p);
+					return;
 				}
-				
-				assert(0);
+
+				/*
+				 * Generate a local depth image of required radius.
+				 */
+
+				ale_pos radius = 1;
+
+				if (diff_median_radius + 1 > radius)
+					radius = diff_median_radius + 1;
+				if (depth_median_radius > radius)
+					radius = depth_median_radius;
+
+				d2::point pl = p - d2::point(radius, radius);
+				d2::point ph = p + d2::point(radius, radius);
+				const d2::image *local_depth = depth(_pt, -1, 1, pl, ph);
+
+				/*
+				 * Find depth and diff at this point, check for
+				 * undefined values, and generate projections
+				 * of the image corners on the estimated normal
+				 * surface.
+				 */
+
+				d2::image *median_diffs = local_depth->fcdiff_median((int) floor(diff_median_radius));
+				d2::image *median_depths = local_depth->medians((int) floor(depth_median_radius));
+
+				*_depth = median_depths->pix((int) radius, (int) radius);
+				*_diff = median_diffs->pix((int) radius, (int) radius);
+
+				delete median_diffs;
+				delete median_depths;
+				delete local_depth;
 			}
 		};
 
@@ -2966,9 +3044,11 @@ public:
 				if (!finite(_focus.focal_distance))
 					continue;
 
-				view_generator::view vw = vg.get_view(_focus.aperture, v, _focus.focal_distance);
+				view_generator::view vw = vg.get_view(_focus.aperture, v, _focus.randomization);
 
-				point p = vw.get_pt().wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
+				pt _pt_new = vw.get_pt();
+
+				point p = _pt_new.wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
 
 				/*
 				 * Determine the most-visible subspace.
@@ -2980,36 +3060,12 @@ public:
 					continue;
 
 				/*
-				 * Generate a local depth image of required radius.
+				 * Get median depth and diff.
 				 */
 
-				ale_pos radius = 1;
+				d2::pixel depth, diff;
 
-				if (diff_median_radius + 1 > radius)
-					radius = diff_median_radius + 1;
-				if (depth_median_radius > radius)
-					radius = depth_median_radius;
-
-				d2::point pl = p.xy() - d2::point(radius, radius);
-				d2::point ph = p.xy() + d2::point(radius, radius);
-				const d2::image *local_depth = depth(_pt_new, -1, 1, pl, ph);
-
-				/*
-				 * Find depth and diff at this point, check for
-				 * undefined values, and generate projections
-				 * of the image corners on the estimated normal
-				 * surface.
-				 */
-
-				d2::image *median_diffs = local_depth->fcdiff_median((int) floor(diff_median_radius));
-				d2::image *median_depths = local_depth->medians((int) floor(depth_median_radius));
-
-				d2::pixel depth = median_depths->pix((int) radius, (int) radius);
-				d2::pixel diff = median_diffs->pix((int) radius, (int) radius);
-
-				delete median_diffs;
-				delete median_depths;
-				delete local_depth;
+				vw.get_median_depth_and_diff(&depth, &diff, p.xy());
 
 				if (!depth.finite() || !diff.finite())
 					continue;
