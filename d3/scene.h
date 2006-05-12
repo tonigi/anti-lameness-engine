@@ -2559,13 +2559,19 @@ public:
 			}
 
 			space::node *get_most_visible(unsigned int i, unsigned int j) {
+				unsigned int height = (int) floor(_pt.scaled_height());
 				unsigned int width  = (int) floor(_pt.scaled_width());
 
-				if (i * width + j >= mv.size()) {
+				if (i < 0 || i >= height
+				 || j < 0 || j >= width) {
+					return NULL;
+				}
+
+				if (mv.size() == 0) {
 					mv = most_visible_scaled(_pt);
 				}
 
-				assert (i * width + j < mv.size());
+				assert (mv.size() > i * width + j);
 
 				return mv[i * width + j];
 			}
