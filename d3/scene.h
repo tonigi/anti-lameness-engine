@@ -3191,7 +3191,14 @@ public:
 									  + remote_bound[1] * inverse_matrix[1][0],
 									    remote_bound[0] * inverse_matrix[0][1]
 									  + remote_bound[1] * inverse_matrix[1][1]);
+
 					}
+
+					if (!local_bounds[0].finite()
+					 || !local_bounds[1].finite()
+					 || !local_bounds[2].finite()
+					 || !local_bounds[3].finite())
+						continue;
 
 					inv_t.gpt_set(local_bounds);
 

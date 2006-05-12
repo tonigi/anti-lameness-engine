@@ -185,6 +185,11 @@ public:
 		     && !isnan(x[1]));
 	}
 
+	int finite() const {
+		return (::finite(x[0])
+		     && ::finite(x[1]));
+	}
+
 	static int defined(const point &p) {
 		return p.defined();
 	}
