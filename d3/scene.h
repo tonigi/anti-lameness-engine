@@ -2587,14 +2587,20 @@ public:
 				return depth->get_pixel(i, j);
 			}
 
-			d2::pixel get_median_depth_and_diff(d2::pixel *t, d2::pixel *f, unsigned int i, unsigned int j) {
+			void get_median_depth_and_diff(d2::pixel *t, d2::pixel *f, unsigned int i, unsigned int j) {
 				if (median_depth == NULL && median_diff == NULL) 
 					init_medians();
 
 				assert (median_depth && median_diff);
 
-				*t = median_depth->get_pixel(i, j);
-				*f = median_diff->get_pixel(i, j);
+				if (i < 0 || i >= median_depth->height()
+				 || j < 0 || j >= median_depth->width()) {
+					*t = d2::pixel::undefined();
+					*f = d2::pixel::undefined();
+				} else {
+					*t = median_depth->get_pixel(i, j);
+					*f = median_diff->get_pixel(i, j);
+				}
 			}
 
 			void get_color_and_weight(d2::pixel *c, d2::pixel *w, d2::point p) {
@@ -2604,8 +2610,13 @@ public:
 
 				assert (color != NULL);
 
-				*c = color->get_bl(p);
-				*w = color_weights->get_bl(p);
+				if (!color->in_bounds(p)) {
+					*c = d2::pixel::undefined();
+					*w = d2::pixel::undefined();
+				} else {
+					*c = color->get_bl(p);
+					*w = color_weights->get_bl(p);
+				}
 			}
 
 			d2::pixel get_depth(d2::point p) {
@@ -2614,6 +2625,10 @@ public:
 				}
 
 				assert (depth != NULL);
+
+				if (!depth->in_bounds(p)) {
+					return d2::pixel::undefined();
+				}
 
 				return depth->get_bl(p);
 			}
@@ -2624,8 +2639,13 @@ public:
 
 				assert (median_diff != NULL && median_depth != NULL);
 
-				*t = median_depth->get_bl(p);
-				*f = median_diff->get_bl(p);
+				if (!median_diff->in_bounds(p)) {
+					*t = d2::pixel::undefined();
+					*f = d2::pixel::undefined();
+				} else {
+					*t = median_depth->get_bl(p);
+					*f = median_diff->get_bl(p);
+				}
 			}
 
 		};
@@ -2725,6 +2745,9 @@ public:
 				*color = im_point->pix(0, 0);
 				*weight = wt_point->pix(0, 0);
 
+				delete im_point;
+				delete wt_point;
+
 				return;
 			}
 
@@ -2780,11 +2803,28 @@ public:
 
 		view get_view(ale_pos aperture, unsigned index, unsigned int randomization) {
 			if (randomization == 0) {
+				fprintf(stderr, "foo %u\n", __LINE__);
+
 				while (aperture_to_shared_views_map[aperture].size() <= index) {
-					aperture_to_shared_views_map[aperture].push_back(shared_view(get_new_view(aperture)));
+				fprintf(stderr, "foo %u\n", __LINE__);
+
+					std::vector<shared_view> *svv = &(aperture_to_shared_views_map[aperture]);
+				fprintf(stderr, "foo %u\n", __LINE__);
+					shared_view sv(get_new_view(aperture));
+				fprintf(stderr, "foo %u\n", __LINE__);
+					svv->push_back(sv);
+				fprintf(stderr, "foo %u\n", __LINE__);
+
+					// aperture_to_shared_views_map[aperture].push_back(shared_view(get_new_view(aperture)));
+				fprintf(stderr, "foo %u\n", __LINE__);
+
 				}
 
+				fprintf(stderr, "foo %u\n", __LINE__);
+
 				return view(&(aperture_to_shared_views_map[aperture][index]));
+				fprintf(stderr, "foo %u\n", __LINE__);
+
 			}
 
 			return view(NULL, get_new_view(aperture));
@@ -2852,7 +2892,11 @@ public:
 				 * Map the focused point to the new view.
 				 */
 
+				fprintf(stderr, "foo %u\n", __LINE__);
+
 				point p = vw.get_pt().wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
+
+				fprintf(stderr, "foo %u\n", __LINE__);
 
 				/*
 				 * Determine weight and color for the given point.
@@ -2860,7 +2904,11 @@ public:
 
 				d2::pixel view_weight, view_color;
 
+				fprintf(stderr, "foo %u\n", __LINE__);
+
 				vw.get_color_and_weight(&view_color, &view_weight, p.xy());
+
+				fprintf(stderr, "foo %u\n", __LINE__);
 
 				if (_focus.statistic == 0) {
 					color += view_color;
@@ -2869,6 +2917,8 @@ public:
 					iwm->accumulate(0, 0, v, view_color, view_weight);
 				} else
 					assert(0);
+				fprintf(stderr, "foo %u\n", __LINE__);
+
 			}
 
 			if (_focus.statistic == 1) {
