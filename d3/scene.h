@@ -2902,6 +2902,9 @@ public:
 
 				vw.get_color_and_weight(&view_color, &view_weight, p.xy());
 
+				if (!color.finite() || !weight.finite())
+					continue;
+
 				if (_focus.statistic == 0) {
 					color += view_color;
 					weight += view_weight;
