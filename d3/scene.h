@@ -2488,6 +2488,16 @@ public:
 				median_diff = NULL;
 			}
 
+			shared_view(const shared_view &copy_origin) {
+				_pt = copy_origin._pt;
+				mv = copy_origin.mv;
+				color = NULL;
+				color_weights = NULL;
+				depth = NULL;
+				median_depth = NULL;
+				median_diff = NULL;
+			}
+
 			~shared_view() {
 				delete color;
 				delete depth;
@@ -2803,28 +2813,12 @@ public:
 
 		view get_view(ale_pos aperture, unsigned index, unsigned int randomization) {
 			if (randomization == 0) {
-				fprintf(stderr, "foo %u\n", __LINE__);
 
 				while (aperture_to_shared_views_map[aperture].size() <= index) {
-				fprintf(stderr, "foo %u\n", __LINE__);
-
-					std::vector<shared_view> *svv = &(aperture_to_shared_views_map[aperture]);
-				fprintf(stderr, "foo %u\n", __LINE__);
-					shared_view sv(get_new_view(aperture));
-				fprintf(stderr, "foo %u\n", __LINE__);
-					svv->push_back(sv);
-				fprintf(stderr, "foo %u\n", __LINE__);
-
-					// aperture_to_shared_views_map[aperture].push_back(shared_view(get_new_view(aperture)));
-				fprintf(stderr, "foo %u\n", __LINE__);
-
+					aperture_to_shared_views_map[aperture].push_back(shared_view(get_new_view(aperture)));
 				}
 
-				fprintf(stderr, "foo %u\n", __LINE__);
-
 				return view(&(aperture_to_shared_views_map[aperture][index]));
-				fprintf(stderr, "foo %u\n", __LINE__);
-
 			}
 
 			return view(NULL, get_new_view(aperture));
@@ -2892,11 +2886,7 @@ public:
 				 * Map the focused point to the new view.
 				 */
 
-				fprintf(stderr, "foo %u\n", __LINE__);
-
 				point p = vw.get_pt().wp_scaled(_pt.pw_scaled(point(i, j, _focus.focal_distance)));
-
-				fprintf(stderr, "foo %u\n", __LINE__);
 
 				/*
 				 * Determine weight and color for the given point.
@@ -2904,11 +2894,7 @@ public:
 
 				d2::pixel view_weight, view_color;
 
-				fprintf(stderr, "foo %u\n", __LINE__);
-
 				vw.get_color_and_weight(&view_color, &view_weight, p.xy());
-
-				fprintf(stderr, "foo %u\n", __LINE__);
 
 				if (_focus.statistic == 0) {
 					color += view_color;
@@ -2917,8 +2903,6 @@ public:
 					iwm->accumulate(0, 0, v, view_color, view_weight);
 				} else
 					assert(0);
-				fprintf(stderr, "foo %u\n", __LINE__);
-
 			}
 
 			if (_focus.statistic == 1) {
