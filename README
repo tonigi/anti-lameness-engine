@@ -1,5 +1,5 @@
 ========================
-ALE version 0.8.3 README
+ALE version 0.8.4 README
 ========================
 
 This README discusses downloading, extraction, and compilation of ALE.
@@ -35,7 +35,7 @@ Windows Binaries
 URLs
 ----
 
-http://auricle.dyndns.org/ALE/download/ale-0_8_3-win32.zip
+http://auricle.dyndns.org/ALE/download/ale-0_8_4-win32.zip
 
 
 Extraction and Use
@@ -63,7 +63,7 @@ Compiling from source
 URLs
 ----
 
-http://auricle.dyndns.org/ALE/download/ale-0.8.3.tar.gz
+http://auricle.dyndns.org/ALE/download/ale-0.8.4.tar.gz
 
 
 Build prerequisites
@@ -78,8 +78,8 @@ Extraction and Installation
 
 Download the source archive file from the URL indicated above, and invoke:
 
-	tar xzf ale-0.8.3.tar.gz
-	cd ale-0.8.3
+	tar xzf ale-0.8.4.tar.gz
+	cd ale-0.8.4
 	make [OPTIONS]
 
 where the text '[OPTIONS]' is replaced by zero or more of the compilation
