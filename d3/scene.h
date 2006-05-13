@@ -2474,7 +2474,7 @@ public:
 			std::vector<space::node *> mv;
 			d2::image *color;
 			d2::image *color_weights;
-			d2::image *depth;
+			const d2::image *_depth;
 			d2::image *median_depth;
 			d2::image *median_diff;
 
@@ -2483,7 +2483,7 @@ public:
 				this->_pt = _pt;
 				color = NULL;
 				color_weights = NULL;
-				depth = NULL;
+				_depth = NULL;
 				median_depth = NULL;
 				median_diff = NULL;
 			}
@@ -2493,14 +2493,14 @@ public:
 				mv = copy_origin.mv;
 				color = NULL;
 				color_weights = NULL;
-				depth = NULL;
+				_depth = NULL;
 				median_depth = NULL;
 				median_diff = NULL;
 			}
 
 			~shared_view() {
 				delete color;
-				delete depth;
+				delete _depth;
 				delete color_weights;
 				delete median_diff;
 				delete median_depth;
@@ -2529,25 +2529,17 @@ public:
 			}
 
 			void init_depth() {
-				depth = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-								(int) floor(_pt.scaled_width()), 3);
-
-				d2::image *temp_weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
-								(int) floor(_pt.scaled_width()), 3);
-
-				get_view_recurse(depth, temp_weights, 6);
-
-				delete temp_weights;
+				_depth = depth(_pt, -1);
 			}
 
 			void init_medians() {
-				if (!depth)
+				if (!_depth)
 					init_depth();
 
-				assert(depth);
+				assert(_depth);
 
-				median_diff = depth->fcdiff_median((int) floor(diff_median_radius));
-				median_depth = depth->medians((int) floor(depth_median_radius));
+				median_diff = _depth->fcdiff_median((int) floor(diff_median_radius));
+				median_depth = _depth->medians((int) floor(depth_median_radius));
 
 				assert(median_diff);
 				assert(median_depth);
@@ -2594,13 +2586,13 @@ public:
 			}
 
 			d2::pixel get_depth(unsigned int i, unsigned int j) {
-				if (depth == NULL) {
+				if (_depth == NULL) {
 					init_depth();
 				}
 
-				assert (depth != NULL);
+				assert (_depth != NULL);
 
-				return depth->get_pixel(i, j);
+				return _depth->get_pixel(i, j);
 			}
 
 			void get_median_depth_and_diff(d2::pixel *t, d2::pixel *f, unsigned int i, unsigned int j) {
@@ -2636,17 +2628,17 @@ public:
 			}
 
 			d2::pixel get_depth(d2::point p) {
-				if (depth == NULL) {
+				if (_depth == NULL) {
 					init_depth();
 				}
 
-				assert (depth != NULL);
+				assert (_depth != NULL);
 
-				if (!depth->in_bounds(p)) {
+				if (!_depth->in_bounds(p)) {
 					return d2::pixel::undefined();
 				}
 
-				return depth->get_bl(p);
+				return _depth->get_bl(p);
 			}
 
 			void get_median_depth_and_diff(d2::pixel *t, d2::pixel *f, d2::point p) {
@@ -2712,14 +2704,14 @@ public:
 
 			view(shared_view *sv, pt _pt = pt()) {
 				this->sv = sv;
-				this->_pt = _pt;
+				if (sv) {
+					this->_pt = sv->get_pt();
+				} else {
+					this->_pt = _pt;
+				}
 			}
 
 			pt get_pt() {
-				if (sv) {
-					return sv->get_pt();
-				}
-
 				return _pt;
 			}
 
