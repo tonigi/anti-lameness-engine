@@ -75,7 +75,7 @@ public:
 		if (focus_list.size() <= ci)
 			focus_list.resize(ci + 1);
 
-		entry e = { type, distance, px, py, fr, ht, vt, sd, ed, sx, ex, sy, ey, ap, sc, fs, sr };
+		entry e = { type, distance, px, py, fr, vt, ht, sd, ed, sx, ex, sy, ey, ap, sc, fs, sr };
 		
 		focus_list[ci].push_back(e);
 	}
