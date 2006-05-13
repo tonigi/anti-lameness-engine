@@ -79,7 +79,7 @@ public:
 			"--hd              Devices.\n"
 			"--hi              User Interfaces.\n"
 			"--hv              Video stream processing (Experimental).\n"
-			"--h3              3D Modeling (Very Experimental).\n"
+			"--h3              3D Modeling.\n"
 			"--hz              Undocumented options.\n"
 			"--hA              Concatenate all help pages.\n"
 			"\n",
@@ -568,7 +568,7 @@ public:
 			"\n");
 	}
 	void d3() {
-		banner("3D Modeling (very experimental)");
+		banner("3D Modeling");
 		fprintf(help_stream,
 			BETWEEN_SECTIONS
 			"Rendering:\n"
