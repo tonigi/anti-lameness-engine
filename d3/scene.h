@@ -1031,11 +1031,10 @@ class scene {
 			int i = (unsigned int) floor(p[0] / pow(2, tc));
 			int j = (unsigned int) floor(p[1] / pow(2, tc));
 
-			int sheight = (int) floor(height / pow(2, tc));
 			int swidth  = (int) floor(width / pow(2, tc));
 
-			assert(i < sheight);
 			assert(j < swidth);
+			assert(i < (int) floor(height / pow(2, tc)));
 
 			for (unsigned int k = 0; k < pairwise_ambiguity; k++) {
 				std::pair<ale_pos, ale_real> *pk =
@@ -4676,12 +4675,8 @@ public:
 				space::traverse st = 
 					refine_space(refined_point, target_dim_, use_filler || _pt1.scale_2d() != 1);
 
-				ale_pos tc1 = al->get(f1)->get_t(0).trilinear_coordinate(st);
-				ale_pos tc2 = al->get(f2)->get_t(0).trilinear_coordinate(st);
-
-
-				assert(resolution_ok(al->get(f1)->get_t(0), tc1));
-				assert(resolution_ok(al->get(f2)->get_t(0), tc2));
+				assert(resolution_ok(al->get(f1)->get_t(0), al->get(f1)->get_t(0).trilinear_coordinate(st)));
+				assert(resolution_ok(al->get(f2)->get_t(0), al->get(f2)->get_t(0).trilinear_coordinate(st)));
 			}
 
 		}

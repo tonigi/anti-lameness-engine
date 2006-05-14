@@ -134,8 +134,11 @@ public:
 					 */
 					focus_origin = d2::point(e->py, e->px);
 					distance_at_focus_origin = depth->get_bl(d2::point(e->py, e->px))[0];
-				} else 
+				} else {
+					fprintf(stderr, "Bad entry type.\n");
 					assert(0);
+					exit(1);
+				}
 
 				r.focal_distance = distance_at_focus_origin + (d2::point(i, j) - focus_origin)
 					                             .dproduct(d2::point(-e->vertical_gradient,
