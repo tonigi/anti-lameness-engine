@@ -2159,8 +2159,6 @@ public:
 			 * Handle encounter thresholds
 			 */
 
-			point w = _pt.pw_scaled(point(i + pl[0], j + pl[1], depth));
-
 			if (weights->pix(i, j)[0] < encounter_threshold) {
 				im3->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
 			} else {
@@ -3666,7 +3664,6 @@ public:
 			point min, point max, const std::vector<pt> &pt_outputs) {
 
 		pt _pt = al->get(f1)->get_t(0);
-		point p = _pt.centroid(min, max);
 
 		if (get_trilinear_coordinate(min, max, _pt) < input_decimation_lower)
 			return 1;
@@ -4395,8 +4392,6 @@ public:
 		
 		for(;;) {
 
-			point diff = st.get_max() - st.get_min();
-
 			point p[2] = { st.get_min(), st.get_max() };
 
 			ale_pos dim_max = 0;
@@ -4602,8 +4597,6 @@ public:
 		for(score_map::iterator smi = _sm.begin(); smi != _sm.end(); smi++) {
 
 			point iw = smi->second.iw;
-			point ip = smi->second.ip;
-			// point is = smi->second.is;
 
 			if (accumulated_ambiguity++ >= max_acc_amb)
 				break;

@@ -348,8 +348,6 @@ public:
 
 		ale_pos diagonal = min.lengthto(max) * sqrt(2) / sqrt(3);
 
-		point diff = (max - min);
-
 		return trilinear_coordinate(avg, diagonal);
 	}
 
