@@ -4695,7 +4695,8 @@ public:
 				   || d3_output_pt->size() != 0
 				   || output_decimation_preferred > 0
 				   || input_decimation_lower > 0
-				   || !focus::is_trivial();
+				   || !focus::is_trivial()
+				   || !strcmp(pairwise_comparisons, "all");
 
 		std::vector<pt> pt_outputs = make_pt_list(d_out, v_out, d3_depth_pt, d3_output_pt);
 
