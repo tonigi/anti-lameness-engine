@@ -829,8 +829,8 @@ o	Add support for general projective transformations, and change/add
 0.1.2 2002-Dec-13
 
 o	Add optional support for .jpg, .png, .tiff, and other file formats
-	through ImageMagick.  Inspired by a translation script idea suggested
-	by Nick Rusnov.
+	through ImageMagick.  Translation using ImageMagick was suggested by
+	Nick Rusnov.
 
 o	Don't segfault if a file can't be opened.
 
