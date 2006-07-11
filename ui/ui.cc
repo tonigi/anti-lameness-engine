@@ -21,6 +21,7 @@
 #include "ui.h"
 #include "ui_wo.h"
 #include "ui_tty.h"
+#include "input.h"
 
 /*
  * See ui.h for details on these variables.
@@ -50,3 +51,6 @@ ui *ui::get() {
 	return singleton;
 }
 	
+void ui::handle_input(int argc, const char *argv[], const char *package, const char *short_version, const char *version) {
+	input::handle(argc, argv, package, short_version, version);
+}

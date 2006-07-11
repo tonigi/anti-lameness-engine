@@ -150,6 +150,14 @@ protected:
 	}
 
 public:
+
+	/*
+	 * Handle options and other user input.
+	 */
+
+	static void handle_input(int argc, const char *argv[], const char *package,
+			const char *short_version, const char *version);
+
 	static ui *get();
 
 	static void set_stream() {
