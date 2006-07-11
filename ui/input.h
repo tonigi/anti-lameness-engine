@@ -153,7 +153,7 @@ public:
 		 * Initialize help object
 		 */
 		
-		help hi(argv[0], short_version);
+		help hi(package, argv[0], short_version);
 
 		/*
 		 * Output version information if --version appears

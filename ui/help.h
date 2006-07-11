@@ -27,6 +27,7 @@
 
 class help {
 private:
+	const char *package;
 	const char *version;
 	const char *invocation;
 	FILE *help_stream;
@@ -40,15 +41,16 @@ private:
 		fprintf(help_stream,
 			BETWEEN_SECTIONS
 			"***********************************\n"
-			"ALE Help Text, version %s\n"
+			"%s Help Text, version %s\n"
 			"Section:  %s\n"
 			"***********************************\n",
-		       version, name);
+		       package, version, name);
 	}
 
 public:
-	help(const char *invocation, const char *version) {
+	help(const char *package, const char *invocation, const char *version) {
 		this->invocation = invocation;
+		this->package = package;
 		this->version = version;
 		this->help_stream = stdout;
 	}
