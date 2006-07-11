@@ -1,10 +1,13 @@
 0.8.5 Prerelease
 
+o	Move input interface details, including option handling, messages,
+	and help information, to the ui/ subdirectory.
+
 o	In d3::scene, always use filler spaces when --pc all is specified.
 
-o	Fix build error noted by Gregory Maxwell and re-tag 0.8.4.
-
 0.8.4 2006-May-14
+
+o	Fix build error noted by Gregory Maxwell and re-tag version.
 
 o	Add fine-grain UI updates for 3D operations when using ui=tty.  Reduce
 	tty UI status update frequency to at most once per second.
