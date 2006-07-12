@@ -150,6 +150,7 @@ class input {
 
 		std::map<const char *, const char *> environment_map;
 
+	public:
 		const char *get(const char *name) {
 			if (environment_map.count(name) == 0)
 				return NULL;
@@ -191,6 +192,16 @@ class input {
 			e->set_ptr("---chain", environment_stack.top());
 
 			environment_stack.push(e);
+		}
+
+		static void pop() {
+			/*
+			 * Execution environments should never be referenced,
+			 * so they can safely be deleted.
+			 */
+			delete environment_stack.top();
+
+			environment_stack.pop();
 		}
 	};
 
