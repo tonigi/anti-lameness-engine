@@ -28,6 +28,8 @@
 #include <assert.h>
 #include <time.h>
 #include <math.h>
+#include <stack>
+#include <map>
 
 /*
  * Types
@@ -134,6 +136,64 @@ void bad_arg(const char *opt_name) {
 }
 
 class input {
+	/*
+	 * Environment structures.
+	 *
+	 * XXX: It's arguable that these should be public members of the
+	 * 'input' class in order to allow passing environment values to other
+	 * classes, but, since we're currently using them only to prepare state
+	 * for an internal 'input' function, they can stay private for now.  A
+	 * more nuanced approach will likely be required later.
+	 */
+	class environment {
+		static std::stack<environment *> environment_stack;
+
+		std::map<const char *, const char *> environment_map;
+
+		const char *get(const char *name) {
+			if (environment_map.count(name) == 0)
+				return NULL;
+
+			return environment_map[name];
+		}
+
+		void set(const char *name, const char *value) {
+			environment_map[name] = value;
+		}
+
+		void set_ptr(const char *name, const void *pointer) {
+			int chars = sizeof(void *) * 2 + 3;
+			char *c = (char *) malloc(sizeof(char) * chars);
+
+			assert(c);
+
+			if (!c)
+				ui::get()->memory_error_location("environment::set_ptr");
+
+			int count = snprintf(c, chars, "%p", pointer);
+
+			assert (count >= 0 && count < chars);
+
+			set(name, c);
+		}
+
+		static environment *top() {
+			if (environment_stack.empty())
+				environment_stack.push(new environment);
+			return environment_stack.top();
+		}
+
+		static void push() {
+			environment *e = new environment;
+
+			e->environment_map = environment_stack.top()->environment_map;
+
+			e->set_ptr("---chain", environment_stack.top());
+
+			environment_stack.push(e);
+		}
+	};
+
 public:
 	/*
 	 * Input handler.
