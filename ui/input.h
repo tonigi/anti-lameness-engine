@@ -145,6 +145,7 @@ class input {
 	 * for an internal 'input' function, they can stay private for now.  A
 	 * more nuanced approach will likely be required later.
 	 */
+
 	class environment {
 		static std::stack<environment *> environment_stack;
 
@@ -178,6 +179,16 @@ class input {
 			set(name, c);
 		}
 
+		/*
+		 * Make an environment substructure.  Note that since deep
+		 * structures are currently referenced rather than copied when
+		 * the stack is pushed, there is no current need for any
+		 * chaining mechanism.
+		 */
+		void make_substructure(const char *name) {
+			set(name, new environment);
+		}
+
 		static environment *top() {
 			if (environment_stack.empty())
 				environment_stack.push(new environment);
@@ -195,15 +206,17 @@ class input {
 		}
 
 		static void pop() {
+
 			/*
 			 * Execution environments should never be referenced by
 			 * structures further up the call chain, so they can
-			 * safely be deleted.  (XXX:  While lexical scoping may
-			 * require copying of environments from lower on the
-			 * call chain, there is no obvious reason that
-			 * references should be used; shallow copies should be
-			 * used instead.)
+			 * safely be deleted.  (XXX:  In particular, while
+			 * lexical scoping may require copying of environments
+			 * from lower on the call chain, there is no obvious
+			 * reason that references should be used in this case;
+			 * shallow copies should be used instead.)
 			 */
+
 			delete environment_stack.top();
 
 			environment_stack.pop();
