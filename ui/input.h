@@ -196,8 +196,13 @@ class input {
 
 		static void pop() {
 			/*
-			 * Execution environments should never be referenced,
-			 * so they can safely be deleted.
+			 * Execution environments should never be referenced by
+			 * structures further up the call chain, so they can
+			 * safely be deleted.  (XXX:  While lexical scoping may
+			 * require copying of environments from lower on the
+			 * call chain, there is no obvious reason that
+			 * references should be used; shallow copies should be
+			 * used instead.)
 			 */
 			delete environment_stack.top();
 
