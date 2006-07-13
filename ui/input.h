@@ -186,7 +186,7 @@ class input {
 		 * chaining mechanism.
 		 */
 		void make_substructure(const char *name) {
-			set(name, new environment);
+			set_ptr(name, new environment);
 		}
 
 		static environment *top() {
@@ -231,13 +231,16 @@ class input {
 		 * Get the next token
 		 */
 		virtual char *get() = 0;
+
+		virtual ~token_reader() {
+		}
 	};
 
 	class cli_token_reader {
 
 		int arg_index;
 		int argc;
-		const char *argv;
+		const char **argv;
 
 		cli_token_reader(int c, const char *v[]) {
 			argc = c;
@@ -245,7 +248,7 @@ class input {
 			arg_index = 1;
 		}
 
-		char *get() {
+		const char *get() {
 			return argv[arg_index++];
 		}
 	};
