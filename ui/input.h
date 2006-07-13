@@ -211,15 +211,42 @@ class input {
 			 * Execution environments should never be referenced by
 			 * structures further up the call chain, so they can
 			 * safely be deleted.  (XXX:  In particular, while
-			 * lexical scoping may require copying of environments
-			 * from lower on the call chain, there is no obvious
-			 * reason that references should be used in this case;
-			 * shallow copies should be used instead.)
+			 * lexical scoping may require copying of execution
+			 * environments from lower on the call chain, there is
+			 * no obvious reason that a reference should be used in
+			 * this case; a shallow copy should be used instead.)
 			 */
 
 			delete environment_stack.top();
 
 			environment_stack.pop();
+		}
+	};
+
+	/*
+	 * Read tokens from a stream.
+	 */
+	class token_reader {
+		/*
+		 * Get the next token
+		 */
+		virtual char *get() = 0;
+	};
+
+	class cli_token_reader {
+
+		int arg_index;
+		int argc;
+		const char *argv;
+
+		cli_token_reader(int c, const char *v[]) {
+			argc = c;
+			argv = v;
+			arg_index = 1;
+		}
+
+		char *get() {
+			return argv[arg_index++];
 		}
 	};
 
