@@ -148,6 +148,7 @@ class input {
 
 	class environment {
 		static std::stack<environment *> environment_stack;
+		static std::set<environment *> environment_set;
 
 		std::map<const char *, const char *> environment_map;
 
@@ -186,12 +187,34 @@ class input {
 		 * chaining mechanism.
 		 */
 		void make_substructure(const char *name) {
-			set_ptr(name, new environment);
+			environment *s = new environment;
+			set_ptr(name, s);
+			environment_set.insert(s);
+			
+		}
+
+		static environment *get_env(const char *name) {
+			void *ptr_value;
+			sscanf(name, "%p", &ptr_value);
+
+			/*
+			 * Check for bad pointers.
+			 */
+
+			if (!environment_set.count((environment *) ptr_value)) {
+				assert(0);
+				fprintf(stderr, "Bad environment pointer.\n");
+				exit(1);
+			}
+
+			return (environment *) ptr_value;
 		}
 
 		static environment *top() {
-			if (environment_stack.empty())
+			if (environment_stack.empty()) {
 				environment_stack.push(new environment);
+				environment_set.insert(environment_stack.top());
+			}
 			return environment_stack.top();
 		}
 
@@ -203,9 +226,11 @@ class input {
 			e->set_ptr("---chain", environment_stack.top());
 
 			environment_stack.push(e);
+			environment_set.insert(e);
 		}
 
 		static void pop() {
+			assert(!environment_stack.empty());
 
 			/*
 			 * Execution environments should never be referenced by
@@ -217,6 +242,7 @@ class input {
 			 * this case; a shallow copy should be used instead.)
 			 */
 
+			environment_set.erase(environment_stack.top());
 			delete environment_stack.top();
 
 			environment_stack.pop();
