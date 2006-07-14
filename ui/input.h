@@ -1,5 +1,5 @@
-// Copyright 2004 David Hilvert <dhilvert@auricle.dyndns.org>, 
-//                              <dhilvert@ugcs.caltech.edu>
+// Copyright 2002, 2003, 2004, 2005, 2006 David Hilvert <dhilvert@auricle.dyndns.org>, 
+//                                                      <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
 
