@@ -18,6 +18,9 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef __input_h__
+#define __input_h__
+
 /*
  * ANSI C and POSIX include files.
  */
@@ -77,65 +80,69 @@
 
 #include "help.h"
 
-/*
- * Argument counter.
- *
- * Counts instances of a given option.
- */
-unsigned int arg_count(int argc, const char *argv[], const char *arg) {
-	unsigned int count = 0;
-	for (int i = 0; i < argc; i++) {
-		if (!strcmp(argv[i], arg))
-			count++;
-		else if (!strcmp(argv[i], "--"))
-			return count;
-	}
-	return count;
-}
-
-/*
- * Argument prefix counter.
- *
- * Counts instances of a given option prefix.
- */
-unsigned int arg_prefix_count(int argc, const char *argv[], const char *pfix) {
-	unsigned int count = 0;
-	for (int i = 0; i < argc; i++) {
-		if (!strncmp(argv[i], pfix, strlen(pfix)))
-			count++;
-		else if (!strcmp(argv[i], "--"))
-			return count;
-	}
-	return count;
-}
-
-/*
- * Reallocation function
- */
-void *local_realloc(void *ptr, size_t size) {
-	void *new_ptr = realloc(ptr, size);
-
-	if (new_ptr == NULL)
-		ui::get()->memory_error_location("main()");
-
-	return new_ptr;
-}
-
-/*
- * Not enough arguments function.
- */
-void not_enough(const char *opt_name) {
-	ui::get()->cli_not_enough(opt_name);
-}
-
-/*
- * Bad argument function
- */
-void bad_arg(const char *opt_name) {
-	ui::get()->cli_bad_arg(opt_name);
-}
-
 class input {
+	/*
+	 * Helper functions.
+	 */
+
+	/*
+	 * Argument counter.
+	 *
+	 * Counts instances of a given option.
+	 */
+	static unsigned int arg_count(int argc, const char *argv[], const char *arg) {
+		unsigned int count = 0;
+		for (int i = 0; i < argc; i++) {
+			if (!strcmp(argv[i], arg))
+				count++;
+			else if (!strcmp(argv[i], "--"))
+				return count;
+		}
+		return count;
+	}
+
+	/*
+	 * Argument prefix counter.
+	 *
+	 * Counts instances of a given option prefix.
+	 */
+	static unsigned int arg_prefix_count(int argc, const char *argv[], const char *pfix) {
+		unsigned int count = 0;
+		for (int i = 0; i < argc; i++) {
+			if (!strncmp(argv[i], pfix, strlen(pfix)))
+				count++;
+			else if (!strcmp(argv[i], "--"))
+				return count;
+		}
+		return count;
+	}
+
+	/*
+	 * Reallocation function
+	 */
+	static void *local_realloc(void *ptr, size_t size) {
+		void *new_ptr = realloc(ptr, size);
+
+		if (new_ptr == NULL)
+			ui::get()->memory_error_location("main()");
+
+		return new_ptr;
+	}
+
+	/*
+	 * Not enough arguments function.
+	 */
+	static void not_enough(const char *opt_name) {
+		ui::get()->cli_not_enough(opt_name);
+	}
+
+	/*
+	 * Bad argument function
+	 */
+	static void bad_arg(const char *opt_name) {
+		ui::get()->cli_bad_arg(opt_name);
+	}
+
 	/*
 	 * Environment structures.
 	 *
@@ -152,19 +159,15 @@ class input {
 
 		std::map<const char *, const char *> environment_map;
 
-	public:
-		const char *get(const char *name) {
-			if (environment_map.count(name) == 0)
-				return NULL;
+		/*
+		 * Internal set operations do not protect any data.
+		 */
 
-			return environment_map[name];
-		}
-
-		void set(const char *name, const char *value) {
+		void internal_set(const char *name, const char *value) {
 			environment_map[name] = value;
 		}
 
-		void set_ptr(const char *name, const void *pointer) {
+		void internal_set_ptr(const char *name, const void *pointer) {
 			int chars = sizeof(void *) * 2 + 3;
 			char *c = (char *) malloc(sizeof(char) * chars);
 
@@ -178,6 +181,40 @@ class input {
 			assert (count >= 0 && count < chars);
 
 			set(name, c);
+		}
+
+		/*
+		 * Check for restricted names.
+		 */
+
+		void name_check(const char *name) {
+			if (!strcmp(name, "---chain") || !strcmp(name, "---this")) {
+				fprintf(stderr, "Bad set operation.");
+				exit(1);
+			}
+		}
+
+	public:
+
+		/*
+		 * Public set operations restrict valid names.
+		 */
+
+		void set(const char *name, const char *value) {
+			name_check(name);
+			internal_set(name, value);
+		}
+
+		void set_ptr(const char *name, const void *pointer) {
+			name_check(name);
+			internal_set_ptr(name, pointer);
+		}
+			
+		const char *get(const char *name) {
+			if (environment_map.count(name) == 0)
+				return NULL;
+
+			return environment_map[name];
 		}
 
 		/*
@@ -224,6 +261,7 @@ class input {
 			e->environment_map = environment_stack.top()->environment_map;
 
 			e->set_ptr("---chain", environment_stack.top());
+			e->set_ptr("---this", e);
 
 			environment_stack.push(e);
 			environment_set.insert(e);
@@ -253,21 +291,47 @@ class input {
 	 * Read tokens from a stream.
 	 */
 	class token_reader {
+	public:
 		/*
 		 * Get the next token
 		 */
-		virtual char *get() = 0;
+		virtual const char *get() = 0;
 
 		virtual ~token_reader() {
 		}
 	};
 
-	class cli_token_reader {
+	class cstring_token_reader : public token_reader {
+		const char *string;
+		char *cur_token;
+
+	public:
+		cstring_token_reader(const char *s) {
+			string = s;
+			cur_token = 0;
+		}
+
+		const char *get() {
+			const char *separators = "\n \t";
+			string += strcspn(string, separators);
+
+			int length = strcspn(string, separators);
+
+			free(cur_token);
+
+			cur_token = strndup(string, length);
+
+			return cur_token;
+		}
+	};
+
+	class cli_token_reader : public token_reader {
 
 		int arg_index;
 		int argc;
 		const char **argv;
 
+	public:
 		cli_token_reader(int c, const char *v[]) {
 			argc = c;
 			argv = v;
@@ -278,6 +342,9 @@ class input {
 			return argv[arg_index++];
 		}
 	};
+
+	static void evaluate_stream(token_reader *tr) {
+	}
 
 public:
 	/*
@@ -293,6 +360,23 @@ public:
 	 */
 
 	static void handle(int argc, const char *argv[], const char *package, const char *short_version, const char *version) {
+
+		/*
+		 * Set basic program information in the environment.
+		 */
+
+		environment::top()->set("---package", package);
+		environment::top()->set("---short-version", short_version);
+		environment::top()->set("---version", version);
+		environment::top()->set("---invocation", argv[0]);
+
+		/*
+		 * Evaluate the command-line arguments to generate environment
+		 * structures.
+		 */
+
+		token_reader *tr = new cli_token_reader(argc, argv);
+		evaluate_stream(tr);
 
 		/*
 		 * Initialize help object
@@ -2162,3 +2246,5 @@ public:
 
 	}
 };
+
+#endif
