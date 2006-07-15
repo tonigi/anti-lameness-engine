@@ -167,6 +167,10 @@ class input {
 			environment_map[name] = value;
 		}
 
+		void internal_unset(const char *name) {
+			environment_map.erase(name);
+		}
+
 		void internal_set_ptr(const char *name, const void *pointer) {
 			int chars = sizeof(void *) * 2 + 3;
 			char *c = (char *) malloc(sizeof(char) * chars);
@@ -203,6 +207,11 @@ class input {
 		void set(const char *name, const char *value) {
 			name_check(name);
 			internal_set(name, value);
+		}
+
+		void unset(const char *name) {
+			name_check(name);
+			internal_unset(name);
 		}
 
 		void set_ptr(const char *name, const void *pointer) {
@@ -262,6 +271,22 @@ class input {
 
 			e->set_ptr("---chain", environment_stack.top());
 			e->set_ptr("---this", e);
+			e->unset("---dup");
+
+			environment_stack.push(e);
+			environment_set.insert(e);
+		}
+
+		static void push_and_dup_output() {
+			environment *e = new environment;
+
+			e->environment_map = environment_stack.top()->environment_map;
+
+			e->set_ptr("---chain", environment_stack.top());
+			e->set_ptr("---this", e);
+			e->make_substructure("---dup");
+
+			e->get_env(e->get("---dup"))->set_ptr("a", environment_stack.top());
 
 			environment_stack.push(e);
 			environment_set.insert(e);
@@ -343,7 +368,32 @@ class input {
 		}
 	};
 
-	static void evaluate_stream(token_reader *tr) {
+	static void evaluate_stream(token_reader *tr, const char *wait_for = NULL) {
+		const char *token;
+
+		while ((token = tr->get())) {
+
+			/*
+			 * Check for termination.
+			 */
+
+			if (wait_for && !strcmp(token, wait_for))
+				return;
+
+			/*
+			 * Check for nesting
+			 */
+
+			if (!strcmp(token, "{")) {
+				environment::push_and_dup_output();
+				evaluate_stream(tr, "}");
+				environment::pop();
+			} else if (!strcmp(token, "[")) {
+				const char *code = environment::top()->get("[");
+				token_reader *bracket_tr = new cstring_token_reader();
+			} else if (!strcmp(token, "<")) {
+			}
+		}
 	}
 
 public:
