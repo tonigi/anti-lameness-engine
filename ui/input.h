@@ -171,7 +171,7 @@ class input {
 			environment_map.erase(name);
 		}
 
-		void internal_set_ptr(const char *name, const void *pointer) {
+		const char *internal_convert_pointer(const void *pointer) {
 			int chars = sizeof(void *) * 2 + 3;
 			char *c = (char *) malloc(sizeof(char) * chars);
 
@@ -184,7 +184,11 @@ class input {
 
 			assert (count >= 0 && count < chars);
 
-			set(name, c);
+			return c;
+		}
+
+		void internal_set_ptr(const char *name, const void *pointer) {
+			set(name, internal_convert_pointer(pointer));
 		}
 
 		/*
@@ -236,7 +240,6 @@ class input {
 			environment *s = new environment;
 			set_ptr(name, s);
 			environment_set.insert(s);
-			
 		}
 
 		static environment *get_env(const char *name) {
@@ -256,6 +259,39 @@ class input {
 			return (environment *) ptr_value;
 		}
 
+		/*
+		 * Prepend to a list.
+		 */
+		void prepend(const char *list, const char *element) {
+			environment *d = get_env(get(list));
+			make_substructure(list);
+			get_env(get(list))->set_ptr("a", element);
+			get_env(get(list))->set_ptr("d", d);
+		}
+
+		void prepend_ptr(const char *list, void *ptr) {
+			prepend(list, internal_convert_pointer(ptr));
+		}
+
+		/*
+		 * Clone the environment.
+		 */
+		environment *clone() {
+			environment *e = new environment();
+
+			for (std::map<const char *, const char *>::iterator i = environment_map.begin(); 
+					i != environment_map.end(); i++) {
+
+				if (environment_set.count(get_env(i->second))) {
+					e->set_ptr(i->first, get_env(i->second)->clone());
+				} else {
+					e->set(i->first, i->second);
+				}
+			}
+
+			return e;
+		}
+
 		static environment *top() {
 			if (environment_stack.empty()) {
 				environment_stack.push(new environment);
@@ -271,25 +307,20 @@ class input {
 
 			e->set_ptr("---chain", environment_stack.top());
 			e->set_ptr("---this", e);
-			e->unset("---dup");
+			e->make_substructure("---dup");
 
 			environment_stack.push(e);
 			environment_set.insert(e);
 		}
 
+		static void dup_second() {
+			environment_stack.top()->prepend_ptr("---dup", 
+					environment::get_env(environment_stack.top()->get("---chain")));
+		}
+
 		static void push_and_dup_output() {
-			environment *e = new environment;
-
-			e->environment_map = environment_stack.top()->environment_map;
-
-			e->set_ptr("---chain", environment_stack.top());
-			e->set_ptr("---this", e);
-			e->make_substructure("---dup");
-
-			e->get_env(e->get("---dup"))->set_ptr("a", environment_stack.top());
-
-			environment_stack.push(e);
-			environment_set.insert(e);
+			push();
+			dup_second();
 		}
 
 		static void pop() {
@@ -321,6 +352,11 @@ class input {
 		 * Get the next token
 		 */
 		virtual const char *get() = 0;
+
+		/*
+		 * Divert the stream until the next occurrence of TOKEN.
+		 */
+		virtual token_reader *divert(const char *token) = 0;
 
 		virtual ~token_reader() {
 		}
@@ -368,17 +404,10 @@ class input {
 		}
 	};
 
-	static void evaluate_stream(token_reader *tr, const char *wait_for = NULL) {
+	static void evaluate_stream(token_reader *tr) {
 		const char *token;
 
 		while ((token = tr->get())) {
-
-			/*
-			 * Check for termination.
-			 */
-
-			if (wait_for && !strcmp(token, wait_for))
-				return;
 
 			/*
 			 * Check for nesting
@@ -386,12 +415,27 @@ class input {
 
 			if (!strcmp(token, "{")) {
 				environment::push_and_dup_output();
-				evaluate_stream(tr, "}");
+				token_reader *tr_nest = tr->divert("}");
+				evaluate_stream(tr_nest);
+				delete tr_nest;
 				environment::pop();
 			} else if (!strcmp(token, "[")) {
-				const char *code = environment::top()->get("[");
-				token_reader *bracket_tr = new cstring_token_reader();
+				environment::push();
+				token_reader *tr_nest = tr->divert("]");
+				evaluate_stream(tr_nest);
+				delete tr_nest;
+				environment::pop();
 			} else if (!strcmp(token, "<")) {
+				environment *dup_list = environment::get_env(environment::top()->get("---dup"));
+				assert (dup_list != NULL);
+				dup_list = dup_list->clone();
+
+				environment::dup_second();
+				token_reader *tr_nest = tr->divert(">");
+				evaluate_stream(tr_nest);
+				delete tr_nest;
+
+				environment::top()->set_ptr("---dup", dup_list);
 			}
 		}
 	}
@@ -421,11 +465,18 @@ public:
 		environment::top()->set("---invocation", argv[0]);
 
 		/*
+		 * Initialize the top-level token-reader and generate
+		 * an environment variable for it.
+		 */
+
+		token_reader *tr = new cli_token_reader(argc, argv);
+		environment::top()->set_ptr("---token-reader", tr);
+
+		/*
 		 * Evaluate the command-line arguments to generate environment
 		 * structures.
 		 */
 
-		token_reader *tr = new cli_token_reader(argc, argv);
 		evaluate_stream(tr);
 
 		/*
