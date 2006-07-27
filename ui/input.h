@@ -363,17 +363,29 @@ class input {
 	};
 
 	class cstring_token_reader : public token_reader {
+		const char *separators;
 		const char *string;
 		char *cur_token;
+		int ephemeral;
+
+		cstring_token_reader(const char *s, int ephemeral) {
+			assert(ephemeral == 1);
+
+			separators = "\n \t";
+			string = s;
+			cur_token = 0;
+			this->ephemeral = 1;
+		}
 
 	public:
 		cstring_token_reader(const char *s) {
+			separators = "\n \t";
 			string = s;
 			cur_token = 0;
+			ephemeral = 0;
 		}
 
 		const char *get() {
-			const char *separators = "\n \t";
 			string += strcspn(string, separators);
 
 			int length = strcspn(string, separators);
@@ -383,6 +395,39 @@ class input {
 			cur_token = strndup(string, length);
 
 			return cur_token;
+		}
+
+		cstring_token_reader *divert(const char *token) {
+			int search = 0;
+			int next = strcspn(string, separators);
+
+			while (*(string + search) != '\0' && 
+			       strcmp(token, (string + search))) {
+				search = next;
+				next = strcspn((string + next), separators);
+			}
+
+			if (*(string + search) == '\0') {
+				fprintf(stderr, "Parse error: End of scope not found.");
+				exit(1);
+			}
+
+			cstring_token_reader *result = new cstring_token_reader(strndup(string, search), 1);
+
+			string += search;
+
+			/*
+			 * Eat the closing token.
+			 */
+
+			get();
+
+			return result;
+		}
+
+		~cstring_token_reader() {
+			if (ephemeral)
+				free((void *) string);
 		}
 	};
 
@@ -400,8 +445,38 @@ class input {
 		}
 
 		const char *get() {
-			return argv[arg_index++];
+
+			if (arg_index <= argc)
+				return argv[arg_index++];
+			else
+				return NULL;
+
 		}
+
+		cli_token_reader *divert(const char *token) {
+			int search = 0;
+
+			while (arg_index + search < argc && strcmp(argv[arg_index], token))
+				search++;
+
+			if (arg_index + search == argc) {
+				fprintf(stderr, "Parse error: end of scope not found.\n");
+				exit(1);
+			}
+
+			cli_token_reader *result = new cli_token_reader(search, argv + arg_index);
+
+			arg_index += search;
+
+			/*
+			 * Eat the closing token.
+			 */
+
+			get();
+
+			return result;
+		}
+
 	};
 
 	static void evaluate_stream(token_reader *tr) {
