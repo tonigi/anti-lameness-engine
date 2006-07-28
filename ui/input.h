@@ -188,16 +188,24 @@ class input {
 		}
 
 		void internal_set_ptr(const char *name, const void *pointer) {
-			set(name, internal_convert_pointer(pointer));
+			internal_set(name, internal_convert_pointer(pointer));
 		}
 
 		/*
 		 * Check for restricted names.
 		 */
 
+		int name_ok(const char *name) {
+			if (!strcmp(name, "---chain") || !strcmp(name, "---this"))
+				return 0;
+
+			return 1;
+		}
+
 		void name_check(const char *name) {
-			if (!strcmp(name, "---chain") || !strcmp(name, "---this")) {
+			if (!name_ok(name)) {
 				fprintf(stderr, "Bad set operation.");
+				assert(0);
 				exit(1);
 			}
 		}
@@ -282,6 +290,9 @@ class input {
 			for (std::map<const char *, const char *>::iterator i = environment_map.begin(); 
 					i != environment_map.end(); i++) {
 
+				if (!name_ok(i->first))
+					continue;
+
 				if (environment_set.count(get_env(i->second))) {
 					e->set_ptr(i->first, get_env(i->second)->clone());
 				} else {
@@ -305,8 +316,8 @@ class input {
 
 			e->environment_map = environment_stack.top()->environment_map;
 
-			e->set_ptr("---chain", environment_stack.top());
-			e->set_ptr("---this", e);
+			e->internal_set_ptr("---chain", environment_stack.top());
+			e->internal_set_ptr("---this", e);
 			e->make_substructure("---dup");
 
 			environment_stack.push(e);
