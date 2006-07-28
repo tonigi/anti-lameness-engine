@@ -467,7 +467,7 @@ class input {
 		cli_token_reader *divert(const char *token) {
 			int search = 0;
 
-			while (arg_index + search < argc && strcmp(argv[arg_index], token))
+			while (arg_index + search < argc && strcmp(argv[arg_index + search], token))
 				search++;
 
 			if (arg_index + search == argc) {
