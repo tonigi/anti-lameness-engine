@@ -452,12 +452,12 @@ class input {
 		cli_token_reader(int c, const char *v[]) {
 			argc = c;
 			argv = v;
-			arg_index = 1;
+			arg_index = 0;
 		}
 
 		const char *get() {
 
-			if (arg_index <= argc)
+			if (arg_index < argc)
 				return argv[arg_index++];
 			else
 				return NULL;
@@ -555,7 +555,7 @@ public:
 		 * an environment variable for it.
 		 */
 
-		token_reader *tr = new cli_token_reader(argc, argv);
+		token_reader *tr = new cli_token_reader(argc - 1, argv + 1);
 		environment::top()->set_ptr("---token-reader", tr);
 
 		/*
