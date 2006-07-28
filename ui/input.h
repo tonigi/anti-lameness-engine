@@ -250,6 +250,21 @@ class input {
 			environment_set.insert(s);
 		}
 
+		static int is_env(const char *name) {
+			void *ptr_value;
+			sscanf(name, "%p", &ptr_value);
+
+			/*
+			 * Check for bad pointers.
+			 */
+
+			if (!environment_set.count((environment *) ptr_value)) {
+				return 0;
+			}
+
+			return 1;
+		}
+
 		static environment *get_env(const char *name) {
 			void *ptr_value;
 			sscanf(name, "%p", &ptr_value);
@@ -293,7 +308,7 @@ class input {
 				if (!name_ok(i->first))
 					continue;
 
-				if (environment_set.count(get_env(i->second))) {
+				if (is_env(i->second)) {
 					e->set_ptr(i->first, get_env(i->second)->clone());
 				} else {
 					e->set(i->first, i->second);
@@ -367,7 +382,7 @@ class input {
 		/*
 		 * Divert the stream until the next occurrence of TOKEN.
 		 */
-		virtual token_reader *divert(const char *token) = 0;
+		virtual token_reader *divert(const char *open_token, const char *close_token) = 0;
 
 		virtual ~token_reader() {
 		}
@@ -408,12 +423,17 @@ class input {
 			return cur_token;
 		}
 
-		cstring_token_reader *divert(const char *token) {
+		cstring_token_reader *divert(const char *open_token, const char *close_token) {
 			int search = 0;
 			int next = strcspn(string, separators);
+			int depth = 0;
 
 			while (*(string + search) != '\0' && 
-			       strcmp(token, (string + search))) {
+			       (depth || strcmp(close_token, (string + search)))) {
+				if (!strcmp(close_token, (string + search)))
+					depth--;
+				if (!strcmp(open_token, (string + search)))
+					depth++;
 				search = next;
 				next = strcspn((string + next), separators);
 			}
@@ -464,11 +484,18 @@ class input {
 
 		}
 
-		cli_token_reader *divert(const char *token) {
+		cli_token_reader *divert(const char *open_token, const char *close_token) {
 			int search = 0;
+			int depth = 0;
 
-			while (arg_index + search < argc && strcmp(argv[arg_index + search], token))
+			while (arg_index + search < argc 
+			    && (depth || strcmp(argv[arg_index + search], close_token))) {
+				if (!strcmp(close_token, argv[arg_index + search]))
+					depth--;
+				if (!strcmp(open_token, argv[arg_index + search]))
+					depth++;
 				search++;
+			}
 
 			if (arg_index + search == argc) {
 				fprintf(stderr, "Parse error: end of scope not found.\n");
@@ -490,7 +517,8 @@ class input {
 
 	};
 
-	static void evaluate_stream(token_reader *tr) {
+	static void evaluate_stream(token_reader *tr, 
+			std::vector<std::pair<const char *, environment *> > *files) {
 		const char *token;
 
 		while ((token = tr->get())) {
@@ -501,14 +529,14 @@ class input {
 
 			if (!strcmp(token, "{")) {
 				environment::push_and_dup_output();
-				token_reader *tr_nest = tr->divert("}");
-				evaluate_stream(tr_nest);
+				token_reader *tr_nest = tr->divert("{", "}");
+				evaluate_stream(tr_nest, files);
 				delete tr_nest;
 				environment::pop();
 			} else if (!strcmp(token, "[")) {
 				environment::push();
-				token_reader *tr_nest = tr->divert("]");
-				evaluate_stream(tr_nest);
+				token_reader *tr_nest = tr->divert("[", "]");
+				evaluate_stream(tr_nest, files);
 				delete tr_nest;
 				environment::pop();
 			} else if (!strcmp(token, "<")) {
@@ -517,11 +545,21 @@ class input {
 				dup_list = dup_list->clone();
 
 				environment::dup_second();
-				token_reader *tr_nest = tr->divert(">");
-				evaluate_stream(tr_nest);
+				token_reader *tr_nest = tr->divert("<", ">");
+				evaluate_stream(tr_nest, files);
 				delete tr_nest;
 
 				environment::top()->set_ptr("---dup", dup_list);
+			}
+
+			/*
+			 * If nothing else matches, then we take the
+			 * token as a filename.
+			 */
+
+			else {
+				files->push_back(std::pair<const char *, environment *>(strdup(token), 
+							environment::top()->clone()));
 			}
 		}
 	}
@@ -563,7 +601,9 @@ public:
 		 * structures.
 		 */
 
-		evaluate_stream(tr);
+		std::vector<std::pair<const char *, environment *> > files;
+
+		evaluate_stream(tr, &files);
 
 		/*
 		 * Initialize help object
