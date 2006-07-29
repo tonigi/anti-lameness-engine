@@ -2022,63 +2022,67 @@ public:
 		 * Initialize device-specific variables
 		 */
 
+		// int input_file_count = argc - i - 1;
+		int input_file_count = files.size() - 1;
+
 		d2::psf *device_response[psf_N] = { NULL, NULL };
 		d2::exposure **input_exposure = NULL;
 		ale_pos view_angle = 43.7 * M_PI / 180;  
 		// ale_pos view_angle = 90 * M_PI / 180;  
 		input_exposure = (d2::exposure **)
-			malloc((argc - i - 1) * sizeof(d2::exposure *));
+			// malloc((argc - i - 1) * sizeof(d2::exposure *));
+			malloc(input_file_count * sizeof(d2::exposure *));
 
 		if (device != NULL) {
 			if (!strcmp(device, "xvp610_640x480")) {
 				device_response[psf_linear] = new xvp610_640x480::lpsf();
 				device_response[psf_nonlinear] = new xvp610_640x480::nlpsf();
-				for (int ii = 0; ii < argc - i - 1; ii++)
+				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new xvp610_640x480::exposure();
 				view_angle = xvp610_640x480::view_angle();
 			} else if (!strcmp(device, "xvp610_320x240")) {
 				device_response[psf_linear] = new xvp610_320x240::lpsf();
 				device_response[psf_nonlinear] = new xvp610_320x240::nlpsf();
-				for (int ii = 0; ii < argc - i - 1; ii++)
+				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new xvp610_320x240::exposure();
 				view_angle = xvp610_320x240::view_angle();
 			} else if (!strcmp(device, "ov7620_raw_linear")) {
 				device_response[psf_linear] = new ov7620_raw_linear::lpsf();
 				device_response[psf_nonlinear] = NULL;
-				for (int ii = 0; ii < argc - i - 1; ii++)
+				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new ov7620_raw_linear::exposure();
 				d2::image_rw::set_default_bayer(IMAGE_BAYER_BGRG);
 			} else if (!strcmp(device, "canon_300d_raw_linear")) {
 				device_response[psf_linear] = new canon_300d_raw_linear::lpsf();
 				device_response[psf_nonlinear] = NULL;
-				for (int ii = 0; ii < argc - i - 1; ii++)
+				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new canon_300d_raw_linear::exposure();
 				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
 			} else if (!strcmp(device, "canon_300d_raw_linear+85mm_1.8")) {
 				device_response[psf_linear] = new canon_300d_raw_linear_85mm_1_8::lpsf();
 				device_response[psf_nonlinear] = NULL;
-				for (int ii = 0; ii < argc - i - 1; ii++)
+				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new canon_300d_raw_linear_85mm_1_8::exposure();
 				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
 				view_angle = canon_300d_raw_linear_85mm_1_8::view_angle();
 			} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.8")) {
 				device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_8::lpsf();
 				device_response[psf_nonlinear] = NULL;
-				for (int ii = 0; ii < argc - i - 1; ii++)
+				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new canon_300d_raw_linear_50mm_1_8::exposure();
 				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
 				view_angle = canon_300d_raw_linear_50mm_1_8::view_angle();
 			} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.4")) {
 				device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_4::lpsf();
 				device_response[psf_nonlinear] = NULL;
-				for (int ii = 0; ii < argc - i - 1; ii++)
+				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new canon_300d_raw_linear_50mm_1_4::exposure();
 				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
 				view_angle = canon_300d_raw_linear_50mm_1_4::view_angle();
 			} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.4@1.4")) {
 				device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_4_1_4::lpsf();
 				device_response[psf_nonlinear] = NULL;
-				for (int ii = 0; ii < argc - i - 1; ii++)
+				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new canon_300d_raw_linear_50mm_1_4_1_4::exposure();
 				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
 				view_angle = canon_300d_raw_linear_50mm_1_4_1_4::view_angle();
@@ -2086,7 +2090,7 @@ public:
 				ui::get()->unknown_device(device);
 			}
 		} else {
-			for (int ii = 0; ii < argc - i - 1; ii++)
+			for (int ii = 0; ii < input_file_count; ii++)
 				input_exposure[ii] = new d2::exposure_default();
 		}
 
@@ -2106,8 +2110,8 @@ public:
 		 * PSF-match exposure.
 		 */
 		if (psf_match) {
-			delete input_exposure[argc - i - 2];
-			input_exposure[argc - i - 2] = new d2::exposure_default();
+			delete input_exposure[input_file_count - 1];
+			input_exposure[input_file_count - 1] = new d2::exposure_default();
 		}
 
 		/*
@@ -2169,17 +2173,18 @@ public:
 		 * file handler.
 		 */
 
-		/*
-		 * There should be at least two file arguments.
-		 */
-
-		if (i >= argc - 1) {
-			hi.usage();
-			exit(1);
+		// d2::image_rw::init(argc - i - 1, argv + i, argv[argc - 1], input_exposure, output_exposure);
+		// ochain_names[0] = argv[argc - 1];
+		
+		const char **input_files = (const char **) malloc(sizeof(const char *) * input_file_count);
+		for (int i = 0; i < input_file_count; i++) {
+			input_files[i] = files[i].first;
 		}
 
-		d2::image_rw::init(argc - i - 1, argv + i, argv[argc - 1], input_exposure, output_exposure);
-		ochain_names[0] = argv[argc - 1];
+		d2::image_rw::init(input_file_count, input_files, files[files.size() - 1].first,
+				input_exposure, output_exposure);
+
+		ochain_names[0] = files[files.size() - 1].first;
 
 		/*
 		 * Handle control point data for alignment
@@ -2193,7 +2198,8 @@ public:
 		 */
 
 		if (psf_match) {
-			d2::image_rw::set_specific_bayer(argc - i - 2, IMAGE_BAYER_NONE);
+			// d2::image_rw::set_specific_bayer(argc - i - 2, IMAGE_BAYER_NONE);
+			d2::image_rw::set_specific_bayer(input_file_count - 1, IMAGE_BAYER_NONE);
 		}
 
 		/*
@@ -2214,8 +2220,10 @@ public:
 		 */
 
 		const d2::image *im = d2::image_rw::open(0);
-		tsave_orig(tsave, argv[i], im->avg_channel_magnitude());
-		tsave_target(tsave, argv[argc - 1]);
+		// tsave_orig(tsave, argv[i], im->avg_channel_magnitude());
+		// tsave_target(tsave, argv[argc - 1]);
+		tsave_orig(tsave, files[0].first, im->avg_channel_magnitude());
+		tsave_target(tsave, files[files.size() - 1].first);
 		d2::image_rw::close(0);
 
 		/*
@@ -2308,7 +2316,8 @@ public:
 		 * Handle the original frame.
 		 */
 
-		ui::get()->original_frame_start(argv[i]);
+		// ui::get()->original_frame_start(argv[i]);
+		ui::get()->original_frame_start(files[files.size() - 1].first);
 
 		for (int opt = 0; opt < oc_count; opt++) {
 			ui::get()->set_orender_current(opt);
