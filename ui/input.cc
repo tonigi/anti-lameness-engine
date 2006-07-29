@@ -28,6 +28,8 @@ std::set<input::environment *> input::environment::environment_set;
 
 int input::global_options = 1;
 
+input::environment input::global_environment;
+
 /*
  * List of options that can be used as nonglobals.
  */

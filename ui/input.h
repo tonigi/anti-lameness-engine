@@ -220,6 +220,14 @@ class input {
 	public:
 
 		/*
+		 * Get the environment map.
+		 */
+
+		std::map<const char *, const char *> &get_map() {
+			return environment_map;
+		}
+
+		/*
 		 * Public set operations restrict valid names.
 		 */
 
@@ -270,6 +278,114 @@ class input {
 			}
 
 			return 1;
+		}
+
+		const char *get_option_name(const char *name) {
+			if (strncmp(name, "0 ", strlen("0 ")))
+				return NULL;
+
+			name += strlen("0 ");
+
+			if (!isdigit(name[0]))
+				return NULL;
+
+			while (isdigit(name[0]))
+				name++;
+
+			if (!isspace(name[0]))
+				return NULL;
+
+			while (isspace(name[0]))
+				name++;
+
+			if (!isalnum(name[0]))
+				return NULL;
+
+			return name;
+		}
+
+		int is_option(const char *name) {
+			return (get_option_name(name) != NULL);
+		}
+
+		int is_arg(const char *name, unsigned int arg) {
+			assert (is_option(name));
+
+			int length = strlen(name) + 3 * sizeof(unsigned int);
+
+			char *desired_string = (char *) malloc(sizeof(char) * length);
+
+			snprintf(desired_string, length, "%u %s", arg, name + strlen("0 "));
+
+			const char *result = environment_map[desired_string];
+
+			if (result)
+				return 1;
+
+			return 0;
+		}
+
+		const char *get_string_arg(const char *name, unsigned int arg) {
+			assert (is_option(name));
+
+			int length = strlen(name) + 3 * sizeof(unsigned int);
+
+			char *desired_string = (char *) malloc(sizeof(char) * length);
+
+			snprintf(desired_string, length, "%u %s", arg, name + strlen("0 "));
+
+			const char *result = environment_map[desired_string];
+
+			assert (result);
+
+			free(desired_string);
+
+			return result;
+		}
+
+		long int get_long_arg(const char *name, unsigned int arg) {
+			assert (is_option(name));
+
+			const char *string = get_string_arg(name, arg);
+			char *endptr;
+			
+			long int result = strtol(string, &endptr, 0);
+
+			if (endptr[0] != '\0') {
+				fprintf(stderr, "\n\nError: bad argument in `%s'.\n\n", get_option_name(name));
+				exit(1);
+			}
+
+			return result;
+		}
+
+		int get_int_arg(const char *name, unsigned int arg) {
+			return (int) get_long_arg(name, arg);
+		}
+
+		int get_unsigned_arg(const char *name, unsigned int arg) {
+			long int result = get_long_arg(name, arg);
+
+			if (result < 0) {
+				fprintf(stderr, "\n\nError: bad argument in `%s'.\n\n", get_option_name(name));
+				exit(1);
+			}
+		}
+
+		double get_double_arg(const char *name, unsigned int arg) {
+			assert (is_option(name));
+
+			const char *string = get_string_arg(name, arg);
+			char *endptr;
+			
+			double result = strtod(string, &endptr);
+
+			if (endptr[0] != '\0') {
+				fprintf(stderr, "\n\nError: bad argument in `%s'.\n\n", get_option_name(name));
+				exit(1);
+			}
+
+			return result;
 		}
 
 		static environment *get_env(const char *name) {
@@ -589,6 +705,18 @@ class input {
 		return 0;
 	}
 
+	static int is_scope_operator(const char *string) {
+		if (!strcmp("{", string)
+		 || !strcmp("}", string)
+		 || !strcmp("[", string)
+		 || !strcmp("]", string)
+		 || !strcmp("<", string)
+		 || !strcmp(">", string))
+			return 1;
+
+		return 0;
+	}
+
 	static const char *option_name_gen(const char *unadorned, const char *map_name, int arg_num, int multi) {
 		static unsigned int multi_counter = 0;
 
@@ -596,20 +724,22 @@ class input {
 			unadorned = map_name;
 		}
 
-		int length = (strlen(unadorned) + sizeof(unsigned int) * 2 + sizeof(int) * 2 + 2) + 1;
+		int length = (strlen(unadorned) + sizeof(unsigned int) * 3 + sizeof(int) * 3 + 2) + 1;
 
 		char *result = (char *) malloc(sizeof(char) * length);
 
 		assert (result);
 
 		if (!multi) {
-			snprintf(result, length, "%s_%x", unadorned, arg_num);
+			snprintf(result, length, "%u 0 %s", arg_num, unadorned);
 		} else {
-			snprintf(result, length, "%s_%x_%x", unadorned, multi_counter, arg_num);
+			snprintf(result, length, "%u %u %s", arg_num, multi_counter, unadorned);
 		}
 
 		return result;
 	}
+
+	static environment genv;
 
 	static void evaluate_stream(token_reader *tr, 
 			std::vector<std::pair<const char *, environment *> > *files) {
@@ -623,7 +753,6 @@ class input {
 			 */
 
 			if (!strcmp(token, "{") && !end_of_options) {
-				global_options = 0;
 				environment::push_and_dup_output();
 				token_reader *tr_nest = tr->divert("{", "}");
 				evaluate_stream(tr_nest, files);
@@ -637,7 +766,6 @@ class input {
 				delete tr_nest;
 				environment::pop();
 			} else if (!strcmp(token, "<") && !end_of_options) {
-				global_options = 0;
 				environment *dup_list = environment::get_env(environment::top()->get("---dup"));
 				assert (dup_list != NULL);
 				dup_list = dup_list->clone();
@@ -704,42 +832,78 @@ class input {
 					found_option = 1;
 
 					/*
-					 * Ensure that global-only options are not used in non-global context.
+					 * Check whether the option is local.
 					 */
 
-					if (!global_options) {
-						int found_nonglobal = 0;
-						for (int j = 0; supported_nonglobal_option_table[j]; j++) {
-							if (!strcmp(supported_nonglobal_option_table[j], 
-										simple_option_table[i].name))
-								found_nonglobal = 1;
-						}
-
-						if (!found_nonglobal) {
-							fprintf(stderr, "\n\nError: option `%s' must be applied globally.", 
-									simple_option_table[i].name);
-							fprintf(stderr, "\n\nHint:  Move option `%s' prior to file and scope operators.\n\n", simple_option_table[i].name);
-							exit(1);
-						}
+					int found_nonglobal = 0;
+					for (int j = 0; supported_nonglobal_option_table[j]; j++) {
+						if (!strcmp(supported_nonglobal_option_table[j], 
+									simple_option_table[i].name))
+							found_nonglobal = 1;
 					}
+
+					/*
+					 * Check for the case where a global option
+					 * is used non-globally.
+					 */
+
+					if (!found_nonglobal && !global_options) {
+						fprintf(stderr, "\n\nError: option `%s' must be applied globally.", 
+								simple_option_table[i].name);
+						fprintf(stderr, "\n\nHint:  Move option `%s' prior to file and scope operators.\n\n", simple_option_table[i].name);
+						exit(1);
+					}
+
+					/*
+					 * Determine which environment should be modified
+					 */
+
+					environment *target;
+					if (found_nonglobal) {
+						target = environment::top();
+					} else {
+						target = &genv;
+					}
+					
+					/*
+					 * Store information required for
+					 * handling the local case later.
+					 */
 
 					const char *map_value = "1";
 
 					if (simple_option_table[i].map_value)
 						map_value = simple_option_table[i].map_value;
 
-					environment::top()->set(option_name_gen(simple_option_table[i].name,
-								simple_option_table[i].map_name, 0, 
-								simple_option_table[i].multi), map_value);
+					target->set(option_name_gen(simple_option_table[i].name,
+								simple_option_table[i].map_name,
+								0,
+								simple_option_table[i].multi),
+							map_value);
 
 					for (int j = 0; j < simple_option_table[i].arg_count; j++) {
 						const char *option = tr->get();
 
-						assert (option != NULL);
+						/*
+						 * Reject scope operators as options,
+						 * at least for now.
+						 */
 
-						environment::top()->set(option_name_gen(simple_option_table[i].name,
-									simple_option_table[i].map_name, j, 
-									simple_option_table[i].multi), option);
+						if (is_scope_operator(option)) {
+							fprintf(stderr, "\n\nError: illegal argument to `%s'.\n\n", token);
+							exit(1);
+						}
+
+						if (option == NULL) {
+							fprintf(stderr, "\n\nError: not enough options for `%s'.\n\n", token);
+							exit(1);
+						}
+
+						target->set(option_name_gen(simple_option_table[i].name,
+									simple_option_table[i].map_name,
+									j,
+									simple_option_table[i].multi),
+								option);
 					}
 				}
 
@@ -1025,84 +1189,116 @@ public:
 		for (int i = 1; i < argc - 1; i++) {
 
 
-			if (!strcmp(argv[i], "--q0")
-			 || !strcmp(argv[i], "--q1")
-			 || !strcmp(argv[i], "--q2")
-			 || !strcmp(argv[i], "--qr")
-			 || !strcmp(argv[i], "--qn")) {
+		}
+
+		/*
+		 * Set basic program information in the environment.
+		 */
+
+		environment::top()->set("---package", package);
+		environment::top()->set("---short-version", short_version);
+		environment::top()->set("---version", version);
+		environment::top()->set("---invocation", argv[0]);
+
+		/*
+		 * Initialize the top-level token-reader and generate
+		 * an environment variable for it.
+		 */
+
+		token_reader *tr = new cli_token_reader(argc - 1, argv + 1);
+		environment::top()->set_ptr("---token-reader", tr);
+
+		/*
+		 * Evaluate the command-line arguments to generate environment
+		 * structures.
+		 */
+
+		std::vector<std::pair<const char *, environment *> > files;
+
+		evaluate_stream(tr, &files);
+
+		/*
+		 * If there are fewer than two files, then output usage information.
+		 */
+
+		if (files.size() < 2) {
+			hi.usage();
+			exit(1);
+		}
+
+		/*
+		 * Iterate through the global environment,
+		 * looking for options.
+		 */
+
+		for (std::map<const char *, const char *>::iterator i = genv.get_map().begin();
+				i != genv.get_map().end(); i++) {
+
+			if (!genv.is_option(i->first))
+				continue;
+
+			const char *option_name = genv.get_option_name(i->first);
+
+			if (!strcmp(option_name, "q0")
+			 || !strcmp(option_name, "q1")
+			 || !strcmp(option_name, "q2")
+			 || !strcmp(option_name, "qr")
+			 || !strcmp(option_name, "qn")) {
 				/*
 				 * Do nothing.  Defaults have already been set.
 				 */
-			} else if (!strcmp(argv[i], "--8bpc")) {
+			} else if (!strcmp(option_name, "8bpc")) {
 				d2::image_rw::depth8();
-			} else if (!strcmp(argv[i], "--16bpc")) {
+			} else if (!strcmp(option_name, "16bpc")) {
 				d2::image_rw::depth16();
-			} else if (!strcmp(argv[i], "--plain")) {
+			} else if (!strcmp(option_name, "plain")) {
 				d2::image_rw::ppm_plain();
-			} else if (!strcmp(argv[i], "--raw")) {
+			} else if (!strcmp(option_name, "raw")) {
 				d2::image_rw::ppm_raw();
-			} else if (!strcmp(argv[i], "--auto")) {
+			} else if (!strcmp(option_name, "auto")) {
 				d2::image_rw::ppm_auto();
-			} else if (!strcmp(argv[i], "--align-all")) {
+			} else if (!strcmp(option_name, "align-all")) {
 				d2::align::all();
-			} else if (!strcmp(argv[i], "--align-green")) {
+			} else if (!strcmp(option_name, "align-green")) {
 				d2::align::green();
-			} else if (!strcmp(argv[i], "--align-sum")) {
+			} else if (!strcmp(option_name, "align-sum")) {
 				d2::align::sum();
-			} else if (!strcmp(argv[i], "--translation")) {
+			} else if (!strcmp(option_name, "translation")) {
 				d2::align::class_translation();
-			} else if (!strcmp(argv[i], "--euclidean")) {
+			} else if (!strcmp(option_name, "euclidean")) {
 				d2::align::class_euclidean();
-			} else if (!strcmp(argv[i], "--projective")) {
+			} else if (!strcmp(option_name, "projective")) {
 				d2::align::class_projective();
-			} else if (!strcmp(argv[i], "--identity")) {
+			} else if (!strcmp(option_name, "identity")) {
 				d2::align::initial_default_identity();
-			} else if (!strcmp(argv[i], "--follow")) {
+			} else if (!strcmp(option_name, "follow")) {
 				d2::align::initial_default_follow();
-			} else if (!strcmp(argv[i], "--perturb-output")) {
+			} else if (!strcmp(option_name, "perturb-output")) {
 				d2::align::perturb_output();
-			} else if (!strcmp(argv[i], "--perturb-source")) {
+			} else if (!strcmp(option_name, "perturb-source")) {
 				d2::align::perturb_source();
-			} else if (!strcmp(argv[i], "--fail-optimal")) {
+			} else if (!strcmp(option_name, "fail-optimal")) {
 				d2::align::fail_optimal();
-			} else if (!strcmp(argv[i], "--fail-default")) {
+			} else if (!strcmp(option_name, "fail-default")) {
 				d2::align::fail_default();
-			} else if (!strcmp(argv[i], "--no-extend")) {
+			} else if (!strcmp(option_name, "no-extend")) {
 				extend = 0;
-			} else if (!strcmp(argv[i], "--extend")) {
+			} else if (!strcmp(option_name, "extend")) {
 				extend = 1;
-			} else if (!strcmp(argv[i], "--no-mc")) {
+			} else if (!strcmp(option_name, "no-mc")) {
 				d2::align::no_mc();
-			} else if (!strcmp(argv[i], "--oc")) {
+			} else if (!strcmp(option_name, "oc")) {
 				d3::scene::oc();
-			} else if (!strcmp(argv[i], "--no-oc")) {
+			} else if (!strcmp(option_name, "no-oc")) {
 				d3::scene::no_oc();
-			} else if (!strcmp(argv[i], "--gs")) {
-				if (i + 1 >= argc)
-					not_enough("--gs");
+			} else if (!strcmp(option_name, "gs")) {
+				d2::align::gs(genv.get_string_arg(i->first, 1));
+			} else if (!strcmp(option_name, "gs-mo")) {
+				d2::align::gs_mo(genv.get_unsigned_arg(i->first, 1));
+			} else if (!strcmp(option_name, "focus")) {
 
-				d2::align::gs(argv[i+1]);
-				i += 1;
-
-			} else if (!strcmp(argv[i], "--gs-mo")) {
-				if (i + 1 >= argc)
-					not_enough("--gs-mo");
-
-				unsigned int mo_parameter;
-				if (sscanf(argv[i+1], "%u", &mo_parameter) != 1)
-					bad_arg("--gs-mo");
-
-				d2::align::gs_mo(mo_parameter);
-				i += 1;
-
-			} else if (!strcmp(argv[i], "--focus")) {
-
-				/*
-				 * Check for argument availability
-				 */
-
-				if (i + 1 >= argc) 
-					not_enough(argv[i]);
+#warning --focus is not yet implemented.
+				assert(0);
 
 				double one = +1;
 				double zero = +0;
@@ -1118,33 +1314,21 @@ public:
 				double distance;
 				double px, py;
 
-				if (!strcmp(argv[i+1], "d")) {
+				if (!strcmp(genv.get_string_arg(i->first, 1), "d")) {
 
 					type = 0;
 
-					if (i + 2 > argc) 
-						not_enough("--focus d");
+					distance = genv.get_double_arg(i->first, 2);
 
-					if (sscanf(argv[i+2], "%lf", &distance) != 1)
-						bad_arg("--focus d");
-
-					i += 2;
-
-				} else if (!strcmp(argv[i+1], "p")) {
+				} else if (!strcmp(genv.get_string_arg(i->first, 1), "p")) {
 
 					type = 1;
 
-					if (i + 3 > argc) 
-						not_enough("--focus");
-
-					if (sscanf(argv[i+2], "%lf", &px) != 1
-					 || sscanf(argv[i+3], "%lf", &py) != 1)
-						bad_arg("--focus");
-
-					i += 3;
+					px = genv.get_double_arg(i->first, 2);
+					py = genv.get_double_arg(i->first, 3);
 
 				} else {
-					bad_arg(argv[i]);
+					bad_arg(option_name);
 				}
 
 				/*
@@ -1166,74 +1350,66 @@ public:
 				unsigned int fs = 0;
 				unsigned int sr = 0;
 
-				int options = 1; 
-
-				i++;
-
-				while (options && i < argc) {
-					if (!strncmp(argv[i], "ci=", 3)) {
-						if(sscanf(argv[i] + 3, "%u", &ci) != 1)
+				for (int arg_num = 2; genv.is_arg(i->first, arg_num); i++) {
+					const char *option = genv.get_string_arg(i->first, arg_num);
+					if (!strncmp(option, "ci=", 3)) {
+						if(sscanf(option + 3, "%u", &ci) != 1)
 							bad_arg("--focus");
-					} else if (!strncmp(argv[i], "fr=", 3)) {
-						if(sscanf(argv[i] + 3, "%lf", &fr) != 1)
+					} else if (!strncmp(option, "fr=", 3)) {
+						if(sscanf(option + 3, "%lf", &fr) != 1)
 							bad_arg("--focus");
-					} else if (!strncmp(argv[i], "ht=", 3)) {
-						if(sscanf(argv[i] + 3, "%lf", &ht) != 1)
+					} else if (!strncmp(option, "ht=", 3)) {
+						if(sscanf(option + 3, "%lf", &ht) != 1)
 							bad_arg("--focus");
-					} else if (!strncmp(argv[i], "vt=", 3)) {
-						if(sscanf(argv[i] + 3, "%lf", &vt) != 1)
+					} else if (!strncmp(option, "vt=", 3)) {
+						if(sscanf(option + 3, "%lf", &vt) != 1)
 							bad_arg("--focus");
-					} else if (!strncmp(argv[i], "sy=", 3)) {
-						if(sscanf(argv[i] + 3, "%lf", &sy) != 1)
+					} else if (!strncmp(option, "sy=", 3)) {
+						if(sscanf(option + 3, "%lf", &sy) != 1)
 							bad_arg("--focus");
-					} else if (!strncmp(argv[i], "ey=", 3)) {
-						if(sscanf(argv[i] + 3, "%lf", &ey) != 1)
+					} else if (!strncmp(option, "ey=", 3)) {
+						if(sscanf(option + 3, "%lf", &ey) != 1)
 							bad_arg("--focus");
-					} else if (!strncmp(argv[i], "sx=", 3)) {
-						if(sscanf(argv[i] + 3, "%lf", &sx) != 1)
+					} else if (!strncmp(option, "sx=", 3)) {
+						if(sscanf(option + 3, "%lf", &sx) != 1)
 							bad_arg("--focus");
-					} else if (!strncmp(argv[i], "ex=", 3)) {
-						if(sscanf(argv[i] + 3, "%lf", &ex) != 1)
+					} else if (!strncmp(option, "ex=", 3)) {
+						if(sscanf(option + 3, "%lf", &ex) != 1)
 							bad_arg("--focus");
-					} else if (!strncmp(argv[i], "sd=", 3)) {
-						if(sscanf(argv[i] + 3, "%lf", &sd) != 1)
+					} else if (!strncmp(option, "sd=", 3)) {
+						if(sscanf(option + 3, "%lf", &sd) != 1)
 							bad_arg("--focus");
-					} else if (!strncmp(argv[i], "ed=", 3)) {
-						if(sscanf(argv[i] + 3, "%lf", &ed) != 1)
+					} else if (!strncmp(option, "ed=", 3)) {
+						if(sscanf(option + 3, "%lf", &ed) != 1)
 							bad_arg("--focus");
-					} else if (!strncmp(argv[i], "ap=", 3)) {
-						if(sscanf(argv[i] + 3, "%lf", &ap) != 1)
+					} else if (!strncmp(option, "ap=", 3)) {
+						if(sscanf(option + 3, "%lf", &ap) != 1)
 							bad_arg("--focus");
-					} else if (!strncmp(argv[i], "sc=", 3)) {
-						if(sscanf(argv[i] + 3, "%u", &sc) != 1)
+					} else if (!strncmp(option, "sc=", 3)) {
+						if(sscanf(option + 3, "%u", &sc) != 1)
 							bad_arg("--focus");
-					} else if (!strncmp(argv[i], "sr=", 3)) {
-						if (!strcmp(argv[i], "sr=aperture")) {
+					} else if (!strncmp(option, "sr=", 3)) {
+						if (!strcmp(option, "sr=aperture")) {
 							sr = 0;
-						} else if (!strcmp(argv[i], "sr=pixel")) {
+						} else if (!strcmp(option, "sr=pixel")) {
 							sr = 1;
 						} else
 							bad_arg("--focus");
 
-					} else if (!strncmp(argv[i], "fs=", 3)) {
-						if (!strcmp(argv[i], "fs=mean")) {
+					} else if (!strncmp(option, "fs=", 3)) {
+						if (!strcmp(option, "fs=mean")) {
 							fs = 0;
-						} else if (!strcmp(argv[i], "fs=median")) {
+						} else if (!strcmp(option, "fs=median")) {
 							fs = 1;
 						} else 
 							bad_arg("--focus");
 					} else
-						options = 0;
-
-					if (options)
-						i++;
+						bad_arg("--focus");
 				}
-
-				i--;
 
 				d3::focus::add_region(type, distance, px, py, ci, fr, ht, vt, sd, ed, sx, ex, sy, ey, ap, sc, fs, sr);
 
-			} else if (!strcmp(argv[i], "--3ddp") || !strcmp(argv[i], "--3dvp")) {
+			} else if (!strcmp(option_name, "3ddp") || !strcmp(option_name, "3dvp")) {
 				d2::align::keep();
 
 				/*
@@ -1249,13 +1425,6 @@ public:
 #endif
 
 				/*
-				 * Check for argument availability
-				 */
-
-				if (i + 10 >= argc) 
-					not_enough(argv[i]);
-
-				/*
 				 * Initialize if necessary
 				 *
 				 * Note: because their existence is checked as an
@@ -1264,7 +1433,7 @@ public:
 				 */
 
 				if (d3_output == NULL) {
-					d3_count  = argc - (i + 2) - 1;
+					d3_count  = argc;
 					d3_output = (const char **) calloc(d3_count, sizeof(char *));
 					d3_depth = (const char **) calloc(d3_count, sizeof(char *));
 				}
@@ -1274,16 +1443,15 @@ public:
 				double x, y, z;
 				double P, Y, R;
 
-				if (sscanf(argv[i+1], "%u", &width) != 1
-				 || sscanf(argv[i+2], "%u", &height) != 1
-				 || sscanf(argv[i+3], "%lf", &view_angle) != 1
-				 || sscanf(argv[i+4], "%lf", &x) != 1
-				 || sscanf(argv[i+5], "%lf", &y) != 1
-				 || sscanf(argv[i+6], "%lf", &z) != 1
-				 || sscanf(argv[i+7], "%lf", &P) != 1
-				 || sscanf(argv[i+8], "%lf", &Y) != 1
-				 || sscanf(argv[i+9], "%lf", &R) != 1)
-					bad_arg(argv[i]);
+				width = genv.get_unsigned_arg(i->first, 1);
+				height = genv.get_unsigned_arg(i->first, 2);
+				view_angle = genv.get_double_arg(i->first, 3);
+				x = genv.get_double_arg(i->first, 4);
+				y = genv.get_double_arg(i->first, 5);
+				z = genv.get_double_arg(i->first, 6);
+				P = genv.get_double_arg(i->first, 7);
+				Y = genv.get_double_arg(i->first, 8);
+				R = genv.get_double_arg(i->first, 9);
 
 				view_angle *= M_PI / 180;
 				P *= M_PI / 180;
@@ -1295,16 +1463,14 @@ public:
 				t.set_domain(height, width);
 				d3::pt _pt(t, d3::et(y, x, z, Y, P, R), view_angle);
 				
-				if (!strcmp(argv[i], "--3dvp")) {
-					d3_output_pt[argv[i+10]] = _pt;
-				} else if (!strcmp(argv[i], "--3ddp")) {
-					d3_depth_pt[argv[i+10]] = _pt;
+				if (!strcmp(option_name, "3dvp")) {
+					d3_output_pt[genv.get_string_arg(i->first, 10)] = _pt;
+				} else if (!strcmp(option_name, "3ddp")) {
+					d3_depth_pt[genv.get_string_arg(i->first, 10)] = _pt;
 				} else {
 					assert(0);
 				}
-
-				i+=10;
-			} else if (!strcmp(argv[i], "--3dv")) {
+			} else if (!strcmp(option_name, "3dv")) {
 				d2::align::keep();
 
 				unsigned int frame_no;
@@ -1322,24 +1488,16 @@ public:
 #endif
 
 				/*
-				 * Check for argument availability
-				 */
-
-				if (i + 2 >= argc) 
-					not_enough("--3dv");
-
-				/*
 				 * Initialize if necessary
 				 */
 
 				if (d3_output == NULL) {
-					d3_count  = argc - (i + 2) - 1;
+					d3_count  = argc;
 					d3_output = (const char **) calloc(d3_count, sizeof(char *));
 					d3_depth = (const char **) calloc(d3_count, sizeof(char *));
 				}
 
-				if (sscanf(argv[i+1], "%d", &frame_no) != 1)
-					ui::get()->error("--3dv argument 0 must be an integer");
+				frame_no = genv.get_int_arg(i->first, 1);
 
 				if (frame_no >= d3_count)
 					ui::get()->error("--3dv argument 0 is too large");
@@ -1348,10 +1506,9 @@ public:
 					unsupported::fornow ("Writing a single 3D view to more than one output file");
 				}
 
-				d3_output[frame_no] = argv[i+2];
+				d3_output[frame_no] = genv.get_string_arg(i->first, 2);
 
-				i+=2;
-			} else if (!strcmp(argv[i], "--3dd")) {
+			} else if (!strcmp(option_name, "3dd")) {
 				d2::align::keep();
 
 				unsigned int frame_no;
@@ -1369,24 +1526,16 @@ public:
 #endif
 
 				/*
-				 * Check for argument availability
-				 */
-
-				if (i + 2 >= argc)
-					not_enough("--3dd");
-
-				/*
 				 * Initialize if necessary
 				 */
 
 				if (d3_output == NULL) {
-					d3_count  = argc - (i + 2) - 1;
+					d3_count  = argc;
 					d3_output = (const char **) calloc(d3_count, sizeof(char *));
 					d3_depth = (const char **) calloc(d3_count, sizeof(char *));
 				}
 
-				if (sscanf(argv[i+1], "%d", &frame_no) != 1)
-					ui::get()->error("--3dd argument 0 must be an integer");
+				frame_no = genv.get_int_arg(i->first, 1);
 
 				if (frame_no >= d3_count)
 					ui::get()->error("--3dd argument 0 is too large");
@@ -1395,241 +1544,93 @@ public:
 					unsupported::fornow ("Writing a single frame's depth info to more than one output file");
 				}
 
-				d3_depth[frame_no] = argv[i+2];
+				d3_depth[frame_no] = genv.get_string_arg(i->first, 2);
 
-				i+=2;
-
-			} else if (!strcmp(argv[i], "--view-angle")) {
-				if (i + 1 >= argc)
-					not_enough("--view-angle");
-
-				double va_parameter;
-				sscanf(argv[i+1], "%lf", &va_parameter);
-				i += 1;
-				user_view_angle = va_parameter * M_PI / 180;
-			} else if (!strcmp(argv[i], "--cpf-load")) {
-				if (i + 1 >= argc)
-					not_enough("--cpf-load");
-
-				d3::cpf::init_loadfile(argv[i+1]);
-				i += 1;
-			} else if (!strcmp(argv[i], "--ui=stream")) {
+			} else if (!strcmp(option_name, "view-angle")) {
+				user_view_angle = genv.get_double_arg(i->first, 1) * M_PI / 180;
+			} else if (!strcmp(option_name, "cpf-load")) {
+				d3::cpf::init_loadfile(genv.get_string_arg(i->first, 1));
+			} else if (!strcmp(option_name, "ui=stream")) {
 				ui::set_stream();
-			} else if (!strcmp(argv[i], "--ui=tty")) {
+			} else if (!strcmp(option_name, "ui=tty")) {
 				ui::set_tty();
-			} else if (!strcmp(argv[i], "--3d-fmr")) {
-
-				if (i + 1 >= argc)
-					not_enough("--3d-fmr");
-
-				double fmr_parameter;
-				sscanf(argv[i+1], "%lf", &fmr_parameter);
-				i += 1;
-				d3::scene::fmr(fmr_parameter);
-
-			} else if (!strcmp(argv[i], "--3d-dmr")) {
-
-				if (i + 1 >= argc)
-					not_enough("--3d-dmr");
-
-				double dmr_parameter;
-				sscanf(argv[i+1], "%lf", &dmr_parameter);
-				i += 1;
-				d3::scene::dmr(dmr_parameter);
-
-			} else if (!strcmp(argv[i], "--et")) {
-
-				if (i + 1 >= argc)
-					not_enough("--et");
-
-				double et_parameter;
-				sscanf(argv[i+1], "%lf", &et_parameter);
-				i += 1;
-				d3::scene::et(et_parameter);
-
-			} else if (!strcmp(argv[i], "--st")) {
-				if (i + 1 >= argc)
-					not_enough("--st");
-
-				double st_parameter;
-				sscanf(argv[i+1], "%lf", &st_parameter);
-				i += 1;
-				d3::cpf::st(st_parameter);
-			} else if (!strcmp(argv[i], "--di-lower")) {
-				if (i + 1 >= argc)
-					not_enough("--di-lower");
-
-				double di_parameter;
-				sscanf(argv[i+1], "%lf", &di_parameter);
-				i += 1;
-				d3::scene::di_lower(di_parameter);
-			} else if (!strcmp(argv[i], "--rc")) {
-				if (i + 1 >= argc)
-					not_enough("--rc");
-
-				double rc_parameter;
-				sscanf(argv[i+1], "%lf", &rc_parameter);
-				i += 1;
-				d3::scene::rc(rc_parameter);
-			} else if (!strcmp(argv[i], "--do-try")) {
-				if (i + 1 >= argc)
-					not_enough("--do-try");
-
-				double do_parameter;
-				sscanf(argv[i+1], "%lf", &do_parameter);
-				i += 1;
-				d3::scene::do_try(do_parameter);
-			} else if (!strcmp(argv[i], "--di-upper")) {
-				if (i + 1 >= argc)
-					not_enough("--di-upper");
-
-				double dgi_parameter;
-				sscanf(argv[i+1], "%lf", &dgi_parameter);
-				i += 1;
-				d3::scene::di_upper(dgi_parameter);
-			} else if (!strcmp(argv[i], "--fc")) {
-				if (i + 1 >= argc)
-					not_enough("--fc");
-
-				double fc_parameter;
-				sscanf(argv[i+1], "%lf", &fc_parameter);
-				i += 1;
-				d3::scene::fc(fc_parameter);
-			} else if (!strcmp(argv[i], "--ecm")) {
+			} else if (!strcmp(option_name, "3d-fmr")) {
+				d3::scene::fmr(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "3d-dmr")) {
+				d3::scene::dmr(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "et")) {
+				d3::scene::et(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "st")) {
+				d3::cpf::st(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "di-lower")) {
+				d3::scene::di_lower(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "rc")) {
+				d3::scene::rc(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "do-try")) {
+				d3::scene::do_try(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "di-upper")) {
+				d3::scene::di_upper(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "fc")) {
+				d3::scene::fc(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "ecm")) {
 				unsupported::discontinued("--ecm <x>");
-			} else if (!strcmp(argv[i], "--acm")) {
+			} else if (!strcmp(option_name, "acm")) {
 				unsupported::discontinued("--acm <x>");
-			} else if (!strcmp(argv[i], "--def-nn")) {
-				if (i + 1 >= argc)
-					not_enough("--def-nn");
+			} else if (!strcmp(option_name, "def-nn")) {
+				d2::image_rw::def_nn(genv.get_double_arg(i->first, 1));
 
-				double nn_parameter;
-				sscanf(argv[i+1], "%lf", &nn_parameter);
-				i += 1;
-				d2::image_rw::def_nn(nn_parameter);
-
-				if (nn_parameter > 2) {
+				if (genv.get_double_arg(i->first, 1) > 2) {
 					fprintf(stderr, "\n\n*** Warning: --def-nn implementation is currently "
 							     "inefficient for large radii. ***\n\n");
 				}
 
-			} else if (!strcmp(argv[i], "--mc")) {
-				if (i + 1 >= argc)
-					not_enough("--mc");
-
-				double mc_parameter;
-				sscanf(argv[i+1], "%lf", &mc_parameter);
-				mc_parameter /= 100;
-				i += 1;
-				d2::align::mc(mc_parameter);
-
-			} else if (!strcmp(argv[i], "--fx")) {
-
-				if (i + 1 >= argc)
-					not_enough("--fx");
-
-				double fx_parameter;
-				sscanf(argv[i+1], "%lf", &fx_parameter);
-				i += 1;
-				d3::scene::fx(fx_parameter);
-
-			} else if (!strcmp(argv[i], "--tcem")) {
-
-				if (i + 1 >= argc)
-					not_enough("--tcem");
-
-				double tcem_parameter;
-				sscanf(argv[i+1], "%lf", &tcem_parameter);
-				i += 1;
-				d3::scene::tcem(tcem_parameter);
-
-			} else if (!strcmp(argv[i], "--oui")) {
-
-				if (i + 1 >= argc)
-					not_enough("--oui");
-
-				unsigned int oui_parameter;
-				sscanf(argv[i+1], "%u", &oui_parameter);
-				i += 1;
-				d3::scene::oui(oui_parameter);
-
-			} else if (!strcmp(argv[i], "--pa")) {
-
-				if (i + 1 >= argc)
-					not_enough("--pa");
-
-				unsigned int pa_parameter;
-				sscanf(argv[i+1], "%u", &pa_parameter);
-				i += 1;
-				d3::scene::pa(pa_parameter);
-
-			} else if (!strcmp(argv[i], "--pc")) {
-
-				if (i + 1 >= argc)
-					not_enough("--pc");
-
-				d3::scene::pc(argv[i+1]);
-				i += 1;
-
-			} else if (!strcmp(argv[i], "--cw")) {
-				d2::align::certainty_weighted(1);
-			} else if (!strcmp(argv[i], "--no-cw")) {
-				d2::align::certainty_weighted(0);
-			} else if (!strcmp(argv[i], "--wm")) {
+			} else if (!strcmp(option_name, "mc")) {
+				d2::align::mc(genv.get_double_arg(i->first, 1) / 100);
+			} else if (!strcmp(option_name, "fx")) {
+				d3::scene::fx(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "tcem")) {
+				d3::scene::tcem(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "oui")) {
+				d3::scene::oui(genv.get_unsigned_arg(i->first, 1));
+			} else if (!strcmp(option_name, "pa")) {
+				d3::scene::pa(genv.get_unsigned_arg(i->first, 1));
+			} else if (!strcmp(option_name, "pc")) {
+				d3::scene::pc(genv.get_string_arg(i->first, 1));
+			} else if (!strcmp(option_name, "cw")) {
+				d2::align::certainty_weighted(genv.get_unsigned_arg(i->first, 0));
+			} else if (!strcmp(option_name, "wm")) {
 				if (wm_filename != NULL)
 					ui::get()->error("only one weight map can be specified");
 
-				if (i + 3 >= argc)
-					not_enough("--wm");
-				wm_filename = argv[i+1];
-
-				if (sscanf(argv[i+2], "%d", &wm_offsetx) != 1)
-					ui::get()->error("--wm x-argument must be an integer");
-
-				if (sscanf(argv[i+3], "%d", &wm_offsety) != 1)
-					ui::get()->error("--wm y-argument must be an integer");
-
-				i += 3;
-
-			} else if (!strcmp(argv[i], "--fl")) {
-				if (i + 3 >= argc)
-					not_enough("--fl");
-				double h, v, a;
-				if (sscanf(argv[i+1], "%lf", &h) != 1) 
-					ui::get()->error("--fl h-argument must be numerical");
-				if (sscanf(argv[i+2], "%lf", &v) != 1)
-					ui::get()->error("--fl v-argument must be numerical");
-				if (sscanf(argv[i+3], "%lf", &a) != 1)
-					ui::get()->error("--fl a-argument must be numerical");
-				i += 3;
+				wm_filename = genv.get_string_arg(i->first, 1);
+				wm_offsetx = genv.get_int_arg(i->first, 2);
+				wm_offsety = genv.get_int_arg(i->first, 3);
+				
+			} else if (!strcmp(option_name, "fl")) {
 #ifdef USE_FFTW
-				d2::align::set_frequency_cut(h, v, a);
+				d2::align::set_frequency_cut(genv.get_double_arg(i->first, 1),
+						             genv.get_double_arg(i->first, 2),
+						             genv.get_double_arg(i->first, 3));
+
 #else
 				ui::get()->error_hint("--fl is not supported", "rebuild ALE with FFTW=1");
 #endif
-			} else if (!strcmp(argv[i], "--wmx")) {
-				if (i + 3 >= argc)
-					not_enough("--wmx");
+			} else if (!strcmp(option_name, "wmx")) {
 #ifdef USE_UNIX
-				d2::align::set_wmx(argv[i+1], argv[i+2], argv[i+3]);
+				d2::align::set_wmx(genv.get_string_arg(i->first, 1),
+						   genv.get_string_arg(i->first, 2),
+						   genv.get_string_arg(i->first, 3));
 #else
 				ui::get()->error_hint("--wmx is not supported", "rebuild ALE with POSIX=1");
 #endif
-				i += 3;
-			} else if (!strcmp(argv[i], "--flshow")) {
-				if (i + 1 >= argc)
-					not_enough("--flshow");
-				d2::align::set_fl_show(argv[i+1]);
-				i++;
-			} else if (!strcmp(argv[i], "--3dpx")) {
-				if (i + 6 >= argc)
-					not_enough("--3dpx");
+			} else if (!strcmp(option_name, "flshow")) {
+				d2::align::set_fl_show(genv.get_string_arg(i->first, 1));
+			} else if (!strcmp(option_name, "3dpx")) {
 
 				d3px_parameters = (double *) local_realloc(d3px_parameters, (d3px_count + 1) * 6 * sizeof(double));
 
 				for (int param = 0; param < 6; param++)
-				if  (sscanf(argv[i + param + 1], "%lf", &(d3px_parameters[6 * d3px_count + param])) != 1)
-					bad_arg("--d3px");
+					d3px_parameters[6 * d3px_count + param] = genv.get_double_arg(i->first, param + 1);
 
 				/*
 				 * Swap x and y, since their internal meanings differ from their external meanings.
@@ -1647,16 +1648,13 @@ public:
 				 */
 
 				d3px_count++;
-				i += 6;
-			} else if (!strcmp(argv[i], "--ex")) {
-				if (i + 6 >= argc)
-					not_enough("--ex");
+				
+			} else if (!strcmp(option_name, "ex")) {
 
 				ex_parameters = (int *) local_realloc(ex_parameters, (ex_count + 1) * 6 * sizeof(int));
 
 				for (int param = 0; param < 6; param++)
-				if  (sscanf(argv[i + param + 1], "%d", &(ex_parameters[6 * ex_count + param])) != 1)
-					bad_arg("--ex");
+					ex_parameters[6 * ex_count + param] = genv.get_int_arg(i->first, param + 1);
 
 				/*
 				 * Swap x and y, since their internal meanings differ from their external meanings.
@@ -1674,17 +1672,14 @@ public:
 				 */
 
 				ex_count++;
-				i += 6;
-			} else if (!strcmp(argv[i], "--crop")) {
-				if (i + 6 >= argc)
-					not_enough("--crop");
+
+			} else if (!strcmp(option_name, "crop")) {
 
 				ex_parameters = (int *) local_realloc(ex_parameters, (ex_count + 4) * 6 * sizeof(int));
 				int crop_args[6];
 
 				for (int param = 0; param < 6; param++)
-				if  (sscanf(argv[i + param + 1], "%d", &(crop_args[param])) != 1)
-					bad_arg("--crop");
+					crop_args[param] = genv.get_int_arg(i->first, param + 1);
 
 				/*
 				 * Construct exclusion regions from the crop area,
@@ -1741,43 +1736,20 @@ public:
 				 */
 
 				ex_count += 4;
-				i += 6;
-			} else if (!strcmp(argv[i], "--exshow")) {
+				
+			} else if (!strcmp(option_name, "exshow")) {
 				ex_show = 1;
-			} else if (!strcmp(argv[i], "--wt")) {
-				if (i + 1 >= argc)
-					not_enough("--wt");
-
-				double wt;
-
-				if (sscanf(argv[i + 1], "%lf", &wt) != 1)
-					bad_arg("--wt");
-
-				d2::render::set_wt(wt);
-				i++;
-			} else if (!strcmp(argv[i], "--3d-chain")) {
-				if (i + 1 >= argc)
-					not_enough("--3d-chain");
-				d3chain_type = argv[i+1];
-				i++;
-			} else if (!strcmp(argv[i], "--dchain")) {
-				if (i + 1 >= argc)
-					not_enough("--dchain");
-				ochain_types[0] = argv[i+1];
-				i++;
-			} else if (!strcmp(argv[i], "--achain")) {
-				if (i + 1 >= argc)
-					not_enough("--achain");
-				achain_type = argv[i+1];
-				i++;
-			} else if (!strcmp(argv[i], "--afilter")) {
-				if (i + 1 >= argc)
-					not_enough("--afilter");
-				afilter_type = argv[i+1];
-				i++;
-			} else if (!strcmp(argv[i], "--ochain")) {
-				if (i + 2 >= argc)
-					not_enough("--ochain");
+			} else if (!strcmp(option_name, "wt")) {
+				d2::render::set_wt(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "3d-chain")) {
+				d3chain_type = genv.get_string_arg(i->first, 1);
+			} else if (!strcmp(option_name, "dchain")) {
+				ochain_types[0] = genv.get_string_arg(i->first, 1);
+			} else if (!strcmp(option_name, "achain")) {
+				achain_type = genv.get_string_arg(i->first, 1);
+			} else if (!strcmp(option_name, "afilter")) {
+				afilter_type = genv.get_string_arg(i->first, 1);
+			} else if (!strcmp(option_name, "ochain")) {
 
 				ochain = (d2::render **) local_realloc(ochain, 
 							(oc_count + 1) * sizeof(d2::render *));
@@ -1786,72 +1758,53 @@ public:
 				ochain_types = (const char **) local_realloc((void *)ochain_types, 
 							(oc_count + 1) * sizeof(const char *));
 
-				ochain_types[oc_count] = argv[i+1];
-				ochain_names[oc_count] = argv[i+2];
+				ochain_types[oc_count] = genv.get_string_arg(i->first, 1);
+				ochain_names[oc_count] = genv.get_string_arg(i->first, 2);
 
 				oc_count++;
-				i+=2;
-			} else if (!strcmp(argv[i], "--visp")) {
-				if (i + 5 >= argc)
-					not_enough("--visp");
+
+			} else if (!strcmp(option_name, "visp")) {
 
 				visp = (const char **) local_realloc((void *)visp, 4 *
 							(vise_count + 1) * sizeof(const char *));
 
 				for (int param = 0; param < 4; param++)
-					visp[vise_count * 4 + param] = argv[i + 1 + param];
+					visp[vise_count * 4 + param] = genv.get_string_arg(i->first, param + 1);
 
 				vise_count++;
-				i+=4;
-			} else if (!strcmp(argv[i], "--cx")) {
-				
-				if (i + 1 >= argc)
-					not_enough("--cx");
 
-				sscanf(argv[i+1], "%lf", &cx_parameter);
-				i += 1;
-
-			} else if (!strcmp(argv[i], "--no-cx")) {
-				cx_parameter = 0;
-			} else if (!strcmp(argv[i], "--ip")) {
+			} else if (!strcmp(option_name, "cx")) {
+				cx_parameter = genv.get_int_arg(i->first, 0) ? genv.get_double_arg(i->first, 1) : 0;
+			} else if (!strcmp(option_name, "ip")) {
 				unsupported::discontinued("--ip <r> <i>", "--lpsf box=<r> --ips <i>");
-			} else if (!strcmp(argv[i], "--bayer")) {
-				if (i + 1 >= argc)
-					not_enough("--bayer");
+			} else if (!strcmp(option_name, "bayer")) {
 
 				/*
 				 * External order is clockwise from top-left.  Internal
 				 * order is counter-clockwise from top-left.
 				 */
 
-				if (!strcmp(argv[i+1], "rgbg")) {
+				const char *option = genv.get_string_arg(i->first, 1);
+
+				if (!strcmp(option, "rgbg")) {
 					user_bayer = IMAGE_BAYER_RGBG;
-				} else if (!strcmp(argv[i+1], "bgrg")) {
+				} else if (!strcmp(option, "bgrg")) {
 					user_bayer = IMAGE_BAYER_BGRG;
-				} else if (!strcmp(argv[i+1], "gbgr")) {
+				} else if (!strcmp(option, "gbgr")) {
 					user_bayer = IMAGE_BAYER_GRGB;
-				} else if (!strcmp(argv[i+1], "grgb")) {
+				} else if (!strcmp(option, "grgb")) {
 					user_bayer = IMAGE_BAYER_GBGR;
-				} else if (!strcmp(argv[i+1], "none")) {
+				} else if (!strcmp(option, "none")) {
 					user_bayer = IMAGE_BAYER_NONE;
 				} else {
 					bad_arg("--bayer");
 				}
-				i++;
-			} else if (!strcmp(argv[i], "--lpsf")) {
-				if (i + 1 >= argc)
-					not_enough("--lpsf");
-
-				psf[psf_linear] = argv[i+1];
-				i++;
-			} else if (!strcmp(argv[i], "--nlpsf")) {
-				if (i + 1 >= argc)
-					not_enough("--nlpsf");
-
-				psf[psf_nonlinear] = argv[i+1];
-				i++;
-
-			} else if (!strcmp(argv[i], "--psf-match")) {
+				
+			} else if (!strcmp(option_name, "lpsf")) {
+				psf[psf_linear] = genv.get_string_arg(i->first, 1);
+			} else if (!strcmp(option_name, "nlpsf")) {
+				psf[psf_nonlinear] = genv.get_string_arg(i->first, 1);
+			} else if (!strcmp(option_name, "psf-match")) {
 				if (i + 6 >= argc)
 					not_enough("--psf-match");
 
@@ -1863,7 +1816,7 @@ public:
 					i++;
 				}
 
-			} else if (!strcmp(argv[i], "--device")) {
+			} else if (!strcmp(option_name, "device")) {
 				if (i + 1 >= argc) 
 					not_enough("--device");
 
@@ -1871,7 +1824,7 @@ public:
 				i++;
 
 #if 0
-			} else if (!strcmp(argv[i], "--usm")) {
+			} else if (!strcmp(option_name, "usm")) {
 
 				if (d3_output != NULL)
 					unsupported::fornow("3D modeling with unsharp mask");
@@ -1883,7 +1836,7 @@ public:
 				i++;
 #endif
 
-			} else if (!strcmp(argv[i], "--ipr")) {
+			} else if (!strcmp(option_name, "ipr")) {
 				
 				if (i + 1 >= argc)
 					not_enough("--ipr");
@@ -1894,23 +1847,23 @@ public:
 				ui::get()->warn("--ipr is deprecated.  Use --ips instead");
 				i++;
 
-			} else if (!strcmp(argv[i], "--cpp-err-median")) {
+			} else if (!strcmp(option_name, "cpp-err-median")) {
 				d3::cpf::err_median();
-			} else if (!strcmp(argv[i], "--cpp-err-mean")) {
+			} else if (!strcmp(option_name, "cpp-err-mean")) {
 				d3::cpf::err_mean();
-			} else if (!strcmp(argv[i], "--vp-adjust")) {
+			} else if (!strcmp(option_name, "vp-adjust")) {
 				d3::align::vp_adjust();
-			} else if (!strcmp(argv[i], "--vp-noadjust")) {
+			} else if (!strcmp(option_name, "vp-noadjust")) {
 				d3::align::vp_noadjust();
-			} else if (!strcmp(argv[i], "--vo-adjust")) {
+			} else if (!strcmp(option_name, "vo-adjust")) {
 				d3::align::vo_adjust();
-			} else if (!strcmp(argv[i], "--vo-noadjust")) {
+			} else if (!strcmp(option_name, "vo-noadjust")) {
 				d3::align::vo_noadjust();
-			} else if (!strcmp(argv[i], "--ip-mean")) {
+			} else if (!strcmp(option_name, "ip-mean")) {
 				ip_use_median = 0;
-			} else if (!strcmp(argv[i], "--ip-median")) {
+			} else if (!strcmp(option_name, "ip-median")) {
 				ip_use_median = 1;
-			} else if (!strcmp(argv[i], "--ips")) {
+			} else if (!strcmp(option_name, "ips")) {
 
 				if (i + 1 >= argc)
 					not_enough("--ips");
@@ -1918,45 +1871,45 @@ public:
 				if (sscanf(argv[i+1], "%d", &ip_iterations) != 1)
 					ui::get()->error("--ips requires an integer argument");
 				i++;
-			} else if (!strcmp(argv[i], "--ipc")) {
+			} else if (!strcmp(option_name, "ipc")) {
 				unsupported::discontinued("--ipc <c> <i>", "--ips <i> --lpsf <c>", "--ips <i> --device <c>");
-			} else if (!strcmp(argv[i], "--exp-extend")) {
+			} else if (!strcmp(option_name, "exp-extend")) {
 				d2::image_rw::exp_scale();
-			} else if (!strcmp(argv[i], "--exp-noextend")) {
+			} else if (!strcmp(option_name, "exp-noextend")) {
 				d2::image_rw::exp_noscale();
-			} else if (!strcmp(argv[i], "--exp-register")) {
+			} else if (!strcmp(option_name, "exp-register")) {
 				exposure_register = 1;
 				d2::align::exp_register();
-			} else if (!strcmp(argv[i], "--exp-noregister")) {
+			} else if (!strcmp(option_name, "exp-noregister")) {
 				exposure_register = 0;
 				d2::align::exp_noregister();
-			} else if (!strcmp(argv[i], "--exp-meta-only")) {
+			} else if (!strcmp(option_name, "exp-meta-only")) {
 				exposure_register = 2;
 				d2::align::exp_meta_only();
-			} else if (!strcmp(argv[i], "--drizzle-only")) {
+			} else if (!strcmp(option_name, "drizzle-only")) {
 				unsupported::discontinued("--drizzle-only", "--dchain box:1");
-			} else if (!strcmp(argv[i], "--subspace-traverse")) {
+			} else if (!strcmp(option_name, "subspace-traverse")) {
 				unsupported::undocumented("--subspace-traverse");
 				d3::scene::set_subspace_traverse();
-			} else if (!strcmp(argv[i], "--3d-nofilter")) {
+			} else if (!strcmp(option_name, "3d-nofilter")) {
 				d3::scene::nofilter();
-			} else if (!strcmp(argv[i], "--3d-filter")) {
+			} else if (!strcmp(option_name, "3d-filter")) {
 				d3::scene::filter();
-			} else if (!strcmp(argv[i], "--occ-norm")) {
+			} else if (!strcmp(option_name, "occ-norm")) {
 				d3::scene::nw();
-			} else if (!strcmp(argv[i], "--occ-nonorm")) {
+			} else if (!strcmp(option_name, "occ-nonorm")) {
 				d3::scene::no_nw();
-			} else if (!strcmp(argv[i], "--inc")) {
+			} else if (!strcmp(option_name, "inc")) {
 				inc = 1;
-			} else if (!strcmp(argv[i], "--no-inc")) {
+			} else if (!strcmp(option_name, "no-inc")) {
 				inc = 0;
-			} else if (!strncmp(argv[i], "--exp-mult=", strlen("--exp-mult="))) {
+			} else if (!strncmp(option_name, "exp-mult=", strlen("--exp-mult="))) {
 				double exp_c, exp_r, exp_b;
-				sscanf(argv[i] + strlen("--exp-mult="), "%lf,%lf,%lf", &exp_c, &exp_r, &exp_b);
+				sscanf(option_name + strlen("--exp-mult="), "%lf,%lf,%lf", &exp_c, &exp_r, &exp_b);
 				exp_mult = d2::pixel(1/(exp_r * exp_c), 1/exp_c, 1/(exp_b * exp_c));
-			} else if (!strncmp(argv[i], "--visp-scale=", strlen("--visp-scale="))) {
+			} else if (!strncmp(option_name, "visp-scale=", strlen("--visp-scale="))) {
 
-				sscanf(argv[i] + strlen("--visp-scale="), "%lf", &vise_scale_factor);
+				sscanf(option_name + strlen("--visp-scale="), "%lf", &vise_scale_factor);
 
 				if (vise_scale_factor <= 0.0)
 					ui::get()->error("VISP scale must be greater than zero");
@@ -1964,9 +1917,9 @@ public:
 				if (!finite(vise_scale_factor))
 					ui::get()->error("VISP scale must be finite");
 
-			} else if (!strncmp(argv[i], "--scale=", strlen("--scale="))) {
+			} else if (!strncmp(option_name, "scale=", strlen("--scale="))) {
 
-				sscanf(argv[i] + strlen("--scale="), "%lf", &scale_factor);
+				sscanf(option_name + strlen("--scale="), "%lf", &scale_factor);
 
 				if (scale_factor <= 0)
 					ui::get()->error("Scale factor must be greater than zero");
@@ -1974,149 +1927,114 @@ public:
 				if (!finite(scale_factor))
 					ui::get()->error("Scale factor must be finite");
 
-			} else if (!strncmp(argv[i], "--metric=", strlen("--metric="))) {
+			} else if (!strncmp(option_name, "metric=", strlen("--metric="))) {
 				double metric;
-				sscanf(argv[i] + strlen("--metric="), "%lf", &metric);
+				sscanf(option_name + strlen("--metric="), "%lf", &metric);
 				d2::align::set_metric_exponent(metric);
-			} else if (!strncmp(argv[i], "--threshold=", strlen("--threshold="))) {
+			} else if (!strncmp(option_name, "threshold=", strlen("--threshold="))) {
 				double match_threshold;
-				sscanf(argv[i] + strlen("--threshold="), "%lf", &match_threshold);
+				sscanf(option_name + strlen("--threshold="), "%lf", &match_threshold);
 				d2::align::set_match_threshold(match_threshold);
-			} else if (!strncmp(argv[i], "--drizzle-diam=", strlen("--drizzle-diam="))) {
+			} else if (!strncmp(option_name, "drizzle-diam=", strlen("--drizzle-diam="))) {
 				unsupported::discontinued("--drizzle-diam=<x>", "--dchain box:1");
-				// sscanf(argv[i] + strlen("--drizzle-diam="), "%lf", &drizzle_radius);
+				// sscanf(option_name + strlen("--drizzle-diam="), "%lf", &drizzle_radius);
 				// drizzle_radius /= 2;
-			} else if (!strncmp(argv[i], "--perturb-upper=", strlen("--perturb-upper="))) {
+			} else if (!strncmp(option_name, "perturb-upper=", strlen("--perturb-upper="))) {
 				double perturb_upper;
 				int characters;
-				sscanf(argv[i] + strlen("--perturb-upper="), "%lf%n", &perturb_upper,
+				sscanf(option_name + strlen("--perturb-upper="), "%lf%n", &perturb_upper,
 										      &characters);
-				if (*(argv[i] + strlen("--perturb-upper=") + characters) == '%')
+				if (*(option_name + strlen("--perturb-upper=") + characters) == '%')
 					d2::align::set_perturb_upper(perturb_upper, 1);
 				else
 					d2::align::set_perturb_upper(perturb_upper, 0);
-			} else if (!strncmp(argv[i], "--perturb-lower=", strlen("--perturb-lower="))) {
+			} else if (!strncmp(option_name, "perturb-lower=", strlen("--perturb-lower="))) {
 				double perturb_lower;
 				int characters;
-				sscanf(argv[i] + strlen("--perturb-lower="), "%lf%n", &perturb_lower,
+				sscanf(option_name + strlen("--perturb-lower="), "%lf%n", &perturb_lower,
 										      &characters);
 				if (perturb_lower <= 0)
 					ui::get()->error("--perturb-lower= value is non-positive");
 
-				if (*(argv[i] + strlen("--perturb-lower=") + characters) == '%')
+				if (*(option_name + strlen("--perturb-lower=") + characters) == '%')
 					d2::align::set_perturb_lower(perturb_lower, 1);
 				else
 					d2::align::set_perturb_lower(perturb_lower, 0);
-			} else if (!strncmp(argv[i], "--stepsize=", strlen("--stepsize="))) {
+			} else if (!strncmp(option_name, "stepsize=", strlen("--stepsize="))) {
 				double perturb_lower;
 				ui::get()->warn("--stepsize is deprecated.  Use --perturb-lower instead");
-				sscanf(argv[i] + strlen("--stepsize="), "%lf", &perturb_lower);
+				sscanf(option_name + strlen("--stepsize="), "%lf", &perturb_lower);
 				d2::align::set_perturb_lower(perturb_lower, 0);
-			} else if (!strncmp(argv[i], "--va-upper=", strlen("--va-upper="))) {
+			} else if (!strncmp(option_name, "va-upper=", strlen("--va-upper="))) {
 				double va_upper;
 				int characters;
-				sscanf(argv[i] + strlen("--va-upper="), "%lf%n", &va_upper,
+				sscanf(option_name + strlen("--va-upper="), "%lf%n", &va_upper,
 										      &characters);
-				if (*(argv[i] + strlen("--va-upper=") + characters) == '%')
+				if (*(option_name + strlen("--va-upper=") + characters) == '%')
 					ui::get()->error("--va-upper= does not accept '%' arguments\n");
 				else
 					d3::cpf::set_va_upper(va_upper);
-			} else if (!strncmp(argv[i], "--cpp-upper=", strlen("--cpp-upper="))) {
+			} else if (!strncmp(option_name, "cpp-upper=", strlen("--cpp-upper="))) {
 				double perturb_upper;
 				int characters;
-				sscanf(argv[i] + strlen("--cpp-upper="), "%lf%n", &perturb_upper,
+				sscanf(option_name + strlen("--cpp-upper="), "%lf%n", &perturb_upper,
 										      &characters);
-				if (*(argv[i] + strlen("--cpp-upper=") + characters) == '%')
+				if (*(option_name + strlen("--cpp-upper=") + characters) == '%')
 					ui::get()->error("--cpp-upper= does not currently accept '%' arguments\n");
 				else
 					d3::cpf::set_cpp_upper(perturb_upper);
-			} else if (!strncmp(argv[i], "--cpp-lower=", strlen("--cpp-lower="))) {
+			} else if (!strncmp(option_name, "cpp-lower=", strlen("--cpp-lower="))) {
 				double perturb_lower;
 				int characters;
-				sscanf(argv[i] + strlen("--cpp-lower="), "%lf%n", &perturb_lower,
+				sscanf(option_name + strlen("--cpp-lower="), "%lf%n", &perturb_lower,
 										      &characters);
-				if (*(argv[i] + strlen("--cpp-lower=") + characters) == '%')
+				if (*(option_name + strlen("--cpp-lower=") + characters) == '%')
 					ui::get()->error("--cpp-lower= does not currently accept '%' arguments\n");
 				else
 					d3::cpf::set_cpp_lower(perturb_lower);
-			} else if (!strncmp(argv[i], "--hf-enhance=", strlen("--hf-enhance="))) {
+			} else if (!strncmp(option_name, "hf-enhance=", strlen("--hf-enhance="))) {
 				unsupported::discontinued("--hf-enhance=<x>");
-			} else if (!strncmp(argv[i], "--rot-upper=", strlen("--rot-upper="))) {
+			} else if (!strncmp(option_name, "rot-upper=", strlen("--rot-upper="))) {
 				double rot_max;
-				sscanf(argv[i] + strlen("--rot-upper="), "%lf", &rot_max);
+				sscanf(option_name + strlen("--rot-upper="), "%lf", &rot_max);
 				d2::align::set_rot_max((int) floor(rot_max));
-			} else if (!strncmp(argv[i], "--bda-mult=", strlen("--bda-mult="))) {
+			} else if (!strncmp(option_name, "bda-mult=", strlen("--bda-mult="))) {
 				double bda_mult;
-				sscanf(argv[i] + strlen("--bda-mult="), "%lf", &bda_mult);
+				sscanf(option_name + strlen("--bda-mult="), "%lf", &bda_mult);
 				d2::align::set_bda_mult(bda_mult);
-			} else if (!strncmp(argv[i], "--bda-rate=", strlen("--bda-rate="))) {
+			} else if (!strncmp(option_name, "bda-rate=", strlen("--bda-rate="))) {
 				double bda_rate;
-				sscanf(argv[i] + strlen("--bda-rate="), "%lf", &bda_rate);
+				sscanf(option_name + strlen("--bda-rate="), "%lf", &bda_rate);
 				d2::align::set_bda_rate(bda_rate);
-			} else if (!strncmp(argv[i], "--lod-max=", strlen("--lod-max="))) {
+			} else if (!strncmp(option_name, "lod-max=", strlen("--lod-max="))) {
 				double lod_max;
-				sscanf(argv[i] + strlen("--lod-max="), "%lf", &lod_max);
+				sscanf(option_name + strlen("--lod-max="), "%lf", &lod_max);
 				d2::align::set_lod_max((int) floor(lod_max));
-			} else if (!strncmp(argv[i], "--cpf-load=", strlen("--cpf-load="))) {
-				d3::cpf::init_loadfile(argv[i] + strlen("--cpf-load="));
+			} else if (!strncmp(option_name, "cpf-load=", strlen("--cpf-load="))) {
+				d3::cpf::init_loadfile(option_name + strlen("--cpf-load="));
 #if 0
-			} else if (!strncmp(argv[i], "--model-load=", strlen("--model-load="))) {
-				d3::scene::load_model(argv[i] + strlen("--model-load="));
-			} else if (!strncmp(argv[i], "--model-save=", strlen("--model-save="))) {
-				d3::scene::save_model(argv[i] + strlen("--model-save="));
+			} else if (!strncmp(option_name, "model-load=", strlen("--model-load="))) {
+				d3::scene::load_model(option_name + strlen("--model-load="));
+			} else if (!strncmp(option_name, "model-save=", strlen("--model-save="))) {
+				d3::scene::save_model(option_name + strlen("--model-save="));
 #endif
-			} else if (!strncmp(argv[i], "--trans-load=", strlen("--trans-load="))) {
+			} else if (!strncmp(option_name, "trans-load=", strlen("--trans-load="))) {
 				d2::tload_delete(tload);
-				tload = d2::tload_new(argv[i] + strlen("--trans-load="));
+				tload = d2::tload_new(option_name + strlen("--trans-load="));
 				d2::align::set_tload(tload);
-			} else if (!strncmp(argv[i], "--trans-save=", strlen("--trans-save="))) {
+			} else if (!strncmp(option_name, "trans-save=", strlen("--trans-save="))) {
 				tsave_delete(tsave);
-				tsave = d2::tsave_new(argv[i] + strlen("--trans-save="));
+				tsave = d2::tsave_new(option_name + strlen("--trans-save="));
 				d2::align::set_tsave(tsave);
-			} else if (!strncmp(argv[i], "--3d-trans-load=", strlen("--3d-trans-load="))) {
+			} else if (!strncmp(option_name, "3d-trans-load=", strlen("--3d-trans-load="))) {
 				d3::tload_delete(d3_tload);
-				d3_tload = d3::tload_new(argv[i] + strlen("--3d-trans-load="));
+				d3_tload = d3::tload_new(option_name + strlen("--3d-trans-load="));
 				d3::align::set_tload(d3_tload);
-			} else if (!strncmp(argv[i], "--3d-trans-save=", strlen("--3d-trans-save="))) {
+			} else if (!strncmp(option_name, "3d-trans-save=", strlen("--3d-trans-save="))) {
 				d3::tsave_delete(d3_tsave);
-				d3_tsave = d3::tsave_new(argv[i] + strlen("--3d-trans-save="));
+				d3_tsave = d3::tsave_new(option_name + strlen("--3d-trans-save="));
 				d3::align::set_tsave(d3_tsave);
 			}
-		}
-
-		/*
-		 * Set basic program information in the environment.
-		 */
-
-		environment::top()->set("---package", package);
-		environment::top()->set("---short-version", short_version);
-		environment::top()->set("---version", version);
-		environment::top()->set("---invocation", argv[0]);
-
-		/*
-		 * Initialize the top-level token-reader and generate
-		 * an environment variable for it.
-		 */
-
-		token_reader *tr = new cli_token_reader(argc - 1, argv + 1);
-		environment::top()->set_ptr("---token-reader", tr);
-
-		/*
-		 * Evaluate the command-line arguments to generate environment
-		 * structures.
-		 */
-
-		std::vector<std::pair<const char *, environment *> > files;
-
-		evaluate_stream(tr, &files);
-
-		/*
-		 * If there are fewer than two files, then output usage information.
-		 */
-
-		if (files.size() < 2) {
-			hi.usage();
-			exit(1);
 		}
 
 		/*
