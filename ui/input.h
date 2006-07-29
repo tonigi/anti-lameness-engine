@@ -562,6 +562,7 @@ class input {
 		int multi;
 	};
 
+	static const char *supported_nonglobal_option_table[];
 	static simple_option simple_option_table[];
 
 	static int option_name_match(const char *unadorned, const char *token, int require_ornamentation = 1) {
@@ -693,6 +694,26 @@ class input {
 					 */
 
 					found_option = 1;
+
+					/*
+					 * Ensure that global-only options are not used in non-global context.
+					 */
+
+					if (!global_options) {
+						int found_nonglobal = 0;
+						for (int j = 0; supported_nonglobal_option_table[j]; j++) {
+							if (!strcmp(supported_nonglobal_option_table[j], 
+										simple_option_table[i].name))
+								found_nonglobal = 1;
+						}
+
+						if (!found_nonglobal) {
+							fprintf(stderr, "\n\nError: option `%s' must be applied globally.", 
+									simple_option_table[i].name);
+							fprintf(stderr, "\n\nHint:  Move option `%s' prior to file and scope operators.\n\n", simple_option_table[i].name);
+							exit(1);
+						}
+					}
 
 					const char *map_value = "1";
 

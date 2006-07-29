@@ -28,7 +28,11 @@ std::set<input::environment *> input::environment::environment_set;
 
 int input::global_options = 1;
 
-const char *supported_nonglobal_option_table[] = {
+/*
+ * List of options that can be used as nonglobals.
+ */
+
+const char *input::supported_nonglobal_option_table[] = {
 	NULL
 };
 
