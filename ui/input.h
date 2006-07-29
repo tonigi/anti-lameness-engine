@@ -363,13 +363,15 @@ class input {
 			return (int) get_long_arg(name, arg);
 		}
 
-		int get_unsigned_arg(const char *name, unsigned int arg) {
+		unsigned int get_unsigned_arg(const char *name, unsigned int arg) {
 			long int result = get_long_arg(name, arg);
 
 			if (result < 0) {
 				fprintf(stderr, "\n\nError: bad argument in `%s'.\n\n", get_option_name(name));
 				exit(1);
 			}
+
+			return (unsigned int) result;
 		}
 
 		double get_double_arg(const char *name, unsigned int arg) {
@@ -1079,7 +1081,7 @@ public:
 		int inc = 1;
 		int exposure_register = 1;
 		const char *wm_filename = NULL;
-		int wm_offsetx, wm_offsety;
+		int wm_offsetx = 0, wm_offsety = 0;
 		double cx_parameter = 0;
 		double *d3px_parameters = NULL;
 		int d3px_count = 0;
@@ -1805,111 +1807,99 @@ public:
 			} else if (!strcmp(option_name, "nlpsf")) {
 				psf[psf_nonlinear] = genv.get_string_arg(i->first, 1);
 			} else if (!strcmp(option_name, "psf-match")) {
-				if (i + 6 >= argc)
-					not_enough("--psf-match");
 
 				psf_match = 1;
 
 				for (int index = 0; index < 6; index++) {
-					if (sscanf(argv[i + 1], "%lf", &psf_match_args[index]) != 1)
-						bad_arg("--psf-match");
-					i++;
+					psf_match_args[index] = genv.get_double_arg(i->first, index + 1);
 				}
 
 			} else if (!strcmp(option_name, "device")) {
-				if (i + 1 >= argc) 
-					not_enough("--device");
-
-				device = argv[i+1];
-				i++;
-
+				device = genv.get_string_arg(i->first, 1);
 #if 0
 			} else if (!strcmp(option_name, "usm")) {
 
 				if (d3_output != NULL)
 					unsupported::fornow("3D modeling with unsharp mask");
 
-				if (i + 1 >= argc)
-					not_enough("--usm");
-
-				sscanf(argv[i+1], "%lf", &usm_multiplier);
-				i++;
+				usm_multiplier = genv.get_double_arg(i->first, 1);
 #endif
 
 			} else if (!strcmp(option_name, "ipr")) {
-				
-				if (i + 1 >= argc)
-					not_enough("--ipr");
 
-				if (sscanf(argv[i+1], "%d", &ip_iterations) != 1)
-					ui::get()->error("--ipr requires an integer argument");
+				ip_iterations = genv.get_int_arg(i->first, 1);
 
 				ui::get()->warn("--ipr is deprecated.  Use --ips instead");
-				i++;
 
-			} else if (!strcmp(option_name, "cpp-err-median")) {
-				d3::cpf::err_median();
-			} else if (!strcmp(option_name, "cpp-err-mean")) {
-				d3::cpf::err_mean();
+			} else if (!strcmp(option_name, "cpp-err")) {
+				if (!strcmp(genv.get_string_arg(i->first, 0), "median"))
+					d3::cpf::err_median();
+				else if (!strcmp(genv.get_string_arg(i->first, 0), "mean"))
+					d3::cpf::err_mean();
 			} else if (!strcmp(option_name, "vp-adjust")) {
-				d3::align::vp_adjust();
-			} else if (!strcmp(option_name, "vp-noadjust")) {
-				d3::align::vp_noadjust();
+				if (genv.get_int_arg(i->first, 0))
+					d3::align::vp_adjust();
+				else
+					d3::align::vp_noadjust();
 			} else if (!strcmp(option_name, "vo-adjust")) {
-				d3::align::vo_adjust();
-			} else if (!strcmp(option_name, "vo-noadjust")) {
-				d3::align::vo_noadjust();
-			} else if (!strcmp(option_name, "ip-mean")) {
-				ip_use_median = 0;
-			} else if (!strcmp(option_name, "ip-median")) {
-				ip_use_median = 1;
+				if (genv.get_int_arg(i->first, 0))
+					d3::align::vo_adjust();
+				else
+					d3::align::vo_noadjust();
+			} else if (!strcmp(option_name, "ip-statistic")) {
+				if (!strcmp(genv.get_string_arg(i->first, 1), "mean"))
+					ip_use_median = 0;
+				else if (!strcmp(genv.get_string_arg(i->first, 1), "median"))
+					ip_use_median = 1;
 			} else if (!strcmp(option_name, "ips")) {
-
-				if (i + 1 >= argc)
-					not_enough("--ips");
-
-				if (sscanf(argv[i+1], "%d", &ip_iterations) != 1)
-					ui::get()->error("--ips requires an integer argument");
-				i++;
+				ip_iterations = genv.get_int_arg(i->first, 1);
 			} else if (!strcmp(option_name, "ipc")) {
 				unsupported::discontinued("--ipc <c> <i>", "--ips <i> --lpsf <c>", "--ips <i> --device <c>");
 			} else if (!strcmp(option_name, "exp-extend")) {
-				d2::image_rw::exp_scale();
-			} else if (!strcmp(option_name, "exp-noextend")) {
-				d2::image_rw::exp_noscale();
+				if (genv.get_int_arg(i->first, 0))
+					d2::image_rw::exp_scale();
+				else
+					d2::image_rw::exp_noscale();
 			} else if (!strcmp(option_name, "exp-register")) {
-				exposure_register = 1;
-				d2::align::exp_register();
-			} else if (!strcmp(option_name, "exp-noregister")) {
-				exposure_register = 0;
-				d2::align::exp_noregister();
-			} else if (!strcmp(option_name, "exp-meta-only")) {
-				exposure_register = 2;
-				d2::align::exp_meta_only();
+				if (genv.get_int_arg(i->first, 0) == 1) {
+					exposure_register = 1;
+					d2::align::exp_register();
+				} else if (genv.get_int_arg(i->first, 0) == 0) {
+					exposure_register = 0;
+					d2::align::exp_noregister();
+				} else if (genv.get_int_arg(i->first, 0) == 2) {
+					exposure_register = 2;
+					d2::align::exp_meta_only();
+				}
 			} else if (!strcmp(option_name, "drizzle-only")) {
 				unsupported::discontinued("--drizzle-only", "--dchain box:1");
 			} else if (!strcmp(option_name, "subspace-traverse")) {
 				unsupported::undocumented("--subspace-traverse");
 				d3::scene::set_subspace_traverse();
-			} else if (!strcmp(option_name, "3d-nofilter")) {
-				d3::scene::nofilter();
 			} else if (!strcmp(option_name, "3d-filter")) {
-				d3::scene::filter();
+				if (genv.get_int_arg(i->first, 0))
+					d3::scene::filter();
+				else
+					d3::scene::nofilter();
 			} else if (!strcmp(option_name, "occ-norm")) {
-				d3::scene::nw();
-			} else if (!strcmp(option_name, "occ-nonorm")) {
-				d3::scene::no_nw();
+				if (genv.get_int_arg(i->first, 0))
+					d3::scene::nw();
+				else
+					d3::scene::no_nw();
 			} else if (!strcmp(option_name, "inc")) {
-				inc = 1;
-			} else if (!strcmp(option_name, "no-inc")) {
-				inc = 0;
-			} else if (!strncmp(option_name, "exp-mult=", strlen("--exp-mult="))) {
+				inc = genv.get_int_arg(i->first, 0);
+			} else if (!strcmp(option_name, "exp-mult")) {
 				double exp_c, exp_r, exp_b;
-				sscanf(option_name + strlen("--exp-mult="), "%lf,%lf,%lf", &exp_c, &exp_r, &exp_b);
-				exp_mult = d2::pixel(1/(exp_r * exp_c), 1/exp_c, 1/(exp_b * exp_c));
-			} else if (!strncmp(option_name, "visp-scale=", strlen("--visp-scale="))) {
 
-				sscanf(option_name + strlen("--visp-scale="), "%lf", &vise_scale_factor);
+				exp_c = genv.get_double_arg(i->first, 1);
+				exp_r = genv.get_double_arg(i->first, 2);
+				exp_b = genv.get_double_arg(i->first, 3);
+
+				exp_mult = d2::pixel(1/(exp_r * exp_c), 1/exp_c, 1/(exp_b * exp_c));
+
+			} else if (!strcmp(option_name, "visp-scale")) {
+
+				vise_scale_factor = genv.get_double_arg(i->first, 1);
 
 				if (vise_scale_factor <= 0.0)
 					ui::get()->error("VISP scale must be greater than zero");
@@ -1917,9 +1907,9 @@ public:
 				if (!finite(vise_scale_factor))
 					ui::get()->error("VISP scale must be finite");
 
-			} else if (!strncmp(option_name, "scale=", strlen("--scale="))) {
+			} else if (!strcmp(option_name, "scale")) {
 
-				sscanf(option_name + strlen("--scale="), "%lf", &scale_factor);
+				scale_factor = genv.get_double_arg(i->first, 1);
 
 				if (scale_factor <= 0)
 					ui::get()->error("Scale factor must be greater than zero");
@@ -1927,113 +1917,99 @@ public:
 				if (!finite(scale_factor))
 					ui::get()->error("Scale factor must be finite");
 
-			} else if (!strncmp(option_name, "metric=", strlen("--metric="))) {
-				double metric;
-				sscanf(option_name + strlen("--metric="), "%lf", &metric);
-				d2::align::set_metric_exponent(metric);
-			} else if (!strncmp(option_name, "threshold=", strlen("--threshold="))) {
-				double match_threshold;
-				sscanf(option_name + strlen("--threshold="), "%lf", &match_threshold);
-				d2::align::set_match_threshold(match_threshold);
-			} else if (!strncmp(option_name, "drizzle-diam=", strlen("--drizzle-diam="))) {
+			} else if (!strcmp(option_name, "metric")) {
+				d2::align::set_metric_exponent(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "threshold")) {
+				d2::align::set_match_threshold(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "drizzle-diam")) {
 				unsupported::discontinued("--drizzle-diam=<x>", "--dchain box:1");
-				// sscanf(option_name + strlen("--drizzle-diam="), "%lf", &drizzle_radius);
-				// drizzle_radius /= 2;
-			} else if (!strncmp(option_name, "perturb-upper=", strlen("--perturb-upper="))) {
+			} else if (!strcmp(option_name, "perturb-upper")) {
+				const char *option = genv.get_string_arg(i->first, 1);
 				double perturb_upper;
 				int characters;
-				sscanf(option_name + strlen("--perturb-upper="), "%lf%n", &perturb_upper,
-										      &characters);
-				if (*(option_name + strlen("--perturb-upper=") + characters) == '%')
+				sscanf(option, "%lf%n", &perturb_upper, &characters);
+				if (*(option + characters) == '%')
 					d2::align::set_perturb_upper(perturb_upper, 1);
 				else
 					d2::align::set_perturb_upper(perturb_upper, 0);
-			} else if (!strncmp(option_name, "perturb-lower=", strlen("--perturb-lower="))) {
+			} else if (!strcmp(option_name, "perturb-lower")) {
+				const char *option = genv.get_string_arg(i->first, 1);
 				double perturb_lower;
 				int characters;
-				sscanf(option_name + strlen("--perturb-lower="), "%lf%n", &perturb_lower,
-										      &characters);
+				sscanf(option, "%lf%n", &perturb_lower, &characters);
 				if (perturb_lower <= 0)
 					ui::get()->error("--perturb-lower= value is non-positive");
 
-				if (*(option_name + strlen("--perturb-lower=") + characters) == '%')
+				if (*(option + characters) == '%')
 					d2::align::set_perturb_lower(perturb_lower, 1);
 				else
 					d2::align::set_perturb_lower(perturb_lower, 0);
-			} else if (!strncmp(option_name, "stepsize=", strlen("--stepsize="))) {
-				double perturb_lower;
+			} else if (!strcmp(option_name, "stepsize")) {
 				ui::get()->warn("--stepsize is deprecated.  Use --perturb-lower instead");
-				sscanf(option_name + strlen("--stepsize="), "%lf", &perturb_lower);
-				d2::align::set_perturb_lower(perturb_lower, 0);
-			} else if (!strncmp(option_name, "va-upper=", strlen("--va-upper="))) {
+				d2::align::set_perturb_lower(genv.get_double_arg(i->first, 1), 0);
+			} else if (!strcmp(option_name, "va-upper")) {
+				const char *option = genv.get_string_arg(i->first, 1);
 				double va_upper;
 				int characters;
-				sscanf(option_name + strlen("--va-upper="), "%lf%n", &va_upper,
-										      &characters);
-				if (*(option_name + strlen("--va-upper=") + characters) == '%')
+				sscanf(option, "%lf%n", &va_upper, &characters);
+				if (*(option + characters) == '%')
 					ui::get()->error("--va-upper= does not accept '%' arguments\n");
 				else
 					d3::cpf::set_va_upper(va_upper);
-			} else if (!strncmp(option_name, "cpp-upper=", strlen("--cpp-upper="))) {
+			} else if (!strcmp(option_name, "cpp-upper")) {
+				const char *option = genv.get_string_arg(i->first, 1);
 				double perturb_upper;
 				int characters;
-				sscanf(option_name + strlen("--cpp-upper="), "%lf%n", &perturb_upper,
-										      &characters);
-				if (*(option_name + strlen("--cpp-upper=") + characters) == '%')
+				sscanf(option, "%lf%n", &perturb_upper, &characters);
+				if (*(option + characters) == '%')
 					ui::get()->error("--cpp-upper= does not currently accept '%' arguments\n");
 				else
 					d3::cpf::set_cpp_upper(perturb_upper);
-			} else if (!strncmp(option_name, "cpp-lower=", strlen("--cpp-lower="))) {
+			} else if (!strcmp(option_name, "cpp-lower")) {
+				const char *option = genv.get_string_arg(i->first, 1);
 				double perturb_lower;
 				int characters;
-				sscanf(option_name + strlen("--cpp-lower="), "%lf%n", &perturb_lower,
-										      &characters);
-				if (*(option_name + strlen("--cpp-lower=") + characters) == '%')
+				sscanf(option, "%lf%n", &perturb_lower, &characters);
+				if (*(option + characters) == '%')
 					ui::get()->error("--cpp-lower= does not currently accept '%' arguments\n");
 				else
 					d3::cpf::set_cpp_lower(perturb_lower);
-			} else if (!strncmp(option_name, "hf-enhance=", strlen("--hf-enhance="))) {
+			} else if (!strcmp(option_name, "hf-enhance")) {
 				unsupported::discontinued("--hf-enhance=<x>");
-			} else if (!strncmp(option_name, "rot-upper=", strlen("--rot-upper="))) {
-				double rot_max;
-				sscanf(option_name + strlen("--rot-upper="), "%lf", &rot_max);
-				d2::align::set_rot_max((int) floor(rot_max));
-			} else if (!strncmp(option_name, "bda-mult=", strlen("--bda-mult="))) {
-				double bda_mult;
-				sscanf(option_name + strlen("--bda-mult="), "%lf", &bda_mult);
-				d2::align::set_bda_mult(bda_mult);
-			} else if (!strncmp(option_name, "bda-rate=", strlen("--bda-rate="))) {
-				double bda_rate;
-				sscanf(option_name + strlen("--bda-rate="), "%lf", &bda_rate);
-				d2::align::set_bda_rate(bda_rate);
-			} else if (!strncmp(option_name, "lod-max=", strlen("--lod-max="))) {
-				double lod_max;
-				sscanf(option_name + strlen("--lod-max="), "%lf", &lod_max);
-				d2::align::set_lod_max((int) floor(lod_max));
-			} else if (!strncmp(option_name, "cpf-load=", strlen("--cpf-load="))) {
-				d3::cpf::init_loadfile(option_name + strlen("--cpf-load="));
+			} else if (!strcmp(option_name, "rot-upper")) {
+				d2::align::set_rot_max((int) floor(genv.get_double_arg(i->first, 1)));
+			} else if (!strcmp(option_name, "bda-mult")) {
+				d2::align::set_bda_mult(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "bda-rate")) {
+				d2::align::set_bda_rate(genv.get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "lod-max")) {
+				d2::align::set_lod_max((int) floor(genv.get_double_arg(i->first, 1)));
+			} else if (!strcmp(option_name, "cpf-load")) {
+				d3::cpf::init_loadfile(genv.get_string_arg(i->first, 1));
 #if 0
-			} else if (!strncmp(option_name, "model-load=", strlen("--model-load="))) {
-				d3::scene::load_model(option_name + strlen("--model-load="));
-			} else if (!strncmp(option_name, "model-save=", strlen("--model-save="))) {
-				d3::scene::save_model(option_name + strlen("--model-save="));
+			} else if (!strcmp(option_name, "model-load")) {
+				d3::scene::load_model(genv.get_string_arg(i->first, 1));
+			} else if (!strcmp(option_name, "model-save")) {
+				d3::scene::save_model(genv.get_string_arg(i->first, 1));
 #endif
-			} else if (!strncmp(option_name, "trans-load=", strlen("--trans-load="))) {
+			} else if (!strcmp(option_name, "trans-load")) {
 				d2::tload_delete(tload);
-				tload = d2::tload_new(option_name + strlen("--trans-load="));
+				tload = d2::tload_new(genv.get_string_arg(i->first, 1));
 				d2::align::set_tload(tload);
-			} else if (!strncmp(option_name, "trans-save=", strlen("--trans-save="))) {
+			} else if (!strcmp(option_name, "trans-save")) {
 				tsave_delete(tsave);
-				tsave = d2::tsave_new(option_name + strlen("--trans-save="));
+				tsave = d2::tsave_new(genv.get_string_arg(i->first, 1));
 				d2::align::set_tsave(tsave);
-			} else if (!strncmp(option_name, "3d-trans-load=", strlen("--3d-trans-load="))) {
+			} else if (!strcmp(option_name, "3d-trans-load")) {
 				d3::tload_delete(d3_tload);
-				d3_tload = d3::tload_new(option_name + strlen("--3d-trans-load="));
+				d3_tload = d3::tload_new(genv.get_string_arg(i->first, 1));
 				d3::align::set_tload(d3_tload);
-			} else if (!strncmp(option_name, "3d-trans-save=", strlen("--3d-trans-save="))) {
+			} else if (!strcmp(option_name, "3d-trans-save")) {
 				d3::tsave_delete(d3_tsave);
-				d3_tsave = d3::tsave_new(option_name + strlen("--3d-trans-save="));
+				d3_tsave = d3::tsave_new(genv.get_string_arg(i->first, 1));
 				d3::align::set_tsave(d3_tsave);
+			} else {
+				assert(0);
 			}
 		}
 

@@ -28,7 +28,7 @@ std::set<input::environment *> input::environment::environment_set;
 
 int input::global_options = 1;
 
-input::environment input::global_environment;
+input::environment input::genv;
 
 /*
  * List of options that can be used as nonglobals.
@@ -198,8 +198,7 @@ input::simple_option input::simple_option_table[] = {
 
 	{ "exp-register" },
 	{ "exp-noregister", "exp-register", "0" },
-
-	{ "exp-meta-only" },
+	{ "exp-meta-only", "exp-register", "2" },
 
 	{ "drizzle-only" },
 
