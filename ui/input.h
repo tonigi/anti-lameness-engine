@@ -83,6 +83,12 @@
 class input {
 
 	/*
+	 * Flag for global options.
+	 */
+
+	static int global_options;
+
+	/*
 	 * Helper functions.
 	 */
 
@@ -389,6 +395,36 @@ class input {
 		}
 	};
 
+	class argument_parsing_token_reader : public token_reader {
+		const char *index;
+		const char *separators;
+	public:
+		argument_parsing_token_reader(const char *s) {
+			index = s;
+			separators = ",=";
+		}
+
+		virtual const char *get() {
+			int length = strcspn(index, separators);
+
+			if (length == 0)
+				return NULL;
+
+			const char *result = strndup(index, length);
+			index += length;
+
+			if (strspn(index, separators) >= 1)
+				index++;
+
+			return result;
+		}
+
+		virtual token_reader *divert(const char *open_token, const char *close_token) {
+			assert(0);
+			return NULL;
+		}
+	};
+
 	class cstring_token_reader : public token_reader {
 		const char *separators;
 		const char *string;
@@ -528,6 +564,44 @@ class input {
 
 	static simple_option simple_option_table[];
 
+	static int option_name_match(const char *unadorned, const char *token, int require_ornamentation = 1) {
+		int strip_max = 2;
+
+		if (!strcmp(unadorned, token) && !require_ornamentation)
+			return 1;
+
+		while (token[0] == '-' && strip_max) {
+			token++;
+			strip_max--;
+			if (!strcmp(unadorned, token))
+				return 1;
+		}
+
+		return 0;
+	}
+
+	static const char *option_name_gen(const char *unadorned, const char *map_name, int arg_num, int multi) {
+		static unsigned int multi_counter = 0;
+
+		if (map_name) {
+			unadorned = map_name;
+		}
+
+		int length = (strlen(unadorned) + sizeof(unsigned int) * 2 + sizeof(int) * 2 + 2) + 1;
+
+		char *result = (char *) malloc(sizeof(char) * length);
+
+		assert (result);
+
+		if (!multi) {
+			snprintf(result, length, "%s_%x", unadorned, arg_num);
+		} else {
+			snprintf(result, length, "%s_%x_%x", unadorned, multi_counter, arg_num);
+		}
+
+		return result;
+	}
+
 	static void evaluate_stream(token_reader *tr, 
 			std::vector<std::pair<const char *, environment *> > *files) {
 		const char *token;
@@ -540,18 +614,21 @@ class input {
 			 */
 
 			if (!strcmp(token, "{") && !end_of_options) {
+				global_options = 0;
 				environment::push_and_dup_output();
 				token_reader *tr_nest = tr->divert("{", "}");
 				evaluate_stream(tr_nest, files);
 				delete tr_nest;
 				environment::pop();
 			} else if (!strcmp(token, "[") && !end_of_options) {
+				global_options = 0;
 				environment::push();
 				token_reader *tr_nest = tr->divert("[", "]");
 				evaluate_stream(tr_nest, files);
 				delete tr_nest;
 				environment::pop();
 			} else if (!strcmp(token, "<") && !end_of_options) {
+				global_options = 0;
 				environment *dup_list = environment::get_env(environment::top()->get("---dup"));
 				assert (dup_list != NULL);
 				dup_list = dup_list->clone();
@@ -565,32 +642,84 @@ class input {
 			}
 
 			/*
-			 * Check for options.
+			 * Check for non-whitespace argument separators
 			 */
+
+			else if (strchr(token, '=')) {
+				environment::push_and_dup_output();
+				token_reader *tr_nest = new argument_parsing_token_reader(token);
+				evaluate_stream(tr_nest, files);
+				delete tr_nest;
+				environment::pop();
+			}
 
 			/*
 			 * Trap the end-of-option indicator.
 			 */
 			
 			else if (!strcmp(token, "--")) {
+				global_options = 0;
 				end_of_options = 1;
 			}
 
 			/*
-			 * Trap illegal options.
+			 * Check for options and filenames
 			 */
-
-			else if (!strncmp(token, "-", strlen("-")) && !end_of_options) 
-				ui::get()->illegal_option(token);
-
-			/*
-			 * If nothing else matches, then we take the
-			 * token as a filename.
-			 */
-
+			
 			else {
-				files->push_back(std::pair<const char *, environment *>(strdup(token), 
-							environment::top()->clone()));
+				/*
+				 * Handle filenames.
+				 */
+
+				if (strncmp("-", token, strlen("-")) || end_of_options) {
+					global_options = 0;
+					files->push_back(std::pair<const char *, environment *>(strdup(token), 
+								environment::top()->clone()));
+
+					continue;
+				}
+
+				/*
+				 * Handle options.
+				 */
+
+				int found_option = 0;
+				for (int i = 0; simple_option_table[i].name; i++) {
+					if (!option_name_match(simple_option_table[i].name, token))
+						continue;
+					
+					/*
+					 * Handle the match case.
+					 */
+
+					found_option = 1;
+
+					const char *map_value = "1";
+
+					if (simple_option_table[i].map_value)
+						map_value = simple_option_table[i].map_value;
+
+					environment::top()->set(option_name_gen(simple_option_table[i].name,
+								simple_option_table[i].map_name, 0, 
+								simple_option_table[i].multi), map_value);
+
+					for (int j = 0; j < simple_option_table[i].arg_count; j++) {
+						const char *option = tr->get();
+
+						assert (option != NULL);
+
+						environment::top()->set(option_name_gen(simple_option_table[i].name,
+									simple_option_table[i].map_name, j, 
+									simple_option_table[i].multi), option);
+					}
+				}
+
+				/*
+				 * Trap illegal options.
+				 */
+
+				if (!found_option) 
+					ui::get()->illegal_option(token);
 			}
 		}
 	}

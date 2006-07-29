@@ -26,15 +26,19 @@
 std::stack<input::environment *> input::environment::environment_stack;
 std::set<input::environment *> input::environment::environment_set;
 
+int input::global_options = 1;
+
+const char *supported_nonglobal_option_table[] = {
+	NULL
+};
+
 /*
  * Entries in this table are:
  *
  *   name, map_name, map_value, arg_count, multi
+ *
+ * The table must be terminated with name of NULL.
  */
-
-const char *supported_option_table[] = {
-	NULL
-};
 
 input::simple_option input::simple_option_table[] = {
 	{ "q0", "default" }, 
