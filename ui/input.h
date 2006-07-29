@@ -517,6 +517,16 @@ class input {
 
 	};
 
+	struct simple_option {
+		const char *name;
+		const char *map_name;
+		const char *map_value;
+		int arg_count;
+		int multi;
+	};
+
+	static simple_option simple_option_table[];
+
 	static void evaluate_stream(token_reader *tr, 
 			std::vector<std::pair<const char *, environment *> > *files) {
 		const char *token;

@@ -25,3 +25,215 @@
  */
 std::stack<input::environment *> input::environment::environment_stack;
 std::set<input::environment *> input::environment::environment_set;
+
+/*
+ * Entries in this table are:
+ *
+ *   name, map_name, map_value, arg_count, multi
+ */
+
+input::simple_option input::simple_option_table[] = {
+	{ "q0", "default" }, 
+	{ "q1", "default" }, 
+	{ "q2", "default" },
+	{ "qn", "default" },
+	{ "qr", "default" },
+
+	{ "8bpc", "bpc" }, 
+	{ "16bpc", "bpc" }, 
+
+	{ "plain", "format" }, 
+	{ "raw", "format" },
+	{ "auto", "format" },
+
+	{ "align-all", "align" },
+	{ "align-green", "align" },
+	{ "align-sum", "align" },
+
+	{ "translation", "transformation" },
+	{ "euclidean", "transformation" },
+	{ "projective", "transformation" },
+
+	{ "identity", "transformation-default" },
+	{ "follow", "transformation-default" },
+
+	{ "perturb-output", "perturb" },
+	{ "perturb-source", "perturb" },
+
+	{ "fail-optimal", "fail" },
+	{ "fail-default", "fail" },
+
+	{ "extend" },
+	{ "no-extend", "extend", "0" },
+
+	{ "no-mc", "mc", "0" },
+	{ "mc", NULL, NULL, 1 },
+
+	{ "oc" }, 
+	{ "no-oc", "oc", "0" },
+
+	{ "gs", NULL, NULL, 1 },
+	{ "gs-mo", NULL, NULL, 1 },
+
+	{ "focus", "error" },
+
+	{ "3ddp", NULL, NULL, 10, 1 },
+	{ "3dvp", NULL, NULL, 10, 1 },
+
+	{ "3dv", NULL, NULL, 2, 1 },
+	{ "3dd", NULL, NULL, 2, 1 },
+
+	{ "view-angle", NULL, NULL, 1 },
+
+	{ "cpf-load", NULL, NULL, 1 },
+
+	{ "ui", NULL, NULL, 1 },
+
+	{ "3d-fmr", NULL, NULL, 1 },
+
+	{ "3d-dmr", NULL, NULL, 1 },
+
+	{ "et", NULL, NULL, 1 },
+	
+	{ "st", NULL, NULL, 1 },
+
+	{ "di-lower", NULL, NULL, 1 },
+
+	{ "rc", NULL, NULL, 1 },
+
+	{ "do-try", NULL, NULL, 1 },
+	{ "di-upper", NULL, NULL, 1 },
+
+	{ "fc", NULL, NULL, 1 },
+
+	{ "ecm", NULL, NULL, 1 },
+	{ "acm", NULL, NULL, 1 },
+
+	{ "def-nn", NULL, NULL, 1 },
+	
+	{ "fx", NULL, NULL, 1 },
+
+	{ "tcem", NULL, NULL, 1 },
+
+	{ "oui", NULL, NULL, 1 },
+
+	{ "pa", NULL, NULL, 1 },
+
+	{ "pc", NULL, NULL, 1 },
+
+	{ "cw" },
+	{ "no-cw", "cw", "0" },
+
+	{ "wm", NULL, NULL, 3 },
+
+	{ "fl", NULL, NULL, 3 },
+
+	{ "wmx", NULL, NULL, 3 },
+
+	{ "flshow", NULL, NULL, 1 },
+
+	{ "3dpx", NULL, NULL, 6 },
+
+	{ "ex", NULL, NULL, 6 },
+	{ "crop", NULL, NULL, 6 },
+	{ "exshow" },
+
+	{ "wt", NULL, NULL, 1 },
+	{ "3d-chain", NULL, NULL, 1 },
+	{ "dchain", NULL, NULL, 1 },
+	{ "achain", NULL, NULL, 1 },
+	{ "afilter", NULL, NULL, 1 },
+	{ "ochain", NULL, NULL, 2 },
+
+	{ "visp", NULL, NULL, 5 },
+	{ "cx", NULL, NULL, 1 },
+	{ "no-cx", "cx", "0" },
+
+	{ "ip", NULL, NULL, 0 },
+
+	{ "bayer", NULL, NULL, 1 },
+
+	{ "lpsf", NULL, NULL, 1 },
+	{ "nlpsf", NULL, NULL, 1 }, 
+	{ "psf-match", NULL, NULL, 6 },
+
+	{ "device", NULL, NULL, 1 },
+
+	{ "usm", NULL, NULL, 1 },
+
+	{ "ipr", NULL, NULL, 1 },
+
+	{ "cpp-err-median", "cpp-err", "median" },
+	{ "cpp-err-mean", "cpp-err", "mean" },
+
+	{ "vp-adjust" },
+	{ "vp-noadjust", "vp-adjust", "0" },
+
+	{ "vo-adjust" },
+	{ "vo-noadjust", "vo-adjust", "0" },
+
+	{ "ip-mean", "ip-statistic", "mean" },
+	{ "ip-median", "ip-statistic", "median" },
+
+	{ "ips", NULL, NULL, 1 },
+
+	{ "ipc", NULL, NULL, 2 },
+
+	{ "exp-extend" },
+	{ "exp-noextend", "exp-extend", "0" },
+
+	{ "exp-register" },
+	{ "exp-noregister", "exp-register", "0" },
+
+	{ "exp-meta-only" },
+
+	{ "drizzle-only" },
+
+	{ "subspace-traverse" },
+
+	{ "3d-filter" },
+	{ "3d-nofilter", "3d-filter", "0" },
+
+	{ "occ-norm" },
+	{ "occ-nonorm", "occ-norm", "0" },
+
+	{ "inc" },
+	{ "no-inc", "inc", "0" },
+
+	{ "exp-mult", NULL, NULL, 1 },
+	
+	{ "visp-scale", NULL, NULL, 1 },
+
+	{ "scale", NULL, NULL, 1 },
+
+	{ "metric", NULL, NULL, 1 },
+
+	{ "threshold", NULL, NULL, 1 },
+
+	{ "drizzle-diam", NULL, NULL, 1 },
+
+	{ "perturb-upper", NULL, NULL, 1 },
+	{ "perturb-lower", NULL, NULL, 1 },
+
+	{ "stepsize", NULL, NULL, 1 },
+
+	{ "va-upper", NULL, NULL, 1 },
+	{ "cpp-upper", NULL, NULL, 1 },
+	{ "cpp-lower", NULL, NULL, 1 }, 
+	{ "hf-enhance", NULL, NULL, 1 },
+	{ "rot-upper", NULL, NULL, 1 },
+
+	{ "bda-mult", NULL, NULL, 1 },
+	{ "bda-rate", NULL, NULL, 1 },
+
+	{ "lod-max", NULL, NULL, 1 },
+
+	{ "cpf-load", NULL, NULL, 1 },
+	{ "model-load", NULL, NULL, 1 },
+	{ "model-save", NULL, NULL, 1 },
+	{ "trans-load", NULL, NULL, 1 },
+	{ "trans-save", NULL, NULL, 1 },
+	{ "3d-trans-load", NULL, NULL, 1 },
+	{ "3d-trans-save", NULL, NULL, 1 }
+};
+
