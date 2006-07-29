@@ -391,6 +391,10 @@ class input {
 		 */
 		virtual token_reader *divert(const char *open_token, const char *close_token) = 0;
 
+		virtual int expects_exactly_one_option(void) {
+			return 0;
+		}
+
 		virtual ~token_reader() {
 		}
 	};
@@ -402,6 +406,10 @@ class input {
 		argument_parsing_token_reader(const char *s) {
 			index = s;
 			separators = ",=";
+		}
+
+		int expects_exactly_one_option(void) {
+			return 1;
 		}
 
 		virtual const char *get() {
@@ -741,6 +749,11 @@ class input {
 
 				if (!found_option) 
 					ui::get()->illegal_option(token);
+			}
+
+			if (tr->expects_exactly_one_option() && tr->get()) {
+				fprintf(stderr, "\n\nError: Too many arguments for `%s'.\n\n", token);
+				exit(1);
 			}
 		}
 	}
