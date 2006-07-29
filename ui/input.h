@@ -81,6 +81,7 @@
 #include "help.h"
 
 class input {
+
 	/*
 	 * Helper functions.
 	 */
@@ -530,6 +531,7 @@ class input {
 	static void evaluate_stream(token_reader *tr, 
 			std::vector<std::pair<const char *, environment *> > *files) {
 		const char *token;
+		int end_of_options = 0;
 
 		while ((token = tr->get())) {
 
@@ -537,19 +539,19 @@ class input {
 			 * Check for nesting
 			 */
 
-			if (!strcmp(token, "{")) {
+			if (!strcmp(token, "{") && !end_of_options) {
 				environment::push_and_dup_output();
 				token_reader *tr_nest = tr->divert("{", "}");
 				evaluate_stream(tr_nest, files);
 				delete tr_nest;
 				environment::pop();
-			} else if (!strcmp(token, "[")) {
+			} else if (!strcmp(token, "[") && !end_of_options) {
 				environment::push();
 				token_reader *tr_nest = tr->divert("[", "]");
 				evaluate_stream(tr_nest, files);
 				delete tr_nest;
 				environment::pop();
-			} else if (!strcmp(token, "<")) {
+			} else if (!strcmp(token, "<") && !end_of_options) {
 				environment *dup_list = environment::get_env(environment::top()->get("---dup"));
 				assert (dup_list != NULL);
 				dup_list = dup_list->clone();
@@ -561,6 +563,25 @@ class input {
 
 				environment::top()->set_ptr("---dup", dup_list);
 			}
+
+			/*
+			 * Check for options.
+			 */
+
+			/*
+			 * Trap the end-of-option indicator.
+			 */
+			
+			else if (!strcmp(token, "--")) {
+				end_of_options = 1;
+			}
+
+			/*
+			 * Trap illegal options.
+			 */
+
+			else if (!strncmp(token, "-", strlen("-"))) 
+				ui::get()->illegal_option(token);
 
 			/*
 			 * If nothing else matches, then we take the
@@ -588,32 +609,6 @@ public:
 	 */
 
 	static void handle(int argc, const char *argv[], const char *package, const char *short_version, const char *version) {
-
-		/*
-		 * Set basic program information in the environment.
-		 */
-
-		environment::top()->set("---package", package);
-		environment::top()->set("---short-version", short_version);
-		environment::top()->set("---version", version);
-		environment::top()->set("---invocation", argv[0]);
-
-		/*
-		 * Initialize the top-level token-reader and generate
-		 * an environment variable for it.
-		 */
-
-		token_reader *tr = new cli_token_reader(argc - 1, argv + 1);
-		environment::top()->set_ptr("---token-reader", tr);
-
-		/*
-		 * Evaluate the command-line arguments to generate environment
-		 * structures.
-		 */
-
-		std::vector<std::pair<const char *, environment *> > files;
-
-		evaluate_stream(tr, &files);
 
 		/*
 		 * Initialize help object
@@ -1923,564 +1918,581 @@ public:
 				d3::tsave_delete(d3_tsave);
 				d3_tsave = d3::tsave_new(argv[i] + strlen("--3d-trans-save="));
 				d3::align::set_tsave(d3_tsave);
-			} else {
-
-				/*
-				 * Trap illegal options and end-of-option indicators.
-				 */
-
-				if (!strcmp(argv[i], "--"))
-					i++;
-				else if (!strncmp(argv[i], "--", strlen("--")))
-					ui::get()->illegal_option(argv[i]);
-
-				/*
-				 * Apply implication logic.
-				 */
-
-				if (extend == 0 && vise_count != 0) {
-					implication::changed("VISP requires increased image extents.",
-							     "Image extension is now enabled.",
-							     "--extend");
-					extend = 1;
-				}
-
-				if (psf_match && ex_count)
-					unsupported::fornow("PSF calibration with exclusion regions.");
-
-				
-				if (d3_output != NULL && ip_iterations != 0) 
-					unsupported::fornow("3D modeling with Irani-Peleg rendering");
-
-#if 0
-				if (extend == 0 && d3_output != NULL) {
-					implication::changed("3D modeling requires increased image extents.",
-							     "Image extension is now enabled.",
-							     "--extend");
-					extend = 1;
-				}
-#endif
-
-				if (cx_parameter != 0 && !exposure_register) {
-					implication::changed("Certainty-based rendering requires exposure registration.",
-							     "Exposure registration is now enabled.",
-							     "--exp-register");
-					d2::align::exp_register();
-					exposure_register = 1;
-				}
-
-				/*
-				 * Set alignment class exclusion region static variables
-				 */
-
-				d2::align::set_exclusion(ex_parameters, ex_count);
-
-				/*
-				 * Initialize renderer class statics.
-				 */
-
-				d2::render::render_init(ex_count, ex_parameters, ex_show, extend, scale_factor);
-
-				/*
-				 * Set confidence
-				 */
-
-				d2::exposure::set_confidence(cx_parameter);
-
-				/*
-				 * Keep transformations for Irani-Peleg, psf-match, and
-				 * VISE
-				 */
-
-				if (ip_iterations > 0 || psf_match || vise_count > 0) {
-					d2::align::keep();
-				}
-
-				/*
-				 * Initialize device-specific variables
-				 */
-
-				d2::psf *device_response[psf_N] = { NULL, NULL };
-				d2::exposure **input_exposure = NULL;
-				ale_pos view_angle = 43.7 * M_PI / 180;  
-				// ale_pos view_angle = 90 * M_PI / 180;  
-				input_exposure = (d2::exposure **)
-					malloc((argc - i - 1) * sizeof(d2::exposure *));
-
-				if (device != NULL) {
-					if (!strcmp(device, "xvp610_640x480")) {
-						device_response[psf_linear] = new xvp610_640x480::lpsf();
-						device_response[psf_nonlinear] = new xvp610_640x480::nlpsf();
-						for (int ii = 0; ii < argc - i - 1; ii++)
-							input_exposure[ii] = new xvp610_640x480::exposure();
-						view_angle = xvp610_640x480::view_angle();
-					} else if (!strcmp(device, "xvp610_320x240")) {
-						device_response[psf_linear] = new xvp610_320x240::lpsf();
-						device_response[psf_nonlinear] = new xvp610_320x240::nlpsf();
-						for (int ii = 0; ii < argc - i - 1; ii++)
-							input_exposure[ii] = new xvp610_320x240::exposure();
-						view_angle = xvp610_320x240::view_angle();
-					} else if (!strcmp(device, "ov7620_raw_linear")) {
-						device_response[psf_linear] = new ov7620_raw_linear::lpsf();
-						device_response[psf_nonlinear] = NULL;
-						for (int ii = 0; ii < argc - i - 1; ii++)
-							input_exposure[ii] = new ov7620_raw_linear::exposure();
-						d2::image_rw::set_default_bayer(IMAGE_BAYER_BGRG);
-					} else if (!strcmp(device, "canon_300d_raw_linear")) {
-						device_response[psf_linear] = new canon_300d_raw_linear::lpsf();
-						device_response[psf_nonlinear] = NULL;
-						for (int ii = 0; ii < argc - i - 1; ii++)
-							input_exposure[ii] = new canon_300d_raw_linear::exposure();
-						d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
-					} else if (!strcmp(device, "canon_300d_raw_linear+85mm_1.8")) {
-						device_response[psf_linear] = new canon_300d_raw_linear_85mm_1_8::lpsf();
-						device_response[psf_nonlinear] = NULL;
-						for (int ii = 0; ii < argc - i - 1; ii++)
-							input_exposure[ii] = new canon_300d_raw_linear_85mm_1_8::exposure();
-						d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
-						view_angle = canon_300d_raw_linear_85mm_1_8::view_angle();
-					} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.8")) {
-						device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_8::lpsf();
-						device_response[psf_nonlinear] = NULL;
-						for (int ii = 0; ii < argc - i - 1; ii++)
-							input_exposure[ii] = new canon_300d_raw_linear_50mm_1_8::exposure();
-						d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
-						view_angle = canon_300d_raw_linear_50mm_1_8::view_angle();
-					} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.4")) {
-						device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_4::lpsf();
-						device_response[psf_nonlinear] = NULL;
-						for (int ii = 0; ii < argc - i - 1; ii++)
-							input_exposure[ii] = new canon_300d_raw_linear_50mm_1_4::exposure();
-						d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
-						view_angle = canon_300d_raw_linear_50mm_1_4::view_angle();
-					} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.4@1.4")) {
-						device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_4_1_4::lpsf();
-						device_response[psf_nonlinear] = NULL;
-						for (int ii = 0; ii < argc - i - 1; ii++)
-							input_exposure[ii] = new canon_300d_raw_linear_50mm_1_4_1_4::exposure();
-						d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
-						view_angle = canon_300d_raw_linear_50mm_1_4_1_4::view_angle();
-					} else {
-						ui::get()->unknown_device(device);
-					}
-				} else {
-					for (int ii = 0; ii < argc - i - 1; ii++)
-						input_exposure[ii] = new d2::exposure_default();
-				}
-
-				/*
-				 * User-specified variables.
-				 */
-
-				if (user_view_angle != 0) {
-					view_angle = user_view_angle;
-				}
-
-				if (user_bayer != IMAGE_BAYER_DEFAULT) {
-					d2::image_rw::set_default_bayer(user_bayer);
-				}
-
-				/*
-				 * PSF-match exposure.
-				 */
-				if (psf_match) {
-					delete input_exposure[argc - i - 2];
-					input_exposure[argc - i - 2] = new d2::exposure_default();
-				}
-
-				/*
-				 * Initialize output exposure
-				 */
-
-				d2::exposure *output_exposure = new d2::exposure_default();
-				output_exposure->set_multiplier(exp_mult);
-
-				/*
-				 * Configure the response function.
-				 */
-
-				d2::psf *response[2] = {NULL, NULL};
-
-				for (int n = 0; n < psf_N; n++ ) {
-					if (psf[n] != NULL) {
-
-						response[n] = d2::psf_parse::get((n == psf_linear), psf[n]);
-
-					} else if (device_response[n] != NULL) {
-
-						/*
-						 * Device-specific response
-						 */
-
-						response[n] = device_response[n];
-
-					} else {
-
-						/*
-						 * Default point-spread function.
-						 */
-
-						if (n == psf_linear) {
-
-							/*
-							 * Default lpsf is a box filter
-							 * of diameter 1.0 (radius
-							 * 0.5).
-							 */
-
-							response[n] = new d2::box(0.5);
-
-						} else if (n == psf_nonlinear) {
-
-							/*
-							 * nlpsf is disabled by default.
-							 */
-
-							 response[n] = NULL;
-						}
-					}
-				}
-
-				/* 
-				 * First file argument.  Print general file information as well
-				 * as information specific to this argument.  Initialize image
-				 * file handler.
-				 */
-
-				/*
-				 * There should be at least two file arguments.
-				 */
-
-				if (i >= argc - 1) {
-					hi.usage();
-					exit(1);
-				}
-
-				d2::image_rw::init(argc - i - 1, argv + i, argv[argc - 1], input_exposure, output_exposure);
-				ochain_names[0] = argv[argc - 1];
-
-				/*
-				 * Handle control point data for alignment
-				 */
-				d2::align::set_cp_count(d3::cpf::count());
-				for (unsigned int ii = 0; ii < d3::cpf::count(); ii++)
-					d2::align::set_cp(ii, d3::cpf::get_2d(ii));
-
-				/*
-				 * PSF-match bayer patterns.
-				 */
-
-				if (psf_match) {
-					d2::image_rw::set_specific_bayer(argc - i - 2, IMAGE_BAYER_NONE);
-				}
-
-				/*
-				 * Handle alignment weight map, if necessary
-				 */
-
-				if (wm_filename != NULL) {
-					d2::image *weight_map;
-					weight_map = d2::image_rw::read_image(wm_filename, new d2::exposure_linear());
-					weight_map->set_offset(wm_offsety, wm_offsetx);
-					d2::align::set_weight_map(weight_map);
-				}
-
-				/*
-				 * Write comment information about original frame and
-				 * target image to the transformation save file, if we
-				 * have one.
-				 */
-
-				const d2::image *im = d2::image_rw::open(0);
-				tsave_orig(tsave, argv[i], im->avg_channel_magnitude());
-				tsave_target(tsave, argv[argc - 1]);
-				d2::image_rw::close(0);
-
-				/*
-				 * Initialize alignment interpolant.
-				 */
-
-				if (afilter_type != "internal")
-					d2::align::set_interpolant(d2::render_parse::get_SSF(afilter_type));
-
-				/*
-				 * Initialize achain and ochain.
-				 */
-
-				achain = d2::render_parse::get(achain_type);
-				
-				for (int chain = 0; chain < oc_count; chain++)
-					ochain[chain] = d2::render_parse::get(ochain_types[chain]);
-
-				/*
-				 * Use merged renderings as reference images in
-				 * alignment.
-				 */
-
-				d2::align::set_reference(achain);
-
-				/*
-				 * Tell the alignment class about the scale factor.
-				 */
-
-				d2::align::set_scale(scale_factor);
-
-				/*
-				 * Initialize visp.
-				 */
-
-				d2::vise_core::set_scale(vise_scale_factor);
-
-				for (int opt = 0; opt < vise_count; opt++) {
-					d2::vise_core::add(d2::render_parse::get(visp[opt * 4 + 0]),
-							   visp[opt * 4 + 1],
-							   visp[opt * 4 + 2],
-							   visp[opt * 4 + 3]);
-				}
-
-				/*
-				 * Initialize non-incremental renderers
-				 */
-
-#if 0
-				if (usm_multiplier != 0) {
-
-					/*
-					 * Unsharp Mask renderer
-					 */
-
-					ochain[0] = new d2::usm(ochain[0], scale_factor,
-							usm_multiplier, inc, response[psf_linear],
-							response[psf_nonlinear], &input_exposure[0]);
-				}
-#endif
-
-				if (psf_match) {
-					
-					/*
-					 * Point-spread function calibration renderer.
-					 * This renderer does not produce image output.
-					 * It is reserved for use with the point-spread
-					 * function calibration script
-					 * ale-psf-calibrate.
-					 */
-
-					ochain[0] = new d2::psf_calibrate(ochain[0],
-							1, inc, response[psf_linear],
-							response[psf_nonlinear],
-							psf_match_args);
-
-				} else if (ip_iterations != 0) {
-
-					/*
-					 * Irani-Peleg renderer
-					 */
-
-					ochain[0] = new d2::ipc( ochain[0], ip_iterations,
-							inc, response[psf_linear],
-							response[psf_nonlinear],
-							(exposure_register == 1), ip_use_median);
-				}
-
-				/*
-				 * Handle the original frame.
-				 */
-
-				ui::get()->original_frame_start(argv[i]);
-
-				for (int opt = 0; opt < oc_count; opt++) {
-					ui::get()->set_orender_current(opt);
-					ochain[opt]->sync(0);
-					if  (inc) {
-						ui::get()->writing_output(opt);
-						d2::image_rw::write_image(ochain_names[opt], 
-							ochain[opt]->get_image(0));
-					}
-				}
-
-				d2::vise_core::frame_queue_add(0);
-
-				ui::get()->original_frame_done();
-
-				/*
-				 * Handle supplemental frames.
-				 */
-
-				for (unsigned int j = 1; j < d2::image_rw::count(); j++) {
-
-					const char *name = d2::image_rw::name(j);
-
-					ui::get()->supplemental_frame_start(name);
-
-					/*
-					 * Write comment information about the
-					 * supplemental frame to the transformation
-					 * save file, if we have one.
-					 */
-
-					tsave_info (tsave, name);
-
-					const d2::image *im = d2::image_rw::open(j);
-					d2::pixel apm = im->avg_channel_magnitude();
-					tsave_apm(tsave, apm[0], apm[1], apm[2]);
-					d2::image_rw::close(j);
-
-					for (int opt = 0; opt < oc_count; opt++) {
-						ui::get()->set_orender_current(opt);
-						ochain[opt]->sync(j);
-						if (inc) {
-							ui::get()->writing_output(opt);
-							d2::image_rw::write_image(ochain_names[opt], 
-								ochain[opt]->get_image(j));
-						}
-					}
-
-					d2::vise_core::frame_queue_add(j);
-
-					ui::get()->supplemental_frame_done();
-				}
-
-				/*
-				 * Do any post-processing and output final image
-				 *
-				 * XXX: note that non-incremental renderers currently
-				 * return zero for ochain[0]->sync(), since they write
-				 * output internally when inc != 0.
-				 */
-
-				for (int opt = 0; opt < oc_count; opt++) 
-				if  ((ochain[opt]->sync() || !inc) && !psf_match)
-					d2::image_rw::write_image(ochain_names[opt], ochain[opt]->get_image());
-
-				/*
-				 * Output a summary match statistic.
-				 */
-
-				ui::get()->ale_2d_done((double) d2::align::match_summary());
-
-				/*
-				 * Perform any 3D tasks
-				 */
-
-				optimizations::begin_3d_work();
-
-				if (d3_count > 0) {
-
-					ui::get()->d3_start();
-
-					d3::align::init_angle(view_angle);
-
-					ui::get()->d3_init_view_angle(view_angle / M_PI * 180);
-
-					d3::align::init_from_d2();
-
-					if (d3::cpf::count() > 0) {
-						ui::get()->d3_control_point_solve();
-						d3::cpf::solve_3d();
-						ui::get()->d3_control_point_solve_done();
-					}
-
-					ui::get()->d3_final_view_angle(d3::align::angle_of(0) / M_PI * 180);
-
-					d3::align::write_alignments();
-
-					d3::scene::set_filter_type(d3chain_type);
-
-					d3::scene::init_from_d2();
-
-					ui::get()->d3_subdividing_space();
-					d3::scene::make_space(d3_depth, d3_output, &d3_depth_pt, &d3_output_pt);
-					ui::get()->d3_subdividing_space_done();
-
-					ui::get()->d3_updating_occupancy();
-					d3::scene::reduce_cost_to_search_depth(output_exposure, inc);
-					ui::get()->d3_updating_occupancy_done();
-
-					d3::scene::d3px(d3px_count, d3px_parameters);
-					int view_count = 0;
-					for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
-						assert (i < d3_count);
-
-						if (d3_depth[i] != NULL) {
-							ui::get()->d3_writing_output(d3_depth[i]);
-							ui::get()->d3_render_status(0, 0, -1, -1, -1, -1, 0);
-							const d2::image *im = d3::scene::depth(i);
-							d2::image_rw::write_image(d3_depth[i], im, output_exposure, 1, 1);
-							delete im;
-							ui::get()->d3_writing_output_done();
-						}
-
-						if (d3_output[i] != NULL) {
-							ui::get()->d3_writing_output(d3_output[i]);
-							const d2::image *im = d3::scene::view(i);
-							d2::image_rw::write_image(d3_output[i], im, output_exposure);
-							delete im;
-							d3::focus::set_camera(view_count++);
-							ui::get()->d3_writing_output_done();
-						}
-
-						for (std::map<const char *, d3::pt>::iterator i = d3_output_pt.begin();
-								i != d3_output_pt.end(); i++) {
-
-							ui::get()->d3_writing_output(i->first);
-							const d2::image *im = d3::scene::view(i->second);
-							d2::image_rw::write_image(i->first, im, output_exposure);
-							delete im;
-							d3::focus::set_camera(view_count++);
-							ui::get()->d3_writing_output_done();
-						}
-
-						for (std::map<const char *, d3::pt>::iterator i = d3_depth_pt.begin();
-								i != d3_depth_pt.end(); i++) {
-
-							ui::get()->d3_writing_output(i->first);
-							ui::get()->d3_render_status(0, 0, -1, -1, -1, -1, 0);
-							const d2::image *im = d3::scene::depth(i->second);
-							d2::image_rw::write_image(i->first, im, output_exposure, 1, 1);
-							delete im;
-							ui::get()->d3_writing_output_done();
-						}
-					}
-
-					for (unsigned int i = d2::image_rw::count(); i < d3_count; i++) {
-						if (d3_depth[i] != NULL) {
-							fprintf(stderr, "\n\n*** Frame number for --3dd too high. ***\n\n");
-						}
-						if (d3_output[i] != NULL) {
-							fprintf(stderr, "\n\n*** Frame number for --3dv too high. ***\n\n");
-						}
-					}
-				}
-
-				/*
-				 * Destroy the image file handler
-				 */
-
-				d2::image_rw::destroy();
-
-				/*
-				 * Delete the transformation file structures, if any
-				 * exist.
-				 */
-
-				tsave_delete(tsave);
-				tload_delete(tload);
-
-				/*
-				 * We're done.
-				 */
-
-				exit(0);
 			}
 		}
 
 		/*
-		 * If there was no output, the user might need more information.
+		 * Set basic program information in the environment.
 		 */
 
-		hi.usage();
-		exit(1);
+		environment::top()->set("---package", package);
+		environment::top()->set("---short-version", short_version);
+		environment::top()->set("---version", version);
+		environment::top()->set("---invocation", argv[0]);
 
+		/*
+		 * Initialize the top-level token-reader and generate
+		 * an environment variable for it.
+		 */
+
+		token_reader *tr = new cli_token_reader(argc - 1, argv + 1);
+		environment::top()->set_ptr("---token-reader", tr);
+
+		/*
+		 * Evaluate the command-line arguments to generate environment
+		 * structures.
+		 */
+
+		std::vector<std::pair<const char *, environment *> > files;
+
+		evaluate_stream(tr, &files);
+
+		/*
+		 * If there are fewer than two files, then output usage information.
+		 */
+
+		if (files.size() < 2) {
+			hi.usage();
+			exit(1);
+		}
+
+		/*
+		 * Apply implication logic.
+		 */
+
+		if (extend == 0 && vise_count != 0) {
+			implication::changed("VISP requires increased image extents.",
+					     "Image extension is now enabled.",
+					     "--extend");
+			extend = 1;
+		}
+
+		if (psf_match && ex_count)
+			unsupported::fornow("PSF calibration with exclusion regions.");
+
+		
+		if (d3_output != NULL && ip_iterations != 0) 
+			unsupported::fornow("3D modeling with Irani-Peleg rendering");
+
+#if 0
+		if (extend == 0 && d3_output != NULL) {
+			implication::changed("3D modeling requires increased image extents.",
+					     "Image extension is now enabled.",
+					     "--extend");
+			extend = 1;
+		}
+#endif
+
+		if (cx_parameter != 0 && !exposure_register) {
+			implication::changed("Certainty-based rendering requires exposure registration.",
+					     "Exposure registration is now enabled.",
+					     "--exp-register");
+			d2::align::exp_register();
+			exposure_register = 1;
+		}
+
+		/*
+		 * Set alignment class exclusion region static variables
+		 */
+
+		d2::align::set_exclusion(ex_parameters, ex_count);
+
+		/*
+		 * Initialize renderer class statics.
+		 */
+
+		d2::render::render_init(ex_count, ex_parameters, ex_show, extend, scale_factor);
+
+		/*
+		 * Set confidence
+		 */
+
+		d2::exposure::set_confidence(cx_parameter);
+
+		/*
+		 * Keep transformations for Irani-Peleg, psf-match, and
+		 * VISE
+		 */
+
+		if (ip_iterations > 0 || psf_match || vise_count > 0) {
+			d2::align::keep();
+		}
+
+		/*
+		 * Initialize device-specific variables
+		 */
+
+		d2::psf *device_response[psf_N] = { NULL, NULL };
+		d2::exposure **input_exposure = NULL;
+		ale_pos view_angle = 43.7 * M_PI / 180;  
+		// ale_pos view_angle = 90 * M_PI / 180;  
+		input_exposure = (d2::exposure **)
+			malloc((argc - i - 1) * sizeof(d2::exposure *));
+
+		if (device != NULL) {
+			if (!strcmp(device, "xvp610_640x480")) {
+				device_response[psf_linear] = new xvp610_640x480::lpsf();
+				device_response[psf_nonlinear] = new xvp610_640x480::nlpsf();
+				for (int ii = 0; ii < argc - i - 1; ii++)
+					input_exposure[ii] = new xvp610_640x480::exposure();
+				view_angle = xvp610_640x480::view_angle();
+			} else if (!strcmp(device, "xvp610_320x240")) {
+				device_response[psf_linear] = new xvp610_320x240::lpsf();
+				device_response[psf_nonlinear] = new xvp610_320x240::nlpsf();
+				for (int ii = 0; ii < argc - i - 1; ii++)
+					input_exposure[ii] = new xvp610_320x240::exposure();
+				view_angle = xvp610_320x240::view_angle();
+			} else if (!strcmp(device, "ov7620_raw_linear")) {
+				device_response[psf_linear] = new ov7620_raw_linear::lpsf();
+				device_response[psf_nonlinear] = NULL;
+				for (int ii = 0; ii < argc - i - 1; ii++)
+					input_exposure[ii] = new ov7620_raw_linear::exposure();
+				d2::image_rw::set_default_bayer(IMAGE_BAYER_BGRG);
+			} else if (!strcmp(device, "canon_300d_raw_linear")) {
+				device_response[psf_linear] = new canon_300d_raw_linear::lpsf();
+				device_response[psf_nonlinear] = NULL;
+				for (int ii = 0; ii < argc - i - 1; ii++)
+					input_exposure[ii] = new canon_300d_raw_linear::exposure();
+				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
+			} else if (!strcmp(device, "canon_300d_raw_linear+85mm_1.8")) {
+				device_response[psf_linear] = new canon_300d_raw_linear_85mm_1_8::lpsf();
+				device_response[psf_nonlinear] = NULL;
+				for (int ii = 0; ii < argc - i - 1; ii++)
+					input_exposure[ii] = new canon_300d_raw_linear_85mm_1_8::exposure();
+				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
+				view_angle = canon_300d_raw_linear_85mm_1_8::view_angle();
+			} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.8")) {
+				device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_8::lpsf();
+				device_response[psf_nonlinear] = NULL;
+				for (int ii = 0; ii < argc - i - 1; ii++)
+					input_exposure[ii] = new canon_300d_raw_linear_50mm_1_8::exposure();
+				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
+				view_angle = canon_300d_raw_linear_50mm_1_8::view_angle();
+			} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.4")) {
+				device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_4::lpsf();
+				device_response[psf_nonlinear] = NULL;
+				for (int ii = 0; ii < argc - i - 1; ii++)
+					input_exposure[ii] = new canon_300d_raw_linear_50mm_1_4::exposure();
+				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
+				view_angle = canon_300d_raw_linear_50mm_1_4::view_angle();
+			} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.4@1.4")) {
+				device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_4_1_4::lpsf();
+				device_response[psf_nonlinear] = NULL;
+				for (int ii = 0; ii < argc - i - 1; ii++)
+					input_exposure[ii] = new canon_300d_raw_linear_50mm_1_4_1_4::exposure();
+				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
+				view_angle = canon_300d_raw_linear_50mm_1_4_1_4::view_angle();
+			} else {
+				ui::get()->unknown_device(device);
+			}
+		} else {
+			for (int ii = 0; ii < argc - i - 1; ii++)
+				input_exposure[ii] = new d2::exposure_default();
+		}
+
+		/*
+		 * User-specified variables.
+		 */
+
+		if (user_view_angle != 0) {
+			view_angle = user_view_angle;
+		}
+
+		if (user_bayer != IMAGE_BAYER_DEFAULT) {
+			d2::image_rw::set_default_bayer(user_bayer);
+		}
+
+		/*
+		 * PSF-match exposure.
+		 */
+		if (psf_match) {
+			delete input_exposure[argc - i - 2];
+			input_exposure[argc - i - 2] = new d2::exposure_default();
+		}
+
+		/*
+		 * Initialize output exposure
+		 */
+
+		d2::exposure *output_exposure = new d2::exposure_default();
+		output_exposure->set_multiplier(exp_mult);
+
+		/*
+		 * Configure the response function.
+		 */
+
+		d2::psf *response[2] = {NULL, NULL};
+
+		for (int n = 0; n < psf_N; n++ ) {
+			if (psf[n] != NULL) {
+
+				response[n] = d2::psf_parse::get((n == psf_linear), psf[n]);
+
+			} else if (device_response[n] != NULL) {
+
+				/*
+				 * Device-specific response
+				 */
+
+				response[n] = device_response[n];
+
+			} else {
+
+				/*
+				 * Default point-spread function.
+				 */
+
+				if (n == psf_linear) {
+
+					/*
+					 * Default lpsf is a box filter
+					 * of diameter 1.0 (radius
+					 * 0.5).
+					 */
+
+					response[n] = new d2::box(0.5);
+
+				} else if (n == psf_nonlinear) {
+
+					/*
+					 * nlpsf is disabled by default.
+					 */
+
+					 response[n] = NULL;
+				}
+			}
+		}
+
+		/* 
+		 * First file argument.  Print general file information as well
+		 * as information specific to this argument.  Initialize image
+		 * file handler.
+		 */
+
+		/*
+		 * There should be at least two file arguments.
+		 */
+
+		if (i >= argc - 1) {
+			hi.usage();
+			exit(1);
+		}
+
+		d2::image_rw::init(argc - i - 1, argv + i, argv[argc - 1], input_exposure, output_exposure);
+		ochain_names[0] = argv[argc - 1];
+
+		/*
+		 * Handle control point data for alignment
+		 */
+		d2::align::set_cp_count(d3::cpf::count());
+		for (unsigned int ii = 0; ii < d3::cpf::count(); ii++)
+			d2::align::set_cp(ii, d3::cpf::get_2d(ii));
+
+		/*
+		 * PSF-match bayer patterns.
+		 */
+
+		if (psf_match) {
+			d2::image_rw::set_specific_bayer(argc - i - 2, IMAGE_BAYER_NONE);
+		}
+
+		/*
+		 * Handle alignment weight map, if necessary
+		 */
+
+		if (wm_filename != NULL) {
+			d2::image *weight_map;
+			weight_map = d2::image_rw::read_image(wm_filename, new d2::exposure_linear());
+			weight_map->set_offset(wm_offsety, wm_offsetx);
+			d2::align::set_weight_map(weight_map);
+		}
+
+		/*
+		 * Write comment information about original frame and
+		 * target image to the transformation save file, if we
+		 * have one.
+		 */
+
+		const d2::image *im = d2::image_rw::open(0);
+		tsave_orig(tsave, argv[i], im->avg_channel_magnitude());
+		tsave_target(tsave, argv[argc - 1]);
+		d2::image_rw::close(0);
+
+		/*
+		 * Initialize alignment interpolant.
+		 */
+
+		if (afilter_type != "internal")
+			d2::align::set_interpolant(d2::render_parse::get_SSF(afilter_type));
+
+		/*
+		 * Initialize achain and ochain.
+		 */
+
+		achain = d2::render_parse::get(achain_type);
+		
+		for (int chain = 0; chain < oc_count; chain++)
+			ochain[chain] = d2::render_parse::get(ochain_types[chain]);
+
+		/*
+		 * Use merged renderings as reference images in
+		 * alignment.
+		 */
+
+		d2::align::set_reference(achain);
+
+		/*
+		 * Tell the alignment class about the scale factor.
+		 */
+
+		d2::align::set_scale(scale_factor);
+
+		/*
+		 * Initialize visp.
+		 */
+
+		d2::vise_core::set_scale(vise_scale_factor);
+
+		for (int opt = 0; opt < vise_count; opt++) {
+			d2::vise_core::add(d2::render_parse::get(visp[opt * 4 + 0]),
+					   visp[opt * 4 + 1],
+					   visp[opt * 4 + 2],
+					   visp[opt * 4 + 3]);
+		}
+
+		/*
+		 * Initialize non-incremental renderers
+		 */
+
+#if 0
+		if (usm_multiplier != 0) {
+
+			/*
+			 * Unsharp Mask renderer
+			 */
+
+			ochain[0] = new d2::usm(ochain[0], scale_factor,
+					usm_multiplier, inc, response[psf_linear],
+					response[psf_nonlinear], &input_exposure[0]);
+		}
+#endif
+
+		if (psf_match) {
+			
+			/*
+			 * Point-spread function calibration renderer.
+			 * This renderer does not produce image output.
+			 * It is reserved for use with the point-spread
+			 * function calibration script
+			 * ale-psf-calibrate.
+			 */
+
+			ochain[0] = new d2::psf_calibrate(ochain[0],
+					1, inc, response[psf_linear],
+					response[psf_nonlinear],
+					psf_match_args);
+
+		} else if (ip_iterations != 0) {
+
+			/*
+			 * Irani-Peleg renderer
+			 */
+
+			ochain[0] = new d2::ipc( ochain[0], ip_iterations,
+					inc, response[psf_linear],
+					response[psf_nonlinear],
+					(exposure_register == 1), ip_use_median);
+		}
+
+		/*
+		 * Handle the original frame.
+		 */
+
+		ui::get()->original_frame_start(argv[i]);
+
+		for (int opt = 0; opt < oc_count; opt++) {
+			ui::get()->set_orender_current(opt);
+			ochain[opt]->sync(0);
+			if  (inc) {
+				ui::get()->writing_output(opt);
+				d2::image_rw::write_image(ochain_names[opt], 
+					ochain[opt]->get_image(0));
+			}
+		}
+
+		d2::vise_core::frame_queue_add(0);
+
+		ui::get()->original_frame_done();
+
+		/*
+		 * Handle supplemental frames.
+		 */
+
+		for (unsigned int j = 1; j < d2::image_rw::count(); j++) {
+
+			const char *name = d2::image_rw::name(j);
+
+			ui::get()->supplemental_frame_start(name);
+
+			/*
+			 * Write comment information about the
+			 * supplemental frame to the transformation
+			 * save file, if we have one.
+			 */
+
+			tsave_info (tsave, name);
+
+			const d2::image *im = d2::image_rw::open(j);
+			d2::pixel apm = im->avg_channel_magnitude();
+			tsave_apm(tsave, apm[0], apm[1], apm[2]);
+			d2::image_rw::close(j);
+
+			for (int opt = 0; opt < oc_count; opt++) {
+				ui::get()->set_orender_current(opt);
+				ochain[opt]->sync(j);
+				if (inc) {
+					ui::get()->writing_output(opt);
+					d2::image_rw::write_image(ochain_names[opt], 
+						ochain[opt]->get_image(j));
+				}
+			}
+
+			d2::vise_core::frame_queue_add(j);
+
+			ui::get()->supplemental_frame_done();
+		}
+
+		/*
+		 * Do any post-processing and output final image
+		 *
+		 * XXX: note that non-incremental renderers currently
+		 * return zero for ochain[0]->sync(), since they write
+		 * output internally when inc != 0.
+		 */
+
+		for (int opt = 0; opt < oc_count; opt++) 
+		if  ((ochain[opt]->sync() || !inc) && !psf_match)
+			d2::image_rw::write_image(ochain_names[opt], ochain[opt]->get_image());
+
+		/*
+		 * Output a summary match statistic.
+		 */
+
+		ui::get()->ale_2d_done((double) d2::align::match_summary());
+
+		/*
+		 * Perform any 3D tasks
+		 */
+
+		optimizations::begin_3d_work();
+
+		if (d3_count > 0) {
+
+			ui::get()->d3_start();
+
+			d3::align::init_angle(view_angle);
+
+			ui::get()->d3_init_view_angle(view_angle / M_PI * 180);
+
+			d3::align::init_from_d2();
+
+			if (d3::cpf::count() > 0) {
+				ui::get()->d3_control_point_solve();
+				d3::cpf::solve_3d();
+				ui::get()->d3_control_point_solve_done();
+			}
+
+			ui::get()->d3_final_view_angle(d3::align::angle_of(0) / M_PI * 180);
+
+			d3::align::write_alignments();
+
+			d3::scene::set_filter_type(d3chain_type);
+
+			d3::scene::init_from_d2();
+
+			ui::get()->d3_subdividing_space();
+			d3::scene::make_space(d3_depth, d3_output, &d3_depth_pt, &d3_output_pt);
+			ui::get()->d3_subdividing_space_done();
+
+			ui::get()->d3_updating_occupancy();
+			d3::scene::reduce_cost_to_search_depth(output_exposure, inc);
+			ui::get()->d3_updating_occupancy_done();
+
+			d3::scene::d3px(d3px_count, d3px_parameters);
+			int view_count = 0;
+			for (unsigned int i = 0; i < d2::image_rw::count(); i++) {
+				assert (i < d3_count);
+
+				if (d3_depth[i] != NULL) {
+					ui::get()->d3_writing_output(d3_depth[i]);
+					ui::get()->d3_render_status(0, 0, -1, -1, -1, -1, 0);
+					const d2::image *im = d3::scene::depth(i);
+					d2::image_rw::write_image(d3_depth[i], im, output_exposure, 1, 1);
+					delete im;
+					ui::get()->d3_writing_output_done();
+				}
+
+				if (d3_output[i] != NULL) {
+					ui::get()->d3_writing_output(d3_output[i]);
+					const d2::image *im = d3::scene::view(i);
+					d2::image_rw::write_image(d3_output[i], im, output_exposure);
+					delete im;
+					d3::focus::set_camera(view_count++);
+					ui::get()->d3_writing_output_done();
+				}
+
+				for (std::map<const char *, d3::pt>::iterator i = d3_output_pt.begin();
+						i != d3_output_pt.end(); i++) {
+
+					ui::get()->d3_writing_output(i->first);
+					const d2::image *im = d3::scene::view(i->second);
+					d2::image_rw::write_image(i->first, im, output_exposure);
+					delete im;
+					d3::focus::set_camera(view_count++);
+					ui::get()->d3_writing_output_done();
+				}
+
+				for (std::map<const char *, d3::pt>::iterator i = d3_depth_pt.begin();
+						i != d3_depth_pt.end(); i++) {
+
+					ui::get()->d3_writing_output(i->first);
+					ui::get()->d3_render_status(0, 0, -1, -1, -1, -1, 0);
+					const d2::image *im = d3::scene::depth(i->second);
+					d2::image_rw::write_image(i->first, im, output_exposure, 1, 1);
+					delete im;
+					ui::get()->d3_writing_output_done();
+				}
+			}
+
+			for (unsigned int i = d2::image_rw::count(); i < d3_count; i++) {
+				if (d3_depth[i] != NULL) {
+					fprintf(stderr, "\n\n*** Frame number for --3dd too high. ***\n\n");
+				}
+				if (d3_output[i] != NULL) {
+					fprintf(stderr, "\n\n*** Frame number for --3dv too high. ***\n\n");
+				}
+			}
+		}
+
+		/*
+		 * Destroy the image file handler
+		 */
+
+		d2::image_rw::destroy();
+
+		/*
+		 * Delete the transformation file structures, if any
+		 * exist.
+		 */
+
+		tsave_delete(tsave);
+		tload_delete(tload);
+
+		/*
+		 * We're done.
+		 */
+
+		exit(0);
 	}
 };
 

@@ -32,6 +32,10 @@ std::set<input::environment *> input::environment::environment_set;
  *   name, map_name, map_value, arg_count, multi
  */
 
+const char *supported_option_table[] = {
+	NULL
+};
+
 input::simple_option input::simple_option_table[] = {
 	{ "q0", "default" }, 
 	{ "q1", "default" }, 
@@ -234,6 +238,6 @@ input::simple_option input::simple_option_table[] = {
 	{ "trans-load", NULL, NULL, 1 },
 	{ "trans-save", NULL, NULL, 1 },
 	{ "3d-trans-load", NULL, NULL, 1 },
-	{ "3d-trans-save", NULL, NULL, 1 }
+	{ "3d-trans-save", NULL, NULL, 1 },
+	{ NULL }
 };
-
