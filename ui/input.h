@@ -580,7 +580,7 @@ class input {
 			 * Trap illegal options.
 			 */
 
-			else if (!strncmp(token, "-", strlen("-"))) 
+			else if (!strncmp(token, "-", strlen("-")) && !end_of_options) 
 				ui::get()->illegal_option(token);
 
 			/*
