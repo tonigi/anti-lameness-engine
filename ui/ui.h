@@ -522,12 +522,12 @@ public:
 	}
 
 	void cli_not_enough(const char *option) {
-		printf("\n\n*** Not enough arguments for %s ***\n\n", option);
+		printf("\n\n*** Not enough arguments for `%s' ***\n\n", option);
 		exit(1);
 	}
 
 	void cli_bad_arg(const char *option) {
-		printf("\n\n*** Bad argument to %s ***\n\n", option);
+		printf("\n\n*** Bad argument to `%s' ***\n\n", option);
 		exit(1);
 	}
 

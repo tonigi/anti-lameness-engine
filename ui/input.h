@@ -540,7 +540,7 @@ class input {
 	public:
 		argument_parsing_token_reader(const char *s) {
 			index = s;
-			separators = ",=";
+			separators = "=";
 		}
 
 		int expects_exactly_one_option(void) {
@@ -558,6 +558,8 @@ class input {
 
 			if (strspn(index, separators) >= 1)
 				index++;
+
+			separators = ",";
 
 			return result;
 		}
@@ -744,6 +746,7 @@ class input {
 	};
 
 	static const char *supported_nonglobal_option_table[];
+	static const char *focus_prefixes[];
 	static simple_option simple_option_table[];
 
 	static int option_name_match(const char *unadorned, const char *token, int require_ornamentation = 1) {
@@ -797,6 +800,33 @@ class input {
 	}
 
 	static environment genv;
+
+	static const char *get_next(token_reader *tr, const char *option_name) {
+		const char *argument = tr->get();
+
+		if (argument == NULL) {
+			fprintf(stderr, "\n\nError: not enough arguments for `%s'.\n\n", option_name);
+			exit(1);
+		}
+
+		return argument;
+	}
+
+	static int table_contains(const char **haystack, const char *needle, int prefix_length = 0) {
+
+		if (needle == NULL)
+			return 0;
+
+		while (*haystack != NULL) {
+			if (prefix_length == 0 && !strcmp(*haystack, needle))
+				return 1;
+			if (prefix_length > 0 && !strncmp(*haystack, needle, prefix_length))
+				return 1;
+			haystack++;
+		}
+
+		return 0;
+	}
 
 	static void evaluate_stream(token_reader *tr, 
 			std::vector<std::pair<const char *, environment *> > *files) {
@@ -870,11 +900,58 @@ class input {
 					files->push_back(std::pair<const char *, environment *>(strdup(token), 
 								environment::top()->clone()));
 
+					if (tr->expects_exactly_one_option() && tr->get()) {
+						fprintf(stderr, "\n\nError: Too many arguments for `%s'.\n\n", token);
+						exit(1);
+					}
+
 					continue;
 				}
 
 				/*
-				 * Handle options.
+				 * Handle focus option.
+				 */
+
+				if (option_name_match("focus", token)) {
+
+					/*
+					 * For now, make focus global.
+					 */
+					if (!global_options) {
+						fprintf(stderr, "\n\nError: option `%s' must be applied globally.", "focus");
+						fprintf(stderr, "\n\nHint:  Move option `%s' prior to file and scope operators.\n\n", "focus");
+						exit(1);
+					}
+					environment *target;
+					target = &genv;
+
+					target->set(option_name_gen("focus", NULL, 0, 0), "1");
+
+					const char *option = get_next(tr, "focus");
+
+					target->set(option_name_gen("focus", NULL, 1, 0), option);
+
+					if (!strcmp(option, "d")) {
+						target->set(option_name_gen("focus", NULL, 2, 0), get_next(tr, "focus"));
+					} else if (!strcmp(option, "p")) {
+						target->set(option_name_gen("focus", NULL, 2, 0), get_next(tr, "focus"));
+						target->set(option_name_gen("focus", NULL, 3, 0), get_next(tr, "focus"));
+					} else 
+						bad_arg("focus");
+
+					int arg = 0;
+
+					while (table_contains(focus_prefixes, tr->peek(), 3)) {
+						target->set(option_name_gen("focus", NULL, 4 + arg, 0), 
+								get_next(tr, "focus"));
+						arg++;
+					}
+
+					continue;
+				}
+
+				/*
+				 * Handle simple options.
 				 */
 
 				int found_option = 0;
@@ -892,12 +969,8 @@ class input {
 					 * Check whether the option is local.
 					 */
 
-					int found_nonglobal = 0;
-					for (int j = 0; supported_nonglobal_option_table[j]; j++) {
-						if (!strcmp(supported_nonglobal_option_table[j], 
-									simple_option_table[i].name))
-							found_nonglobal = 1;
-					}
+					int found_nonglobal = table_contains(supported_nonglobal_option_table, 
+							simple_option_table[i].name);
 
 					/*
 					 * Check for the case where a global option
@@ -1374,9 +1447,6 @@ public:
 				d2::align::gs_mo(genv.get_unsigned_arg(i->first, 1));
 			} else if (!strcmp(option_name, "focus")) {
 
-#warning --focus is not yet implemented.
-				assert(0);
-
 				double one = +1;
 				double zero = +0;
 				double inf = one / zero;
@@ -1388,8 +1458,8 @@ public:
 				 */
 
 				unsigned int type = 0;
-				double distance;
-				double px, py;
+				double distance = 0;
+				double px = 0, py = 0;
 
 				if (!strcmp(genv.get_string_arg(i->first, 1), "d")) {
 
@@ -1427,7 +1497,7 @@ public:
 				unsigned int fs = 0;
 				unsigned int sr = 0;
 
-				for (int arg_num = 2; genv.is_arg(i->first, arg_num); i++) {
+				for (int arg_num = 4; genv.is_arg(i->first, arg_num); arg_num++) {
 					const char *option = genv.get_string_arg(i->first, arg_num);
 					if (!strncmp(option, "ci=", 3)) {
 						if(sscanf(option + 3, "%u", &ci) != 1)

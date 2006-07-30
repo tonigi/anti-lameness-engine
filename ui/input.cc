@@ -1,4 +1,4 @@
-// Copyright 2004 David Hilvert <dhilvert@auricle.dyndns.org>, 
+// Copyright 2006 David Hilvert <dhilvert@auricle.dyndns.org>, 
 //                              <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
@@ -35,6 +35,24 @@ input::environment input::genv;
  */
 
 const char *input::supported_nonglobal_option_table[] = {
+	NULL
+};
+
+const char *input::focus_prefixes[] = {
+	"ci=",
+	"fr=",
+	"ht=",
+	"vt=",
+	"sy=",
+	"ey=",
+	"sx=",
+	"ex=",
+	"sd=",
+	"ed=",
+	"ap=",
+	"sc=",
+	"sr=",
+	"fs=",
 	NULL
 };
 
