@@ -419,6 +419,47 @@ class input {
 		}
 
 		/*
+		 * Restrict values to those matching a given environment.
+		 */
+		void intersect(environment *e) {
+
+			for (std::map<const char *, const char *, compare_strings>::iterator i = environment_map.begin();
+					i != environment_map.end(); i++) {
+				if (is_env(i->second)) {
+					if (!e->is_env(e->get(i->first)))
+						environment_map.erase(i);
+					else
+						get_env(i->second)->intersect(e->get_env(e->get(i->first)));
+				} else {
+					if (!e->get(i->first) || strcmp(i->second, e->get(i->first)))
+						environment_map.erase(i);
+				}
+			}
+
+		}
+
+		/*
+		 * Remove values matching a given environment.
+		 */
+		void difference(environment *e) {
+			for (std::map<const char *, const char *, compare_strings>::iterator i = environment_map.begin();
+					i != environment_map.end(); i++) {
+				if (is_env(i->second)) {
+					if (!e->is_env(e->get(i->first)))
+						continue;
+					else
+						get_env(i->second)->difference(e->get_env(e->get(i->first)));
+
+					if (get_env(i->second)->get_map().size() == 0)
+						environment_map.erase(i);
+				} else {
+					if (e->get(i->first) && !strcmp(i->second, e->get(i->first)))
+						environment_map.erase(i);
+				}
+			}
+		}
+
+		/*
 		 * Prepend to a list.
 		 */
 		void prepend(const char *list, const char *element) {
@@ -438,7 +479,7 @@ class input {
 		environment *clone() {
 			environment *e = new environment();
 
-			for (std::map<const char *, const char *>::iterator i = environment_map.begin(); 
+			for (std::map<const char *, const char *, compare_strings>::iterator i = environment_map.begin(); 
 					i != environment_map.end(); i++) {
 
 				if (!name_ok(i->first))
@@ -799,7 +840,7 @@ class input {
 		return result;
 	}
 
-	static environment genv;
+	static environment *genv;
 
 	static const char *get_next(token_reader *tr, const char *option_name) {
 		const char *argument = tr->get();
@@ -869,7 +910,7 @@ class input {
 			 * Check for non-whitespace argument separators
 			 */
 
-			else if (token && token[0] == '-' && strchr(token, '=')) {
+			else if (!end_of_options && token && token[0] == '-' && strchr(token, '=')) {
 				environment::push_and_dup_output();
 				token_reader *tr_nest = new argument_parsing_token_reader(token);
 				evaluate_stream(tr_nest, files);
@@ -914,16 +955,8 @@ class input {
 
 				if (option_name_match("focus", token)) {
 
-					/*
-					 * For now, make focus global.
-					 */
-					if (!global_options) {
-						fprintf(stderr, "\n\nError: option `%s' must be applied globally.", "focus");
-						fprintf(stderr, "\n\nHint:  Move option `%s' prior to file and scope operators.\n\n", "focus");
-						exit(1);
-					}
 					environment *target;
-					target = &genv;
+					target = environment::top();
 
 					target->set(option_name_gen("focus", NULL, 0, 0), "1");
 
@@ -966,34 +999,11 @@ class input {
 					found_option = 1;
 
 					/*
-					 * Check whether the option is local.
-					 */
-
-					int found_nonglobal = table_contains(supported_nonglobal_option_table, 
-							simple_option_table[i].name);
-
-					/*
-					 * Check for the case where a global option
-					 * is used non-globally.
-					 */
-
-					if (!found_nonglobal && !global_options) {
-						fprintf(stderr, "\n\nError: option `%s' must be applied globally.", 
-								simple_option_table[i].name);
-						fprintf(stderr, "\n\nHint:  Move option `%s' prior to file and scope operators.\n\n", simple_option_table[i].name);
-						exit(1);
-					}
-
-					/*
 					 * Determine which environment should be modified
 					 */
 
 					environment *target;
-					if (found_nonglobal) {
-						target = environment::top();
-					} else {
-						target = &genv;
-					}
+					target = environment::top();
 					
 					/*
 					 * Store information required for
@@ -1349,91 +1359,107 @@ public:
 		}
 
 		/*
+		 * Extract the global environment.
+		 */
+
+		genv = files[0].second->clone();
+		
+		for (unsigned int i = 0; i < files.size(); i++) {
+			genv->intersect(files[i].second);
+		}
+
+		for (unsigned int i = 0; i < files.size(); i++) {
+			files[i].second->difference(genv);
+		}
+
+		/*
 		 * Iterate through the global environment,
 		 * looking for options.
 		 */
 
-		for (std::map<const char *, const char *>::iterator i = genv.get_map().begin();
-				i != genv.get_map().end(); i++) {
+		for (std::map<const char *, const char *>::iterator i = genv->get_map().begin();
+				i != genv->get_map().end(); i++) {
 
-			if (!genv.is_option(i->first))
+			environment *env = genv;
+
+			if (!env->is_option(i->first))
 				continue;
 
-			const char *option_name = genv.get_option_name(i->first);
+			const char *option_name = env->get_option_name(i->first);
 
 			if (!strcmp(option_name, "default")) {
 				/*
 				 * Do nothing.  Defaults have already been set.
 				 */
 			} else if (!strcmp(option_name, "bpc")) {
-				if (!strcmp(genv.get_string_arg(i->first, 0), "8bpc"))
+				if (!strcmp(env->get_string_arg(i->first, 0), "8bpc"))
 					d2::image_rw::depth8();
-				else if (!strcmp(genv.get_string_arg(i->first, 0), "16bpc"))
+				else if (!strcmp(env->get_string_arg(i->first, 0), "16bpc"))
 					d2::image_rw::depth16();
 				else
 					assert(0);
 			} else if (!strcmp(option_name, "format")) {
-				if (!strcmp(genv.get_string_arg(i->first, 0), "plain"))
+				if (!strcmp(env->get_string_arg(i->first, 0), "plain"))
 					d2::image_rw::ppm_plain();
-				else if (!strcmp(genv.get_string_arg(i->first, 0), "raw"))
+				else if (!strcmp(env->get_string_arg(i->first, 0), "raw"))
 					d2::image_rw::ppm_raw();
-				else if (!strcmp(genv.get_string_arg(i->first, 0), "auto"))
+				else if (!strcmp(env->get_string_arg(i->first, 0), "auto"))
 					d2::image_rw::ppm_auto();
 				else
 					assert(0);
 			} else if (!strcmp(option_name, "align")) {
-				if (!strcmp(genv.get_string_arg(i->first, 0), "align-all"))
+				if (!strcmp(env->get_string_arg(i->first, 0), "align-all"))
 					d2::align::all();
-				else if (!strcmp(genv.get_string_arg(i->first, 0), "align-green"))
+				else if (!strcmp(env->get_string_arg(i->first, 0), "align-green"))
 					d2::align::green();
-				else if (!strcmp(genv.get_string_arg(i->first, 0), "align-sum"))
+				else if (!strcmp(env->get_string_arg(i->first, 0), "align-sum"))
 					d2::align::sum();
 				else
 					assert(0);
 			} else if (!strcmp(option_name, "transformation")) {
-				if (!strcmp(genv.get_string_arg(i->first, 0), "translation"))
+				if (!strcmp(env->get_string_arg(i->first, 0), "translation"))
 					d2::align::class_translation();
-				else if (!strcmp(genv.get_string_arg(i->first, 0), "euclidean"))
+				else if (!strcmp(env->get_string_arg(i->first, 0), "euclidean"))
 					d2::align::class_euclidean();
-				else if (!strcmp(genv.get_string_arg(i->first, 0), "projective"))
+				else if (!strcmp(env->get_string_arg(i->first, 0), "projective"))
 					d2::align::class_projective();
 				else
 					assert(0);
 			} else if (!strcmp(option_name, "transformation-default")) {
-				if (!strcmp(genv.get_string_arg(i->first, 0), "identity"))
+				if (!strcmp(env->get_string_arg(i->first, 0), "identity"))
 					d2::align::initial_default_identity();
-				else if (!strcmp(genv.get_string_arg(i->first, 0), "follow"))
+				else if (!strcmp(env->get_string_arg(i->first, 0), "follow"))
 					d2::align::initial_default_follow();
 				else
 					assert(0);
 			} else if (!strcmp(option_name, "perturb")) {
-				if (!strcmp(genv.get_string_arg(i->first, 0), "perturb-output"))
+				if (!strcmp(env->get_string_arg(i->first, 0), "perturb-output"))
 					d2::align::perturb_output();
-				else if (!strcmp(genv.get_string_arg(i->first, 0), "perturb-source"))
+				else if (!strcmp(env->get_string_arg(i->first, 0), "perturb-source"))
 					d2::align::perturb_source();
 				else
 					assert(0);
 			} else if (!strcmp(option_name, "fail")) {
-				if (!strcmp(genv.get_string_arg(i->first, 0), "fail-optimal"))
+				if (!strcmp(env->get_string_arg(i->first, 0), "fail-optimal"))
 					d2::align::fail_optimal();
-				else if (!strcmp(genv.get_string_arg(i->first, 0), "fail-default"))
+				else if (!strcmp(env->get_string_arg(i->first, 0), "fail-default"))
 					d2::align::fail_default();
 				else
 					assert(0);
 			} else if (!strcmp(option_name, "extend")) {
-				if (genv.get_int_arg(i->first, 0))
+				if (env->get_int_arg(i->first, 0))
 					extend = 1;
 				else
 					extend = 0;
 			} else if (!strcmp(option_name, "oc")) {
-				if (genv.get_int_arg(i->first, 0))
+				if (env->get_int_arg(i->first, 0))
 					d3::scene::oc();
 				else 
 					d3::scene::no_oc();
 			} else if (!strcmp(option_name, "gs")) {
-				d2::align::gs(genv.get_string_arg(i->first, 1));
+				d2::align::gs(env->get_string_arg(i->first, 1));
 			} else if (!strcmp(option_name, "gs-mo")) {
-				d2::align::gs_mo(genv.get_unsigned_arg(i->first, 1));
+				d2::align::gs_mo(env->get_unsigned_arg(i->first, 1));
 			} else if (!strcmp(option_name, "focus")) {
 
 				double one = +1;
@@ -1450,18 +1476,18 @@ public:
 				double distance = 0;
 				double px = 0, py = 0;
 
-				if (!strcmp(genv.get_string_arg(i->first, 1), "d")) {
+				if (!strcmp(env->get_string_arg(i->first, 1), "d")) {
 
 					type = 0;
 
-					distance = genv.get_double_arg(i->first, 2);
+					distance = env->get_double_arg(i->first, 2);
 
-				} else if (!strcmp(genv.get_string_arg(i->first, 1), "p")) {
+				} else if (!strcmp(env->get_string_arg(i->first, 1), "p")) {
 
 					type = 1;
 
-					px = genv.get_double_arg(i->first, 2);
-					py = genv.get_double_arg(i->first, 3);
+					px = env->get_double_arg(i->first, 2);
+					py = env->get_double_arg(i->first, 3);
 
 				} else {
 					bad_arg(option_name);
@@ -1486,8 +1512,8 @@ public:
 				unsigned int fs = 0;
 				unsigned int sr = 0;
 
-				for (int arg_num = 4; genv.is_arg(i->first, arg_num); arg_num++) {
-					const char *option = genv.get_string_arg(i->first, arg_num);
+				for (int arg_num = 4; env->is_arg(i->first, arg_num); arg_num++) {
+					const char *option = env->get_string_arg(i->first, arg_num);
 					if (!strncmp(option, "ci=", 3)) {
 						if(sscanf(option + 3, "%u", &ci) != 1)
 							bad_arg("--focus");
@@ -1579,15 +1605,15 @@ public:
 				double x, y, z;
 				double P, Y, R;
 
-				width = genv.get_unsigned_arg(i->first, 1);
-				height = genv.get_unsigned_arg(i->first, 2);
-				view_angle = genv.get_double_arg(i->first, 3);
-				x = genv.get_double_arg(i->first, 4);
-				y = genv.get_double_arg(i->first, 5);
-				z = genv.get_double_arg(i->first, 6);
-				P = genv.get_double_arg(i->first, 7);
-				Y = genv.get_double_arg(i->first, 8);
-				R = genv.get_double_arg(i->first, 9);
+				width = env->get_unsigned_arg(i->first, 1);
+				height = env->get_unsigned_arg(i->first, 2);
+				view_angle = env->get_double_arg(i->first, 3);
+				x = env->get_double_arg(i->first, 4);
+				y = env->get_double_arg(i->first, 5);
+				z = env->get_double_arg(i->first, 6);
+				P = env->get_double_arg(i->first, 7);
+				Y = env->get_double_arg(i->first, 8);
+				R = env->get_double_arg(i->first, 9);
 
 				view_angle *= M_PI / 180;
 				P *= M_PI / 180;
@@ -1600,9 +1626,9 @@ public:
 				d3::pt _pt(t, d3::et(y, x, z, Y, P, R), view_angle);
 				
 				if (!strcmp(option_name, "3dvp")) {
-					d3_output_pt[genv.get_string_arg(i->first, 10)] = _pt;
+					d3_output_pt[env->get_string_arg(i->first, 10)] = _pt;
 				} else if (!strcmp(option_name, "3ddp")) {
-					d3_depth_pt[genv.get_string_arg(i->first, 10)] = _pt;
+					d3_depth_pt[env->get_string_arg(i->first, 10)] = _pt;
 				} else {
 					assert(0);
 				}
@@ -1633,7 +1659,7 @@ public:
 					d3_depth = (const char **) calloc(d3_count, sizeof(char *));
 				}
 
-				frame_no = genv.get_int_arg(i->first, 1);
+				frame_no = env->get_int_arg(i->first, 1);
 
 				if (frame_no >= d3_count)
 					ui::get()->error("--3dv argument 0 is too large");
@@ -1642,7 +1668,7 @@ public:
 					unsupported::fornow ("Writing a single 3D view to more than one output file");
 				}
 
-				d3_output[frame_no] = genv.get_string_arg(i->first, 2);
+				d3_output[frame_no] = env->get_string_arg(i->first, 2);
 
 			} else if (!strcmp(option_name, "3dd")) {
 				d2::align::keep();
@@ -1671,7 +1697,7 @@ public:
 					d3_depth = (const char **) calloc(d3_count, sizeof(char *));
 				}
 
-				frame_no = genv.get_int_arg(i->first, 1);
+				frame_no = env->get_int_arg(i->first, 1);
 
 				if (frame_no >= d3_count)
 					ui::get()->error("--3dd argument 0 is too large");
@@ -1680,96 +1706,96 @@ public:
 					unsupported::fornow ("Writing a single frame's depth info to more than one output file");
 				}
 
-				d3_depth[frame_no] = genv.get_string_arg(i->first, 2);
+				d3_depth[frame_no] = env->get_string_arg(i->first, 2);
 
 			} else if (!strcmp(option_name, "view-angle")) {
-				user_view_angle = genv.get_double_arg(i->first, 1) * M_PI / 180;
+				user_view_angle = env->get_double_arg(i->first, 1) * M_PI / 180;
 			} else if (!strcmp(option_name, "cpf-load")) {
-				d3::cpf::init_loadfile(genv.get_string_arg(i->first, 1));
+				d3::cpf::init_loadfile(env->get_string_arg(i->first, 1));
 			} else if (!strcmp(option_name, "ui")) {
-				if (!strcmp(genv.get_string_arg(i->first, 1), "stream"))
+				if (!strcmp(env->get_string_arg(i->first, 1), "stream"))
 					ui::set_stream();
-				else if (!strcmp(genv.get_string_arg(i->first, 1), "tty"))
+				else if (!strcmp(env->get_string_arg(i->first, 1), "tty"))
 					ui::set_tty();
 				else
 					assert(0);
 			} else if (!strcmp(option_name, "3d-fmr")) {
-				d3::scene::fmr(genv.get_double_arg(i->first, 1));
+				d3::scene::fmr(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "3d-dmr")) {
-				d3::scene::dmr(genv.get_double_arg(i->first, 1));
+				d3::scene::dmr(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "et")) {
-				d3::scene::et(genv.get_double_arg(i->first, 1));
+				d3::scene::et(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "st")) {
-				d3::cpf::st(genv.get_double_arg(i->first, 1));
+				d3::cpf::st(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "di-lower")) {
-				d3::scene::di_lower(genv.get_double_arg(i->first, 1));
+				d3::scene::di_lower(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "rc")) {
-				d3::scene::rc(genv.get_double_arg(i->first, 1));
+				d3::scene::rc(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "do-try")) {
-				d3::scene::do_try(genv.get_double_arg(i->first, 1));
+				d3::scene::do_try(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "di-upper")) {
-				d3::scene::di_upper(genv.get_double_arg(i->first, 1));
+				d3::scene::di_upper(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "fc")) {
-				d3::scene::fc(genv.get_double_arg(i->first, 1));
+				d3::scene::fc(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "ecm")) {
 				unsupported::discontinued("--ecm <x>");
 			} else if (!strcmp(option_name, "acm")) {
 				unsupported::discontinued("--acm <x>");
 			} else if (!strcmp(option_name, "def-nn")) {
-				d2::image_rw::def_nn(genv.get_double_arg(i->first, 1));
+				d2::image_rw::def_nn(env->get_double_arg(i->first, 1));
 
-				if (genv.get_double_arg(i->first, 1) > 2) {
+				if (env->get_double_arg(i->first, 1) > 2) {
 					fprintf(stderr, "\n\n*** Warning: --def-nn implementation is currently "
 							     "inefficient for large radii. ***\n\n");
 				}
 
 			} else if (!strcmp(option_name, "mc")) {
-				d2::align::mc(genv.get_int_arg(i->first, 0) ? genv.get_double_arg(i->first, 1) / 100 : 0);
+				d2::align::mc(env->get_int_arg(i->first, 0) ? env->get_double_arg(i->first, 1) / 100 : 0);
 			} else if (!strcmp(option_name, "fx")) {
-				d3::scene::fx(genv.get_double_arg(i->first, 1));
+				d3::scene::fx(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "tcem")) {
-				d3::scene::tcem(genv.get_double_arg(i->first, 1));
+				d3::scene::tcem(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "oui")) {
-				d3::scene::oui(genv.get_unsigned_arg(i->first, 1));
+				d3::scene::oui(env->get_unsigned_arg(i->first, 1));
 			} else if (!strcmp(option_name, "pa")) {
-				d3::scene::pa(genv.get_unsigned_arg(i->first, 1));
+				d3::scene::pa(env->get_unsigned_arg(i->first, 1));
 			} else if (!strcmp(option_name, "pc")) {
-				d3::scene::pc(genv.get_string_arg(i->first, 1));
+				d3::scene::pc(env->get_string_arg(i->first, 1));
 			} else if (!strcmp(option_name, "cw")) {
-				d2::align::certainty_weighted(genv.get_unsigned_arg(i->first, 0));
+				d2::align::certainty_weighted(env->get_unsigned_arg(i->first, 0));
 			} else if (!strcmp(option_name, "wm")) {
 				if (wm_filename != NULL)
 					ui::get()->error("only one weight map can be specified");
 
-				wm_filename = genv.get_string_arg(i->first, 1);
-				wm_offsetx = genv.get_int_arg(i->first, 2);
-				wm_offsety = genv.get_int_arg(i->first, 3);
+				wm_filename = env->get_string_arg(i->first, 1);
+				wm_offsetx = env->get_int_arg(i->first, 2);
+				wm_offsety = env->get_int_arg(i->first, 3);
 				
 			} else if (!strcmp(option_name, "fl")) {
 #ifdef USE_FFTW
-				d2::align::set_frequency_cut(genv.get_double_arg(i->first, 1),
-						             genv.get_double_arg(i->first, 2),
-						             genv.get_double_arg(i->first, 3));
+				d2::align::set_frequency_cut(env->get_double_arg(i->first, 1),
+						             env->get_double_arg(i->first, 2),
+						             env->get_double_arg(i->first, 3));
 
 #else
 				ui::get()->error_hint("--fl is not supported", "rebuild ALE with FFTW=1");
 #endif
 			} else if (!strcmp(option_name, "wmx")) {
 #ifdef USE_UNIX
-				d2::align::set_wmx(genv.get_string_arg(i->first, 1),
-						   genv.get_string_arg(i->first, 2),
-						   genv.get_string_arg(i->first, 3));
+				d2::align::set_wmx(env->get_string_arg(i->first, 1),
+						   env->get_string_arg(i->first, 2),
+						   env->get_string_arg(i->first, 3));
 #else
 				ui::get()->error_hint("--wmx is not supported", "rebuild ALE with POSIX=1");
 #endif
 			} else if (!strcmp(option_name, "flshow")) {
-				d2::align::set_fl_show(genv.get_string_arg(i->first, 1));
+				d2::align::set_fl_show(env->get_string_arg(i->first, 1));
 			} else if (!strcmp(option_name, "3dpx")) {
 
 				d3px_parameters = (double *) local_realloc(d3px_parameters, (d3px_count + 1) * 6 * sizeof(double));
 
 				for (int param = 0; param < 6; param++)
-					d3px_parameters[6 * d3px_count + param] = genv.get_double_arg(i->first, param + 1);
+					d3px_parameters[6 * d3px_count + param] = env->get_double_arg(i->first, param + 1);
 
 				/*
 				 * Swap x and y, since their internal meanings differ from their external meanings.
@@ -1793,7 +1819,7 @@ public:
 				ex_parameters = (int *) local_realloc(ex_parameters, (ex_count + 1) * 6 * sizeof(int));
 
 				for (int param = 0; param < 6; param++)
-					ex_parameters[6 * ex_count + param] = genv.get_int_arg(i->first, param + 1);
+					ex_parameters[6 * ex_count + param] = env->get_int_arg(i->first, param + 1);
 
 				/*
 				 * Swap x and y, since their internal meanings differ from their external meanings.
@@ -1818,7 +1844,7 @@ public:
 				int crop_args[6];
 
 				for (int param = 0; param < 6; param++)
-					crop_args[param] = genv.get_int_arg(i->first, param + 1);
+					crop_args[param] = env->get_int_arg(i->first, param + 1);
 
 				/*
 				 * Construct exclusion regions from the crop area,
@@ -1879,15 +1905,15 @@ public:
 			} else if (!strcmp(option_name, "exshow")) {
 				ex_show = 1;
 			} else if (!strcmp(option_name, "wt")) {
-				d2::render::set_wt(genv.get_double_arg(i->first, 1));
+				d2::render::set_wt(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "3d-chain")) {
-				d3chain_type = genv.get_string_arg(i->first, 1);
+				d3chain_type = env->get_string_arg(i->first, 1);
 			} else if (!strcmp(option_name, "dchain")) {
-				ochain_types[0] = genv.get_string_arg(i->first, 1);
+				ochain_types[0] = env->get_string_arg(i->first, 1);
 			} else if (!strcmp(option_name, "achain")) {
-				achain_type = genv.get_string_arg(i->first, 1);
+				achain_type = env->get_string_arg(i->first, 1);
 			} else if (!strcmp(option_name, "afilter")) {
-				afilter_type = genv.get_string_arg(i->first, 1);
+				afilter_type = env->get_string_arg(i->first, 1);
 			} else if (!strcmp(option_name, "ochain")) {
 
 				ochain = (d2::render **) local_realloc(ochain, 
@@ -1897,8 +1923,8 @@ public:
 				ochain_types = (const char **) local_realloc((void *)ochain_types, 
 							(oc_count + 1) * sizeof(const char *));
 
-				ochain_types[oc_count] = genv.get_string_arg(i->first, 1);
-				ochain_names[oc_count] = genv.get_string_arg(i->first, 2);
+				ochain_types[oc_count] = env->get_string_arg(i->first, 1);
+				ochain_names[oc_count] = env->get_string_arg(i->first, 2);
 
 				oc_count++;
 
@@ -1908,12 +1934,12 @@ public:
 							(vise_count + 1) * sizeof(const char *));
 
 				for (int param = 0; param < 4; param++)
-					visp[vise_count * 4 + param] = genv.get_string_arg(i->first, param + 1);
+					visp[vise_count * 4 + param] = env->get_string_arg(i->first, param + 1);
 
 				vise_count++;
 
 			} else if (!strcmp(option_name, "cx")) {
-				cx_parameter = genv.get_int_arg(i->first, 0) ? genv.get_double_arg(i->first, 1) : 0;
+				cx_parameter = env->get_int_arg(i->first, 0) ? env->get_double_arg(i->first, 1) : 0;
 			} else if (!strcmp(option_name, "ip")) {
 				unsupported::discontinued("--ip <r> <i>", "--lpsf box=<r> --ips <i>");
 			} else if (!strcmp(option_name, "bayer")) {
@@ -1923,7 +1949,7 @@ public:
 				 * order is counter-clockwise from top-left.
 				 */
 
-				const char *option = genv.get_string_arg(i->first, 1);
+				const char *option = env->get_string_arg(i->first, 1);
 
 				if (!strcmp(option, "rgbg")) {
 					user_bayer = IMAGE_BAYER_RGBG;
@@ -1940,71 +1966,71 @@ public:
 				}
 				
 			} else if (!strcmp(option_name, "lpsf")) {
-				psf[psf_linear] = genv.get_string_arg(i->first, 1);
+				psf[psf_linear] = env->get_string_arg(i->first, 1);
 			} else if (!strcmp(option_name, "nlpsf")) {
-				psf[psf_nonlinear] = genv.get_string_arg(i->first, 1);
+				psf[psf_nonlinear] = env->get_string_arg(i->first, 1);
 			} else if (!strcmp(option_name, "psf-match")) {
 
 				psf_match = 1;
 
 				for (int index = 0; index < 6; index++) {
-					psf_match_args[index] = genv.get_double_arg(i->first, index + 1);
+					psf_match_args[index] = env->get_double_arg(i->first, index + 1);
 				}
 
 			} else if (!strcmp(option_name, "device")) {
-				device = genv.get_string_arg(i->first, 1);
+				device = env->get_string_arg(i->first, 1);
 #if 0
 			} else if (!strcmp(option_name, "usm")) {
 
 				if (d3_output != NULL)
 					unsupported::fornow("3D modeling with unsharp mask");
 
-				usm_multiplier = genv.get_double_arg(i->first, 1);
+				usm_multiplier = env->get_double_arg(i->first, 1);
 #endif
 
 			} else if (!strcmp(option_name, "ipr")) {
 
-				ip_iterations = genv.get_int_arg(i->first, 1);
+				ip_iterations = env->get_int_arg(i->first, 1);
 
 				ui::get()->warn("--ipr is deprecated.  Use --ips instead");
 
 			} else if (!strcmp(option_name, "cpp-err")) {
-				if (!strcmp(genv.get_string_arg(i->first, 0), "median"))
+				if (!strcmp(env->get_string_arg(i->first, 0), "median"))
 					d3::cpf::err_median();
-				else if (!strcmp(genv.get_string_arg(i->first, 0), "mean"))
+				else if (!strcmp(env->get_string_arg(i->first, 0), "mean"))
 					d3::cpf::err_mean();
 			} else if (!strcmp(option_name, "vp-adjust")) {
-				if (genv.get_int_arg(i->first, 0))
+				if (env->get_int_arg(i->first, 0))
 					d3::align::vp_adjust();
 				else
 					d3::align::vp_noadjust();
 			} else if (!strcmp(option_name, "vo-adjust")) {
-				if (genv.get_int_arg(i->first, 0))
+				if (env->get_int_arg(i->first, 0))
 					d3::align::vo_adjust();
 				else
 					d3::align::vo_noadjust();
 			} else if (!strcmp(option_name, "ip-statistic")) {
-				if (!strcmp(genv.get_string_arg(i->first, 1), "mean"))
+				if (!strcmp(env->get_string_arg(i->first, 1), "mean"))
 					ip_use_median = 0;
-				else if (!strcmp(genv.get_string_arg(i->first, 1), "median"))
+				else if (!strcmp(env->get_string_arg(i->first, 1), "median"))
 					ip_use_median = 1;
 			} else if (!strcmp(option_name, "ips")) {
-				ip_iterations = genv.get_int_arg(i->first, 1);
+				ip_iterations = env->get_int_arg(i->first, 1);
 			} else if (!strcmp(option_name, "ipc")) {
 				unsupported::discontinued("--ipc <c> <i>", "--ips <i> --lpsf <c>", "--ips <i> --device <c>");
 			} else if (!strcmp(option_name, "exp-extend")) {
-				if (genv.get_int_arg(i->first, 0))
+				if (env->get_int_arg(i->first, 0))
 					d2::image_rw::exp_scale();
 				else
 					d2::image_rw::exp_noscale();
 			} else if (!strcmp(option_name, "exp-register")) {
-				if (genv.get_int_arg(i->first, 0) == 1) {
+				if (env->get_int_arg(i->first, 0) == 1) {
 					exposure_register = 1;
 					d2::align::exp_register();
-				} else if (genv.get_int_arg(i->first, 0) == 0) {
+				} else if (env->get_int_arg(i->first, 0) == 0) {
 					exposure_register = 0;
 					d2::align::exp_noregister();
-				} else if (genv.get_int_arg(i->first, 0) == 2) {
+				} else if (env->get_int_arg(i->first, 0) == 2) {
 					exposure_register = 2;
 					d2::align::exp_meta_only();
 				}
@@ -2014,29 +2040,29 @@ public:
 				unsupported::undocumented("--subspace-traverse");
 				d3::scene::set_subspace_traverse();
 			} else if (!strcmp(option_name, "3d-filter")) {
-				if (genv.get_int_arg(i->first, 0))
+				if (env->get_int_arg(i->first, 0))
 					d3::scene::filter();
 				else
 					d3::scene::nofilter();
 			} else if (!strcmp(option_name, "occ-norm")) {
-				if (genv.get_int_arg(i->first, 0))
+				if (env->get_int_arg(i->first, 0))
 					d3::scene::nw();
 				else
 					d3::scene::no_nw();
 			} else if (!strcmp(option_name, "inc")) {
-				inc = genv.get_int_arg(i->first, 0);
+				inc = env->get_int_arg(i->first, 0);
 			} else if (!strcmp(option_name, "exp-mult")) {
 				double exp_c, exp_r, exp_b;
 
-				exp_c = genv.get_double_arg(i->first, 1);
-				exp_r = genv.get_double_arg(i->first, 2);
-				exp_b = genv.get_double_arg(i->first, 3);
+				exp_c = env->get_double_arg(i->first, 1);
+				exp_r = env->get_double_arg(i->first, 2);
+				exp_b = env->get_double_arg(i->first, 3);
 
 				exp_mult = d2::pixel(1/(exp_r * exp_c), 1/exp_c, 1/(exp_b * exp_c));
 
 			} else if (!strcmp(option_name, "visp-scale")) {
 
-				vise_scale_factor = genv.get_double_arg(i->first, 1);
+				vise_scale_factor = env->get_double_arg(i->first, 1);
 
 				if (vise_scale_factor <= 0.0)
 					ui::get()->error("VISP scale must be greater than zero");
@@ -2046,7 +2072,7 @@ public:
 
 			} else if (!strcmp(option_name, "scale")) {
 
-				scale_factor = genv.get_double_arg(i->first, 1);
+				scale_factor = env->get_double_arg(i->first, 1);
 
 				if (scale_factor <= 0)
 					ui::get()->error("Scale factor must be greater than zero");
@@ -2055,13 +2081,13 @@ public:
 					ui::get()->error("Scale factor must be finite");
 
 			} else if (!strcmp(option_name, "metric")) {
-				d2::align::set_metric_exponent(genv.get_double_arg(i->first, 1));
+				d2::align::set_metric_exponent(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "threshold")) {
-				d2::align::set_match_threshold(genv.get_double_arg(i->first, 1));
+				d2::align::set_match_threshold(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "drizzle-diam")) {
 				unsupported::discontinued("--drizzle-diam=<x>", "--dchain box:1");
 			} else if (!strcmp(option_name, "perturb-upper")) {
-				const char *option = genv.get_string_arg(i->first, 1);
+				const char *option = env->get_string_arg(i->first, 1);
 				double perturb_upper;
 				int characters;
 				sscanf(option, "%lf%n", &perturb_upper, &characters);
@@ -2070,7 +2096,7 @@ public:
 				else
 					d2::align::set_perturb_upper(perturb_upper, 0);
 			} else if (!strcmp(option_name, "perturb-lower")) {
-				const char *option = genv.get_string_arg(i->first, 1);
+				const char *option = env->get_string_arg(i->first, 1);
 				double perturb_lower;
 				int characters;
 				sscanf(option, "%lf%n", &perturb_lower, &characters);
@@ -2083,9 +2109,9 @@ public:
 					d2::align::set_perturb_lower(perturb_lower, 0);
 			} else if (!strcmp(option_name, "stepsize")) {
 				ui::get()->warn("--stepsize is deprecated.  Use --perturb-lower instead");
-				d2::align::set_perturb_lower(genv.get_double_arg(i->first, 1), 0);
+				d2::align::set_perturb_lower(env->get_double_arg(i->first, 1), 0);
 			} else if (!strcmp(option_name, "va-upper")) {
-				const char *option = genv.get_string_arg(i->first, 1);
+				const char *option = env->get_string_arg(i->first, 1);
 				double va_upper;
 				int characters;
 				sscanf(option, "%lf%n", &va_upper, &characters);
@@ -2094,7 +2120,7 @@ public:
 				else
 					d3::cpf::set_va_upper(va_upper);
 			} else if (!strcmp(option_name, "cpp-upper")) {
-				const char *option = genv.get_string_arg(i->first, 1);
+				const char *option = env->get_string_arg(i->first, 1);
 				double perturb_upper;
 				int characters;
 				sscanf(option, "%lf%n", &perturb_upper, &characters);
@@ -2103,7 +2129,7 @@ public:
 				else
 					d3::cpf::set_cpp_upper(perturb_upper);
 			} else if (!strcmp(option_name, "cpp-lower")) {
-				const char *option = genv.get_string_arg(i->first, 1);
+				const char *option = env->get_string_arg(i->first, 1);
 				double perturb_lower;
 				int characters;
 				sscanf(option, "%lf%n", &perturb_lower, &characters);
@@ -2114,36 +2140,36 @@ public:
 			} else if (!strcmp(option_name, "hf-enhance")) {
 				unsupported::discontinued("--hf-enhance=<x>");
 			} else if (!strcmp(option_name, "rot-upper")) {
-				d2::align::set_rot_max((int) floor(genv.get_double_arg(i->first, 1)));
+				d2::align::set_rot_max((int) floor(env->get_double_arg(i->first, 1)));
 			} else if (!strcmp(option_name, "bda-mult")) {
-				d2::align::set_bda_mult(genv.get_double_arg(i->first, 1));
+				d2::align::set_bda_mult(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "bda-rate")) {
-				d2::align::set_bda_rate(genv.get_double_arg(i->first, 1));
+				d2::align::set_bda_rate(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "lod-max")) {
-				d2::align::set_lod_max((int) floor(genv.get_double_arg(i->first, 1)));
+				d2::align::set_lod_max((int) floor(env->get_double_arg(i->first, 1)));
 			} else if (!strcmp(option_name, "cpf-load")) {
-				d3::cpf::init_loadfile(genv.get_string_arg(i->first, 1));
+				d3::cpf::init_loadfile(env->get_string_arg(i->first, 1));
 #if 0
 			} else if (!strcmp(option_name, "model-load")) {
-				d3::scene::load_model(genv.get_string_arg(i->first, 1));
+				d3::scene::load_model(env->get_string_arg(i->first, 1));
 			} else if (!strcmp(option_name, "model-save")) {
-				d3::scene::save_model(genv.get_string_arg(i->first, 1));
+				d3::scene::save_model(env->get_string_arg(i->first, 1));
 #endif
 			} else if (!strcmp(option_name, "trans-load")) {
 				d2::tload_delete(tload);
-				tload = d2::tload_new(genv.get_string_arg(i->first, 1));
+				tload = d2::tload_new(env->get_string_arg(i->first, 1));
 				d2::align::set_tload(tload);
 			} else if (!strcmp(option_name, "trans-save")) {
 				tsave_delete(tsave);
-				tsave = d2::tsave_new(genv.get_string_arg(i->first, 1));
+				tsave = d2::tsave_new(env->get_string_arg(i->first, 1));
 				d2::align::set_tsave(tsave);
 			} else if (!strcmp(option_name, "3d-trans-load")) {
 				d3::tload_delete(d3_tload);
-				d3_tload = d3::tload_new(genv.get_string_arg(i->first, 1));
+				d3_tload = d3::tload_new(env->get_string_arg(i->first, 1));
 				d3::align::set_tload(d3_tload);
 			} else if (!strcmp(option_name, "3d-trans-save")) {
 				d3::tsave_delete(d3_tsave);
-				d3_tsave = d3::tsave_new(genv.get_string_arg(i->first, 1));
+				d3_tsave = d3::tsave_new(env->get_string_arg(i->first, 1));
 				d3::align::set_tsave(d3_tsave);
 			} else {
 				assert(0);
@@ -2507,31 +2533,64 @@ public:
 		}
 
 		/*
-		 * Handle the original frame.
+		 * Iterate through all files.
 		 */
 
-		// ui::get()->original_frame_start(argv[i]);
-		ui::get()->original_frame_start(files[files.size() - 1].first);
+		for (unsigned int j = 0; j < d2::image_rw::count(); j++) {
 
-		for (int opt = 0; opt < oc_count; opt++) {
-			ui::get()->set_orender_current(opt);
-			ochain[opt]->sync(0);
-			if  (inc) {
-				ui::get()->writing_output(opt);
-				d2::image_rw::write_image(ochain_names[opt], 
-					ochain[opt]->get_image(0));
+			/*
+			 * Iterate through non-global options
+			 */
+
+			for (std::map<const char *, const char *>::iterator i = files[j].second->get_map().begin();
+					i != files[j].second->get_map().end(); i++) {
+
+				environment *env = files[j].second;
+
+				if (!env->is_option(i->first))
+					continue;
+
+				const char *option_name = env->get_option_name(i->first);
+
+				if (0) {
+				} else {
+					fprintf(stderr, "\n\nError: option `%s' must be applied globally.", option_name);
+					fprintf(stderr, "\n\nHint:  Move option `%s' prior to file and scope operators.\n\n", 
+							option_name);
+					exit(1);
+				}
 			}
-		}
 
-		d2::vise_core::frame_queue_add(0);
 
-		ui::get()->original_frame_done();
 
-		/*
-		 * Handle supplemental frames.
-		 */
+			if (j == 0) {
+				/*
+				 * Handle the original frame.
+				 */
 
-		for (unsigned int j = 1; j < d2::image_rw::count(); j++) {
+				// ui::get()->original_frame_start(argv[i]);
+				ui::get()->original_frame_start(files[files.size() - 2].first);
+
+				for (int opt = 0; opt < oc_count; opt++) {
+					ui::get()->set_orender_current(opt);
+					ochain[opt]->sync(0);
+					if  (inc) {
+						ui::get()->writing_output(opt);
+						d2::image_rw::write_image(ochain_names[opt], 
+							ochain[opt]->get_image(0));
+					}
+				}
+
+				d2::vise_core::frame_queue_add(0);
+
+				ui::get()->original_frame_done();
+
+				continue;
+			}
+
+			/*
+			 * Handle supplemental frames.
+			 */
 
 			const char *name = d2::image_rw::name(j);
 
