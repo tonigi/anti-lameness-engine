@@ -885,8 +885,11 @@ class input {
 
 					const char *map_value = "1";
 
-					if (simple_option_table[i].map_value)
+					if (simple_option_table[i].map_value) {
 						map_value = simple_option_table[i].map_value;
+					} else if (simple_option_table[i].map_name) {
+						map_value = simple_option_table[i].name;
+					}
 
 					target->set(option_name_gen(simple_option_table[i].name,
 								simple_option_table[i].map_name,
