@@ -1313,17 +1313,6 @@ public:
 
 		d3chain_type = ochain_types[0];
 
-		/* 
-		 * Iterate through arguments until we reach the first file 
-		 * argument.  After the first file argument, we assume that
-		 * all following arguments are files.
-		 */
-
-		for (int i = 1; i < argc - 1; i++) {
-
-
-		}
-
 		/*
 		 * Set basic program information in the environment.
 		 */
