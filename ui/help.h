@@ -214,8 +214,8 @@ public:
 			BETWEEN_SECTIONS
 			"Transformation file operations:\n"
 			HEADER_SPACE
-			"--trans-load=x    Load initial transformation settings from file x\n"
-			"--trans-save=x    Save final transformation data in file x\n"
+			"--trans-load <x>  Load initial transformation settings from file x\n"
+			"--trans-save <x>  Save final transformation data in file <x>\n"
 			BETWEEN_SECTIONS
 			"Monte Carlo alignment (see --hq for defaults):\n"
 			HEADER_SPACE
