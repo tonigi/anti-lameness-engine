@@ -151,6 +151,17 @@ class input {
 	}
 
 	/*
+	 * String comparison class.
+	 */
+
+	class compare_strings {
+	public:
+		int operator()(const char *A, const char *B) const {
+			return strcmp(A, B) < 0;
+		}
+	};
+
+	/*
 	 * Environment structures.
 	 *
 	 * XXX: It's arguable that these should be public members of the
@@ -164,7 +175,7 @@ class input {
 		static std::stack<environment *> environment_stack;
 		static std::set<environment *> environment_set;
 
-		std::map<const char *, const char *> environment_map;
+		std::map<const char *, const char *, compare_strings> environment_map;
 
 		/*
 		 * Internal set operations do not protect any data.
@@ -223,7 +234,7 @@ class input {
 		 * Get the environment map.
 		 */
 
-		std::map<const char *, const char *> &get_map() {
+		std::map<const char *, const char *, compare_strings> &get_map() {
 			return environment_map;
 		}
 
@@ -903,7 +914,7 @@ class input {
 
 						target->set(option_name_gen(simple_option_table[i].name,
 									simple_option_table[i].map_name,
-									j,
+									j + 1,
 									simple_option_table[i].multi),
 								option);
 					}
