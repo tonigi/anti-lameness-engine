@@ -869,7 +869,7 @@ class input {
 			 * Check for non-whitespace argument separators
 			 */
 
-			else if (strchr(token, '=')) {
+			else if (token && token[0] == '-' && strchr(token, '=')) {
 				environment::push_and_dup_output();
 				token_reader *tr_nest = new argument_parsing_token_reader(token);
 				evaluate_stream(tr_nest, files);

@@ -67,7 +67,7 @@ set file [svg_open $test 200 100]
 svg_circle $file 50 50 10
 svg_close $file
 
-exec $ALE --trans-save=[trans_file $test] [ppm_file $test] [out_file $test] 2> /dev/null
+exec $ALE --trans-save [trans_file $test] [ppm_file $test] [out_file $test] 2> /dev/null
 
 if [file exists [trans_file $test]] {
 	pass "$test (existence)"
@@ -98,7 +98,7 @@ foreach type {translation euclidean projective} {
 	
 	set test_identifier "$test, $type, scale=$scale"
 
-	exec $ALE --$type --scale=$scale --trans-save=[trans_file $test_identifier] \
+	exec $ALE --$type --scale=$scale --trans-save [trans_file $test_identifier] \
 	[ppm_file $test] [ppm_file $test] [out_file $test] 2> /dev/null
 
 	set transformation [exec grep ^\[EP\] [trans_file $test_identifier] | tail -1]
@@ -149,7 +149,7 @@ foreach offset {0 1 5 11 18 20 21 22 25 26 27 28 29} {
 	svg_ellipse $file 20 [expr 50 + $offset] 10 30
 	svg_close $file
 
-	exec $ALE --extend --exp-noregister --no-mc --$type --scale=$scale --trans-save=[trans_file $test_identifier] \
+	exec $ALE --extend --exp-noregister --no-mc --$type --scale=$scale --trans-save [trans_file $test_identifier] \
 	[ppm_file $test-reference] [ppm_file $test_identifier] \
 	[out_file $test_identifier] 2> /dev/null
 
