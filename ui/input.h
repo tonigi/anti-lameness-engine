@@ -417,6 +417,9 @@ class input {
 		}
 
 		static environment *get_env(const char *name) {
+
+			assert(name);
+			
 			void *ptr_value;
 			sscanf(name, "%p", &ptr_value);
 
@@ -439,7 +442,7 @@ class input {
 		void prepend(const char *list, const char *element) {
 			environment *d = get_env(get(list));
 			make_substructure(list);
-			get_env(get(list))->set_ptr("a", element);
+			get_env(get(list))->set("a", element);
 			get_env(get(list))->set_ptr("d", d);
 		}
 
@@ -517,6 +520,28 @@ class input {
 			delete environment_stack.top();
 
 			environment_stack.pop();
+		}
+
+		/*
+		 * Set with duplication.
+		 */
+
+		void set_with_dup(const char *name, const char *value) {
+			set(name, value);
+
+			if (!get("---dup"))
+				return;
+
+			environment *dup_item = get_env(get("---dup"));
+
+			assert (dup_item);
+
+			while (dup_item->get("a")) {
+				get_env(dup_item->get("a"))->set_with_dup(name, value);
+				assert(dup_item->get("d"));
+				dup_item = get_env(dup_item->get("d"));
+				assert(dup_item);
+			}
 		}
 	};
 
@@ -1029,24 +1054,27 @@ class input {
 					environment *target;
 					target = environment::top();
 
-					target->set(option_name_gen("focus", NULL, 0, 0), "1");
+					target->set_with_dup(option_name_gen("focus", NULL, 0, 0), "1");
 
 					const char *option = get_next(tr, "focus");
 
-					target->set(option_name_gen("focus", NULL, 1, 0), option);
+					target->set_with_dup(option_name_gen("focus", NULL, 1, 0), option);
 
 					if (!strcmp(option, "d")) {
-						target->set(option_name_gen("focus", NULL, 2, 0), get_next(tr, "focus"));
+						target->set_with_dup(option_name_gen("focus", NULL, 2, 0), 
+								get_next(tr, "focus"));
 					} else if (!strcmp(option, "p")) {
-						target->set(option_name_gen("focus", NULL, 2, 0), get_next(tr, "focus"));
-						target->set(option_name_gen("focus", NULL, 3, 0), get_next(tr, "focus"));
+						target->set_with_dup(option_name_gen("focus", NULL, 2, 0), 
+								get_next(tr, "focus"));
+						target->set_with_dup(option_name_gen("focus", NULL, 3, 0), 
+								get_next(tr, "focus"));
 					} else 
 						bad_arg("focus");
 
 					int arg = 0;
 
 					while (table_contains(focus_prefixes, tr->peek(), 3)) {
-						target->set(option_name_gen("focus", NULL, 4 + arg, 0), 
+						target->set_with_dup(option_name_gen("focus", NULL, 4 + arg, 0), 
 								get_next(tr, "focus"));
 						arg++;
 					}
@@ -1089,7 +1117,7 @@ class input {
 						map_value = simple_option_table[i].name;
 					}
 
-					target->set(option_name_gen(simple_option_table[i].name,
+					target->set_with_dup(option_name_gen(simple_option_table[i].name,
 								simple_option_table[i].map_name,
 								0,
 								simple_option_table[i].multi),
@@ -1113,7 +1141,7 @@ class input {
 							exit(1);
 						}
 
-						target->set(option_name_gen(simple_option_table[i].name,
+						target->set_with_dup(option_name_gen(simple_option_table[i].name,
 									simple_option_table[i].map_name,
 									j + 1,
 									simple_option_table[i].multi),
@@ -1398,10 +1426,10 @@ public:
 		 * Set basic program information in the environment.
 		 */
 
-		environment::top()->set("---package", package);
-		environment::top()->set("---short-version", short_version);
-		environment::top()->set("---version", version);
-		environment::top()->set("---invocation", argv[0]);
+		environment::top()->set_with_dup("---package", package);
+		environment::top()->set_with_dup("---short-version", short_version);
+		environment::top()->set_with_dup("---version", version);
+		environment::top()->set_with_dup("---invocation", argv[0]);
 
 		/*
 		 * Initialize the top-level token-reader and generate
