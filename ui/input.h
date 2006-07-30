@@ -336,9 +336,6 @@ class input {
 		}
 
 		void remove_arg(const char *name, unsigned int arg) {
-
-			fprintf(stderr, "remove_arg, %s, %d, %u\n", name, arg, __LINE__);
-
 			assert (is_option(name));
 			assert (is_arg(name, arg));
 
@@ -892,9 +889,6 @@ class input {
 	}
 
 	static void remove_option(environment *a, const char *option_name) {
-
-		fprintf(stderr, "remove option, %s, %u\n", option_name, __LINE__);
-
 		assert(a->is_option(option_name));
 
 		int option_number = 0;
@@ -902,6 +896,29 @@ class input {
 		while (a->is_arg(option_name, option_number)) {
 			a->remove_arg(option_name, option_number);
 			option_number++;
+		}
+	}
+
+	static void remove_nonglobals(environment *a) {
+		assert(a);
+
+		std::stack<const char *> removal_stack;
+
+		for (std::map<const char *, const char *, compare_strings>::iterator i = a->get_map().begin();
+				i != a->get_map().end(); i++) {
+
+			if (!a->is_option(i->first))
+				continue;
+
+			if (!table_contains(supported_nonglobal_option_table, a->get_option_name(i->first)))
+				continue;
+
+			removal_stack.push(i->first);
+		}
+
+		while (!removal_stack.empty()) {
+			remove_option(a, removal_stack.top());
+			removal_stack.pop();
 		}
 	}
 
@@ -914,17 +931,11 @@ class input {
 		for (std::map<const char *, const char *, compare_strings>::iterator i = a->get_map().begin();
 				i != a->get_map().end(); i++) {
 
-			fprintf(stderr, "intersect, %s, %u\n", i->first, __LINE__);
-
 			if (!a->is_option(i->first))
 				continue;
 
-			fprintf(stderr, "intersect, %s, %u\n", i->first, __LINE__);
-
 			if (option_is_identical(a, b, i->first))
 				continue;
-
-			fprintf(stderr, "intersect, %s, %u\n", i->first, __LINE__);
 
 			removal_stack.push(i->first);
 		}
@@ -944,17 +955,11 @@ class input {
 		for (std::map<const char *, const char *, compare_strings>::iterator i = a->get_map().begin();
 				i != a->get_map().end(); i++) {
 
-			fprintf(stderr, "difference, %s, %u\n", i->first, __LINE__);
-
 			if (!a->is_option(i->first))
 				continue;
 
-			fprintf(stderr, "difference, %s, %u\n", i->first, __LINE__);
-
 			if (!option_is_identical(a, b, i->first))
 				continue;
-
-			fprintf(stderr, "difference, %s, %u\n", i->first, __LINE__);
 
 			removal_stack.push(i->first);
 		}
@@ -1458,10 +1463,13 @@ public:
 		}
 
 		/*
-		 * Extract the global environment.
+		 * Extract the global environment and check non-globals
+		 * against a list of supported non-global options.
 		 */
 
 		genv = files[0].second->clone();
+
+		remove_nonglobals(genv);
 		
 		for (unsigned int i = 0; i < files.size(); i++) {
 			option_intersect(genv, files[i].second);
@@ -1469,6 +1477,24 @@ public:
 
 		for (unsigned int i = 0; i < files.size(); i++) {
 			option_difference(files[i].second, genv);
+
+			for (std::map<const char *, const char *>::iterator j = files[i].second->get_map().begin();
+					j != files[i].second->get_map().end(); j++) {
+
+				environment *env = files[i].second;
+
+				if (!env->is_option(j->first))
+					continue;
+
+				const char *option_name = env->get_option_name(j->first);
+
+				if (!table_contains(supported_nonglobal_option_table, option_name)) {
+					fprintf(stderr, "\n\nError: option `%s' must be applied globally.", option_name);
+					fprintf(stderr, "\n\nHint:  Move option `%s' prior to file and scope operators.\n\n", 
+							option_name);
+					exit(1);
+				}
+			}
 		}
 
 		/*
@@ -2641,10 +2667,10 @@ public:
 			 * Iterate through non-global options
 			 */
 
-			for (std::map<const char *, const char *>::iterator i = files[j].second->get_map().begin();
-					i != files[j].second->get_map().end(); i++) {
+			environment *env = files[j].second;
 
-				environment *env = files[j].second;
+			for (std::map<const char *, const char *>::iterator i = env->get_map().begin();
+					i != env->get_map().end(); i++) {
 
 				if (!env->is_option(i->first))
 					continue;
@@ -2653,6 +2679,12 @@ public:
 
 				if (0) {
 				} else {
+					/*
+					 * This error should be encountered earlier.
+					 */
+
+					assert(0);
+
 					fprintf(stderr, "\n\nError: option `%s' must be applied globally.", option_name);
 					fprintf(stderr, "\n\nHint:  Move option `%s' prior to file and scope operators.\n\n", 
 							option_name);
