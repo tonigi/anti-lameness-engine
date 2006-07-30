@@ -328,12 +328,27 @@ class input {
 
 			snprintf(desired_string, length, "%u %s", arg, name + strlen("0 "));
 
-			const char *result = environment_map[desired_string];
+			int result = environment_map.count(desired_string);
 
-			if (result)
-				return 1;
+			free(desired_string);
 
-			return 0;
+			return result > 0;
+		}
+
+		void remove_arg(const char *name, unsigned int arg) {
+
+			fprintf(stderr, "remove_arg, %s, %d, %u\n", name, arg, __LINE__);
+
+			assert (is_option(name));
+			assert (is_arg(name, arg));
+
+			int length = strlen(name) + 3 * sizeof(unsigned int);
+
+			char *desired_string = (char *) malloc(sizeof(char) * length);
+
+			snprintf(desired_string, length, "%u %s", arg, name + strlen("0 "));
+
+			environment_map.erase(desired_string);
 		}
 
 		const char *get_string_arg(const char *name, unsigned int arg) {
@@ -416,47 +431,6 @@ class input {
 			}
 
 			return (environment *) ptr_value;
-		}
-
-		/*
-		 * Restrict values to those matching a given environment.
-		 */
-		void intersect(environment *e) {
-
-			for (std::map<const char *, const char *, compare_strings>::iterator i = environment_map.begin();
-					i != environment_map.end(); i++) {
-				if (is_env(i->second)) {
-					if (!e->is_env(e->get(i->first)))
-						environment_map.erase(i);
-					else
-						get_env(i->second)->intersect(e->get_env(e->get(i->first)));
-				} else {
-					if (!e->get(i->first) || strcmp(i->second, e->get(i->first)))
-						environment_map.erase(i);
-				}
-			}
-
-		}
-
-		/*
-		 * Remove values matching a given environment.
-		 */
-		void difference(environment *e) {
-			for (std::map<const char *, const char *, compare_strings>::iterator i = environment_map.begin();
-					i != environment_map.end(); i++) {
-				if (is_env(i->second)) {
-					if (!e->is_env(e->get(i->first)))
-						continue;
-					else
-						get_env(i->second)->difference(e->get_env(e->get(i->first)));
-
-					if (get_env(i->second)->get_map().size() == 0)
-						environment_map.erase(i);
-				} else {
-					if (e->get(i->first) && !strcmp(i->second, e->get(i->first)))
-						environment_map.erase(i);
-				}
-			}
 		}
 
 		/*
@@ -867,6 +841,103 @@ class input {
 		}
 
 		return 0;
+	}
+
+	static int option_is_identical(environment *a, environment *b, const char *option_name) {
+		if (!a->is_option(option_name) || !b->is_option(option_name))
+			return 0;
+		
+		int option_number = 0;
+
+		while (a->is_arg(option_name, option_number) || b->is_arg(option_name, option_number)) {
+			if (!a->is_arg(option_name, option_number)
+			 || !b->is_arg(option_name, option_number))
+				return 0;
+
+			const char *a_str = a->get_string_arg(option_name, option_number);
+			const char *b_str = b->get_string_arg(option_name, option_number);
+
+			if (strcmp(a_str, b_str))
+				return 0;
+
+			option_number++;
+		}
+
+		return 1;
+	}
+
+	static void remove_option(environment *a, const char *option_name) {
+
+		fprintf(stderr, "remove option, %s, %u\n", option_name, __LINE__);
+
+		assert(a->is_option(option_name));
+
+		int option_number = 0;
+
+		while (a->is_arg(option_name, option_number)) {
+			a->remove_arg(option_name, option_number);
+			option_number++;
+		}
+	}
+
+	static void option_intersect(environment *a, environment *b) {
+		assert(a);
+		assert(b);
+
+		std::stack<const char *> removal_stack;
+
+		for (std::map<const char *, const char *, compare_strings>::iterator i = a->get_map().begin();
+				i != a->get_map().end(); i++) {
+
+			fprintf(stderr, "intersect, %s, %u\n", i->first, __LINE__);
+
+			if (!a->is_option(i->first))
+				continue;
+
+			fprintf(stderr, "intersect, %s, %u\n", i->first, __LINE__);
+
+			if (option_is_identical(a, b, i->first))
+				continue;
+
+			fprintf(stderr, "intersect, %s, %u\n", i->first, __LINE__);
+
+			removal_stack.push(i->first);
+		}
+
+		while (!removal_stack.empty()) {
+			remove_option(a, removal_stack.top());
+			removal_stack.pop();
+		}
+	}
+
+	static void option_difference(environment *a, environment *b) {
+		assert(a);
+		assert(b);
+
+		std::stack<const char *> removal_stack;
+
+		for (std::map<const char *, const char *, compare_strings>::iterator i = a->get_map().begin();
+				i != a->get_map().end(); i++) {
+
+			fprintf(stderr, "difference, %s, %u\n", i->first, __LINE__);
+
+			if (!a->is_option(i->first))
+				continue;
+
+			fprintf(stderr, "difference, %s, %u\n", i->first, __LINE__);
+
+			if (!option_is_identical(a, b, i->first))
+				continue;
+
+			fprintf(stderr, "difference, %s, %u\n", i->first, __LINE__);
+
+			removal_stack.push(i->first);
+		}
+
+		while (!removal_stack.empty()) {
+			remove_option(a, removal_stack.top());
+			removal_stack.pop();
+		}
 	}
 
 	static void evaluate_stream(token_reader *tr, 
@@ -1365,11 +1436,11 @@ public:
 		genv = files[0].second->clone();
 		
 		for (unsigned int i = 0; i < files.size(); i++) {
-			genv->intersect(files[i].second);
+			option_intersect(genv, files[i].second);
 		}
 
 		for (unsigned int i = 0; i < files.size(); i++) {
-			files[i].second->difference(genv);
+			option_difference(files[i].second, genv);
 		}
 
 		/*
