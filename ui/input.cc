@@ -248,5 +248,10 @@ input::simple_option input::simple_option_table[] = {
 	{ "trans-save", NULL, NULL, 1 },
 	{ "3d-trans-load", NULL, NULL, 1 },
 	{ "3d-trans-save", NULL, NULL, 1 },
+
+	/*
+	 * End of table.
+	 */
+
 	{ NULL }
 };

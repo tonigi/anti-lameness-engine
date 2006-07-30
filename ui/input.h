@@ -516,6 +516,12 @@ class input {
 		virtual const char *get() = 0;
 
 		/*
+		 * Peek at the next token.
+		 */
+
+		virtual const char *peek() = 0;
+
+		/*
 		 * Divert the stream until the next occurrence of TOKEN.
 		 */
 		virtual token_reader *divert(const char *open_token, const char *close_token) = 0;
@@ -556,6 +562,17 @@ class input {
 			return result;
 		}
 
+		virtual const char *peek() {
+			int length = strcspn(index, separators);
+
+			if (length == 0)
+				return NULL;
+
+			const char *result = strndup(index, length);
+
+			return result;
+		}
+
 		virtual token_reader *divert(const char *open_token, const char *close_token) {
 			assert(0);
 			return NULL;
@@ -586,6 +603,24 @@ class input {
 		}
 
 		const char *get() {
+			/*
+			 * This function is broken.
+			 */
+
+			assert(0);
+
+			string += strcspn(string, separators);
+
+			int length = strcspn(string, separators);
+
+			free(cur_token);
+
+			cur_token = strndup(string, length);
+
+			return cur_token;
+		}
+
+		const char *peek() {
 			string += strcspn(string, separators);
 
 			int length = strcspn(string, separators);
@@ -653,6 +688,15 @@ class input {
 
 			if (arg_index < argc)
 				return argv[arg_index++];
+			else
+				return NULL;
+
+		}
+
+		const char *peek() {
+
+			if (arg_index < argc)
+				return argv[arg_index];
 			else
 				return NULL;
 
@@ -900,6 +944,11 @@ class input {
 					for (int j = 0; j < simple_option_table[i].arg_count; j++) {
 						const char *option = tr->get();
 
+						if (option == NULL) {
+							fprintf(stderr, "\n\nError: not enough options for `%s'.\n\n", token);
+							exit(1);
+						}
+
 						/*
 						 * Reject scope operators as options,
 						 * at least for now.
@@ -907,11 +956,6 @@ class input {
 
 						if (is_scope_operator(option)) {
 							fprintf(stderr, "\n\nError: illegal argument to `%s'.\n\n", token);
-							exit(1);
-						}
-
-						if (option == NULL) {
-							fprintf(stderr, "\n\nError: not enough options for `%s'.\n\n", token);
 							exit(1);
 						}
 
@@ -1255,58 +1299,75 @@ public:
 
 			const char *option_name = genv.get_option_name(i->first);
 
-			if (!strcmp(option_name, "q0")
-			 || !strcmp(option_name, "q1")
-			 || !strcmp(option_name, "q2")
-			 || !strcmp(option_name, "qr")
-			 || !strcmp(option_name, "qn")) {
+			if (!strcmp(option_name, "default")) {
 				/*
 				 * Do nothing.  Defaults have already been set.
 				 */
-			} else if (!strcmp(option_name, "8bpc")) {
-				d2::image_rw::depth8();
-			} else if (!strcmp(option_name, "16bpc")) {
-				d2::image_rw::depth16();
-			} else if (!strcmp(option_name, "plain")) {
-				d2::image_rw::ppm_plain();
-			} else if (!strcmp(option_name, "raw")) {
-				d2::image_rw::ppm_raw();
-			} else if (!strcmp(option_name, "auto")) {
-				d2::image_rw::ppm_auto();
-			} else if (!strcmp(option_name, "align-all")) {
-				d2::align::all();
-			} else if (!strcmp(option_name, "align-green")) {
-				d2::align::green();
-			} else if (!strcmp(option_name, "align-sum")) {
-				d2::align::sum();
-			} else if (!strcmp(option_name, "translation")) {
-				d2::align::class_translation();
-			} else if (!strcmp(option_name, "euclidean")) {
-				d2::align::class_euclidean();
-			} else if (!strcmp(option_name, "projective")) {
-				d2::align::class_projective();
-			} else if (!strcmp(option_name, "identity")) {
-				d2::align::initial_default_identity();
-			} else if (!strcmp(option_name, "follow")) {
-				d2::align::initial_default_follow();
-			} else if (!strcmp(option_name, "perturb-output")) {
-				d2::align::perturb_output();
-			} else if (!strcmp(option_name, "perturb-source")) {
-				d2::align::perturb_source();
-			} else if (!strcmp(option_name, "fail-optimal")) {
-				d2::align::fail_optimal();
-			} else if (!strcmp(option_name, "fail-default")) {
-				d2::align::fail_default();
-			} else if (!strcmp(option_name, "no-extend")) {
-				extend = 0;
+			} else if (!strcmp(option_name, "bpc")) {
+				if (!strcmp(genv.get_string_arg(i->first, 0), "8bpc"))
+					d2::image_rw::depth8();
+				else if (!strcmp(genv.get_string_arg(i->first, 0), "16bpc"))
+					d2::image_rw::depth16();
+				else
+					assert(0);
+			} else if (!strcmp(option_name, "format")) {
+				if (!strcmp(genv.get_string_arg(i->first, 0), "plain"))
+					d2::image_rw::ppm_plain();
+				else if (!strcmp(genv.get_string_arg(i->first, 0), "raw"))
+					d2::image_rw::ppm_raw();
+				else if (!strcmp(genv.get_string_arg(i->first, 0), "auto"))
+					d2::image_rw::ppm_auto();
+				else
+					assert(0);
+			} else if (!strcmp(option_name, "align")) {
+				if (!strcmp(genv.get_string_arg(i->first, 0), "align-all"))
+					d2::align::all();
+				else if (!strcmp(genv.get_string_arg(i->first, 0), "align-green"))
+					d2::align::green();
+				else if (!strcmp(genv.get_string_arg(i->first, 0), "align-sum"))
+					d2::align::sum();
+				else
+					assert(0);
+			} else if (!strcmp(option_name, "transformation")) {
+				if (!strcmp(genv.get_string_arg(i->first, 0), "translation"))
+					d2::align::class_translation();
+				else if (!strcmp(genv.get_string_arg(i->first, 0), "euclidean"))
+					d2::align::class_euclidean();
+				else if (!strcmp(genv.get_string_arg(i->first, 0), "projective"))
+					d2::align::class_projective();
+				else
+					assert(0);
+			} else if (!strcmp(option_name, "transformation-default")) {
+				if (!strcmp(genv.get_string_arg(i->first, 0), "identity"))
+					d2::align::initial_default_identity();
+				else if (!strcmp(genv.get_string_arg(i->first, 0), "follow"))
+					d2::align::initial_default_follow();
+				else
+					assert(0);
+			} else if (!strcmp(option_name, "perturb")) {
+				if (!strcmp(genv.get_string_arg(i->first, 0), "perturb-output"))
+					d2::align::perturb_output();
+				else if (!strcmp(genv.get_string_arg(i->first, 0), "perturb-source"))
+					d2::align::perturb_source();
+				else
+					assert(0);
+			} else if (!strcmp(option_name, "fail")) {
+				if (!strcmp(genv.get_string_arg(i->first, 0), "fail-optimal"))
+					d2::align::fail_optimal();
+				else if (!strcmp(genv.get_string_arg(i->first, 0), "fail-default"))
+					d2::align::fail_default();
+				else
+					assert(0);
 			} else if (!strcmp(option_name, "extend")) {
-				extend = 1;
-			} else if (!strcmp(option_name, "no-mc")) {
-				d2::align::no_mc();
+				if (genv.get_int_arg(i->first, 0))
+					extend = 1;
+				else
+					extend = 0;
 			} else if (!strcmp(option_name, "oc")) {
-				d3::scene::oc();
-			} else if (!strcmp(option_name, "no-oc")) {
-				d3::scene::no_oc();
+				if (genv.get_int_arg(i->first, 0))
+					d3::scene::oc();
+				else 
+					d3::scene::no_oc();
 			} else if (!strcmp(option_name, "gs")) {
 				d2::align::gs(genv.get_string_arg(i->first, 1));
 			} else if (!strcmp(option_name, "gs-mo")) {
@@ -1566,10 +1627,13 @@ public:
 				user_view_angle = genv.get_double_arg(i->first, 1) * M_PI / 180;
 			} else if (!strcmp(option_name, "cpf-load")) {
 				d3::cpf::init_loadfile(genv.get_string_arg(i->first, 1));
-			} else if (!strcmp(option_name, "ui=stream")) {
-				ui::set_stream();
-			} else if (!strcmp(option_name, "ui=tty")) {
-				ui::set_tty();
+			} else if (!strcmp(option_name, "ui")) {
+				if (!strcmp(genv.get_string_arg(i->first, 1), "stream"))
+					ui::set_stream();
+				else if (!strcmp(genv.get_string_arg(i->first, 1), "tty"))
+					ui::set_tty();
+				else
+					assert(0);
 			} else if (!strcmp(option_name, "3d-fmr")) {
 				d3::scene::fmr(genv.get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "3d-dmr")) {
@@ -1601,7 +1665,7 @@ public:
 				}
 
 			} else if (!strcmp(option_name, "mc")) {
-				d2::align::mc(genv.get_double_arg(i->first, 1) / 100);
+				d2::align::mc(genv.get_int_arg(i->first, 0) ? genv.get_double_arg(i->first, 1) / 100 : 0);
 			} else if (!strcmp(option_name, "fx")) {
 				d3::scene::fx(genv.get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "tcem")) {
