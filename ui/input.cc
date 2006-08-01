@@ -35,6 +35,7 @@ input::environment *input::genv = NULL;
  */
 
 const char *input::supported_nonglobal_option_table[] = {
+	"mc",
 	NULL
 };
 

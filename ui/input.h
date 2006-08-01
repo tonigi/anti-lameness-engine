@@ -1874,8 +1874,6 @@ public:
 							     "inefficient for large radii. ***\n\n");
 				}
 
-			} else if (!strcmp(option_name, "mc")) {
-				d2::align::mc(env->get_int_arg(i->first, 0) ? env->get_double_arg(i->first, 1) / 100 : 0);
 			} else if (!strcmp(option_name, "fx")) {
 				d3::scene::fx(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "tcem")) {
@@ -2677,7 +2675,8 @@ public:
 
 				const char *option_name = env->get_option_name(i->first);
 
-				if (0) {
+				if (!strcmp(option_name, "mc")) {
+					d2::align::mc(env->get_int_arg(i->first, 0) ? env->get_double_arg(i->first, 1) / 100 : 0);
 				} else {
 					/*
 					 * This error should be encountered earlier.
@@ -2700,7 +2699,7 @@ public:
 				 */
 
 				// ui::get()->original_frame_start(argv[i]);
-				ui::get()->original_frame_start(files[files.size() - 2].first);
+				ui::get()->original_frame_start(files[0].first);
 
 				for (int opt = 0; opt < oc_count; opt++) {
 					ui::get()->set_orender_current(opt);
