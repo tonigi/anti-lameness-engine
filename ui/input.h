@@ -621,7 +621,6 @@ class input {
 	class cstring_token_reader : public token_reader {
 		const char *separators;
 		const char *string;
-		char *cur_token;
 		int ephemeral;
 
 		cstring_token_reader(const char *s, int ephemeral) {
@@ -629,7 +628,6 @@ class input {
 
 			separators = "\n \t";
 			string = s;
-			cur_token = 0;
 			this->ephemeral = 1;
 		}
 
@@ -637,41 +635,43 @@ class input {
 		cstring_token_reader(const char *s) {
 			separators = "\n \t";
 			string = s;
-			cur_token = 0;
 			ephemeral = 0;
 		}
 
 		const char *get() {
+
+			string += strspn(string, separators);
+
+			size_t length_to_next = strcspn(string, separators);
+
+			if (length_to_next == 0)
+				return NULL;
+
+			const char *result = strndup(string, length_to_next);
+
+			string += length_to_next;
+
+			return result;
+		}
+
+		const char *peek() {
+			string += strspn(string, separators);
+
+			size_t length_to_next = strcspn(string, separators);
+
+			if (length_to_next == 0)
+				return NULL;
+
+			return strndup(string, length_to_next);
+		}
+
+		cstring_token_reader *divert(const char *open_token, const char *close_token) {
 			/*
-			 * This function is broken.
+			 * This function might be broken.
 			 */
 
 			assert(0);
 
-			string += strcspn(string, separators);
-
-			int length = strcspn(string, separators);
-
-			free(cur_token);
-
-			cur_token = strndup(string, length);
-
-			return cur_token;
-		}
-
-		const char *peek() {
-			string += strcspn(string, separators);
-
-			int length = strcspn(string, separators);
-
-			free(cur_token);
-
-			cur_token = strndup(string, length);
-
-			return cur_token;
-		}
-
-		cstring_token_reader *divert(const char *open_token, const char *close_token) {
 			int search = 0;
 			int next = strcspn(string, separators);
 			int depth = 0;
@@ -1038,6 +1038,9 @@ class input {
 				 */
 
 				if (strncmp("-", token, strlen("-")) || end_of_options) {
+
+					assert(files);
+
 					global_options = 0;
 					files->push_back(std::pair<const char *, environment *>(strdup(token), 
 								environment::top()->clone()));
@@ -1374,58 +1377,69 @@ public:
 		if (arg_prefix_count(argc, argv, "--q") > 1)
 			ui::get()->error("more than one default setting option --q* was specified");
 
+		const char *defaults[] = {
+   			"--dchain fine:box:1,triangle:2 "
+			"--achain triangle:2 "
+			"--mc 30 "
+			"--ips 0 "
+			"--exp-noextend "
+			"--no-cx "
+			"--3d-chain fine:box:1,triangle:2",
+
+			"--dchain sinc*lanc:6 "
+			"--achain sinc*lanc:6 "
+			"--mc 50 "
+			"--ips 0 "
+			"--exp-noextend "
+			"--no-cx "
+			"--3d-chain sinc*lanc:6 ",
+   
+			"--dchain median:fine:sinc*lanc:8,triangle:2 "
+			"--achain triangle:2 "
+			"--mc 50 "
+			"--ips 0 "
+			"--exp-noextend "
+			"--no-cx "
+			"--3d-chain median:fine:sinc*lanc:8,triangle:2 ",
+
+			"--dchain sinc*lanc:8 "
+			"--achain sinc*lanc:8 "
+			"--no-mc "
+			"--ips 4 "
+			"--exp-noextend "
+			"--no-cx "
+			"--3d-chain sinc*lanc:8",
+
+			"--dchain sinc*lanc:8 "
+			"--achain sinc*lanc:8 "
+			"--no-mc "
+			"--ips 6 "
+			"--exp-extend "
+			"--cx 0.7 "
+			"--3d-chain sinc*lanc:8"
+		};
+
+		int default_index;
 		if (arg_count(argc, argv, "--q0")) {
-			ochain_types[0] = "fine:box:1,triangle:2";
-			achain_type = "triangle:2";
-			d2::align::mc(0.3);
-			ip_iterations = 0;
-			d2::image_rw::exp_noscale();
-			cx_parameter = 0;
+			default_index = 0;
 		} else if (arg_count(argc, argv, "--qn")) {
-			ochain_types[0] = "sinc*lanc:6";
-			achain_type = "sinc*lanc:6";
-			d2::align::mc(0.5);
-			ip_iterations = 0;
-			d2::image_rw::exp_noscale();
-			cx_parameter = 0;
+			default_index = 1;
 		} else if (arg_count(argc, argv, "--q1")) {
-			ochain_types[0] = "median:fine:sinc*lanc:8,triangle:2";
-			achain_type = "triangle:2";
-			d2::align::mc(0.5);
-			ip_iterations = 0;
-			d2::image_rw::exp_noscale();
-			cx_parameter = 0;
+			default_index = 2;
 		} else if (arg_count(argc, argv, "--q2")) {
-			ochain_types[0] = "sinc*lanc:8";
-			achain_type = "sinc*lanc:8";
-			d2::align::no_mc();
-			ip_iterations = 4;
-			d2::image_rw::exp_noscale();
-			cx_parameter = 0;
+			default_index = 3;
 		} else if (arg_count(argc, argv, "--qr")) {
-			ochain_types[0] = "sinc*lanc:8";
-			achain_type = "sinc*lanc:8";
-			d2::align::no_mc();
-			ip_iterations = 6;
-			d2::image_rw::exp_scale();
-			cx_parameter = 0.7;
+			default_index = 4;
 		} else {
 			/*
 			 * Same as --q0
 			 */
-			ochain_types[0] = "fine:box:1,triangle:2";
-			achain_type = "triangle:2";
-			d2::align::mc(0.3);
-			ip_iterations = 0;
-			d2::image_rw::exp_noscale();
-			cx_parameter = 0;
+			default_index = 0;
 		}
 
-		/*
-		 * Set default d3chain to default ochain[0].
-		 */
+		token_reader *default_reader = new cstring_token_reader(defaults[default_index]);
 
-		d3chain_type = ochain_types[0];
+		evaluate_stream(default_reader, NULL);
 
 		/*
 		 * Set basic program information in the environment.
