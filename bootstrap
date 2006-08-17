@@ -1,0 +1,5 @@
+#!/bin/sh
+
+gnulib-tool --import error strtod realloc error malloc strndup
+automake --fix-missing
+autoreconf
