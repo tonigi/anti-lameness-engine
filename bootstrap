@@ -4,5 +4,5 @@ gnulib-tool --import error strtod realloc error malloc strndup
 touch NEWS
 touch AUTHORS
 ln -s Changelog ChangeLog
-automake --fix-missing
+automake --add-missing
 autoreconf
