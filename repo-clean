@@ -20,7 +20,7 @@ make dist-clean &> /dev/null
 echo ""
 echo "Other removal candidates (run manually if OK):"
 echo ""
-find | xargs file | grep "symbolic link" | sed -e 's/:.*//g' | xargs -n 1 -r echo "rm -f"
+find | xargs file | grep "symbolic link" | sed -e 's/:.*//g' | xargs -n 1 -r echo "rm"
 
 #
 # Check for the existence of repository resources.
@@ -40,6 +40,6 @@ fi
 # List ordinary files that the repository doesn't know about.
 #
 
-darcs wha -l --boring | grep "^addfile" | sed -e 's/addfile //' | xargs -n 1 -r echo "rm -f"
-darcs wha -l --boring | grep "^adddir" | sed -e 's/adddir //' | xargs -n 1 -r echo "rm -rf"
+darcs wha -l --boring | grep "^addfile" | sed -e 's/addfile //' | xargs -n 1 -r echo "rm"
+darcs wha -l --boring | grep "^adddir" | sed -e 's/adddir //' | xargs -n 1 -r echo "rmdir"
 
