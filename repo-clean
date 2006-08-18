@@ -37,3 +37,6 @@ darcs wha -l --boring | grep "^adddir" | sed -e 's/adddir //' | xargs rm -rf
 # Remove symbolic links.
 #
 
+rm -f ChangeLog
+rm -f INSTALL
+rm -f missing
