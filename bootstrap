@@ -1,8 +1,84 @@
 #!/bin/sh
 
+###
+### 'bootstrap' generates build files for distribution.
+###
+
+#
+# Check for the existence of a configure script.
+#
+
+if test -e configure && test "x$1" != "x-r"; then
+	echo
+	echo "To install:"
+	echo "1) Run './configure'."
+	echo "2) Run 'make'."
+	echo "3) Run 'make install'."
+	echo ""
+	echo "* To regenerate configure, run '$0 -r'"
+	echo
+	exit
+fi
+
+if ! which gnulib-tool &> /dev/null; then
+	echo "*** Cannot find 'gnulib-tool'. ***"
+	exit
+fi
+
+if ! which ln &> /dev/null; then
+	echo "*** Cannot find 'ln'. ***"
+	exit
+fi
+
+if ! which automake &> /dev/null; then
+	echo "*** Cannot find 'automake'. ***"
+	exit 
+fi
+
+if ! which autoreconf &> /dev/null; then
+	echo "*** Cannot find 'autoreconf'. ***"
+	exit
+fi
+
+#
+# Import GNU extension strndup
+#
+
 gnulib-tool --import error strtod realloc error malloc strndup
+
+#
+# Placeholders for automake-mandated files.
+#
+
 touch NEWS
 touch AUTHORS
+
+#
+# Use the automake-mandated spelling for the changelog.
+#
+
 ln -s Changelog ChangeLog
+
+#
+# Add things that automake thinks are missing.
+#
+
 automake --add-missing
+
+
+#
+# Run autotools' bootstrap script.
+#
+
 autoreconf
+
+#
+# Tell the user what to do next.
+#
+
+echo
+echo "To install:"
+echo "1) Run './configure'."
+echo "2) Run 'make'."
+echo "3) Run 'make install'."
+

@@ -1,0 +1,39 @@
+#!/bin/sh
+
+###
+### 'repo-clean' attempts to remove files not in the
+### repository.
+###
+
+#
+# Check for the existence of repository resources.
+#
+
+if ! which darcs &> /dev/null; then
+	echo "*** Cannot find 'darcs'. ***"
+	exit
+fi
+
+if ! ls _darcs &> /dev/null; then 
+	echo "*** Cannot find repository directory '_darcs'.***"
+	exit
+fi
+
+#
+# Use makefile clean commands.
+#
+
+make clean &> /dev/null
+make dist-clean &> /dev/null
+
+#
+# Remove ordinary files that the repository doesn't know about.
+#
+
+darcs wha -l --boring | grep "^addfile" | sed -e 's/addfile //' | xargs rm -f
+darcs wha -l --boring | grep "^adddir" | sed -e 's/adddir //' | xargs rm -rf
+
+#
+# Remove symbolic links.
+#
+
