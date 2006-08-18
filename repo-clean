@@ -6,6 +6,23 @@
 ###
 
 #
+# Use makefile clean commands.
+#
+
+echo "Running makefile 'clean' commands."
+make clean &> /dev/null
+make dist-clean &> /dev/null
+
+#
+# List other candidates for removal.
+#
+
+echo ""
+echo "Other removal candidates (run manually if OK):"
+echo ""
+find | xargs file | grep "symbolic link" | sed -e 's/:.*//g' | xargs -n 1 -r echo "rm -f"
+
+#
 # Check for the existence of repository resources.
 #
 
@@ -20,23 +37,9 @@ if ! ls _darcs &> /dev/null; then
 fi
 
 #
-# Use makefile clean commands.
+# List ordinary files that the repository doesn't know about.
 #
 
-make clean &> /dev/null
-make dist-clean &> /dev/null
+darcs wha -l --boring | grep "^addfile" | sed -e 's/addfile //' | xargs -n 1 -r echo "rm -f"
+darcs wha -l --boring | grep "^adddir" | sed -e 's/adddir //' | xargs -n 1 -r echo "rm -rf"
 
-#
-# Remove ordinary files that the repository doesn't know about.
-#
-
-darcs wha -l --boring | grep "^addfile" | sed -e 's/addfile //' | xargs rm -f
-darcs wha -l --boring | grep "^adddir" | sed -e 's/adddir //' | xargs rm -rf
-
-#
-# Remove symbolic links.
-#
-
-rm -f ChangeLog
-rm -f INSTALL
-rm -f missing
