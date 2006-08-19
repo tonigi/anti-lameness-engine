@@ -149,12 +149,13 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 	int n;
 	struct extended_t extended;
 	FILE *f = fopen(filename, "rb");
-	assert(f);
 
 	if (f == NULL) {
 		fprintf(stderr, "\n\nUnable to open '%s'.\n\n", filename);
 		exit(1);
 	}
+
+	assert(f);
 
 	/* Magic */
 
@@ -298,12 +299,13 @@ static inline void write_ppm(const char *filename, const image *im, exposure *e,
 		unsigned int mcv, int plain, int rezero, int exposure_scale, double nn_defined_radius) {
 	unsigned int i, j, k;
 	FILE *f = fopen(filename, "wb");
-	assert(f);
 
 	if (f == NULL) {
 		fprintf(stderr, "\n\nUnable to open '%s'.\n\n", filename);
 		exit(1);
 	}
+
+	assert(f);
 
 	/*
 	 * Output a plain (ASCII) or raw (binary) PPM file
