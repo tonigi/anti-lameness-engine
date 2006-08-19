@@ -60,17 +60,11 @@ touch AUTHORS
 ln -s Changelog ChangeLog
 
 #
-# Add things that automake thinks are missing.
+# Run autotools' bootstrap script, adding things that automake thinks are
+# missing, among other things (--install).
 #
 
-automake --add-missing
-
-
-#
-# Run autotools' bootstrap script.
-#
-
-autoreconf
+autoreconf --install
 
 #
 # Tell the user what to do next.
