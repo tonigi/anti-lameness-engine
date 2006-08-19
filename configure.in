@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.60)
-AC_INIT(FULL-PACKAGE-NAME, VERSION, BUG-REPORT-ADDRESS)
+AC_INIT(ale, 0.8.5-prerelease, ale@ventricle.dyndns.org)
 AC_CONFIG_SRCDIR([ale_accum.h])
 AC_CONFIG_HEADER([config.h])
 
