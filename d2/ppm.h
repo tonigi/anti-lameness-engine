@@ -161,10 +161,11 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 
 	eat_comments(f, filename, &extended);	/* XXX - should we eat comments here? */
 	n = fscanf(f, "%c%c", &m1, &m2);
-	assert(n == 2 && m1 == 'P' && (m2 == '6' || m2 == '3'));
 
 	if (n != 2 || m1 != 'P' || (m2 != '6' && m2 != '3'))
 		error_ppm(filename);
+
+	assert(n == 2 && m1 == 'P' && (m2 == '6' || m2 == '3'));
 
 	/* Extended flag */
 
