@@ -21,6 +21,10 @@
 #ifndef __input_h__
 #define __input_h__
 
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 /*
  * ANSI C and POSIX include files.
  */
@@ -33,6 +37,14 @@
 #include <math.h>
 #include <stack>
 #include <map>
+
+/*
+ * GNU extensions
+ */
+
+extern "C" {
+#include "strndup.h"
+}
 
 /*
  * Types

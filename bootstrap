@@ -44,7 +44,7 @@ fi
 # Import GNU extension strndup
 #
 
-gnulib-tool --import error strtod realloc error malloc strndup
+gnulib-tool --libtool --import strndup error strtod
 
 #
 # Placeholders for automake-mandated files.
