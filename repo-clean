@@ -11,7 +11,7 @@
 
 echo "Running makefile 'clean' commands."
 make clean &> /dev/null
-make dist-clean &> /dev/null
+make distclean &> /dev/null
 
 #
 # List other candidates for removal.
