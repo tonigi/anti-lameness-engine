@@ -50,14 +50,14 @@ gnulib-tool --libtool --import strndup error strtod
 # Placeholders for automake-mandated files.
 #
 
-touch NEWS
-touch AUTHORS
+# touch NEWS
+# touch AUTHORS
 
 #
 # Use the automake-mandated spelling for the changelog.
 #
 
-ln -s Changelog ChangeLog
+# ln -s Changelog ChangeLog
 
 #
 # Run autotools' bootstrap script, adding things that automake thinks are
@@ -65,6 +65,16 @@ ln -s Changelog ChangeLog
 #
 
 autoreconf --install
+
+#
+# Run automake again, with the --foreign option.
+#
+
+echo ""
+echo "Rerunning automake with --foreign flag."
+automake --foreign
+echo ""
+echo "Done."
 
 #
 # Tell the user what to do next.
