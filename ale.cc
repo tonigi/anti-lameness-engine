@@ -23,6 +23,12 @@
  */
 
 /*
+ * Configuration
+ */
+
+#include <config.h>
+
+/*
  * Types
  */
 
