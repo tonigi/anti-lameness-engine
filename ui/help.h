@@ -33,18 +33,36 @@ private:
 	FILE *help_stream;
 
 	/*
+	 * Stars
+	 * 
+	 * This function produces a line of stars for banner output.
+	 */
+	void stars(unsigned int n) {
+		for (unsigned int i = 0; i < n; i++) {
+			fprintf(help_stream, "*");
+		}
+		fprintf(help_stream, "\n");
+	}
+
+
+	/*
 	 * Banner
 	 * 
 	 * This function aids in locating the start of help output.
 	 */
 	void banner(const char *name) {
-		fprintf(help_stream,
-			BETWEEN_SECTIONS
-			"***********************************\n"
-			"%s Help Text, version %s\n"
-			"Section:  %s\n"
-			"***********************************\n",
-		       package, version, name);
+		const char *package_banner = " Help Text, version ";
+		const char *section_banner = "Section: ";
+
+		int plen = strlen(package) + strlen(package_banner) + strlen(version);
+		int slen = strlen(section_banner) + strlen(name);
+		int len = (plen > slen) ? plen : slen;
+
+		fprintf(help_stream, BETWEEN_SECTIONS);
+		stars(len);
+		fprintf(help_stream, "%s%s%s\n", package, package_banner, version);
+		fprintf(help_stream, "%s%s\n", section_banner, name);
+		stars(len);
 	}
 
 public:
