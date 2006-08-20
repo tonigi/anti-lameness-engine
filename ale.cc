@@ -39,9 +39,11 @@
  * Version Information
  */
 
-char *short_version = "0.8.4";
+char *package_name = PACKAGE_NAME;
 
-char *version = "ALE Version:      0.8.4\n"
+char *short_version = VERSION;
+
+char *version = PACKAGE_NAME " Version:      " VERSION "\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else
@@ -87,7 +89,7 @@ int main(int argc, const char *argv[]){
 	 * Returning from this function indicates program success.
 	 */
 
-	ui::handle_input(argc, argv, "ALE", short_version, version);
+	ui::handle_input(argc, argv, package_name, short_version, version);
 
 	return 0;
 
