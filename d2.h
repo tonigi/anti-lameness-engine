@@ -20,6 +20,8 @@
 
 /*
  * Top-level header file for classes treating scenes as two-dimensional data.
+ * autoconf 'config.h' should be included after this file, as we undefine
+ * various autoconf defines herein.
  */
 
 #include <stdint.h>
@@ -45,6 +47,18 @@
 
 #ifdef USE_MAGICK
 #include <magick/api.h>
+
+/*
+ * ImageMagick defines these, for reasons unclear.
+ * Since they clash with autotools names, undefine
+ * them here.
+ */
+
+#undef PACKAGE_TARNAME
+#undef PACKAGE_VERSION
+#undef PACKAGE_STRING
+#undef PACKAGE_NAME
+#undef PACKAGE_BUGREPORT
 #endif
 
 #ifdef USE_FFTW

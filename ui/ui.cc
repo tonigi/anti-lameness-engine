@@ -18,10 +18,10 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "ui.h"
 #include "ui_wo.h"
 #include "ui_tty.h"
 #include "input.h"
+#include "ui.h"
 
 /*
  * See ui.h for details on these variables.

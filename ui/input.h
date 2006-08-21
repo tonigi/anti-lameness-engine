@@ -21,10 +21,6 @@
 #ifndef __input_h__
 #define __input_h__
 
-#if HAVE_CONFIG_H
-# include <config.h>
-#endif
-
 /*
  * ANSI C and POSIX include files.
  */
@@ -37,6 +33,22 @@
 #include <math.h>
 #include <stack>
 #include <map>
+
+/*
+ * Interface files
+ */
+
+#include "ui.h"
+#include "unsupported.h"
+#include "implication.h"
+
+/*
+ * Configuration
+ */
+
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
 
 /*
  * GNU extensions
@@ -52,14 +64,6 @@ extern "C" {
 
 #include "../ale_pos.h"
 #include "../ale_real.h"
-
-/*
- * Interface files
- */
-
-#include "ui.h"
-#include "unsupported.h"
-#include "implication.h"
 
 /*
  * 2D include files

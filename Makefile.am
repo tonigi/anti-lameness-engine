@@ -6,7 +6,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = lib
 AM_CPPFLAGS = @OPTION_CFLAGS@ @OPTION_CPPFLAGS@ -I$(top_srcdir)/lib
-AM_LDFLAGS = @OPTION_LDFLAGS@ @OPTION_LIBS@
+AM_LDFLAGS = @OPTION_LDFLAGS@
 
 #
 # Executable target.
@@ -14,4 +14,4 @@ AM_LDFLAGS = @OPTION_LDFLAGS@ @OPTION_LIBS@
 
 bin_PROGRAMS = ale
 ale_SOURCES = ale.cc ui/ui.cc ui/input.cc d2.cc d3.cc
-ale_LDADD = lib/libgnu.la
+ale_LDADD = lib/libgnu.la @OPTION_LIBS@

@@ -85,7 +85,7 @@ if test x$enable_imagemagick != xno; then
 		  && test $IMAGEMAGICK_VERSION_B -eq 0 \
 		  && test $IMAGEMAGICK_VERSION_C -ge 6 ); then
 		  	IMAGEMAGICK_CFLAGS=`Magick-config --cflags`
-			IMAGEMAGICK_CPPFLAGS=`Magick-config --cppflags`
+			IMAGEMAGICK_CPPFLAGS="`Magick-config --cppflags` -DUSE_MAGICK"
 			IMAGEMAGICK_LDFLAGS=`Magick-config --ldflags`
 			IMAGEMAGICK_LIBS=`Magick-config --libs`
 		else

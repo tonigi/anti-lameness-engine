@@ -26,9 +26,9 @@
 #include <string.h>
 #include <assert.h>
 
+#include "../d2.h"
 #include "ui.h"
 #include "util.h"
-#include "../d2.h"
 
 /*
  * TTY user interface
