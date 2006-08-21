@@ -5,7 +5,8 @@ ACLOCAL_AMFLAGS = -I m4
 # 
 
 SUBDIRS = lib
-AM_CPPFLAGS = -I$(top_srcdir)/lib
+AM_CPPFLAGS = @OPTION_CFLAGS@ @OPTION_CPPFLAGS@ -I$(top_srcdir)/lib
+AM_LDFLAGS = @OPTION_LDFLAGS@ @OPTION_LIBS@
 
 #
 # Executable target.
