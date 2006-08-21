@@ -64,7 +64,7 @@ else
 fi
 
 # Determine whether ImageMagick should be linked (if possible)
-AC_ARG_ENABLE(imagemagick, [  --enable-magick           use imagemagick file handling (default=yes)])
+AC_ARG_ENABLE(imagemagick, [  --enable-imagemagick         use imagemagick file handling (default=yes)])
 if test x$enable_imagemagick != xno; then
 
 	# AC_CHECK_TOOL is somewhat broken for cross-compilation in
