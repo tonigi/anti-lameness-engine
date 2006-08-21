@@ -89,7 +89,7 @@ if test x$enable_imagemagick != xno; then
 			IMAGEMAGICK_LDFLAGS=`Magick-config --ldflags`
 			IMAGEMAGICK_LIBS=`Magick-config --libs`
 		else
-			AC_MSG_WARN(Not using ImageMagick older than 6.0.6 ($IMAGEMAGICK_VERSION))
+			AC_MSG_WARN(Not using ImageMagick older than 6.0.6 (found $IMAGEMAGICK_VERSION))
 		fi
 	fi
 else
