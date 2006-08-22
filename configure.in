@@ -115,7 +115,19 @@ if test x$enable_imagemagick = xyes \
 	AC_MSG_ERROR([ImageMagick build requested (--enable-imagemagick=yes), but no suitable version was found.])
 fi
 
-OPTION_CPPFLAGS="$ASSERT_FLAGS $IMAGEMAGICK_CPPFLAGS"
+# Determine whether FFTW should be linked
+AC_ARG_ENABLE(fftw3, [  --enable-fftw3               Use FFTW3 for fourier transforms: auto,no,yes (default=auto)])
+if test x$enable_fftw3 != xno; then
+	AC_CHECK_LIB([fftw3], [main], LIBS="-lfftw3 $LIBS" FFTW_CPPFLAGS="-DUSE_FFTW")
+fi
+
+# Fatal error if user flag for FFTW could not be satisified
+if test x$enable_fftw3 = xyes \
+&& test x$FFTW_CPPFLAGS = x; then
+	AC_MSG_ERROR([FFTW3 build requested (--enable-fftw3=yes), but no suitable version was found.])
+fi
+
+OPTION_CPPFLAGS="$ASSERT_FLAGS $IMAGEMAGICK_CPPFLAGS $FFTW_CPPFLAGS"
 OPTION_CFLAGS="$IMAGEMAGICK_CFLAGS"
 OPTION_LDFLAGS="$IMAGEMAGICK_LDFLAGS"
 OPTION_LIBS="$IMAGEMAGICK_LIBS"
