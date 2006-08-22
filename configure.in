@@ -126,4 +126,12 @@ AC_SUBST(OPTION_LDFLAGS)
 AC_SUBST(OPTION_LIBS)
 
 AC_CONFIG_FILES([Makefile lib/Makefile])
+
 AC_OUTPUT
+
+# Since the generated Makefile seems to sometimes miss build steps that are
+# required due to reconfiguration, 'make clean' here.
+
+AC_MSG_NOTICE(making clean)
+make clean &> /dev/null
+
