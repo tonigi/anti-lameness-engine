@@ -131,9 +131,9 @@ fi
 AC_CHECK_HEADER(unistd.h, AC_DEFINE([HAVE_UNISTD_H]))
 AC_CHECK_FUNC(execlp, AC_DEFINE([HAVE_EXECLP], [], [execlp() function is available.]))
 
-if test x$ac_cv_func_fork_works != x \
-&& test x$ac_cv_header_unistd_h != x \
-&& test x$ac_cv_func_execlp != x; then
+if test x$ac_cv_func_fork_works = xyes \
+&& test x$ac_cv_header_unistd_h = xyes \
+&& test x$ac_cv_func_execlp = xyes; then
 	UNIX_CPPFLAGS="-DUSE_UNIX"
 fi
 
