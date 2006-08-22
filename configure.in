@@ -127,7 +127,17 @@ if test x$enable_fftw3 = xyes \
 	AC_MSG_ERROR([FFTW3 build requested (--enable-fftw3=yes), but no suitable version was found.])
 fi
 
-OPTION_CPPFLAGS="$ASSERT_FLAGS $IMAGEMAGICK_CPPFLAGS $FFTW_CPPFLAGS"
+# Check for Unix facilities.
+AC_CHECK_HEADER(unistd.h, AC_DEFINE([HAVE_UNISTD_H]))
+AC_CHECK_FUNC(execlp, AC_DEFINE([HAVE_EXECLP], [], [execlp() function is available.]))
+
+if test x$ac_cv_func_fork_works != x \
+&& test x$ac_cv_header_unistd_h != x \
+&& test x$ac_cv_func_execlp != x; then
+	UNIX_CPPFLAGS="-DUSE_UNIX"
+fi
+
+OPTION_CPPFLAGS="$ASSERT_FLAGS $IMAGEMAGICK_CPPFLAGS $FFTW_CPPFLAGS $UNIX_CPPFLAGS"
 OPTION_CFLAGS="$IMAGEMAGICK_CFLAGS"
 OPTION_LDFLAGS="$IMAGEMAGICK_LDFLAGS"
 OPTION_LIBS="$IMAGEMAGICK_LIBS"
