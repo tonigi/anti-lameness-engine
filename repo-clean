@@ -9,9 +9,20 @@
 # Use makefile clean commands.
 #
 
+echo ""
 echo "Running makefile 'clean' commands."
 make clean &> /dev/null
 make distclean &> /dev/null
+
+#
+# Clean DejaGNU results
+# 
+
+echo ""
+echo "Cleaning DejaGNU results."
+rm -f ale.sum ale.log
+find testsuite -name "*temp.*" -print0 | xargs -0 rm -rf
+find testsuite -name "*.output.*" -print0 | xargs -0 rm -rf
 
 #
 # List other candidates for removal.

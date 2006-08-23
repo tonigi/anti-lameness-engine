@@ -1,10 +1,22 @@
 ACLOCAL_AMFLAGS = -I m4
 
 #
+# DejaGNU configuration
+#
+
+AUTOMAKE_OPTIONS=dejagnu
+RUNTESTFLAGS=--tool ale ALE=./ale --srcdir=./testsuite
+
+#
 # Gnulib support functions (generating lib/libgnu.la).
 # 
 
 SUBDIRS = lib
+
+#
+# Flags
+# 
+
 AM_CPPFLAGS = @OPTION_CFLAGS@ @OPTION_CPPFLAGS@ -I$(top_srcdir)/lib
 AM_LDFLAGS = @OPTION_LDFLAGS@
 
