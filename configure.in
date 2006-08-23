@@ -57,15 +57,15 @@ AC_CHECK_FUNCS([floor memset pow select sqrt strchr strcspn strdup strndup strsp
 
 # Determine whether assertions should be enabled.
 AC_ARG_ENABLE(assertions, [  --enable-assertions     check runtime assertions (default=no)])
-if test x$enable_debug = xyes; then
+if test x$enable_assertions = xyes; then
 	ASSERT_FLAGS="-DDEBUG"
 else
 	ASSERT_FLAGS="-DNDEBUG"
 fi
 
 # Determine whether ImageMagick should be linked
-AC_ARG_ENABLE(imagemagick, [  --enable-imagemagick    ImageMagick file handling: auto,no,yes (default=auto)])
-if test x$enable_imagemagick != xno; then
+AC_ARG_WITH(imagemagick, [  --with-imagemagick      ImageMagick file handling: auto,no,yes (default=auto)])
+if test x$with_imagemagick != xno; then
 
 	# AC_CHECK_TOOL is somewhat broken for cross-compilation in
 	# some versions of autoconf, so use a conditional instead.
@@ -110,22 +110,104 @@ else
 fi
 
 # Fatal error if user flag for ImageMagick could not be satisified
-if test x$enable_imagemagick = xyes \
+if test x$with_imagemagick = xyes \
 && test x$IMAGEMAGICK_CPPFLAGS = x; then
 	AC_MSG_ERROR([ImageMagick build requested (--enable-imagemagick=yes), but no suitable version was found.])
 fi
 
 # Determine whether FFTW should be linked
-AC_ARG_ENABLE(fftw3, [  --enable-fftw3          FFTW3 fourier transforms: auto,no,yes (default=auto)])
-if test x$enable_fftw3 != xno; then
+AC_ARG_WITH(fftw3, [  --with-fftw3            FFTW3 fourier transforms: auto,no,yes (default=auto)])
+if test x$with_fftw3 != xno; then
 	AC_CHECK_LIB([fftw3], [main], LIBS="-lfftw3 $LIBS" FFTW_CPPFLAGS="-DUSE_FFTW")
 fi
 
 # Fatal error if user flag for FFTW could not be satisified
-if test x$enable_fftw3 = xyes \
+if test x$with_fftw3 = xyes \
 && test x$FFTW_CPPFLAGS = x; then
 	AC_MSG_ERROR([FFTW3 build requested (--enable-fftw3=yes), but no suitable version was found.])
 fi
+
+# Determine the precision of colors that should be used
+AC_ARG_WITH(colors, [  --with-colors=[TYPE]      use TYPE colors: single,double (default=single)])
+if test x$with_colors = xsingle \
+|| test x$with_colors = x; then
+	COLOR_CPPFLAGS="-DALE_COLORS=SINGLE"
+elif test x$with_colors = xdouble; then
+	COLOR_CPPFLAGS="-DALE_COLORS=DOUBLE"
+else
+	AC_MSG_ERROR(option --with-colors=$with_colors is not currently supported)
+fi
+
+# Determine the precision of coordinates that should be used
+AC_ARG_WITH(coords, [  --with-coords=[TYPE]      use TYPE coords: single,double (default=single)])
+if test x$with_coords = xsingle \
+|| test x$with_coords = x; then
+	COORD_CPPFLAGS="-DALE_COORDINATES=SINGLE"
+elif test x$with_coords = xdouble; then
+	COORD_CPPFLAGS="-DALE_COORDINATES=DOUBLE"
+else
+	AC_MSG_ERROR(option --with-coords=$with_coords is not currently supported)
+fi
+
+# Determine whether optimizations should be used
+AC_ARG_ENABLE(optimization, [  --enable-optimizations  use optimization code (default=yes)])
+if test x$enable_optimizations = xyes \
+|| test x$enable_optimizations = x; then
+	OPTIMIZATION_CPPFLAGS="-DOPTIMIZATIONS=1"
+elif test x$enable_optimizations = xno; then
+	OPTIMIZATION_CPPFLAGS="-DOPTIMIZATIONS=0"
+else
+	AC_MSG_ERROR(option --enable-optimizations=$enable_optimizations is not currently supported)
+fi
+
+# Determine whether hash maps should be used.
+AC_ARG_WITH(hashmap, [  --with-hashmap=[TYPE]     Use TYPE hash map: no,gnu,std (default=no)])
+if test x$with_hashmap = xno \
+|| test x$with_hashmap = x; then
+	STL_CPPFLAGS=""
+elif test x$with_hashmap = xgnu; then
+  	AC_CACHE_CHECK(whether GNU hash maps are available, ac_cv_gnu_hash,[
+		AC_LANG_SAVE
+		AC_LANG_CPLUSPLUS
+		AC_TRY_COMPILE([
+			#include <ext/hash_map>
+			struct node_hash
+			{
+				size_t operator()(int n) const
+				{
+					return __gnu_cxx::hash<int>()(n);
+				}
+			};
+			typedef __gnu_cxx::hash_map<int, int, node_hash> int_map_t;
+		],[
+			int_map_t foo;
+		], ac_cv_gnu_hash=yes, ac_cv_gnu_hash=no)
+		AC_LANG_RESTORE])
+	if test $ac_cv_gnu_hash = yes; then
+		STL_CPPFLAGS="-DHASH_MAP_GNU"
+	else
+		AC_MSG_ERROR([option --with-hashmap=gnu specified, but this configuration fails.])
+	fi
+elif test x$with_hashmap = xstd; then
+  	AC_CACHE_CHECK(whether std hash maps are available, ac_cv_std_hash,[
+		AC_LANG_SAVE
+		AC_LANG_CPLUSPLUS
+		AC_TRY_COMPILE([
+			#include <ext/hash_map>
+			typedef std::hash_map<int, int> int_map_t;
+		],[
+			int_map_t foo;
+		], ac_cv_std_hash=yes, ac_cv_std_hash=no)
+		AC_LANG_RESTORE])
+	if test $ac_cv_std_hash = yes; then
+		STL_CPPFLAGS="-DHASH_MAP_STD"
+	else
+		AC_MSG_ERROR([option --with-hashmap=std specified, but this configuration fails.])
+	fi
+else
+	AC_MSG_ERROR(option --with-hashmap=$with_hashmap is not currently supported)
+fi
+
 
 # Determine whether ioctl() should be used for determining window dimensions
 AC_ARG_ENABLE(getsize, [  --enable-getsize        get terminal size: auto,no,yes (default=auto)
@@ -190,7 +272,7 @@ if test x$enable_wmx = xyes \
 	AC_MSG_ERROR([--wmx support requested (--enable-wmx=yes), but this configuration fails.])
 fi
 
-OPTION_CPPFLAGS="$ASSERT_FLAGS $IMAGEMAGICK_CPPFLAGS $FFTW_CPPFLAGS $UNIX_CPPFLAGS $IOCTL_CPPFLAGS"
+OPTION_CPPFLAGS="$ASSERT_FLAGS $IMAGEMAGICK_CPPFLAGS $FFTW_CPPFLAGS $UNIX_CPPFLAGS $IOCTL_CPPFLAGS $COORD_CPPFLAGS $COLOR_CPPFLAGS $OPTIMIZATION_CPPFLAGS $STL_CPPFLAGS"
 OPTION_CFLAGS="$IMAGEMAGICK_CFLAGS"
 OPTION_LDFLAGS="$IMAGEMAGICK_LDFLAGS"
 OPTION_LIBS="$IMAGEMAGICK_LIBS"
