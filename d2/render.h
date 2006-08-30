@@ -195,23 +195,15 @@ public:
 
 		for (unsigned int region = 0; region < rx_count; region++) {
 
-			double region_scale = (_rx_parameters[region].type == exclusion::RENDER)
-				            ? scale_factor
-					    : 1;
+			rx_parameters[region] = _rx_parameters[region];
 
 			/*
-			 * Copy spatial bounds, scaling if necessary
+			 * Scale spatial rendering coordinates
 			 */
 
-			for (int p = 0; p < 4; p++)
-				rx_parameters[region].x[p] = _rx_parameters[region].x[p] * region_scale;
-
-			/*
-			 * Copy frame index bounds.
-			 */
-
-			for (int p = 4; p < 6; p++)
-				rx_parameters[region].x[p] = _rx_parameters[region].x[p];
+			if (rx_parameters[region].type == exclusion::RENDER)
+				for (int p = 0; p < 4; p++)
+					rx_parameters[region].x[p] *= scale_factor;
 		}
 	}
 

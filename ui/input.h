@@ -1972,9 +1972,9 @@ public:
 				ex_parameters = (d2::exclusion *) local_realloc(ex_parameters, 
 						(ex_count + 1) * sizeof(d2::exclusion));
 
-				ex_parameters[ex_count].type = (!strcmp(option_name, "ex")
-						              ? d2::exclusion::RENDER
-							      : d2::exclusion::FRAME);
+				ex_parameters[ex_count].type = (!strcmp(option_name, "ex"))
+						             ? d2::exclusion::RENDER
+							     : d2::exclusion::FRAME;
 
 				/*
 				 * Get parameters, swapping x and y coordinates
@@ -1999,9 +1999,9 @@ public:
 						(ex_count + 4) * sizeof(d2::exclusion));
 
 				for (int r = 0; r < 4; r++) 
-					ex_parameters[ex_count + r].type = (!strcmp(option_name, "crop")
-								          ? d2::exclusion::RENDER
-								          : d2::exclusion::FRAME);
+					ex_parameters[ex_count + r].type = (!strcmp(option_name, "crop"))
+								         ? d2::exclusion::RENDER
+								         : d2::exclusion::FRAME;
 
 
 				int crop_args[6];
