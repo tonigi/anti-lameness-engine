@@ -150,7 +150,7 @@ private:
 	}
 
 	void filter_channel(point p, point mapped_p, unsigned int k, ale_pos hscale,
-			ale_pos wscale, pixel *result, pixel *weight) const {
+			ale_pos wscale, pixel *result, pixel *weight, int honor_exclusion, int frame) const {
 
 #if 1
 		/*
@@ -200,6 +200,9 @@ private:
 				 i<= (int) floor(max[0]); i++)
 			for (int j = (int) ceil (min[1]); 
 				 j<= (int) floor(max[1]); j++) {
+
+				if (render::is_excluded_f(i, j, frame))
+					continue;
 
 				if (bayer != IMAGE_BAYER_NONE
 				 && ((image_bayer_ale_real *) im)->bayer_color(i, j) != k)
@@ -254,6 +257,9 @@ private:
 				 i<= (int) floor(max[0]); i++)
 			for (int j = (int) ceil (min[1]); 
 				 j<= (int) floor(max[1]); j++) {
+
+				if (render::is_excluded_f(i, j, frame))
+					continue;
 
 				if (bayer != IMAGE_BAYER_NONE
 				 && ((image_bayer_ale_real *) im)->bayer_color(i, j) != k)
@@ -331,7 +337,7 @@ public:
 	 * specified by the inverse of transformation T based on data taken
 	 * from image IM.
 	 */
-	void filtered(int i, int j, pixel *result, pixel *weight) const {
+	void filtered(int i, int j, pixel *result, pixel *weight, int honor_exclusion, int frame) const {
 
 		point p = point(i, j) + offset;
 
@@ -358,9 +364,9 @@ public:
 
 		freq_limit(p, mapped_p, &hscale_g, &hscale_rb, &wscale_g, &wscale_rb);
 
-		filter_channel(p, mapped_p, 0, hscale_rb, wscale_rb, result, weight);
-		filter_channel(p, mapped_p, 2, hscale_rb, hscale_rb, result, weight);
-		filter_channel(p, mapped_p, 1, hscale_g , hscale_g , result, weight);
+		filter_channel(p, mapped_p, 0, hscale_rb, wscale_rb, result, weight, honor_exclusion, frame);
+		filter_channel(p, mapped_p, 2, hscale_rb, hscale_rb, result, weight, honor_exclusion, frame);
+		filter_channel(p, mapped_p, 1, hscale_g , hscale_g , result, weight, honor_exclusion, frame);
 
 		for (unsigned int k = 0; k < 3; k++) {
 			if (fabs((*weight)[k]) < 0.0001) {

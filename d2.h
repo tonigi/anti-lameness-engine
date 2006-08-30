@@ -81,6 +81,7 @@
  */
 
 namespace d2 {
+#include "d2/exclusion.h"
 #include "d2/pixel.h"
 #include "d2/spixel.h"
 #include "d2/pixel_accum.h"

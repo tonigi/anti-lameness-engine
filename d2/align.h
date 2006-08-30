@@ -318,7 +318,7 @@ private:
 	 * Exclusion regions
 	 */
 
-	static int *ax_parameters;
+	static exclusion *ax_parameters;
 	static int ax_count;
 
 	/*
@@ -329,11 +329,43 @@ private:
 		const image *accum;
 		const image *defined;
 		const image *aweight;
-		const int   *ax_parameters;
+		exclusion *ax_parameters;
 
 		ale_pos input_scale;
 		const image *input;
 	};
+
+	/*
+	 * Check for exclusion region coverage in the reference 
+	 * array.
+	 */
+	static int ref_excluded(int i, int j, point offset, exclusion *params, int param_count) {
+		for (int idx = 0; idx < param_count; idx++)
+			if (params[idx].type == exclusion::RENDER
+			 && i + offset[0] >= params[idx].x[0]
+			 && i + offset[0] <= params[idx].x[1]
+			 && j + offset[1] >= params[idx].x[2]
+			 && j + offset[1] <= params[idx].x[3])
+				return 1;
+
+		return 0;
+	}
+
+	/*
+	 * Check for exclusion region coverage in the input 
+	 * array.
+	 */
+	static int input_excluded(ale_pos ti, ale_pos tj, exclusion *params, int param_count) {
+		for (int idx = 0; idx < param_count; idx++)
+			if (params[idx].type == exclusion::FRAME
+			 && ti >= params[idx].x[0]
+			 && ti <= params[idx].x[1]
+			 && tj >= params[idx].x[2]
+			 && tj <= params[idx].x[3])
+				return 1;
+
+		return 0;
+	}
 
 	/*
 	 * Overlap function.  Determines the number of pixels in areas where
@@ -350,16 +382,7 @@ private:
 		for (unsigned int i = 0; i < c.accum->height(); i++)
 		for (unsigned int j = 0; j < c.accum->width();  j++) {
 
-			int ax_ok = 1;
-
-			for (int idx = 0; idx < ax_count; idx++)
-				if (i + offset[0] >= c.ax_parameters[idx * 4 + 0]
-				 && i + offset[0] <= c.ax_parameters[idx * 4 + 1]
-				 && j + offset[1] >= c.ax_parameters[idx * 4 + 2]
-				 && j + offset[1] <= c.ax_parameters[idx * 4 + 3])
-					ax_ok = 0;
-
-			if (ax_ok == 0)
+			if (ref_excluded(i, j, offset, c.ax_parameters, ax_count))
 				continue;
 
 			/*
@@ -384,8 +407,11 @@ private:
 			 * unless we know it is nonzero by virtue of the fact
 			 * that it falls within the region of the original
 			 * frame (e.g. when we're not increasing image
-			 * extents).
+			 * extents).  Also check for frame exclusion.
 			 */
+
+			if (input_excluded(ti, tj, c.ax_parameters, ax_count))
+				continue;
 
 			if (ti >= 0
 			 && ti <= c.input->height() - 1
@@ -416,7 +442,7 @@ private:
 	 *
 	 */
 	static ale_accum diff(struct scale_cluster c, transformation t,
-			ale_pos _mc_arg, int ax_count) {
+			ale_pos _mc_arg, int ax_count, int f) {
 
 		assert (reference_image);
 		ale_accum result = 0;
@@ -506,19 +532,12 @@ private:
 			i = index / c.accum->width();
 			j = index % c.accum->width();
 
-			int ax_ok = 1;
+			/*
+			 * Check for exclusion in render coordinates.
+			 */
 
-			for (int idx = 0; idx < ax_count; idx++)
-				if (i + offset[0] >= c.ax_parameters[idx * 4 + 0]
-				 && i + offset[0] <= c.ax_parameters[idx * 4 + 1]
-				 && j + offset[1] >= c.ax_parameters[idx * 4 + 2]
-				 && j + offset[1] <= c.ax_parameters[idx * 4 + 3])
-					ax_ok = 0;
-
-			if (ax_ok == 0) {
-				// ((image *)c.accum)->set_pixel(i, j, pixel(0, 0, 0));
+			if (ref_excluded(i, j, offset, c.ax_parameters, ax_count))
 				continue;
-			}
 
 			/*
 			 * Transform
@@ -537,13 +556,17 @@ private:
 
 			/*
 			 * Check that the transformed coordinates are within
-			 * the boundaries of array c.input.  
+			 * the boundaries of array c.input and that they
+			 * are not subject to exclusion.
 			 *
 			 * Also, check that the weight value in the accumulated array
 			 * is nonzero, unless we know it is nonzero by virtue of the
 			 * fact that it falls within the region of the original frame
 			 * (e.g. when we're not increasing image extents).
 			 */
+
+			if (input_excluded(ti, tj, c.ax_parameters, ax_count))
+				continue;
 
 			if (ti >= 0
 			 && ti <= c.input->height() - 1
@@ -556,7 +579,7 @@ private:
 				pixel weight;
 
 				if (interpolant != NULL)
-					interpolant->filtered(i, j, &pb, &weight);
+					interpolant->filtered(i, j, &pb, &weight, 1, f);
 				else {
 					pixel result[2];
 					c.input->get_bl(point(ti, tj), result);
@@ -662,19 +685,8 @@ private:
 		for (unsigned int i = 0; i < c.accum->height(); i++)
 		for (unsigned int j = 0; j < c.accum->width(); j++) {
 
-			int ax_ok = 1;
-
-			for (int idx = 0; idx < ax_count; idx++)
-				if (i + offset[0] >= c.ax_parameters[idx * 4 + 0]
-				 && i + offset[0] <= c.ax_parameters[idx * 4 + 1]
-				 && j + offset[1] >= c.ax_parameters[idx * 4 + 2]
-				 && j + offset[1] <= c.ax_parameters[idx * 4 + 3])
-					ax_ok = 0;
-
-			if (ax_ok == 0) {
-				// ((image *)c.accum)->set_pixel(i, j, pixel(0, 0, 0));
+			if (ref_excluded(i, j, offset, c.ax_parameters, ax_count))
 				continue;
-			}
 
 			/*
 			 * Transform
@@ -690,9 +702,13 @@ private:
 
 			/*
 			 * Check that the transformed coordinates are within
-			 * the boundaries of array c.input, and check that the
-			 * weight value in the accumulated array is nonzero.
+			 * the boundaries of array c.input, that they are not
+			 * subject to exclusion, and that the weight value in
+			 * the accumulated array is nonzero.
 			 */
+
+			if (input_excluded(q[0], q[1], c.ax_parameters, ax_count))
+				continue;
 
 			if (q[0] >= 0
 			 && q[0] <= c.input->height() - 1
@@ -739,63 +755,63 @@ private:
 		}
 	}
 
-	static void halve_ax_parameters(int local_ax_count, struct scale_cluster *scale_clusters) {
+	/*
+	 * Copy all ax parameters.
+	 */
+	static exclusion *copy_ax_parameters(int local_ax_count, exclusion *source) {
 
-		const int *ax_parameter_scales_old = scale_clusters[0].ax_parameters;
-		int *ax_parameter_scales_new = (int *) malloc(local_ax_count * 4 * sizeof(int));
+		exclusion *dest = (exclusion *) malloc(local_ax_count * sizeof(exclusion));
 
-		assert (ax_parameter_scales_old);
-		assert (ax_parameter_scales_new);
+		assert (dest);
 
-		if (!ax_parameter_scales_new)
+		if (!dest)
 			ui::get()->memory_error("exclusion regions");
 
-		for (int idx = 0; idx < local_ax_count; idx++) {
-			ax_parameter_scales_new[idx * 4 + 0] = ax_parameter_scales_old[idx * 4 + 0] / 2;
-			ax_parameter_scales_new[idx * 4 + 1] = (ax_parameter_scales_old[idx * 4 + 1] + 1) / 2;
-			ax_parameter_scales_new[idx * 4 + 2] = ax_parameter_scales_old[idx * 4 + 2] / 2;
-			ax_parameter_scales_new[idx * 4 + 3] = (ax_parameter_scales_old[idx * 4 + 3] + 1) / 2;
-		}
+		for (int idx = 0; idx < local_ax_count; idx++)
+			dest[idx] = source[idx];
 
-		scale_clusters[1].ax_parameters = ax_parameter_scales_new;
+		return dest;
 	}
 
-	static void init_ax_parameter_scales(int frame, int *local_ax_count, 
-			struct scale_cluster *scale_clusters, unsigned int steps) {
+	/*
+	 * Copy ax parameters according to frame.
+	 */
+	static exclusion *filter_ax_parameters(int frame, int *local_ax_count) {
 
-		int *ax_parameter_scales_0 = (int *) malloc(ax_count * 4 * sizeof(int));
+		exclusion *dest = (exclusion *) malloc(ax_count * sizeof(exclusion));
 
-		assert (ax_parameter_scales_0);
+		assert (dest);
 
-		if (!ax_parameter_scales_0)
+		if (!dest)
 			ui::get()->memory_error("exclusion regions");
 
 		*local_ax_count = 0;
 
 		for (int idx = 0; idx < ax_count; idx++) {
-			if (ax_parameters[6 * idx + 4] > frame 
-			 || ax_parameters[6 * idx + 5] < frame)
+			if (ax_parameters[idx].x[4] > frame 
+			 || ax_parameters[idx].x[5] < frame)
 				continue;
 
-			ax_parameter_scales_0[4 * *local_ax_count + 0]
-				= (int) floor(scale_factor * ax_parameters[6 * idx + 0]);
-			ax_parameter_scales_0[4 * *local_ax_count + 1]
-				= (int) ceil (scale_factor * ax_parameters[6 * idx + 1]);
-			ax_parameter_scales_0[4 * *local_ax_count + 2]
-				= (int) floor(scale_factor * ax_parameters[6 * idx + 2]);
-			ax_parameter_scales_0[4 * *local_ax_count + 3]
-				= (int) ceil (scale_factor * ax_parameters[6 * idx + 3]);
+			dest[*local_ax_count] = ax_parameters[idx];
 
 			(*local_ax_count)++;
 		}
 
-		// ax_parameter_scales_0 = (int *) realloc(ax_parameter_scales_0, *local_ax_count * 4 * sizeof(int));
+		return dest;
+	}
 
-		scale_clusters[0].ax_parameters = ax_parameter_scales_0;
+	static void scale_ax_parameters(int local_ax_count, exclusion *ax_parameters, 
+			ale_pos ref_scale, ale_pos input_scale) {
+		for (int i = 0; i < local_ax_count; i++) {
+			ale_pos scale = (ax_parameters[i].type == exclusion::RENDER)
+				      ? ref_scale
+				      : input_scale;
 
-		for (unsigned int step = 1; step < steps; step++)
-			halve_ax_parameters(*local_ax_count, scale_clusters + step - 1);
-		
+			for (int n = 0; n < 6; n++) {
+				ax_parameters[i].x[n] = (int) floor(ax_parameters[i].x[n]
+						                  * scale);
+			}
+		}
 	}
 
 	/*
@@ -847,7 +863,8 @@ private:
 			ui::get()->memory_error("alignment");
 
 		/*
-		 * Prepare images for the highest level of detail.  
+		 * Prepare images and exclusion regions for the highest level
+		 * of detail.  
 		 */
 
 		scale_clusters[0].accum = reference_image;
@@ -861,9 +878,14 @@ private:
 
 		scale_clusters[0].defined = reference_defined;
 		scale_clusters[0].aweight = alignment_weights_const;
+		scale_clusters[0].ax_parameters = filter_ax_parameters(frame, local_ax_count);
+
+		scale_ax_parameters(*local_ax_count, scale_clusters[0].ax_parameters, scale_factor, 
+				(scale_factor < 1.0 && interpolant == NULL) ? scale_factor : 1);
 
 		/*
-		 * Prepare reduced-detail images.
+		 * Prepare reduced-detail images and exclusion
+		 * regions.
 		 */
 
 		for (unsigned int step = 1; step < steps; step++) {
@@ -871,23 +893,23 @@ private:
 			scale_clusters[step].accum = prepare_lod(scale_clusters[step - 1].accum, scale_clusters[step - 1].aweight);
 			scale_clusters[step].defined = prepare_lod_def(scale_clusters[step - 1].defined);
 			scale_clusters[step].aweight = prepare_lod(scale_clusters[step - 1].aweight);
+			scale_clusters[step].ax_parameters 
+				= copy_ax_parameters(*local_ax_count, scale_clusters[step - 1].ax_parameters);
 
 			double sf = scale_clusters[step - 1].input_scale / 2;
 			scale_clusters[step].input_scale = sf;
 
-			if (sf >= 1.0 || interpolant != NULL)
+			if (sf >= 1.0 || interpolant != NULL) {
 				scale_clusters[step].input = scale_clusters[step - 1].input;
-			else if (sf > 0.5)
+				scale_ax_parameters(*local_ax_count, scale_clusters[step].ax_parameters, 0.5, 1);
+			} else if (sf > 0.5) {
 				scale_clusters[step].input = scale_clusters[step - 1].input->scale(sf, "alignment");
-			else
+				scale_ax_parameters(*local_ax_count, scale_clusters[step].ax_parameters, 0.5, sf);
+			} else {
 				scale_clusters[step].input = scale_clusters[step - 1].input->scale(0.5, "alignment");
+				scale_ax_parameters(*local_ax_count, scale_clusters[step].ax_parameters, 0.5, 0.5);
+			}
 		}
-
-		/*
-		 * Initialize ax parameters for all scales.
-		 */
-
-		init_ax_parameter_scales(frame, local_ax_count, scale_clusters, steps);
 
 		return scale_clusters;
 	}
@@ -1262,7 +1284,7 @@ private:
 		 */
 
 		ui::get()->prematching();
-		here = diff(si, offset, _mc_arg, local_ax_count);
+		here = diff(si, offset, _mc_arg, local_ax_count, m);
 		ui::get()->set_match(here);
 
 		/*
@@ -1320,7 +1342,7 @@ private:
 				for (ale_pos j = inner_min_t[1]; j <= inner_max_t[1]; j += adj_p) {
 					transformation t = offset;
 					t.translate(point(i, j));
-					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
 					unsigned int ovl = overlap(si, t, local_ax_count);
 
 					if ((v < lowest_v && ovl >= _gs_mo) 
@@ -1341,7 +1363,7 @@ private:
 				for (ale_pos j = outer_min_t[1]; j <  inner_min_t[1]; j += adj_p) {
 					transformation t = offset;
 					t.translate(point(i, j));
-					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
 					unsigned int ovl = overlap(si, t, local_ax_count);
 
 					if ((v < lowest_v && ovl >= _gs_mo)
@@ -1354,7 +1376,7 @@ private:
 				for (ale_pos j = outer_max_t[1]; j >  inner_max_t[1]; j -= adj_p) {
 					transformation t = offset;
 					t.translate(point(i, j));
-					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
 					unsigned int ovl = overlap(si, t, local_ax_count);
 
 					if ((v < lowest_v && ovl >= _gs_mo)
@@ -1367,7 +1389,7 @@ private:
 				for (ale_pos j = outer_min_t[1]; j <= outer_max_t[1]; j += adj_p) {
 					transformation t = offset;
 					t.translate(point(i, j));
-					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
 					unsigned int ovl = overlap(si, t, local_ax_count);
 
 					if ((v < lowest_v && ovl >= _gs_mo)
@@ -1380,7 +1402,7 @@ private:
 				for (ale_pos j = outer_min_t[1]; j <= outer_max_t[1]; j += adj_p) {
 					transformation t = offset;
 					t.translate(point(i, j));
-					ale_accum v = diff(si, t, _mc_arg, local_ax_count);
+					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
 					unsigned int ovl = overlap(si, t, local_ax_count);
 
 					if ((v < lowest_v && ovl >= _gs_mo)
@@ -1554,7 +1576,7 @@ private:
 
 					test_t.eu_modify(i, adj_s);
 
-					test_d = diff(si, test_t, _mc_arg, local_ax_count);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count, m);
 
 					if (test_d < here || (!finite(here) && finite(test_d))) {
 						here = test_d;
@@ -1570,7 +1592,7 @@ private:
 
 					test_t.eu_modify(2, adj_s);
 
-					test_d = diff(si, test_t, _mc_arg, local_ax_count);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count, m);
 
 					if (test_d < here || (!finite(here) && finite(test_d))) {
 						here = test_d;
@@ -1598,7 +1620,7 @@ private:
 					else
 						assert(0);
 
-					test_d = diff(si, test_t, _mc_arg, local_ax_count);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count, m);
 
 					if (test_d < here || (!finite(here) && finite(test_d))) {
 						here = test_d;
@@ -1630,7 +1652,7 @@ private:
 
 					test_t.bd_modify(rd, adj_s);
 
-					test_d = diff(si, test_t, _mc_arg, local_ax_count);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count, m);
 
 					if (test_d < here || (!finite(here) && finite(test_d))) {
 						here = test_d;
@@ -1664,7 +1686,7 @@ private:
 					si = scale_clusters[lod];
 					_mc_arg /= 4;
 
-					here = diff(si, offset, _mc_arg, local_ax_count);
+					here = diff(si, offset, _mc_arg, local_ax_count, m);
 
 				} else {
 					adj_p = perturb;
@@ -1699,7 +1721,7 @@ private:
 		 */
 
 		ui::get()->postmatching();
-		here = diff(scale_clusters[0], offset, _mc, local_ax_count);
+		here = diff(scale_clusters[0], offset, _mc, local_ax_count, m);
 		ui::get()->set_match(here);
 
 		/*
@@ -2427,7 +2449,7 @@ public:
 	/*
 	 * Set alignment exclusion regions
 	 */
-	static void set_exclusion(int *_ax_parameters, int _ax_count) {
+	static void set_exclusion(exclusion *_ax_parameters, int _ax_count) {
 		ax_count = _ax_count;
 		ax_parameters = _ax_parameters;
 	}

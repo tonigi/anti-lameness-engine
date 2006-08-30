@@ -68,9 +68,13 @@ protected:
 
 		for (unsigned int i = 0; i < t.unscaled_height(); i++)
 		for (unsigned int j = 0; j < t.unscaled_width(); j++) {
+
+			if (is_excluded_f(i, j, frame_num))
+				continue;
+			
 			point p = t.transform_unscaled(point(i, j));
 
-			if (is_excluded(accum_image->offset(), p, frame_num))
+			if (is_excluded_r(accum_image->offset(), p, frame_num))
 				continue;
 
 			if (p[0] < min[0]) {
@@ -128,9 +132,13 @@ protected:
 
 		for (unsigned int i = 0; i < t.unscaled_height(); i++)
 		for (unsigned int j = 0; j < t.unscaled_width(); j++) {
+
+			if (is_excluded_f(i, j, frame_num))
+				continue;
+			
 			point p = t.transform_unscaled(point(i, j));
 
-			if (is_excluded(point(0, 0), p, frame_num))
+			if (is_excluded_r(point(0, 0), p, frame_num))
 				continue;
 
 			if (p[0] < min[0]) {
@@ -171,7 +179,7 @@ protected:
 	 */
 	void _merge_pixel(int frame, const image *delta, transformation t, int i, int j, const filter::ssfe *_ssfe) {
 
-		if (_ssfe->ex_is_honored() && is_excluded(i, j, frame))
+		if (_ssfe->ex_is_honored() && is_excluded_r(i, j, frame))
 			return;
 
 		if (accum_image->accumulate_norender(i, j))
@@ -217,7 +225,7 @@ protected:
 			_merge_pixel(frame, delta, t, i, j, _ssfe);
 #else
 
-			if (_ssfe->ex_is_honored() && is_excluded(i, j, frame))
+			if (_ssfe->ex_is_honored() && is_excluded_r(i, j, frame))
 				continue;
 
 			if (accum_image->accumulate_norender(i, j))

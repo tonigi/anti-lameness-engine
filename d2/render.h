@@ -41,7 +41,7 @@
 class render {
 private:
 	static unsigned int rx_count;
-	static ale_pos *rx_parameters;
+	static exclusion *rx_parameters;
 	static int rx_show;
 	static render *directory[ACTIVE_RENDERER_COUNT];
 	static int directory_length;
@@ -107,39 +107,73 @@ protected:
 	virtual void step() = 0;
 
 public:
+
 	/*
-	 * Check for excluded regions.  (Applies an offset to spatial
-	 * coordinates internally.)
+	 * Check for render-coordinate excluded regions.  (Applies an offset to
+	 * spatial coordinates internally.)
 	 */
-	static int is_excluded(point offset, point p, int f) {
+	static int is_excluded_r(point offset, point p, int f) {
 
 		for (unsigned int param = 0; param < rx_count; param++)
-			if (p[0] + offset[0] >= rx_parameters[6 * param + 0]
-			 && p[0] + offset[0] <= rx_parameters[6 * param + 1]
-			 && p[1] + offset[1] >= rx_parameters[6 * param + 2]
-			 && p[1] + offset[1] <= rx_parameters[6 * param + 3]
-			 && f >= rx_parameters[6 * param + 4]
-			 && f <= rx_parameters[6 * param + 5])
+			if (rx_parameters[param].type == exclusion::RENDER
+			 && p[0] + offset[0] >= rx_parameters[param].x[0]
+			 && p[0] + offset[0] <= rx_parameters[param].x[1]
+			 && p[1] + offset[1] >= rx_parameters[param].x[2]
+			 && p[1] + offset[1] <= rx_parameters[param].x[3]
+			 && f >= rx_parameters[param].x[4]
+			 && f <= rx_parameters[param].x[5])
 				return 1;
 
 		return 0;
 	}
-	static int is_excluded(point offset, int i, int j, int f) {
+	static int is_excluded_r(point offset, int i, int j, int f) {
 
 		for (unsigned int param = 0; param < rx_count; param++)
-			if (i + offset[0] >= rx_parameters[6 * param + 0]
-			 && i + offset[0] <= rx_parameters[6 * param + 1]
-			 && j + offset[1] >= rx_parameters[6 * param + 2]
-			 && j + offset[1] <= rx_parameters[6 * param + 3]
-			 && f >= rx_parameters[6 * param + 4]
-			 && f <= rx_parameters[6 * param + 5])
+			if (rx_parameters[param].type == exclusion::RENDER
+			 && i + offset[0] >= rx_parameters[param].x[0]
+			 && i + offset[0] <= rx_parameters[param].x[1]
+			 && j + offset[1] >= rx_parameters[param].x[2]
+			 && j + offset[1] <= rx_parameters[param].x[3]
+			 && f >= rx_parameters[param].x[4]
+			 && f <= rx_parameters[param].x[5])
 				return 1;
 
 		return 0;
 	}
+	int is_excluded_r(int i, int j, int f) {
+		return is_excluded_r(get_image()->offset(), i, j, f);
+	}
 
-	int is_excluded(int i, int j, int f) {
-		return is_excluded(get_image()->offset(), i, j, f);
+	/*
+	 * Check for frame-coordinate excluded regions.
+	 */
+	static int is_excluded_f(point p, int f) {
+
+		for (unsigned int param = 0; param < rx_count; param++)
+			if (rx_parameters[param].type == exclusion::FRAME
+			 && p[0] >= rx_parameters[param].x[0]
+			 && p[0] <= rx_parameters[param].x[1]
+			 && p[1] >= rx_parameters[param].x[2]
+			 && p[1] <= rx_parameters[param].x[3]
+			 && f >= rx_parameters[param].x[4]
+			 && f <= rx_parameters[param].x[5])
+				return 1;
+
+		return 0;
+	}
+	static int is_excluded_f(int i, int j, int f) {
+
+		for (unsigned int param = 0; param < rx_count; param++)
+			if (rx_parameters[param].type == exclusion::FRAME
+			 && i >= rx_parameters[param].x[0]
+			 && i <= rx_parameters[param].x[1]
+			 && j >= rx_parameters[param].x[2]
+			 && j <= rx_parameters[param].x[3]
+			 && f >= rx_parameters[param].x[4]
+			 && f <= rx_parameters[param].x[5])
+				return 1;
+
+		return 0;
 	}
 
 	static int render_count() {
@@ -150,22 +184,34 @@ public:
 		return directory[n];
 	}
 
-	static void render_init(unsigned int _rx_count, int *_rx_parameters, 
+	static void render_init(unsigned int _rx_count, exclusion *_rx_parameters, 
 			int _rx_show, int _extend, double _scale_factor) {
 		rx_count = _rx_count;
 		rx_show = _rx_show;
 		extend = _extend;
 		scale_factor = _scale_factor;
 
-		rx_parameters = (ale_pos *) malloc(rx_count * 6 * sizeof(ale_pos));
+		rx_parameters = (exclusion *) malloc(rx_count * sizeof(exclusion));
 
-		for (unsigned int param = 0; param < rx_count; param++) {
-			rx_parameters[param * 6 + 0] = _rx_parameters[param * 6 + 0] * scale_factor;
-			rx_parameters[param * 6 + 1] = _rx_parameters[param * 6 + 1] * scale_factor;
-			rx_parameters[param * 6 + 2] = _rx_parameters[param * 6 + 2] * scale_factor;
-			rx_parameters[param * 6 + 3] = _rx_parameters[param * 6 + 3] * scale_factor;
-			rx_parameters[param * 6 + 4] = _rx_parameters[param * 6 + 4];
-			rx_parameters[param * 6 + 5] = _rx_parameters[param * 6 + 5];
+		for (unsigned int region = 0; region < rx_count; region++) {
+
+			double region_scale = (_rx_parameters[region].type == exclusion::RENDER)
+				            ? scale_factor
+					    : 1;
+
+			/*
+			 * Copy spatial bounds, scaling if necessary
+			 */
+
+			for (int p = 0; p < 4; p++)
+				rx_parameters[region].x[p] = _rx_parameters[region].x[p] * region_scale;
+
+			/*
+			 * Copy frame index bounds.
+			 */
+
+			for (int p = 4; p < 6; p++)
+				rx_parameters[region].x[p] = _rx_parameters[region].x[p];
 		}
 	}
 
@@ -185,7 +231,7 @@ public:
 		return rx_count;
 	}
 
-	static const ale_pos *get_rx_parameters() {
+	static const exclusion *get_rx_parameters() {
 		return rx_parameters;
 	}
 

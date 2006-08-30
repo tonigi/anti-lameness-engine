@@ -169,6 +169,8 @@ input::simple_option input::simple_option_table[] = {
 
 	{ "ex", NULL, NULL, 6 },
 	{ "crop", NULL, NULL, 6 },
+	{ "fex", NULL, NULL, 6 },
+	{ "fcrop", NULL, NULL, 6 },
 	{ "exshow" },
 
 	{ "wt", NULL, NULL, 1 },

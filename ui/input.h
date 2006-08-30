@@ -1349,7 +1349,7 @@ public:
 		double cx_parameter = 0;
 		double *d3px_parameters = NULL;
 		int d3px_count = 0;
-		int *ex_parameters = NULL;
+		d2::exclusion *ex_parameters = NULL;
 		int ex_count = 0;
 		int ex_show = 0;
 		d2::render *achain;
@@ -1967,23 +1967,25 @@ public:
 
 				d3px_count++;
 				
-			} else if (!strcmp(option_name, "ex")) {
+			} else if (!strcmp(option_name, "ex") || !strcmp(option_name, "fex")) {
 
-				ex_parameters = (int *) local_realloc(ex_parameters, (ex_count + 1) * 6 * sizeof(int));
+				ex_parameters = (d2::exclusion *) local_realloc(ex_parameters, 
+						(ex_count + 1) * sizeof(d2::exclusion));
 
-				for (int param = 0; param < 6; param++)
-					ex_parameters[6 * ex_count + param] = env->get_int_arg(i->first, param + 1);
+				ex_parameters[ex_count].type = (!strcmp(option_name, "ex")
+						              ? d2::exclusion::RENDER
+							      : d2::exclusion::FRAME);
 
 				/*
-				 * Swap x and y, since their internal meanings differ from their external meanings.
+				 * Get parameters, swapping x and y coordinates
 				 */
 
-				for (int param = 0; param < 2; param++) {
-					int temp = ex_parameters[6 * ex_count + 2 + param];
-					ex_parameters[6 * ex_count + 2 + param] = ex_parameters[6 * ex_count + 0 + param];
-					ex_parameters[6 * ex_count + 0 + param] = temp;
-				}
-
+				ex_parameters[ex_count].x[0] = env->get_int_arg(i->first, 1 + 2);
+				ex_parameters[ex_count].x[1] = env->get_int_arg(i->first, 1 + 3);
+				ex_parameters[ex_count].x[2] = env->get_int_arg(i->first, 1 + 0);
+				ex_parameters[ex_count].x[3] = env->get_int_arg(i->first, 1 + 1);
+				ex_parameters[ex_count].x[4] = env->get_int_arg(i->first, 1 + 4);
+				ex_parameters[ex_count].x[5] = env->get_int_arg(i->first, 1 + 5);
 
 				/*
 				 * Increment counters
@@ -1991,9 +1993,17 @@ public:
 
 				ex_count++;
 
-			} else if (!strcmp(option_name, "crop")) {
+			} else if (!strcmp(option_name, "crop") || !strcmp(option_name, "fcrop")) {
 
-				ex_parameters = (int *) local_realloc(ex_parameters, (ex_count + 4) * 6 * sizeof(int));
+				ex_parameters = (d2::exclusion *) local_realloc(ex_parameters, 
+						(ex_count + 4) * sizeof(d2::exclusion));
+
+				for (int r = 0; r < 4; r++) 
+					ex_parameters[ex_count + r].type = (!strcmp(option_name, "crop")
+								          ? d2::exclusion::RENDER
+								          : d2::exclusion::FRAME);
+
+
 				int crop_args[6];
 
 				for (int param = 0; param < 6; param++)
@@ -2009,45 +2019,45 @@ public:
 				 * Exclusion region 1: low x
 				 */
 
-				ex_parameters[6 * ex_count + 0] = INT_MIN;
-				ex_parameters[6 * ex_count + 1] = crop_args[2] - 1;
-				ex_parameters[6 * ex_count + 2] = INT_MIN;
-				ex_parameters[6 * ex_count + 3] = INT_MAX;
-				ex_parameters[6 * ex_count + 4] = crop_args[4];
-				ex_parameters[6 * ex_count + 5] = crop_args[5];
+				ex_parameters[ex_count + 0].x[0] = INT_MIN;
+				ex_parameters[ex_count + 0].x[1] = crop_args[2] - 1;
+				ex_parameters[ex_count + 0].x[2] = INT_MIN;
+				ex_parameters[ex_count + 0].x[3] = INT_MAX;
+				ex_parameters[ex_count + 0].x[4] = crop_args[4];
+				ex_parameters[ex_count + 0].x[5] = crop_args[5];
 
 				/*
 				 * Exclusion region 2: low y
 				 */
 
-				ex_parameters[6 * ex_count + 6] = INT_MIN;
-				ex_parameters[6 * ex_count + 7] = INT_MAX;
-				ex_parameters[6 * ex_count + 8] = INT_MIN;
-				ex_parameters[6 * ex_count + 9] = crop_args[0] - 1;
-				ex_parameters[6 * ex_count + 10] = crop_args[4];
-				ex_parameters[6 * ex_count + 11] = crop_args[5];
+				ex_parameters[ex_count + 1].x[0] = INT_MIN;
+				ex_parameters[ex_count + 1].x[1] = INT_MAX;
+				ex_parameters[ex_count + 1].x[2] = INT_MIN;
+				ex_parameters[ex_count + 1].x[3] = crop_args[0] - 1;
+				ex_parameters[ex_count + 1].x[4] = crop_args[4];
+				ex_parameters[ex_count + 1].x[5] = crop_args[5];
 
 				/*
 				 * Exclusion region 3: high y
 				 */
 
-				ex_parameters[6 * ex_count + 12] = INT_MIN;
-				ex_parameters[6 * ex_count + 13] = INT_MAX;
-				ex_parameters[6 * ex_count + 14] = crop_args[1] + 1;
-				ex_parameters[6 * ex_count + 15] = INT_MAX;
-				ex_parameters[6 * ex_count + 16] = crop_args[4];
-				ex_parameters[6 * ex_count + 17] = crop_args[5];
+				ex_parameters[ex_count + 2].x[0] = INT_MIN;
+				ex_parameters[ex_count + 2].x[1] = INT_MAX;
+				ex_parameters[ex_count + 2].x[2] = crop_args[1] + 1;
+				ex_parameters[ex_count + 2].x[3] = INT_MAX;
+				ex_parameters[ex_count + 2].x[4] = crop_args[4];
+				ex_parameters[ex_count + 2].x[5] = crop_args[5];
 
 				/*
 				 * Exclusion region 4: high x
 				 */
 
-				ex_parameters[6 * ex_count + 18] = crop_args[3] + 1;
-				ex_parameters[6 * ex_count + 19] = INT_MAX;
-				ex_parameters[6 * ex_count + 20] = INT_MIN;
-				ex_parameters[6 * ex_count + 21] = INT_MAX;
-				ex_parameters[6 * ex_count + 22] = crop_args[4];
-				ex_parameters[6 * ex_count + 23] = crop_args[5];
+				ex_parameters[ex_count + 3].x[0] = crop_args[3] + 1;
+				ex_parameters[ex_count + 3].x[1] = INT_MAX;
+				ex_parameters[ex_count + 3].x[2] = INT_MIN;
+				ex_parameters[ex_count + 3].x[3] = INT_MAX;
+				ex_parameters[ex_count + 3].x[4] = crop_args[4];
+				ex_parameters[ex_count + 3].x[5] = crop_args[5];
 
 				/*
 				 * Increment counters

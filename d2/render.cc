@@ -25,7 +25,7 @@
  */
 
 unsigned int render::rx_count;
-ale_pos *render::rx_parameters;
+exclusion *render::rx_parameters;
 int render::rx_show;
 render *render::directory[ACTIVE_RENDERER_COUNT];
 int render::directory_length;

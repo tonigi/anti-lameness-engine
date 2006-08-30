@@ -57,7 +57,7 @@ public:
 		int replace_ex = 0;
 		const filter::scaled_filter *scf = NULL;
 		unsigned int rx_count = render::get_rx_count();
-		const ale_pos *rx_parameters = render::get_rx_parameters();
+		const exclusion *rx_parameters = render::get_rx_parameters();
 		int rx_show = render::is_rx_show();
 
 		/*
@@ -146,14 +146,25 @@ public:
 
 
 			if (rx_show || (replace && replace_ex))
-			for (unsigned int param = 0; param < rx_count; param++)
-				if (unoffset_p[0] >= rx_parameters[6 * param + 0]
-				 && unoffset_p[0] <= rx_parameters[6 * param + 1]
-				 && unoffset_p[1] >= rx_parameters[6 * param + 2]
-				 && unoffset_p[1] <= rx_parameters[6 * param + 3]
-				 && frame_number >= (unsigned) rx_parameters[6 * param + 4]
-				 && frame_number <= (unsigned) rx_parameters[6 * param + 5])
+			for (unsigned int param = 0; param < rx_count; param++) {
+				if (rx_parameters[param].type == exclusion::RENDER
+				 && unoffset_p[0] >= rx_parameters[param].x[0]
+				 && unoffset_p[0] <= rx_parameters[param].x[1]
+				 && unoffset_p[1] >= rx_parameters[param].x[2]
+				 && unoffset_p[1] <= rx_parameters[param].x[3]
+				 && frame_number >= (unsigned) rx_parameters[param].x[4]
+				 && frame_number <= (unsigned) rx_parameters[param].x[5])
 					shading *= 0.5;
+
+				if (rx_parameters[param].type == exclusion::FRAME
+				 && i >= rx_parameters[param].x[0] * scale_factor
+				 && i <= rx_parameters[param].x[1] * scale_factor
+				 && j >= rx_parameters[param].x[2] * scale_factor
+				 && j <= rx_parameters[param].x[3] * scale_factor
+				 && frame_number >= (unsigned) rx_parameters[param].x[4]
+				 && frame_number <= (unsigned) rx_parameters[param].x[5])
+					shading *= 0.5;
+			}
 
 			if (shading < 1 && !rx_show && replace && replace_ex)
 				continue;
@@ -161,7 +172,7 @@ public:
 			if (replace) {
 				pixel value, weight;
 
-				scf->filtered(i, j, &value, &weight);
+				scf->filtered(i, j, &value, &weight, replace_ex, frame_number);
 
 				if (weight.min_norm() > 0) {
 					rendered->set_pixel(i, j, shading * value);

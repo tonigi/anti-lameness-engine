@@ -88,10 +88,10 @@ public:
 		*result = pixel(0, 0, 0);
 		*weight = pixel(0, 0, 0);
 		
-		if (honor_exclusion && render::is_excluded(_offset, i, j, frame))
+		if (honor_exclusion && render::is_excluded_r(_offset, i, j, frame))
 			return;
 
-		f->filtered(i, j, result, weight);
+		f->filtered(i, j, result, weight, honor_exclusion, frame);
 	}
 };
 #endif

@@ -144,7 +144,7 @@ protected:
                 for (unsigned int i = 0; i < approximation->height(); i++)
                 for (unsigned int j = 0; j < approximation->width();  j++) {
 
-			if (is_excluded(approximation->offset(), i, j, frame_num))
+			if (is_excluded_r(approximation->offset(), i, j, frame_num))
 				continue;
 
 			/*
@@ -156,6 +156,9 @@ protected:
                         point p = point(i + approximation->offset()[0], j + approximation->offset()[1]);
 			point q;
 			ale_pos d[2];
+
+			if (is_excluded_f(p, frame_num))
+				continue;
 
 			t.unscaled_map_area_inverse(p, &q, d);
 			
@@ -463,7 +466,7 @@ protected:
 			for (unsigned int i = 0; i < new_lreal->height(); i++)
 			for (unsigned int j = 0; j < new_lreal->width();  j++) {
 
-				if (is_excluded(approximation->offset(), i, j, frame_num))
+				if (is_excluded_r(approximation->offset(), i, j, frame_num))
 					continue;
 
 
@@ -640,6 +643,9 @@ protected:
 				 || ii >= (int) lreal->height()
 				 || jj < (int) 0
 				 || jj >= (int) lreal->width())
+					continue;
+
+				if (is_excluded_f(ii, jj, frame_num))
 					continue;
 
 				unsigned int selection = lresponse->select(ii, jj);

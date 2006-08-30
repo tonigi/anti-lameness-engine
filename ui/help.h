@@ -444,7 +444,7 @@ public:
 		banner("Exclusion");
 		fprintf(help_stream, 
 			BETWEEN_SECTIONS
-			"Exclusion regions:\n"
+			"Rendering-coordinate exclusion regions:\n"
 			HEADER_SPACE
 			"--ex <args>       Exclude a specified volume.\n"
 			"                     <args> are space-delimited horizontal,\n"
@@ -455,6 +455,18 @@ public:
 			"                  specified set of frames.  <args> are:\n"
 			"                         <xmin> <xmax> <ymin> <ymax> <fmin> <fmax>\n"
 			"                     using unscaled rendering spatial coordinates.\n"
+			BETWEEN_SECTIONS
+			"Frame-coordinate exclusion regions:\n"
+			HEADER_SPACE
+			"--fex <args>      Exclude a specified volume.\n"
+			"                     <args> are space-delimited horizontal,\n"
+			"                     vertical, and frame limits:\n"
+			"                         <xmin> <xmax> <ymin> <ymax> <fmin> <fmax>\n"
+			"                     using unscaled frame spatial coordinates.\n"
+			"--fcrop <args>    Exclude the spatial complement of an area over a\n"
+			"                  specified set of frames.  <args> are:\n"
+			"                         <xmin> <xmax> <ymin> <ymax> <fmin> <fmax>\n"
+			"                     using unscaled frame spatial coordinates.\n"
 			"\n"
 		       );
 	}
