@@ -1,5 +1,7 @@
 0.8.5 Prerelease
 
+o	Add options --f{ex,crop} for frame-coordinate exclusion regions.
+
 o	Add autotools-based configuration, build, and installation facilities,
 	replacing the earlier Makefile-based configuration and build process.
 
