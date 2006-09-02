@@ -167,10 +167,10 @@ input::simple_option input::simple_option_table[] = {
 
 	{ "3dpx", NULL, NULL, 6 },
 
-	{ "ex", NULL, NULL, 6 },
-	{ "crop", NULL, NULL, 6 },
-	{ "fex", NULL, NULL, 6 },
-	{ "fcrop", NULL, NULL, 6 },
+	{ "ex", NULL, NULL, 6, 1 },
+	{ "crop", NULL, NULL, 6, 1 },
+	{ "fex", NULL, NULL, 6, 1 },
+	{ "fcrop", NULL, NULL, 6, 1 },
 	{ "exshow" },
 
 	{ "wt", NULL, NULL, 1 },

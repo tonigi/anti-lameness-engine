@@ -846,6 +846,17 @@ class input {
 		if (!multi) {
 			snprintf(result, length, "%u 0 %s", arg_num, unadorned);
 		} else {
+
+			/*
+			 * XXX: This assumes that generating calls for
+			 * options other than 0 exist in the same
+			 * multiplicity group as the most recently 
+			 * generated 0-option multiplicity.
+			 */
+
+			if (arg_num == 0)
+				multi_counter++;
+
 			snprintf(result, length, "%u %u %s", arg_num, multi_counter, unadorned);
 		}
 
