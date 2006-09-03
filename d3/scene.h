@@ -1690,6 +1690,9 @@ public:
 			if (!resolution_ok(al->get(f)->get_t(0), tc))
 				return;
 
+			if (d2::render::is_excluded_f(p.xy(), f))
+				return;
+
 			/*
 			 * Update subspace.
 			 */
@@ -1773,7 +1776,7 @@ public:
 	 * always performs exclusion.
 	 */
 
-	static const void view_recurse(int type, d2::image *im, d2::image *weights, space::iterate si, pt _pt, 
+	static const void view_recurse(int type, d2::image *im, d2::image *weights, space::iterate si, pt _pt,
 			int prune = 0, d2::point pl = d2::point(0, 0), d2::point ph = d2::point(0, 0)) {
 		while (!si.done()) {
 			space::traverse st = si.get();
@@ -4262,7 +4265,9 @@ public:
 			ale_pos l1_multiplier = 0.125;
 
 			if (if1->in_bounds(ip.xy())
-			 && if2->in_bounds(is.xy())) {
+			 && if2->in_bounds(is.xy())
+			 && !d2::render::is_excluded_f(ip.xy(), f1)
+			 && !d2::render::is_excluded_f(is.xy(), f2)) {
 				divisor += 1 - l1_multiplier;
 				score += (1 - l1_multiplier)
 				       * (if1->get_bl(ip.xy()) - if2->get_bl(is.xy())).normsq();
@@ -4276,7 +4281,9 @@ public:
 				d2::point t(iii, jjj);
 
 				if (!if1->in_bounds(ip.xy() + t)
-				 || !if2->in_bounds(is.xy() + t))
+				 || !if2->in_bounds(is.xy() + t)
+				 || d2::render::is_excluded_f(ip.xy(), f1)
+				 || d2::render::is_excluded_f(is.xy(), f2))
 					continue;
 
 				divisor += l1_multiplier;
@@ -4300,7 +4307,9 @@ public:
 				point p = _pt3.wp_unscaled(iw);
 
 				if (!if3->in_bounds(p.xy())
-				 || !if1->in_bounds(ip.xy()))
+				 || !if1->in_bounds(ip.xy())
+				 || d2::render::is_excluded_f(p.xy(), f)
+				 || d2::render::is_excluded_f(ip.xy(), f1))
 					continue;
 
 				divisor += tc_multiplier;
@@ -4779,6 +4788,9 @@ public:
 
 			for (unsigned int i = 0; i < al->get(f1)->get_image(primary_decimation_upper)->height(); i++)
 			for (unsigned int j = 0; j < al->get(f1)->get_image(primary_decimation_upper)->width();  j++) {
+
+				if (d2::render::is_excluded_f(i, j, f1))
+					continue;
 
 				ui::get()->d3_subdivision_status(f1, f2, i, j);
 
