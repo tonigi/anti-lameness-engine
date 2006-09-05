@@ -1688,10 +1688,10 @@ public:
 			 */
 
 			if (!resolution_ok(al->get(f)->get_t(0), tc))
-				return;
+				continue;
 
 			if (d2::render::is_excluded_f(p.xy(), f))
-				return;
+				continue;
 
 			/*
 			 * Update subspace.
@@ -2027,6 +2027,27 @@ public:
 						im->pix(i, j)[1] = j - min[1];
 						im->pix(i, j)[2] = 0;
 					}
+
+				} else if (type == 8) {
+
+					/*
+					 * Value = 1 for any intersected space.
+					 */
+
+					weights->pix(i, j) = d2::pixel(1, 1, 1);
+					im->pix(i, j) = d2::pixel(1, 1, 1);
+
+				} else if (type == 9) {
+
+					/*
+					 * Number of contributions for the nearest space.
+					 */
+
+					if (weights->pix(i, j)[0] == 1)
+						continue;
+
+					weights->pix(i, j) = d2::pixel(1, 1, 1);
+					im->pix(i, j) = d2::pixel(1, 1, 1) * (sn.get_pocc_density() * 0.1);
 
 				} else 
 					assert(0);
