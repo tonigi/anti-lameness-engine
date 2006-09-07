@@ -2123,7 +2123,7 @@ public:
 #if 1
 		view_recurse(7, im2, weights, si, _pt, prune, pl, ph);
 #else
-		view_recurse(4, im2, weights, si, _pt, prune, pl, ph);
+		view_recurse(8, im2, weights, si, _pt, prune, pl, ph);
 		return im2;
 #endif
 
@@ -3992,6 +3992,7 @@ public:
 
 		const d2::image *if1 = al->get(f1)->get_image(primary_decimation_upper);
 		const d2::image *if2 = al->get(f2)->get_image(primary_decimation_upper);
+		ale_pos pdu_scale = pow(2, primary_decimation_upper);
 
 		/*
 		 * Get the pixel color in the primary frame
@@ -4287,8 +4288,8 @@ public:
 
 			if (if1->in_bounds(ip.xy())
 			 && if2->in_bounds(is.xy())
-			 && !d2::render::is_excluded_f(ip.xy(), f1)
-			 && !d2::render::is_excluded_f(is.xy(), f2)) {
+			 && !d2::render::is_excluded_f(ip.xy() * pdu_scale, f1)
+			 && !d2::render::is_excluded_f(is.xy() * pdu_scale, f2)) {
 				divisor += 1 - l1_multiplier;
 				score += (1 - l1_multiplier)
 				       * (if1->get_bl(ip.xy()) - if2->get_bl(is.xy())).normsq();
@@ -4303,8 +4304,8 @@ public:
 
 				if (!if1->in_bounds(ip.xy() + t)
 				 || !if2->in_bounds(is.xy() + t)
-				 || d2::render::is_excluded_f(ip.xy(), f1)
-				 || d2::render::is_excluded_f(is.xy(), f2))
+				 || d2::render::is_excluded_f(ip.xy() * pdu_scale, f1)
+				 || d2::render::is_excluded_f(is.xy() * pdu_scale, f2))
 					continue;
 
 				divisor += l1_multiplier;
@@ -4329,8 +4330,8 @@ public:
 
 				if (!if3->in_bounds(p.xy())
 				 || !if1->in_bounds(ip.xy())
-				 || d2::render::is_excluded_f(p.xy(), f)
-				 || d2::render::is_excluded_f(ip.xy(), f1))
+				 || d2::render::is_excluded_f(p.xy() * pdu_scale, f)
+				 || d2::render::is_excluded_f(ip.xy() * pdu_scale, f1))
 					continue;
 
 				divisor += tc_multiplier;
@@ -4807,10 +4808,12 @@ public:
 			 * Iterate over all points in the primary frame.
 			 */
 
+			ale_pos pdu_scale = pow(2, primary_decimation_upper);
+
 			for (unsigned int i = 0; i < al->get(f1)->get_image(primary_decimation_upper)->height(); i++)
 			for (unsigned int j = 0; j < al->get(f1)->get_image(primary_decimation_upper)->width();  j++) {
 
-				if (d2::render::is_excluded_f(i, j, f1))
+				if (d2::render::is_excluded_f(d2::point(i, j) * pdu_scale, f1))
 					continue;
 
 				ui::get()->d3_subdivision_status(f1, f2, i, j);
