@@ -56,11 +56,11 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([floor memset pow select sqrt strchr strcspn strdup strndup strspn strtol])
 
 # Determine whether assertions should be enabled.
-AC_ARG_ENABLE(assertions, [  --enable-assertions     check runtime assertions (default=no)])
-if test x$enable_assertions = xyes; then
-	ASSERT_FLAGS="-DDEBUG"
-else
+AC_ARG_ENABLE(assertions, [  --enable-assertions     check runtime assertions (default=yes)])
+if test x$enable_assertions = xno; then
 	ASSERT_FLAGS="-DNDEBUG"
+else
+	ASSERT_FLAGS="-DDEBUG"
 fi
 
 # Determine whether ImageMagick should be linked
