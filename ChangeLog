@@ -1,5 +1,10 @@
 0.8.5 Prerelease
 
+o	Revise Changelog name to autotools-approved ChangeLog
+
+o	Add NEWS file containing mailing list and Freshmeat announcement text
+	for versions 0.5.1 through 0.8.4.
+
 o	Add options --f{ex,crop} for frame-coordinate exclusion regions.
 
 o	Add autotools-based configuration, build, and installation facilities,
@@ -138,8 +143,8 @@ o	Add support for using control points in 2D and 3D alignment, as well
 	'--cpf-load=', '--cpp-upper=', '--cpp-lower=', '--va-upper=', and
 	'--st'.
 
-o	Fix enumerator compile bugs noted by Gregory Maxwell to cause 
-	compilation failure under GCC 3.4.
+o	Fix enumerator compile bugs noted by Gregory Maxwell and Tom Holroyd
+	to cause compilation failure under GCC 3.4.
 
 o	Add average magnitude comments to transformation data file output.
 

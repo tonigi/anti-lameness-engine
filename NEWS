@@ -1,0 +1,192 @@
+0.8.4 2006-May-14
+
+This release refines the 3D engine to support focus effects, filtering, and
+editing of scene geometry.  (Freshmeat blurb)
+
+Mailing list announcement:
++ Support for filtered 3D rendering.
++ Support for removal of foreground objects in 3D scenes.
++ Support for synthetic focus effects.
+
+
+0.8.3 2005-Dec-23
+
+This version adds enhancements in the handling of 3D scenes.  (Freshmeat blurb)
+
+Mailing list announcement:
++ Various enhancements to handling of 3D scenes.
+
+
+0.8.2 2005-Nov-22
+
+This release revises the 3D scene reconstruction algorithm, allowing more
+robust handling of certain scenes. New 3D model and output options have also
+been added, including support for clipping planes and arbitrary camera
+positioning. This release also fixes certain bugs in 2D control-point
+alignment.  (Freshmeat blurb)
+
+Mailing list announcement:
++ Fix 2D control point alignment bugs
++ Revise 3D modeling code to use spatial subdivision and occupancy
++ Add support for clipping planes and arbitrary camera positioning
+
+
+0.8.1 2005-May-6
+
+This release adds control points, median-value rendering, and a unified 3D
+scene model. It resolves certain syntax errors, allowing successful compilation
+under GCC 3.4.  (Freshmeat blurb)
+
+Mailing list announcement:
++ Add control points, median-value rendering, and a unified 3D scene model.
++ Resolve syntax errors causing compilation failure under GCC 3.4.
+
+
+0.8.0-patch 2005-Apr-13
+
++ Patch to fix build failures under GCC 3.4 noted by Tom Holroyd and Gregory
+  Maxwell
+
+
+0.8.0 2005-Jan-12
+
+This release adds a more informative TTY user interface, increases Euclidean
+alignment precision for large images, and reduces certainty-related noise
+amplification in the Irani-Peleg renderer.  (Freshmeat blurb)
+
+Mailing list announcement:
++ Add a more informative TTY user interface
++ Increase Euclidean alignment precision for large images
++ Reduce certainty-related noise amplification in the Irani-Peleg renderer
+
+
+0.7.3 2004-Dec-1
+
+This release includes revised 3D algorithms, reduced memory usage for certain
+rendering steps, and new point-spread function and device options.  (Freshmeat
+blurb)
+
+Mailing list announcement:
++ Reduce memory usage in Irani-Peleg and 3D renderers
++ Add new PSF options for convolution and scalar multiplication
++ Revise the 3D scene reconstruction algorithm
+
+
+0.7.2 2004-Oct-26
+
+This release fixes exclusion region and alignment bugs, adds device support for
+the Canon 300D SLR, and incorporates an experimental framework for
+reconstruction of 3D scenes.  (Freshmeat blurb)
+
+Mailing list announcement:
++ Incorporate changes from 0.7.1 patches
++ Add a device configuration for the Canon EOS 300D (Digital Rebel)
++ Incorporate an approach to 3D reconstruction.  (Does not work yet.)
+
+
+0.7.1-patch2 2004-Sep-15
+
+Changelog summary:
++ Adds an option for establishing a minimum overlap area for global searches
++ Adds a rudimentary test suite.
+
+
+0.7.1-patch1 2004-Sep-07
+
+Mailing list announcement:
++ Allows each perturbation bound to be specified as a percentage of the
+  smallest image dimension (useful for large images?).
++ Fixes bugs in exclusion region handlers.
++ Fixes bugs in alignment failure handlers.
++ Avoids superfluously large undefined regions.
++ Adds experimental options for refining perturbation.
+
+
+0.7.1 2004-Aug-27
+
+This release fixes alignment bugs, adds a global search option, and adds
+support for the OmniView OV7620 sensor. (Freshmeat blurb)
+
+Mailing list announcement:
++ Add linear PSF for OV7620
++ Add option to concatenate help pages
++ Fix VISP segfault
++ Incorporate changes from 0.7.0-patch1
+
+Notes:
+The default PSF for the OV7620 can be a bit noisy.  As an alternative,
+box=1.3+box=1.8 also works well in some cases, and is less noisy.
+
+
+0.7.0-patch1 2004-Aug-22
+
+Mailing list announcement:
++ Fixes alignment bugs.
++ Adds a global search option.
++ Adds support for ov7620 in raw, linear mode.
+
+Notes:
+The ov7620 device option expects that the 7620 be in raw, linear mode, and that
+clamping be turned on.  These features may not be accessible using standard
+drivers.
+
+
+0.7.0 2004-Aug-06
+
+This release updates the renderer to support a variety of filters, including
+sinc and Lanczos, and adds new options for excluding image regions and
+processing video frames.  (Freshmeat blurb)
+
+
+0.6.0 2004-Feb-10
+
+Merging and drizzling renderers now operate in linear colorspace, and the
+Irani-Peleg renderer has been extended to handle convolutions in both linear
+colorspace (e.g. lens blur) and non-linear colorspace (e.g. some types of
+in-camera sharpening). New options in this release include certainty weighting
+and exposure registration.  (Freshmeat blurb)
+
+
+0.5.1 2003-Nov-19
+
+(Currently seeking Freshmeat blurbs for 0.5.1 and earlier.  Any information
+regarding where these can be obtained can be sent to ale@ventricle.dyndns.org)
+
+
+0.5.0 2003-Nov-02
+
+0.4.8 2003-Aug-01
+
+0.4.7 2003-Jul-27
+
+0.4.6 2003-Jul-01
+
+0.4.5 2003-Jun-23
+
+0.4.4 2003-Jun-06
+
+0.4.3 2003-May-30
+
+0.4.2 2003-May-23
+
+0.4.1 2003-Apr-28
+
+0.4.0p1 2003-Apr-04
+
+0.4.0 2003-Mar-30
+
+0.3.2 2003-Mar-26
+
+0.3.1 2003-Mar-25
+
+0.3.0 2003-Jan-17
+
+0.2.0 2003-Jan-01
+
+0.1.2 2002-Dec-13
+
+0.1.1 2002-Dec-09
+
+0.1.0 2002-Nov-26
+
+0.0.0 2002-Oct-11
