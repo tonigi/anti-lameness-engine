@@ -1,7 +1,40 @@
-This file should list contributors of documentation, code or patches included
-in the current version.  
+This file lists contributors of documentation, code or patches included in the
+current version.  
+
+
+Image-processing code
+---------------------
 
 David Hilvert <dhilvert@auricle.dyndns.org>,
               <dhilvert@gmail.com>,
 	      <dhilvert@ugcs.caltech.edu>
 
+
+
+Image-processing documentation
+------------------------------
+
+(Empty, pending inclusion of documentation)
+
+
+
+Build and installation code and documentation
+---------------------------------------------
+
+David Hilvert <dhilvert@auricle.dyndns.org>,
+              <dhilvert@gmail.com>,
+	      <dhilvert@ugcs.caltech.edu>
+
+Distributions of this software may be based on the GNU project build tools
+("autotools"), which may automatically import code written by authors other
+than those listed above.  These authors may include, but are not limited to:
+
+X Consortium
+Free Software Foundation (FSF)
+
+More information on autotools may be available from the following sites:
+
+http://www.gnu.org/software/automake/
+http://www.gnu.org/software/autoconf/
+http://www.gnu.org/software/libtool/
+http://sourceware.org/autobook/
