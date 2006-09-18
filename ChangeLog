@@ -13,7 +13,8 @@ o	Add options --f{ex,crop} for frame-coordinate exclusion regions.
 o	Add autotools-based configuration, build, and installation facilities,
 	replacing the earlier Makefile-based configuration and build process.
 
-o	Modify command-line interface to accept certain scope operators.
+o	Modify command-line interface to accept certain scope operators, and
+	to increase uniformity of syntax.
 
 o	Move input interface details, including option handling, messages,
 	and help information, to the ui/ subdirectory.
