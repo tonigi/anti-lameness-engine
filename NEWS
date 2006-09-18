@@ -1,4 +1,5 @@
 0.8.4 2006-May-14
+-----------------
 
 This release refines the 3D engine to support focus effects, filtering, and
 editing of scene geometry.  (Freshmeat blurb)
@@ -10,6 +11,7 @@ Mailing list announcement:
 
 
 0.8.3 2005-Dec-23
+-----------------
 
 This version adds enhancements in the handling of 3D scenes.  (Freshmeat blurb)
 
@@ -18,6 +20,7 @@ Mailing list announcement:
 
 
 0.8.2 2005-Nov-22
+-----------------
 
 This release revises the 3D scene reconstruction algorithm, allowing more
 robust handling of certain scenes. New 3D model and output options have also
@@ -32,6 +35,7 @@ Mailing list announcement:
 
 
 0.8.1 2005-May-6
+----------------
 
 This release adds control points, median-value rendering, and a unified 3D
 scene model. It resolves certain syntax errors, allowing successful compilation
@@ -43,12 +47,14 @@ Mailing list announcement:
 
 
 0.8.0-patch 2005-Apr-13
+-----------------------
 
 + Patch to fix build failures under GCC 3.4 noted by Tom Holroyd and Gregory
   Maxwell
 
 
 0.8.0 2005-Jan-12
+-----------------
 
 This release adds a more informative TTY user interface, increases Euclidean
 alignment precision for large images, and reduces certainty-related noise
@@ -61,6 +67,7 @@ Mailing list announcement:
 
 
 0.7.3 2004-Dec-1
+----------------
 
 This release includes revised 3D algorithms, reduced memory usage for certain
 rendering steps, and new point-spread function and device options.  (Freshmeat
@@ -73,6 +80,7 @@ Mailing list announcement:
 
 
 0.7.2 2004-Oct-26
+-----------------
 
 This release fixes exclusion region and alignment bugs, adds device support for
 the Canon 300D SLR, and incorporates an experimental framework for
@@ -85,6 +93,7 @@ Mailing list announcement:
 
 
 0.7.1-patch2 2004-Sep-15
+------------------------
 
 Changelog summary:
 + Adds an option for establishing a minimum overlap area for global searches
@@ -92,6 +101,7 @@ Changelog summary:
 
 
 0.7.1-patch1 2004-Sep-07
+------------------------
 
 Mailing list announcement:
 + Allows each perturbation bound to be specified as a percentage of the
@@ -103,6 +113,7 @@ Mailing list announcement:
 
 
 0.7.1 2004-Aug-27
+-----------------
 
 This release fixes alignment bugs, adds a global search option, and adds
 support for the OmniView OV7620 sensor. (Freshmeat blurb)
@@ -119,6 +130,7 @@ box=1.3+box=1.8 also works well in some cases, and is less noisy.
 
 
 0.7.0-patch1 2004-Aug-22
+------------------------
 
 Mailing list announcement:
 + Fixes alignment bugs.
@@ -132,6 +144,7 @@ drivers.
 
 
 0.7.0 2004-Aug-06
+-----------------
 
 This release updates the renderer to support a variety of filters, including
 sinc and Lanczos, and adds new options for excluding image regions and
@@ -139,6 +152,7 @@ processing video frames.  (Freshmeat blurb)
 
 
 0.6.0 2004-Feb-10
+-----------------
 
 Merging and drizzling renderers now operate in linear colorspace, and the
 Irani-Peleg renderer has been extended to handle convolutions in both linear
@@ -148,9 +162,11 @@ and exposure registration.  (Freshmeat blurb)
 
 
 0.5.1 2003-Nov-19
+-----------------
 
 (Currently seeking Freshmeat blurbs for 0.5.1 and earlier.  Any information
-regarding where these can be obtained can be sent to ale@ventricle.dyndns.org)
+regarding where these can be obtained can be sent to ale@ventricle.dyndns.org .
+Detailed change information can be found in the ChangeLog.)
 
 
 0.5.0 2003-Nov-02
