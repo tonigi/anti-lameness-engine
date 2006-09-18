@@ -70,9 +70,14 @@ autoreconf --install
 # Run automake again, with the --foreign option.
 #
 
-echo ""
-echo "Rerunning automake with --foreign flag."
-automake --foreign
+# echo ""
+# echo "Rerunning automake with --foreign flag."
+# automake --foreign
+
+#
+# Indicate that we're done.
+# 
+
 echo ""
 echo "Done."
 
