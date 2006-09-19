@@ -8,6 +8,8 @@ information, see the 'NEWS' file.
 
 0.8.5 Prerelease
 
+o	Add file 'TODO', containing a to-do list for future releases.
+
 o	Add AUTHORS file, in accordance with the autotools packaging
 	standards.
 
