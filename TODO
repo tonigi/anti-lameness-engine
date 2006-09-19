@@ -12,7 +12,10 @@ updates, please see the version in the main repository.[1]
 + Move user and tech documentation from the website to this tree, and license
   under GPL, where 'object code' is understood to mean 'any non-source version of
   the work', as defined in GPLv3 draft 2.  Conversion from HTML to a more flexible
-  format, such as texinfo, would be desirable.
+  format, such as texinfo, would be desirable.  Revision of the user manual for
+  new features and syntax would be desirable.
+  - Document new scoping operators {}, [], and [<>].
+  - Document other changes in UI, including regularization of syntax.
 
 Note: This release may be merged with the 0.9.0 Beta release.
 
@@ -21,6 +24,7 @@ Note: This release may be merged with the 0.9.0 Beta release.
 ----------
 
 + Add Irani-Peleg processing to 3D output options.
+  - Add generic 2D transformation class, supporting partial transformations.
 + Add multi-threading. 
 + Add file-scoped options for black level, alignment type, etc.
 
@@ -32,6 +36,7 @@ Unsorted
   to languages other than English.
 + Internationalize command-line interface and help text to allow 
   translation.
++ Update the Technical Manual for information regarding 3D operation.
 
 
 Notes
