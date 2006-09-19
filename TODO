@@ -38,6 +38,11 @@ Unsorted
 + Internationalize command-line interface and help text to allow 
   translation.
 + Update the Technical Manual for information regarding 3D operation.
++ Add facilities for manipulating images storing color as integer-valued data,
+  possibly as library routines.
++ Move image-processing routines into a library that can be used by other 
+  programs.
++ Add bindings for other programming languages.
 
 
 Notes
