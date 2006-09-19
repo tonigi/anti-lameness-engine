@@ -9,6 +9,7 @@ updates, please see the version in the main repository.[1]
 0.8.5 pre-beta (tentative)
 --------------------------
 
++ Update the README to reflect the new build process.
 + Move user and tech documentation from the website to this tree, and license
   under GPL, where 'object code' is understood to mean 'any non-source version of
   the work', as defined in GPLv3 draft 2.  Conversion from HTML to a more flexible
