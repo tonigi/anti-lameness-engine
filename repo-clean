@@ -60,6 +60,6 @@ fi
 # List ordinary files that the repository doesn't know about.
 #
 
-darcs wha -l --boring | grep "^addfile" | sed -e 's/addfile //' | xargs -n 1 -r echo "rm"
-darcs wha -l --boring | grep "^adddir" | sed -e 's/adddir //' | xargs -n 1 -r echo "rmdir"
+darcs wha -l --boring | grep "^a.*[^/]$" | sed -e 's/a //' | xargs -n 1 -r echo "rm"
+darcs wha -l --boring | grep "^a.*/$" | sed -e 's/a //' | xargs -n 1 -r echo "rmdir"
 
