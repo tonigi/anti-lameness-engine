@@ -3,7 +3,10 @@ ALE To-do list
 ==============
 
 This list is dynamic, and may have changed since the last release.  For
-updates, please see the version in the main repository.[1]
+updates, please see the version in the main repository.[1]  Prior to
+implementing changes listed below, please ensure that any dependencies have
+been satisfied and that changes do not generate new conflicts with other list
+items.
 
 
 0.8.5 pre-beta (tentative)
