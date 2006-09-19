@@ -86,6 +86,13 @@ Mailing list announcement:
 + Add new PSF options for convolution and scalar multiplication
 + Revise the 3D scene reconstruction algorithm
 
+This release includes a revised summary:
+
+ALE is an image-processing program used for tasks such as
+super-resolution, deblurring, noise reduction, and anti-aliasing. Its
+principle of operation is synthetic capture, combining multiple inputs
+representing the same scene.
+
 
 0.7.2 2004-Oct-26
 -----------------
@@ -172,45 +179,179 @@ and exposure registration.  (Freshmeat blurb)
 0.5.1 2003-Nov-19
 -----------------
 
-(Currently seeking Freshmeat blurbs for 0.5.1 and earlier.  Any information
-regarding where these can be obtained can be sent to ale@ventricle.dyndns.org .
-Detailed change information can be found in the ChangeLog.)
+Changes in this release include optional support for 16-bit color channels and
+built-in support for all PPM file types. Also, a user manual and an updated
+technical description are now available.  (Freshmeat blurb via Neohapsis)
+
+[This release was, and remains (as of Sep 2006), the most advanced version
+storing pixels as integer values (rather than as floating-point values).  As
+integer values may be more suitable for certain applications, integer-valued
+functions may be re-introduced, possibly as library code, in the future.
+19-Sep-2006]
+
+This release is accompanied by a revised summary:
+
+ALE is a program that can render high-fidelity images of real
+scenes by aligning and combining many similar images from a camera or
+scanner. The correct similarity between images is roughly that achieved by
+a somewhat unsteady hand holding a camera. 
 
 
 0.5.0 2003-Nov-02
+-----------------
+
+Alignment following has been modified to support multiple-pass alignment of
+panoramic image mosaics. Other changes in this release include code cleanup and
+documentation updates.  (Freshmeat blurb via Neohapsis)
+
 
 0.4.8 2003-Aug-01
+-----------------
+
+The Monte Carlo alignment algorithm has been modified, and may now offer better
+alignment for small sample sizes. Also, the Irani-Peleg renderer now writes
+output after each iteration when incremental output is enabled. Other changes
+include a bugfix in Euclidean alignment, a new option for configuring the level
+of detail, and a new independent constraint for rotational perturbation.
+(Freshmeat blurb via Neohapsis)
+
 
 0.4.7 2003-Jul-27
+-----------------
+
+Support for device-specific projection functions and various bugfixes have been
+added to the Irani-Peleg renderer. Also, a new option has been added that may
+be useful for video stabilization applications.  (Freshmeat blurb via Neohapsis)
+
 
 0.4.6 2003-Jul-01
+-----------------
+
+This release fixes bugs in drizzling and post-processing. The following
+combinations should now work as expected: drizzling in combination with scaling
+and Irani-Peleg image reconstruction in combination with high-frequency
+enhancement.  (Freshmeat blurb via Neohapsis)
+
 
 0.4.5 2003-Jun-23
+-----------------
+
+This release resolves a number of minor alignment bugs.  (Freshmeat blurb via
+Neohapsis)
+
 
 0.4.4 2003-Jun-06
+-----------------
+
+The PPM file handler has been updated to open files in binary mode, resolving a
+serious bug under Windows. Also, the percentage of pixels used in Monte Carlo
+alignment now more closely matches user specifications in typical cases.
+(Freshmeat blurb via Neohapsis)
+
 
 0.4.3 2003-May-30
+-----------------
+
+A Monte Carlo alignment option has been added, which may reduce alignment time.
+An option to disable incremental file output has also been added.  (Freshmeat
+blurb via Neohapsis)
+
 
 0.4.2 2003-May-23
+-----------------
+
+An iterative image reconstruction renderer has been added, and the PPM file
+handler has been updated to correctly handle PPM header comments.  (Freshmeat
+blurb via Neohapsis)
+
 
 0.4.1 2003-Apr-28
+-----------------
+
+Increased spatial extents, drizzling, and new alignment options have been added
+in this release.  (Freshmeat blurb via Neohapsis)
+
 
 0.4.0p1 2003-Apr-04
+-------------------
+
+A bugfix from the Debian ALE package version 0.4.0-1 has been merged. Without
+this fix, an assertion failure can occur when ImageMagick support is enabled.
+(Freshmeat blurb via Neohapsis)
+
++ The original Debian fix was implemented by Debian package maintainer Nick
+  Rusnov.
+
 
 0.4.0 2003-Mar-30
+-----------------
+
+A general scaling option has been added, and the high-frequency enhancement
+filter now works near image boundaries.  (Freshmeat blurb via Neohapsis)
+
 
 0.3.2 2003-Mar-26
+-----------------
+
+A match summary was added to the program's output, comments in transformation
+file output were made more helpful, and an experimental high-frequency
+enhancement option was added.  (Freshmeat blurb via Neohapsis)
+
 
 0.3.1 2003-Mar-25
+-----------------
+
+(This release appears to have been superseded by 0.3.2.)
+
 
 0.3.0 2003-Jan-17
+-----------------
+
+New options in this release facilitate writing final alignment transformations
+to a file, reading initial alignment transformations from a file, and setting
+an upper boundary on the correction step size used in alignment.  (Freshmeat
+blurb via Neohapsis)
+
 
 0.2.0 2003-Jan-01
+-----------------
+
+General projective transformations can now be used in image alignment.
+(Freshmeat blurb via Neohapsis)
+
 
 0.1.2 2002-Dec-13
+-----------------
+
+A new file handler has been added to read and write JPEG, PNG, and other image
+formats using the ImageMagick C API. The default PPM-only file handler now
+deals with certain file errors more gracefully.  (Freshmeat blurb via
+Neohapsis)
+
++ Translation of file formats using ImageMagick was suggested by Nick Rusnov.
+
 
 0.1.1 2002-Dec-09
+-----------------
+
+In this version, a scaling bug that caused corruption of boundary pixels has
+been fixed. Also, the alignment algorithm has been modified to use reduced
+detail for coarse alignment steps.  (Freshmeat blurb via Neohapsis)
+
 
 0.1.0 2002-Nov-26
+-----------------
+
+The image alignment algorithm has been updated.  (Freshmeat blurb via Neohapsis)
+
 
 0.0.0 2002-Oct-11
+-----------------
+
+Initial release 
+
+Program Summary:
+
+ALE aligns and merges several similar images from a digitizing device (such as
+a digital camera or scanner) into a single image. This may have the effect of
+producing a relatively alias-free image (sometimes called "anti-aliasing"). 
