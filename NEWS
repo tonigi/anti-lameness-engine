@@ -57,8 +57,8 @@ Mailing list announcement:
 0.8.0-patch 2005-Apr-13
 -----------------------
 
-+ Patch to fix build failures under GCC 3.4 noted by Tom Holroyd and Gregory
-  Maxwell
++ Patch to fix build failures under GCC 3.4 noted by Gregory Maxwell and Tom
+  Holroyd
 
 
 0.8.0 2005-Jan-12
