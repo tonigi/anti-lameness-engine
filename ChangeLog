@@ -8,6 +8,8 @@ information, see the 'NEWS' file.
 
 0.8.5 Prerelease
 
+o	Revise README for autotools build and installation.
+
 o	Add file 'TODO', containing a to-do list for future releases.
 
 o	Add AUTHORS file, in accordance with the autotools packaging
@@ -16,7 +18,7 @@ o	Add AUTHORS file, in accordance with the autotools packaging
 o	Revise Changelog name to autotools-approved ChangeLog
 
 o	Add NEWS file containing mailing list and Freshmeat announcement text
-	for versions 0.5.1 through 0.8.4.  This file is required by autotools.
+	for versions through 0.8.4.  This file is required by autotools.
 
 o	Add options --f{ex,crop} for frame-coordinate exclusion regions.
 
