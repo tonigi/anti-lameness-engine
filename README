@@ -5,7 +5,7 @@ ALE version 0.8.4 README
 This file includes download, build, and installation instructions specific to
 this software package.  For additional instructions on using 'autotools' build
 and installation scripts, see the 'INSTALL' file.  Documentation regarding use
-of the software is provided in the 'doc' directory of this package, and can may
+of the software is provided in the 'doc' directory of this package, and may
 also be available from the project web site.  See the end of this file for
 relevant URLs.
 
