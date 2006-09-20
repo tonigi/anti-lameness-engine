@@ -2,17 +2,14 @@
 ALE To-do list
 ==============
 
-This list is dynamic, and may have changed since the last release.  For
-updates, please see the version in the main repository.[1]  Prior to
-implementing changes listed below, please ensure that any dependencies have
-been satisfied and that changes do not generate new conflicts with other list
-items.
+This file includes a tentative list of future versions and features.
 
+0.8.5 pre-beta
+--------------
 
-0.8.5 pre-beta (tentative)
---------------------------
+Note: This release may be combined with the 0.9.0 Beta release.
 
-+ Update the README to reflect the new build process.
++ Modify help text and messages containing references to the old build process.
 + Move user and tech documentation from the website to this tree, and license
   under GPL, where 'object code' is understood to mean 'any non-source version of
   the work', as defined in GPLv3 draft 2.  Conversion from HTML to a more flexible
@@ -20,8 +17,6 @@ items.
   new features and syntax would be desirable.
   - Document new scoping operators {}, [], and [<>].
   - Document other changes in UI, including regularization of syntax.
-
-Note: This release may be merged with the 0.9.0 Beta release.
 
 
 0.9.0 Beta
@@ -48,7 +43,4 @@ Unsorted
 + Add bindings for other programming languages.
 
 
-Notes
------
 
-[1] http://auricle.dyndns.org/darcs/ale/TODO
