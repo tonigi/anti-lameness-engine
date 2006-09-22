@@ -4,8 +4,8 @@ ALE To-do list
 
 This file includes a tentative list of future versions and features.
 
-0.8.5 pre-beta
---------------
+0.8.5 (pre-Beta)
+----------------
 
 Note: This release may be combined with the 0.9.0 Beta release.
 
@@ -13,21 +13,30 @@ Note: This release may be combined with the 0.9.0 Beta release.
 + Move user and tech documentation from the website to this tree, and license
   under GPL, where 'object code' is understood to mean 'any non-source version
   of the work', as defined in GPLv3 draft 2.  Conversion from HTML to a more
-  flexible format, such as texinfo, would be desirable.  Revision of the user
-  manual for new features and syntax would be desirable.  Automatic inclusion
-  of the text of README, TODO, and other package documentation would probably
-  also be desirable.
+  flexible format, such as texinfo or docbook, would be desirable.  Revision of
+  the user manual for new features and syntax would be desirable.  Automatic
+  inclusion of the text of README, TODO, and other package documentation would
+  probably also be desirable.
   - Document new scoping operators {}, [], and [<>].
   - Document other changes in UI, including regularization of syntax.
 
 
-0.9.0 Beta
-----------
+0.9.0 (Beta)
+------------
 
 + Add Irani-Peleg processing to 3D output options.
   - Add generic 2D transformation class, supporting partial transformations.
-+ Add multi-threading. 
++ Add multi-threading (e.g., in rendering code).
 + Add file-scoped options for black level, alignment type, etc.
+
+
+1.0.0 (Stable)
+--------------
+
++ Refine rendering and alignment code for better performance.
++ Internationalize command-line interface and help text to accommodate
+  translations.
++ Update the Technical Manual for information regarding 3D operation.
 
 
 Unsorted
@@ -35,14 +44,8 @@ Unsorted
 
 + Review command-line interface and help text for suitability for translation
   to languages other than English.
-+ Internationalize command-line interface and help text to allow 
-  translation.
-+ Update the Technical Manual for information regarding 3D operation.
 + Add facilities for manipulating images storing color as integer-valued data,
   possibly as library routines.
 + Move image-processing routines into a library that can be used by other 
   programs.
 + Add bindings for other programming languages.
-
-
-

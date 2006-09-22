@@ -281,9 +281,9 @@ public:
 			"                  read weights <r> back.\n"
 #ifndef USE_UNIX
 			"\n"
-			"                     NOTE: since this build was not configured for POSIX,\n"
-			"                           this option is not supported.  To use this option,\n"
-			"                           first re-build with POSIX=1.\n"
+			"                     NOTE: since this build was not configured with\n"
+			"                           support for --wmx, this option is not supported.\n"
+			"                           To use this option, re-build with support for --wmx.\n"
 #endif
 			BETWEEN_SECTIONS
 			"Perturbation Type [experimental]:\n"
@@ -584,9 +584,9 @@ public:
 			"                     tty [default]\n"
 #ifndef USE_IOCTL
 			"\n"
-			"                     NOTE: since ALE was compiled without ioctl support,\n"
+			"                     NOTE: since ALE was compiled without terminal size check,\n"
 			"                     --ui=tty will behave identically to --ui=stream.\n"
-			"                     For additional output, recompile with IOCTL=1.\n"
+			"                     For additional output, recompile with terminal size check.\n"
 #endif
 			"\n");
 	}

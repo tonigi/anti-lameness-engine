@@ -1942,7 +1942,7 @@ public:
 						             env->get_double_arg(i->first, 3));
 
 #else
-				ui::get()->error_hint("--fl is not supported", "rebuild ALE with FFTW=1");
+				ui::get()->error_hint("--fl is not supported", "rebuild ALE with FFTW support");
 #endif
 			} else if (!strcmp(option_name, "wmx")) {
 #ifdef USE_UNIX
@@ -1950,7 +1950,7 @@ public:
 						   env->get_string_arg(i->first, 2),
 						   env->get_string_arg(i->first, 3));
 #else
-				ui::get()->error_hint("--wmx is not supported", "rebuild ALE with POSIX=1");
+				ui::get()->error_hint("--wmx is not supported", "rebuild ALE with support for --wmx");
 #endif
 			} else if (!strcmp(option_name, "flshow")) {
 				d2::align::set_fl_show(env->get_string_arg(i->first, 1));
