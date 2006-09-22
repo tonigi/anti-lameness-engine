@@ -19,6 +19,7 @@ Note: This release may be combined with the 0.9.0 Beta release.
   probably also be desirable.
   - Document new scoping operators {}, [], and [<>].
   - Document other changes in UI, including regularization of syntax.
++ Website updates to support README URL changes.
 
 
 0.9.0 (Beta)
