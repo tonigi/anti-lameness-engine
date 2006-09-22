@@ -1,0 +1,120 @@
+<html>
+<title>Merging</title>
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>Merging</h1>
+
+Merging uses bilinear interpolation to determine each frame's contribution to
+the accumulated image, and each contribution is assigned equal weight.
+Sections below outline the merging algorithm and its properties.
+
+<h2>Calculating the <i>Overlapping Value</i></h2>
+
+<p>(This section is a very verbose explanation of bilinear interpolation.)
+
+<p>Determining what values from the new frame overlap pixels in the accumulated
+image is an important part of merging.  Since transformations may involve
+sub-pixel alignment, and the accumulated image may be configured to be of finer
+resolution than the input frames, the manner in which these values are
+determined is not necessarily obvious.  
+
+<p>ALE uses the following rules to determine the <i>overlapping value</i>:
+
+<ol>
+<li>If the new frame overlaps the accumulated image pixel in such a manner that
+the accumulated image pixel is aligned with a pixel in the new frame, then the
+value of this pixel is the overlapping value.  <br><br>
+
+<li>If the point overlapping the accumulated image pixel falls on a line between
+two pixels in the new frame, then the overlapping value is a linear
+interpolation between these pixels in the coordinate system of the new frame.
+<br><br>
+
+<li>If the point overlapping the accumulated image pixel falls within a
+quadrilateral outlined by the four closest pixels in the new frame, then the
+overlapping value is a bilinear interpolation among these pixels in the
+coordinate system of the new frame.<br><br>
+
+<li>If none of the above conditions apply, then there is no overlapping value
+for the accumulated image pixel in the new frame.<br><br>
+</ol>
+
+<h2>Calculating the <i>Merged Value</i></h2>
+
+<p>The <i>merged value</i> for an accumulated image pixel is a weighted average
+between the current accumulated image pixel value and the overlapping value.
+The weights are selected so that overlapping values from all frames contribute
+with equal weight.
+
+<h2>Definition of <i>Merging</i></h2>
+
+<p><i>Merging</i> a new frame replaces the existing value of each accumulated
+image pixel with the merged value.
+
+<h2>Properties</h2>
+
+<h3>Density and false local minima</h3>
+
+<p>The merging method outlined above has the property of always updating a
+dense set of pixels in the accumulated image, even when the accumulated image
+is of finer resolution than the new frame.  This ensures that the area of
+defined pixels in the accumulated image is dense and that any uniform change in
+intensity is reflected uniformly over a dense area.  The absence of these
+properties may cause alignment to fail due to entrapment in local minima, and
+so merging is always used internally to create the renderings used by the
+alignment algorithm.  Except in the case of a large pixel footprint, <a
+href="../drizzling">drizzling</a> does not share these properties.
+
+<h3>Convolution with the Bartlett (triangle) filter as the limiting case</h3>
+
+<p>Assuming predicates for translation, point sampling with simple optics, and
+a very large, uniform input sequence, the result of merging is equivalent to
+convolution of pixel data with the Bartlett, or triangle, filter.  This is
+derived from the fact that bilinear interpolation of an image defined at
+discrete points is equivalent to convolution with a Barlett filter.  This
+property is still approximately true even when the translation predicate is not
+satisfied, so long as large changes in scale do not occur.
+
+<br><br>
+
+<hr>
+<i>Copyright 2002, 2003 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+</body>
+</html>

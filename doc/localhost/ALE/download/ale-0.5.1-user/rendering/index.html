@@ -1,0 +1,216 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE User Manual: Rendering</title>
+
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+2684415918<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE Rendering</h1>
+
+Rendering determines how an output image is constructed from a series of
+aligned input frames.  The incremental renderers, merging and drizzling, update
+the output image after reading each new frame from the series, whereas the
+non-incremental renderers wait until the last frame has been loaded to produce
+output.  More than one renderer can be involved in producing the final output image.
+Available rendering options are outlined below.
+
+<h2>Merging</h2>
+
+Merging, the default incremental renderer, works most effectively on images
+that have no large changes in scale (e.g. camera zooming).  Since it uses
+bilinear interpolation, output images are approximately convolved with the
+triangle, or Bartlett, filter, and may appear to have reduced contrast and
+resolution in comparison with other renderers.
+
+<h2>Drizzling</h2>
+
+The drizzling renderer is an incremental renderer that can usually produce
+better images than merging, but it works most effectively with devices having
+very little blur and optical distortion.  Devices sampling very small angles of
+the scene at each pixel are ideal; hence, if very fine staircase aliasing is
+visible in the input frames, drizzling should work very well.  (For creation of
+higher resolution images with drizzling, use also the --scale option described
+below.)
+
+<pre>
+--drizzle-diam=x  Drizzle with input pixel diameter x (where 0 &lt; x &lt;= 1).
+--drizzle-only    If drizzling, output black for pixels with no drizzle data.
+</pre>
+
+<p>For more information about drizzling, see the paper by Richard Hook and
+Andrew Fruchter, "Variable-Pixel Linear Combination", or the following URL:
+
+<p><a href="http://www.cv.nrao.edu/adass/adassVI/hookr.html">http://www.cv.nrao.edu/adass/adassVI/hookr.html</a>
+
+<h2>High-frequency enhancement</h2>
+
+<p>This renderer uses an unsharp mask to enhance the contrast of high
+frequencies.  It can be used to compensate for systematic blurriness introduced
+by merging, drizzling, or the image capture device.  However, better results
+will generally be achievable by using a separate postprocessing tool, such as
+<a href="http://www.gimp.org">the GIMP</a> or <a
+href="http://cinepaint.sourceforge.net/">CinePaint</a> (formerly called Film
+GIMP).  In addition to the built-in unsharp mask, the GIMP can make use of
+Ernest Lippe's <a href="http://refocus.sourceforge.net/">refocus</a> plugin.
+
+<pre>
+--hf-enhance=x    Enhance high frequency details by factor x.  (0.0 is default)
+</pre>
+
+<h2>Irani-Peleg iterative image reconstruction</h2>
+
+This renderer is by far the most general, and can be used to compensate for
+blurring introduced by the image capture device.  In order to use it most
+effectively, an approximation of the projection function for the capture device
+should be known.  Two general classes of projection functions are supported: box
+filters and custom filters.
+
+<p>If rendering with the box filter option, manual experimentation can be used
+to find a diameter that works well.  Alternatively, ALE includes a script that
+calibrates custom filters for devices, based on images captured from known
+scenes.
+
+<p>Two custom filter options are included: one for the IBM PC Camera Pro
+(XVP610) in 320x240 mode, and one for interactive filter specification.
+
+<p>Note that this option can take a long time to produce output, especially on
+large images.  If incremental output is enabled (see below), output is written after
+each iteration is complete.  Using more iterations will generally improve
+output, up to the point of convergence, when additional iterations have no
+effect.  A dot is displayed to indicate the completion of each iteration.
+
+<pre>
+--ip &lt;d> &lt;i>      Solve for a box filter with diameter &lt;d> over &lt;i> iterations.
+--ipc &lt;c> &lt;i>     Solve for device config &lt;c> over &lt;i> iterations.
+</pre>
+
+The available device configurations are as follows:
+
+<pre>
+xvp610_320x240
+stdin
+</pre>
+
+<p>For more information on the backprojection technique of Michal Irani and Shmuel
+Peleg, see their paper, "Improving Resolution by Image Registration", at
+
+<p><a href="ftp://ftp.wisdom.weizmann.ac.il/pub/irani/PAPERS/SR_CVGIP91.pdf">ftp://ftp.wisdom.weizmann.ac.il/pub/irani/PAPERS/SR_CVGIP91.pdf</a>
+
+<h2>Scale factor</h2>
+
+Rendering with a larger scale factor causes internal data structures to store
+more information, resulting in image output of the specified larger scale.
+Larger scales can improve alignment precision and output image quality, but can
+also increase alignment and rendering times.
+
+<pre>
+--scale=x         Scale images by the factor x (where x is at least 1.0)
+</pre>
+
+<h2>Image extents</h2>
+
+The --extend option records pixel data that falls outside of the region of the
+first frame in the sequence.  This can be useful for providing additional
+alignment constraints or creating panoramic image mosaics.  (See also the
+description of the --follow option in the <a href="../alignment">alignment</a>
+section.)
+
+<pre>
+--extend          Increase image extents to accommodate all pixel data.
+--no-extend       Don't increase extents; crop to original frame. [default]
+</pre>
+
+<h2>Incremental output</h2>
+
+By default, the output file is written every time a renderer completes an
+update cycle.  In order to suppress output until the final image is rendered,
+specify the --no-inc option.
+
+<pre>
+--inc             Produce incremental output.  [default]
+--no-inc          Don't produce incremental output.
+</pre>
+
+<h2>Pixel replacement</h2>
+
+<p>When using the merging renderer, --replace indicates that each new frame
+should replace the corresponding region of the rendering, instead of being
+merged with data from previous frames.  This option was originally suggested by
+Jeff Treece for use in stabilization of video streams.  His approach to
+stabilization is outlined below.
+
+<h3>Video Stabilization</h3>
+
+<p>If the files
+
+<pre>0.ppm, 1.ppm, ..., 9.ppm</pre>
+
+represent frames from an unstabilized video stream, then the following sequence
+of commands may result in a stabilized sequence:
+
+<pre>
+ale --replace         0.ppm 1.ppm 1.stable.ppm
+ale --replace  1.stable.ppm 2.ppm 2.stable.ppm
+ale --replace  2.stable.ppm 3.ppm 3.stable.ppm
+.
+.
+.
+ale --replace  8.stable.ppm 9.ppm 9.stable.ppm
+</pre>
+
+<p>The resulting stabilized sequence would be:
+
+<pre>0.ppm, 1.stable.ppm, 2.stable.ppm, ..., 9.stable.ppm</pre>
+
+<h3>Option Syntax</h3>
+
+<pre>
+--replace         Replace overlapping areas rather than merging.
+--no-replace      Do not replace.  [default]
+</pre>
+
+
+<br>
+<hr>
+<i>Copyright 2003 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

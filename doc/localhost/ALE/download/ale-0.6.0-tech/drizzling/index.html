@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Drizzling Renderer</title>
+
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>Drizzling Renderer</h1>
+
+<p>ALE versions 0.4.1 and later implement a drizzling algorithm based on that
+outlined in research by Richard Hook and Andrew Fruchter.<sup>1</sup>  
+
+<h2>Algorithm</h2>
+
+<p>In the drizzle rendering method, pixels from source images are associated
+with a square region of given radius in the source image coordinate system.
+Similarly, each pixel in the accumulated image, or target image, is associated
+with a square region, such that each square region coincides with its neighbors
+exactly at its edges.  The source regions are then transformed according to the
+known alignment between source and target, and the regions from all transformed
+source images are combined to form the target image, where each source pixel
+region contributes to each target pixel region linearly with the area of
+overlap between the regions (as calculated in the target coordinate system).
+
+<p>ALE uses an approximation to the above approach, wherein the area of overlap
+is calculated in the coordinates of the source image and then multiplied by a
+factor approximating any difference in scale between the source and target
+images; for the purpose of these calculations, the region of the target pixel
+is approximated by a rectangle in the source coordinate system having all sides
+parallel to the source image coordinate axes.
+
+<h2>Properties</h2>
+
+<p>Assuming small drizzling radius, drizzling is approximately the same as
+convolution of discrete pixel data with a box filter having the same radius as
+the chosen drizzling radius.  Given the box filter approximation, jittering
+assumption, point sampling, and sufficiently small radius, drizzling should
+provide an acceptable approximation of <b>T</b>.  Until this is proven,
+however, this result should be considered unreliable.
+
+<small>
+<p><sup>1</sup> More information on drizzling can be found in the paper by Hook and Fruchter,
+"Variable-Pixel Linear Combination", published in vol. 125 of the ASP
+Conference Series (eds. Gareth Hunt and H. E. Payne).  This paper was also
+published on-line at:
+
+<p><a href="http://www.cv.nrao.edu/adass/adassVI/hookr.html">http://www.cv.nrao.edu/adass/adassVI/hookr.html</a>
+
+</small>
+
+<hr>
+<i>Copyright 2002, 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

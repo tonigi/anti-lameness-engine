@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE User Manual: Alignment</title>
+
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+2684415918<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>Alignment</h1>
+
+Alignment compares each supplemental frame in the sequence with an intermediate
+rendering known as the reference image.  Based on this comparison, a
+transformation is assigned to the supplemental frame.  Many different
+transformations can be assigned before alignment of the frame is complete.
+
+<h2>Match statistics</h2>
+
+The match statistic is a single number indicating how well two frames are
+aligned; this number is used to select or reject transformations during
+alignment.  After alignment is complete, ALE displays the final match
+statistic.  If the value is close to 100%, then the frames are well aligned.
+Very low values can indicate misalignment.  However, even frames that are very
+well aligned do not usually achieve 100% alignment, and, for improving image
+quality, ALE works most effectively when match values are less than 100%.
+
+<h3>Match threshold</h3>
+
+A match threshold can be specified; no images with final match statistics
+falling below this threshold will contribute to the final output.
+
+<pre>
+--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)
+</pre>
+
+<h3>Alignment error metric exponent</h3>
+
+The function calculated at each pixel to determine the match statistic is known
+as the alignment error metric, and is of the form <i>(a-b)<sup>x</sup></i>.
+The value <i>x</i> is known as the error metric exponent, and is 2 by default.
+Larger numbers usually mean that alignment will be more influenced by smaller
+image features.
+
+<pre>
+--metric=x        Set the alignment error metric exponent.       (2 is default)
+</pre>
+
+<h3>Alignment Channel Options</h3>
+
+In calculating the per-pixel error metric, there are three ways in which ALE
+can handle color channels.  By default, ALE adds the channels before
+calculating the match.  However, ALE can also rely solely on the green color
+channel or use all three channels separately.
+
+<pre>
+--align-all       Align images using all color channels
+--align-green     Align images using the green channel
+--align-sum       Align images using a sum of channels [default]
+</pre>
+
+<h3>Monte Carlo Alignment</h3>
+
+Aligning large images can take a very long time if all pixels are examined in
+determining the match statistic, so it is often desirable to examine a smaller
+number of pixels.  The Monte Carlo alignment option allows this.  The number of
+pixels used is specified as a percentage, and smaller numbers usually mean
+faster, but less precise, alignment.
+
+<pre>
+--mc &lt;x>          Align using, on average, x% of available pixels (0 &lt; x &lt; 100)
+--no-mc           Align using all pixels.  [default]
+</pre>
+
+<h2>Perturbation</h2>
+
+Every dot displayed after an input filename indicates a change in perturbation
+size.  The size is initially set to be high, allowing large changes in
+alignment to be evaluated, and is reduced as the locally optimal alignment is
+found for each size.  When this size drops below a specified lower bound, the
+frame is considered to be aligned.
+
+<h3>Perturbation bounds</h3>
+
+These options determine the upper and lower bounds for perturbation size.  The
+perturb-upper and perturb-lower bounds apply to rotation (in degrees),
+translation (in pixels), and the movement of the boundaries of a projected
+frame (in pixels).  The rot-upper bound disables rotational perturbation above
+a certain perturbation size (in degrees).  To disable alignment, set
+perturb-upper to zero.
+
+<pre>
+--perturb-upper=x Perturbation upper bound in pixels/degrees  (32.0 is default)
+--perturb-lower=x Perturbation lower bound in pixels/degrees  (.125 is default)
+--rot-upper=x     Rotation-specific perturbation upper bound  (32.0 is default)
+</pre>
+
+<h3>Level of detail</h3>
+
+<p>Alignment at large perturbation sizes is usually carried out on
+reduced-detail images.  To disable this, set lod-max to
+log<sub>2</sub>(perturb-upper).
+
+<pre>
+--lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (1 is def.)
+</pre>
+
+<h2>Transformations</h2>
+
+The variables used to adjust alignment are called transformations, and map
+points from a source image to a target image.  
+
+<p>There are three transformation classes that can be used by ALE.  The
+translational class applies only translations to the inputs, changing only the
+position of images; the Euclidean class applies translations and rotations; and
+the projective class applies general projective transformations, which are the
+most general type of transformation supported by ALE.  
+
+<p>The Euclidean class is most appropriate for use with scanners and as a first
+pass for projective transformations.  The projective class is most appropriate
+for use with cameras.  
+
+<p>Except when capturing flat scenes, ALE does not correct for perspective
+changes, so movement of cameras should ideally be constrained so that no large
+translations occur.
+
+<h3>Transformation Class Options</h3>
+
+<pre>
+--translation     Only adjust the position of images
+--euclidean       Adjust the position and orientation of images [default]
+--projective      Use projective transformations.  Best quality, but slow.
+</pre>
+
+<h3>Transformation data file options</h3>
+
+Transformations used in alignment can be loaded from a file or saved to a file.
+This can be useful when performing alignment in several passes, or when
+refining rendering options.
+
+<p>Note that projective transformation data saved to a file cannot be used to
+initialize other transformation types.  
+
+<pre>
+--trans-load=x    Load initial transformation settings from file x
+--trans-save=x    Save final transformation data in file x
+</pre>
+
+<h3>Alignment following</h3>
+
+When frames are more closely aligned with adjacent frames in the sequence than
+they are with the first frame in the sequence, alignment success can be
+improved by specifying the --follow option.  This option can be effective even
+when initial alignment information is loaded from a file.
+
+<pre>
+--identity        Frames align closely with the original frame.  [default]
+--follow          Frames align closely with their immediate predecessor.
+</pre>
+
+<br>
+<hr>
+<i>Copyright 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

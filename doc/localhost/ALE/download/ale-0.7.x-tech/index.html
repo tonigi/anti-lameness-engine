@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE Version 0.7.x/0.8.x Technical Description</title>
+  <style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+
+</head>
+<body>
+
+
+
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+
+<p><b>[ <a href="../../tech/">Up</a> ]</b></p>
+<h1>ALE Version 0.7.x/0.8.x Technical Description <!-- <small>(or the best approximation to date)</small> --> </h1>
+
+<h2>Purpose</h2>
+
+<p>This page discusses motivation, related work, models of program input,
+renderers, and the alignment algorithm, but does not cover the 3D scene
+reconstruction code in versions 0.7.2 and later.  Note also that some changes
+in 0.8.x might not yet be covered.  For information on ALE program operation and
+usage, see the User Manual for <a href="../ale-0.7.x-user/">0.7.x</a> or <a
+href="../ale-0.8.x-user/">0.8.x</a>.</p>
+
+<p><b>Note: This document uses HTML 4 character entities. &nbsp;Sigma is '&Sigma;'; summation is '&sum;'</b>.</p>
+
+<h2>Motivation</h2>
+
+<p>Several factors in the imaging pipeline can affect output, sometimes
+degrading image quality, either individually or through combination.  Lens
+effects include barrel or pincushion distortion; the camera sensor and
+electronics can produce blurring, signal aliasing, noise, quantization, and
+non-linear effects; analog video signals can degrade in transmission; and
+various compression techniques and digital enhancements on- or off-camera can
+destroy image features.  In some cases, a better image can be produced through
+combining information contained in different images.</p>
+
+<table>
+<tr><td align=center><img src="conceptual_pipeline.png"></td></tr>
+<tr><td align=center><i>Imaging Pipeline</i></td></tr>
+</table>
+
+<h2>Related Work</h2>
+
+<p>Richard Hook and Andrew Fruchter's <a
+href="http://www.cv.nrao.edu/adass/adassVI/hookr.html">drizzling technique</a> was designed
+to combine dithered undersampled images.  Previous versions of ALE supported this
+technique; the current version supports an approximation.
+
+<p>Steve Mann's work (e.g. <a href="http://wearcam.org/orbits/">here</a> and <a
+href="http://wearcam.org/comparam.htm">here</a>), on spatial extents,
+projective transformations, linear-colorspace image processing, and weighting
+by certainty functions, motivated ALE's adoption of these features.  A
+modified, "one-sided" approach to certainty is used by ALE's Irani-Peleg
+renderer, to better accommodate extremely bright features that exceed the range
+of all input images.  This approach is modified further in 0.8.0 to rely on
+estimated (instead of measured) intensities, which may allow further reduction
+of noise in some cases.
+
+<p>ALE incorporates an iterative solver based on Michal Irani and Shmuel
+Peleg's <a
+href="http://www.wisdom.weizmann.ac.il/~irani/abstracts/superResolution.html">iterative
+deblurring and super-resolution</a> technique.  It has been extended to handle
+convolutions occurring in tandem in different colorspaces, and has been
+modified for certainty weighting.
+
+<p>ALE's treatment of barrel distortion, using a polynomial in distance from
+the image center, is based on that of Helmut Dersch's Panorama Tools.  ALE's
+approach adjusts the linear (first-order) coefficient so that the corners of
+the transformed frame remain in place.</p>
+
+<h2>Program Inputs</h2>
+
+<p>Define an <i>image</i> to be a function mapping a subset of 2D Euclidean space to
+an RGB colorspace; define a <i>discrete image</i> to be an image defined only
+at coordinates having integral components; define a <i>spatial discretization</i> 
+to be an operator that restricts the domain of an image to a set of points
+having integral components, thus producing a discrete image; define a <i>spatial
+extension</i> to be an operator that extends the domain of a discrete image by 
+assigning the value of the nearest neighbor point.
+
+<p>Ignoring noise and color quantization, ALE assumes that each input frame
+<b>d<sub>x</sub></b> is a discrete image that can be obtained by applying a
+sequence of operators, including transformations, exposure adjustment,
+convolutions, gamma correction, spatial discretization, and spatial extension,
+to some image <b>d</b>, as follows:
+
+<blockquote><b>
+d<sub>x</sub> = DNCGDLE<sub>x</sub>B<sub>x</sub>P<sub>x</sub>d
+</b></blockquote>
+
+Where:
+
+<ul>
+<li><b>P<sub>x</sub></b> is a projective transformation
+<li><b>B<sub>x</sub></b> is a barrel/pincushion distortion transformation
+<li><b>E<sub>x</sub></b> is linear exposure adjustment
+<li><b>L</b> is a convolution in linear colorspace
+<li><b>D</b> is a spatial discretization
+<li><b>G</b> is gamma correction
+<li><b>C</b> is a spatial extension
+<li><b>N</b> is a convolution in non-linear colorspace
+</ul>
+
+(When ALE aligns using Euclidean transformations, <b>P<sub>x</sub></b> are
+assumed to be Euclidean.)
+
+<p>The presence of an extension operator between <b>G</b> and <b>N</b> is
+suspect, and is somewhat inelegant in the case of digitally processed data, but
+although such extension may require careful selection of <b>N</b>, it does not
+restrict the set of possible models.  It is only included because it creates a
+parallelism between <b>N</b> and <b>L</b> that makes implementation easier.
+In a more sophisticated implementation, it could be removed.</p>
+
+<h2>Incremental Rendering</h2>
+
+<p>If <b>L</b> and <b>N</b> are assumed to behave as identity operators, then each
+pixel in each input frame corresponds to a single point in <b>d</b>.  In this
+case, it may be possible to apply filtering operations to input frame pixels
+directly.  One caveat, however, is that different parts of the output may be
+sampled with unequal density in the input frame sequence; hence, a filtering
+approach that is uniform over all regions could cause significant aliasing or
+detail loss.  Instead, ALE uses a non-uniform approach.  If <b>I<sub>n</sub>(i,
+j)</b> is an output pixel, at position <b>(i, j)</b>, updated for input frames
+zero through <b>n</b>, then:
+
+<blockquote>
+<b>I<sub>n</sub>(i, j) = </b>&sum;<sub>n'&isin;0..n</sub>&sum;<sub>(i',j')&isin;Dom[d<sub>n'</sub>]</sub> <b>E<sub>n'</sub><sup>-1</sup>G<sup>-1</sup>d<sub>n'</sub>(i',j') * c(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>)</b>
+</blockquote>
+
+<p>Where <b>c</b> is a <a href="chain/">rendering chain</a>.  Note that for most
+types of rendering chains, the above expression can be simplified considerably.
+
+<h2>Irani-Peleg Rendering</h2>
+
+ALE's Irani-Peleg renderer iteratively updates the final output of incremental
+rendering, with update operator U:
+
+<blockquote>
+<b>J<sub>0</sub> = I<sub>final</sub></b>
+<br>
+<b>J<sub>1</sub> = UJ<sub>0</sub></b>
+<br>
+.
+<br>
+.
+<br>
+.
+<br>
+<b>J<sub>k</sub> = UJ<sub>k-1</sub></b>
+</blockquote>
+
+Where <b>U</b> is the <a href="ip_update_rule/">Irani-Peleg update rule</a>.
+
+<h2>Spatial Extension and Space Complexity</h2>
+
+<p>By default, the output image is of fixed size, limited to the extents of
+<b>d<sub>0</sub></b>, the first image in the input sequence; the 'extend' option
+specifies that output should accommodate all regions of all input images.
+
+<p>When rendering an output image of fixed size, image storage space in memory
+for all non-median rendering types is <i>O(1)</i> in the number of input frames
+and <i>O(n)</i> in the number of pixels per input frame, since at most one
+input image is loaded into memory at any time.  For median-value rendering,
+storage is O(n) in the number of input frames.  When using projectively-aligned
+input images, however, renderings that accommodate all regions of all input
+images can generate arbitrarily large output for a bounded input size, and can
+use an arbitrarily large amount of memory.
+
+<h2>Alignment Algorithm</h2>
+
+<p>Details on the alignment algorithm used in ALE are <a href="alignment/">here</a>.</p>
+
+<h2>3D Scene Reconstruction</h2>
+
+<p>The scene reconstruction code is still very experimental and is not
+currently covered by this document.  For more information, see the user manual
+and source code.
+
+<br>
+<hr>
+<i>Copyright 2002, 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p class="footer">Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

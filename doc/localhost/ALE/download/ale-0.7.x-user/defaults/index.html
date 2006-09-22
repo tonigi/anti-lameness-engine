@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE User Manual: Default Settings</title>
+  <style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+
+</head>
+<body>
+
+
+
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+2684415918<br>
+</table>
+
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE Default Settings</h1>
+
+<p>ALE offers five different default settings, each of which emphasizes
+image quality, speed, or some other rendering characteristic, as follows:</p>
+
+<pre>
+--q0              Low quality, high speed. [default]
+--qn              Low noise, moderate speed.
+--q1              Moderate quality and speed.
+--q2              High quality, low speed.
+--qr              Range-extended high quality.
+</pre>
+
+<p>These settings specify defaults for other options: <code>--dchain</code>, <code>--achain</code>,
+<code>--mc</code>, <code>--ips</code>, <code>--exp-extend</code>, and <code>--cx</code>.  For
+more information about these options, see the <a href="../alignment/">alignment</a> and <a href="../rendering/">rendering</a>
+manual pages.  Details regarding these defaults are provided in the following sections.
+
+<h2>High speed (--q0)</h2>
+
+<code>--q0</code> emphasizes speed over image quality.  This option is default, and
+sets other options' defaults as follows:
+
+<pre>
+   --dchain fine:box:1,triangle:2
+   --achain triangle:2
+   --mc 30
+   --ips 0
+   --exp-noextend
+   --no-cx
+</pre>
+
+<h2>Low noise (--qn)</h2>
+
+<code>--qn</code> emphasizes low noise over resolution and rendering speed, and
+sets the following defaults:
+
+<pre>
+   --dchain sinc*lanc:6
+   --achain sinc*lanc:6
+   --mc 50
+   --ips 0
+   --exp-noextend
+   --no-cx
+</pre>
+
+<h2>Balanced quality and speed (--q1)</h2>
+
+<code>--q1</code> balances image quality and rendering speed, offering higher
+resolution than <code>--qn</code>.  It sets the following defaults:
+
+<pre>
+   --dchain fine:sinc*lanc:6,sinc*lanc:6
+   --achain sinc*lanc:6
+   --mc 50
+   --ips 0
+   --exp-noextend
+   --no-cx
+</pre>
+
+<h2>High quality (--q2)</h2>
+
+<p><code>--q2</code> favors image quality over rendering speed, offering greater
+emphasis for high-frequency details than <code>--q0</code>, <code>--qn</code>,
+or <code>--q1</code>.  It depends on the <code>--lpsf</code> and
+<code>--nlpsf</code> options, which can be set indirectly via the
+<code>--device</code> option.  (More information about these options can be
+found on the <a href="../rendering/psf">PSF</a> and <a href="../device/">device</a> pages.)  <code>--q2</code>
+sets the following defaults:
+
+<pre>
+   --dchain sinc*lanc:8
+   --achain sinc*lanc:8
+   --no-mc
+   --ips 4
+   --exp-noextend
+   --no-cx
+</pre>
+
+<h2>Range extension (--qr)</h2>
+
+<p><code>--qr</code> is similar to <code>--q2</code>, but offers improved
+rendering when input images have been taken with unequal exposures.  In other
+cases, it might exacerbate noise in light and dark regions, and so should not
+be used.  This option sets the following defaults:
+
+<pre>
+   --dchain sinc*lanc:8
+   --achain sinc*lanc:8
+   --no-mc
+   --ips 6
+   --exp-extend
+   --cx 0.7
+</pre>
+
+
+<br>
+<hr>
+<i>Copyright 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

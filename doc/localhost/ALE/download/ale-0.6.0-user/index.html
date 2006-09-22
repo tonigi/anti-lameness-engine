@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE 0.6.0 User Manual</title>
+
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+2684415918<br>
+</table>
+
+
+
+<p><b>[ <a href="../../user/">Up</a> | <a href="file/">File Output</a> | <a href="rendering/">Rendering</a> | <a href="alignment/">Alignment</a> ]</b></p>
+<h1>ALE 0.6.0 User Manual</h1>
+
+<h2>Purpose</h2>
+
+<p>This page summarizes ALE program operation and command-line usage.  
+
+<p>Manual pages linked from this section describe <a href="file/">file
+output</a>, <a href="rendering/">rendering</a> and <a
+href="alignment/">alignment</a>.
+
+<p>For more information on ALE, see the <a
+href="http://auricle.dyndns.org/ALE/">ALE Home Page</a>.
+
+<h2>Parameter Meta-syntax</h2>
+
+<table>
+<tr>
+<td><code>&nbsp;&lt;foo></code></td>
+<td>A required parameter called <i>foo</i>.</td>
+</tr>
+<tr>
+<td><code>[&lt;foo>]</code></td>
+<td>An optional parameter called <i>foo</i>.
+</tr>
+<tr>
+<td><code>[&lt;foo>]*</code></td>
+<td>Zero or more parameters <i>foo</i>.
+</tr>
+</table>
+
+<h2>Command-line syntax for Image Processing</h2>
+
+<p>The following command-line invocation can be used to process a series of
+frames into an output file:
+
+<pre>ale [&lt;option>]* &lt;original-frame> [&lt;supplemental-frame>]* &lt;output-file></pre>
+
+<h3>Option Arguments</h3>
+
+<p>Options are outlined in the manual pages describing <a href="file/">file
+output</a>, <a href="rendering/">rendering</a> and <a
+href="alignment/">alignment</a>.
+
+<h3>Image Files</h3>
+
+<p>ALE can be configured at compile time to use one of two different file
+handlers.  Execute 'ale --version' to determine which file handler is being
+used.  The table below outlines the supported formats for each file handler.</p>
+
+<table border>
+<tr><th>Version Message</th><th>File Types Supported</th>
+<tr><td valign=top>
+<pre>File handler:     ImageMagick</pre>
+</td>
+
+<td>
+<p>Input and output files can be any of the <a
+href="http://imagemagick.sourceforge.net/www/formats.html">formats</a> supported by
+ImageMagick.
+</td>
+
+<tr><td valign=top>
+<pre>File handler:     PPM</pre>
+<td>
+<p>Input files must be PPM, and output files are written as PPM.
+</table>
+
+<p>Note that many external programs, including ImageMagick's <a
+href="http://www.imagemagick.org/">command line utilities</a>, can be used to
+convert between PPM and other formats.</p>
+
+<p>See the README included in the source distribution for more information about
+compile-time configuration of file handlers.</p>
+
+<h2>Command-line syntax for Version Information</h2>
+
+<p>The following command-line invocation can be used to print version
+information and build options:
+
+<pre>ale --version</pre>
+
+The following is sample output from this invocation:
+
+<pre>
+ALE Version:      0.6.0
+File handler:     ImageMagick
+Color data:       SINGLE
+Coordinate data:  SINGLE
+DFT:              Built-in
+Assertions:       Disabled
+</pre>
+
+<p>The first line of output indicates the version of ALE source code being
+used, while the remaining lines reflect the build options selected at compile
+time.
+
+<p>For more information about build options, see the README file included in
+the source distribution.
+
+<h2>Command-line syntax for Help Output</h2>
+
+When invoked with no options, or options detected as incorrect, ALE outputs a 
+help message specifying command-line usage and available options.  The following
+is a sample invocation:
+
+<pre>ale</pre>
+
+<h2>Related Manual Pages</h2>
+
+<ul>
+<li><a href="file/">File Output</a>
+<li><a href="rendering/">Rendering</a>
+<li><a href="alignment/">Alignment</a>
+</ul>
+
+<br>
+<hr>
+<i>Copyright 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.  
+</body>
+</html>

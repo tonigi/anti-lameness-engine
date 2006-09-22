@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Irani-Peleg Renderer</title>
+
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>Irani-Peleg Renderer</h1>
+
+<p>ALE implements an iterative image reconstruction algorithm based on Michal
+Irani and Shmuel Peleg's paper "Improving Resolution by Image Registration",
+published in <i>Graphical Models and Image Processing</i>, Vol. 53, No. 3, May,
+pp. 231-239, 1991, or available at:
+
+<p><a href="http://www.wisdom.weizmann.ac.il/~irani/abstracts/superResolution.html">http://www.wisdom.weizmann.ac.il/~irani/abstracts/superResolution.html</a>
+
+<p>This algorithm iteratively performs two steps: first, an
+approximation of <b>T</b> is projected, based on a filter approximating
+<b>d<sub>j</sub></b>, and data collected during <a
+href="../alignment/">alignment</a>, to create a set of simulated input frames;
+second, the per-pixel error -- between these simulated input frames and the
+actual input frames -- is calculated, backprojected, and subtracted from the
+approximation of <b>T</b>, resulting in a new approximation of <b>T</b>.
+
+<h2>Initial Image Approximation</h2>
+
+<p>ALE uses the results of previous rendering steps as the initial image
+approximation.</p>
+
+<h2>Projection and Back-projection filters</h2>
+
+ALE provides command-line options for selecting forward-projection filters,
+including box filters (release 0.4.2 and later) and custom filters (release
+0.4.7 and later).  The back-projection filters are constructed from the
+forward-projection filters in such a way that condition (9) from Theorem 4.1
+in the source paper is satisfied.
+
+<h2>Transformation details</h2>
+
+<p>ALE's method of transforming pixel areas between coordinate systems
+approximates transformed pixel boundaries with axis-aligned rectangular
+regions.  Since boundaries are transformed into the coordinate systems of the
+input frames, this approximation can be improved by using larger scale factors
+(and hence reducing the size of transformed pixels).</p>
+
+<h2>Multi-level operation</h2>
+
+<p>The following is an edited excerpt from the comment headers for the source
+file <code>d2/render/ipc.h</code>.  For more information about ALE's
+implementation of multi-level operation, see the relevant source files.
+
+<pre>
+ * The algorithm in the source paper looks something like this (PSF' is the
+ * backprojection kernel, and corresponds to what the authors of the paper call
+ * AUX):
+ *
+ * ===============================================================
+ *    Forward         Backward           Binary Operators
+ * ---------------------------------------------------------------
+ *
+ *    scene(n) ------> scene(n+1)        <--- summation
+ *
+ *      |                 ^
+ *      |                 |
+ *     PSF               PSF'
+ *      |                 |
+ *      |        ---------+              <--- difference
+ *      V       /         |
+ *
+ *   simulated(n)       real
+ *
+ * ===============================================================
+ *
+ * This assumes a single colorspace representation.  However, consumer cameras
+ * sometimes perform sharpening in non-linear colorspace, whereas lens and
+ * sensor blurring occurs in linear colorspace.  Hence, there can be two
+ * colorspaces involved; ALE accounts for this with linear and non-linear
+ * colorspace PSFs.  Hence, the algorithm we use looks something like:
+ *
+ * ===============================================================
+ *    Forward         Backward            Binary Operators
+ * ---------------------------------------------------------------
+ *
+ *    scene(n) -----> scene(n+1)          <--- summation
+ *
+ *      |                 ^
+ *      |                 |
+ *    LPSF              LPSF'
+ *      |                 |
+ *      |       ----------+               <--- difference,
+ *      V      /          |                    exposure
+ *                                             re-estimation
+ *  lsimulated(n)      lreal(n)
+ *
+ *      |                 ^
+ *      |                 |
+ *   unlinearize       linearize
+ *      |                 |
+ *      V                 |
+ *
+ *  lsim_nl(n) -----> lreal_nl(n)         <--- summation
+ *
+ *      |                 ^
+ *      |                 |
+ *    NLPSF             NLPSF'
+ *      |                 |
+ *      |       ----------+               <--- difference
+ *      V      /          |
+ *
+ *  nlsimulated(n)     real_nl
+ *
+ *                        ^
+ *                        |
+ *                    unlinearize
+ *                        |
+ *                        |
+ *
+ *                      real
+ *
+ * ===============================================================
+</pre>
+
+
+<hr>
+<i>Copyright 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

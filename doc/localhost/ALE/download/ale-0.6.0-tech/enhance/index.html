@@ -1,0 +1,85 @@
+<html>
+<title>USM Renderer</title>
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> <!-- | <a href="../../ba/big_about.html">Examples</a> --> ]</b></p>
+<h1>USM Renderer</h1>
+
+<p>The Unsharp Mask Renderer is a built-in post-processing step based on the
+unsharp mask technique, which has been used to enhance high frequencies since
+the days of photographic plate processing (see, for example, <a
+href="http://www.scenic-route.com/tutorial/psp/tutor/unsharp/Unsharp.htm">this
+page</a>).  This renderer acts after all other rendering steps have completed,
+except for Irani-Peleg rendering, which occurs afterward.
+
+<h2>Properties</h2>
+
+<p>Given a sequence of images that satisfy all predicates for merging (or
+drizzling) except point sampling; given a known linear PSF; and given only
+translations between frames, the result of merging (or drizzling) will be an
+acceptable approximation of <b>T</b> convolved with the PSF.  This does not
+imply that deconvolution of this result will be an acceptable approximation of
+<b>T</b>, however, since frequencies with low response may be reconstructed
+with poor fidelity due to reduced precision.  We use the low-response
+approximation to ignore these frequencies.  Assuming the USM approximation, the
+remaining frequencies are reconstructed to form an acceptable approximation of
+<b>T</b>.  (Since this doesn't really constitute a proof, the results should be
+considered unreliable.)
+
+<p>
+
+<small>
+<!--
+<sup>1</sup>Ernst Lippe.  refocus: A Gimp plug-in for sharpening images.  <a href="http://refocus.sourceforge.net/doc.html">http://refocus.sourceforge.net/doc.html</a><br>
+<sup>2</sup>E.g. this approach was used in: 
+<br>Michal Irani and Shmuel Peleg. "Improving Resolution by Image Registration". <i>Graphical
+Models and Image Processing.</i> Academic Press, May 1991.  <a href="http://www.wisdom.weizmann.ac.il/~irani/abstracts/superResolution.html">http://www.wisdom.weizmann.ac.il/~irani/abstracts/superResolution.html</a> -->
+
+</small>
+
+<!--
+<h2>Examples</h2>
+
+<p><a href="../../ba/big_about.html">Examples</a> of post-enhancement are available.
+-->
+
+<hr>
+<i>Copyright 2002, 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+</body>
+</html>

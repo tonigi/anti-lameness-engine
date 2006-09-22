@@ -1,0 +1,94 @@
+<html>
+<title>Merging</title>
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>Merging</h1>
+
+Merging uses bilinear interpolation to determine each frame's contribution to
+the accumulated image, with each contribution assigned equal weight.  Where
+bilinear interpolation does not define a value, the accumulated image pixel is
+not updated.  Sections below outline the properties of this approach.
+
+<h2>Properties</h2>
+
+<h3>Convolution with the Bartlett (triangle) filter as the limiting case</h3>
+
+<p>Assuming predicates for translation and point sampling, bilinear
+interpolation is equivalent to convolution with a Bartlett filter.  Combined
+with the box filter approximation, jittering assumptions, and Bartlett filter
+approximation, the result of merging should be an acceptable approximation of
+<b>T</b>.  This should be proven at some point.  Until then, this result should
+be considered unreliable.
+
+<h3>Density and false local minima</h3>
+
+<p>Informally, the merging method outlined above always updates a dense set
+of pixels in the accumulated image.  In particular, any accumulated image pixel
+whose center falls on a line between updated pixels is also an updated pixel.
+
+<p>It is conceivable that this property reduces the likelihood of alignment
+failure due to entrapment in local minima; hence, the merging renderer is
+always used as a reference for the <a href="../alignment/">alignment</a>
+algorithm.  Except in cases where a large radius is used, <a
+href="../drizzling/">drizzling</a> does not share these properties.</p>
+
+<!--
+<p>Define a dense update method to be one that 
+
+<p>The merging method outlined above has the property of always updating a
+dense set of pixels in the accumulated image (i.e. any accumulated image pixel
+whose center falls on a line between updated pixels is also an updated pixel,
+and all updated pixels are connected by a path consisting of only updated
+pixels), even when the accumulated image is of finer resolution than the new
+frame.  This ensures that the area of defined pixels in the accumulated image
+is dense and that any uniform change in intensity between frames is reflected
+uniformly over a dense area.  The absence of these properties may cause
+alignment to fail due to entrapment in local minima, and so merging is always
+used internally to create the renderings used by the alignment algorithm.
+Except in the case of a large pixel footprint, <a
+href="../drizzling">drizzling</a> does not share these properties.
+-->
+
+<br><br>
+
+<hr>
+<i>Copyright 2002, 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+</body>
+</html>

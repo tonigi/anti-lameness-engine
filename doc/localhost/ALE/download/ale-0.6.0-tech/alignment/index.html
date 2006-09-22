@@ -1,0 +1,191 @@
+<html>
+<title>Alignment</title>
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> | <a href="error/">Error Function</a> ]</b></p>
+<h1>Alignment</h1>
+
+ALE aligns each supplemental frame, in sequence, with the merged rendering
+representing all previous frames.  This page outlines the three supported
+transformation classes, the algorithm used for alignment, and the properties of
+the alignment algorithm.  Following this is a discussion of practical use of
+alignment options, including alignment classes and alignment in the case of
+extended renderings.
+
+<h2>Transformations</h2>
+
+<p>ALE offers three classes of transformations: </p>
+
+<table border>
+<tr><td>Translations</td><td>introduced in version 0.0.0</td>
+<tr><td>Euclidean transformations (excluding reflections)</td><td>introduced in version 0.1.0</td>
+<tr><td>Projective transformations</td><td>introduced in version 0.2.0</td>
+</table>
+
+<!-- <p>ALE uses a forward transformation to map from a supplemental frame to the
+accumulated image, and an inverse transformation to map from the accumulated
+image to the supplemental frame.  Alignment operates on the parameters of the
+forward transformation. -->
+
+<h2>Algorithm</h2>
+
+<p>Alignment proceeds by a deterministic search, beginning with an initial
+transformation and modifying this transformation through a series of
+perturbations.
+
+<p>The initial transformation may be loaded from a file or selected by default.
+The default initial transformation is either the identity transformation or
+(when the <code>--follow</code> option is specified) the most recently merged
+frame's final alignment.  (Note that changes in release 0.5.0 are not reflected
+here; these changes affect the interaction of the --follow and --trans-load
+flags.)
+
+<p>Once the initial transformation is determined, an initial perturbation
+amount is selected, and represents the step size by which each of the
+transformation parameters are changed.  In translational or Euclidean
+alignment, the perturbation amount is applied to translation -- in units of
+pixels on the two image axes -- and rotation -- in units of degrees about the
+image center.  (In version 0.4.8 and later, an additional configurable upper
+bound constrains rotational perturbation separately, preventing, e.g., a
+360 degree perturbation of rotation.)  In the case of projective alignment, the
+perturbation amount is applied to the position of the corners of the projected
+quadrilateral in units of pixels, where the projection is from the boundary
+of the supplemental image into the coordinate system of the accumulated image.
+
+<p>If possible, transformation parameters are changed to decrease the <a
+href="error/">error</a> between the two images being
+aligned.  The perturbation amount is halved whenever it is determined that no
+parameter change of this size improves the alignment of the images.  A lower
+bound on the perturbation amount determines when the alignment is complete.
+
+<p>The order in which parameters are considered for change is specified in the
+source code, and has the following property: No modified parameter is
+considered for further change until all other parameters have been considered.
+A consequence of this property is that parameters are always considered in a
+fixed (round robin) order.
+
+<p>When multiple levels of detail are used, the error may be calculated on
+images with a reduced level of detail.  ALE versions 0.1.1 through 0.4.7 use a
+level of detail twice as fine as the perturbation amount for perturbation
+amounts larger than two, and full detail otherwise.  Later versions default to
+this behavior, but can be configured differently.  Earlier versions do not use
+reduced levels of detail.
+
+<h2>Properties</h2>
+
+<p>Several assumptions were made throughout the design and testing of the
+algorithm outlined above.  These assumptions are outlined below.
+
+<p>The algorithm is based on a hill-climbing approach, which requires that any
+local minimum reachable from the starting point by traveling a path of
+decreasing error is also a global minimum (or, in this case, the correct
+alignment).  While it is possible that the algorithm outlined above succeeds in
+some cases for which hill-climbing fails, it is still susceptible to entrapment
+in local minima.
+
+<p>As outlined above, depending on program options, transformation parameters
+may be changed by perturbations of several units (degrees or pixels) early in
+the alignment process.  As long as no change of this magnitude moves the
+transformation out of the 'bowl' in which the minimum error -- and hence
+correct alignment -- lies, this is not a problem.  However, it might break in
+some cases where a hill-climbing approach would succeed.  (Notably, simulated
+annealing suffers from a similar problem, and it seems likely that a case could
+be constructed in such a way that the algorithm outlined above -- like
+simulated annealing -- could, contrarily, succeed where hill-climbing fails.)
+
+<p>Finally, the use of reduced level-of-detail relies on a high signal-to-noise
+ratio at low frequencies.  Fortunately, this assumption seems to generally
+hold, but camera defects or radio interference could violate the assumption,
+possibly resulting in misalignment.
+
+<h2>Use of Alignment Classes</h2>
+
+<p>ALE is likely to be most useful when corresponding regions of different
+frames can be aligned by one of the available alignment classes.
+
+<p>As described by Steve Mann in his work on <a
+href="http://wearcam.org/orbits/">Video Orbits</a>, the projective
+transformation offers particular versatility for camera imaging of (ideal
+Lambertian) flat scenes.  In this case, any change in camera position and
+orientation can be corrected as long as points always have a defined projection
+onto the rendering plane (for which ALE uses the base of the pyramid
+<b>R<sub>1</sub></b>).
+
+<p>In camera imaging of scenes with depth, correction for orientation is almost
+the same as for flat scenes, since, if focus and lens distortion is ignored, a
+scene with depth is indistinguishable from a flat scene from the perspective of
+a camera whose position is fixed.
+
+<p>For sequences of camera images with small changes in position or
+orientation, the projective transformations for alignment may closely
+approximate Euclidean transformations; in this case, using Euclidean
+transformations may achieve similar results and may require less time for
+alignment, since there are fewer parameters to tweak (three parameters
+instead of eight).
+
+<p>In the case of flatbed scanners that preserve the relative height and width
+of scans, any change in the position or orientation of flat objects can be
+corrected using the Euclidean alignment class.</p>
+
+<p>If a flatbed scanner does not preserve relative height and width, but does
+preserve straight lines, then any change in the position or orientation of flat
+objects can be corrected with the projective alignment class.
+
+<p>However, even if a transformation is within the alignment class used, the
+alignment algorithm may still be unable to approximate it.
+
+<h2>Alignment in the case of Extended Renderings</h2>
+
+<p>By using the --extend flag, ALE can be used to create image mosaics spanning
+a spatial region larger than that represented by any single image in the frame
+sequence.  In these cases, if adjacent frames in the sequence tend to be more
+closely aligned with each other than they are with the original frame, it may
+be helpful to also use the --follow flag as a hint to the alignment algorithm.
+</p>
+
+
+<br><br>
+<small>
+</small>
+
+<hr>
+<i>Copyright 2002, 2003 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any
+medium, provided this notice is preserved.
+</body>
+</html>

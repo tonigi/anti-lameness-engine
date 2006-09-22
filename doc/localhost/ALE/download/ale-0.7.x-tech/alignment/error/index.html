@@ -1,0 +1,138 @@
+<html>
+<title>Error</title>
+
+  <style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+
+</head>
+<body>
+
+
+
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+
+<p><b>[ <a href="../">Up</a> | <a href="mc/">Monte Carlo</a> ]</b></p>
+<h1>Error</h1>
+
+<p>Error calculations are used to determine whether a transformation is "good"
+or not, and in particular, whether one transformation is better or worse than
+another.  A smaller error indicates a better transformation, from the perspective
+of the alignment algorithm.
+
+<p>ALE defines an error value for each pixel of the alignment reference image, and also
+comprehensive error, which summarizes the error over all pixels.  
+
+<h3>Pre-Alignment Exposure Registration</h3>
+
+<p>When exposure registration is enabled, ALE performs an exposure registration
+step prior to alignment.  The result of this step is dependent on the initial
+alignment (this can be either the default initial alignment or an alignment
+loaded from a transformation data file).  See the source for more details.
+
+<h3>Per-Pixel Error</h3>
+
+<!-- <p>(Alternatives to normalization exist, including the use of inner products; see
+Steve Mann's paper, available on the website linked in footnote 1, for a
+discussion of alignment approaches.)  -->
+
+<!--
+<p>Based on principle 2, ALE calculates the difference between each alignment reference
+image pixel and the value with which it would be merged given a candidate
+transformation.  This latter value is the <i>overlapping value</i>, as
+described in the section on <a href="../../merging/">merging</a>.  This difference
+is then raised by the error metric exponent, as specified by the --metric
+option.  The exponent defaults to 2.0 for ALE versions 0.1.0 and later, or 1.0
+for version 0.0.0.  Hence, 
+-->
+<p>The per-pixel error for pixel <i>(i, j)</i> in the alignment reference
+image <i>A</i>, frame <i>B</i>, and transformation <i>T</i>, is:
+
+<p><blockquote>
+<pre>
+<i>p(i, j, A, B, T) = Abs( A(i, j) - B(T_inverse(i, j)) )<sup>metric_exponent</sup></i>
+</pre>
+</blockquote>
+
+<p>where <i>Abs()</i> is the absolute value function and <i>B(T_inverse(i,
+j))</i> is determined by bilinear interpolation (unless a different interpolant
+is specified using <code>--afilter</code>).  If not specified by the --metric
+option, <i>metric_exponent</i> defaults to 2.
+
+<p>For coordinates where B(T_inverse(i, j)) is not defined, the error is zero.
+(Feedback from Angelo Pesce led to clarification of this point.)
+
+<p>In addition to per-pixel error, a per-pixel <i>maximum error
+estimator</i> is calculated, as follows:
+
+<p><blockquote>
+<pre>
+<i>p_max(i, j, A, B, T) = Max( A(i, j), B(T_inverse(i, j)) )<sup>metric_exponent</sup></i>
+</pre>
+</blockquote>
+
+<p>For coordinates where B(T_inverse(i, j)) is not defined, the maximum error
+estimator is zero.  (Feedback from Angelo Pesce led to clarification of this
+point.)
+
+
+<h3>Comprehensive Error</h3>
+
+<p>There are two varieties of comprehensive error used by ALE: <i>exhaustive</i>
+error (enabled by <code>--no-mc</code>) and <a
+href="mc/"><i>Monte Carlo</i></a> error (enabled by <code>--mc</code>).
+Whereas the exhaustive approach evaluates the error for each pixel in the
+alignment reference image, the <a href="mc/">Monte Carlo</a> approach evaluates
+only a subset of pixels.  
+
+<p>If we consider <i>Sum[]</i> to provide the sum over whatever subset of
+pixels we are sampling (including possibly the set of all pixels), then the
+comprehensive error function, for alignment reference image <i>A</i>, frame
+<i>B</i>, and transformation <i>T</i>, is:
+
+<p><blockquote>
+<pre>
+<i>E(A, B, T) = (Sum [ p(i, j, A, B, T) ] / Sum [ p_max(i, j, A, B, T) ])<sup>(1/metric_exponent)</sup></i>
+</pre>
+</blockquote>
+
+<br><br>
+
+<hr>
+<i>Copyright 2002, 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any
+medium, provided this notice is preserved.
+</body>
+</html>

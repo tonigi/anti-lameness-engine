@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE User Manual: File Output</title>
+
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+2684415918<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE File Output</h1>
+
+File output options determine the format in which rendered images are written.
+Depending on the compilation options used, available file output options vary.
+
+<h2>PPM Output</h2>
+
+All builds of ALE support PPM output.  PPM can be written in plain (ASCII) or
+raw (binary) format.  If ALE has been built without ImageMagick support, or if
+the file type cannot be automatically determined by file extension, then raw
+PPM output is used by default.
+
+<pre>
+--raw             Write raw PPM output
+--plain           Write plain PPM output
+</pre>
+
+<h2>Extension-based file type determination</h2>
+
+If ALE has been built with ImageMagick support, then the output file type can
+be determined automatically by file extension.  This is the default behavior
+for ImageMagick builds.  The <code>--auto</code> flag explicitly specifies that
+the default behavior should be used.  This flag generates an error on builds
+compiled without ImageMagick support.  
+
+<pre>
+--auto            Determine file type automatically
+</pre>
+
+<h2>Output Color Depth</h2>
+
+Output color depth of 8 or 16 bits of precision per color channel can be specified,
+for 24-bit or 48-bit color, respectively.  
+
+<pre>
+--8bpc            Write 8 bit per channel output [default]
+--16bpc           Write 16 bit per channel output
+</pre>
+
+<br>
+<hr>
+<i>Copyright 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

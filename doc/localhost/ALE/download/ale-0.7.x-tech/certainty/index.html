@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE Certainty</title>
+  <style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+
+</head>
+<body>
+
+
+
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE Certainty</h1>
+
+<p>When used with a sequence of differently-exposed images, the certainty
+techniques implemented in ALE may produce output having higher fidelity overall
+than that of any single exposure.
+
+<h2>Motivation</h2>
+
+<p>When multiple, differently-exposed images of the same scene are available,
+variations of intensity visible in one image might not be visible in another.
+In particular, if the difference between maximal light and dark values in the
+scene exceeds the range of the image capture apparatus, then no single exposure
+can faithfully record the scene.  Using multiple exposures allows discernment
+of at least as many details as any single exposure in the set can provide, and
+may allow discernment of more details, and better estimates of intensities.
+
+<h2>Related Work</h2>
+
+<p>Steve Mann's original approach to certainty is described in his <a
+href="http://wearcam.org/comparam.htm">comparametric paper</a>.  ALE extends
+his approach to Irani-Peleg rendering by defining certainty for (intensity,
+correction) pairs (in versions 0.7.x) and by basing certainty on estimated
+intensities (in version 0.8.0).
+
+<h2>Two-sided Certainty</h2>
+
+<p>Two-sided certainty operator <b>&kappa;</b> is used by ALE's incremental
+renderer, and applies a parameterized heuristic function:
+
+<blockquote>
+<b>&kappa;d(i, j) = max(0.001, [1 - 4 * (0.5 - d(i, j))<sup>2</sup>]<sup>k</sup>)</b>
+</blockquote>
+
+Where all operations are applied componentwise, and <b>k</b> is the certainty
+exponent parameter.
+
+<h2>Symmetrically One-sided Certainty</h2>
+
+<p>Symmetrically one-sided certainty is used by ALE's Irani-Peleg renderer in
+versions 0.7.x, and is calculated using the direction of bias of a correction
+<b>c(i, j)</b> against a modeled pixel value <b>m(i, j)</b>.  The following
+expression assumes the range of <b>m</b> to be <b>[0, 1]</b>, and expresses
+condition using the C trinary if-else operator:
+
+<blockquote>
+<b>&Kappa;(c, m, i, j) = [c(i, j) * (m(i, j) - 0.5) > 0] ? 1 : &kappa;d(i, j)</b>
+</blockquote>
+
+<P>Where all operations are applied componentwise, and <b>&kappa;</b> is the
+operator for two-sided certainty.</p>
+
+<h2>Asymmetrically one-sided certainty</h2>
+
+Asymmetrically one-sided certainty applies the one-sided condition asymmetrically.
+
+<blockquote>
+<b>&Kappa;'(c, m, i, j) = [c(i, j) > 0 && (m(i, j) - 0.5) > 0] ? 1 : &kappa;d(i, j)</b>
+</blockquote>
+
+<h2>Estimate-based Certainty</h2>
+
+<p>Estimate-based certainty uses an estimate of intensity, rather than measured
+intensity, to determine certainty, and can be used in a one-sided or two-sided
+way.  ALE version 0.8.0 uses estimate-based asymmetrically one-sided certainty
+to weight Irani-Peleg correction values.</p>
+
+<br>
+<hr>
+<i>Copyright 2002, 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

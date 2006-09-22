@@ -1,0 +1,347 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE Rendering Chains</title>
+  <style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+
+</head>
+<body>
+
+
+
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE Rendering Chains</h1>
+
+<p>In cases of spatially non-uniform resolution, rendering chains can maintain low
+aliasing in poorly-resolved regions while preserving detail in well-resolved
+regions.  Each chain is based on a sequence of rendering invariants, each
+allowing first, last, average, minimum, or maximum pixel values to be rendered.
+For a given invariant, exclusion regions are honored by default, but can
+optionally be ignored.  Finally, for a given invariant, resolution can be
+limited to the minimum of the input and output images, to prevent aliasing, or
+can use the full resolution of the output image, to prevent loss of fine
+details.</p>
+
+<h2>Parameters</h2>
+
+Parameters for rendering chain or rendering invariant <b>r</b> are as follows:</b>
+
+<blockquote>
+<b>r(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>)</b>
+
+<br><br>
+
+<table>
+<tr><th align=left>Parameter<th><pre>   </pre><th align=left>Description</tr>
+<tr><td>n</td><td></td><td> the number of images contributing to output</tr>
+<tr><td>n'</td><td></td><td> the current image index</tr>
+<tr><td>(i, j)</td><td></td><td> the output pixel position</tr>
+<tr><td>(i', j')</td><td></td><td> the pixel position in the current image</tr>
+<tr><td>E<sub>x</sub></td><td></td><td> linear exposure adjustment for image x</tr>
+<tr><td>G</td><td></td><td> gamma correction</tr>
+<tr><td>P<sub>x</sub></td><td></td><td> projective transformation for image x</tr>
+<tr><td>B<sub>x</sub></td><td></td><td> barrel distortion for image x</tr>
+<tr><td>d<sub>x</sub></td><td></td><td> image x</tr>
+</table>
+
+</blockquote>
+
+Parameters for scaled sampling filter with exclusion (SSFE) <b>e</b> are as follows:
+
+<blockquote>
+<b>e(n', i, j, i', j', E, G, P, B, d)</b>
+
+<br><br>
+
+<table>
+<tr><th align=left>Parameter<th><pre>   </pre><th align=left>Description</tr>
+<tr><td>n'</td><td></td><td> the current image index</tr>
+<tr><td>(i, j)</td><td></td><td> the output pixel position</tr>
+<tr><td>(i', j')</td><td></td><td> the input pixel position</tr>
+<tr><td>E</td><td></td><td> linear exposure adjustment</tr>
+<tr><td>G</td><td></td><td> gamma correction</tr>
+<tr><td>P</td><td></td><td> projective transformation</tr>
+<tr><td>B</td><td></td><td> barrel distortion</tr>
+<tr><td>d</td><td></td><td> image</tr>
+</table>
+
+</blockquote>
+
+
+
+Parameters for scaled sampling filter (SSF) <b>s</b> are as
+follows:</b>
+
+<blockquote>
+<b>s(i, j, i', j', P, B, k)</b>
+
+<br><br>
+
+<table>
+<tr><th align=left>Parameter<th><pre>   </pre><th align=left>Description</tr>
+<tr><td>(i, j)</td><td></td><td> the output pixel position</tr>
+<tr><td>(i', j')</td><td></td><td> the input pixel position</tr>
+<tr><td>P</td><td></td><td> projective transformation</tr>
+<tr><td>B</td><td></td><td> barrel distortion</tr>
+<tr><td>k</td><td></td><td> certainty values</tr>
+</table>
+
+</blockquote>
+
+Parameters for sampling filter <b>f</b> are as follows:</b>
+
+<blockquote>
+<b>f(p)</b>
+
+<br><br>
+
+<table>
+<tr><th align=left>Parameter<th><pre>   </pre><th align=left>Description</tr>
+<tr><td>p</td><td></td><td>position offset p = (i, j)</tr>
+</table>
+
+</blockquote>
+
+<h2>Chains</h2>
+
+<p>A chain <b>c</b> is based on a sequence of rendering invariants <b>v<sub>1</sub>, v<sub>2</sub>, ..., v<sub>max</sub></b>.  For each <b>v<sub>x</sub></b>, define <b>w<sub>x</sub></b>:
+
+<blockquote>
+<b>w<sub>x</sub>(n, i, j, E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = &sum;<sub>n'&isin;0..n</sub> &sum;<sub>(i', j')&isin;Dom[d<sub>n'</sub>]</sub> v<sub>x</sub>(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>)</b>
+</blockquote>
+
+
+If <b>w<sub>t</sub></b> is the weight threshold (ALE option 'wt'), and there exists a smallest <b>x</b> such that:
+
+<blockquote>
+<b>w<sub>x</sub>(n, i, j, E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) &ge; w<sub>t</sub></b>
+</blockquote>
+
+Then <b>c</b> gives:
+
+<blockquote>
+<b>c(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = v<sub>x</sub>(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) / w<sub>x</sub>(n, i, j, E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>)</b>
+</blockquote>
+
+Otherwise, <b>c</b> gives:
+
+<blockquote>
+<b>c(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = v<sub>max</sub>(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) / w<sub>max</sub>(n, i, j, E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>)</b>
+</blockquote>
+
+If both of the expressions above are undefined, then <b>c</b> gives:
+
+<blockquote>
+<b>c(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = 0</b>
+</blockquote>
+
+
+<h2>Invariants</h2>
+
+<p>There are five types of rendering invariants, all of which are parameterized
+with a scaled sampling filter with exclusion, denoted here by the symbol <b>e</b>.  In particular, an
+invariant can be of initial, final, maximal, minimal, or average type.  
+
+<h3>Initial</h3>
+
+<p>If an invariant <b>v</b> is of initial type, then choose the smallest <b>m</b> such that
+the following expression is non-zero:
+
+<blockquote>
+<b>&sum;<sub>(i',j')&isin;Dom[d<sub>m</sub>]</sub> e(m, i, j, i', j', E<sub>m</sub>, G, P<sub>m</sub>, B<sub>m</sub>, d<sub>m</sub>)</b>
+</blockquote>
+
+If such an <b>m</b> can be chosen, then, using the C trinary if-else operator to express condition:
+
+<blockquote>
+<b>v(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = (n' == m) ? e(m, i, j, i', j', E<sub>m</sub>, G, P<sub>m</sub>, B<sub>m</sub>, d<sub>m</sub>) : 0</b>
+</blockquote>
+
+Otherwise:
+
+<blockquote> <b>v(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = 0</b>
+</blockquote> 
+
+<h3>Final</h3>
+
+<p>If an invariant <b>v</b> is of final type, then choose the largest <b>m</b> such that
+the following expression is non-zero:
+
+<blockquote>
+<b>&sum;<sub>(i',j')&isin;Dom[d<sub>m</sub>]</sub> e(m, i, j, i', j', E<sub>m</sub>, G, P<sub>m</sub>, B<sub>m</sub>, d<sub>m</sub>)</b>
+</blockquote>
+
+If such an <b>m</b> can be chosen, then, using the C trinary if-else operator to express condition:
+
+<blockquote>
+<b>v(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = (n' == m) ? e(m, i, j, i', j', E<sub>m</sub>, G, P<sub>m</sub>, B<sub>m</sub>, d<sub>m</sub>) : 0</b>
+</blockquote>
+
+Otherwise:
+
+<blockquote> <b>v(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = 0</b>
+</blockquote> 
+
+<h3>Minimal</h3>
+
+<p>If an invariant <b>v</b> is of minimal type, then choose <b>m</b> such that the following
+expression is defined and minimal:
+
+<blockquote>
+<b>&sum;<sub>(i',j')&isin;Dom[d<sub>m</sub>]</sub> E<sub>m</sub><sup>-1</sup>G<sup>-1</sup>d<sub>m</sub>(i',j') * e(m, i, j, i', j', E<sub>m</sub>, G, P<sub>m</sub>, B<sub>m</sub>, d<sub>m</sub>) / &sum;<sub>(i',j')&isin;Dom[d<sub>m</sub>]</sub> e(m, i, j, i', j', E<sub>m</sub>, G, P<sub>m</sub>, B<sub>m</sub>, d<sub>m</sub>)</b>
+</blockquote>
+
+If such an <b>m</b> can be chosen, then, using the C trinary if-else operator to express condition:
+
+<blockquote>
+<b>v(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = (n' == m) ? e(m, i, j, i', j', E<sub>m</sub>, G, P<sub>m</sub>, B<sub>m</sub>, d<sub>m</sub>) : 0</b>
+</blockquote>
+
+Otherwise:
+
+<blockquote>
+<b>v(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = 0</b>
+</blockquote>
+
+<h3>Maximal</h3>
+
+<p>If an invariant <b>v</b> is of maximal type, then choose <b>m</b> such that the following
+expression is defined and maximal:
+
+<blockquote>
+<b>&sum;<sub>(i',j')&isin;Dom[d<sub>m</sub>]</sub> E<sub>m</sub><sup>-1</sup>G<sup>-1</sup>d<sub>m</sub>(i',j') * e(m, i, j, i', j', E<sub>m</sub>, G, P<sub>m</sub>, B<sub>m</sub>, d<sub>m</sub>) / &sum;<sub>(i',j')&isin;Dom[d<sub>m</sub>]</sub> e(m, i, j, i', j', E<sub>m</sub>, G, P<sub>m</sub>, B<sub>m</sub>, d<sub>m</sub>)</b>
+</blockquote>
+
+If such an <b>m</b> can be chosen, then, using the C trinary if-else operator to express condition:
+
+<blockquote>
+<b>v(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = (n' == m) ? e(m, i, j, i', j', E<sub>m</sub>, G, P<sub>m</sub>, B<sub>m</sub>, d<sub>m</sub>) : 0</b>
+</blockquote>
+
+Otherwise:
+
+<blockquote>
+<b>v(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = 0</b>
+</blockquote>
+
+<h3>Average</h3>
+
+<p>If an invariant <b>v</b> is of average type, then:
+
+<blockquote>
+<b>v(n, n', i, j, i', j', E<sub>0</sub>, ..., E<sub>n</sub>, G, P<sub>0</sub>, ..., P<sub>n</sub>, B<sub>0</sub>, ..., B<sub>n</sub>, d<sub>0</sub>, ..., d<sub>n</sub>) = e(n', i, j, i', j', E<sub>n'</sub>, G, P<sub>n'</sub>, B<sub>n'</sub>, d<sub>n'</sub>)</b>
+</blockquote>
+
+<h2>Scaled Sampling Filter with Exclusion (SSFE)</h2>
+
+<p>A scaled sampling filter with exclusion <b>e</b> is parameterized with a scaled sampling filter <b>s</b>, and
+can be of two types: it can either honor exclusion regions or not.  Define
+<b>is_exclude(n', i, j)</b> to be false if point <b>(i, j)</b> is not excluded
+for frame <b>n'</b>, or if exclusion regions are not being honored.  Then,
+using the C trinary if-else operator to express condition:
+
+<blockquote>
+<b>e(n', i, j, i', j', E, G, P, B, d) = is_exclude(n', i, j) ? 0 : s(i, j, i', j', P, B, &kappa;G<sup>-1</sup>E<sup>-1</sup>d)</b>
+</blockquote>
+
+<p>Where <b>&kappa;</b> is the operator for <a href="../certainty/">certainty</a>.
+
+<h2>Scaled Sampling Filter (SSF)</h2>
+
+<p>Define <b>bayer(i, j)</b> to be a function that returns an RGB value whose
+channels are either zero or one, depending on whether that color is sampled at
+<b>(i, j)</b>.
+
+<p>A scaled sampling filter <b>s</b> is parameterized with a sampling filter
+<b>f</b>, and can be one of two types: fine or coarse.  If it is fine, then,
+using <b>P</b> and <b>B</b> as functions:
+
+<blockquote>
+<b>s(i, j, i', j', P, B, k) = bayer(i', j') * k(i', j') * f(B(P(i', j')) - (i, j))</b>
+</blockquote>
+
+<p>If SSF <b>s</b> is coarse, then color channels are handled separately,
+depending on their density relative to the output image, at point <b>(i, j)</b>
+in the output image.  In particular, bayer patterns can cause some colors to be
+more dense than others.  If the local density of channel <b>h</b> is lower in
+each dimension than the density of channel <b>h</b> in the output image, then:
+
+<blockquote>
+<b>[s(i, j, i', j', P, B, k)]<sub>h</sub> = [bayer(i', j') * k(i', j') * f((i', j') - P<sup>-1</sup>(B<sup>-1</sup>(i, j)))]<sub>h</sub></b>
+</blockquote>
+
+<p>Otherwise, if channel <b>h</b> is locally less dense by a factor <b>d</b> in
+exactly one dimension of the input image, then set <b>d_pair</b> equal to
+<b>(1, d)</b> or <b>(d, 1)</b>, according to the dimension, and:
+
+<blockquote>
+<b>[s(i, j, i', j', P, B, k)]<sub>h</sub> = [bayer(i', j') * k(i', j') * f(d_pair * (B(P(i', j')) - (i, j)))]<sub>h</sub></b>
+</blockquote>
+
+<p>Otherwise, channel <b>h</b> is locally at least as dense in both dimensions of 
+the input image as it is dense in the output image.  In this case:
+
+<blockquote>
+<b>[s(i, j, i', j', P, B, k)]<sub>h</sub> = [bayer(i', j') * k(i', j') * f(B(P(i', j')) - (i, j))]<sub>h</sub></b>
+</blockquote>
+
+
+
+<h2>Sampling Filter</h2>
+
+<p>Sampling filters can be one of the following:</p>
+<table>
+<tr><th align=left>Type</th><th><pre>   </pre></th><th align=left>Description</th></tr>
+<tr><td>sinc<td><td>Sinc filter: (sin &pi;x) / (&pi;x)</td>
+<tr><td>lanc:&lt;x&gt;<td><td>Lanczos, diameter x.
+<tr><td>triangle:&lt;x&gt;<td><td>Triangle, diameter x.
+<tr><td>box:&lt;x&gt;<td><td>Box, diameter x.
+<tr><td>zero<td><td>Zero function
+<tr><td>&lt;f&gt;*&lt;f&gt;<td><td>Pointwise multiplication (windowing)
+</table>
+
+
+<br>
+<hr>
+<i>Copyright 2002, 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

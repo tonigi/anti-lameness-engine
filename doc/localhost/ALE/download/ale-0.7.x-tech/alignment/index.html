@@ -1,0 +1,180 @@
+<html>
+<title>Alignment</title>
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+
+<body>
+
+
+
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+
+<p><b>[ <a href="../">Up</a> | <a href="error/">Error Function</a> ]</b></p>
+<h1>Alignment</h1>
+
+<p>ALE aligns each supplemental frame, in sequence, with an <i>alignment
+reference image</i> constructed from previous frames.  This page outlines
+supported transformation classes, the algorithm used for alignment, and the
+properties of the alignment algorithm.  Following this is a discussion of
+practical use of alignment options, including alignment classes and alignment
+in the case of spatial extension.
+
+<h2>Transformations</h2>
+
+<p>ALE offers the following classes of transformations: </p>
+
+<table border>
+<tr><td>Translations</td><td>introduced in version 0.0.0</td>
+<tr><td>Euclidean transformations (excluding reflections)</td><td>introduced in version 0.1.0</td>
+<tr><td>Projective transformations</td><td>introduced in version 0.2.0</td>
+<tr><td>Barrel distortion correction</td><td>introduced in version 0.7.0</td>
+</table>
+
+<h2>Algorithm</h2>
+
+<p>Alignment proceeds by a deterministic search, beginning with an initial
+transformation and modifying this transformation through a series of
+perturbations.
+
+<p>The initial transformation may be loaded from a file (when
+<code>--trans-load</code> is used) or selected by default, or may be the
+result of a global search (when <code>--gs</code> is used [0.7.1 only]).  The
+default initial transformation is either the transformation of the original
+frame (when the <code>--identity</code> option is specified) or the most
+recently aligned frame's final alignment (when the <code>--follow</code> option
+is specified).  When the initial transformation is loaded from a file, and if
+the <code>--follow</code> option is specified, any changes to the alignment of
+the previous frame are applied to the current frame at the outset.
+
+<p>Once the initial transformation is determined, an initial perturbation
+amount determines the step size by which each of the transformation parameters
+are changed.  In translational or Euclidean alignment, the perturbation amount
+is applied to translation -- in units of pixels on the two image axes -- and
+rotation -- in units of degrees about the image center.  An additional
+configurable upper bound, <code>--rot-upper</code>, constrains rotational
+perturbation separately, preventing, e.g., a 360 degree perturbation of
+rotation.  In the case of projective alignment, the perturbation amount is
+applied to the position of the corners of the projected quadrilateral in units
+of pixels, where the projection is from the boundary of the supplemental frame
+into the coordinate system of the alignment reference image.  In the case of barrel
+distortion correction, the perturbation amount is scaled by a multiplier
+(<code>--bda-mult</code>) before being applied to each barrel distortion
+coefficient (if any have been defined).  The rate of change of barrel distortion
+coefficients per frame can be limited with the option <code>--bda-rate</code>.
+
+<p>If possible, transformation parameters are changed to decrease the <a
+href="error/">error</a> between the supplemental frame and the alignment reference
+image.  The perturbation amount is halved whenever it is determined that no
+parameter change of the current perturbation size improves the alignment of the
+images.  A lower bound on the perturbation amount determines when the alignment
+is complete.
+
+<!--
+
+XXX: Even if this was true at one point, it appears to no longer be true.
+
+<p>The order in which parameters are considered for change is specified in the
+source code, and has the following property: No modified parameter is
+considered for further change until all other parameters have been considered.
+A consequence of this property is that parameters are always considered in a
+fixed (round robin) order.
+-->
+
+<p>When multiple levels of detail are used, the error may be calculated on
+images with a reduced level of detail.  By default, this version of ALE uses a
+level of detail twice as fine as the perturbation amount for perturbation
+amounts larger than two, and full detail otherwise.  This behavior can be changed
+by adjusting the <code>--lod-max</code> option.
+
+<!--
+
+Is this useful to anyone?
+
+<h2>Use of Alignment Classes</h2>
+
+<p>ALE is likely to be most useful when corresponding regions of different
+frames can be aligned by one of the available alignment classes.
+
+<p>As described by Steve Mann in his work on <a
+href="http://wearcam.org/orbits/">Video Orbits</a>, the projective
+transformation offers particular versatility for camera imaging of (ideal
+Lambertian) flat scenes.
+
+<p>In camera imaging of scenes with depth, correction for orientation is almost
+the same as for flat scenes, since, if focus and lens distortion is ignored, a
+scene with depth is indistinguishable from a flat scene from the perspective of
+a camera whose position is fixed.
+
+<p>For sequences of camera images with small changes in position or
+orientation, the projective transformations for alignment may closely
+approximate Euclidean transformations; in this case, using Euclidean
+transformations may achieve similar results and may require less time for
+alignment, since there are fewer parameters to tweak (three parameters
+instead of eight).
+
+<p>In the case of flatbed scanners that preserve the relative height and width
+of scans, any change in the position or orientation of flat objects can be
+corrected using the Euclidean alignment class.</p>
+
+<p>If a flatbed scanner does not preserve relative height and width, but does
+preserve straight lines, then any change in the position or orientation of flat
+objects can be corrected with the projective alignment class.
+
+<p>However, even if a transformation is within the alignment class used, the
+alignment algorithm may still be unable to approximate it.
+
+<h2>Alignment in the case of Extended Renderings</h2>
+
+<p>By using the --extend flag, ALE can be used to create image mosaics spanning
+a spatial region larger than that represented by any single image in the frame
+sequence.  In these cases, if adjacent frames in the sequence tend to be more
+closely aligned with each other than they are with the original frame, it may
+be helpful to also use the --follow flag as a hint to the alignment algorithm.
+</p>
+
+-->
+
+
+<br><br>
+<small>
+</small>
+
+<hr>
+<i>Copyright 2002, 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any
+medium, provided this notice is preserved.
+</body>
+</html>

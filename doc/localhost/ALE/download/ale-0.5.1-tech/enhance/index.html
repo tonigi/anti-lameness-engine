@@ -1,0 +1,262 @@
+<html>
+<title>High-Frequency Enhancement Renderer</title>
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> <!-- | <a href="../../ba/big_about.html">Examples</a> --> ]</b></p>
+<h1>High-Frequency Enhancement Renderer</h1>
+
+<p>The High-Frequency Enhancement Renderer is a built-in post-processing
+step based on the unsharp mask technique, which has been used to enhance high
+frequencies since the days of photographic plate processing (see, for example,
+<a
+href="http://www.scenic-route.com/tutorial/psp/tutor/unsharp/Unsharp.htm">this
+page</a>).  This renderer acts after all other rendering steps have completed,
+except for Irani-Peleg Iterative Image Reconstruction, which occurs afterward.
+
+<p>(The remainder of this text outlines version-specific information and offers no
+further justification for rendering predicates.)
+
+<!-- One theoretical approach to understanding the general
+problem of lousy-looking images is that of convolution, and since many projects take
+this approach, it may be useful to describe briefly how the ALE rendering pipeline
+fits into this framework, as well as some deconvolution approaches which may be
+useful.
+-->
+
+<!-- We discuss convolution -- one context in which such
+a filter can be viewed -- and then deconvolution generally and the details of
+the filter used by ALE.  The sections most directly relevant to ALE's high-frequency
+enhancement are the final two sections, 'Release 0.3.2' and 'Release 0.4.0'.  The
+other sections provide a context in which this enhancement can be viewed, and discuss
+other approaches to addressing the problems that the high-frequency filter was 
+designed to solve. -->
+
+<!--
+<h2>Convolution</h2>
+-->
+
+<!-- <p>An image capture process involving ALE may transform a source scene in many ways.
+Lens effects may place some areas of a scene in focus and others out of focus,
+image sensors sometimes fail to resolve fine details, and, even when alignment
+is successful, the rendering methods used by ALE do not, in general, respond
+uniformly to unaliased input frequencies.
+
+<p>Subjectively, all of these factors tend to make an image more 'blurry'.  One approach
+to handling blur, which can be very effective, is to consider it as a convolution.  When
+this assumption is made, the problem then becomes deconvolution.  ('Deconvolution' may be
+a good keyword to look for if a more detailed description is desired.)  The remainder
+of this section discusses how convolution can approximate the operation of ALE,
+and the next section will cover deconvolution.
+ -->
+<!--
+<p>Several aspects of the ALE rendering pipeline, starting with the image capture hardware,
+can be considered convolutions.  These aspects are discussed briefly below.
+
+<h3>Focus</h3>
+
+<p>Blur due to an unfocused lens is sometimes considered in the realm of
+convolution, and approaches such as Ernst Lippe's Gimp plugin <a
+href="http://refocus.sourceforge.net/">refocus</a><sup>1</sup> take this view.
+<!-- However, different parts of a scene may be focused differently, and so treating
+an image uniformly may not always be appropriate. -->
+<!--
+<h3>Image Sensors</h3>
+
+<p>The manner in which a scene projected onto an image sensor array is sampled
+over each of several small regions corresponding to the sensor elements might
+be considered as a convolution.  In particular, if the response of each element
+is roughly linear and uniform over a small, approximately square region, then
+the sensor response could be approximated by convolution with the box filter.
+-->
+<!-- <p>The manner in which an image sensor element (several of which form an image
+sensor array) combines intensity values over some area of a sensor array can be
+
+to be roughly linearly uniformly responsive to changes in intensity over a finite
+region<sup>2</sup>, then its response to intensity can be considered a
+convolution.  If the sensor element region is square, then its response would
+be equivalent to convolution with a 2D box filter. -->
+
+<!-- Note that this convolution
+is not generally invertible for a single image, since only one value is
+observed per region and there is no overlap between regions.  However, if many
+nearby samples are taken -- e.g. from a sequence of overlapping frames -- some
+deconvolution may be possible. -->
+<!--
+<h3>ALE Rendering</h3>
+
+<p>For a large number of input frames, when frames are of roughly the same
+scale and rotation about the optical axis is negligible, the default ALE
+rendering technique can be considered to apply the 2D convolution that is the
+direct product of the 1D triangle filter with itself.  (I believe this is
+sometimes called the 2D triangle filter.)  The distance between the center and
+the edge of the filter is the distance between adjacent pixels.
+
+<p>When the <a href="../drizzling">drizzle</a> rendering method is used with a
+very small diameter and very fine grid (i.e. a large scale factor), then
+negligible convolution occurs.  On the other hand, when a diameter approaching
+the distance between pixels is used, and the grid is of the same resolution as
+the input frames, then convolution will be roughly equivalent to the default
+ALE rendering technique.
+
+<h2>Deconvolution</h2>
+
+Deconvolution seems to be an active area of research, but many reasonably good
+practical approaches exist, most of which require some interactive tweaking of
+parameters.-->  <!-- This should not be surprising, for at least two reasons.  
+
+<h3>Motivation for Interactivity</h3>
+
+<p>First, the value of a filtering process often depends on the viewing context.
+For example, contrast that would appear unrealistic upon close inspection may
+produce what appears to be a realistic image when viewed from a distance.  (A
+familiar example of this is the arrangement of differently-colored elements in
+a display device which nevertheless may produce what appears to be a uniform
+image of an entirely different color.)
+
+<p>Second, although deconvolution may be considered as a way of 'undoing' certain
+characteristics of the image capture process, it is not always obvious what
+these characteristics are.  An apparently blurred result might, in fact, be a
+faithful capture by a flatbed scanner of a high-quality print of a continuous color
+spectrum. -->
+<!--
+<h3>Techniques</h3>
+-->
+
+<!-- <p>As described in the convolution section above, the rendering approaches used by
+ALE can be approximated by convolutions, and so it is possible to take the
+final rendered result of ALE and perform deconvolution with an external tool (such
+as Ernst Lippe's Gimp plug-in 'refocus'<sup>1</sup>).   -->
+<!--
+Several tools external to ALE, such as Ernst Lippe's Gimp plug-in
+<a href="http://refocus.sourceforge.net/">refocus</a><sup>1</sup>, provide
+deconvolution functions.  Such tools can facilitate interactive adjustment 
+of deconvolution parameters.
+-->
+<!-- Since ALE is not well-suited to interactive parameter
+tweaking, and external tools like the Gimp are designed for interactive
+parameter tweaking, this may be a reasonable approach if such tweaking is
+desired. -->
+<!--
+<p>Alternatively, ALE's <a href="../iterative">image reconstruction option</a>
+may be used to reduce blur caused by other internal renderers and by image
+sensors.  <a href="../drizzling">Drizzling</a> with a small diameter may also
+reduce renderer-incurred blurring.
+
+<p>Finally, an internal filter to enhance high frequencies is provided, and may
+sometimes be more convenient to use than the above options.  The filter is
+designed to be simple, and is based on the unsharp mask technique.  The details
+of the filter are covered in the following two sections.  
+-->
+<h2>Release 0.3.1</h2>
+
+<p>The filter in release 0.3.1 acts on a square region, centered on the pixel
+to be filtered, where the length of each side of the square is linear with the
+scale factor (arbitrarily selected to be 2.5 times the scale factor). &nbsp;The
+pixel being filtered makes a positive contribution weighted with the total area
+of the filter region, and all pixels coincident with the filter region make a
+negative contribution weighted with the area in which the pixel is coincident
+with the filter region.  
+
+<p>This filter was chosen primarily due to its implementation simplicity and
+also for its satisfaction of the following two criteria: 
+
+<p>First, the filter value returned for a uniformly valued pixel array is zero.
+&nbsp;Hence, when the pixels in the region of the filter support do not vary in
+value, the high-frequency filter returns zero. &nbsp;This seems to be a
+reasonable requirement for a high-frequency filter. &nbsp;
+
+<p>Second, the filter support for a pixel closely corresponding to given pixel
+in the original (unscaled) frame spans a region corresponding to a neighborhood
+of pixels in the original frame that is roughly independent of the scale factor.  
+
+<p>In release 0.3.1, the filter result described above was divided by 100, so that
+an enhancement factor of 1.0 would look reasonable for an image that had been
+scaled up by a factor of 4.  This division step is replaced by a more general
+and elegant normalization step in release 0.4.0.
+
+<p>Since this filter requires a square region of pixels centered on the pixel
+to be filtered, it cannot operate near the boundary of an image.  We avoid this
+problem in release 0.3.1 by not filtering near the boundary of images.
+
+<h2>Release 0.4.0 and later</h2>
+
+<p>The filter in release 0.4.0 was modified from the filter in release 0.3.1 in two 
+ways: 
+
+<p>First, the filter was extended to operate near the boundaries of an image.  When
+necessary, the filter region is constrained so that it fits within the boundary
+of the image.  (However, the notion of boundary used does not yet elegantly accommodate 
+the non-rectangular boundaries that may occur when image extents are increased.)
+
+<p>Second, the filter was normalized so that the filtered pixel makes a
+positive contribution with unit (1) weight, and all pixels coincident with the
+filter region make a negative contribution with weight <i>a/A</i>, where
+<i>a</i> is the area in which the pixel is coincident with the
+filter region and <i>A</i> is the total area of the filter region.  
+
+<p>This change provides the following nice property that did not hold for the
+filter in release 0.3.1:
+
+<p>Filtering and then scaling is almost the same as scaling and then filtering.
+
+<p>Hence, a given high-frequency enhancement argument in ALE will achieve
+roughly similar results regardless of scale factor.  This behavior should be
+less surprising than the behavior in 0.3.1, in which merely increasing the
+scale factor argument could cause pixel values to become distorted as they
+eventually collided with the limits of the image format.</p>
+
+<small>
+<!--
+<sup>1</sup>Ernst Lippe.  refocus: A Gimp plug-in for sharpening images.  <a href="http://refocus.sourceforge.net/doc.html">http://refocus.sourceforge.net/doc.html</a><br>
+<sup>2</sup>E.g. this approach was used in: 
+<br>Michal Irani and Shmuel Peleg. "Improving Resolution by Image Registration". <i>Graphical
+Models and Image Processing.</i> Academic Press, May 1991.  <a href="http://www.wisdom.weizmann.ac.il/~irani/abstracts/superResolution.html">http://www.wisdom.weizmann.ac.il/~irani/abstracts/superResolution.html</a> -->
+
+</small>
+
+<!--
+<h2>Examples</h2>
+
+<p><a href="../../ba/big_about.html">Examples</a> of post-enhancement are available.
+-->
+
+<hr>
+<i>Copyright 2002, 2003 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+</body>
+</html>

@@ -1,0 +1,148 @@
+<html>
+<title>Error Functions</title>
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> | <a href="mc/">Monte Carlo</a> ]</b></p>
+<h1>Error Functions</h1>
+
+<p>Error functions are used to determine whether a transformation is "good" or
+not, and in particular, whether one transformation is better or worse than
+another.  In particular, a smaller error indicates a better transformation.
+
+<!--
+The error functions used by ALE are based on two principles:
+
+<ol>
+<li>A relatively small change in camera position or orientation should be
+reflected by a small transformation.
+<li>When a new frame is merged, the accumulated image should change as little
+as possible.
+</ol>
+-->
+<!--
+
+<p>Since sufficiently large transformations can move a new frame so far that it
+no longer overlaps the accumulated image, it is important that the alignment
+process not mistakenly move images too far, although in principle it is
+possible, as in the case of a chain-link fence, that two fairly similar images
+do, in fact, represent areas that are spatially separated.  This is the
+motivation for the first criterion.
+
+<p>The second criterion is based on the general idea that, if two inputs to ALE
+look vaguely like a petunia, the output should look like a petunia also.  Hence
+it should typically be the case that the accumulated image not change much when
+new frames are merged.  
+
+-->
+<p>ALE defines error functions for each pixel of the accumulated image, and
+also a comprehensive error function that summarizes the error over all 
+pixels.  
+
+<h3>Per-Pixel Error Functions</h3>
+
+<p>Since differences in exposure may alter the absolute values of pixels even
+in images that are perfectly aligned, ALE usually normalizes the images so that
+overall image intensity matches.  This normalization step does not affect the
+pixel values contributing to the merged image, but it does affect the values
+with which the per-pixel error function is calculated.  (The normalization
+step is skipped when --extend or --follow is specified.)
+
+<!-- <p>(Alternatives to normalization exist, including the use of inner products; see
+Steve Mann's paper, available on the website linked in footnote 1, for a
+discussion of alignment approaches.)  -->
+
+<!--
+<p>Based on principle 2, ALE calculates the difference between each accumulated
+image pixel and the value with which it would be merged given a candidate
+transformation.  This latter value is the <i>overlapping value</i>, as
+described in the section on <a href="../../merging/">merging</a>.  This difference
+is then raised by the error metric exponent, as specified by the --metric
+option.  The exponent defaults to 2.0 for ALE versions 0.1.0 and later, or 1.0
+for version 0.0.0.  Hence, 
+-->
+<p>The per-pixel error function for pixel <i>(i, j)</i> in the accumulated
+image <i>A</i>, frame <i>B</i>, and transformation <i>T</i>, is:
+
+<p><blockquote>
+<pre>
+<i>p(i, j, A, B, T) = Abs( A(i, j) - B(T_inverse(i, j)) )<sup>metric_exponent</sup></i>
+</pre>
+</blockquote>
+
+<p>where <i>Abs()</i> is the absolute value function and <i>B(T_inverse(i, j))</i>
+is the overlapping value described in the <a href="../../merging/">merging</a> section.
+If not specified by the --metric option, <i>metric_exponent</i> defaults to 2.0
+for ALE versions 0.1.0 and later, or 1.0 for version 0.0.0.
+
+<p>In addition to the per-pixel error function, a per-pixel <i>maximum error
+estimator</i> is calculated, as follows:
+
+<p><blockquote>
+<pre>
+<i>p_max(i, j, A, B, T) = Max( A(i, j), B(T_inverse(i, j)) )<sup>metric_exponent</sup></i>
+</pre>
+</blockquote>
+
+
+<h3>Comprehensive Error Functions</h3>
+
+There are two varieties of comprehensive error function used by ALE: an
+<i>exhaustive</i> error function and, in versions 0.4.3 and later,  a
+<a href="mc/"><i>Monte Carlo</i></a> error function.  Whereas the exhaustive function
+evaluates the error for each pixel in the accumulated image, the <a href="mc/">Monte
+Carlo</a> function evaluates only a subset of pixels.  <!-- The latter may require
+less time to compute, possibly at the expense of precision.  -->
+<p>If we consider <i>Sum[]</i> to provide the sum over whatever
+subset of pixels we are sampling (including possibly the set of all pixels), then
+the comprehensive error function, for accumulated image <i>A</i>, frame
+<i>B</i>, and transformation <i>T</i>, is:
+
+<p><blockquote>
+<pre>
+<i>E(A, B, T) = (Sum [ p(i, j, A, B, T) ] / Sum [ p_max(i, j, A, B, T) ])<sup>(1/metric_exponent)</sup></i>
+</pre>
+</blockquote>
+
+<br><br>
+
+<hr>
+<i>Copyright 2002, 2003 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any
+medium, provided this notice is preserved.
+</body>
+</html>

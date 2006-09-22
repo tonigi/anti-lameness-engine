@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE User Manual: Transformation Data Files</title>
+
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+2684415918<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE Transformation Data Files</h1>
+
+Transformation data files are useful when performing alignment in several
+passes or refining rendering options, and are necessary for specifying
+barrel/pincushion distortion parameters.  They also offer a way to manually
+specify alignment when ALE cannot automatically align images.  
+
+<h2>Multiple-pass alignment</h2>
+
+To align images in multiple passes, load the saved results of each previous
+pass, as follows:
+
+<pre>
+$ ale --trans-save=a.t &lt;first pass arguments&gt;
+$ ale --trans-load=a.t --trans-save=b.t &lt;second pass arguments&gt;
+$ ale --trans-load=b.t --trans-save=c.t &lt;third pass arguments&gt;
+.
+.
+.
+</pre>
+
+<h2>Rendering option refinement</h2>
+
+To refine rendering options using the same alignment, first save the alignment
+for the first option set, and then load the saved alignment information with
+each subsequent option set, setting the perturbation upper bound to zero to
+prevent a new alignment pass from occurring:
+
+<pre>
+$ ale --trans-save=a.t &lt;first option set&gt;
+$ ale --trans-load=a.t --perturb-upper=0 &lt;second option set&gt;
+$ ale --trans-load=a.t --perturb-upper=0 &lt;third option set&gt;
+.
+.
+.
+</pre>
+
+<h2>Alignment file syntax (version 2)</h2>
+
+There are two varieties of alignment file syntax that are both read and written
+by ALE 0.7.0.  The most basic of these is version 2.  Version 3 is slightly
+more complex, and is covered in the next section.
+
+At the highest level, version 2 transformation data files contain the following
+components: (a) a version command, and (b) a sequence of transformation
+commands, one for each supplemental frame.  Each line of text should contain at
+most one command, between which optional comments may be interspersed.  A
+transformation command can be Euclidean, projective, or default.  Euclidean and
+projective commands take several arguments, including the width and height of
+the supplemental frame.  Default commands take no arguments.  Commands are
+outlined in more detail below.
+
+<h3>Version command</h3>
+
+<p>The version 2 version command is as follows:</p>
+
+<pre>
+V 2
+</pre>
+
+<h3>Euclidean commands</h3>
+
+<p>The structure of a Euclidean command is as follows:</p>
+
+<pre>
+E &lt;image width&gt; &lt;image height&gt; &lt;x-offset&gt; &lt;y-offset&gt; &lt;rotation-angle&gt;
+</pre>
+
+<h3>Projective commands</h3>
+
+<p>Projective commands map the four corners of the supplemental frame to four
+points in the rendering coordinate system:</p>
+
+<pre>
+P &lt;image width&gt; &lt;image height&gt; &lt;top-left-x&gt; &lt;top-left-y&gt; &lt;blx&gt; &lt;bly&gt; &lt;brx&gt; &lt;bry&gt; &lt;trx&gt; &lt;try&gt;
+</pre>
+
+<h3>Default commands</h3>
+
+Default commands can be explicitly written as follows:
+
+<pre>
+D
+</pre>
+
+Alternatively, if there are more frames than alignment commands (euclidean,
+projective, or default), then the last supplemental frames in the frame
+sequence will be assigned the default command.
+
+<h3>Comments</h3>
+
+Comments can be inserted with the following syntax:
+
+<pre>
+# This comment extends to the end of this line.  I can write anything I want here.
+</pre>
+
+<h2>Alignment file syntax (version 3)</h2>
+
+Version 3 syntax is required for specifying transformations for the original
+frame, and for specifying barrel/pincushion distortion parameters.  
+
+<p>In version 3, the first transformation command is associated with the
+original frame, instead of being associated with the first supplemental frame.
+Also, barrel/pincushion distortion commands can precede each projective,
+Euclidean, or default command.
+
+<h3>Version command</h3>
+
+<p>The version 3 version command is as follows:</p>
+
+<pre>
+V 3
+</pre>
+
+<h3>Barrel/pincushion distortion command</h3>
+
+In version 3, barrel/pincushion distortion commands are supported.  Distortion
+is modeled as a transformation affecting the distance of image features from the
+image center.  The distorted distance is expressed as a polynomial function of
+the undistorted distance.  Zeroth and first order coefficients are fixed or
+automatically determined; additional coefficients can be specified explicitly,
+using the following syntax:
+
+<pre>
+B &lt;n&gt; &lt;coefficient 2&gt; &lt;coefficient 3&gt; ... &lt;coefficient n+1&gt;
+</pre>
+
+<p>Barrel/pincushion distortion commands should precede the projective, Euclidean,
+or default transformation command for the corresponding frame.</p>
+
+<br>
+<hr>
+<i>Copyright 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

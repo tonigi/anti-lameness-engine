@@ -1,0 +1,489 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE Technical Description</title>
+
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+<p><b>[ <a href="../../tech/">Up</a> | <a href="merging">Merging</a>  | <a href="drizzling">Drizzling</a> | <a href="enhance/">Enhancement</a> | <a href="iterative/">Irani-Peleg</a> | <a href="alignment/">Alignment</a> ]</b></p>
+<h1>ALE Technical Description <!-- <small>(or the best approximation to date)</small> --> </h1>
+
+<h2>Abstract</h2>
+
+<p>ALE combines a series of input frames into a single output image possibly
+having:</p>
+
+<ul>
+<li>Reduced noise.
+<li>Reduced aliasing.
+<li>Increased dynamic range.
+<li>Increased spatial resolution.
+<li>Increased spatial extents.
+</ul>
+
+<p>This page provides information on related work, models of program input, an
+outline of renderers, and an overview of the algorithm used in ALE.  </p>
+
+<p><b>Note: This document uses PNGs and HTML 4 character entities.</b></p>
+
+<h2>Related Work</h2>
+
+ALE derives <a href="drizzling/">one</a> of its rendering techniques from a
+method developed by Richard Hook and Andrew Fruchter for combining dithered
+images.
+
+<p>Steve Mann's work in <a href="http://wearcam.org/orbits/">Video Orbits</a>
+on increased spatial extents and the use of projective transformations has
+influenced features incorporated by ALE.
+
+<p>ALE incorporates an iterative solver based on the <a
+href="http://www.wisdom.weizmann.ac.il/~irani/abstracts/superResolution.html">work</a>
+of Michal Irani and Shmuel Peleg on image reconstruction.
+
+<h2>Models of Program Input</h2>
+
+<h3>Definition of Discrete and Continuous Images</h3>
+
+<p>Using <b>R<sup>+</sup></b> to represent the non-negative real numbers, a
+<i>discrete image</i> <b>D</b> of size <b>(d<sub>1</sub>,
+d<sub>2</sub>)</b> is a function 
+
+<blockquote>
+<b>D: {0, 1, &hellip;, d<sub>1</sub> - 1}&times;{0, 1, &hellip;, d<sub>2</sub> - 1} &rarr; R<sup>+</sup>&times;R<sup>+</sup>&times;R<sup>+</sup></b>
+</blockquote>
+
+A <i>continuous image</i> <b>I</b> of size <b>(c<sub>1</sub>, c<sub>2</sub>)</b> is a function
+
+<blockquote>
+<b>I: [0, c<sub>1</sub>]&times;[0, c<sub>2</sub>] &rarr; R<sup>+</sup>&times;R<sup>+</sup>&times;R<sup>+</sup></b>
+</blockquote>
+
+<!--
+An <i>infinite continuous image</i> <b>I</b> is a function
+
+<blockquote>
+<b>I: (-&infin;, &infin;)&times;(-&infin;, &infin;) &rarr; R<sup>+</sup>&times;R<sup>+</sup>&times;R<sup>+</sup></b>
+</blockquote>
+-->
+
+<p>In this document, a member of the set
+<b>R<sup>+</sup>&times;R<sup>+</sup>&times;R<sup>+</sup></b> is sometimes called an
+<i>RGB triple</i>.
+
+<h3>Definition of a Camera Snapshot</h3>
+
+<p>A <i>camera snapshot</i> is defined as an <i>n</i>-tuple consisting of:</p>
+
+<ul>
+<li>A scene <i><b>S</b></i>.
+<li>A pyramid <i><b>R</b></i> with rectangular base.
+<li>A continuous image <i><b>I</b></i>.
+<li>A discrete image <i><b>D</b></i>.
+<li>A function <i><b>i</b></i> such that <i><b>i(S, R) = I</b></i>. 
+<li>A function <i><b>d</b></i> such that <i><b>d(I) = D</b></i>.
+</ul>
+
+<p><i><b>S</b></i> represents a physical scene.</p>
+
+<p><i><b>R</b></i> represents the viewing volume of a physical camera.
+
+<p>The value <i><b>I(x, y)</b></i> is the RGB triple representing the radiance
+that would be recorded from <i><b>S</b></i> by a directional light sensor
+located at the apex of <i><b>R</b></i> and aimed at the point <i><b>(x,
+y)</i></b> on the base of <i><b>R</b></i>.  The only constraint on the sensor
+is that, given a fixed scene <i><b>S</b></i>,  it must return a unique value
+for a given position and orientation.  This sensor is assumed to be the same
+for all camera snapshots, and is called the <i>canonical</i> sensor.</p>
+
+<center>
+<table>
+<tr><td align=center><img src="i.png">
+<tr><td align=center><i>Positioning of the canonical sensor</i>
+</table>
+</center>
+
+
+<p><i><b>D</b></i> represents the discrete pixel values reported by the
+camera.</p>
+
+<p>The composite function <i><b>composite(d, i)</b></i> represents the optical
+and electronic properties of the camera. 
+
+<h3>Definition of a Camera Input Frame Sequence</h3>
+
+<p>For positive integer <b>N</b>, a sequence of camera snapshots
+<b>{ C<sub>1</sub>, C<sub>2</sub>, &hellip;, C<sub>N</sub> }</b>, defined by the
+<i>n</i>-tuples <b>{ C<sub>j</sub> = (S<sub>j</sub>, R<sub>j</sub>, I<sub>j</sub>, D<sub>j</sub>,
+i<sub>j</sub>, d<sub>j</sub>) }</b> is a <i>camera input frame sequence</i> if,
+for all <b>j</b> and <b>j'</b>, <b>S<sub>j</sub> =
+S<sub>j'</sub></b> and <b>i<sub>j</sub> = i<sub>j'</sub></b>.
+
+<h3>Definition of a Diffuse Surface</h3>
+
+Given a camera input frame sequence <b>{ C<sub>1</sub>, C<sub>2</sub>,
+&hellip;, C<sub>N</sub> }</b>, defined by the <i>n</i>-tuples
+<b>{&nbsp;C<sub>j</sub> = (S, R<sub>j</sub>, I<sub>j</sub>, D<sub>j</sub>, i,
+d<sub>j</sub>)&nbsp;}</b>, a surface in <b>S</b> is <i>diffuse</i> if the
+radiance of each point on the surface (as measured by the canonical sensor) is
+the same for all views <b>R<sub>j</sub></b> from which the point is visible.
+
+<h3>Definition of the Extended Pyramid</h3>
+
+<p>If the view pyramids <b>{ R<sub>1</sub>, R<sub>2</sub>, &hellip;,
+R<sub>N</sub> }</b> of a sequence of <b>N</b> camera input frames all share a
+common apex and can be enclosed in a single rectangular-base pyramid <b>R</b>
+sharing the same apex and having base edges parallel to the base edges of
+<b>R<sub>1</sub></b>, then the smallest such <b>R</b> is the <i>extended pyramid</i>.
+Otherwise, the extended pyramid is undefined.</p>
+
+<p>If a camera input frame sequence has an extended pyramid <b>R</b>, then an
+<i>extended image</i> is defined from <b>R</b> in a manner analogous to the definition
+of the image <i><b>I</b></i> from the view pyramid <i><b>R</b></i> in the
+definition of a camera snapshot.
+
+<h3>Definition of a Projective Snapshot</h3>
+
+<p>A <i>projective snapshot</i> is defined as an <i>n</i>-tuple consisting of:</p>
+
+<ul>
+<li>A continuous image <i><b>&Sigma;</b></i>.
+<li>A continuous image <i><b>I</b></i>.
+<li>A discrete image <i><b>D</b></i>.
+<li>A projective transformation <i><b>q</b></i> such that <i><b>I = composite(&Sigma;, q)</b></i>
+<li>A function <i><b>d</b></i> such that <i><b>d(I) = D</b></i>.
+</ul>
+
+<p><i><b>&Sigma;</b></i> represents the subject of the
+snapshot (somewhat analogous to <i><b>S</b></i> in the camera snapshot).
+
+<p><i><b>D</b></i> represents discrete pixel values reported by the physical
+imaging device.
+
+<h3>Definition of a Projective Input Frame Sequence</h3>
+
+<p>For positive integer <b>N</b>, a sequence of projective snapshots <b>{
+P<sub>1</sub>, P<sub>2</sub>, &hellip;, P<sub>N</sub> }</b>, defined by the
+<i>n</i>-tuples <b>{ P<sub>j</sub> = (&Sigma;<sub>j</sub>, I<sub>j</sub>,
+D<sub>j</sub>, q<sub>j</sub>, d<sub>j</sub>) }</b> is a <i>projective input
+frame sequence</i> if, for all <b>j</b> and <b>j'</b>, <b>&Sigma;<sub>j</sub> =
+&Sigma;<sub>j'</sub></b>.
+
+<p>The first frame in the sequence of input frames is called the <i>original
+frame</i>, and subsequent frames <i>supplemental frames</i>.
+
+<h3>Construction of Projective Input Frame Sequences from Camera Input Frame Sequences</h3>
+
+<p>From a camera input frame sequence, define a continuous image
+<b>&Sigma;</b> as follows:
+
+<ul>
+
+<li>If an extended pyramid is defined for the set of camera input frames, then
+<b>&Sigma;</b> is the associated extended image.  <br><br>
+
+<li>If an extended pyramid would be defined if all pyramids
+<b>R<sub>j</sub></b> were translated to share a common apex, and the scene
+<b>S</b> represents a physical configuration presenting to the camera only a
+single planar, diffuse surface, then define <b>&Sigma;</b> so that there
+exists some projective transformation <b>p</b> such that <b>&Sigma;(p(x))</b>
+indicates the radiance at point <b>x</b> on the surface.
+
+</ul>
+
+If such a <b>&Sigma;</b> exists, then each camera input frame 
+
+<blockquote>
+<b>C<sub>j</sub> = (S, R<sub>j</sub>, I<sub>j</sub>, D<sub>j</sub>, i,
+d<sub>j</sub>)</b>
+</blockquote>
+
+admits a projective input frame
+
+<blockquote>
+<b>P<sub>j</sub> = (&Sigma;, I<sub>j</sub>, D<sub>j</sub>, q<sub>j</sub>, d<sub>j</sub>)</b>
+</blockquote>
+
+for some <b>q<sub>j</sub></b>, and these <b>{ P<sub>j</sub> }</b> form a
+projective input frame sequence.
+
+<h3>Definition of a Projective Renderer without Extension</h3>
+
+<p>For a projective input frame sequence <b>{ P<sub>j</sub> = (&Sigma;,
+I<sub>j</sub>, D<sub>j</sub>, q<sub>j</sub>, d<sub>j</sub>) }</b>, a
+<i>projective renderer without extension</i> is an algorithm that outputs a
+discrete image approximation of <b>I<sub>1</sub></b>.  The assumptions used in
+calculating the approximation vary across rendering methods.
+
+<h3>Definition of a Projective Renderer with Extension</h3>
+
+<p>For a projective input frame sequence <b>{ P<sub>j</sub> = (&Sigma;,
+I<sub>j</sub>, D<sub>j</sub>, q<sub>j</sub>, d<sub>j</sub>) }</b>, a
+<i>projective rendering method with extension</i> is an algorithm that outputs
+a discrete image approximation of <b>&Sigma;</b>.  The assumptions used in
+calculating the approximation vary across rendering methods.
+
+<h2>Renderers</h2>
+<!--
+<h3>Examples</h3>
+
+Examples of rendering output are available on the <a href="../render/">rendering
+page</a>.
+-->
+
+<h3>Extension</h3>
+
+<p>All renderers can be used with or without extension (according to whether the
+--extend flag is used).  The target image for approximation (either
+<b>&Sigma;</b> or <b>I<sub>1</sub></b>) is generically called <b>T</b>.
+
+<h3>Renderer Types</h3>
+
+<p>Renderers can be of incremental or non-incremental type.  Incremental
+renderers update the rendering as each new frame is loaded, while
+non-incremental renderers update the rendering only after all frames have been
+loaded.</p>
+
+<p>Incremental renderers contain two data structures that are updated with each
+new frame: an accumulated image <b>A</b> with elements <b>A<sub>x, y</sub></b>
+and the associated weight array <b>W</b> with elements <b>W<sub>x, y</sub></b>.
+The accumulated image stores the current rendering result, while the weight
+array stores information about contributions to each accumulated image pixel.
+
+<h3>Renderer Details</h3>
+
+These pages offer detailed descriptions of renderers.
+
+<ul>
+<li>Incremental Renderers</li>
+	<ul>
+	<li><a href="merging/">Merging</a>
+	<li><a href="drizzling/">Drizzling</a>
+	</ul>
+<li>Non-incremental Renderers</li>
+	<ul>
+	<li><a href="enhance/">High-frequency Enhancement</a>
+	<li><a href="iterative/">Irani-Peleg</a>
+	</ul>
+</ul>
+
+<h3>Rendering Predicates</h3>
+
+<p>Renderers should output approximations of <b>T</b> when certain predicates
+are satisfied.  Not all of these predicates are required for all renderers, and
+renderers may produce acceptable output even when their predicates are not
+satisfied.</p>
+
+<blockquote>
+<table border cellpadding=5>
+<tr>
+<th>Predicate</td>
+<th>Explanation</th>
+<tr>
+<td>Alignment</td>
+<td>The projective input frame transformations <b>q<sub>j</sub></b> are known.</td>
+<tr>
+<td>Translation</td>
+<td>All projective input frame transformations <b>q<sub>j</sub></b> are 
+translations.</td>
+<tr>
+<td>Point sampling with simple optics</td>
+<td><b>d<sub>j</sub></b> assigns <b>D<sub>j</sub>(x) = I<sub>j</sub>(x)</b>.
+<tr>
+<td>Very large, uniform input sequence</td>
+<td>A large number of input frames are provided, uniformly sampling the domain
+of <b>T</b>.
+<tr>
+<td>Small radius</td>
+<td>The radius parameter used with the rendering method is chosen to be
+sufficiently small.
+<tr>
+<td>Barlett filter approximation</td>
+<td>Convolution of <b>T</b> with a Bartlett filter remains an acceptable
+approximation of <b>T</b>.
+<tr>
+<td>USM approximation</td>
+<td>Applying the unsharp mask employed by the ALE --hf-enhance option to the
+output of drizzling or merging produces an acceptable approximation of
+<b>T</b>.
+<tr>
+<td>Correct Projection Filter</td>
+<td>The projection filter used in Irani-Peleg rendering approximates
+<b>d<sub>j</sub></b>.
+<tr>
+<td>Low Response Approximation</td>
+<td>Frequencies having low response in the Fourier domain representations of
+<b>d<sub>j</sub></b> need not be accurately reconstructed in the Fourier
+domain representation of program output.
+<tr>
+<td>Convergence</td>
+<td>Iterating Irani-Peleg on the input frames will eventually produce an
+acceptable approximation of <b>T</b>, and the number of iterations chosen is
+adequate to achieve this.  This predicate may entail the very large, uniform
+input sequence predicate.
+</table>
+</blockquote>
+
+<h3>Summary of Rendering Predicates by Renderer</h3>
+
+<p>The following table indicates which rendering predicates are associated with
+each renderer.  Note that renderers may produce acceptable output even when
+these predicates are not satisfied.  Justification for non-obvious entries in
+this table should appear in the detailed descriptions; for entries where this
+is not the case, the value given should be considered unreliable.</p>
+
+<ul>
+<li><b>M</b> = Merging
+<li><b>D</b> = Drizzling
+<li><b>H</b> = High-frequency Enhancement
+<li><b>I</b> = Irani-Peleg Iterative Image Reconstruction
+</ul>
+
+<blockquote>
+<table border cellpadding=5>
+<tr>
+<th>&nbsp;</td>
+<th>M</th>
+<th>D</th>
+<th>H</th>
+<th>I</th>
+<tr>
+<td>Alignment</td>
+<td>X</td>
+<td>X</td>
+<td>&nbsp;</td>
+<td>X</td>
+<tr>
+<td>Translation</td>
+<td>X</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<tr>
+<td>Point sampling with simple optics
+<td>X</td>
+<td>X</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<tr>
+<td>Very large, uniform input sequence
+<td>X</td>
+<td>X</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<tr>
+<td>Small radius</td>
+<td>&nbsp;</td>
+<td>X</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<tr>
+<td>Barlett filter approximation</td>
+<td>X</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<tr>
+<td>USM approximation</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>X</td>
+<td>&nbsp;</td>
+<tr>
+<td>Correct Projection Filter</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>X</td>
+<tr>
+<td>Low Response Approximation</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<tr>
+<td>Convergence</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>X</td>
+</table>
+</blockquote>
+
+<h3>Space Complexity</h3>
+
+Image storage space in memory for all renderers without extension is
+<i>O(1)</i> in the number of input frames and <i>O(n)</i> in the number of pixels per
+input frame.  The worst-case image storage space in memory for all renderers
+with extension is <i>O(n)</i> in the size of program input.
+
+<h2>Algorithm</h2>
+
+<p>First, a <a href="merging/">merging</a> renderer is instantiated.  Then,
+program flags are used to determine what other renderers should be
+instantiated.
+
+<p>An iterative loop supplies to the renderers each of the frames in sequence,
+beginning with the original frame.  The <a href="drizzling/">drizzling</a> and
+<a href="merging/">merging</a> renderers are incremental renderers, and
+immediately update their renderings with each new frame, while the <a
+href="enhance/">high-frequency enhancement</a> and <a
+href="iterative/">Irani-Peleg</a> renderers do not act until the final frame
+has been received.
+
+<p>In the case of the incremental renderers, the original frame is used without
+transformation, and each supplemental frame is transformed according to the
+results of the <a href="alignment/">alignment</a> algorithm, which aligns each
+new frame with the current rendering of the <a href="merging/">merging</a>
+renderer.
+
+<p>Once all frames have been aligned and merged, non-incremental renderers
+produce renderings based on input frames, alignment information, and the output
+of other renderers.</p>
+
+<small>
+
+</small>
+
+<br>
+<hr>
+<i>Copyright 2002, 2003 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

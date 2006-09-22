@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE User Manual: Control Points</title>
+  <style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+
+</head>
+<body>
+
+
+
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+2684415918<br>
+</table>
+
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>Control Points  [0.8.1 and later]</h1>
+
+<p>Control points are used for 2D and 3D alignment, and to constrain 3D scene
+models.  Control point data is loaded from a control point file.  Scripts to
+generate and manipulate control point files are included in the
+<code>scripts</code> directory of the source distribution; the file
+specification is outlined in the final section below.
+
+<h2>Loading a Control Point File</h2>
+
+The --cpf-load= option is used to load data from a control point file.
+
+<pre>
+--cpf-load=&lt;f>    Load control point data from file &lt;f>   [0.8.1 and later]
+</pre>
+
+<h2>Control Point File Format (version 0)</h2>
+
+The version 0 control point file format consists of a version command followed
+by a sequence of control points, with one control point per line of the file.
+
+<pre>
+V 0
+<i>Control Point 1</i>
+<i>Control Point 2</i>
+<i>Control Point 3</i>
+.
+.
+.
+</pre>
+
+<p>Control points can be one of three types:</p>
+
+<h3>Type A control points</h3>
+
+Type A control points specify a sequence of 2D points, one for each frame,
+where each point is specified as a pair of floating point numbers.  If there is
+no data for a frame, then "nan" should be specified.  E.g.:
+
+<pre>
+A 20  30  nan nan 10  10  10  15
+A 23  22  25  25  nan nan nan nan
+</pre>
+
+<h3>Type B control points</h3>
+
+Type B control points specify a 3D coordinate.  E.g.:
+
+<pre>
+B 10 30 -400
+B 10 15 -425
+</pre>
+
+<h3>Type C control points</h3>
+
+Type C control points specify both 2D and 3D data.  There is a single 3D point
+specified, as well as one 2D point for each frame.  The 3D point appears at the
+end of the line.  E.g.:
+
+<pre>
+C 20  30  nan nan 10  10  10  15  10 30 -400
+C 23  22  25  25  nan nan nan nan 10 15 -425
+</pre>
+
+
+<br>
+<hr>
+<i>Copyright 2005 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

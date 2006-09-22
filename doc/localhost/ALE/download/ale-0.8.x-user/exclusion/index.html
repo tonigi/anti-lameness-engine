@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE User Manual: Exclusion Regions</title>
+
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+2684415918<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE Exclusion Regions</h1>
+
+<p>ALE offers exclusion regions as a way to disallow certain areas from being
+used in alignment and (optionally) rendering.  Spatial coordinates are
+expressed in the rendering coordinate system (prior to scaling).  In cases
+where the default transformation is used with the original frame, this is
+identical to the unscaled original frame coordinate system, taking the
+upper-left corner to be (0, 0).  Frame numbering begins with 0, which represents
+the original frame.
+
+<h2>Rectangular Exclusion</h2>
+
+<p>All specified volumes are excluded from alignment (except where they affect
+the alignment reference image), and are excluded from rendering by default.
+(See the <a href="../rendering/chains/">rendering chains</a> page for
+information on how to ignore exclusion regions.)  Exclusion region syntax is
+as follows:
+
+<pre>
+--ex &lt;args&gt;       Exclude a specified volume.
+                     &lt;args&gt; are space-delimited horizontal,
+                     vertical, and frame limits:
+                         &lt;xmin&gt; &lt;xmax&gt; &lt;ymin&gt; &lt;ymax&gt; &lt;fmin&gt; &lt;fmax&gt;
+</pre>
+
+<h2>Cropping</h2>
+
+Cropping excludes the spatial complement of an area over a specified set of
+frames.
+
+<pre>
+--crop &lt;args&gt;     Exclude the spatial complement of an area over a
+                  specified set of frames.  &lt;args&gt; are:
+                         &lt;xmin&gt; &lt;xmax&gt; &lt;ymin&gt; &lt;ymax&gt; &lt;fmin&gt; &lt;fmax&gt;
+</pre>
+
+
+<br>
+<hr>
+<i>Copyright 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

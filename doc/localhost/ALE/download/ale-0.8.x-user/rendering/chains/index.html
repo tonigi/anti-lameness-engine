@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE User Manual: Rendering Chains</title>
+
+<style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+</head><body>
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+2684415918<br>
+</table>
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE Rendering Chains</h1>
+
+<p>The ALE incremental renderer is configured using rendering chains.  Rendering chains are
+constructed hierarchically from: invariants, SSFEs (scaled sampling filters
+with exclusion), SSFs (scaled sampling filters), and sampling filters.  Each of
+these components is described in a section below.  Defaults are outlined in the
+final section.
+
+<h2>Chains</h2>
+
+<p>The chain is the top level of the rendering chain hierarchy, and is composed of a
+sequence of invariants.  Syntactically, a chain is specified as a number of
+invariants separated by commas:
+
+<blockquote>
+<code>invariant<sub>1</sub>,invariant<sub>2</sub>,invariant<sub>3</sub>,...,invariant<sub>n</sub></code>
+</blockquote>
+
+<p>Each rendered pixel is assigned a value at the first invariant whose weight
+exceeds the weight threshold, or otherwise at the last invariant in the sequence.
+
+<h3>Chain Options</h3>
+
+<pre>
+--wt &lt;w&gt;          Set weight threshold for defined pixels [default is 0.8 in v0.8.0; 0.1 in v0.8.1 and later]
+--dchain &lt;g&gt;      Use chain &lt;g&gt; to render the default output.
+--ochain &lt;g&gt; &lt;o&gt;  Use chain &lt;g&gt; to render output file &lt;o&gt;.
+--achain &lt;g&gt;      Use chain &lt;g&gt; to render the alignment reference image.
+--3d-chain &lt;g>    Use chain <g> by default to render 3d output.  [0.8.4 and later]
+
+</pre>
+
+<h3>Chain Examples</h3>
+
+<pre>
+             triangle:2                           ALE 0.6.0 merging (roughly)
+             fine:box:1                           Drizzling (roughly)
+             fine:sinc*lanc:8                     High-frequency preservation
+             last:nex:sinc*lanc:8                 Useful for video stabilization
+             fine:box:1,triangle:2                Multi-resolution rendering
+             fine:sinc*lanc:8,sinc*lanc:8         Multi-resolution rendering
+</pre>
+
+<h2>Invariants</h2>
+
+<p>Invariants determine whether the rendered pixel value should be taken from a
+single frame, or from an average of all frames.  If from a single frame, it can
+be the first, last, minimal, or maximal pixel value.  Averages include mean
+and, in versions 0.8.1 and later, the median.  By default, the mean is used.
+(Note that using the median value may require allocation of a quantity of
+memory linear in the number of frames.)  The syntax is as follows:
+
+<blockquote>
+<table>
+<tr><th align=left>Syntax</th><th><pre>   </pre></th><th align=left>Description</th></tr>
+<tr><td>avg:&lt;SSFE&gt;<td><td>Mean value
+<tr><td>median:&lt;SSFE&gt;<td><td>Median value  [0.8.1 and later]
+<tr><td>max:&lt;SSFE&gt;<td><td>Maximum value
+<tr><td>min:&lt;SSFE&gt;<td><td>Minimum value
+<tr><td>first:&lt;SSFE&gt;<td><td>First value
+<tr><td>last:&lt;SSFE&gt;<td><td>Last value
+<tr><td>&lt;SSFE&gt;<td><td>Same as avg:&lt;SSFE&gt;
+</table>
+</blockquote>
+
+<h2>Scaled Sampling Filter with Exclusion (SSFE)</h2>
+
+<p>SSFEs qualify SSFs, indicating whether exclusion regions should be honored.
+
+<blockquote>
+<table>
+<tr><th align=left>Syntax</th><th><pre>   </pre></th><th align=left>Description</th></tr>
+<tr><td>ex:&lt;SSF&gt;<td><td>Honor exclusion regions
+<tr><td>nex:&lt;SSF&gt;<td><td>Don't honor exclusion regions
+<tr><td>&lt;SSF&gt;<td><td>Same as ex:&lt;SSF&gt;
+</table>
+</blockquote>
+
+<h2>Scaled Sampling Filter (SSF)</h2>
+
+<p>SSFs indicate whether filtering should occur at the resolution of the output
+image, or at the minimum of input and output image resolutions.  The former prevents loss
+of details; the latter prevents aliasing.
+
+<blockquote>
+<table>
+<tr><th align=left>Syntax</th><th><pre>   </pre></th><th align=left>Description</th></tr>
+<tr><td>fine:&lt;SF&gt;<td><td>Filter at full output image resolution
+<tr><td>coarse:&lt;SF&gt;<td><td>Filter at minimum resolution
+<tr><td>&lt;SF&gt;<td><td>Same as coarse:&lt;SF&gt;
+</table>
+</blockquote>
+
+<h3>SSF Options</h3>
+<pre>
+--afilter &lt;s&gt;     Use SSF &lt;s&gt; to interpolate points in alignment.
+</pre>
+
+<h2>Sampling Filter (SF)</h2>
+
+<p>SFs are used to limit bandwidth.  Primitive functions and pointwise multiplication of these
+functions (windowing) are available.
+
+<blockquote>
+<table>
+<tr><th align=left>Syntax</th><th><pre>   </pre></th><th align=left>Description</th></tr>
+<tr><td>sinc<td><td>Sinc filter: (sin &pi;x) / (&pi;x)</td>
+<tr><td>lanc:&lt;x&gt;<td><td>Lanczos, diameter x.
+<tr><td>triangle:&lt;x&gt;<td><td>Triangle, diameter x.
+<tr><td>box:&lt;x&gt;<td><td>Box, diameter x.
+<tr><td>zero<td><td>Zero function
+<tr><td>&lt;f&gt;*&lt;f&gt;<td><td>Pointwise multiplication (windowing)
+</table>
+</blockquote>
+
+<h2>Defaults</h2>
+
+<p>ALE defaults are as follows:</p>
+
+<pre>
+                     dchain         Varies by <a href="../../defaults/">default setting</a>
+                     achain         Varies by <a href="../../defaults/">default setting</a>
+                     afilter        internal (approximates triangle:2)
+</pre>
+
+
+<br>
+<hr>
+<i>Copyright 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

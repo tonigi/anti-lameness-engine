@@ -1,0 +1,160 @@
+<html>
+<title>Monte Carlo Error</title>
+  <style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+
+</head>
+<body>
+
+
+
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>Monte Carlo Error</h1>
+
+<p>Use of Monte Carlo error can decrease the time required to align large images,
+since performing coordinate transformations and memory accesses at every pixel
+can be expensive.  Sections in this page describe the motivation for Monte
+Carlo alignment, the ratio calculations used, the sampling algorithm, cache
+behavior for the algorithm, randomization approaches, typical deviations from
+the specified ratios, special handling of level-of-detail, and practical
+observations regarding the use of Monte Carlo error.
+
+<h2>Motivation</h2>
+
+<p>Performing large numbers of coordinate transformations and memory accesses in
+order to determine alignment error can be computationally expensive.  One
+approach to mitigating this expense is to use reduced level-of-detail.
+However, using reduced level-of-detail can also reduce alignment precision.  In
+particular, reducing the level of detail by a factor of two can make impossible
+the task of precisely aligning a horizontal line one pixel high.  However, if
+just a few pixels from the line are sampled at full detail, exact alignment is
+possible.
+
+<h2>Ratio Calculations</h2>
+
+<p>In Monte Carlo alignment, a ratio 
+
+<blockquote>
+<i>s = (expected # of pixel
+samples) / (# of total pixels in the accumulated image)</i>
+</blockquote>
+
+is specified.  From this ratio, a new ratio 
+
+<blockquote>
+<i>u = (expected # of unsampled pixels) / (expected # of sampled pixels)</i>
+</blockquote>
+
+is calculated.  Pixels are sampled in such a manner that <i>u</i> is
+approximately satisified.  
+
+<p>At this stage, the region of overlap with the new frame is not considered.
+With a limited area of overlap, the number of actual samples contributing to
+the final error value will typically be reduced proportionally.  (Angelo Pesce
+has pointed out that better approaches may be possible, wherein explicit
+calculation of overlapping areas reduces the number of coordinate
+transformations performed.)
+
+<h2>Sampling Algorithm</h2>
+
+<p>Pixels are considered in order of index, where the accumulated image pixel
+at position <i>(i, j)</i> is numbered with an index <i>(i * width + j)</i>.
+In order of index, we skip and sample pixels in such a manner that the
+expected size of a run of consecutive skipped pixels preceding a sampled pixel
+is <i>u</i>.  We select the size of each run of consecutive skipped pixels as
+follows:
+
+<p>If <i>2 * u</i> is an integer, then we draw uniformly from integer values in
+the interval <i>[0,2u]</i>.  If it is not an integer, then we draw from integer values in
+the interval <i>[0,2u + 1]</i> in such a manner that integer values in
+<i>[0,2u]</i> are equally likely to be chosen.  
+
+<p>(Also, see the section below on interaction with level-of-detail.)
+
+<h2>Cache behavior</h2>
+
+<p>Since indices are monotonically increasing in memory address, this approach
+to sampling may make effective use of memory cache where other approaches (e.g.
+repeated random draws from the entire index space) would not.  
+
+<h2>Randomization</h2>
+
+<p>ALE versions 0.4.7 and earlier do not reseed the pseudorandom number generator,
+and so a new random subset is selected every time the error is evaluated.
+Hence, as more or fewer of the pixels critical to alignment are sampled, the
+reported alignment can worsen or improve even in the absence of any change in
+transformation.
+
+<p>With this approach, since many transformations are inspected during the
+alignment of any given frame, it is likely, especially with greater precision
+of alignment, that some measured differences between transformations are due to
+a difference in sample sets rather than a difference in alignment accuracy.
+
+<p>By reseeding the pseudorandom number generator, ALE versions 0.4.8 and later
+instead use a consistent set of pixels from the accumulated image when
+comparing two transformations.  Tests sampling 3% of pixels from a set of
+320x240 frames indicate that this approach improves alignment.
+
+<h2>Sampling characteristics</h2>
+
+<p>For an image with 100,000 pixels and specified
+<i>s</i> in the interval <i>[0.005,0.995]</i>, ALE's sampling method results in
+a ratio <i>s</i> within 0.000003 of the specified <i>s</i>.  This number 
+improves with image size.  (The results are outlined in a <a
+href="ratios/">table</a>.)  However, note that s only represents an expected
+value, and the actual number of sampled pixels may vary by more than the
+numbers given here.
+
+<h2>Interaction with level-of-detail</h2>
+
+<p>When reduced level-of-detail is used, the number of reduced-detail pixels
+sampled is taken to be a percentage of the total number of pixels in the
+full-detail image, rather than as a percentage of the total number of pixels in
+the reduced-detail image.  (When this fraction of pixels in the full-detail
+image is more than the number of reduced-detail pixels available, all
+reduced-detail pixels are used.)  This may improve the likelihood of successful
+alignment, but may also add overhead to the alignment process.
+
+<br><br>
+
+<hr>
+<i>Copyright 2002, 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any
+medium, provided this notice is preserved.
+</body>
+</html>

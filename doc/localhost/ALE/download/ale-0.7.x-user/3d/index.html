@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE User Manual: 3D Modeling</title>
+  <style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+
+</head>
+<body>
+
+
+
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+2684415918<br>
+</table>
+
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE 3D Modeling [Very Experimental]</h1>
+
+<p>When considering images captured by a camera, the projective class of 2D
+transformations can compensate for arbitrary changes in position and
+orientation when the scene consists of a diffuse flat surface, and arbitrary
+changes in orientation (but not position) otherwise.  In order to support
+changes of position and orientation in the general case, it is necessary to
+construct a 3D model of the scene.  ALE currently has no reliable method for
+doing this, but the scene reconstruction code included in versions 0.7.2 and
+later may be a useful starting point for developing such a method.
+
+<h2>View Angle</h2>
+
+<p>In versions 0.7.3 and above, the diagonal view angle of the camera can be
+specified on the command line.  If no value is specified, the default value is
+either device specific (if a device with a known view angle is specified), 43.7
+degrees [ALE 0.7.3 and above], or 90 degrees [ALE 0.7.2].
+
+<pre>
+--view-angle &lt;x>  Set the diagonal view angle to &lt;x> degrees.  [ALE 0.7.3 and above]
+</pre>
+
+<h2>View Output [Very Experimental]</h2>
+
+The view output option provides a reconstruction of the scene as viewed from a
+particular frame's vantage point.
+
+<pre>
+--3dv &lt;n> &lt;o>     Render file &lt;o> from a 3D model using the &lt;n>th frame view.  [Very Experimental]
+</pre>
+
+<h2>Depth Output [Very Experimental]</h2>
+
+The depth output option provides reconstructed depth information associated
+with a view.
+
+<pre>
+--3dd &lt;n> &lt;o>     Render 3D depth information &lt;o> for the view from frame &lt;n>.  [Very Experimental]
+</pre>
+
+<br>
+<hr>
+<i>Copyright 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

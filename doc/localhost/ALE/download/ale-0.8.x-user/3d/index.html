@@ -1,0 +1,258 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE User Manual: 3D Scene Reconstruction</title>
+  <style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+
+</head>
+<body>
+
+
+
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+2684415918<br>
+</table>
+
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE 3D Scene Reconstruction</h1>
+
+<p>In general, 3D modeling of scenes may allow handling of cases that per-frame
+projective transformations do not allow, such as registering frames having
+different viewpoints over a non-flat or specular scene, or recovery of depth
+from frames having different viewpoints.  ALE's implementation of 3D scene
+reconstruction is considered experimental in versions prior to 0.8.3.
+
+<h2>Models</h2>
+
+<p>The method of modeling used in 0.8.2 and later is spatial subdivision based on
+regions of interest, followed by iterative update of the estimated occupancy
+and color of each region of interest.  (For a general discussion of occupancy,
+see Hans Moravec's work on depth recovery.)  In 0.8.1, the method of modeling
+is decomposition and deformation of a surface.  In earlier versions, a
+per-frame, per-pixel model of depth is used.
+
+<h2>Recovered Color and Depth Output</h2>
+
+<p>The color and depth output options provide a reconstruction of the scene as
+viewed from a particular frame's vantage point, or from an arbitrary camera
+view [0.8.2 and later].  In 0.8.2 and later, normalization of output values by
+accumulated occupancy can optionally be disabled for unfiltered views.  Version
+0.8.3 adds support for options --et and --3dpx, which can be useful for 3D
+cropping applications.  --et specifies the minimum accumulated weight required
+for a pixel to be defined, allowing refinements of crops based on clip planes
+(<code>--rc</code> and <code>--fc</code>) established prior to scene
+reconstruction, whereas --3dpx specifies a region of space to be removed 
+after scene reconstruction.  0.8.3 uses depth image pixels to determine such spatial regions,
+leaving the pixels undefined, whereas 0.8.4 removes scene geometry prior to
+rendering, allowing rendering of background objects after the foreground has been removed.
+
+<pre>
+--3dv &lt;n> &lt;o>     Render, to file &lt;o>, colors as viewed from frame &lt;n>.
+--3dd &lt;n> &lt;o>     Render, to file &lt;o>, depths as viewed from frame &lt;n>.
+--3dvp &lt;args> &lt;o> Render, to file &lt;o>, colors viewed with projective &lt;args>.  [0.8.2 and later]
+--3ddp &lt;args> &lt;o> Render, to file &lt;o>, depths viewed with projective &lt;args>.  [0.8.2 and later]
+                    &lt;args> are W H V x y z P Y R:
+                         W    image width.
+                         H    image height.
+                         V    camera view angle.
+                         x    translation x component.
+                         y    translation y component.
+                         z    translation z component.
+                         P    rotation around x-axis.
+                         Y    rotation around y-axis.
+                         R    rotation around z-axis.
+--occ-norm        Normalize output with accumulated occupancy.          [default]     [0.8.2 and later]
+--occ-nonorm      Don't normalize output with accumulated occupancy.                  [0.8.2 and later]
+--et &lt;x>          Set encounter threshold &lt;x> for defined pixels.  [default is 0]     [0.8.3 and later]
+--3dpx &lt;args>     Exclude a specified spatial volume following full-scene             [0.8.3]
+                  reconstruction, assuming a single depth at each point
+                  in the output.  &lt;args> are:
+                         &lt;xmin> &lt;xmax> &lt;ymin> &lt;ymax> &lt;zmin> &lt;zmax>
+--3dpx &lt;args>     Exclude a specified spatial volume following full-scene             [0.8.4 and later]
+                  reconstruction.  &lt;args> are:
+                         &lt;xmin> &lt;xmax> &lt;ymin> &lt;ymax> &lt;zmin> &lt;zmax>
+</pre>
+
+<h2>Filtering [0.8.4 and later]</h2>
+
+Version 0.8.4 adds support for filtering color values from the inputs to
+produce final color renderings.  This is now the default.  Determining surface
+depth and gradient for filtering the inputs draws from a set of depth pixels
+within a disc whose radius can be specified with the --3d-dmr and --3d-fmr
+options.
+
+Filtering color from views distributed on a disc (about the camera origin) of
+specified aperture allows simulation of focus effects; such effects can be
+controlled with the --focus option.
+
+<pre>
+--3d-filter       Use filtering for 3D color output.                    [default]
+--3d-nofilter     Don't use filtering for 3D color output.
+--3d-dmr &lt;x>      Set radius for filtering median depth to &lt;x>        [default 0]
+--3d-fmr &lt;x>      Set radius for filtering median diff to &lt;x>         [default 0]
+--focus &lt;ft> &lt;op> Create focus region with type &lt;ft> and options &lt;op>:
+                     Focus type:
+                        d &lt;d>           focus at distance &lt;d>
+                        p &lt;x> &lt;y>       focus at point (x, y)
+                     Space-separated options may include zero or more of:
+                        ci=&lt;ci>  camera index               [default 0]
+                        fr=&lt;fr>  focal range                [default 0]
+                        ht=&lt;ht>  horizontal tilt gradient   [default 0]
+                        vt=&lt;vt>  vertical tilt gradient     [default 0]
+                        ap=&lt;ap>  aperture diameter          [default 3]
+                        sc=&lt;sc>  sample count               [default 3]
+                        sx=&lt;sx>  start x coordinate      [default -Inf]
+                        ex=&lt;ex>  end x coordinate         [default Inf]
+                        sy=&lt;sy>  start y coordinate      [default -Inf]
+                        ey=&lt;ey>  end y coordinate         [default Inf]
+                        sd=&lt;sd>  start depth                [default 0]
+                        ed=&lt;ed>  end depth                [default Inf]
+                        sr=&lt;sr>  view sample randomization:
+                            aperture  per aperture            [default]
+                            pixel     per pixel
+                        fs=&lt;fs>  focal statistic, one of:
+                            mean      mean of views           [default]
+                            median    median of views
+</pre>
+
+
+<h2>Camera parameter adjustment</h2>
+
+<p>In versions 0.8.1 and later, camera parameters can be adjusted according to
+control points to decrease the error between points in different frames.
+Perturbation bounds for adjustment can be specified, including an additional
+upper bound on view angle perturbation, and a stereo threshold can be set for
+discarding control points after adjustment is complete.  An initial camera view
+angle can also be specified.  Versions 0.8.2 and later allow calculation of
+error by median rather than mean, and also allow disabling of adjustment of
+orientation and/or position.
+
+<pre>
+--view-angle &lt;x>  Set the initial diagonal view angle to &lt;x> degrees.
+                     (Default is 43.7 degrees or device-specific.)
+--cpp-upper=&lt;x>   Set upper bound &lt;x> for camera parameter perturbation,           [0.8.1 and later]
+                  in pixels or degrees [default is 32]                            
+--cpp-lower=&lt;x>   Set lower bound &lt;x> for camera parameter perturbation,           [0.8.1 and later]
+                  in pixels or degrees [default is 0.125]                    
+--va-upper=&lt;x>    View-angle perturbation upper bound in degrees  [default is 32]  [0.8.1 and later]
+--st &lt;x>          Control point stereo threshold is &lt;x> pixels.    [default is 4]  [0.8.1 and later]
+--cpp-err-mean    Use RMS error to determine camera parameters.         [default]        [0.8.2 and later]
+--cpp-err-median  Use median error to determine camera parameters.                       [0.8.2 and later]
+--vp-adjust       Adjust the view point                                 [default]        [0.8.2 and later]
+--vp-noadjust     Do not adjust the view point                                           [0.8.2 and later]
+--vo-adjust       Adjust the view orientation                           [default]        [0.8.2 and later]
+--vo-noadjust     Do not adjust the view orientation                                     [0.8.2 and later]
+</pre>
+
+<h2>Transformation data files [0.8.2 and later]</h2>
+
+Transformation data file options allow reading and writing of camera position,
+orientation, and view angle information.
+
+<pre>
+--3d-trans-load=x Load initial transformation settings from file x                       [0.8.2 and later]
+--3d-trans-save=x Save final transformation data in file x                               [0.8.2 and later]
+</pre>
+
+<h2>Transformation data file format [0.8.2 and later]</h2>
+
+<p>The transformation data file uses the following format, starting with a version
+command, and then describing view angle and euclidean transformation of each
+frame in turn:
+
+<pre>
+W 0
+V &lt;view angle>
+E &lt;width> &lt;height> &lt;X> &lt;Y> &lt;Z> &lt;P> &lt;Y> &lt;R>
+V &lt;view angle>
+E &lt;width> &lt;height> &lt;X> &lt;Y> &lt;Z> &lt;P> &lt;Y> &lt;R>
+.
+.
+.
+V &lt;view angle>
+E &lt;width> &lt;height> &lt;X> &lt;Y> &lt;Z> &lt;P> &lt;Y> &lt;R>
+</pre>
+
+<h2>Model costs [0.8.1 only]</h2>
+
+<p>After the cameras are adjusted, a 2D surface is decomposed and deformed to
+reduce local cost measures, calculated from angles between neighboring
+triangles, edge lengths, and differences in color between different views.
+Multipliers for edge length and angle costs can be specified on the
+command line.</p>
+
+<pre>
+--ecm &lt;x>         Set edge length cost multiplier &lt;x>.         [default is 0.001]  [0.8.1 only]
+--acm &lt;x>         Set angle cost multiplier &lt;x>.               [default is 0.001]  [0.8.1 only]
+</pre>
+
+<h2>Model rules [0.8.2 and later]</h2>
+
+<p>In versions 0.8.2 and later, clip planes can be specified, and a color falloff
+exponent for pairwise occupancy estimation can be specified.  Larger exponents
+are more forgiving of color differences between pixels in different frames.
+In versions 0.8.3 and later, error contributions from cameras outside of the
+generating pair can be assigned non-zero multipliers (<code>--tcem</code>), the
+number of occupancy and color update iterations can be specified
+(<code>--oui</code>), the number of points in space generated for each pixel
+pair can be specified (<code>--pa</code>), and the type of frame pairings can
+be specified (<code>--pc</code>).
+
+<pre>
+--di-upper &lt;x>    Decimate primary input resolution by at most 2^x [default is 0]  [0.8.4 and later]
+--di-lower &lt;x>    Decimate input resolutions by at least 2^x       [default is 0]  [0.8.4 and later]
+--do-try &lt;x>      Decimate output resolution by 2^x if possible    [default is 0]  [0.8.4 and later]
+--oc              Clip scene to output regions.                                    [0.8.4 and later]
+--no-oc           Do not clip scene to output regions.                  [default]  [0.8.4 and later]
+--fc &lt;x>          Set front-clip to &lt;x> (0 &lt; x &lt; 1)                [default is 0]  [0.8.2 and later]
+--rc &lt;x>          Set rear-clip to &lt;x> (1 &lt; x &lt; inf)             [default is inf]  [0.8.2 and later]
+--fx &lt;x>          Set falloff exponent to &lt;x>                      [default is 0]  [0.8.2 and later]
+--tcem &lt;x>        Set third-camera error multiplier to &lt;x>         [default is 0]  [0.8.3 and later]
+--oui &lt;x>         Set occupancy update iterations to &lt;x>          [default is 10]  [0.8.3 and later]
+--pa &lt;x>          Set pairwise ambiguity to &lt;x>                    [default is 3]  [0.8.3 and later]
+--pc &lt;type>       Set the type of pairwise comparisons:                            [0.8.3 and later]
+                     auto     Determine comparisons automatically.      [default]
+                     all      Perform all comparisons.
+
+</pre>
+
+<br>
+<hr>
+<i>Copyright 2004, 2005, 2006 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>

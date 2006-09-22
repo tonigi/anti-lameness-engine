@@ -1,0 +1,309 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE Irani-Peleg Update Rule</title>
+  <style type="text/css">
+  TABLE.ba { max-width: 678; text-align: center; padding-bottom: 15; padding-top: 5}
+  TABLE.inline { padding-right: 300; clear: left}
+  TD.text_table {padding-left: 2; padding-right: 2; border-width: 1}
+  H2 {clear: left}
+  P {max-width: none; padding-right: 300; clear: left}
+  BLOCKQUOTE {padding-right: 400 }
+  LI {max-width: 640; clear: left}
+  P.footer {max-width: none; width: auto; padding-left: 0}
+  P.header {max-width: none; width: auto; padding-left: 0}
+  HR.main {max-width: 640; clear: left; padding-left: 0; margin-left: 0}
+  HR.footer {clear: both}
+</style>
+
+</head>
+<body>
+
+
+
+
+
+
+<table align=right valign=top width=160>
+<td valign=top height=600 width=160>
+<a href="http://auricle.dyndns.org/ALE/">
+<big>ALE</big>
+<br>
+Image Processing Software
+<br>
+<br>
+<small>Deblurring, Anti-aliasing, and Superresolution.</small></a>
+<br><br>
+<big>
+Local Operation
+</big>
+<hr>
+localhost<br>
+5393119533<br>
+</table>
+
+
+
+
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE Irani-Peleg Update Rule</h1>
+
+The Irani-Peleg update operator <b>U</b> is used iteratively to update the
+final output of incremental rendering:
+
+<blockquote>
+<b>J<sub>0</sub> = I<sub>final</sub></b>
+<br>
+<b>J<sub>1</sub> = UJ<sub>0</sub></b>
+<br>
+<b>J<sub>2</sub> = UJ<sub>1</sub></b>
+<br>
+.
+<br>
+.
+<br>
+.
+<br>
+<b>J<sub>k</sub> = UJ<sub>k-1</sub></b>
+</blockquote>
+
+<h2>Modeling of the imaging process</h2>
+
+<p>Given transformations <b>P<sub>x</sub></b> and <b>B<sub>x</sub></b>, linear
+exposure adjustment <b>E<sub>x</sub></b>, linear and non-linear convolutions
+<b>L</b> and <b>N</b>, discretization operator <b>D</b>, and extension operator
+<b>C</b>, the imaging process can be modeled, starting with <b>s</b>, a
+discrete approximation of the scene, as:
+
+<blockquote>
+<b>d<sub>x</sub> = DNCGDLE<sub>x</sub>B<sub>x</sub>P<sub>x</sub>Cs</b>
+</blockquote>
+
+<p>Note the extension operator to the left of <b>s</b>, which was not present
+in the similar equation appearing on the main page.  Since we are using only a
+discrete approximation of the scene, it must first be made continuous, in order
+to fit within the framework developed on the main page.  As noted before, the
+second extension operator, between <b>G</b> and <b>N</b>, is included for
+convenience of implementation, and does not restrict the generality of the model.
+
+<h2>Pixel-to-pixel weighting</h2>
+
+<p>Since pixel values in <b>DLE<sub>x</sub>B<sub>x</sub>P<sub>x</sub>Cs</b> are
+linear in pixel values of <b>Cs</b>, and hence linear in pixel values of
+<b>s</b>, and since, similarly, pixel values of <b>d<sub>x</sub></b> are linear
+in pixel values of <b>GDLE<sub>x</sub>B<sub>x</sub>P<sub>x</sub>Cs</b>, we can
+define arrays of values <b>a</b> and <b>b</b> such that:
+
+<blockquote>
+<b>DLE<sub>x</sub>B<sub>x</sub>P<sub>x</sub>Cs(i, j) = &sum;<sub>(i', j')</sub> a<sub>x,i,j,i',j'</sub> * s(i', j')</b>
+<br><br>
+<b>d<sub>x</sub>(i, j) = &sum;<sub>(i', j')</sub> b<sub>x,i,j,i',j'</sub> * GDLE<sub>x</sub>B<sub>x</sub>P<sub>x</sub>Cs(i', j')</b>
+</blockquote>
+
+Hence, using <b>G</b> as a gamma correction function:
+
+<blockquote>
+<b>d<sub>x</sub>(i, j) = &sum;<sub>(i', j')</sub> b<sub>x,i,j,i',j'</sub> * G(&sum;<sub>(i'', j'')</sub> a<sub>x,i',j',i'',j''</sub> * s(i'', j''))</b>
+</blockquote>
+
+Note that, since <b>G</b> is non-linear, the inner sum cannot be moved outside of the enclosing parentheses.
+
+<h2>Error calculation</h2>
+
+<p>Given the model described above, we now have two ways to calculate a pixel value <b>d<sub>x</sub>(i, j)</b>: directly, from the input frame, or indirectly, from the scene approximation <b>s</b>.  Hence, we can calculate an error between the two methods:
+
+<blockquote>
+<b>e<sub>x</sub>(i, j) = d<sub>x</sub>(i, j) - &sum;<sub>(i', j')</sub> b<sub>x,i,j,i',j'</sub> * G(&sum;<sub>(i'', j'')</sub> a<sub>x,i',j',i'',j''</sub> * s(i'', j''))</b>
+</blockquote>
+
+<h2>Backprojection (single stage)</h2>
+
+Assume for the moment that our model of <b>d<sub>x</sub></b> were restricted in the following way, using a scene approximation <b>s'</b>:
+
+<blockquote>
+<b>d<sub>x</sub>(i, j) = &sum;<sub>(i', j')</sub> b<sub>x,i,j,i',j'</sub> * s'(i', j')</b>
+</blockquote>
+
+<p>This includes, as a special case, the scenario originally outlined by Irani and
+Peleg, which considered a single convolution step.  In this case, we can use a
+backprojection array <b>c</b> to produce an updated image <b>Us'</b>:
+
+<blockquote>
+<b>Us'(i, j) = s'(i, j) + (1 / x<sub>max</sub>) * &sum;<sub>x</sub> &sum;<sub>(i', j')</sub> c<sub>x,i,j,i',j'</sub> * e<sub>x</sub>(i', j')</b>
+</blockquote>
+
+<p>For certain limited cases, Irani and Peleg have proved this update rule to
+converge exponentially to the original scene.  However, since the model used by
+ALE includes two convolution steps that cannot, in general, be combined, ALE
+uses a different update rule.
+
+<h2>Backprojection (two-stage)</h2>
+
+<p>The two-stage backprojection rule below could easily be extended to any
+arbitrary number of stages, but ALE currently supports only two stages, in
+accordance with the two-colorspace imaging model outlined above.  The rule,
+using <b>G<sup>-1</sup></b> as an inverse gamma correction function, is:</p>
+
+<blockquote>
+<b>Us(i, j) = s(i, j) + (1 / x<sub>max</sub>) &sum;<sub>x</sub> &sum;<sub>(i', j')</sub> c<sub>x,i,j,i',j'</sub> * (G<sup>-1</sup>(GDLE<sub>x</sub>B<sub>x</sub>P<sub>x</sub>Cs(i', j') + &sum;<sub>(i'', j'')</sub> f<sub>x,i',j',i'',j''</sub> * e<sub>x</sub>(i'',j'')) - DLE<sub>x</sub>B<sub>x</sub>P<sub>x</sub>Cs(i', j'))</b>
+</blockquote>
+
+<p>Where <b>f</b> is a second backprojection array.  Schematically, the update
+process looks something like the diagram below, based on an excerpt from the
+ALE source code.  The exposure re-estimation step shown in the diagram has not
+been described here, but is available for inspection in the source.  Also,
+since ALE stores images internally using a linear representation, they must
+first be converted back to a non-linear representation, as shown at the very
+bottom of the diagram.</p>
+
+<table border><tr><td>
+<pre>
+ * The algorithm in the paper by Irani and Peleg looks something like this
+ * (PSF' is the backprojection kernel, and corresponds to what the authors of
+ * the paper call AUX):
+ *
+ * ===============================================================
+ *    Forward         Backward           Binary Operators
+ * ---------------------------------------------------------------
+ *
+ *    scene(n) ------> scene(n+1)        <--- summation
+ *
+ *      |                 ^
+ *      |                 |
+ *     PSF               PSF'
+ *      |                 |
+ *      |        ---------+              <--- difference
+ *      V       /         |
+ *
+ *   simulated(n)       real
+ *
+ * ===============================================================
+ *
+ * The above approach assumes a single colorspace representation.  However,
+ * consumer cameras sometimes perform sharpening in non-linear colorspace,
+ * whereas lens and sensor blurring occurs in linear colorspace.  Hence, there
+ * can be two colorspaces involved; ALE accounts for this with linear and
+ * non-linear colorspace PSFs.  Hence, the algorithm we use looks something
+ * like:
+ *
+ * ===============================================================
+ *    Forward         Backward            Binary Operators
+ * ---------------------------------------------------------------
+ *
+ *    scene(n) -----> scene(n+1)          <--- summation
+ *
+ *      |                 ^
+ *      |                 |
+ *    LPSF              LPSF'
+ *      |                 |
+ *      |       ----------+               <--- difference,
+ *      V      /          |                    exposure
+ *                                             re-estimation
+ *  lsimulated(n)      lreal(n)
+ *
+ *      |                 ^
+ *      |                 |
+ *   unlinearize       linearize
+ *      |                 |
+ *      V                 |
+ *
+ *  lsim_nl(n) -----> lreal_nl(n)         <--- summation
+ *
+ *      |                 ^
+ *      |                 |
+ *    NLPSF             NLPSF'
+ *      |                 |
+ *      |       ----------+               <--- difference
+ *      V      /          |
+ *
+ *  nlsimulated(n)     real_nl
+ *
+ *                        ^
+ *                        |
+ *                    unlinearize
+ *                        |
+ *                        |
+ *
+ *                      real
+ *
+ * ===============================================================
+</pre>
+</td></tr></table>
+
+<h2>Backprojection Arrays</h2>
+
+<p>The rules used for calculating backprojection arrays <b>c</b> and <b>f</b> are as follows:</p>
+
+<blockquote>
+<b>c<sub>x,i,j,i',j'</sub> = Y * b<sub>x,i,j,i',j'</sub></b>
+<br><br>
+<b>f<sub>x,i,j,i',j'</sub> = Z * a<sub>x,i,j,i',j'</sub></b>
+</blockquote>
+
+<p>Such that:
+
+<!-- Ka and Kb had been swapped.  Fixed August 8, 2004 --dhilvert -->
+
+<blockquote>
+<b>Y = - 0.9 / (max<sub>&omega;</sub> |FK<sub>b</sub>(&omega;)|)</b>
+<br><br>
+<b>Z = - 0.9 / (max<sub>&omega;</sub> |FK<sub>a</sub>(&omega;)|)</b>
+</blockquote>
+
+<p>where <b>F</b> is the fourier transform, <b>K<sub>a</sub></b> is the convolution kernel for <b>a</b>
+in its native coordinate system, and <b>K<sub>b</sub></b> is the convolution kernel for <b>b</b> in its native coordinate
+system.
+
+<h2>Convergence for special cases</h2>
+
+<p>In cases where at least one of <b>L</b>, <b>N</b>, or <b>G</b> is the
+identity operator, or if <b>G</b> is linear, the technique outlined above can
+be expressed in terms of the original method by Irani and Peleg, and will
+converge exponentially if it meets the convergence criteria outlined in their
+paper.  Note that ALE makes certain approximations to obtain projection and
+backprojection arrays that may hinder convergence in some cases.  In particular,
+the calculation of overlap areas involving non-identity transformations is not
+exact.</p>
+
+<h2>Certainty</h2>
+
+<p>ALE's implementation of certainty for Irani-Peleg rendering modifies the rule
+described above.  Write the original rule as:</p>
+
+<blockquote>
+<b>Us(i, j) = s(i, j) + (1 / x<sub>max</sub>) &sum;<sub>x</sub> correction<sub>x</sub>(i, j)</b>
+</blockquote>
+
+<p>where <b>correction<sub>x</sub></b> represents the back-projected correction
+for frame <b>x</b>.  Let the re-estimated linear value <b>comp_real</b>,
+<code>lreal(n)</code> in the diagram above, be defined as:
+
+<blockquote>
+<b>comp_real<sub>x</sub>(i, j) = G<sup>-1</sup>(GDLE<sub>x</sub>B<sub>x</sub>P<sub>x</sub>Cs(i, j) + &sum;<sub>(i'', j'')</sub> f<sub>x,i,j,i'',j''</sub> * e<sub>x</sub>(i'',j''))</b>
+</blockquote>
+
+Then the certainty-based rule for versions 0.7.x is:
+
+<blockquote>
+<b>Us(i, j) = s(i, j) + &sum;<sub>x</sub> &Kappa;(correction<sub>x</sub>, E<sub>x</sub>comp_real<sub>x</sub>, i, j) * correction<sub>x</sub>(i, j) / &sum;<sub>x</sub> K(correction<sub>x</sub>, E<sub>x</sub>comp_real<sub>x</sub>, i, j)</b>
+</blockquote>
+
+<p>Where <b>&Kappa;</b> is the symmetrically one-sided <a href="../certainty/">certainty</a> function.  
+
+<p>For version 0.8.0, the rule is:</p>
+
+<blockquote>
+<b>Us(i, j) = s(i, j) + &sum;<sub>x</sub> &Kappa;'(correction<sub>x</sub>, s, i, j) * correction<sub>x</sub>(i, j) / &sum;<sub>x</sub> &Kappa;'(correction<sub>x</sub>, s, i, j)</b>
+</blockquote>
+
+<p>Where <b>&Kappa;'</b> is the asymmetrically one-sided <a href="../certainty/">certainty</a> function.  Note that this expression substitutes <b>s</b> for <b>E<sub>x</sub>comp_real<sub>x</sub></b>, resulting in estimate-based certainty.
+
+
+<br>
+<hr>
+<i>Copyright 2002, 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+
+</body>
+</html>
