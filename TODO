@@ -21,18 +21,41 @@ Note: This release may be combined with the 0.9.0 Beta release.
     these text files are automatically generated from markup.  (?)
   - Document new scoping operators {}, [], and [<>].
   - Document other changes in UI, including regularization of syntax.
+    * commas can no longer appear in single-argument options when using
+      assignment-delimited syntax; use space-delimited syntax instead.
   - Update bootstrap and/or Makefile.am to properly build and install
     documentation.
 + Ensure consistency between the website hierarchy and the README.
++ Investigate options for creating and distributing a Windows package
+  containing sufficient software to ensure support for common image types
+  (perhaps statically linking with libraries for opening JPEG and PNG files).
+  One option would be to use BitTorrent for distribution; another would be to
+  distribute CDs.
++ Investigate options for distributing a complete package, including revision
+  history, and, possibly, example image sets.  Bittorrent and CD seem the most
+  obvious candidates for this.
 
 
 0.9.0 (Beta)
 ------------
 
-+ Add Irani-Peleg processing to 3D output options.
-  - Add generic 2D transformation class, supporting partial transformations.
++ Add a generic 2D transformation class, supporting partial transformations.
++ Add a partial 2D transformation class with constructor taking a 3D
+  transformation and 3D model as arguments.
++ Add file-scoped options
+  - Irani-Peleg
+  - black level
+  - alignment type
+  - focus details
++ Add Irani-Peleg processing for output from 3D models.
+  - modify existing Irani-Peleg code to use generic partial 2D transformations.
++ Add facilities for handling depth-of-field and focus bracketing, as suggested
+  by Viktors Rotanovs and Gregory Maxwell.
+  - use user-provided (file-scoped) focus details to determine depth of field
+  - use the 3D model for depth data, as suggested by Gregory Maxwell
+  - use variable PSF to handle focus of input images in the Irani-Peleg
+    algorithm, as suggested by Gregory Maxwell
 + Add multi-threading (e.g., in rendering code).
-+ Add file-scoped options for black level, alignment type, etc.
 
 
 1.0.0 (Stable)
