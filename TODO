@@ -10,59 +10,75 @@ This file includes a tentative list of future versions and features.
 Note: This release may be combined with the 0.9.0 Beta release.
 
 + Documentation
-  - Modify page footers to reflect the current license terms (doc/COPYING).
-  - Consolidate the manual into a single work.
-  - Add license section to the manual.
   - Convert from HTML to a more flexible format, such as texinfo or docbook.
+  - Add license information (GPL; see doc/COPYING) sections to the manuals.
+  - Modify page footers to better reflect the updated license terms.
+  - Consolidate the manuals into a single work (e.g., docbook set, texinfo
+    top-node) for more straightforward searching and indexing.
+  - Add a new 'package manual' including the text of source package
+    documentation files README, TODO, etc., so that these are searchable
+    using utilities such as GNU info.
+  - Modify bootstrap script to generate plain-text package documentation
+    (README, TODO, etc.) from markup. (?)
   - Revise the user manual for new features and syntax.
-  - Integrate source package documentation files README, TODO, etc. as links
-    and table-of-contents entries.
-  - Integrate source package documentation files README, TODO, etc., so that
-    these text files are automatically generated from markup.  (?)
-  - Document new scoping operators {}, [], and [<>].
-  - Document other changes in UI, including regularization of syntax.
-    * commas can no longer appear in single-argument options when using
-      assignment-delimited syntax; use space-delimited syntax instead.
+    * Document new scoping operators {}, [], and [<>].
+    * Document other changes in UI, including regularization of syntax.
+      - in particular, commas can no longer appear in single-argument options
+        when using assignment-delimited syntax; use space-delimited syntax
+        instead.  This behavior is inconsistent with 0.8.4.
   - Update bootstrap and/or Makefile.am to properly build and install
     documentation.
 + Ensure consistency between the website hierarchy and the README.
-+ Investigate options for creating and distributing a Windows package
-  containing sufficient software to ensure support for common image types
-  (perhaps statically linking with libraries for opening JPEG and PNG files).
-  One option would be to use BitTorrent for distribution; another would be to
-  distribute CDs.
-+ Investigate options for distributing a complete package, including revision
-  history, and, possibly, example image sets.  Bittorrent and CD seem the most
-  obvious candidates for this.
++ Investigate options for distributing a 'complete' package including full
+  revision history, pre-built documentation (if the ordinary distribution does
+  not include this), and, possibly, example image sets.  Direct download,
+  bittorrent and CD are the most prominent candidates for distribution.
+  - In the case of CD distribution, information should probably be added to the
+    manuals regarding how to update CD-provided program source.
++ Investigate options for creating and distributing a combined source and
+  binary Windows package containing sufficient software to ensure support for
+  common image types (e.g., by statically linking with libraries for opening
+  JPEG and PNG files).  BitTorrent and CD are the most obvious candidates for
+  distribution.
+  - This package could build on the package described above, as a 'for Windows'
+    variant or some such.
 
 
 0.9.0 (Beta)
 ------------
 
 + Add a generic 2D transformation class, supporting partial transformations.
-+ Add a partial 2D transformation class with constructor taking a 3D
-  transformation and 3D model as arguments.
+  - 'partial transformation', as used here, means that it is expected that some
+    points will fail to map.
++ Add a partial 2D transformation class with constructor taking as arguments a
+  3D transformation and a 3D model.
 + Add file-scoped options
   - Irani-Peleg
   - black level
   - alignment type
   - focus details
-+ Add Irani-Peleg processing for output from 3D models.
-  - modify existing Irani-Peleg code to use generic partial 2D transformations.
-+ Add facilities for handling depth-of-field and focus bracketing, as suggested
-  by Viktors Rotanovs and Gregory Maxwell.
-  - use user-provided (file-scoped) focus details to determine depth of field
-  - use the 3D model for depth data, as suggested by Gregory Maxwell
-  - use variable PSF to handle focus of input images in the Irani-Peleg
-    algorithm, as suggested by Gregory Maxwell
-+ Add multi-threading (e.g., in rendering code).
++ Modify existing Irani-Peleg code to use generic (partial) 2D transformations.
+  - in combination with the above, this should allow the algorithm to operate
+    on 3D models.
++ Add facilities for handling depth-of-field and focus bracketing in input
+  image sets, as suggested by Viktors Rotanovs and Gregory Maxwell.  This
+  change will likely involve:
+  - using the 3D model for depth data, as suggested by Gregory Maxwell
+  - using user-provided (file-scoped) focus details to determine depth of field
+  - using variable PSF in the Irani-Peleg algorithm, as suggested by Gregory
+    Maxwell
+  - developing an approach to handle the iterative (non-Irani-Peleg) case.
++ Add multi-threading options (e.g., for rendering code), so that a single
+  invocation of the program can run on multiple processors simultaneously.
 
 
 1.0.0 (Stable)
 --------------
 
 + Refine rendering and alignment code for better performance.
-+ Internationalize command-line interface and help text to accommodate
++ Enhance the command-line interface in preparation for i18n.  (?)
+  - e.g., syntax for identifying synchronized frame sets
++ Internationalize the command-line interface and help text to accommodate
   translations.
 + Update the Technical Manual for information regarding 3D operation.
 
@@ -70,8 +86,6 @@ Note: This release may be combined with the 0.9.0 Beta release.
 Unsorted
 --------
 
-+ Review command-line interface and help text for suitability for translation
-  to languages other than English.
 + Add facilities for manipulating images storing color as integer-valued data,
   possibly as library routines.
 + Move image-processing routines into a library that can be used by other 
