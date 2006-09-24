@@ -9,7 +9,6 @@ This file includes a tentative list of future versions and features.
 
 Note: This release may be combined with the 0.9.0 Beta release.
 
-+ Collapse darcs repositories 'ale' and 'ale-working' into a single repository.
 + Documentation
   - Convert from HTML to a more flexible format, such as texinfo or docbook.
   - Add license information (GPL; see doc/COPYING) sections to the manuals.
