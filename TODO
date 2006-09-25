@@ -12,6 +12,9 @@ Note: This release may be combined with the 0.9.0 Beta release.
 + Documentation
   - Convert from HTML to a more flexible format, such as texinfo or docbook.
   - Add license information (GPL; see doc/COPYING) sections to the manuals.
+  - Add additional permission for distribution of hardcopy documentation 
+    with source downloadable from a public network server in the case of orders
+    placed on-line.
   - Modify page footers to better reflect the updated license terms.
   - Consolidate the manuals into a single work (e.g., docbook set, texinfo
     top-node) for more straightforward searching and indexing.
