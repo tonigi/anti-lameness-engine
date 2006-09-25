@@ -52,6 +52,8 @@ Note: This release may be combined with the 0.9.0 Beta release.
   distribution.
   - This package could build on the package described above, as a 'for Windows'
     variant or some such.
+  - This package could make use of an application such as InstallJammer for
+    installation.
 
 
 0.9.0 (Beta)
