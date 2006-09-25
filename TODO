@@ -20,14 +20,24 @@ Note: This release may be combined with the 0.9.0 Beta release.
     using utilities such as GNU info.
   - Modify bootstrap script to generate plain-text package documentation
     (README, TODO, etc.) from markup. (?)
+  - Centralize licensing and authorship information (e.g., there should be only
+    one COPYING file and only one AUTHORS file).
+  - Incorporate an automatic method for building the target documentation
+    types.  The example Makefile supplied with docbook-xsl would be sufficient
+    for this, but note that their license and copyright terms should be included
+    as copyright notices in the AUTHORS and/or COPYING files (or equivalent).
   - Revise the user manual for new features and syntax.
     * Document new scoping operators {}, [], and [<>].
     * Document other changes in UI, including regularization of syntax.
       - in particular, commas can no longer appear in single-argument options
         when using assignment-delimited syntax; use space-delimited syntax
         instead.  This behavior is inconsistent with 0.8.4.
+  - Add a section to the README indicating how to obtain and update source via
+    darcs.
   - Update bootstrap and/or Makefile.am to properly build and install
-    documentation.
+    documentation.  (Since the required tools might not be be available
+    everywhere, building the documentation from the bootstrap file would
+    probably be preferable.)
 + Ensure consistency between the website hierarchy and the README.
 + Investigate options for distributing a 'complete' package including full
   revision history, pre-built documentation (if the ordinary distribution does
