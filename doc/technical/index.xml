@@ -1,0 +1,196 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
+	"file:///usr/local/share/docbook2X/dtd/Texi-XML">
+
+<book xmlns:xi="http://www.w3.org/2001/XInclude">
+<bookinfo>
+  <title>
+    <xi:include href="../package-info.xml" xpointer="product-name"/>
+    <xi:include href="../package-info.xml" xpointer="product-number"/> 
+    Technical Manual
+  </title>
+  <xi:include href="../package-info.xml" xpointer="author-name"/>
+  <xi:include href="../package-info.xml" xpointer="copyright-info"/>
+</bookinfo>
+<chapter>
+<section><title>Purpose (foobar)</title>
+
+<para>This page summarizes program operation and command-line usage for ALE
+versions 0.8.0 through 0.8.4.  Features specific to a particular version
+are annotated (e.g.  [ALE 0.8.1 and later]).</para>
+
+<para>Manual pages linked from this section describe <a href="defaults/">default
+settings</a>, <a href="file/">file output</a>, <a
+href="alignment/">alignment</a>, <a href="rendering/">rendering</a>, <a
+href="exclusion/">exclusion regions</a>, <a href="cp/">control points</a>, <a href="ui/">user interfaces</a>, <a
+href="device/">devices</a>, and <a href="3d/">3D scene reconstruction</a>.</para>
+
+<para>For more information on ALE, see the <a
+href="http://auricle.dyndns.org/ALE/">ALE Home Page</a>.</para>
+
+</section>
+<section><title>Parameter Meta-syntax</title>
+
+<table>
+<tr>
+<td><code>&lt;foo></code></td>
+<td>A required parameter called <i>foo</i>.</td>
+</tr>
+<tr>
+<td><code>[&lt;foo>]</code></td>
+<td>An optional parameter called <i>foo</i>.</td>
+</tr>
+<tr>
+<td><code>[&lt;foo>]*</code></td>
+<td>Zero or more parameters <i>foo</i>.</td>
+</tr>
+</table>
+
+</section>
+<section><title>Command-line syntax for Image Processing</title>
+
+<para>The following command-line invocation can be used to process a series of
+frames into an output file:</para>
+
+<pre>ale [&lt;option>]* &lt;original-frame> [&lt;supplemental-frame>]* &lt;output-file></pre>
+
+<h3>Option Arguments</h3>
+
+<para>Certain basic modes of operation, emphasizing image quality, speed, or other
+rendering characteristics, are now established in the form of <a
+href="defaults/">default settings</a>.</para>
+
+<para>Other options are outlined in the manual pages describing <a
+href="file/">file output</a>, <a href="rendering/">rendering</a>, <a
+href="alignment/">alignment</a>, <a href="exclusion/">exclusion
+regions</a>, <a href="device/">devices</a>, <a href="ui/">user interfaces</a>,
+and <a href="3d/">3D scene reconstruction</a>.</para>
+
+<h3>Image Files</h3>
+
+<para>ALE can be configured at compile time to use one of two different file
+handlers.  Execute 'ale --version' to determine which file handler is being
+used.  The table below outlines the supported formats for each file handler.</para>
+
+<table class="inline">
+<td>
+<table border="1">
+<tr><th>Version Message</th><th>File Types Supported</th></tr>
+<tr><td valign="top">
+<pre>File handler:     ImageMagick</pre>
+</td>
+
+<td>
+Input and output files can be any of the <a
+href="http://imagemagick.sourceforge.net/www/formats.html">formats</a> supported by
+ImageMagick.
+</td></tr>
+
+<tr><td valign="top">
+<pre>File handler:     PPM</pre>
+</td><td>
+Input files must be PPM, and output files are written as PPM.
+</td></tr>
+</table>
+</td>
+</table>
+
+<para>Note that many external programs, including ImageMagick's <a
+href="http://www.imagemagick.org/">command line utilities</a>, can be used to
+convert between PPM and other formats.</para>
+
+<para>See the README included in the source distribution of ALE for more information about
+compile-time configuration of file handlers.</para>
+
+</section>
+<section>
+<title>Command-line syntax for Version Information</title>
+
+<para>The following command-line invocation can be used to print version
+information and build options:</para>
+
+<pre>ale --version</pre>
+
+<para>The following is sample output from this invocation:</para>
+
+<pre>
+ALE Version:      0.8.4
+File handler:     ImageMagick
+Color data:       SINGLE
+Coordinate data:  SINGLE
+DFT:              FFTW3
+Assertions:       Enabled
+Optimizations:    Enabled
+</pre>
+
+<para>The first line of output indicates the version of ALE source code being
+used; the remaining lines reflect the build options selected at compile
+time.</para>
+
+<para>For more information about build options, see the README file included in
+the ALE source distribution.</para>
+
+</section>
+<section>
+<title>Command-line syntax for Help Output</title>
+
+<para>When invoked with no arguments, or an insufficient number of file arguments,
+ALE outputs a help message specifying command-line usage and available help
+topics.  The following is a sample invocation:</para>
+
+<pre>ale</pre>
+
+<h3>Help Topics</h3>
+
+<para>More information about specific help topics can be obtained with an invocation
+of the following form:</para>
+
+<pre>ale &lt;help option&gt;</pre>
+
+<para>Available help options, and their corresponding help topics, are outlined
+below:</para>
+
+<pre>
+--hu              Usage.
+--hq              Default settings.
+--hf              Image files.
+--he              Exclusion regions.
+--ha              Alignment (not exposure-related).
+--hr              Rendering (not exposure-related).
+--hx              Exposure.
+--ht              Transformation data files.
+--hc              Control points.  [0.8.1 and later]
+--hl              Filtering (PSFs, rendering chains).
+--hd              Devices.
+--hi              User Interfaces.
+--hv              Video stream processing (Experimental).
+--h3              3D Modeling.
+--hz              Undocumented options.
+--hA              Concatenate all help pages.
+</pre>
+
+</section>
+<section>
+<title>Related Manual Pages</title>
+
+<ul>
+<li><a href="defaults/">Default Settings</a></li>
+<li><a href="file/">File Output</a></li>
+<li><a href="rendering/">Rendering</a></li>
+<li><a href="alignment/">Alignment</a></li>
+<li><a href="exclusion/">Exclusion Regions</a></li>
+<li><a href="cp/">Control Points (0.8.1 and later)</a></li>
+<li><a href="device/">Devices</a></li>
+<li><a href="ui/">User Interfaces</a></li>
+<li><a href="3d/">3D Scene Reconstruction</a></li>
+</ul>
+
+</section>
+
+<br/>
+<hr/>
+<i>Copyright 2003, 2004, 2005, 2006 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<para class="footer">Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.</para>
+</chapter>
+</book>

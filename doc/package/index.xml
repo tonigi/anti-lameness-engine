@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
+	"file:///usr/local/share/docbook2X/dtd/Texi-XML">
+
+<book xmlns:xi="http://www.w3.org/2001/XInclude">
+<bookinfo>
+  <title>
+    <xi:include href="../package-info.xml" xpointer="product-name"/>
+    <xi:include href="../package-info.xml" xpointer="product-number"/> 
+    Package Manual
+  </title>
+  <xi:include href="../package-info.xml" xpointer="author-name"/>
+  <xi:include href="../package-info.xml" xpointer="copyright-info"/>
+</bookinfo>
+<!--  <xi:include href="readme/index.xml"/>
+  <xi:include href="news/index.xml"/>
+  <xi:include href="changelog/index.xml"/> 
+-->
+  <xi:include href="todo/index.xml"/>
+<!--  <xi:include href="authors/index.xml"/>
+  <xi:include href="copying/index.xml"/>
+  <xi:include href="install/index.xml"/>
+-->
+</book>
