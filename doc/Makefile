@@ -1,3 +1,8 @@
+#
+# Makefile modified by David Hilvert to generate ALE documentation.
+# 24-Sep-2006
+#
+
 # $Source$
 # $Author: xmldoc $
 # $Date: 2006-09-01 15:47:16 +0900 (Fri, 01 Sep 2006) $
@@ -30,7 +35,7 @@
 #
 # That would generate just HTML (unchunked) and plain-text output.
 #
-DOCBOOK_OUTPUT_FORMATS ?= man chunk txt pdf
+DOCBOOK_OUTPUT_FORMATS ?= man chunk txt pdf info
 
 # If you want XHTML output instead of HTML, set HTML_OR_XHTML to
 # 'xhtml' or just specify 'xhtml" in DOCBOOK_OUTPUT_FORMATS.
@@ -55,7 +60,7 @@ PDF_MAKER = fop
 # possible values for TXT_MAKER are:
 #   links|lynx|w3m|w3mmee
 TXT_MAKER = links
-TXT_MAKER_FLAGS = -dump
+TXT_MAKER_FLAGS = -dump -no-numbering -no-references
 
 # xsl
 XSLT = xsltproc
@@ -63,7 +68,7 @@ XSLT_FLAGS = --xinclude
 
 # http://dblatex.sourceforge.net/
 DBLATEX = dblatex
-DBLATEX_FLAGS = -b pdftex
+DBLATEX_FLAGS = -b pdftex -P page.margin.inner=0.8 -P page.margin.outer=0.5 -P double.sided=1 -T db2latex
 
 FOP = fop
 FOP_FLAGS =
@@ -83,8 +88,8 @@ PDFXMLTEX = pdfxmltex
 
 # http://docbook2x.sourceforge.net/
 DB2X_XSLTPROC = db2x_xsltproc
-DB2X_XSLTPROC_FLAGS = 
-DB2X_TEXIXML = db2x_texixml
+DB2X_XSLTPROC_FLAGS = --xinclude
+DB2X_TEXIXML = db2x_texixml --list-files
 DB2X_TEXIXML_FLAGS = 
 
 # we call the man(1) command to generate "foo.N.pdf" and
@@ -251,7 +256,12 @@ FO_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
                 version="1.0"> \
   <xsl:import href="$(DOCBOOK_XSL)/fo/docbook.xsl"/> \
   <xsl:param name="$(PDF_MAKER).extensions">1</xsl:param> \
-  <xsl:param name="paper.type">A4</xsl:param> \
+  <xsl:param name="paper.type">Custom</xsl:param> \
+  <xsl:param name="page.height">9.25in</xsl:param> \
+  <xsl:param name="page.width">7.5in</xsl:param> \
+  <xsl:param name="commented.page.margin.inner">3in</xsl:param> \
+  <xsl:param name="commented.page.margin.outer">3in</xsl:param> \
+  <xsl:param name="double.sided">1</xsl:param> \
   <xsl:param name="draft.watermark.image"></xsl:param> \
   <xsl:param name="hyphenation">false</xsl:param> \
   <xsl:param name="hyphenate.verbatim">1</xsl:param> \
@@ -474,13 +484,15 @@ endif
 %.txml: %$(DOCBOOK_FILE_EXTENSION)
 	$(DB2X_XSLTPROC) $(DB2X_XSLTPROC_FLAGS) -s texi -o $@ $<
 
-%.texi: %.txml
-	$(DB2X_TEXIXML) $(DB2X_TEXIXML_FLAGS) $<
+%.texi-list: %.txml
+	$(DB2X_TEXIXML) $(DB2X_TEXIXML_FLAGS) $< > $@
 
 # the following is actually a built-in rule, but it's redefined
 # here just for the sake of clarity
-%.info: %.texi
-	$(MAKEINFO) $(MAKEINFO_FLAGS) $< -o $@
+%.info: %.texi-list
+	./make-infos $(MAKEINFO) < $<
+	-@ # This doesn't work in general.
+	-@ # $(MAKEINFO) $(MAKEINFO_FLAGS) $< -o $@
 
 # -----------------------------------------------------------------
 #     pattern rule for making man pages
@@ -572,6 +584,9 @@ endif
 #   target(s) for cleaning up the mess
 # -----------------------------------------------------------------
 clean:
+	$(RM) *.info
+	$(RM) *.texi
+	$(RM) *.texi-list
 ifneq ($(FILES_TXT),)
 	$(RM) $(FILES_TXT)
 endif

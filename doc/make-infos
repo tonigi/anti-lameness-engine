@@ -1,0 +1,9 @@
+#!/usr/bin/perl -w
+
+while(<STDIN>) {
+	chomp($texi_file = $_);
+	s/[_[:space:]]+/_/g;
+	s/_*.texi_*//g;
+	`$ARGV[0] -o "$_.info" "$texi_file"`;
+	`rm "$texi_file"`;
+}
