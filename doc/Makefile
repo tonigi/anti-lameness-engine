@@ -381,7 +381,11 @@ MAN_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
 #  and foo.1.txt from it.
 .PRECIOUS: %.1 %.2 %.3 %.4 %.5 %.6 %.7 %.8 %.9
 
-docbook: index.docbook $(DOCBOOK_OUTPUT_FORMATS)
+docbook: index.docbook $(DOCBOOK_OUTPUT_FORMATS) ../TODO 
+
+../TODO: package/todo/index.txt
+	mv package/todo/index.txt ../TODO
+	
 
 man: $(LISTS_MAN)
 
