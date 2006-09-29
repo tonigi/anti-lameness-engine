@@ -5,7 +5,6 @@
 
 <article>
 
-<edit by="David Hilvert" in-month="2006-Sep"/>
 
 <articleinfo xmlns:xi="http://www.w3.org/2001/XInclude">
   <title>To-do list</title>
@@ -13,9 +12,243 @@
 </articleinfo>
 
 <section><title>0.8.5 (pre-Beta)</title>
+
+<edit by="David Hilvert" in-month="2006-Sep"/>
+
 <note>This release may be combined with the 0.9.0 Beta release.</note>
-<itemizedlist>
-<listitem>Documentation</listitem>
-</itemizedlist>
+<section>
+<title>
+  Documentation
+</title>
+  <ul>
+  <li> Convert from HTML to a more flexible format, such as texinfo or docbook.
+  </li><li>Add license information (GPL; see doc/COPYING) sections to the manuals.
+  </li><li>Add additional permission for distribution of hardcopy documentation 
+    with source downloadable from a public network server in the case of orders
+    placed on-line.
+  </li><li>Modify page footers to better reflect the updated license terms.
+  </li><li>Consolidate the manuals into a single work (e.g., docbook set, texinfo
+    top-node) for more straightforward searching and indexing.
+  </li><li>Add a new 'package manual' including the text of source package
+    documentation files README, TODO, etc., so that these are searchable
+    using utilities such as GNU info.
+  </li><li>Modify bootstrap script to generate plain-text package documentation
+    (README, TODO, etc.) from markup. (?)
+  </li><li>Centralize licensing and authorship information (e.g., there should be only
+    one COPYING file and only one AUTHORS file).
+  </li><li>Incorporate an automatic method for building the target documentation
+    types.  The example Makefile supplied with docbook-xsl would be sufficient
+    for this, but note that their license and copyright terms should be included
+    as copyright notices in the AUTHORS and/or COPYING files (or equivalent).
+  </li><li>Revise the user manual for new features and syntax.
+    <ul>
+    <li>Document new scoping operators {}, [], and [&lt;>].
+    </li><li>Document other changes in UI, including regularization of syntax.
+      <ul>
+      <li>in particular, commas can no longer appear in single-argument options
+        when using assignment-delimited syntax; use space-delimited syntax
+        instead.  This behavior is inconsistent with 0.8.4.
+      </li>
+      </ul>
+    </li>
+    </ul>
+  </li><li>Add a section to the README indicating how to obtain and update source via
+    darcs.
+  </li><li>Update bootstrap and/or Makefile.am to properly build and install
+    documentation.  (Since the required tools might not be be available
+    everywhere, building the documentation from the bootstrap file would
+    probably be preferable.)
+  </li><li>Add a tutorial, and credit Metin Toyran for suggesting a step-by-step
+    guide.
+  </li><li>Move generated doc files to subdirectories expressive of their format,
+    in cases where more than one file is used to contain the documentation.
+    (html, info, etc.)
+  </li>
+  </ul>
 </section>
+<section>
+<title>
+  Website
+</title>
+  <ul>
+  <li> Ensure consistency between the website hierarchy and the README.</li>
+  </ul>
+</section>
+<section>
+<title>
+  Packaging
+</title>
+  <section>
+  <title>
+    Complete Package
+  </title>
+<ul><li> Investigate options for distributing a 'complete' package including full
+  revision history, pre-built documentation (if the ordinary distribution does
+  not include this), and, possibly, example image sets.  Direct download,
+  bittorrent and CD are the most prominent candidates for distribution.
+  <ul>
+  <li> In the case of CD distribution, information should probably be added to the
+    manuals regarding how to update CD-provided program source.
+  </li>
+  </ul>
+  </li>
+  </ul>
+
+  </section><section>
+  <title>
+    Windows Package
+  </title>
+<ul>
+<li> Investigate options for creating and distributing a combined source and
+  binary Windows package containing sufficient software to ensure support for
+  common image types (e.g., by statically linking with libraries for opening
+  JPEG and PNG files).  BitTorrent and CD are the most obvious candidates for
+  distribution.
+  <ul>
+  <li> This package could build on the package described above, as a 'for Windows'
+    variant or some such.
+  </li><li> This package could make use of an application such as InstallJammer for
+    installation.
+  </li>
+  </ul>
+  </li>
+</ul>
+</section>
+</section>
+</section>
+
+<section>
+<title>
+	0.9.0 (Beta)
+</title>
+<edit by="David Hilvert" in-month="2006-Sep"/>
+<section>
+<title>
+	Abstract and partial transformations
+</title>
+<ul>
+<li>Add a generic 2D transformation class, supporting partial transformations.
+  <ul><li> 'partial transformation', as used here, means that it is expected that some
+    points will fail to map.
+  </li></ul>
+</li><li> Add a partial 2D transformation class with constructor taking as arguments
+  a pair of 3D projective transformations and a 3D model.
+</li></ul>
+</section>
+
+<section>
+<title>
+	File scoping
+</title>
+<ul><li> Add new file-scoped options
+  <ul><li> Irani-Peleg
+  </li><li> black level
+  </li><li> alignment type
+  </li><li> focus details
+  </li></ul>
+</li></ul>
+</section>
+<section>
+<title>
+	Irani-Peleg for 3D models
+</title>
+<ul><li> Modify existing Irani-Peleg code to use generic (partial) 2D transformations.
+  <ul><li> in combination with the above, this should allow the algorithm to operate
+    on 3D models.
+  </li></ul>
+  </li></ul>
+</section>
+<section>
+<title>
+	Focus bracketing for depth-of-field expansion
+</title>
+<ul><li> Add facilities for handling depth-of-field and focus bracketing in input
+  image sets, as suggested by Viktors Rotanovs and Gregory Maxwell.  This
+  change will likely involve:
+  <ul><li> using the 3D model for depth data, as suggested by Gregory Maxwell
+  </li><li> using user-provided (file-scoped) focus details to determine depth of field
+  </li><li> using variable PSF in the Irani-Peleg algorithm, as suggested by Gregory
+    Maxwell
+  </li><li> developing an approach to handle the incremental (non-Irani-Peleg) case.
+  </li></ul>
+  </li></ul>
+</section>
+<section>
+<title>
+	Multi-threading
+</title>
+<ul><li> Add multi-threading options (e.g., for rendering code), so that a single
+  invocation of the program can run on multiple processors simultaneously.
+</li></ul>
+</section>
+</section>
+
+
+
+<section>
+<title>
+	1.0.0 (Stable)
+</title>
+<edit by="David Hilvert" in-month="2006-Sep"/>
+<section>
+<title>
+	Performance
+</title>
+<ul><li> Refine rendering and alignment code for better performance.
+  </li></ul>
+</section>
+<section>
+<title>
+	Internationalization
+</title>
+<ul><li> Enhance the command-line interface in preparation for i18n.  (?)
+  <ul><li> e.g., syntax for identifying synchronized frame sets
+  </li></ul>
+</li><li> Internationalize the command-line interface and help text to accommodate
+  translations.
+  </li></ul>
+</section>
+<section>
+<title>
+	Technical Manual Updates
+</title>
+<ul><li> Update the Technical Manual for information regarding 3D operation.
+</li></ul>
+</section>
+</section>
+
+
+
+<section>
+<title>
+	Unsorted
+</title>
+<edit by="David Hilvert" in-month="2006-Sep"/>
+<section>
+<title>
+	Integer-value routines
+</title>
+<ul><li> Add facilities for manipulating images storing color as integer-valued data,
+  possibly as library routines.
+</li></ul>
+</section>
+<section>
+<title>
+	Library
+</title>
+<ul><li> Move image-processing routines into a library that can be used by other 
+  programs.
+</li></ul>
+</section>
+<section>
+<title>
+	Language Bindings
+</title>
+<ul><li> Add bindings for other programming languages.
+</li></ul>
+</section>
+</section>
+
+
+
 </article>
