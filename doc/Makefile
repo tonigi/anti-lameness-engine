@@ -179,6 +179,7 @@ DBX_PARAMS=
 
 # What file extension do you use for DocBook source files?
 DOCBOOK_FILE_EXTENSION = .docbook
+SOURCE_FILE_EXTENSION = .xml
 
 # -----------------------------------------------------------------
 #       make(1) functions for building file lists
@@ -187,7 +188,7 @@ DOCBOOK_FILE_EXTENSION = .docbook
 #    the values of the following are used for determing what needs
 #    to be built and/or cleaned up
 
-SOURCE_FILES_DBK = $(wildcard *$(DOCBOOK_FILE_EXTENSION))
+SOURCE_FILES_DBK = $(wildcard *$(SOURCE_FILE_EXTENSION))
 
 FILES_FO   = $(foreach base,$(basename $(SOURCE_FILES_DBK)),$(base).fo)
 FILES_TXT  = $(foreach base,$(basename $(SOURCE_FILES_DBK)),$(base).txt)
@@ -507,7 +508,7 @@ endif
 # the following is actually a built-in rule, but it's redefined
 # here just for the sake of clarity
 %.info: %.texi-list
-	./make-infos $(MAKEINFO) < $<
+	/usr/bin/perl -w make-infos $(MAKEINFO) < $<
 	-@ # This doesn't work in general.
 	-@ # $(MAKEINFO) $(MAKEINFO_FLAGS) $< -o $@
 

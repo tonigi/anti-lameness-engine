@@ -94,6 +94,12 @@ autoreconf --install
 # automake --foreign
 
 #
+# Make documentation
+#
+
+make -C doc
+
+#
 # Indicate that we're done.
 # 
 
