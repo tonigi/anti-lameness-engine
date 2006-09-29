@@ -207,5 +207,21 @@
 	</xsl:copy>
 	</xsl:template>
 
+	<!-- 
+	  -  Abbreviations for DocBook elements.
+          -->
+
+	<xsl:template match="ul">
+	<itemizedlist>
+	  <xsl:apply-templates/>
+	</itemizedlist>
+	</xsl:template>
+
+	<xsl:template match="li">
+	<listitem>
+	  <xsl:apply-templates/>
+	</listitem>
+	</xsl:template>
+
 
 </xsl:stylesheet>
