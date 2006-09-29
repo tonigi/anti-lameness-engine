@@ -29,13 +29,13 @@
 	  -  NOTE: all of the below entities operate on edit records, which
 	  -  are expected to conform to exactly one of the following patterns:
 	  -
-	  -  <edit by="GIVEN-NAME SURNAME" on="2006-Sep-24">
-	  -  <edit by="GIVEN-NAME SURNAME" in-month="2006-Sep">
-	  -  <edit by="GIVEN-NAME SURNAME" in-year="2006">
+	  -  <edit by="David Hilvert" on="2006-Sep-24">
+	  -  <edit by="David Hilvert" in-month="2006-Sep">
+	  -  <edit by="David Hilvert" in-year="2006">
 	  -
 	  -  The first form is preferred for occasional edits; the latter two
 	  -  are provided as shorthand for edits occurring over a number of
-	  -  days in succesion, or for cases where the exact date of the edit
+	  -  days in succession, or for cases where the exact date of the edit
 	  -  is not known (e.g., when basing edit history on copyright notices
 	  -  from older files).
 	  -->
