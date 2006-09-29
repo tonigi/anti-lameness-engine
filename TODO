@@ -41,6 +41,11 @@ Note: This release may be combined with the 0.9.0 Beta release.
     documentation.  (Since the required tools might not be be available
     everywhere, building the documentation from the bootstrap file would
     probably be preferable.)
+  - Add a tutorial, and credit Metin Toyran for suggesting a step-by-step
+    guide.
+  - Move generated doc files to subdirectories expressive of their format,
+    in cases where more than one file is used to contain the documentation.
+    (html, info, etc.)
 + Ensure consistency between the website hierarchy and the README.
 + Investigate options for distributing a 'complete' package including full
   revision history, pre-built documentation (if the ordinary distribution does
