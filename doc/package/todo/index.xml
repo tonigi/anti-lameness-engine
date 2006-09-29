@@ -4,12 +4,14 @@
 	"file:///usr/local/share/docbook2X/dtd/Texi-XML">
 
 <article>
+
+<edit by="David Hilvert" in-month="2006-Sep"/>
+
 <articleinfo xmlns:xi="http://www.w3.org/2001/XInclude">
   <title>To-do list</title>
-  <author><firstname>David</firstname><surname>Hilvert</surname></author>
-  <copyright><year>2006</year><holder>David Hilvert</holder></copyright>
   <abstract>This document contains a tentative list of future versions and features.</abstract>
 </articleinfo>
+
 <section><title>0.8.5 (pre-Beta)</title>
 <note>This release may be combined with the 0.9.0 Beta release.</note>
 <itemizedlist>

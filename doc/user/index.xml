@@ -6,12 +6,8 @@
 <book xmlns:xi="http://www.w3.org/2001/XInclude">
 <bookinfo>
   <title>
-    <xi:include href="../package-info.xml" xpointer="product-name"/>
-    <xi:include href="../package-info.xml" xpointer="product-number"/> 
     User Manual
   </title>
-  <xi:include href="../package-info.xml" xpointer="author-name"/>
-  <xi:include href="../package-info.xml" xpointer="copyright-info"/>
 </bookinfo>
 <chapter><title>Introduction</title>
 <section><title>Purpose (foobar)</title>

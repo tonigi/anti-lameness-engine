@@ -171,7 +171,7 @@ MAN_PARAMS =
 DBX_PARAMS=
 
 # What file extension do you use for DocBook source files?
-DOCBOOK_FILE_EXTENSION = .xml
+DOCBOOK_FILE_EXTENSION = .docbook
 
 # -----------------------------------------------------------------
 #       make(1) functions for building file lists
@@ -400,6 +400,12 @@ info: $(FILES_INFO)
 # test/troubleshoot changes you make to this makefile
 debug:
 	@echo $(DIRS_MAN)
+
+# -----------------------------------------------------------------
+#     preprocess xml to docbook.
+# -----------------------------------------------------------------
+%$(DOCBOOK_FILE_EXTENSION): %.xml ale-doc.xsl
+	$(XSLT) $(XSLT_FLAGS) ale-doc.xsl $< > $@
 
 # -----------------------------------------------------------------
 #     pattern rule for making (X)HTML and plain-text output
