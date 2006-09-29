@@ -100,13 +100,6 @@
 
 	<xsl:param name="product-number" select="'0.8.5-prerelease'"/>
 
-	<xsl:param name="copyright-info">
-	  <copyright id="copyright-info">
-	    <year> 2002, 2003, 2004, 2005, 2006 </year>
-	    <holder> David Hilvert </holder>
-	  </copyright>
-	</xsl:param>
-
 	<!-- 
 	  -  Editing information
           -->
