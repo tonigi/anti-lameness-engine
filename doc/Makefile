@@ -147,6 +147,13 @@ HTML_MANIFEST_EXT = manifest_html
 #BASEDIR_SUFFIX = _html
 BASEDIR_SUFFIX = 
 
+#
+# Workaround the fact that we don't calculate dependencies.
+#
+
+BROKEN_DEPENDENCIES = $(shell find . -name "*.xml")
+
+
 # -----------------------------------------------------------------
 #                        assorted OPTIONS
 # -----------------------------------------------------------------
@@ -374,7 +381,7 @@ MAN_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
 #  and foo.1.txt from it.
 .PRECIOUS: %.1 %.2 %.3 %.4 %.5 %.6 %.7 %.8 %.9
 
-docbook: $(DOCBOOK_OUTPUT_FORMATS)
+docbook: index.docbook $(DOCBOOK_OUTPUT_FORMATS)
 
 man: $(LISTS_MAN)
 
@@ -404,7 +411,7 @@ debug:
 # -----------------------------------------------------------------
 #     preprocess xml to docbook.
 # -----------------------------------------------------------------
-%$(DOCBOOK_FILE_EXTENSION): %.xml ale-doc.xsl
+%$(DOCBOOK_FILE_EXTENSION): %.xml ale-doc.xsl $(BROKEN_DEPENDENCIES)
 	$(XSLT) $(XSLT_FLAGS) ale-doc.xsl $< > $@
 
 # -----------------------------------------------------------------
