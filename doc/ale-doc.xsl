@@ -100,6 +100,58 @@
 
 	<xsl:param name="product-number" select="'0.8.5-prerelease'"/>
 
+	<!--
+	  -  License information
+	  -->
+
+	<xsl:template match="*|/" mode="license-terms">
+	<para>
+	  This <xsl:apply-templates select="." mode="document-type"/> is free
+	  documentation; you can redistribute it and/or modify it under the
+	  terms of the GNU General Public License as published by the Free
+	  Software Foundation; either version 2 of the License, or (at your
+	  option) any later version.
+	</para>
+	</xsl:template>
+
+	<xsl:template match="*|/" mode="license-object">
+	<para>
+	  Unless otherwise defined within the GNU General Public License, any
+	  references to "object code" within the license are to be interpreted
+	  to refer to any non-source version of this <xsl:apply-templates
+	  select="." mode="document-type"/> (or of any work based on this
+	  <xsl:apply-templates select="." mode="document-type"/>).
+	</para>
+	</xsl:template>
+
+	<xsl:template match="*|/" mode="license-warranty">
+	<para>
+	   This <xsl:apply-templates select="." mode="document-type"/> is
+	   distributed in the hope that it will be useful, but WITHOUT ANY
+	   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+	   FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+	   for more details.
+	 </para>
+	</xsl:template>
+
+	<xsl:template match="*|/" mode="license-availability">
+	<para>
+	   You should have received a copy of the GNU General Public License
+	   along with this <xsl:apply-templates select="."
+	   mode="document-type"/>; if not, write to the Free Software
+	   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+	</para>
+	</xsl:template>
+
+	<xsl:template match="*|/" mode="license">
+	<legalnotice>
+	  <xsl:apply-templates select="." mode="license-terms"/>
+	  <xsl:apply-templates select="." mode="license-warranty"/>
+	  <xsl:apply-templates select="." mode="license-availability"/>
+	  <xsl:apply-templates select="." mode="license-object"/>
+	</legalnotice>
+	</xsl:template>
+
 	<!-- 
 	  -  Editing information
           -->
@@ -138,9 +190,21 @@
 	</xsl:template>
 
 	<!-- 
-	  -  Generate title, author, and copyright information for articles,
-	  -  books and sets.
+	  -  Generate title, author, copyright, and license information for
+	  -  articles, books and sets.
           -->
+
+	<xsl:template match="setinfo" mode="document-type">
+	  <xsl:text>set</xsl:text>
+	</xsl:template>
+
+	<xsl:template match="bookinfo" mode="document-type">
+	  <xsl:text>book</xsl:text>
+	</xsl:template>
+
+	<xsl:template match="articleinfo" mode="document-type">
+	  <xsl:text>article</xsl:text>
+	</xsl:template>
 
 	<xsl:template match="setinfo|bookinfo|articleinfo">
 	<xsl:copy>
@@ -196,6 +260,13 @@
 	      </xsl:for-each>
 	      </copyright>
 	    </xsl:for-each>
+
+
+	  <!--
+	    -  Add a license notice
+	    -->
+
+	    <xsl:apply-templates select="." mode="license"/>
 
 	</xsl:copy>
 	</xsl:template>
