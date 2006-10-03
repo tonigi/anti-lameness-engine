@@ -151,7 +151,7 @@ BASEDIR_SUFFIX =
 # Workaround the fact that we don't calculate dependencies.
 #
 
-BROKEN_DEPENDENCIES = $(shell find . -name "*.xml")
+BROKEN_DEPENDENCIES = $(shell find . -name "*.xml") package/changelog/index.in
 
 
 # -----------------------------------------------------------------
@@ -417,6 +417,7 @@ debug:
 #     preprocess xml to docbook.
 # -----------------------------------------------------------------
 %$(DOCBOOK_FILE_EXTENSION): %.xml ale-doc.xsl $(BROKEN_DEPENDENCIES)
+	./make-changelog < package/changelog/index.in > package/changelog/index.xml
 	$(XSLT) $(XSLT_FLAGS) ale-doc.xsl $< > $@
 
 # -----------------------------------------------------------------
