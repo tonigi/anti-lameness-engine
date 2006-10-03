@@ -350,7 +350,12 @@ public:
 		if (!isatty(fileno(ui_stream)))
 			throw exception_value;
 
-		terminal_width = get_terminal_width(ui_stream);
+		/*
+		 * Don't use the last column, as this may cause
+		 * wrapping in some environments (BSD, Hurd).
+		 */
+
+		terminal_width = get_terminal_width(ui_stream) - 1;
 
 		if (terminal_width < 0)
 			throw exception_value;
