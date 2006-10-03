@@ -1,5 +1,8 @@
 V	0.8.5 Prerelease
 
+o	Modify ui_tty for correct operation under Hurd and DragonFly
+	consoles.  
+
 o	Revise README for autotools build and installation.
 
 o	Add file 'TODO', containing a to-do list for future releases.
