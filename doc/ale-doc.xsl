@@ -24,9 +24,18 @@
 
 	<!--
 	  -  Entities
+	  -->
+
+	<!--
+	  -  Character classes
+	  -->
+
+	<!ENTITY uppercase "'ABCDEFGHIJKLMNOPQRSTUVWXYZ'">
+	<!ENTITY lowercase "'abcdefghijklmnopqrstuvwxyz'">
+	
+	<!--
 	  -
-	  -
-	  -  NOTE: all of the below entities operate on edit records, which
+	  -  NOTE: the below entities operate on edit records, which
 	  -  are expected to conform to exactly one of the following patterns:
 	  -
 	  -  <edit by="David Hilvert" on="2006-Sep-24">
@@ -84,6 +93,12 @@
 
 	<!ENTITY editor-sort-order '&editor-surname;'>
 
+	<!--
+	  -  Sort order for years
+	  -->
+
+	<!ENTITY year-sort-order '&year;'>
+
 ]>
 
 <xsl:stylesheet id="style1"
@@ -98,7 +113,7 @@
 
 	<xsl:param name="product-name" select="'ALE'"/>
 
-	<xsl:param name="product-number" select="'0.8.5-prerelease'"/>
+	<xsl:param name="product-version" select="'0.8.5-prerelease'"/>
 
 	<!--
 	  -  License information
@@ -175,18 +190,54 @@
 
 	<xsl:template match="edit"/>
 
+	<!--
+	  -  Capitalize the initial letter of titles.
+	  -->
+
+	<xsl:template name="write_title">
+	   <xsl:param name="product-name"/>
+	   <xsl:param name="product-version"/>
+           <xsl:param name="title" select="."/>
+
+	   <xsl:variable name="space-stripped-title" select="normalize-space($title)"/>
+	   <xsl:variable name="initial" select="substring($space-stripped-title, 1, 1)"/>
+	   <xsl:variable name="sequel" select="substring($space-stripped-title, 2)"/>
+
+	   <title>
+
+	     <xsl:copy-of select="$product-name"/>
+	     <xsl:text> </xsl:text>
+	     <xsl:copy-of select="$product-version"/>
+	     <xsl:text> </xsl:text>
+	     <xsl:copy-of select="concat(translate($initial, &lowercase;, &uppercase;), $sequel)"/>
+
+           </title>
+	</xsl:template>
+
+	<xsl:template match="text()" mode="title">
+	  <xsl:call-template name="write_title">
+	    <xsl:with-param name="title" select="."/>
+	  </xsl:call-template>
+	</xsl:template>
+
+	<!--
+	  - Titles other than article, book and set titles.
+	  -->
+
+	<xsl:template match="title|t">
+	  <xsl:apply-templates select="text()" mode="title"/>
+	</xsl:template>
+
 	<!-- 
 	  -  Add package information to titles of articles, books and sets.
           -->
 
-	<xsl:template match="setinfo/title|bookinfo/title|articleinfo/title">
-	  <title>
-		  <xsl:copy-of select="$product-name"/>
-		  <xsl:text> </xsl:text>
-		  <xsl:copy-of select="$product-number"/>
-		  <xsl:text> </xsl:text>
-	          <xsl:apply-templates/>
-	  </title>
+	<xsl:template match="setinfo/title|bookinfo/title|articleinfo/title|setinfo/t|bookinfo/t|articleinfo/t">
+	   <xsl:call-template name="write_title">
+	     <xsl:with-param name="product-name" select="$product-name"/>
+	     <xsl:with-param name="product-version" select="$product-version"/>
+	     <xsl:with-param name="title" select="text()"/>
+	   </xsl:call-template>
 	</xsl:template>
 
 	<!-- 
@@ -216,7 +267,7 @@
 	    -  Generate the title, if available.
             -->
 
-	    <xsl:apply-templates select="title"/>
+	    <xsl:apply-templates select="title|t"/>
 
 	  <!--
 	    -  Preserve abstracts.
@@ -252,6 +303,7 @@
 	        <xsl:value-of select="&editor;"/>
 	      </holder>
 	      <xsl:for-each select="$editor-years-unique">
+	        <xsl:sort select="&year-sort-order;"/>
 	        <xsl:if test="&editor; = $this-editor">
 		  <year>
 		    <xsl:value-of select="&year;"/>
@@ -271,6 +323,133 @@
 	</xsl:copy>
 	</xsl:template>
 
+	<!--
+	  -  Changelogs
+	  -->
+
+	<!--
+	  -  Changelog item
+	  -->
+
+	<xsl:template match="entry">
+	  <listitem>
+	    <xsl:apply-templates/>
+	  </listitem>
+	</xsl:template>
+
+	<!--
+	  - Keys
+	  -->
+
+	<xsl:key name="taxonomy-names" match="taxonomy//*[not(keyword)]" use="name()"/>
+	<xsl:key name="taxonomy-keywords" match="taxonomy//*" use="./keyword/@keyword"/>
+
+	<!--
+	  - Taxonomy
+	  -->
+
+	<xsl:variable name="taxonomy" select="document('taxonomy.xml')"/>
+
+	<!--
+	  - Attempt to map all changes to sublevels
+	  -->
+
+	<xsl:template name="map-changes-to-sublevels">
+	  <xsl:param name="taxonomy"/>
+	  <xsl:param name="changes"/>
+	  <xsl:param name="fragment"/>
+	  <xsl:param name="iteration" select="1"/>
+
+	  <xsl:if test="count($taxonomy/*[$iteration]) = 0">
+	    <xsl:copy-of select="$fragment">
+	  </xsl:if>
+
+	  <xsl:variable name="new-fragment">
+	  </xsl:variable>
+
+	  <xsl:call-template name="map-changes-to-sublevels">
+	    <xsl:with-param name="taxonomy" select="$taxonomy"/>
+	    <xsl:with-param name="changes" select="$changes"/>
+	    <xsl:with-param name="fragment" select="$new-fragment"/>
+	    <xsl:with-param name="iteration" select="$iteration + 1"/>
+	  </xsl:call-template>
+
+	</xsl:template name="map-changes-to-sublevels">
+
+	<!--
+	  - Write changes
+	  -->
+
+	<xsl:template name="write-changes">
+	  <xsl:param name="taxonomy"/>
+	  <xsl:param name="changes"/>
+
+	  <!--
+	    - Attempt to map changes to sublevels
+	    -->
+
+	  <xsl:variable name="map">
+	    <xsl:call-template name="map-changes-to-sublevels">
+	      <xsl:with-param name="taxonomy" select="$taxonomy">
+	      <xsl:with-param name="changes" select="$changes">
+	    </xsl:call-template>
+	  </xsl:variable>
+
+	  <xsl:choose>
+	    <xsl:when test="contains($map, 'fail-to-insert-error'">
+	      
+	      <!--
+	        - In case of failure, insert all nodes at the current level. 
+		-->
+
+	      <itemizedlist>
+	      <xsl:apply-template select=".//entry">
+	      </itemizedlist>
+
+	    </xsl:when>
+	    <xsl:otherwise>
+
+	      <!--
+	        - In case of success, insert all nodes within sublevels.
+		-->
+
+	      <xsl:for-each select="$taxonomy/*">
+	      </xsl:for-each>
+
+	    </xsl:otherwise>
+	  </xsl:choose>
+
+	</xsl:template>
+
+	<!--
+	  - Release
+	  -->
+
+	<xsl:template match="release">
+	    <section>
+		<title><xsl:value-of select="@version"/></title>
+
+		<!--
+		  - Notes
+		  -->
+
+		<xsl:apply-templates select=".//note"/>
+
+		<!--
+		  - Write changes according to the change taxonomy
+		  -->
+
+		<xsl:call-template name="write-changes">
+		  <xsl:with-param name="taxonomy" select="document('taxonomy.xml')"/>
+		  <xsl:with-param name="changes" select="."/>
+		</xsl:call-template>
+            </section>
+	</xsl:template>
+
+	<xsl:template match="changelog">
+	  <xsl:apply-templates select="release"/>
+	</xsl:template>
+
 	<!-- 
 	  -  Abbreviations for DocBook elements.
           -->
@@ -285,6 +464,12 @@
 	<listitem>
 	  <xsl:apply-templates/>
 	</listitem>
+	</xsl:template>
+
+	<xsl:template match="s">
+	<section>
+	  <xsl:apply-templates/>
+	</section>
 	</xsl:template>
 
 
