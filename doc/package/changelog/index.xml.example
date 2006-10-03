@@ -1,0 +1,555 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE article PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
+	"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd">
+
+<article>
+<edit by="David Hilvert" in-year="2006"/>
+
+
+<articleinfo xmlns:xi="http://www.w3.org/2001/XInclude">
+  <t>Change log</t>
+  <abstract>This article contains detailed change information for each release.</abstract>
+</articleinfo>
+
+<changelog>
+  <release version="3">
+    <packaging>
+    <i>Change 1</i>
+    <i>Change 2</i>
+    <i>Change 3</i>
+    </packaging>
+  </release>
+</changelog>
+
+<s><t>0.8.5 (Prerelease)</t>
+<edit by="David Hilvert" in-year="2006"/>
+
+<s><t>Documentation</t>
+
+<ul><li>Migrate documentation to a modified DocBook format.
+
+</li><li>Revise README for autotools build and installation.
+
+</li><li>Add file 'TODO', containing a tentative list of future versions
+         and features.
+
+</li><li>Add AUTHORS file, in accordance with the autotools packaging
+	standards.
+
+</li><li>Revise Changelog name to autotools-recognized ChangeLog
+
+</li><li> Add NEWS file containing summary announcement text, including mailing
+	  list and Freshmeat announcements for versions through 0.8.4.  This
+	  file is required by autotools when not running in --foreign mode.
+</li></ul>
+
+</s>
+
+<s>
+<t>Configuration</t>
+
+<ul><li>Add autotools-based configuration, build, and installation facilities,
+	replacing the earlier Makefile-based configuration and build process.
+</li></ul>
+
+</s>
+
+<s><t>Command-line interface</t>
+
+<ul><li>Modify command-line interface to accept certain scope operators, and
+	to increase uniformity of syntax.
+</li></ul>
+
+</s>
+
+<s><t>Image constraints</t>
+
+<ul><li>Add options --f{ex,crop} for frame-coordinate exclusion regions.
+</li></ul>
+</s>
+
+<s>
+<t>3D Rendering</t>
+
+<ul><li>In d3::scene, always use filler spaces when --pc all is specified.
+</li></ul>
+</s>
+
+<s>
+<t>Source code organization</t>
+
+<ul><li>Move input interface details, including option handling, messages,
+	and help information, to the ui/ subdirectory.
+</li></ul>
+</s>
+
+</s>
+
+<s>
+<t>
+0.8.4 2006-May-14
+</t>
+<edit by="David Hilvert" in-year="2006"/>
+<edit by="David Hilvert" in-year="2005"/>
+
+<s>
+<t>Packaging</t>
+
+<ul><li>Fix build error noted by Gregory Maxwell and re-tag version.
+</li></ul>
+</s>
+
+<s>
+<t>Documentation</t>
+<ul><li>Add dates to the Changelog, using dates in comments in the download
+	page on the website for versions prior to 0.8.0, and using dates from
+	the darcs repository for versions 0.8.0 and later.
+</li></ul>
+</s>
+
+<s>
+<t>Command-line interface</t>
+
+<ul><li>Add fine-grain UI updates for 3D operations when using ui=tty.  Reduce
+	tty UI status update frequency to at most once per second.
+</li></ul>
+
+</s>
+
+<s>
+<t>3D Rendering</t>
+<ul><li>Add support for synthetic focus via the --focus option, including
+	focus with horizontal and vertical tilt.  Adding simulated focus
+	effects, including tilted and swung focal planes, was suggested by
+	Gregory Maxwell.
+</li><li>Add support for filtering 3D output with --3d-filter.  This
+	is now the default behavior.  Add an option --3d-chain for selecting
+	the filter chain used for 3D output.  (See --hl and --hq for details.)
+</li><li>Interpolate to generate smooth 3D depth output.
+
+</li></ul>
+</s>
+
+<s>
+<t>3D Models</t>
+<ul><li>Modify --3dpx to affect scene geometry rather than rendered
+	pixels.  In certain cases, this change should allow removal of objects
+	close to the camera, hence revealing objects further away.
+</li><li>Add decimation options --di-upper, --di-lower, and --do-try for
+	reducing the complexity of 3D scene geometry, hence reducing the
+	number of operations required for occupancy updating.
+</li><li>Fix dimension comparison bug in d3::space::traverse::get_next_split().
+</li><li>Implement an experimental approach to 3D subspace candidate selection;
+	this seems to perform poorly in most cases due to parallax effects.
+	See the source code for details.  (Option --subspace-traverse)
+</li><li>Add adaptive weight decomposition to 3D occupancy algorithms.
+</li><li>Move low-level code concerning scale and level-of-detail from
+	d3::scene to d3::pt.
+</li><li>Move code concerning the nature of space from d3::scene to 
+	d3::space.
+</li><li>Remove older 3D rendering code. 
+</li></ul>
+
+</s>
+
+<s>
+<t>Scripts</t>
+<ul><li>Add a script 'transform' for applying an inverse projective
+	transformation.  Recalculation of transformations was suggested by Rob
+	Stewart (ALE mailing list message, 2005-Dec-28).
+</li></ul>
+</s>
+
+<s>
+<t>Undocumented options</t>
+<ul><li>Add to the Makefile a HASH_MAP option that can be used to assign the
+	3D spatial info structure a hash map type instead of the standard STL
+	map type.  As this is likely to break things, it is currently
+	undocumented.  HASH_MAP=GNU seems to compile with g++ 4.0.x but
+	has not otherwise been tested.
+</li></ul>
+</s>
+
+
+</s>
+
+
+<s>
+<t>0.8.3 2005-Dec-23</t>
+<edit by="David Hilvert" in-year="2005"/>
+
+<s>
+<t>Rendering</t>
+
+<ul><li>Add an option --def-nn to allow definition of pixels in output images
+	to take values from neighboring pixels within a certain radius, in
+	cases where they would not otherwise be defined.
+</li></ul>
+
+</s>
+
+<s>
+<t>3D Models</t>
+
+<s>
+<t>Stereoscopy</t>
+
+<ul><li>Add option --pc to specify which pairwise comparisons should be
+	performed.
+</li><li>Add option --pa to set the number of point candidates accepted
+	for each pair of cameras (pairwise ambiguity).  The default
+	of 3 preserves existing default behavior.
+</li><li>Add option --tcem for scoring point candidates by third-camera
+	views.  The default of 0 preserves existing default behavior.
+</li></ul>
+</s>
+
+<s>
+<t>Geometry</t>
+
+<ul><li>Add option --3dpx to specify 3D regions to exclude during final
+	rendering, using a single depth for each pixel in each frame of
+	rendered output.  (Evaluates at the depth used in depth-rendering.)
+
+</li><li>Add --et option to specify encounter thresholds.
+
+</li><li>Modify representation of 3D subspaces so that refined subspaces
+	are roughly cubical, and to allow refinements at multiple
+	resolutions.
+
+</li><li>Clean up d3::scene to remove triangle-mesh code.
+</li></ul>
+</s>
+
+<s>
+<t>Occupancy</t>
+
+<ul><li>Fix bugs in 3D color and occupancy updating caused by bounding
+	box miscalculation.
+
+</li><li>Add option --oui for determining occupancy update iterations.
+	The new default is 10, halving the previous default of 20.
+
+</li></ul>
+</s>
+</s>
+
+</s>
+
+<s>
+<t>0.8.2 2005-Nov-22</t>
+<edit by="David Hilvert" in-year="2005"/>
+
+<s>
+<t>Image files</t>
+
+<ul><li>Add magical file 'dump:' for listing color values numerically
+	to stderr.
+</li></ul>
+
+</s>
+
+<s>
+<t>3D Models</t>
+
+<ul><li>Transition from a subdivisible triangle model to a subdivisible	
+	space model, using a rudimentary implementation of Hans Moravec's 
+	notion of occupancy.
+
+</li><li>Add support for view and depth output from arbitrary cameras.
+
+</li><li>Add clipping plane options for 3D modeling.
+</li></ul>
+
+</s>
+
+<s>
+<t>Control points</t>
+
+<ul><li>Fix various bugs in control-point alignment reported by Gregory
+	Maxwell.
+</li></ul>
+
+</s>
+
+</s>
+
+<s>
+<t>0.8.1 2005-May-6</t>
+<edit by="David Hilvert" in-year="2005"/>
+
+<s>
+<t>Build</t>
+
+<ul><li>Fix enumerator compile bugs noted by Gregory Maxwell and Tom Holroyd
+	to cause compilation failure under GCC 3.4.
+</li></ul>
+
+</s>
+
+<s>
+<t>Defaults</t>
+
+<ul><li>Modify --q1 to use median-value incremental rendering.
+</li></ul>
+
+</s>
+
+<s>
+<t>Rendering</t>
+
+<ul><li>Add support for median-value incremental and Irani-Peleg rendering.
+	Using a statistic other than the mean was suggested by Scott Scriven
+	as a means of eliminating non-uniform artifacts.  Using the median
+	seems to improve performance on Scott Scriven's example sequences, as
+	well as on the scaled output of fine:sinc*lanc for sparse inputs.
+</li></ul>
+
+</s>
+
+<s>
+<t>Exposure</t>
+<ul><li>Add a color adjustment option --exp-mult=.
+</li></ul>
+</s>
+
+<s>
+<t>Control points</t>
+
+<ul><li>Add support for using control points in 2D and 3D alignment, as well
+	as in 3D model construction.  New options include '--gs points',
+	'--cpf-load=', '--cpp-upper=', '--cpp-lower=', '--va-upper=', and
+	'--st'.
+</li></ul>
+
+</s>
+
+
+<s>
+<t>Transformation data files</t>
+
+<ul><li>Add average magnitude comments to transformation data file output.
+</li></ul>
+
+</s>
+
+<s>
+<t>3D Models</t>
+<ul><li>For 3D scene reconstruction, use a new unified surface model in place
+	of the depth-based multi-model approach used in 0.8.0.  The new model
+	is adjusted on the basis of edge, angle, and color measures.
+</li></ul>
+</s>
+
+<s>
+<t>Scripts</t>
+
+<ul><li>Move ale-psf-calibrate to a new scripts directory.
+</li></ul>
+
+</s>
+
+</s>
+
+<s>
+<t>0.8.0 2005-Jan-12</t>
+<edit by="David Hilvert" in-year="2005"/>
+<edit by="David Hilvert" in-year="2004"/>
+
+<s>
+<t>Command-line interface</t>
+<ul><li>Add user interface options --ui=stream and --ui=tty.  The latter
+	includes more detailed status output when terminal width information
+	can be obtained (esp. when IOCTL=1 is set at compile time), and is the
+	new default.
+</li></ul>
+</s>
+
+<s>
+<t>Exclusion regions</t>
+<ul><li>Add --crop argument, which excludes the spatial complement of a
+	specified area over a specified set of frames.  Gregory Maxwell notes
+	several advantages of internal over external crops, including
+	preserving knowledge of position in the uncropped frame, which among
+	other benefits allows natural handling of Bayer patterns.
+</li><li>Modify rx_parameters in d2/render.h to use the ale_pos data type
+	instead of int.  This should allow exclusion regions to be calculated
+	more accurately.
+
+</li></ul>
+</s>
+
+<s>
+<t>Image files</t>
+<ul><li>Add support for PPM with extended attributes (EPPM).  Attributes
+	handled specially include black level, shutter speed, aperture, and
+	ISO (or gain).
+</li></ul>
+</s>
+
+<s>
+<t>Exposure</t>
+<ul><li>Add a flag --exp-meta-only which causes tonal registration to be
+	performed only on the basis of exposure metadata (e.g., data encoded
+	as EPPM extended attributes).  This approach was suggested by Gregory
+	Maxwell.
+</li><li>Fix an index variable bug in d2::image_bayer_ale_real::trigger().
+</li><li>Modify d2::exposure one-sided certainty so that the 'one-sided'
+	condition only applies to bright (>50%) areas.  Applying it to dark
+	areas has no clear benefit, and an experiment by Gregory Maxwell
+	demonstrates that doing so can exacerbate noise.
+
+</li></ul>
+</s>
+
+<s>
+<t>Alignment</t>
+<ul><li>Modify euclidean alignment so that perturb-upper and perturb-lower
+	apply to rotational arclength.
+</li><li>Modify d2::align to use unscaled input images when the scale factor
+	is larger than 1.0, or when a scaled_filter interpolant is being used.
+</li><li>Modify d2::align::set_exposure_ratio() so that alignment 
+	weights and certainty values are taken into consideration.  
+</li><li>Add a --cw option to weight alignment error by certainty values,
+	as suggested by Gregory Maxwell.  This allows the contributions of
+	pixels at maxval to be diminished, which can increase alignment
+	success in certain cases.
+</li></ul>
+</s>
+
+<s>
+<t>Rendering</t>
+
+<s>
+<t>Scale</t>
+
+<ul><li>Modify d2::image::scale() to allow scale factors in the interval 
+	(0, 1), and modify the command-line interface and help text to reflect
+	this change.  --scale= now accepts all finite positive values.
+
+</li></ul>
+</s>
+
+<s>
+<t>Incremental</t>
+<ul><li>Replace functions d2::incremental::{increase,decrease}_extents()
+	with new functions that take exclusion regions into account.  The new
+	functions should also fix a boundary-calculation bug reported by
+	Gregory Maxwell.
+
+</li></ul>
+</s>
+
+<s>
+<t>Irani-Peleg</t>
+<ul><li>Set image offsets in d2/render/combine.h.  This allows Irani-Peleg
+	rendering to work with --crop when the default rendering chain
+	includes more than one rendering invariant.
+</li><li>Perform Irani-Peleg updating separately by channel instead of
+	using vector operations.  This allows divide-by-zero and other
+	conditions to be localized to particular channels.
+</li><li>Modify the Irani-Peleg renderer to use estimate-based certainty.  This
+	seems to improve noise characteristics significantly.
+</li><li>Modify d2::render::ipc::_ip_frame_correct() so that exposure
+	re-estimation uses a ratio of weighted sums instead of a weighted
+	average of ratios.
+</li><li>Modify d2/render/ipc.h to handle exclusion regions more effectively.
+</li></ul>
+</s>
+
+</s>
+
+<s>
+<t>Transformation data files</t>
+<ul><li>Write the results of tonal registration as a comment in the 
+	transformation data file.
+</li></ul>
+</s>
+
+<s>
+<t>3D Models</t>
+<ul><li>Add experimental cost calculation routines to d3/scene.h.
+</li></ul>
+</s>
+
+<s>
+<t>Source code organization</t>
+<ul><li>Move certain user interface elements to the source subdirectory ui/.
+</li></ul>
+</s>
+
+</s>
+
+<s>
+<t>0.7.3 2004-Dec-1</t>
+<edit by="David Hilvert" in-year="2004"/>
+
+<s>
+<t>3D Models</t>
+o	Add incremental 3D reconstruction output.
+</s>
+
+<s>
+<t>Command-line interface</t>
+o	Remove the reference to a non-existent web page in
+	unsupported::fornow().
+</s>
+
+<s>
+<t>Rendering</t>
+<remark>Should the --bayer option be moved to another section?</remark>
+o	Allow device-specific bayer patterns to be overridden by the --bayer
+	option.
+</s>
+
+<s>
+<t>3D Models</t>
+o	Add an option for explicitly setting the camera view angle.  Make the 
+	default view angle 43.7 degrees.
+</s>
+
+o	Implement optimizations that reduce the memory footprint when 3D
+	options are used.
+
+o	Modify the 3D cost reduction algorithm.  The new algorithm seems to
+	offer better results than the old in cases tested thus far, and does
+	not require that spatial extension be enabled.
+
+o	Add support for the Canon 300D with a 50mm f/1.4 lens (specifying view
+	angle), as well as experimental support for the 50mm f/1.4 lens at 1.4
+	(specifying a linear PSF).  Also add support for 50mm f/1.8 and 85mm
+	f/1.8 lenses, specifying view angles as specified in the chart at
+	http://www.acapixus.dk/photography/angle_of_view.htm
+
+o	Don't output final data when --psf-match is specified.  Doing so
+	would be useless anyway, and apparently causes a segfault.
+
+o	For cases where --psf-match is specified, modify the exposure settings
+	for the final input image (i.e., reference image) so that default
+	exposure is used, and modify the bayer pattern settings so that no
+	bayer pattern is used.  (The first of these modifications requires
+	changes in the way that the array of input exposures is stored.)
+
+o	Optionally (when OPTIMIZATIONS == 1) use the output of the default
+	rendering chain directly as the Irani-Peleg initial approximation,
+	instead of copying it.
+
+o	Add support for PSF convolution and scalar multiplication.
+
+o	Move all PSF parsing logic to a new file: d2/render/psf/psf_parse.h
+
+o	Modify help argument processing so that several help arguments can be
+	specified at a time.  Change the usage text to reflect this.
+
+o	Fix concatenated help output; outputs from all help options are now
+	represented.  (3D help had been omitted in 0.7.2.)
+
+o	Add a check to ensure that at most one --q* option is specified.
+	The issue of multiple --q* options being specified was raised on the
+	ALE mailing list by Viktors Rotanovs.  As there is currently no
+	support for this, generating an error message is appropriate.
+
+
+</s>
+</article>
