@@ -60,6 +60,12 @@ if ! which autoreconf &> /dev/null; then
 fi
 
 #
+# Make documentation
+#
+
+make -C doc
+
+#
 # Import GNU extension strndup
 #
 
@@ -92,12 +98,6 @@ autoreconf --install
 # echo ""
 # echo "Rerunning automake with --foreign flag."
 # automake --foreign
-
-#
-# Make documentation
-#
-
-make -C doc
 
 #
 # Indicate that we're done.
