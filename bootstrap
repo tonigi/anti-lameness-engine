@@ -63,6 +63,8 @@ fi
 # Make documentation
 #
 
+chmod a+x doc/make-changelog
+chmod a+x doc/make-infos
 make -C doc
 
 #
