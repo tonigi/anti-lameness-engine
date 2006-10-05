@@ -333,7 +333,7 @@
 
 	<xsl:template match="entry">
 	  <listitem>
-	    <xsl:apply-templates/>
+	    <xsl:apply-templates select="text/text()"/>
 	  </listitem>
 	</xsl:template>
 
@@ -341,14 +341,98 @@
 	  - Keys
 	  -->
 
-	<xsl:key name="taxonomy-names" match="taxonomy//*[not(keyword)]" use="name()"/>
-	<xsl:key name="taxonomy-keywords" match="taxonomy//*" use="./keyword/@keyword"/>
+	<xsl:key name="word-map" match="entry" use="word/child::text()"/>
 
 	<!--
 	  - Taxonomy
 	  -->
 
-	<xsl:variable name="taxonomy" select="document('taxonomy.xml')"/>
+	<xsl:variable name="taxonomy-root" select="document('taxonomy.xmli')"/>
+
+	<!--
+	  - Write a fragment substring for a (change, category) pair.
+	  -->
+
+	<xsl:template name="write-change-category">
+	  <xsl:param name="change"/>
+	  <xsl:param name="category"/>
+	  <xsl:value-of select="concat(generate-id($change), ':', generate-id($category), ' ')"/>
+	</xsl:template>
+
+	<!--
+	  - Get a change category from a fragment result
+	  -->
+
+	<xsl:template name="get-change-category">
+	  <xsl:param name="change"/>
+	  <xsl:param name="fragment"/>
+	  <xsl:value-of select="substring-before(substring-after(substring-after($fragment, generate-id($change)), ':'), ' ')"/>
+	</xsl:template>
+
+	<!--
+	  - Get a tree fragment with categories set to zero.
+	  -->
+
+	<xsl:template name="get-zero-categories">
+	  <xsl:param name="changes"/>
+	    <xsl:for-each select="$changes">
+	      <xsl:call-template name="write-change-category">
+	        <xsl:with-param name="change" select="."/>
+	        <xsl:with-param name="category" select="$taxonomy-root"/>
+	      </xsl:call-template>
+	    </xsl:for-each>
+	</xsl:template>
+
+	<!--
+	  - Determine whether a category tree is valid (no undefineds) for all
+	  - changes.  Returns a tree fragment including the string 'fail'
+	  - upon failure.
+	  -->
+
+	<xsl:template name="categories-valid">
+	  <xsl:param name="changes"/>
+	  <xsl:param name="fragment"/>
+	    <xsl:for-each select="$changes">
+	      <xsl:variable name="category">
+	        <xsl:call-template name="get-change-category">
+	          <xsl:with-param name="change" select="."/>
+	          <xsl:with-param name="fragment" select="$fragment"/>
+	        </xsl:call-template>
+	      </xsl:variable>
+
+	      <xsl:if test="$category = ''">
+	        <xsl:text>fail: </xsl:text>
+		<apply-templates select="."/>
+              </xsl:if>
+	    </xsl:for-each>
+	</xsl:template>
+
+	<!--
+	  - make a map unique
+	  -->
+	<xsl:template name="make-map-unique">
+	  <xsl:param name="map"/>
+	  <xsl:param name="map-prefix"/>
+
+	  <xsl:choose>
+	    <xsl:when test="$map = ''">
+	    </xsl:when>
+	    <xsl:when test="contains($map-prefix, substring-before($map, ':'))">
+	      <xsl:call-template name="make-map-unique">
+	        <xsl:with-param name="map" select="substring-after($map, ' ')"/>
+	        <xsl:with-param name="map-prefix" select="$map-prefix"/>
+	      </xsl:call-template>
+	    </xsl:when>
+	    <xsl:otherwise>
+	      <xsl:value-of select="substring-before($map, ' ')"/>
+	      <xsl:text> </xsl:text>
+	      <xsl:call-template name="make-map-unique">
+	        <xsl:with-param name="map" select="substring-after($map, ' ')"/>
+	        <xsl:with-param name="map-prefix" select="concat($map-prefix, substring-before($map, ' '))"/>
+	      </xsl:call-template>
+	    </xsl:otherwise>
+	  </xsl:choose>
+	</xsl:template>
 
 	<!--
 	  - Attempt to map all changes to sublevels
@@ -357,24 +441,42 @@
 	<xsl:template name="map-changes-to-sublevels">
 	  <xsl:param name="taxonomy"/>
 	  <xsl:param name="changes"/>
-	  <xsl:param name="fragment"/>
-	  <xsl:param name="iteration" select="1"/>
 
-	  <xsl:if test="count($taxonomy/*[$iteration]) = 0">
-	    <xsl:copy-of select="$fragment">
-	  </xsl:if>
+          <xsl:variable name="non-unique-map">
+	  <xsl:for-each select="$taxonomy">
+	    <xsl:sort select="@match-priority" order="descending"/>
 
-	  <xsl:variable name="new-fragment">
-	  </xsl:variable>
+	      <xsl:variable name="category" select="."/>
 
-	  <xsl:call-template name="map-changes-to-sublevels">
-	    <xsl:with-param name="taxonomy" select="$taxonomy"/>
-	    <xsl:with-param name="changes" select="$changes"/>
-	    <xsl:with-param name="fragment" select="$new-fragment"/>
-	    <xsl:with-param name="iteration" select="$iteration + 1"/>
-	  </xsl:call-template>
+	      <xsl:variable name="keywords" select=".//keyword"/>
 
-	</xsl:template name="map-changes-to-sublevels">
+	        <xsl:for-each select="$changes">
+
+		  <xsl:variable name="change" select="."/>
+
+		  <xsl:choose>
+		    <xsl:when test="name($category) = name(.)">
+	              <xsl:call-template name="write-change-category">
+	                <xsl:with-param name="change" select="."/>
+	                <xsl:with-param name="category" select="$category"/>
+	              </xsl:call-template>
+		    </xsl:when>
+		    <xsl:when test="count(key('word-map', $keywords/child::text()))
+		                  = count(key('word-map', $keywords/child::text())|.)">
+	              <xsl:call-template name="write-change-category">
+	                <xsl:with-param name="change" select="."/>
+	                <xsl:with-param name="category" select="$category"/>
+	              </xsl:call-template>
+		    </xsl:when>
+		  </xsl:choose>
+	        </xsl:for-each>
+	      </xsl:for-each>
+	    </xsl:variable>
+
+	    <xsl:call-template name="make-map-unique">
+	      <xsl:with-param name="map" select="$non-unique-map"/>
+	    </xsl:call-template>
+	</xsl:template>
 
 	<!--
 	  - Write changes
@@ -390,20 +492,27 @@
 
 	  <xsl:variable name="map">
 	    <xsl:call-template name="map-changes-to-sublevels">
-	      <xsl:with-param name="taxonomy" select="$taxonomy">
-	      <xsl:with-param name="changes" select="$changes">
+	      <xsl:with-param name="taxonomy" select="$taxonomy"/>
+	      <xsl:with-param name="changes" select="$changes"/>
+	    </xsl:call-template>
+	  </xsl:variable>
+
+	  <xsl:variable name="map-failures">
+	    <xsl:call-template name="categories-valid">
+	      <xsl:with-param name="changes" select="$changes"/>
+	      <xsl:with-param name="fragment" select="$map"/>
 	    </xsl:call-template>
 	  </xsl:variable>
 
 	  <xsl:choose>
-	    <xsl:when test="contains($map, 'fail-to-insert-error'">
+	    <xsl:when test="contains($map-failures, 'fail')">
 	      
 	      <!--
 	        - In case of failure, insert all nodes at the current level. 
 		-->
 
 	      <itemizedlist>
-	      <xsl:apply-template select=".//entry">
+	        <xsl:apply-templates select="$changes"/>
 	      </itemizedlist>
 
 	    </xsl:when>
@@ -413,10 +522,32 @@
 	        - In case of success, insert all nodes within sublevels.
 		-->
 
-	      <xsl:for-each select="$taxonomy/*">
+	      <xsl:for-each select="$taxonomy">
+	        <xsl:variable name="category" select="."/>
+		<xsl:if test="contains($map, concat(generate-id($category), ' '))">
+	          <section>
+		    <xsl:call-template name="write_title">
+		      <xsl:with-param name="title">
+		        <xsl:choose>
+		        <xsl:when test="@t != ''">
+		          <xsl:value-of select="@t"/>
+			</xsl:when>
+			<xsl:otherwise>
+		          <xsl:value-of select="translate(name($category), '-', ' ')"/>
+			</xsl:otherwise>
+			</xsl:choose>
+		      </xsl:with-param>
+		    </xsl:call-template>
+		    <xsl:call-template name="write-changes">
+		      <xsl:with-param name="taxonomy" select="$category/*"/>
+		      <xsl:with-param name="changes" select="$changes[name(.) = name($category)]/*|$changes[not(name(.) = name($category))][contains($map, concat(generate-id(.), ':', generate-id($category), ' '))]"/>
+		    </xsl:call-template>
+		  </section>
+		</xsl:if>
 	      </xsl:for-each>
 
 	    </xsl:otherwise>
+
 	  </xsl:choose>
 
 	</xsl:template>
@@ -440,8 +571,8 @@
 		  -->
 
 		<xsl:call-template name="write-changes">
-		  <xsl:with-param name="taxonomy" select="document('taxonomy.xml')"/>
-		  <xsl:with-param name="changes" select="."/>
+		  <xsl:with-param name="taxonomy" select="$taxonomy-root/taxonomy/*"/>
+		  <xsl:with-param name="changes" select="./*"/>
 		</xsl:call-template>
             </section>
 	</xsl:template>

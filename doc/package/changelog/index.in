@@ -838,6 +838,7 @@ o	Add an option to set the upper bound on correction steps.
 o	Modify Makefile to compile with size optimization, since this 
 	appears to improve speed characteristics in some cases.
 
+/alignment
 o	Move transformation data structure and related functions to 
 	a separate header file.
 
@@ -858,6 +859,7 @@ o	Add optional support for .jpg, .png, .tiff, and other file formats
 	through ImageMagick.  Translation using ImageMagick was suggested by
 	Nick Rusnov.
 
+/image-files
 o	Don't segfault if a file can't be opened.
 
 
@@ -900,4 +902,5 @@ o	Add a rule for ale.exe to the Makefile.
 
 V	0.0.0 2002-Oct-11
 
+/initial-release
 o	Initial release.

@@ -151,7 +151,7 @@ BASEDIR_SUFFIX =
 # Workaround the fact that we don't calculate dependencies.
 #
 
-BROKEN_DEPENDENCIES = $(shell find . -name "*.xml") package/changelog/index.in
+BROKEN_DEPENDENCIES = $(shell find . -name "*.xml") package/changelog/index.in make-changelog
 
 
 # -----------------------------------------------------------------
@@ -382,10 +382,13 @@ MAN_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
 #  and foo.1.txt from it.
 .PRECIOUS: %.1 %.2 %.3 %.4 %.5 %.6 %.7 %.8 %.9
 
-docbook: index.docbook $(DOCBOOK_OUTPUT_FORMATS) ../TODO 
+docbook: index.docbook $(DOCBOOK_OUTPUT_FORMATS) ../TODO ../ChangeLog
 
 ../TODO: package/todo/index.txt
 	mv package/todo/index.txt ../TODO
+	
+../ChangeLog: package/changelog/index.txt
+	mv package/changelog/index.txt ../ChangeLog
 	
 
 man: $(LISTS_MAN)
