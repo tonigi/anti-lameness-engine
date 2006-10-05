@@ -572,7 +572,7 @@
 
 		<xsl:call-template name="write-changes">
 		  <xsl:with-param name="taxonomy" select="$taxonomy-root/taxonomy/*"/>
-		  <xsl:with-param name="changes" select="./*"/>
+		  <xsl:with-param name="changes" select="./*[name() != 'edit']"/>
 		</xsl:call-template>
             </section>
 	</xsl:template>
