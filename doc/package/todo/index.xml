@@ -21,9 +21,8 @@
   Documentation
 </title>
   <ul>
-  <li> Remedy issues with the tables of contents, specifically incorrect nesting
-  of book ToCs (at least when generating the entire set) and meaningless page
-  numbers for book title pages in the set ToC.</li>
+  <li> Remedy meaningless page numbers for book title pages in the set
+  ToC.</li>
   <li> Check the address for the FSF included in the documentation. </li>
   <li> Convert from HTML to a more flexible format, such as texinfo or docbook.
   </li><li>Add license information (GPL; see doc/COPYING) sections to the manuals.
