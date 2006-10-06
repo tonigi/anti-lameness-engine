@@ -367,6 +367,25 @@ HTML_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
   <xsl:param name="section.autolabel">1</xsl:param> \
   <xsl:param name="toc.section.depth">1</xsl:param> \
   <xsl:param name="commented.toc.max.depth">2</xsl:param> \
+  <xsl:param name="generate.toc"> \
+appendix  toc,title \
+article/appendix  nop \
+article   toc, title \
+book      toc,title,figure,table,example,equation \
+chapter   toc,title \
+part      toc,title \
+preface   toc,title \
+qandadiv  toc \
+qandaset  toc \
+reference toc,title \
+sect1     toc \
+sect2     toc \
+sect3     toc \
+sect4     toc \
+sect5     toc \
+section   toc \
+set       toc,title \
+</xsl:param> \
 </xsl:stylesheet>
 
 # for chunked (X)HTML output
@@ -389,6 +408,25 @@ CHNK_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
   <xsl:param name="section.autolabel">1</xsl:param> \
   <xsl:param name="toc.section.depth">1</xsl:param> \
   <xsl:param name="commented.toc.max.depth">2</xsl:param> \
+  <xsl:param name="generate.toc"> \
+appendix  toc,title \
+article/appendix  nop \
+article   toc,title \
+book      toc,title,figure,table,example,equation \
+chapter   toc,title \
+part      toc,title \
+preface   toc,title \
+qandadiv  toc \
+qandaset  toc \
+reference toc,title \
+sect1     toc \
+sect2     toc \
+sect3     toc \
+sect4     toc \
+sect5     toc \
+section   toc \
+set       toc,title \
+</xsl:param> \
 </xsl:stylesheet>
 
 # for man-page output
