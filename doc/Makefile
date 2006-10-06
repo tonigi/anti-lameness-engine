@@ -151,7 +151,7 @@ BASEDIR_SUFFIX =
 # Workaround the fact that we don't calculate dependencies.
 #
 
-BROKEN_DEPENDENCIES = $(shell find . -name "*.xml") package/changelog/index.in package/changelog/index.xml make-changelog
+BROKEN_DEPENDENCIES = $(shell find . -name "*.xml") package/changelog/index.in package/changelog/index.xml make-changelog Makefile
 
 
 # -----------------------------------------------------------------
@@ -269,6 +269,10 @@ FO_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
   <xsl:param name="page.width">7.5in</xsl:param> \
   <xsl:param name="commented.page.margin.inner">3in</xsl:param> \
   <xsl:param name="commented.page.margin.outer">3in</xsl:param> \
+  <xsl:param name="chapter.autolabel">1</xsl:param> \
+  <xsl:param name="section.autolabel">1</xsl:param> \
+  <xsl:param name="toc.section.depth">1</xsl:param> \
+  <xsl:param name="commented.toc.max.depth">2</xsl:param> \
   <xsl:param name="double.sided">1</xsl:param> \
   <xsl:param name="draft.watermark.image"></xsl:param> \
   <xsl:param name="hyphenation">false</xsl:param> \
@@ -285,6 +289,20 @@ FO_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
   <xsl:attribute-set name="xref.properties"> \
     <xsl:attribute name="color">blue</xsl:attribute> \
   </xsl:attribute-set> \
+  <xsl:template name="page.number.format"> \
+  <xsl:param name="element" select="local-name(.)"/> \
+  <xsl:choose> \
+    <xsl:when test="$element = 'toc'">i</xsl:when> \
+    <xsl:when test="$element = 'preface'">i</xsl:when> \
+    <xsl:when test="$element = 'dedication'">i</xsl:when> \
+    <xsl:when test="$element = 'book'">i</xsl:when> \
+    <xsl:when test="$element = 'set'">i</xsl:when> \
+    <xsl:otherwise>1</xsl:otherwise> \
+  </xsl:choose> \
+  </xsl:template> \
+  <xsl:template match="*" mode="toc.for.set"> \
+    <xsl:call-template name="set.toc"/> \
+  </xsl:template> \
   <xsl:attribute-set name="shade.verbatim.style"> \
     <xsl:attribute name="background-color">\#E0E0E0</xsl:attribute> \
     <xsl:attribute name="padding-left">4pt</xsl:attribute> \
@@ -345,6 +363,10 @@ HTML_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
   <xsl:param name="html.stylesheet">$(HTML_STYLESHEET)</xsl:param> \
   <xsl:param name="admon.graphics">0</xsl:param> \
   <xsl:param name="index.on.type">1</xsl:param> \
+  <xsl:param name="chapter.autolabel">1</xsl:param> \
+  <xsl:param name="section.autolabel">1</xsl:param> \
+  <xsl:param name="toc.section.depth">1</xsl:param> \
+  <xsl:param name="commented.toc.max.depth">2</xsl:param> \
 </xsl:stylesheet>
 
 # for chunked (X)HTML output
@@ -363,6 +385,10 @@ CHNK_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
   <xsl:param name="use.id.as.filename">1</xsl:param> \
   <xsl:param name="chunker.output.indent">yes</xsl:param> \
   <xsl:param name="index.on.type">1</xsl:param> \
+  <xsl:param name="chapter.autolabel">1</xsl:param> \
+  <xsl:param name="section.autolabel">1</xsl:param> \
+  <xsl:param name="toc.section.depth">1</xsl:param> \
+  <xsl:param name="commented.toc.max.depth">2</xsl:param> \
 </xsl:stylesheet>
 
 # for man-page output
