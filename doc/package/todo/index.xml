@@ -178,6 +178,47 @@
 </section>
 <section>
 <title>
+Output image characteristics
+</title>
+<ul><li>Allow specification of output image characteristics, including exposure
+(e.g., gamma) and channel offsets within a pixel.
+  </li></ul>
+</section>
+<section>
+<title>
+Output devices
+</title>
+<ul><li>Add support for specifying output devices, such as LCD monitors, to
+allow shorthand customization of exposure (e.g., gamma) and other
+characteristics, such as channel offset in the case of LCD screens for sub-pixel
+anti-aliasing.
+  </li></ul>
+</section>
+<section>
+<title>
+Weight and certainty upper bounds
+</title>
+<ul><li>Add support for specifying weight and certainty upper bounds for
+rendering, either as an absolute constraint or relative to average
+weights, so that the overall contributions to an output pixel (or channel) are
+constrained by weight.  
+
+  </li></ul>
+</section>
+
+<section>
+<title>
+Time locality
+</title>
+<ul><li>In combination with weight and certainty upper bounds, time locality could be
+used to determine which frames are used to generate an output pixel.  As a
+special case of this, video stream processing could favor frames
+having the smallest time difference from the target frame.
+  </li></ul>
+</section>
+
+<section>
+<title>
 	Multi-threading
 </title>
 <ul><li> Add multi-threading options (e.g., for rendering code), so that a single
