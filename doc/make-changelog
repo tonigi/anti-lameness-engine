@@ -43,14 +43,40 @@ sub unset_version {
 
 sub set_version {
 
+	#
+	# Initialize variables and trim whitespace.
+	#
+
 	chomp($version = $_[0]);
+	$version =~ s/^\s*(.*)\s*$/$1/;
 
-	print "<release version=\"$_[0]\">\n";
+	#
+	# Check the version style for included date
+	#
 
-	if ($version =~ /2\d\d\d/) {
-		$date = $version;
-		$date =~ s/.*(2\d\d\d).*/$1/;
-		print "<edit by=\"David Hilvert\" in-year=\"$date\"/>";
+	if ($version =~ /(\S+)\s*(2\d\d\d)(\S*)/) {
+
+		#
+		# Handle the date, if available, and add a rudimentary
+		# edit history.
+		#
+
+		$version = $1;
+		$year = $2;
+		$date = $year . $3;
+
+		print "<release version=\"$version\" date=\"$date\">\n";
+
+		print "<edit by=\"David Hilvert\" in-year=\"$year\"/>";
+
+	} else {
+
+		#
+		# Handle the case where the date is not available
+		#
+
+		print "<release version=\"$version\">\n";
+
 	}
 }
 

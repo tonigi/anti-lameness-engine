@@ -558,7 +558,22 @@
 
 	<xsl:template match="release">
 	    <section>
-		<title><xsl:value-of select="@version"/></title>
+	    	<xsl:choose>
+	    	  <xsl:when test="@date">
+		    <title>
+		      <xsl:text>Version </xsl:text>
+		      <xsl:value-of select="@version"/>
+		      <xsl:text>, </xsl:text>
+		      <xsl:value-of select="@date"/>
+		    </title>
+		  </xsl:when>
+	    	  <xsl:otherwise>
+		    <title>
+		      <xsl:text>Version </xsl:text>
+		      <xsl:value-of select="@version"/>
+		    </title>
+		  </xsl:otherwise>
+		</xsl:choose>
 
 		<!--
 		  - Notes
