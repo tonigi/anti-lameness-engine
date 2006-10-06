@@ -271,7 +271,7 @@ FO_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
   <xsl:param name="commented.page.margin.outer">3in</xsl:param> \
   <xsl:param name="chapter.autolabel">1</xsl:param> \
   <xsl:param name="section.autolabel">1</xsl:param> \
-  <xsl:param name="toc.section.depth">1</xsl:param> \
+  <xsl:param name="toc.section.depth">2</xsl:param> \
   <xsl:param name="commented.toc.max.depth">2</xsl:param> \
   <xsl:param name="double.sided">1</xsl:param> \
   <xsl:param name="draft.watermark.image"></xsl:param> \
@@ -289,6 +289,7 @@ FO_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
   <xsl:attribute-set name="xref.properties"> \
     <xsl:attribute name="color">blue</xsl:attribute> \
   </xsl:attribute-set> \
+  <xsl:template match="section[@tocexclude = 1]"  mode="toc" /> \
   <xsl:template name="page.number.format"> \
   <xsl:param name="element" select="local-name(.)"/> \
   <xsl:choose> \
@@ -365,8 +366,9 @@ HTML_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
   <xsl:param name="index.on.type">1</xsl:param> \
   <xsl:param name="chapter.autolabel">1</xsl:param> \
   <xsl:param name="section.autolabel">1</xsl:param> \
-  <xsl:param name="toc.section.depth">1</xsl:param> \
+  <xsl:param name="toc.section.depth">2</xsl:param> \
   <xsl:param name="commented.toc.max.depth">2</xsl:param> \
+  <xsl:template match="section[@tocexclude = 1]"  mode="toc" /> \
   <xsl:param name="generate.toc"> \
 appendix  toc,title \
 article/appendix  nop \
@@ -406,8 +408,9 @@ CHNK_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
   <xsl:param name="index.on.type">1</xsl:param> \
   <xsl:param name="chapter.autolabel">1</xsl:param> \
   <xsl:param name="section.autolabel">1</xsl:param> \
-  <xsl:param name="toc.section.depth">1</xsl:param> \
+  <xsl:param name="toc.section.depth">2</xsl:param> \
   <xsl:param name="commented.toc.max.depth">2</xsl:param> \
+  <xsl:template match="section[@tocexclude = 1]"  mode="toc" /> \
   <xsl:param name="generate.toc"> \
 appendix  toc,title \
 article/appendix  nop \

@@ -526,7 +526,7 @@
 	      <xsl:for-each select="$taxonomy">
 	        <xsl:variable name="category" select="."/>
 		<xsl:if test="contains($map, concat(generate-id($category), ' '))">
-	          <section>
+	          <section tocexclude="1">
 		    <xsl:call-template name="write_title">
 		      <xsl:with-param name="title">
 		        <xsl:choose>
@@ -557,8 +557,10 @@
 	  - Release
 	  -->
 
-	<xsl:template match="release">
-	    <section>
+	<xsl:template match="release" name="release">
+	    <xsl:param name="label" select="1"/>
+	    <section label="{$label}">
+	    <!-- <section label="{@version}"> -->
 	    	<xsl:choose>
 	    	  <xsl:when test="@date">
 		    <title>
@@ -594,7 +596,11 @@
 	</xsl:template>
 
 	<xsl:template match="changelog">
-	  <xsl:apply-templates select="release"/>
+	  <xsl:for-each select="release">
+	    <xsl:call-template name="release">
+	      <xsl:with-param name="label" select="count(../release) - position()"/>
+	    </xsl:call-template>
+	  </xsl:for-each>
 	</xsl:template>
 
 	<!-- 

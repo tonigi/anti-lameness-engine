@@ -14,6 +14,7 @@
 <section><title>0.8.5 (pre-Beta)</title>
 
 <edit by="David Hilvert" in-month="2006-Sep"/>
+<edit by="David Hilvert" in-month="2006-Oct"/>
 
 <note>This release may be combined with the 0.9.0 Beta release.</note>
 <section>
@@ -226,6 +227,15 @@
 	Unsorted
 </title>
 <edit by="David Hilvert" in-month="2006-Sep"/>
+<edit by="David Hilvert" in-month="2006-Oct"/>
+<section>
+<title>
+	Documentation
+</title>
+<ul><li> Generate correctly indented book-level tables of contents when rendering
+the complete set of manuals.
+</li></ul>
+</section>
 <section>
 <title>
 	Integer-value routines
