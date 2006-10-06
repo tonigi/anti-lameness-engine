@@ -23,7 +23,6 @@
   <ul>
   <li> Remedy meaningless page numbers for book title pages in the set
   ToC.</li>
-  <li> Check the address for the FSF included in the documentation. </li>
   <li> Convert from HTML to a more flexible format, such as texinfo or docbook.
   </li><li>Add license information (GPL; see doc/COPYING) sections to the manuals.
   </li><li>Add additional permission for distribution of hardcopy documentation 
