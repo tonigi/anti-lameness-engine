@@ -325,7 +325,7 @@
 	</xsl:template>
 
 	<!--
-	  -  Changelogs
+	  -  Changelogs and news files.
 	  -->
 
 	<!--
@@ -554,10 +554,99 @@
 	</xsl:template>
 
 	<!--
-	  - Release
+	  - News entries.
 	  -->
 
-	<xsl:template match="release" name="release">
+	<xsl:template match="fm">
+	  <para>
+	    <xsl:choose>
+	      <xsl:when test="@nh">
+	        <xsl:apply-templates/><xsl:text> (Freshmeat blurb via Neohapsis)</xsl:text>
+	      </xsl:when>
+	      <xsl:otherwise>
+	        <xsl:apply-templates/><xsl:text> (Freshmeat blurb)</xsl:text>
+	      </xsl:otherwise>
+	    </xsl:choose>
+	  </para>
+	</xsl:template>
+
+	<xsl:template match="sum">
+	  <section tocexclude="1"><title>Program summary</title>
+	    <xsl:if test="@revised">
+	      <para>This release includes a revised summary:</para>
+		<!-- This release is accompanied by a revised summary: -->
+	    </xsl:if>
+	    <para>
+	      <xsl:apply-templates/>
+	    </para>
+	  </section>
+	</xsl:template>
+
+	<xsl:template match="ed-note">
+	  <xsl:apply-templates/>
+	</xsl:template>
+
+	<xsl:template match="notes">
+	  <section tocexclude="1"><title>Notes</title>
+	  <para>
+	    <xsl:apply-templates/>
+	  </para>
+	  </section>
+	</xsl:template>
+
+	<xsl:template match="ch">
+	  <section tocexclude="1"><title>Changelog summary</title>
+	    <xsl:apply-templates/>
+	  </section>
+	</xsl:template>
+
+	<xsl:template match="ml">
+	  <section tocexclude="1"><title>Mailing list announcement</title>
+	    <xsl:apply-templates/>
+	  </section>
+	</xsl:template>
+
+	<!--
+	  - Releases
+	  -->
+
+	<xsl:template match="release" name="release-news" mode="news">
+	    <xsl:param name="label" select="1"/>
+	    <section label="{$label}">
+	    <!-- <section label="{@version}"> -->
+	    	<xsl:choose>
+	    	  <xsl:when test="@date">
+		    <title>
+		      <xsl:text>Version </xsl:text>
+		      <xsl:value-of select="@version"/>
+		      <xsl:text>, </xsl:text>
+		      <xsl:value-of select="@date"/>
+		    </title>
+		  </xsl:when>
+	    	  <xsl:otherwise>
+		    <title>
+		      <xsl:text>Version </xsl:text>
+		      <xsl:value-of select="@version"/>
+		    </title>
+		  </xsl:otherwise>
+		</xsl:choose>
+
+		<!--
+		  - Notes
+		  -->
+
+		<xsl:apply-templates select=".//note"/>
+
+		<!--
+		  - Write subsections.
+		  -->
+
+		<xsl:apply-templates/>
+
+            </section>
+	</xsl:template>
+
+	<xsl:template match="release" name="release-changelog" mode="changelog">
 	    <xsl:param name="label" select="1"/>
 	    <section label="{$label}">
 	    <!-- <section label="{@version}"> -->
@@ -595,9 +684,17 @@
             </section>
 	</xsl:template>
 
+	<xsl:template match="news">
+	  <xsl:for-each select="release">
+	    <xsl:call-template name="release-news">
+	      <xsl:with-param name="label" select="count(../release) - position()"/>
+	    </xsl:call-template>
+	  </xsl:for-each>
+	</xsl:template>
+
 	<xsl:template match="changelog">
 	  <xsl:for-each select="release">
-	    <xsl:call-template name="release">
+	    <xsl:call-template name="release-changelog" mode="changelog">
 	      <xsl:with-param name="label" select="count(../release) - position()"/>
 	    </xsl:call-template>
 	  </xsl:for-each>
@@ -606,6 +703,12 @@
 	<!-- 
 	  -  Abbreviations for DocBook elements.
           -->
+
+	<xsl:template match="p">
+	<para>
+	  <xsl:apply-templates/>
+	</para>
+	</xsl:template>
 
 	<xsl:template match="ul">
 	<itemizedlist>
