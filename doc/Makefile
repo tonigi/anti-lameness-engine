@@ -449,7 +449,7 @@ MAN_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
 #  and foo.1.txt from it.
 .PRECIOUS: %.1 %.2 %.3 %.4 %.5 %.6 %.7 %.8 %.9
 
-docbook: index.docbook $(DOCBOOK_OUTPUT_FORMATS) ../TODO ../ChangeLog ../NEWS
+docbook: index.docbook $(DOCBOOK_OUTPUT_FORMATS) ../TODO ../ChangeLog ../NEWS ../README
 
 ../TODO: package/todo/index.txt
 	mv package/todo/index.txt ../TODO
@@ -459,6 +459,9 @@ docbook: index.docbook $(DOCBOOK_OUTPUT_FORMATS) ../TODO ../ChangeLog ../NEWS
 	
 ../NEWS: package/news/index.txt
 	mv package/news/index.txt ../NEWS
+	
+../README: package/readme/index.txt
+	mv package/readme/index.txt ../README
 	
 
 man: $(LISTS_MAN)

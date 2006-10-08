@@ -112,8 +112,19 @@
           -->
 
 	<xsl:param name="product-name" select="'ALE'"/>
-
 	<xsl:param name="product-version" select="'0.8.5-prerelease'"/>
+	<xsl:param name="site-URL" select="
+		concat('http://auricle.dyndns.org/', $product-name, '/')"/>
+	<xsl:param name="download-URL" select="concat($site-URL, 'download/')"/>
+	<xsl:param name="windows-binary-package-name" select="
+		concat(translate($product-name, &uppercase;, &lowercase;), '-', 
+		       translate($product-version, '.', '_'), '-win32.zip')"/>
+	<xsl:param name="source-package-name" select="
+		concat(translate($product-name, &uppercase;, &lowercase;), '-', $product-version)"/>
+	<xsl:param name="source-package-name-tar-gz" select="
+		concat($source-package-name, '.tar.gz')"/>
+	<xsl:param name="windows-binary-URL" select="concat($site-URL, $windows-binary-package-name)"/>
+	<xsl:param name="source-URL" select="concat($site-URL, $source-package-name-tar-gz)"/>
 
 	<!--
 	  -  License information
@@ -131,11 +142,12 @@
 
 	<xsl:template match="*|/" mode="license-object">
 	<para>
-	  Unless otherwise defined within the GNU General Public License, any
-	  references to "object code" within the license are to be interpreted
-	  to refer to any non-source version of this <xsl:apply-templates
-	  select="." mode="document-type"/> (or of any work based on this
-	  <xsl:apply-templates select="." mode="document-type"/>).
+	  Unless explicitly defined within the applicable version of the GNU
+	  General Public License, any references to "object code" within the
+	  license shall refer to any non-source version of this
+	  <xsl:apply-templates select="." mode="document-type"/> (or of any
+	  work based on this <xsl:apply-templates select="."
+	  mode="document-type"/>).
 	</para>
 	</xsl:template>
 
@@ -700,6 +712,30 @@
 	  </xsl:for-each>
 	</xsl:template>
 
+	<!--
+	  - Inline product information
+	  -->
+
+	<xsl:template match="winpack">
+	  <xsl:value-of select="$windows-binary-package-name"/>
+	</xsl:template>
+
+	<xsl:template match="sourcepack">
+	  <xsl:value-of select="$source-package-name"/>
+	</xsl:template>
+
+	<xsl:template match="sourcepacktargz">
+	  <xsl:value-of select="$source-package-name-tar-gz"/>
+	</xsl:template>
+
+	<xsl:template match="winurl">
+	  <ulink url="{$windows-binary-URL}"/>
+	</xsl:template>
+
+	<xsl:template match="sourceurl">
+	  <ulink url="{$source-URL}"/>
+	</xsl:template>
+
 	<!-- 
 	  -  Abbreviations for DocBook elements.
           -->
@@ -726,6 +762,12 @@
 	<section>
 	  <xsl:apply-templates/>
 	</section>
+	</xsl:template>
+
+	<xsl:template match="ll">
+	<literallayout class="monospaced">
+	  <xsl:apply-templates/>
+	</literallayout>
 	</xsl:template>
 
 
