@@ -123,8 +123,8 @@
 		concat(translate($product-name, &uppercase;, &lowercase;), '-', $product-version)"/>
 	<xsl:param name="source-package-name-tar-gz" select="
 		concat($source-package-name, '.tar.gz')"/>
-	<xsl:param name="windows-binary-URL" select="concat($site-URL, $windows-binary-package-name)"/>
-	<xsl:param name="source-URL" select="concat($site-URL, $source-package-name-tar-gz)"/>
+	<xsl:param name="windows-binary-URL" select="concat($download-URL, $windows-binary-package-name)"/>
+	<xsl:param name="source-URL" select="concat($download-URL, $source-package-name-tar-gz)"/>
 
 	<!--
 	  -  License information
