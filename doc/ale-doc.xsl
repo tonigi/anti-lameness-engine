@@ -574,10 +574,10 @@
 	  <para>
 	    <xsl:choose>
 	      <xsl:when test="@nh">
-	        <xsl:apply-templates/><xsl:text> (Freshmeat blurb via Neohapsis)</xsl:text>
+	        <xsl:apply-templates/><xsl:text> (Freshmeat announcement via Neohapsis)</xsl:text>
 	      </xsl:when>
 	      <xsl:otherwise>
-	        <xsl:apply-templates/><xsl:text> (Freshmeat blurb)</xsl:text>
+	        <xsl:apply-templates/><xsl:text> (Freshmeat announcement)</xsl:text>
 	      </xsl:otherwise>
 	    </xsl:choose>
 	  </para>
