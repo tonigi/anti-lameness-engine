@@ -286,7 +286,7 @@ FO_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
   <xsl:param name="ulink.show">1</xsl:param> \
   <xsl:param name="ulink.footnotes">1</xsl:param> \
   <xsl:param name="index.on.type">1</xsl:param> \
-  <xsl:attribute-set name="xref.properties"> \
+  <xsl:attribute-set name="comment.xref.properties"> \
     <xsl:attribute name="color">blue</xsl:attribute> \
   </xsl:attribute-set> \
   <xsl:template match="section[@tocexclude = 1]"  mode="toc" /> \
