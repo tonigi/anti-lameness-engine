@@ -125,6 +125,7 @@
 		concat($source-package-name, '.tar.gz')"/>
 	<xsl:param name="windows-binary-URL" select="concat($download-URL, $windows-binary-package-name)"/>
 	<xsl:param name="source-URL" select="concat($download-URL, $source-package-name-tar-gz)"/>
+	<xsl:param name="mailing-list-address" select="'ale@ventricle.dyndns.org'"/>
 
 	<!--
 	  -  License information
@@ -734,6 +735,10 @@
 
 	<xsl:template match="sourceurl">
 	  <ulink url="{$source-URL}"/>
+	</xsl:template>
+
+	<xsl:template match="mailinglist">
+	  <xsl:value-of select="$mailing-list-address"/>
 	</xsl:template>
 
 	<!-- 

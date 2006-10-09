@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE article PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
+	"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd">
+
+<article>
+
+
+<articleinfo xmlns:xi="http://www.w3.org/2001/XInclude">
+  <title>Bug Reporting Guide</title>
+  <abstract>This article includes information regarding bug report procedures.</abstract>
+</articleinfo>
+
+<edit by="David Hilvert" in-year="2006"/>
+
+<s><t>Address</t>
+
+<p>Bug reports can be sent by e-mail to <mailinglist/>.</p>
+
+</s>
+
+<s><t>Relevant information</t>
+
+<p>Providing information sufficient to reproduce a bug may allow more timely
+resolution of a bug report.  Relevant information may include:</p>
+
+<ul><li>the full output of <userinput>ale --version</userinput>
+</li><li>a list of steps sufficient to reproduce the bug
+</li></ul>
+
+</s>
+
+</article>

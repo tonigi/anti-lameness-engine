@@ -13,8 +13,8 @@
   <xi:include href="news/index.xml"/>
   <xi:include href="changelog/index.xml"/> 
   <xi:include href="todo/index.xml"/>
-<!--  <xi:include href="bugs/index.xml"/>
-  <xi:include href="authors/index.xml"/>
+  <xi:include href="bugs/index.xml"/>
+<!--  <xi:include href="authors/index.xml"/>
   <xi:include href="copying/index.xml"/>
   <xi:include href="install/index.xml"/>
 -->
