@@ -1,0 +1,179 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
+	"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd">
+
+<chapter><title>Overview</title>
+
+<section><title>Purpose</title>
+
+<para>This manual describes program operation and command-line usage for ALE
+versions 0.8.0 through <ver/>.  Features specific to a particular version
+are annotated (e.g.  [ALE 0.8.1 and later]).</para>
+
+<!-- <para>For more information on ALE, see the <a
+href="http://auricle.dyndns.org/ALE/">ALE Home Page</a>.</para> -->
+
+</section>
+<section><title>Parameter Meta-syntax</title>
+
+<p>When describing parameter syntax, the following conventions are used in this manual:</p>
+
+<table>
+<caption>Parameter Meta-syntax</caption>
+<tr>
+<td><l>&lt;foo></l></td>
+<td>A required parameter called <meta>foo</meta>.</td>
+<td></td>
+</tr>
+<tr>
+<td><l>[&lt;foo>]</l></td>
+<td>An optional parameter called <meta>foo</meta>.</td>
+</tr>
+<tr>
+<td><l>[&lt;foo>]*</l></td>
+<td>Zero or more parameters <meta>foo</meta>.</td>
+</tr>
+</table>
+
+</section>
+<section><title>Command-line syntax for Image Processing</title>
+
+<para>The following command-line invocation can be used to process a series of
+frames into an output file:</para>
+
+<ll>ale [&lt;option>]* &lt;original-frame> [&lt;supplemental-frame>]* &lt;output-file></ll>
+
+<s><t>Option Arguments</t>
+
+<s><t>Default Settings</t>
+
+<para>Certain basic modes of operation, emphasizing image quality, speed, or
+other rendering characteristics, are now established in the form of default
+settings.  For more information, see:</para>
+
+<ul><li><xref linkend="user-defaults"/>
+</li></ul>
+
+</s>
+
+<s><t>Other options</t>
+<para>Other options are outlined in subsequent chapters:</para>
+
+<ul><li><xref linkend="user-file"/>
+</li><li><xref linkend="user-rendering"/>
+</li><li><xref linkend="user-alignment"/>
+</li><li><xref linkend="user-exclusion"/>
+</li><li><xref linkend="user-device"/>
+</li><li><xref linkend="user-ui"/>
+</li><li><xref linkend="user-3d"/>
+</li></ul>
+
+</s>
+</s>
+
+<s><t>Image Files</t>
+
+<para>ALE can be configured at compile time to use one of two different file
+handlers.  Execute 'ale --version' to determine which file handler is being
+used.  The table below outlines the supported formats for each file handler.</para>
+
+<table>
+<caption>Supported image file formats</caption>
+<tr><th>Version Message</th><th>File Types Supported</th></tr>
+<tr><td valign="top">
+<ll>File handler:     ImageMagick</ll>
+</td>
+
+<td>
+Input and output files can be any of the <ulink url="http://imagemagick.sourceforge.net/www/formats.html">formats</ulink> supported by
+ImageMagick.
+</td>
+<td/>
+</tr>
+
+<tr><td valign="top">
+<ll>File handler:     PPM</ll>
+</td><td>
+Input files must be PPM, and output files are written as PPM.
+</td></tr>
+</table>
+
+<para>Note that many external programs, including ImageMagick's <ulink url="http://www.imagemagick.org/">command line utilities</ulink>, can be used to
+convert between PPM and other formats.</para>
+
+<para>See the README included in the source distribution of ALE for more information about
+compile-time configuration of file handlers.</para>
+
+</s>
+
+</section>
+<section>
+<title>Command-line syntax for Version Information</title>
+
+<para>The following command-line invocation can be used to print version
+information and build options:</para>
+
+<ll>ale --version</ll>
+
+<para>The following is sample output from this invocation:</para>
+
+<ll>ALE Version:      <ver/>
+File handler:     ImageMagick
+Color data:       SINGLE
+Coordinate data:  SINGLE
+DFT:              FFTW3
+Assertions:       Enabled
+Optimizations:    Enabled
+</ll>
+
+<para>The first line of output indicates the version of ALE source code being
+used; the remaining lines reflect the build options selected at compile
+time.</para>
+
+<para>For more information about build options, see the README file included in
+the ALE source distribution.</para>
+
+</section>
+<section>
+<title>Command-line syntax for Help Output</title>
+
+<para>When invoked with no arguments, or an insufficient number of file arguments,
+ALE outputs a help message specifying command-line usage and available help
+topics.  The following is a sample invocation:</para>
+
+<ll>ale</ll>
+
+<s><t>Help Topics</t>
+
+<para>More information about specific help topics can be obtained with an invocation
+of the following form:</para>
+
+<ll>ale &lt;help option&gt;</ll>
+
+<para>Available help options, and their corresponding help topics, are outlined
+below:</para>
+
+<ll>--hu              Usage.
+--hq              Default settings.
+--hf              Image files.
+--he              Exclusion regions.
+--ha              Alignment (not exposure-related).
+--hr              Rendering (not exposure-related).
+--hx              Exposure.
+--ht              Transformation data files.
+--hc              Control points.  [0.8.1 and later]
+--hl              Filtering (PSFs, rendering chains).
+--hd              Devices.
+--hi              User Interfaces.
+--hv              Video stream processing (Experimental).
+--h3              3D Modeling.
+--hz              Undocumented options.
+--hA              Concatenate all help pages.
+</ll>
+
+</s>
+
+</section>
+
+</chapter>
