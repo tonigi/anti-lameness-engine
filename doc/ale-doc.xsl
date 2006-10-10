@@ -721,6 +721,10 @@
 	  <xsl:value-of select="$windows-binary-package-name"/>
 	</xsl:template>
 
+	<xsl:template match="ver">
+	  <xsl:value-of select="$product-version"/>
+	</xsl:template>
+
 	<xsl:template match="sourcepack">
 	  <xsl:value-of select="$source-package-name"/>
 	</xsl:template>
@@ -769,10 +773,28 @@
 	</section>
 	</xsl:template>
 
+	<xsl:template match="l">
+	<literal>
+	  <xsl:apply-templates/>
+	</literal>
+	</xsl:template>
+
 	<xsl:template match="ll">
 	<literallayout class="monospaced">
 	  <xsl:apply-templates/>
 	</literallayout>
+	</xsl:template>
+
+	<xsl:template match="ui">
+	<userinput>
+	  <xsl:apply-templates/>
+	</userinput>
+	</xsl:template>
+
+	<xsl:template match="meta">
+	<emphasis>
+	  <xsl:apply-templates/>
+	</emphasis>
 	</xsl:template>
 
 
