@@ -9,37 +9,35 @@
     User Manual
   </title>
 </bookinfo>
-<chapter><title>Introduction</title>
-<section><title>Purpose (foobar)</title>
+<chapter><title>Overview</title>
+<section><title>Purpose</title>
 
-<para>This page summarizes program operation and command-line usage for ALE
-versions 0.8.0 through 0.8.4.  Features specific to a particular version
+<para>This manual describes program operation and command-line usage for ALE
+versions 0.8.0 through <ver/>.  Features specific to a particular version
 are annotated (e.g.  [ALE 0.8.1 and later]).</para>
 
-<para>Manual pages linked from this section describe <a href="defaults/">default
-settings</a>, <a href="file/">file output</a>, <a
-href="alignment/">alignment</a>, <a href="rendering/">rendering</a>, <a
-href="exclusion/">exclusion regions</a>, <a href="cp/">control points</a>, <a href="ui/">user interfaces</a>, <a
-href="device/">devices</a>, and <a href="3d/">3D scene reconstruction</a>.</para>
-
-<para>For more information on ALE, see the <a
-href="http://auricle.dyndns.org/ALE/">ALE Home Page</a>.</para>
+<!-- <para>For more information on ALE, see the <a
+href="http://auricle.dyndns.org/ALE/">ALE Home Page</a>.</para> -->
 
 </section>
 <section><title>Parameter Meta-syntax</title>
 
+<p>When describing parameter syntax, the following conventions are used in this manual:</p>
+
 <table>
+<caption>Parameter Meta-syntax</caption>
 <tr>
-<td><code>&lt;foo></code></td>
-<td>A required parameter called <i>foo</i>.</td>
+<td><l>&lt;foo></l></td>
+<td>A required parameter called <meta>foo</meta>.</td>
+<td></td>
 </tr>
 <tr>
-<td><code>[&lt;foo>]</code></td>
-<td>An optional parameter called <i>foo</i>.</td>
+<td><l>[&lt;foo>]</l></td>
+<td>An optional parameter called <meta>foo</meta>.</td>
 </tr>
 <tr>
-<td><code>[&lt;foo>]*</code></td>
-<td>Zero or more parameters <i>foo</i>.</td>
+<td><l>[&lt;foo>]*</l></td>
+<td>Zero or more parameters <meta>foo</meta>.</td>
 </tr>
 </table>
 
@@ -49,9 +47,9 @@ href="http://auricle.dyndns.org/ALE/">ALE Home Page</a>.</para>
 <para>The following command-line invocation can be used to process a series of
 frames into an output file:</para>
 
-<pre>ale [&lt;option>]* &lt;original-frame> [&lt;supplemental-frame>]* &lt;output-file></pre>
+<ll>ale [&lt;option>]* &lt;original-frame> [&lt;supplemental-frame>]* &lt;output-file></ll>
 
-<h3>Option Arguments</h3>
+<s><t>Option Arguments</t>
 
 <para>Certain basic modes of operation, emphasizing image quality, speed, or other
 rendering characteristics, are now established in the form of <a
@@ -63,7 +61,9 @@ href="alignment/">alignment</a>, <a href="exclusion/">exclusion
 regions</a>, <a href="device/">devices</a>, <a href="ui/">user interfaces</a>,
 and <a href="3d/">3D scene reconstruction</a>.</para>
 
-<h3>Image Files</h3>
+</s>
+
+<s><t>Image Files</t>
 
 <para>ALE can be configured at compile time to use one of two different file
 handlers.  Execute 'ale --version' to determine which file handler is being
@@ -98,6 +98,8 @@ convert between PPM and other formats.</para>
 
 <para>See the README included in the source distribution of ALE for more information about
 compile-time configuration of file handlers.</para>
+
+</s>
 
 </section>
 <section>
@@ -165,21 +167,6 @@ below:</para>
 --hz              Undocumented options.
 --hA              Concatenate all help pages.
 </pre>
-
-</section>
-<section>
-<title>Related Manual Pages</title>
-<ul>
-<li><a href="defaults/">Default Settings</a></li>
-<li><a href="file/">File Output</a></li>
-<li><a href="rendering/">Rendering</a></li>
-<li><a href="alignment/">Alignment</a></li>
-<li><a href="exclusion/">Exclusion Regions</a></li>
-<li><a href="cp/">Control Points (0.8.1 and later)</a></li>
-<li><a href="device/">Devices</a></li>
-<li><a href="ui/">User Interfaces</a></li>
-<li><a href="3d/">3D Scene Reconstruction</a></li>
-</ul>
 
 </section>
 
