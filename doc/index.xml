@@ -7,7 +7,7 @@
   <title>Manuals</title>
 </setinfo>
   <xi:include href="package/index.xml"/>
-  <xi:include href="tutorial/index.xml"/>
+  <!-- <xi:include href="tutorial/index.xml"/> -->
   <xi:include href="user/index.xml"/>
-  <xi:include href="technical/index.xml"/>
+  <!-- <xi:include href="technical/index.xml"/> -->
 </set>
