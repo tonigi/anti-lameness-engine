@@ -625,7 +625,7 @@
 
 	<xsl:template match="release" name="release-news" mode="news">
 	    <xsl:param name="label" select="1"/>
-	    <section label="{$label}">
+	    <section label="{$label}" tocexclude="1">
 	    <!-- <section label="{@version}"> -->
 	    	<xsl:choose>
 	    	  <xsl:when test="@date">
@@ -661,7 +661,7 @@
 
 	<xsl:template match="release" name="release-changelog" mode="changelog">
 	    <xsl:param name="label" select="1"/>
-	    <section label="{$label}">
+	    <section label="{$label}" tocexclude="1">
 	    <!-- <section label="{@version}"> -->
 	    	<xsl:choose>
 	    	  <xsl:when test="@date">
