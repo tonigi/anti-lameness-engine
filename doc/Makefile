@@ -475,7 +475,7 @@ MAN_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
 ALE_SUBDIRS := user technical package
 ALE_TYPES := letter.pdf txt info
 ALE_PACKAGE := TODO ChangeLog NEWS README REPORTING-BUGS
-ALE_MANUALS := $(foreach subdir, $(ALE_SUBDIRS), $(subdir)/manual)
+ALE_MANUALS := $(foreach subdir, $(ALE_SUBDIRS), $(subdir)-manual)
 ALE_MANUAL_TARGETS := $(foreach manual, $(ALE_MANUALS), $(foreach type, $(ALE_TYPES), $(manual).$(type)))
 ALE_PACKAGE_TARGETS := $(foreach package, $(ALE_PACKAGE), ../$(package))
 ALE_TARGETS := $(ALE_MANUAL_TARGETS) $(ALE_PACKAGE_TARGETS)
@@ -491,9 +491,10 @@ ALE_TARGETS := $(ALE_MANUAL_TARGETS) $(ALE_PACKAGE_TARGETS)
 # docbook: index.docbook $(DOCBOOK_OUTPUT_FORMATS) ../TODO ../ChangeLog ../NEWS ../README ../REPORTING-BUGS
 docbook: $(ALE_TARGETS) index.docbook chunk
 	mv index html
+	mkdir -p info; mv *.info info
 	rm index.docbook
 
-%/manual.docbook: %/index.xml
+%-manual.docbook: %/index.xml
 	$(XSLT) $(XSLT_FLAGS) ale-doc.xsl $< > $@
 	
 manual-set.docbook: index.xml
