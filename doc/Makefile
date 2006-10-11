@@ -151,7 +151,7 @@ BASEDIR_SUFFIX =
 # Workaround the fact that we don't calculate dependencies.
 #
 
-BROKEN_DEPENDENCIES = $(shell find . -name "*.xml") package/changelog/index.in package/changelog/index.xml make-changelog Makefile
+BROKEN_DEPENDENCIES = package/changelog/index.in $(shell find . -name "*.xml") package/changelog/index.xml make-changelog Makefile
 
 
 # -----------------------------------------------------------------
@@ -544,7 +544,7 @@ debug:
 # -----------------------------------------------------------------
 #     preprocess xml to docbook.
 # -----------------------------------------------------------------
-%$(DOCBOOK_FILE_EXTENSION): %.xml ale-doc.xsl $(BROKEN_DEPENDENCIES)
+%$(DOCBOOK_FILE_EXTENSION): %.xml $(BROKEN_DEPENDENCIES) ale-doc.xsl
 	$(XSLT) $(XSLT_FLAGS) ale-doc.xsl $< > $@
 
 package/changelog/index.xml: package/changelog/index.in ./make-changelog
@@ -553,7 +553,7 @@ package/changelog/index.xml: package/changelog/index.in ./make-changelog
 # -----------------------------------------------------------------
 #     pattern rule for making (X)HTML and plain-text output
 # -----------------------------------------------------------------
-%.html: %$(DOCBOOK_FILE_EXTENSION)
+%.html: %$(DOCBOOK_FILE_EXTENSION) $(BROKEN_DEPENDENCIES)
 	@echo '$(HTML_CUSTOM)' | $(XSLT) $(XSLT_FLAGS) $(HTML_PARAMS) - $< > $@
 
 %.txt: %.html
@@ -571,28 +571,28 @@ endif
 # -----------------------------------------------------------------
 #     pattern rule for making chunked (X)HTML pages
 # -----------------------------------------------------------------
-%.$(HTML_MANIFEST_EXT): %$(DOCBOOK_FILE_EXTENSION)
+%.$(HTML_MANIFEST_EXT): %$(DOCBOOK_FILE_EXTENSION) $(BROKEN_DEPENDENCIES)
 	@echo '$(CHNK_CUSTOM)' | $(XSLT) $(XSLT_FLAGS) $(HTML_PARAMS) \
 	--stringparam manifest $@  \
 	--stringparam base.dir $(basename $@)$(BASEDIR_SUFFIX)/  \
-	- $< 
+	- $<
 
 # -----------------------------------------------------------------
 #     pattern rules for making FO and PDF stuff
 # -----------------------------------------------------------------
-%.letter.fo: %$(DOCBOOK_FILE_EXTENSION)
+%.letter.fo: %$(DOCBOOK_FILE_EXTENSION) $(BROKEN_DEPENDENCIES)
 	@echo '$(FO_LETTER_COLOR)' \
 	  | $(XSLT) $(XSLT_FLAGS) $(FO_PARAMS) - $< > $@
 
-%.small.fo: %$(DOCBOOK_FILE_EXTENSION)
+%.small.fo: %$(DOCBOOK_FILE_EXTENSION) $(BROKEN_DEPENDENCIES)
 	@echo '$(FO_SMALL_COLOR)' \
 	  | $(XSLT) $(XSLT_FLAGS) $(FO_PARAMS) - $< > $@
 
-%.letter-mono.fo: %$(DOCBOOK_FILE_EXTENSION)
+%.letter-mono.fo: %$(DOCBOOK_FILE_EXTENSION) $(BROKEN_DEPENDENCIES)
 	@echo '$(FO_LETTER_MONO)' \
 	  | $(XSLT) $(XSLT_FLAGS) $(FO_PARAMS) - $< > $@
 
-%.small-mono.fo: %$(DOCBOOK_FILE_EXTENSION)
+%.small-mono.fo: %$(DOCBOOK_FILE_EXTENSION) $(BROKEN_DEPENDENCIES)
 	@echo '$(FO_SMALL_MONO)' \
 	  | $(XSLT) $(XSLT_FLAGS) $(FO_PARAMS) - $< > $@
 
@@ -752,6 +752,7 @@ clean:
 	find . -name "*.fo" | xargs rm -f
 	find . -name "*.docbook" | xargs rm -f
 	find . -name "*.txt" | xargs rm -f
+	rm -f package/changelog/index.xml
 	rm -rf index
 	rm -rf html
 ifneq ($(FILES_TXT),)
