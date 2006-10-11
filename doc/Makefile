@@ -265,15 +265,17 @@ FO_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
   <xsl:import href="$(DOCBOOK_XSL)/fo/docbook.xsl"/> \
   <xsl:param name="$(PDF_MAKER).extensions">1</xsl:param> \
   <xsl:param name="paper.type">Custom</xsl:param> \
-  <xsl:param name="page.height">9.25in</xsl:param> \
-  <xsl:param name="page.width">7.5in</xsl:param> \
+  <xsl:param name="commented.page.height">9.25in</xsl:param> \
+  <xsl:param name="commented.page.width">7.5in</xsl:param> \
+  <xsl:param name="page.height">PAPER_HEIGHT</xsl:param> \
+  <xsl:param name="page.width">PAPER_WIDTH</xsl:param> \
   <xsl:param name="commented.page.margin.inner">3in</xsl:param> \
   <xsl:param name="commented.page.margin.outer">3in</xsl:param> \
   <xsl:param name="chapter.autolabel">1</xsl:param> \
   <xsl:param name="section.autolabel">1</xsl:param> \
   <xsl:param name="toc.section.depth">2</xsl:param> \
   <xsl:param name="commented.toc.max.depth">2</xsl:param> \
-  <xsl:param name="double.sided">1</xsl:param> \
+  <xsl:param name="double.sided">DOUBLE_SIDED</xsl:param> \
   <xsl:param name="draft.watermark.image"></xsl:param> \
   <xsl:param name="hyphenation">false</xsl:param> \
   <xsl:param name="hyphenate.verbatim">1</xsl:param> \
@@ -286,8 +288,8 @@ FO_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
   <xsl:param name="ulink.show">1</xsl:param> \
   <xsl:param name="ulink.footnotes">1</xsl:param> \
   <xsl:param name="index.on.type">1</xsl:param> \
-  <xsl:attribute-set name="comment.xref.properties"> \
-    <xsl:attribute name="color">blue</xsl:attribute> \
+  <xsl:attribute-set name="xref.properties"> \
+    <xsl:attribute name="color">XREF_COLOR</xsl:attribute> \
   </xsl:attribute-set> \
   <xsl:template match="section[@tocexclude = 1]"  mode="toc" /> \
   <xsl:template name="page.number.format"> \
@@ -350,6 +352,30 @@ FO_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
     </xsl:attribute> \
   </xsl:attribute-set> \
 </xsl:stylesheet>
+
+FO_LETTER_COLOR := $(subst PAPER_WIDTH, 8.5in, \
+                   $(subst PAPER_HEIGHT, 11in, \
+		   $(subst XREF_COLOR,blue, \
+		   $(subst DOUBLE_SIDED, 0,  \
+		   	$(FO_CUSTOM)))))
+
+FO_LETTER_MONO  := $(subst PAPER_WIDTH, 8.5in, \
+                   $(subst PAPER_HEIGHT, 11in, \
+		   $(subst XREF_COLOR,black, \
+		   $(subst DOUBLE_SIDED, 0,  \
+		   	$(FO_CUSTOM)))))
+
+FO_SMALL_COLOR  := $(subst PAPER_WIDTH, 7.5in, \
+                   $(subst PAPER_HEIGHT, 9.25in, \
+		   $(subst XREF_COLOR,blue, \
+		   $(subst DOUBLE_SIDED, 1,  \
+		   	$(FO_CUSTOM)))))
+
+FO_SMALL_MONO   := $(subst PAPER_WIDTH, 7.5in, \
+                   $(subst PAPER_HEIGHT, 9.25in, \
+		   $(subst XREF_COLOR,black, \
+		   $(subst DOUBLE_SIDED, 1,  \
+		   	$(FO_CUSTOM)))))
 
 # for single-file (X)HTML outpout
 HTML_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
@@ -442,6 +468,19 @@ MAN_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
   <xsl:param name="man.output.subdirs.enabled" select="1"/> \
 </xsl:stylesheet>
 
+#
+# ALE documentation targets
+#
+
+ALE_SUBDIRS := user technical package
+ALE_TYPES := letter.pdf txt info
+ALE_PACKAGE := TODO ChangeLog NEWS README REPORTING-BUGS
+ALE_MANUALS := $(foreach subdir, $(ALE_SUBDIRS), $(subdir)/manual)
+ALE_MANUAL_TARGETS := $(foreach manual, $(ALE_MANUALS), $(foreach type, $(ALE_TYPES), $(manual).$(type)))
+ALE_PACKAGE_TARGETS := $(foreach package, $(ALE_PACKAGE), ../$(package))
+ALE_TARGETS := $(ALE_MANUAL_TARGETS) $(ALE_PACKAGE_TARGETS)
+
+
 # -----------------------------------------------------------------
 #                  ** TARGETS START HERE ** 
 # -----------------------------------------------------------------
@@ -449,7 +488,16 @@ MAN_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
 #  and foo.1.txt from it.
 .PRECIOUS: %.1 %.2 %.3 %.4 %.5 %.6 %.7 %.8 %.9
 
-docbook: index.docbook $(DOCBOOK_OUTPUT_FORMATS) ../TODO ../ChangeLog ../NEWS ../README ../REPORTING-BUGS
+# docbook: index.docbook $(DOCBOOK_OUTPUT_FORMATS) ../TODO ../ChangeLog ../NEWS ../README ../REPORTING-BUGS
+docbook: $(ALE_TARGETS) index.docbook chunk
+	mv index html
+	rm index.docbook
+
+%/manual.docbook: %/index.xml
+	$(XSLT) $(XSLT_FLAGS) ale-doc.xsl $< > $@
+	
+manual-set.docbook: index.xml
+	$(XSLT) $(XSLT_FLAGS) ale-doc.xsl $< > $@
 
 ../TODO: package/todo/index.txt
 	mv package/todo/index.txt ../TODO
@@ -531,8 +579,20 @@ endif
 # -----------------------------------------------------------------
 #     pattern rules for making FO and PDF stuff
 # -----------------------------------------------------------------
-%.fo: %$(DOCBOOK_FILE_EXTENSION)
-	@echo '$(FO_CUSTOM)' \
+%.letter.fo: %$(DOCBOOK_FILE_EXTENSION)
+	@echo '$(FO_LETTER_COLOR)' \
+	  | $(XSLT) $(XSLT_FLAGS) $(FO_PARAMS) - $< > $@
+
+%.small.fo: %$(DOCBOOK_FILE_EXTENSION)
+	@echo '$(FO_SMALL_COLOR)' \
+	  | $(XSLT) $(XSLT_FLAGS) $(FO_PARAMS) - $< > $@
+
+%.letter-mono.fo: %$(DOCBOOK_FILE_EXTENSION)
+	@echo '$(FO_LETTER_MONO)' \
+	  | $(XSLT) $(XSLT_FLAGS) $(FO_PARAMS) - $< > $@
+
+%.small-mono.fo: %$(DOCBOOK_FILE_EXTENSION)
+	@echo '$(FO_SMALL_MONO)' \
 	  | $(XSLT) $(XSLT_FLAGS) $(FO_PARAMS) - $< > $@
 
 ifeq ($(PDF_MAKER),dblatex)
@@ -684,9 +744,15 @@ endif
 #   target(s) for cleaning up the mess
 # -----------------------------------------------------------------
 clean:
-	$(RM) *.info
-	$(RM) *.texi
-	$(RM) *.texi-list
+	find . -name "*.info" | xargs rm -f
+	find . -name "*.texi" | xargs rm -f
+	find . -name "*.texi-list" | xargs rm -f
+	find . -name "*.pdf" | xargs rm -f
+	find . -name "*.fo" | xargs rm -f
+	find . -name "*.docbook" | xargs rm -f
+	find . -name "*.txt" | xargs rm -f
+	rm -rf index
+	rm -rf html
 ifneq ($(FILES_TXT),)
 	$(RM) $(FILES_TXT)
 endif
