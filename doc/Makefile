@@ -259,6 +259,23 @@ DBX_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
 </xsl:stylesheet>
 
 # for FO output
+
+#
+# NOTE: The following changes may be required to the stock docbook stylesheets
+# for double-sided output:
+#
+# In /usr/share/xml/docbook/stylesheet/nwalsh/fo:
+#
+# 	o Add '<xsl:attribute name="margin-left">0pc</xsl:attribute>'
+#	  to the template 'footer.table'.  This fixes number positioning in
+#	  double-sided output.
+#	o In the test for generating 'section.head.marker', change
+#	  the test '$double-sided != 0' to read '$double-sided > 1'.
+#	  This disables section-name headings in favor of chapter-name
+#	  headings.
+#
+#	--dhilvert@auricle.dyndns.org, 12-Oct-2006
+#
 FO_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
                 xmlns:fo="http://www.w3.org/1999/XSL/Format" \
                 version="1.0"> \
