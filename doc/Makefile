@@ -292,7 +292,7 @@ FO_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
     <xsl:attribute name="color">XREF_COLOR</xsl:attribute> \
   </xsl:attribute-set> \
   <xsl:template match="section[@tocexclude = 1]"  mode="toc" /> \
-  <xsl:template name="page.number.format"> \
+  <xsl:template name="commented.page.number.format"> \
   <xsl:param name="element" select="local-name(.)"/> \
   <xsl:choose> \
     <xsl:when test="$element = 'toc'">i</xsl:when> \
