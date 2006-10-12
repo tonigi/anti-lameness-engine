@@ -472,7 +472,7 @@ MAN_CUSTOM := <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" \
 # ALE documentation targets
 #
 
-ALE_SUBDIRS := user technical package
+ALE_SUBDIRS := user technical
 ALE_TYPES := letter.pdf txt info
 ALE_PACKAGE := TODO ChangeLog NEWS README REPORTING-BUGS
 ALE_MANUALS := $(foreach subdir, $(ALE_SUBDIRS), $(subdir)-manual)
