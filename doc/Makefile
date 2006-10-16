@@ -507,6 +507,7 @@ ALE_TARGETS := $(ALE_MANUAL_TARGETS) $(ALE_PACKAGE_TARGETS)
 
 # docbook: index.docbook $(DOCBOOK_OUTPUT_FORMATS) ../TODO ../ChangeLog ../NEWS ../README ../REPORTING-BUGS
 docbook: $(ALE_TARGETS) index.docbook chunk
+	rm -rf html
 	mv index html
 	mkdir -p info; mv *.info info
 	rm index.docbook
