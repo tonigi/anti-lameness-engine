@@ -18,6 +18,18 @@
 </articleinfo>
 
 <news>
+<release version="0.8.5-pre1" date="2006-Oct-16">
+<p>This prerelease includes an autotools build system, documentation licensed
+under GPL, and an updated user interface accepting scope operators.  In
+particular, the --mc option has been changed to allow file scoping.
+Documentation is currently incomplete.</p> 
+<p>A release plan is included in the TODO file, with entries for 0.8.5, 0.9.0,
+and 1.0.0 releases, as well as unsorted items.  Releases 0.8.5 and 0.9.0 may be
+combined into a single release; in particular, changes listed under 0.8.5 in
+TODO may be implemented after 0.9.0 changes are complete.</p>
+</release>
+
+
 <release version="0.8.4" date="2006-May-14">
 <fm>
 This release refines the 3D engine to support focus effects, filtering, and
