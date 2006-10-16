@@ -1,4 +1,4 @@
-V	0.8.5-pre1
+V	0.8.5-pre1 2006-Oct-16
 
 o	Incorporate all existing ALE documentation within the source
 	tree, and license under GPL.  Begin migration of documentation,
