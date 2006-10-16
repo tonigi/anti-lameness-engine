@@ -24,9 +24,7 @@ under GPL, and an updated user interface accepting scope operators.  In
 particular, the --mc option has been changed to allow file scoping.
 Documentation is currently incomplete.</p> 
 <p>A release plan is included in the TODO file, with entries for 0.8.5, 0.9.0,
-and 1.0.0 releases, as well as unsorted items.  Releases 0.8.5 and 0.9.0 may be
-combined into a single release; in particular, changes listed under 0.8.5 in
-TODO may be implemented after 0.9.0 changes are complete.</p>
+and 1.0.0 releases.</p>
 </release>
 
 
