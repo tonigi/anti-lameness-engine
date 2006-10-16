@@ -1,4 +1,8 @@
-V	0.8.5 Prerelease
+V	0.8.5-pre1
+
+o	Incorporate all existing ALE documentation within the source
+	tree, and license under GPL.  Begin migration of documentation,
+	including package documentation files, to a more flexible format.
 
 o	Modify ui_tty for correct operation under Hurd and DragonFly
 	consoles.  
@@ -19,6 +23,8 @@ o	Add options --f{ex,crop} for frame-coordinate exclusion regions.
 
 o	Add autotools-based configuration, build, and installation facilities,
 	replacing the earlier Makefile-based configuration and build process.
+
+o	Modify --mc to be a file-scoped option.
 
 o	Modify command-line interface to accept certain scope operators, and
 	to increase uniformity of syntax.
