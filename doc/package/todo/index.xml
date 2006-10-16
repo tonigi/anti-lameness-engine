@@ -22,27 +22,13 @@
   Documentation
 </title>
   <ul>
-  <li> Remedy meaningless page numbers for book title pages in the set
-  ToC.</li>
-  <li> Convert from HTML to a more flexible format, such as texinfo or docbook.
-  </li><li>Add license information (GPL; see doc/COPYING) sections to the manuals.
-  </li><li>Add additional permission for distribution of hardcopy documentation 
-    with source downloadable from a public network server in the case of orders
-    placed on-line.
-  </li><li>Modify page footers to better reflect the updated license terms.
-  </li><li>Consolidate the manuals into a single work (e.g., docbook set, texinfo
-    top-node) for more straightforward searching and indexing.
-  </li><li>Add a new 'package manual' including the text of source package
-    documentation files README, TODO, etc., so that these are searchable
-    using utilities such as GNU info.
-  </li><li>Modify bootstrap script to generate plain-text package documentation
-    (README, TODO, etc.) from markup. (?)
+  <li>Complete migration of existing documentation from the localhost sub-directory,
+    removing superfluous license terms in the footers.
   </li><li>Centralize licensing and authorship information (e.g., there should be only
     one COPYING file and only one AUTHORS file).
-  </li><li>Incorporate an automatic method for building the target documentation
-    types.  The example Makefile supplied with docbook-xsl would be sufficient
-    for this, but note that their license and copyright terms should be included
+  </li><li>Include license and copyright terms for the doc tree Makefile
     as copyright notices in the AUTHORS and/or COPYING files (or equivalent).
+  </li><li>Complete the documentation.
   </li><li>Revise the user manual for new features and syntax.
     <ul>
     <li>Document new scoping operators {}, [], and [&lt;>].
@@ -57,17 +43,7 @@
     </ul>
   </li><li>Add a section to the README indicating how to obtain and update source via
     darcs.
-  </li><li>Update bootstrap and/or Makefile.am to properly build and install
-    documentation.  (Since the required tools might not be be available
-    everywhere, building the documentation from the bootstrap file would
-    probably be preferable.)
-  </li><li>Add a tutorial, and credit Metin Toyran for suggesting a step-by-step
-    guide.
-  </li><li>Move generated doc files to subdirectories expressive of their format,
-    in cases where more than one file is used to contain the documentation.
-    (html, info, etc.)
-  </li>
-  </ul>
+  </li></ul>
 </section>
 <section>
 <title>
@@ -110,8 +86,8 @@
   <ul>
   <li> This package could build on the package described above, as a 'for Windows'
     variant or some such.
-  </li><li> This package could make use of an application such as InstallJammer for
-    installation.
+  </li><li> This package could make use of an application such as InstallJammer
+    or Nullsoft Scriptable Install System for installation.
   </li>
   </ul>
   </li>
@@ -275,6 +251,10 @@ having the smallest time difference from the target frame.
 </title>
 <ul><li> Generate correctly indented book-level tables of contents when rendering
 the complete set of manuals.
+  </li><li>Add a tutorial, and credit Metin Toyran for suggesting a step-by-step
+    guide.
+  </li><li> Remedy meaningless page numbers for book title pages in the set
+  ToC.
 </li></ul>
 </section>
 <section>
