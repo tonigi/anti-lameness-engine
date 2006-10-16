@@ -30,7 +30,7 @@
 #
 
 AC_PREREQ(2.60)
-AC_INIT(ALE, 0.8.5-prerelease, ale@ventricle.dyndns.org)
+AC_INIT(ALE, 0.8.5-pre1, ale@ventricle.dyndns.org)
 AC_CONFIG_SRCDIR([ale_accum.h])
 AC_CONFIG_HEADER([config.h])
 
