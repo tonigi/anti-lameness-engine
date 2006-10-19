@@ -83,6 +83,43 @@ AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([floor memset pow select sqrt strchr strcspn strdup strndup strspn strtol])
 
+# Check for POSIX threads.
+ACX_PTHREAD()
+
+# Determine whether multithreading should be used.
+AC_ARG_ENABLE(threads,    [  --enable-threads        enable multithreading: auto, no, yes (default=auto)])
+if test x$enable_threads != xno \
+&& test x$acx_pthread_ok = xyes; then
+	PTHREAD_CFLAGS="$PTHREAD_CFLAGS -DUSE_PTHREAD=1"
+
+	#
+	# XXX: This is probably wrong.
+	#
+
+	if test x$PTHREAD_CXX = x; then
+		PTHREAD_CXX="$CXX"
+	fi
+
+	#
+	# CC replacement logic from ImageMagick's configuration process
+	#
+
+    	if test "$CC" != "$PTHREAD_CC"; then 
+		AC_MSG_WARN([Replacing compiler $CC with compiler $PTHREAD_CC to support pthreads.])
+	        CC="$PTHREAD_CC" 
+	fi 
+	if test  "$CXX" != "$PTHREAD_CXX"; then
+	    	AC_MSG_WARN([Replacing compiler $CXX with compiler $PTHREAD_CXX to support pthreads.]) 
+		CXX="$PTHREAD_CXX" 
+	fi
+fi
+
+if test x$enable_threads = xyes \
+&& test x$acx_pthread_ok = xno; then
+	AC_MSG_ERROR([Multithreaded build requested (--enable-threads=yes), but usable library was found.])
+fi
+		
+
 # Determine whether assertions should be enabled.
 AC_ARG_ENABLE(assertions, [  --enable-assertions     check runtime assertions (default=yes)])
 if test x$enable_assertions = xno; then
@@ -301,9 +338,9 @@ if test x$enable_wmx = xyes \
 fi
 
 OPTION_CPPFLAGS="$ASSERT_FLAGS $IMAGEMAGICK_CPPFLAGS $FFTW_CPPFLAGS $UNIX_CPPFLAGS $IOCTL_CPPFLAGS $COORD_CPPFLAGS $COLOR_CPPFLAGS $OPTIMIZATION_CPPFLAGS $STL_CPPFLAGS"
-OPTION_CFLAGS="$IMAGEMAGICK_CFLAGS"
+OPTION_CFLAGS="$IMAGEMAGICK_CFLAGS $PTHREAD_CFLAGS"
 OPTION_LDFLAGS="$IMAGEMAGICK_LDFLAGS"
-OPTION_LIBS="$IMAGEMAGICK_LIBS"
+OPTION_LIBS="$PTHREAD_LIBS $IMAGEMAGICK_LIBS"
 
 AC_SUBST(OPTION_CPPFLAGS)
 AC_SUBST(OPTION_CFLAGS)
