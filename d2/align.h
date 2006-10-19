@@ -441,16 +441,19 @@ private:
 	 * all pixels.
 	 *
 	 */
-	static ale_accum diff(struct scale_cluster c, transformation t,
-			ale_pos _mc_arg, int ax_count, int f) {
+
+	static void diff_subdomain(struct scale_cluster c, transformation t,
+			ale_pos _mc_arg, int ax_count, int f, ale_accum *result, 
+			ale_accum *divisor, int i_min, int i_max, int j_min, int j_max, int subdomain) {
 
 		assert (reference_image);
-		ale_accum result = 0;
-		ale_accum divisor = 0;
 
 		point offset = c.accum->offset();
 
 		int i, j, k;
+
+		ale_accum local_result = 0;
+		ale_accum local_divisor = 0;
 
 		if (interpolant != NULL) 
 			interpolant->set_parameters(t, c.input, offset);
@@ -465,7 +468,8 @@ private:
 			_mc_arg = 1;
 
 		int index;
-		int index_max = c.accum->height() * c.accum->width();
+
+		int index_max = (i_max - i_min) * (j_max - j_min);
 		
 		/*
 		 * We use a random process for which the expected
@@ -517,9 +521,11 @@ private:
 		 * achieve better results than not reseeding.  (1 is
 		 * the default seed according to the GNU Manual Page
 		 * for rand(3).)
+		 * 
+		 * For subdomain calculations, we vary the seed by subdomain.
 		 */
 
-		srand(1);
+		srand(1 + subdomain);
 
 		for(index = -1 + (int) ceil((mc_max+1) 
 					  * ( (1 + ((ale_pos) rand()) ) 
@@ -529,8 +535,8 @@ private:
 				      * ( (1 + ((ale_pos) rand()) ) 
 					/ (1 + ((ale_pos) RAND_MAX)) ))){
 
-			i = index / c.accum->width();
-			j = index % c.accum->width();
+			i = index / (j_max - j_min) + i_min;
+			j = index % (j_max - j_min) + j_min;
 
 			/*
 			 * Check for exclusion in render coordinates.
@@ -611,8 +617,8 @@ private:
 						ale_real achan = pa[k];
 						ale_real bchan = pb[k];
 
-						result += weight[k] * pow(fabs(achan - bchan), metric_exponent);
-						divisor += weight[k] * pow(achan > bchan ? achan : bchan, metric_exponent);
+						local_result += weight[k] * pow(fabs(achan - bchan), metric_exponent);
+						local_divisor += weight[k] * pow(achan > bchan ? achan : bchan, metric_exponent);
 					}
 				} else if (channel_alignment_type == 1) {
 					/*
@@ -622,8 +628,8 @@ private:
 					ale_real achan = pa[1];
 					ale_real bchan = pb[1];
 
-					result += weight[1] * pow(fabs(achan - bchan), metric_exponent);
-					divisor += weight[1] * pow(achan > bchan ? achan : bchan, metric_exponent);
+					local_result += weight[1] * pow(fabs(achan - bchan), metric_exponent);
+					local_divisor += weight[1] * pow(achan > bchan ? achan : bchan, metric_exponent);
 				} else if (channel_alignment_type == 2) {
 					/*
 					 * Align based on the sum of all channels.
@@ -639,13 +645,38 @@ private:
 						wsum += weight[k] / 3;
 					}
 
-					result += wsum * pow(fabs(asum - bsum), metric_exponent);
-					divisor += wsum * pow(asum > bsum ? asum : bsum, metric_exponent);
+					local_result += wsum * pow(fabs(asum - bsum), metric_exponent);
+					local_divisor += wsum * pow(asum > bsum ? asum : bsum, metric_exponent);
 				}
 			}
 		}
-		return pow(result / divisor, 1/metric_exponent);
+
+		*result = local_result;
+		*divisor = local_divisor;
 	}
+
+	static ale_accum diff(struct scale_cluster c, transformation t,
+			ale_pos _mc_arg, int ax_count, int f) {
+		ale_accum result[4] = {0, 0, 0, 0}, 
+		         divisor[4] = {0, 0, 0, 0};
+
+		ale_accum result_total, divisor_total;
+
+		diff_subdomain(c, t, _mc_arg, ax_count, f, &result[0], &divisor[0], 
+				0, c.accum->height() / 2, 0, c.accum->width() / 2, 0);
+		diff_subdomain(c, t, _mc_arg, ax_count, f, &result[1], &divisor[1], 
+				c.accum->height() / 2, c.accum->height(), 0, c.accum->width() / 2, 1);
+		diff_subdomain(c, t, _mc_arg, ax_count, f, &result[2], &divisor[2], 
+				0, c.accum->height() / 2, c.accum->width() / 2, c.accum->width(), 2);
+		diff_subdomain(c, t, _mc_arg, ax_count, f, &result[3], &divisor[3], 
+				c.accum->height() / 2, c.accum->height(), c.accum->width() / 2, c.accum->width(), 3);
+
+		result_total = result[0] + result[1] + result[2] + result[3];
+		divisor_total = divisor[0] + divisor[1] + divisor[2] + divisor[3];
+
+		return pow(result_total / divisor_total, 1/metric_exponent);
+	}
+
 
 	/*
 	 * Adjust exposure for an aligned frame B against reference A.
