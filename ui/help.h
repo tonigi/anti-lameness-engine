@@ -100,6 +100,7 @@ public:
 			"--hi              User Interfaces.\n"
 			"--hv              Video stream processing (Experimental).\n"
 			"--h3              3D Modeling.\n"
+			"--hp              Parallel computation.\n"
 			"--hz              Undocumented options.\n"
 			"--hA              Concatenate all help pages.\n"
 			"\n",
@@ -692,6 +693,38 @@ public:
 			"--pc <type>       Set the type of pairwise comparisons:\n"
 			"                     auto     Determine comparisons automatically.      [default]\n"
 			"                     all      Perform all comparisons.\n"
+			"\n");
+	}
+	void parallel() {
+		banner("Parallel computation");
+		fprintf(help_stream,
+			BETWEEN_SECTIONS
+			"Thread count:\n"
+			"\n"
+			"NOTE: If the number of CPUs cannot be determined, a warning will be produced,\n"
+			"      the --per-cpu option will have no effect, and the default number of\n"
+			"      threads will be determined by the --threads default.  Otherwise, the\n"
+			"      default number of threads will be determined by the --per-cpu default.\n"
+			"\n"
+			HEADER_SPACE
+			"--threads <n>     Use <n> threads.                                 [default is 4]\n"
+#ifndef USE_PTHREAD
+			"\n"
+			"                     NOTE: since this build of ALE does not link with a\n"
+			"                           threading library, this option is not supported.\n"
+			"                           To use this option, first rebuild with support
+			"                           for threads.\n"
+			"\n"
+#endif
+			"--per-cpu <n>     Use <n> threads for each detected CPU.           [default is 1]\n"
+#ifndef USE_PTHREAD
+			"\n"
+			"                     NOTE: since this build of ALE does not link with a\n"
+			"                           threading library, this option is not supported.\n"
+			"                           To use this option, first rebuild with support
+			"                           for threads.\n"
+			"\n"
+#endif
 			"\n");
 	}
 	void undocumented() {

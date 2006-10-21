@@ -78,6 +78,12 @@ extern "C" {
 #include "../d3.h"
 
 /*
+ * Thread include files
+ */
+
+#include "../thread.h"
+
+/*
  * Device configuration files
  */
 
@@ -1273,6 +1279,8 @@ public:
 				hi.cp(), found_help = 1;
 			if (!strcmp(argv[i], "--h3") || all)
 				hi.d3(), found_help = 1;
+			if (!strcmp(argv[i], "--hp") || all)
+				hi.parallel(), found_help = 1;
 			if (!strcmp(argv[i], "--hz") || all)
 				hi.undocumented(), found_help = 1;
 
@@ -1331,6 +1339,12 @@ public:
 
 			exit(0);
 		}
+
+		/*
+		 * Thread initialization.
+		 */
+
+		thread::init();
 
 		/*
 		 * Flags and variables
@@ -2728,6 +2742,10 @@ public:
 
 				if (!strcmp(option_name, "mc")) {
 					d2::align::mc(env->get_int_arg(i->first, 0) ? env->get_double_arg(i->first, 1) / 100 : 0);
+				} else if (!strcmp(option_name, "threads")) {
+					thread::set_count((unsigned int) env->get_int_arg(i->first, 0));
+				} else if (!strcmp(option_name, "per-cpu")) {
+					thread::set_per_cpu((unsigned int) env->get_int_arg(i->first, 0));
 				} else {
 					/*
 					 * This error should be encountered earlier.

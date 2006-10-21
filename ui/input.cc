@@ -36,6 +36,8 @@ input::environment *input::genv = NULL;
 
 const char *input::supported_nonglobal_option_table[] = {
 	"mc",
+	"threads",
+	"per-cpu",
 	NULL
 };
 
@@ -101,6 +103,9 @@ input::simple_option input::simple_option_table[] = {
 
 	{ "no-mc", "mc", "0" },
 	{ "mc", NULL, NULL, 1 },
+
+	{ "threads", NULL, NULL, 1 },
+	{ "per-cpu", NULL, NULL, 1 },
 
 	{ "oc" }, 
 	{ "no-oc", "oc", "0" },
