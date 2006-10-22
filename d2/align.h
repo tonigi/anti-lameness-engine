@@ -442,9 +442,34 @@ private:
 	 *
 	 */
 
-	static void diff_subdomain(struct scale_cluster c, transformation t,
-			ale_pos _mc_arg, int ax_count, int f, ale_accum *result, 
-			ale_accum *divisor, int i_min, int i_max, int j_min, int j_max, int subdomain) {
+	struct subdomain_args {
+		struct scale_cluster c;
+		transformation t;
+		ale_pos _mc_arg;
+		int ax_count;
+		int f;
+		ale_accum result;
+		ale_accum divisor;
+		int i_min, i_max, j_min, j_max;
+		int subdomain;
+	};
+
+	static void diff_subdomain(void *args) {
+
+		subdomain_args *sargs = (subdomain_args *) args;
+
+		struct scale_cluster c = sargs->c;
+		transformation t = sargs->t;
+		ale_pos _mc_arg = sargs->_mc_arg;
+		int ax_count = sargs->ax_count;
+		int f = sargs->f;
+		ale_accum *result = &sargs->result;
+		ale_accum *divisor = &sargs->divisor;
+		int i_min = sargs->i_min;
+		int i_max = sargs->i_max;
+		int j_min = sargs->j_min;
+		int j_max = sargs->j_max;
+		int subdomain = sargs->subdomain;
 
 		assert (reference_image);
 
@@ -657,22 +682,34 @@ private:
 
 	static ale_accum diff(struct scale_cluster c, transformation t,
 			ale_pos _mc_arg, int ax_count, int f) {
-		ale_accum result[4] = {0, 0, 0, 0}, 
-		         divisor[4] = {0, 0, 0, 0};
 
-		ale_accum result_total, divisor_total;
+		ale_accum result_total = 0, divisor_total = 0;
 
-		diff_subdomain(c, t, _mc_arg, ax_count, f, &result[0], &divisor[0], 
-				0, c.accum->height() / 2, 0, c.accum->width() / 2, 0);
-		diff_subdomain(c, t, _mc_arg, ax_count, f, &result[1], &divisor[1], 
-				c.accum->height() / 2, c.accum->height(), 0, c.accum->width() / 2, 1);
-		diff_subdomain(c, t, _mc_arg, ax_count, f, &result[2], &divisor[2], 
-				0, c.accum->height() / 2, c.accum->width() / 2, c.accum->width(), 2);
-		diff_subdomain(c, t, _mc_arg, ax_count, f, &result[3], &divisor[3], 
-				c.accum->height() / 2, c.accum->height(), c.accum->width() / 2, c.accum->width(), 3);
+		subdomain_args *args = (subdomain_args *) malloc(sizeof(subdomain_args) * thread::count());
 
-		result_total = result[0] + result[1] + result[2] + result[3];
-		divisor_total = divisor[0] + divisor[1] + divisor[2] + divisor[3];
+		for (int ti = 0; ti < thread::count(); ti++) {
+			args[ti].c = c;
+			args[ti].t = t;
+			args[ti]._mc_arg = _mc_arg;
+			args[ti].ax_count = ax_count;
+			args[ti].f = f;
+			args[ti].result = 0;
+			args[ti].divisor = 0;
+			args[ti].i_min = (c.accum->height() * ti) / thread::count();
+			args[ti].i_max = (c.accum->height() * (ti + 1)) / thread::count();
+			args[ti].j_min = 0;
+			args[ti].j_max = c.accum->width();
+			args[ti].subdomain = ti;
+
+			diff_subdomain(&args[ti]);
+		}
+
+		for (int ti = 0; ti < thread::count(); ti++) {
+			result_total += args[ti].result;
+			divisor_total += args[ti].divisor;
+		}
+
+		free(args);
 
 		return pow(result_total / divisor_total, 1/metric_exponent);
 	}
