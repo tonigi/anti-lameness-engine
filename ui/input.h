@@ -1421,7 +1421,6 @@ public:
 		const char *defaults[] = {
    			"--dchain fine:box:1,triangle:2 "
 			"--achain triangle:2 "
-			"--mc 30 "
 			"--ips 0 "
 			"--exp-noextend "
 			"--no-cx "
@@ -1429,7 +1428,6 @@ public:
 
 			"--dchain sinc*lanc:6 "
 			"--achain sinc*lanc:6 "
-			"--mc 50 "
 			"--ips 0 "
 			"--exp-noextend "
 			"--no-cx "
@@ -1437,7 +1435,6 @@ public:
    
 			"--dchain median:fine:sinc*lanc:8,triangle:2 "
 			"--achain triangle:2 "
-			"--mc 50 "
 			"--ips 0 "
 			"--exp-noextend "
 			"--no-cx "
@@ -1445,7 +1442,6 @@ public:
 
 			"--dchain sinc*lanc:8 "
 			"--achain sinc*lanc:8 "
-			"--no-mc "
 			"--ips 4 "
 			"--exp-noextend "
 			"--no-cx "
@@ -1453,7 +1449,6 @@ public:
 
 			"--dchain sinc*lanc:8 "
 			"--achain sinc*lanc:8 "
-			"--no-mc "
 			"--ips 6 "
 			"--exp-extend "
 			"--cx 0.7 "
