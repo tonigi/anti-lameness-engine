@@ -550,14 +550,16 @@ private:
 		 * For subdomain calculations, we vary the seed by subdomain.
 		 */
 
-		srand(1 + subdomain);
+		rng_t rng;
+
+		rng.seed(1 + subdomain);
 
 		for(index = -1 + (int) ceil((mc_max+1) 
-					  * ( (1 + ((ale_pos) rand()) ) 
+					  * ( (1 + ((ale_pos) (rng.get())) ) 
 					    / (1 + ((ale_pos) RAND_MAX)) ));
 		    index < index_max;
 		    index += (int) ceil((mc_max+1) 
-				      * ( (1 + ((ale_pos) rand()) ) 
+				      * ( (1 + ((ale_pos) (rng.get())) ) 
 					/ (1 + ((ale_pos) RAND_MAX)) ))){
 
 			i = index / (j_max - j_min) + i_min;

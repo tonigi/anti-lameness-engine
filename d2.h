@@ -80,6 +80,8 @@
 #include "thread.h"
 #endif
 
+#include "rand.h"
+
 
 
 /*
