@@ -162,6 +162,21 @@ sizes indicated in parentheses.</p>
 </s>
 
 <s><t>
+Thread support
+</t>
+
+<p>
+Threads can improve performance on multiprocessor machines.  POSIX threads are
+currently supported.
+</p>
+
+<ll>--enable-threads=auto  Auto-detect thread support.  [default]
+--enable-threads=yes   Enable thread support.
+--enable-threads=no    Disable thread support.
+</ll>
+</s>
+
+<s><t>
 FFTW Support
 </t>
 
