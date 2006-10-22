@@ -56,6 +56,11 @@ char *version = PACKAGE_NAME " Version:      " VERSION "\n"
 #else
 		"DFT:              Built-in\n"
 #endif
+#if defined USE_PTHREAD 
+		"Threads:          POSIX\n"
+#else
+		"Threads:          Disabled\n"
+#endif
 #if defined NDEBUG && !defined DEBUG
                 "Assertions:       Disabled\n"
 #elif defined DEBUG && !defined NDEBUG
