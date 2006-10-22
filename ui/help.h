@@ -236,10 +236,14 @@ public:
 			"--trans-load <x>  Load initial transformation settings from file <x>\n"
 			"--trans-save <x>  Save final transformation data in file <x>\n"
 			BETWEEN_SECTIONS
-			"Monte Carlo alignment (see --hq for defaults):\n"
+			"Monte Carlo alignment:\n"
 			HEADER_SPACE
+			"--mcd             Dynamically sample to satisfy a quorum.             [default]\n"
 			"--mc <x>          Align using, on average, x%% of available pixels (0 < x < 100)\n"
 			"--no-mc           Align using all pixels.\n"
+			"--mcd-min         Set the minimum sample count.               (1000 is default)\n"
+			"--mcd-reduce      Set the reduction threshold, as a percentage. (50 is default)\n"
+			"--mcd-increase    Set the increase threshold, as a percentage.  (25 is default)\n"
 			BETWEEN_SECTIONS
 			"Tunable parameters:\n"
 			HEADER_SPACE

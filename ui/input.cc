@@ -101,8 +101,12 @@ input::simple_option input::simple_option_table[] = {
 	{ "extend" },
 	{ "no-extend", "extend", "0" },
 
-	{ "no-mc", "mc", "0" },
+	{ "no-mc", "mc", "100" },
+	{ "mcd", "mc", "0" },
 	{ "mc", NULL, NULL, 1 },
+	{ "mcd-min", NULL, NULL, 1 },
+	{ "mcd-reduce", NULL, NULL, 1 },
+	{ "mcd-increase", NULL, NULL, 1 },
 
 	{ "threads", NULL, NULL, 1 },
 	{ "per-cpu", NULL, NULL, 1 },
