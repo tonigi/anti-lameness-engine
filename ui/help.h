@@ -233,11 +233,12 @@ public:
 			BETWEEN_SECTIONS
 			"Monte Carlo alignment:\n"
 			HEADER_SPACE
-			"--mcd             Dynamically sample using consensus thresholds.       [default]\n"
-			"--mc <x>          Align using, on average, x%% of available pixels (0 < x < 100)\n"
+			"--mc <x>          Statically sample ~x%% of available pixels       (0 < x < 100)\n"
+                        "--no-mc           Statically sample all pixels.\n"
+			"--mcd             Dynamically sample with consensus thresholds.       [default]\n"
 			"--mcd-min <x>     Set the minimum dynamic sample count.       (1000 is default)\n"
-			"--mcd-upper <x>   Set the upper consensus threshold to x%%.     (50 is default)\n"
-			"--mcd-lower <x>   Set the lower consensus threshold to x%%.     (25 is default)\n"
+			"--mcd-upper <x>   Set the upper consensus threshold to x%%.      (75 is default)\n"
+			"--mcd-lower <x>   Set the lower consensus threshold to x%%.      (50 is default)\n"
 			BETWEEN_SECTIONS
 			"Tunable parameters:\n"
 			HEADER_SPACE
