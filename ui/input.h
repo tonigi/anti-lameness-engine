@@ -2738,9 +2738,9 @@ public:
 				if (!strcmp(option_name, "mc")) {
 					d2::align::mc(env->get_int_arg(i->first, 0) ? env->get_double_arg(i->first, 1) / 100 : 0);
 				} else if (!strcmp(option_name, "threads")) {
-					thread::set_count((unsigned int) env->get_int_arg(i->first, 0));
+					thread::set_count((unsigned int) env->get_int_arg(i->first, 1));
 				} else if (!strcmp(option_name, "per-cpu")) {
-					thread::set_per_cpu((unsigned int) env->get_int_arg(i->first, 0));
+					thread::set_per_cpu((unsigned int) env->get_int_arg(i->first, 1));
 				} else {
 					/*
 					 * This error should be encountered earlier.
