@@ -105,8 +105,8 @@ input::simple_option input::simple_option_table[] = {
 	{ "mcd", "mc", "0" },
 	{ "mc", NULL, NULL, 1 },
 	{ "mcd-min", NULL, NULL, 1 },
-	{ "mcd-reduce", NULL, NULL, 1 },
-	{ "mcd-increase", NULL, NULL, 1 },
+	{ "mcd-upper", NULL, NULL, 1 },
+	{ "mcd-lower", NULL, NULL, 1 },
 
 	{ "threads", NULL, NULL, 1 },
 	{ "per-cpu", NULL, NULL, 1 },

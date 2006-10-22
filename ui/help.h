@@ -123,7 +123,6 @@ public:
 			HEADER_SPACE
 			"   --dchain fine:box:1,triangle:2\n"
 			"   --achain triangle:2\n"
-			"   --mc 30\n"
 			"   --ips 0\n"
 			"   --exp-noextend\n"
 			"   --no-cx\n"
@@ -133,7 +132,6 @@ public:
 			HEADER_SPACE
 			"   --dchain sinc*lanc:6\n"
 			"   --achain sinc*lanc:6\n"
-			"   --mc 50\n"
 			"   --ips 0\n"
 			"   --exp-noextend\n"
 			"   --no-cx\n"
@@ -143,7 +141,6 @@ public:
 			HEADER_SPACE
 			"   --dchain median:fine:sinc*lanc:8,triangle:2\n"
 			"   --achain triangle:2\n"
-			"   --mc 50\n"
 			"   --ips 0\n"
 			"   --exp-noextend\n"
 			"   --no-cx\n"
@@ -153,7 +150,6 @@ public:
 			HEADER_SPACE
 			"   --dchain sinc*lanc:8\n"
 			"   --achain sinc*lanc:8\n"
-			"   --no-mc\n"
 			"   --ips 4\n"
 			"   --exp-noextend\n"
 			"   --no-cx\n"
@@ -163,7 +159,6 @@ public:
 			HEADER_SPACE
 			"   --dchain sinc*lanc:8\n"
 			"   --achain sinc*lanc:8\n"
-			"   --no-mc\n"
 			"   --ips 6\n"
 			"   --exp-extend\n"
 			"   --cx 0.7\n"
@@ -238,12 +233,11 @@ public:
 			BETWEEN_SECTIONS
 			"Monte Carlo alignment:\n"
 			HEADER_SPACE
-			"--mcd             Dynamically sample to satisfy a quorum.             [default]\n"
+			"--mcd             Dynamically sample using consensus thresholds.       [default]\n"
 			"--mc <x>          Align using, on average, x%% of available pixels (0 < x < 100)\n"
-			"--no-mc           Align using all pixels.\n"
-			"--mcd-min         Set the minimum sample count.               (1000 is default)\n"
-			"--mcd-reduce      Set the reduction threshold, as a percentage. (50 is default)\n"
-			"--mcd-increase    Set the increase threshold, as a percentage.  (25 is default)\n"
+			"--mcd-min <x>     Set the minimum dynamic sample count.       (1000 is default)\n"
+			"--mcd-upper <x>   Set the upper consensus threshold to x%%.     (50 is default)\n"
+			"--mcd-lower <x>   Set the lower consensus threshold to x%%.     (25 is default)\n"
 			BETWEEN_SECTIONS
 			"Tunable parameters:\n"
 			HEADER_SPACE
