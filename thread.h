@@ -98,7 +98,7 @@ public:
 	static void set_count(unsigned int new_count) {
 		if (new_count == 0) {
 			fprintf(stderr, "\n\n");
-			fprintf(stderr, "Error: per-cpu thread count specified is zero.\n");
+			fprintf(stderr, "Error: thread count specified is zero.\n");
 			fprintf(stderr, "       Try setting a positive thread count.\n");
 
 			exit(1);
