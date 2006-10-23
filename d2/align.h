@@ -689,7 +689,7 @@ private:
 			ale_pos _mc_arg, int ax_count, int f) {
 
 		if (interpolant != NULL) 
-			interpolant->set_parameters(t, c.input, offset);
+			interpolant->set_parameters(t, c.input, c.accum->offset());
 
 		int N;
 #ifdef USE_PTHREAD
