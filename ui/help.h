@@ -711,7 +711,7 @@ public:
 			"\n"
 			"                     NOTE: since this build of ALE does not link with a\n"
 			"                           threading library, this option is not supported.\n"
-			"                           To use this option, first rebuild with support
+			"                           To use this option, first rebuild with support\n"
 			"                           for threads.\n"
 			"\n"
 #endif
@@ -720,7 +720,7 @@ public:
 			"\n"
 			"                     NOTE: since this build of ALE does not link with a\n"
 			"                           threading library, this option is not supported.\n"
-			"                           To use this option, first rebuild with support
+			"                           To use this option, first rebuild with support\n"
 			"                           for threads.\n"
 			"\n"
 #endif
