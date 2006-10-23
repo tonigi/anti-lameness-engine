@@ -201,8 +201,25 @@ protected:
 	 * Merge part of a delta frame with part of the accumulated image using
 	 * the specified transformation.
 	 */
-	void
-	_merge(int frame, const image *delta, transformation t) {
+
+	struct subdomain_args {
+		incremental *instance;
+		int frame;
+		const image *delta;
+		transformation t;
+		unsigned int i_min, i_max, j_min, j_max;
+	};
+
+	void _merge_subdomain(void *args) {
+		subdomain_args *sargs = (subdomain_args *) args;
+
+		int frame = sargs->frame;
+		const image *delta = sargs->delta;
+		transformation t = sargs->t;
+		unsigned int i_min = sargs->i_min;
+		unsigned int i_max = sargs->i_max;
+		unsigned int j_min = sargs->j_min;
+		unsigned int j_max = sargs->j_max;
 
 		point offset = accum_image->offset();
 
@@ -211,10 +228,8 @@ protected:
 
 		const filter::ssfe *_ssfe = inv->ssfe();
 
-		_ssfe->set_parameters(t, delta, offset);
-
-		for (unsigned int i = 0; i < accum_image->height(); i++)
-		for (unsigned int j = 0; j < accum_image->width(); j++) {
+		for (unsigned int i = i_min; i < i_max; i++)
+		for (unsigned int j = j_min; j < j_max; j++) {
 
 #if 0
 			/*
@@ -243,6 +258,70 @@ protected:
 			accum_image->accumulate(i, j, frame, value, confidence);
 #endif
 		}
+	}
+
+	static void *_merge_run_subdomain(void *args) {
+		subdomain_args *sargs = (subdomain_args *) args;
+		sargs->instance->_merge_subdomain(args);
+#ifdef USE_PTHREAD
+		pthread_exit(0);
+#else
+		return NULL;
+#endif
+	}
+
+	void
+	_merge(int frame, const image *delta, transformation t) {
+
+		point offset = accum_image->offset();
+
+		assert (accum_image != NULL);
+		assert (delta != NULL);
+
+		const filter::ssfe *_ssfe = inv->ssfe();
+
+		_ssfe->set_parameters(t, delta, offset);
+
+		int N;
+
+#ifdef USE_PTHREAD
+		N = thread::count();
+
+		pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * N);
+		pthread_attr_t *thread_attr = (pthread_attr_t *) malloc(sizeof(pthread_attr_t) * N);
+
+#else
+		N = 1;
+#endif
+
+		subdomain_args *args = (subdomain_args *) malloc(sizeof(subdomain_args) * N);
+
+		for (int ti = 0; ti < N; ti++) {
+			args[ti].instance = this;
+			args[ti].frame = frame;
+			args[ti].delta = delta;
+			args[ti].t = t;
+			args[ti].i_min = (accum_image->height() * ti) / N;
+			args[ti].i_max = (accum_image->height() * (ti + 1)) / N;
+			args[ti].j_min = 0;
+			args[ti].j_max = accum_image->width();
+
+#ifdef USE_PTHREAD
+			pthread_attr_init(&thread_attr[ti]);
+			pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
+			pthread_create(&threads[ti], &thread_attr[ti], _merge_run_subdomain, &args[ti]);
+#else
+			_merge_subdomain(&args[ti]);
+#endif
+		}
+
+#ifdef USE_PTHREAD
+		for (int ti = 0; ti < N; ti++) {
+			pthread_join(threads[ti], NULL);
+		}
+#endif
+
+		free(args);
 	}
 
 public:
