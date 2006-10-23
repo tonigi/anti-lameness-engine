@@ -480,9 +480,6 @@ private:
 		ale_accum local_result = 0;
 		ale_accum local_divisor = 0;
 
-		if (interpolant != NULL) 
-			interpolant->set_parameters(t, c.input, offset);
-
 		/*
 		 * We always use the same code for exhaustive and Monte Carlo
 		 * pixel sampling, setting _mc_arg = 1 when all pixels are to
@@ -690,6 +687,9 @@ private:
 
 	static ale_accum diff(struct scale_cluster c, transformation t,
 			ale_pos _mc_arg, int ax_count, int f) {
+
+		if (interpolant != NULL) 
+			interpolant->set_parameters(t, c.input, offset);
 
 		int N;
 #ifdef USE_PTHREAD
