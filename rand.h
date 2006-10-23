@@ -61,9 +61,14 @@ public:
 		return rand_r(&state_vars.state_ui);
 #else
 		int result;
+
 		pthread_mutex_lock(&rand_mutex);
+		srand(state_vars.state_ui);
 		result = rand();
 		pthread_mutex_unlock(&rand_mutex);
+
+		state_vars.state_ui = (unsigned int) result;
+
 		return result;
 #endif
 #else
