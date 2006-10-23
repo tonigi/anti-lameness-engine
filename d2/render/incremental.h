@@ -273,6 +273,8 @@ protected:
 	void
 	_merge(int frame, const image *delta, transformation t) {
 
+		ui::get()->d2_incremental_start();
+
 		point offset = accum_image->offset();
 
 		assert (accum_image != NULL);
@@ -322,6 +324,8 @@ protected:
 #endif
 
 		free(args);
+
+		ui::get()->d2_incremental_stop();
 	}
 
 public:

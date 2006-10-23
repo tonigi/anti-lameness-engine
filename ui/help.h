@@ -730,6 +730,10 @@ public:
 		banner("Undocumented");
 		fprintf(help_stream,
 			BETWEEN_SECTIONS
+			"Profiling:\n"
+			HEADER_SPACE
+			"--profile          Output performance data\n"
+			BETWEEN_SECTIONS
 			"Point-spread functions:\n"
 			HEADER_SPACE
 			"--psf-match <args> Can be used to evaluate PSFs. [details are undocumented]\n"

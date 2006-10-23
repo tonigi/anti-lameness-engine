@@ -1621,6 +1621,8 @@ public:
 					d2::align::fail_default();
 				else
 					assert(0);
+			} else if (!strcmp(option_name, "profile")) {
+				ui::set_profile();
 			} else if (!strcmp(option_name, "extend")) {
 				if (env->get_int_arg(i->first, 0))
 					extend = 1;

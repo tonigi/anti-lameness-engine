@@ -63,7 +63,7 @@ AC_CHECK_LIB([m], [main])
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([limits.h stdint.h stdlib.h string.h sys/ioctl.h unistd.h])
+AC_CHECK_HEADERS([limits.h stdint.h stdlib.h string.h sys/ioctl.h unistd.h time.h sys/time.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -81,7 +81,7 @@ AC_PROG_GCC_TRADITIONAL
 AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([floor memset pow select sqrt strchr strcspn strdup strndup strspn strtol nrand48 rand_r])
+AC_CHECK_FUNCS([floor memset pow select sqrt strchr strcspn strdup strndup strspn strtol nrand48 rand_r gettimeofday])
 
 # Check for POSIX threads.
 ACX_PTHREAD()

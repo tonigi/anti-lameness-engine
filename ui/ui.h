@@ -26,6 +26,13 @@
 #include <stdarg.h>
 #include <assert.h>
 #include "../ale_pos.h"
+#include "../config.h"
+#if HAVE_TIME_H
+#include <time.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
 
 /*
  * User interface messages.
@@ -45,6 +52,8 @@ private:
 	 */
 
 	static int type;
+
+	static int output_performance_data;
 
 protected:
 
@@ -116,11 +125,28 @@ protected:
 	} status;
 
 	/*
+	 * Performance data
+	 */
+
+#if HAVE_GETTIMEOFDAY
+	struct timeval d2_align_start_time;
+	struct timeval d2_incremental_start_time;
+	struct timeval d2_align_total_time;
+	struct timeval d2_incremental_total_time;
+#endif
+
+	/*
 	 * Constructor
 	 */
 
 	ui() {
 		ui_stream = stderr;
+#if HAVE_GETTIMEOFDAY
+		d2_incremental_total_time.tv_usec = 0;
+		d2_incremental_total_time.tv_sec = 0;
+		d2_align_total_time.tv_usec = 0;
+		d2_align_total_time.tv_sec = 0;
+#endif
 	}
 
 	/*
@@ -149,6 +175,36 @@ protected:
 		return "      (%f%% match)";
 	}
 
+	void timer_start(timeval *t) {
+#if HAVE_GETTIMEOFDAY
+		gettimeofday(t, NULL);
+#endif
+	}
+
+	void timer_stop(timeval *start, timeval *total) {
+#if HAVE_GETTIMEOFDAY
+		timeval t;
+		gettimeofday(&t, NULL);
+
+		t.tv_sec -= start->tv_sec;
+		t.tv_usec -= start->tv_usec;
+
+		total->tv_sec += t.tv_sec;
+		total->tv_usec += t.tv_usec;
+
+		while (total->tv_usec >= 1000000) {
+			total->tv_sec += 1;
+			total->tv_usec -= 1000000;
+		}
+
+		while (total->tv_usec < 0) {
+			total->tv_sec -= 1;
+			total->tv_usec += 1000000;
+		}
+#endif
+	}
+
+
 public:
 
 	/*
@@ -170,9 +226,37 @@ public:
 		type = 1;
 	}
 
+	static void set_profile() {
+		output_performance_data = 1;
+	}
+
 	/*
 	 * Messages from the engine
 	 */
+
+	void d2_align_start() {
+#if HAVE_GETTIMEOFDAY
+		timer_start(&d2_align_start_time);
+#endif
+	}
+
+	void d2_align_stop() {
+#if HAVE_GETTIMEOFDAY
+		timer_stop(&d2_align_start_time, &d2_align_total_time);
+#endif
+	}
+
+	void d2_incremental_start() {
+#if HAVE_GETTIMEOFDAY
+		timer_start(&d2_incremental_start_time);
+#endif
+	}
+
+	void d2_incremental_stop() {
+#if HAVE_GETTIMEOFDAY
+		timer_stop(&d2_incremental_start_time, &d2_incremental_total_time);
+#endif
+	}
 
 	void exp_multiplier(double m0, double m1, double m2) {
 		status.exp_multiplier[0] = m0;
@@ -422,6 +506,19 @@ public:
 		printf("Average match: %f%%", value);
 		status.code = status.SET_DONE;
 		update();
+#if HAVE_GETTIMEOFDAY
+		if (output_performance_data) {
+			printf("\n");
+			printf("Real time measurements\n");
+			printf("======================\n");
+			printf("\n");
+			printf("Alignment time:  %fs\n", (double) d2_align_total_time.tv_sec 
+					              + (double) d2_align_total_time.tv_usec / (double) 1000000);
+			printf("Rendering time:  %fs\n", (double) d2_incremental_total_time.tv_sec 
+					              + (double) d2_incremental_total_time.tv_usec / (double) 1000000);
+			printf("\n");
+		}
+#endif
 	}
 
 	void d3_start() {

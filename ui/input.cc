@@ -98,6 +98,8 @@ input::simple_option input::simple_option_table[] = {
 	{ "fail-optimal", "fail" },
 	{ "fail-default", "fail" },
 
+	{ "profile" },
+
 	{ "extend" },
 	{ "no-extend", "extend", "0" },
 

@@ -29,6 +29,7 @@
 
 ui *ui::singleton = NULL;
 int ui::type = 1;   /* TTY is default */
+int ui::output_performance_data = 0;
 
 ui *ui::get() {
 	if (singleton == NULL) {

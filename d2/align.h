@@ -688,6 +688,8 @@ private:
 	static ale_accum diff(struct scale_cluster c, transformation t,
 			ale_pos _mc_arg, int ax_count, int f) {
 
+		ui::get()->d2_align_start();
+
 		if (interpolant != NULL) 
 			interpolant->set_parameters(t, c.input, c.accum->offset());
 
@@ -739,6 +741,8 @@ private:
 
 		free(args);
 
+		ui::get()->d2_align_stop();
+		
 		return pow(result_total / divisor_total, 1/metric_exponent);
 	}
 
