@@ -701,9 +701,9 @@ public:
 			"Thread count:\n"
 			"\n"
 			"NOTE: If the number of CPUs cannot be determined, a warning will be produced,\n"
-			"      the --per-cpu option will have no effect, and the default number of\n"
-			"      threads will be determined by the --threads default.  Otherwise, the\n"
-			"      default number of threads will be determined by the --per-cpu default.\n"
+			"      and the default number of threads will be determined by the --threads\n"
+			"      default.  Otherwise, the default number of threads will be determined by\n"
+			"      the --per-cpu default.\n"
 			"\n"
 			HEADER_SPACE
 			"--threads <n>     Use <n> threads.                                 [default is 4]\n"
