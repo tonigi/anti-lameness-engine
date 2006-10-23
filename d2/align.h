@@ -454,7 +454,7 @@ private:
 		int subdomain;
 	};
 
-	static void diff_subdomain(void *args) {
+	static void *diff_subdomain(void *args) {
 
 		subdomain_args *sargs = (subdomain_args *) args;
 
@@ -680,16 +680,33 @@ private:
 
 		*result = local_result;
 		*divisor = local_divisor;
+
+#ifdef USE_PTHREAD
+		pthread_exit(0);
+#else
+		return NULL;
+#endif
 	}
 
 	static ale_accum diff(struct scale_cluster c, transformation t,
 			ale_pos _mc_arg, int ax_count, int f) {
 
+		int N;
+#ifdef USE_PTHREAD
+		N = thread::count();
+
+		pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * N);
+		pthread_attr_t *thread_attr = (pthread_attr_t *) malloc(sizeof(pthread_attr_t) * N);
+
+#else
+		N = 1;
+#endif
+
 		ale_accum result_total = 0, divisor_total = 0;
 
-		subdomain_args *args = (subdomain_args *) malloc(sizeof(subdomain_args) * thread::count());
+		subdomain_args *args = (subdomain_args *) malloc(sizeof(subdomain_args) * N);
 
-		for (int ti = 0; ti < thread::count(); ti++) {
+		for (int ti = 0; ti < N; ti++) {
 			args[ti].c = c;
 			args[ti].t = t;
 			args[ti]._mc_arg = _mc_arg;
@@ -697,16 +714,25 @@ private:
 			args[ti].f = f;
 			args[ti].result = 0;
 			args[ti].divisor = 0;
-			args[ti].i_min = (c.accum->height() * ti) / thread::count();
-			args[ti].i_max = (c.accum->height() * (ti + 1)) / thread::count();
+			args[ti].i_min = (c.accum->height() * ti) / N;
+			args[ti].i_max = (c.accum->height() * (ti + 1)) / N;
 			args[ti].j_min = 0;
 			args[ti].j_max = c.accum->width();
 			args[ti].subdomain = ti;
 
+#ifdef USE_PTHREAD
+			pthread_attr_init(&thread_attr[ti]);
+			pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
+			pthread_create(&threads[ti], &thread_attr[ti], diff_subdomain, &args[ti]);
+#else
 			diff_subdomain(&args[ti]);
+#endif
 		}
 
-		for (int ti = 0; ti < thread::count(); ti++) {
+		for (int ti = 0; ti < N; ti++) {
+#ifdef USE_PTHREAD
+			pthread_join(threads[ti], NULL);
+#endif
 			result_total += args[ti].result;
 			divisor_total += args[ti].divisor;
 		}
