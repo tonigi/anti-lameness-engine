@@ -249,7 +249,9 @@ protected:
 		unsigned int i_max = sargs->i_max;
 		unsigned int j_min = sargs->j_min;
 		unsigned int j_max = sargs->j_max;
+#ifdef USE_PTHREAD
 		pthread_mutex_t *lock = sargs->lock;
+#endif
 
 		/*
 		 * Iterate non-linear
