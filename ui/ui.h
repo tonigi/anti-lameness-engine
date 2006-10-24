@@ -221,7 +221,7 @@ protected:
 		}
 #else
 		time_t t = time(NULL);
-		t -= *((time_t *) start_v;
+		t -= *((time_t *) start_v);
 		*((time_t *) total_v) += t;
 #endif
 	}
@@ -551,9 +551,9 @@ public:
 			printf("Irani-Peleg   :  %f s\n", (double) d2_irani_peleg_total_time.tv_sec 
 					              + (double) d2_irani_peleg_total_time.tv_usec / (double) 1000000);
 #else
-			printf("Alignment     :  %f s\n", (double) d2_align_total_time)
-			printf("Incremental   :  %f s\n", (double) d2_incremental_total_time)
-			printf("Irani-Peleg   :  %f s\n", (double) d2_irani_peleg_total_time)
+			printf("Alignment     :  %f s\n", (double) d2_align_total_time);
+			printf("Incremental   :  %f s\n", (double) d2_incremental_total_time);
+			printf("Irani-Peleg   :  %f s\n", (double) d2_irani_peleg_total_time);
 #endif
 			printf("\n");
 		}
