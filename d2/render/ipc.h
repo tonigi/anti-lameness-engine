@@ -577,186 +577,155 @@ protected:
 	 * densities.
 	 */
 
-	void _ip_frame_correct(int frame_num, image *approximation,
-			correction_t *cu, const image *real, image *lsimulated, 
-			image *nlsimulated, transformation t, 
-			const backprojector *lresponse, 
-			const backprojector *nlresponse) {
+	struct correct_subdomain_args {
+		int frame_num;
+		image *approximation;
+		correction_t *cu;
+		const image *real;
+		image *lreal;
+		image *lsimulated;
+		image *nlsimulated;
+		transformation t;
+		const backprojector *lresponse;
+		const backprojector *nlresponse;
+		unsigned int i_min, i_max, j_min, j_max;
+	};
+
+	static void *_ip_frame_correct_subdomain_nonlinear(void *args) {
+
+		correct_subdomain_args *sargs = (correct_subdomain_args *) args;
+
+		int frame_num = sargs->frame_num;
+		image *approximation = sargs->approximation;
+		const image *real = sargs->real;
+		image *lreal = sargs->lreal;
+		image *lsimulated = sargs->lsimulated;
+		const image *nlsimulated = sargs->nlsimulated;
+		transformation t = sargs->t;
+		const backprojector *nlresponse = sargs->nlresponse;
+		unsigned int i_min = sargs->i_min;
+		unsigned int i_max = sargs->i_max;
+		unsigned int j_min = sargs->j_min;
+		unsigned int j_max = sargs->j_max;
 
 		/*
-		 * Generate the image to compare lsimulated with.
+		 * Unlinearize values from lsimulated.
 		 */
 
-		const image *lreal;
+		for (unsigned int i = i_min; i < i_max; i++)
+		for (unsigned int j = j_min; j < j_max; j++)
+			lreal->set_pixel(i, j, real->exp().unlinearize(
+						lsimulated->get_pixel(i, j)));
 
-		if (nlsimulated == NULL)
-			lreal = real;
-		else {
 
-			image *new_lreal = new image_ale_real(
-					real->height(),
-					real->width(),
-					real->depth(),
-					"IPC lreal", 
-					&real->exp());
+		/*
+		 * Backproject from real to lreal, iterating over all pixels
+		 * in lreal.
+		 */
 
-			/*
-			 * Unlinearize values from lsimulated.
-			 */
-
-			for (unsigned int i = 0; i < lsimulated->height(); i++)
-			for (unsigned int j = 0; j < lsimulated->width(); j++)
-				new_lreal->set_pixel(i, j, real->exp().unlinearize(
-							lsimulated->get_pixel(i, j)));
+		for (unsigned int i = i_min; i < i_max; i++)
+		for (unsigned int j = j_min; j < j_max; j++) {
 
 			/*
-			 * Backproject from real to lreal, iterating over all pixels
-			 * in lreal.
+			 * XXX: Is this right?
 			 */
 
-			for (unsigned int i = 0; i < new_lreal->height(); i++)
-			for (unsigned int j = 0; j < new_lreal->width();  j++) {
+			if (is_excluded_r(approximation->offset(), i, j, frame_num))
+				continue;
 
-				if (is_excluded_r(approximation->offset(), i, j, frame_num))
+			/*
+			 * Convenient variables for expressing the boundaries
+			 * of the mapped area.
+			 */
+			
+			ale_pos top = i - 0.5;
+			ale_pos bot = i + 0.5;
+			ale_pos lef = j - 0.5;
+			ale_pos rig = j + 0.5;
+
+			/*
+			 * Iterate over non-linear pixels influenced by linear
+			 * pixels.
+			 */
+
+			for (int ii = (int) floor(top + nlresponse->min_i());
+				ii <= ceil(bot + nlresponse->max_i()); ii++)
+			for (int jj = (int) floor(lef + nlresponse->min_j());
+				jj <= ceil(rig + nlresponse->max_j()); jj++) {
+
+				if (ii < (int) 0
+				 || ii >= (int) nlsimulated->height()
+				 || jj < (int) 0
+				 || jj >= (int) nlsimulated->width())
 					continue;
 
+				class backprojector::psf_result r =
+					(*nlresponse)(top - ii, bot - ii,
+						    lef - jj, rig - jj,
+						    nlresponse->select(ii, jj));
+
+
+				pixel comp_real =
+					real->exp().unlinearize(real->get_pixel(ii, jj));
+
+				pixel comp_simu =
+					nlsimulated->get_pixel(ii, jj);
+
+				if (!finite(comp_simu[0])
+				 || !finite(comp_simu[1])
+				 || !finite(comp_simu[2]))
+					continue;
 
 				/*
-				 * Convenient variables for expressing the boundaries
-				 * of the mapped area.
+				 * Backprojection value.
 				 */
-				
-				ale_pos top = i - 0.5;
-				ale_pos bot = i + 0.5;
-				ale_pos lef = j - 0.5;
-				ale_pos rig = j + 0.5;
+
+				pixel bpv = r(comp_real - comp_simu);
 
 				/*
-				 * Iterate over non-linear pixels influenced by linear
-				 * pixels.
+				 * Error calculation
 				 */
 
-				for (int ii = (int) floor(top + nlresponse->min_i());
-					ii <= ceil(bot + nlresponse->max_i()); ii++)
-				for (int jj = (int) floor(lef + nlresponse->min_j());
-					jj <= ceil(rig + nlresponse->max_j()); jj++) {
-
-					if (ii < (int) 0
-					 || ii >= (int) nlsimulated->height()
-					 || jj < (int) 0
-					 || jj >= (int) nlsimulated->width())
-						continue;
-
-					class backprojector::psf_result r =
-						(*nlresponse)(top - ii, bot - ii,
-							    lef - jj, rig - jj,
-							    nlresponse->select(ii, jj));
-
-
-					pixel comp_real =
-						real->exp().unlinearize(real->get_pixel(ii, jj));
-
-					pixel comp_simu =
-						nlsimulated->get_pixel(ii, jj);
-
-					if (!finite(comp_simu[0])
-					 || !finite(comp_simu[1])
-					 || !finite(comp_simu[2]))
-						continue;
-
-					/*
-					 * Backprojection value.
-					 */
-
-					pixel bpv = r(comp_real - comp_simu);
-
-					/*
-					 * Error calculation
-					 */
-
-					new_lreal->pix(i, j) += bpv;
-				}
+				lreal->pix(i, j) += bpv;
 			}
-
-			/*
-			 * Linearize lreal.
-			 */
-
-			for (unsigned int i = 0; i < new_lreal->height(); i++)
-			for (unsigned int j = 0; j < new_lreal->width(); j++)
-				new_lreal->set_pixel(i, j, real->exp().linearize(
-							new_lreal->get_pixel(i, j)));
-
-			lreal = new_lreal;
 		}
 
 		/*
-		 * Perform exposure adjustment.
-		 *
-		 * XXX: it would be cleaner to remove the 'nlsimulated' term
-		 * from the following test, but, empirically, this causes
-		 * problems with raw Bayer pattern data, so we leave this as-is
-		 * for now.
+		 * Linearize lreal.
 		 */
 
-		if (exposure_register && nlsimulated) {
+		for (unsigned int i = i_min; i < i_max; i++)
+		for (unsigned int j = j_min; j < j_max; j++)
+			lreal->set_pixel(i, j, real->exp().linearize(
+						lreal->get_pixel(i, j)));
 
-			pixel ec;
 
-#if 0
-			ec = lsimulated->avg_channel_magnitude()
-			   / lreal->avg_channel_magnitude();
-#elsif 0
-			pixel_accum ratio_sum;
-			pixel_accum weight_sum;
+		return NULL;
+	}
 
-			for (unsigned int i = 0; i < lreal->height(); i++)
-			for (unsigned int j = 0; j < lreal->width(); j++) {
-				pixel s = lsimulated->get_pixel(i, j);
-				pixel r = lreal->get_pixel(i, j);
-				pixel confidence = real->exp().confidence(r);
+	static void *_ip_frame_correct_subdomain_linear(void *args) {
 
-				if (s[0] > 0.001 
-				 && s[1] > 0.001
-				 && s[2] > 0.001
-				 && r[0] > 0.001
-				 && r[1] > 0.001
-				 && r[2] > 0.001) {
-					ratio_sum += confidence * s / r;
-					weight_sum += confidence;
-				}
-			}
+		correct_subdomain_args *sargs = (correct_subdomain_args *) args;
 
-			ec = ratio_sum / weight_sum;
-#else
-			pixel_accum ssum, rsum;
-
-			for (unsigned int i = 0; i < lreal->height(); i++)
-			for (unsigned int j = 0; j < lreal->width(); j++) {
-				pixel s = lsimulated->get_pixel(i, j);
-				pixel r = lreal->get_pixel(i, j);
-				pixel confidence = real->exp().confidence(r)
-					         * real->exp().confidence(s);
-
-				ssum += confidence * s;
-				rsum += confidence * r;
-			}
-
-			ec = ssum / rsum;
-
-#endif
-
-			real->exp().set_multiplier(
-				real->exp().get_multiplier() * ec);
-		}
-
+		int frame_num = sargs->frame_num;
+		image *approximation = sargs->approximation;
+		correction_t *cu = sargs->cu;
+		const image *real = sargs->real;
+		const image *lreal = sargs->lreal;
+		const image *lsimulated = sargs->lsimulated;
+		transformation t = sargs->t;
+		const backprojector *lresponse = sargs->lresponse;
+		unsigned int i_min = sargs->i_min;
+		unsigned int i_max = sargs->i_max;
+		unsigned int j_min = sargs->j_min;
+		unsigned int j_max = sargs->j_max;
 
 		/*
 		 * Iterate over all pixels in the approximation.
 		 */
 
-                for (unsigned int i = 0; i < approximation->height(); i++)
-                for (unsigned int j = 0; j < approximation->width();  j++) {
+                for (unsigned int i = i_min; i < i_max; i++)
+                for (unsigned int j = j_min; j < j_max; j++) {
 
 			/*
 			 * Obtain the position Q and dimensions D of image
@@ -888,6 +857,168 @@ protected:
 				cu->update(i, j, bpv * conf, conf * r.weight() / lresponse->integral(selection));
 			}
                 }
+
+		return NULL;
+	}
+
+	void _ip_frame_correct(int frame_num, image *approximation,
+			correction_t *cu, const image *real, image *lsimulated, 
+			image *nlsimulated, transformation t, 
+			const backprojector *lresponse, 
+			const backprojector *nlresponse) {
+
+		/*
+		 * Threading initializations
+		 */
+
+		int N;
+
+#ifdef USE_PTHREAD
+		N = thread::count();
+
+		pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * N);
+		pthread_attr_t *thread_attr = (pthread_attr_t *) malloc(sizeof(pthread_attr_t) * N);
+
+#else
+		N = 1;
+#endif
+
+		correct_subdomain_args *args = (correct_subdomain_args *) malloc(sizeof(correct_subdomain_args) * N);
+
+		for (int ti = 0; ti < N; ti++) {
+			args[ti].frame_num = frame_num;
+			args[ti].approximation = approximation;
+			args[ti].cu = cu;
+			args[ti].real = real;
+			args[ti].lsimulated = lsimulated;
+			args[ti].nlsimulated = nlsimulated;
+			args[ti].t = t;
+			args[ti].lresponse = lresponse;
+			args[ti].nlresponse = nlresponse;
+		}
+
+		/*
+		 * Generate the image to compare lsimulated with.
+		 */
+
+		const image *lreal;
+
+		if (nlsimulated == NULL)
+			lreal = real;
+		else {
+
+			image *new_lreal = new image_ale_real(
+					real->height(),
+					real->width(),
+					real->depth(),
+					"IPC lreal", 
+					&real->exp());
+
+			for (int ti = 0; ti < N; ti++) {
+				args[ti].lreal = new_lreal;
+				args[ti].i_min = (new_lreal->height() * ti) / N;
+				args[ti].i_max = (new_lreal->height() * (ti + 1)) / N;
+				args[ti].j_min = 0;
+				args[ti].j_max = new_lreal->width();
+
+#ifdef USE_PTHREAD
+				pthread_attr_init(&thread_attr[ti]);
+				pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
+				pthread_create(&threads[ti], &thread_attr[ti], _ip_frame_correct_subdomain_nonlinear, &args[ti]);
+#else
+				_ip_frame_correct_subdomain_nonlinear(&args[ti]);
+#endif
+			}
+
+#ifdef USE_PTHREAD
+			for (int ti = 0; ti < N; ti++) {
+				pthread_join(threads[ti], NULL);
+			}
+#endif
+
+			lreal = new_lreal;
+		}
+
+		/*
+		 * Perform exposure adjustment.
+		 *
+		 * XXX: it would be cleaner to remove the 'nlsimulated' term
+		 * from the following test, but, empirically, this causes
+		 * problems with raw Bayer pattern data, so we leave this as-is
+		 * for now.
+		 */
+
+		if (exposure_register && nlsimulated) {
+
+			pixel ec;
+
+#if 0
+			ec = lsimulated->avg_channel_magnitude()
+			   / lreal->avg_channel_magnitude();
+#elsif 0
+			pixel_accum ratio_sum;
+			pixel_accum weight_sum;
+
+			for (unsigned int i = 0; i < lreal->height(); i++)
+			for (unsigned int j = 0; j < lreal->width(); j++) {
+				pixel s = lsimulated->get_pixel(i, j);
+				pixel r = lreal->get_pixel(i, j);
+				pixel confidence = real->exp().confidence(r);
+
+				if (s[0] > 0.001 
+				 && s[1] > 0.001
+				 && s[2] > 0.001
+				 && r[0] > 0.001
+				 && r[1] > 0.001
+				 && r[2] > 0.001) {
+					ratio_sum += confidence * s / r;
+					weight_sum += confidence;
+				}
+			}
+
+			ec = ratio_sum / weight_sum;
+#else
+			pixel_accum ssum, rsum;
+
+			for (unsigned int i = 0; i < lreal->height(); i++)
+			for (unsigned int j = 0; j < lreal->width(); j++) {
+				pixel s = lsimulated->get_pixel(i, j);
+				pixel r = lreal->get_pixel(i, j);
+				pixel confidence = real->exp().confidence(r)
+					         * real->exp().confidence(s);
+
+				ssum += confidence * s;
+				rsum += confidence * r;
+			}
+
+			ec = ssum / rsum;
+
+#endif
+
+			real->exp().set_multiplier(
+				real->exp().get_multiplier() * ec);
+		}
+		for (int ti = 0; ti < N; ti++) {
+			args[ti].lreal = (d2::image *) lreal;
+			args[ti].i_min = (approximation->height() * ti) / N;
+			args[ti].i_max = (approximation->height() * (ti + 1)) / N;
+			args[ti].j_min = 0;
+			args[ti].j_max = approximation->width();
+
+#ifdef USE_PTHREAD
+			pthread_attr_init(&thread_attr[ti]);
+			pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
+			pthread_create(&threads[ti], &thread_attr[ti], _ip_frame_correct_subdomain_linear, &args[ti]);
+#else
+			_ip_frame_correct_subdomain_linear(&args[ti]);
+#endif
+		}
+
+#ifdef USE_PTHREAD
+		for (int ti = 0; ti < N; ti++) {
+			pthread_join(threads[ti], NULL);
+		}
+#endif
 
 		if (nlsimulated)
 			delete lreal;
