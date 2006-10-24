@@ -198,7 +198,10 @@ private:
 				status_printf(3, "Writing image for chain %d", "Writing", "write-o%d", status.onum);
 				break;
 			case status_type::IP_RENDER:
-				status_printf(2, "Processing frame '%s'", "Processing", d2::image_rw::name(status.frame_num));
+				status_printf(2, /* "Processing frame '%s'%s", */ "Processing frame '%s'", "Processing", 
+						d2::image_rw::name(status.frame_num), status.irani_peleg_stage 
+						  ? ((status.irani_peleg_stage == 1) ? " [simulate]" : " [backproject]") 
+						  : "");
 				break;
 			case status_type::IP_UPDATE:
 				status_printf(3, "Updating approximation", "Updating", "update");

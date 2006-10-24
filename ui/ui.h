@@ -104,6 +104,7 @@ protected:
 		double perturb_size;
 		double align_lod;
 		unsigned int frame_num;
+		unsigned int irani_peleg_stage;
 		unsigned int secondary_frame_num;
 		unsigned int view_num;
 		unsigned int x_coordinate, y_coordinate;;
@@ -433,6 +434,16 @@ public:
 	void ip_frame_start(unsigned int num) {
 		status.code = status.IP_RENDER;
 		status.frame_num = num;
+		status.irani_peleg_stage = 0;
+	}
+
+	void ip_frame_simulate_start() {
+		status.irani_peleg_stage = 1;
+		update();
+	}
+
+	void ip_frame_correct_start() {
+		status.irani_peleg_stage = 2;
 		update();
 	}
 

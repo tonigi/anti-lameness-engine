@@ -773,12 +773,14 @@ protected:
 		 * Create simulated frames with forward projection.
 		 */
 
+		ui::get()->ip_frame_simulate_start();
 		_ip_frame_simulate(frame_num, approximation, lsimulated, nlsimulated, t, f, nlf, real->exp());
 
 		/*
 		 * Update the correction array using backprojection.
 		 */
 
+		ui::get()->ip_frame_correct_start();
 		_ip_frame_correct(frame_num, approximation, cu, real, lsimulated, nlsimulated, t, b, nlb);
 
 		/*
