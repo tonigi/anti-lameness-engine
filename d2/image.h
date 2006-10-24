@@ -776,6 +776,8 @@ public:
 				is->set_pixel(i, j,
 					get_scaled_bl(point(i, j), f));
 
+			is->_offset = point(_offset[0] * f, _offset[1] * f);
+
 			return is;
 		} else if (f == 0.5) {
 			return scale_by_half(name);
