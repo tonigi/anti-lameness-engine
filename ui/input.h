@@ -2271,15 +2271,6 @@ public:
 				d2::align::set_match_threshold(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "drizzle-diam")) {
 				unsupported::discontinued("--drizzle-diam=<x>", "--dchain box:1");
-			} else if (!strcmp(option_name, "perturb-upper")) {
-				const char *option = env->get_string_arg(i->first, 1);
-				double perturb_upper;
-				int characters;
-				sscanf(option, "%lf%n", &perturb_upper, &characters);
-				if (*(option + characters) == '%')
-					d2::align::set_perturb_upper(perturb_upper, 1);
-				else
-					d2::align::set_perturb_upper(perturb_upper, 0);
 			} else if (!strcmp(option_name, "perturb-lower")) {
 				const char *option = env->get_string_arg(i->first, 1);
 				double perturb_lower;
@@ -2739,6 +2730,15 @@ public:
 
 				if (!strcmp(option_name, "mc")) {
 					d2::align::mc(env->get_int_arg(i->first, 0) ? env->get_double_arg(i->first, 1) / 100 : 0);
+				} else if (!strcmp(option_name, "perturb-upper")) {
+					const char *option = env->get_string_arg(i->first, 1);
+					double perturb_upper;
+					int characters;
+					sscanf(option, "%lf%n", &perturb_upper, &characters);
+					if (*(option + characters) == '%')
+						d2::align::set_perturb_upper(perturb_upper, 1);
+					else
+						d2::align::set_perturb_upper(perturb_upper, 0);
 				} else if (!strcmp(option_name, "threads")) {
 					thread::set_count((unsigned int) env->get_int_arg(i->first, 1));
 				} else if (!strcmp(option_name, "per-cpu")) {

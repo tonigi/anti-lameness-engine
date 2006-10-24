@@ -38,6 +38,7 @@ const char *input::supported_nonglobal_option_table[] = {
 	"mc",
 	"threads",
 	"per-cpu",
+	"perturb-upper",
 	NULL
 };
 
