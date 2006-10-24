@@ -1,3 +1,16 @@
+V	0.8.5-pre2 2006-Oct-25
+
+o	Modify d2::image::scale() to correctly handle offsets for
+	scale factors other than negative powers of two.
+
+o	Reformat most help text to fit a 79 column screen.
+
+o	Add option --profile to measure elapsed real time for 2D alignment
+	and rendering operations.
+
+o	Add support for POSIX threads to 2D alignment and rendering
+	code.
+
 V	0.8.5-pre1 2006-Oct-16
 
 o	Incorporate all existing ALE documentation within the source

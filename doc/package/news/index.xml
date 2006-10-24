@@ -18,6 +18,14 @@
 </articleinfo>
 
 <news>
+
+<release version="0.8.5-pre2" date="2006-Oct-25">
+<p>This prerelease adds POSIX thread support for 2D alignment and rendering
+operations, and adds a profiling option to measure elapsed time for different
+tasks.  Documentation is incomplete.</p>
+</release>
+
+
 <release version="0.8.5-pre1" date="2006-Oct-16">
 <p>This prerelease includes an autotools build system, documentation licensed
 under GPL, and an updated user interface accepting scope operators.  In

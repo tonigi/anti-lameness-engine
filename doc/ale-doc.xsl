@@ -112,7 +112,7 @@
           -->
 
 	<xsl:param name="product-name" select="'ALE'"/>
-	<xsl:param name="product-version" select="'0.8.5-pre1'"/>
+	<xsl:param name="product-version" select="'0.8.5-pre2'"/>
 	<xsl:param name="site-URL" select="
 		concat('http://auricle.dyndns.org/', $product-name, '/')"/>
 	<xsl:param name="download-URL" select="concat($site-URL, 'download/')"/>
@@ -734,7 +734,16 @@
 	</xsl:template>
 
 	<xsl:template match="winurl">
-	  <ulink url="{$windows-binary-URL}"/>
+	  <xsl:choose>
+	    <xsl:when test="contains($product-version, 'pre')">
+	      <note>
+	        Windows binaries are not available for this prerelease version.
+	      </note>
+	    </xsl:when>
+	    <xsl:otherwise>
+	      <ulink url="{$windows-binary-URL}"/>
+	    </xsl:otherwise>
+	  </xsl:choose>
 	</xsl:template>
 
 	<xsl:template match="sourceurl">
