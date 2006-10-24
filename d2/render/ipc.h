@@ -123,26 +123,47 @@ protected:
 	 * pixels.  
 	 */
 
-	void _ip_frame_simulate(int frame_num, image *approximation, 
-			image *lsimulated, image *nlsimulated, 
-			transformation t, const raster *lresponse, 
-			const raster *nlresponse, const exposure &exp) {
+	struct sim_subdomain_args {
+		int frame_num;
+		image *approximation;
+		image *lsimulated;
+		image *nlsimulated;
+		image *lsim_weights;
+		image *nlsim_weights;
+		transformation t;
+		const raster *lresponse;
+		const raster *nlresponse;
+		const exposure *exp;
+		int i_min, i_max, j_min, j_max;
+#ifdef USE_PTHREAD
+		pthread_mutex_t *lock;
+#endif
+	};
 
-		/*
-		 * Initializations for linear filtering
-		 */
+	static void *_ip_frame_simulate_subdomain_linear(void *args) {
 
-		image_ale_real *lsim_weights = new image_ale_real(
-				lsimulated->height(),
-				lsimulated->width(),
-				lsimulated->depth());
+		sim_subdomain_args *sargs = (sim_subdomain_args *) args;
+
+		int frame_num = sargs->frame_num;
+		image *approximation = sargs->approximation;
+		image *lsimulated = sargs->lsimulated;
+		image *lsim_weights = sargs->lsim_weights;
+		transformation t = sargs->t;
+		const raster *lresponse = sargs->lresponse;
+		unsigned int i_min = sargs->i_min;
+		unsigned int i_max = sargs->i_max;
+		unsigned int j_min = sargs->j_min;
+		unsigned int j_max = sargs->j_max;
+#ifdef USE_PTHREAD
+		pthread_mutex_t *lock = sargs->lock;
+#endif
 
 		/*
 		 * Linear filtering, iterating over approximation pixels
 		 */
 
-                for (unsigned int i = 0; i < approximation->height(); i++)
-                for (unsigned int j = 0; j < approximation->width();  j++) {
+                for (unsigned int i = i_min; i < i_max; i++)
+                for (unsigned int j = j_min; j < j_max; j++) {
 
 			if (is_excluded_r(approximation->offset(), i, j, frame_num))
 				continue;
@@ -156,6 +177,10 @@ protected:
                         point p = point(i + approximation->offset()[0], j + approximation->offset()[1]);
 			point q;
 			ale_pos d[2];
+
+			/*
+			 * XXX: This appears to calculate the wrong thing.
+			 */
 
 			if (is_excluded_f(p, frame_num))
 				continue;
@@ -194,60 +219,44 @@ protected:
 						    lef - jj, rig - jj,
 						    lresponse->select(ii, jj));
 
+#ifdef USE_PTHREAD
+				pthread_mutex_lock(lock);
+#endif
 				lsimulated->pix(ii, jj) +=
 					r(approximation->get_pixel(i, j));
 				lsim_weights->pix(ii, jj) +=
 					r.weight();
+#ifdef USE_PTHREAD
+				pthread_mutex_unlock(lock);
+#endif
                         }
                 }
 
-		/*
-		 * Normalize linear
-		 */
+		return NULL;
+	}
 
-		for (unsigned int ii = 0; ii < lsimulated->height(); ii++)
-		for (unsigned int jj = 0; jj < lsimulated->width(); jj++) {
-			pixel weight = lsim_weights->get_pixel(ii, jj);
-			const ale_real weight_floor = 0.00001;
+	static void *_ip_frame_simulate_subdomain_nonlinear(void *args) {
 
-			if (weight[0] > weight_floor
-			 && weight[1] > weight_floor
-			 && weight[2] > weight_floor)
-				lsimulated->pix(ii, jj)
-					/= weight;
-			else
-				lsimulated->pix(ii, jj)
-					/= 0;  /* Generate a non-finite value */
-		}
+		sim_subdomain_args *sargs = (sim_subdomain_args *) args;
 
-		/*
-		 * Finalize linear
-		 */
-
-		delete lsim_weights;
-
-		/*
-		 * Return if there is no non-linear step.
-		 */
-
-		if (nlsimulated == NULL)
-			return;
-
-		/*
-		 * Initialize non-linear
-		 */
-
-		image_ale_real *nlsim_weights = new image_ale_real(
-				nlsimulated->height(),
-				nlsimulated->width(),
-				nlsimulated->depth());
+		image *lsimulated = sargs->lsimulated;
+		image *nlsimulated = sargs->nlsimulated;
+		image *nlsim_weights = sargs->nlsim_weights;
+		transformation t = sargs->t;
+		const raster *nlresponse = sargs->nlresponse;
+		const exposure *exp = sargs->exp;
+		unsigned int i_min = sargs->i_min;
+		unsigned int i_max = sargs->i_max;
+		unsigned int j_min = sargs->j_min;
+		unsigned int j_max = sargs->j_max;
+		pthread_mutex_t *lock = sargs->lock;
 
 		/*
 		 * Iterate non-linear
 		 */
 
-                for (unsigned int i = 0; i < lsimulated->height(); i++)
-                for (unsigned int j = 0; j < lsimulated->width();  j++) {
+                for (unsigned int i = i_min; i < i_max; i++)
+                for (unsigned int j = j_min; j < j_max; j++) {
 
 			/*
 			 * Convenient variables for expressing the boundaries
@@ -281,12 +290,152 @@ protected:
 						    lef - jj, rig - jj,
 						    nlresponse->select(ii, jj));
 
+#ifdef USE_PTHREAD
+				pthread_mutex_lock(lock);
+#endif
 				nlsimulated->pix(ii, jj) +=
-					r(exp.unlinearize(lsimulated->get_pixel(i, j)));
+					r(exp->unlinearize(lsimulated->get_pixel(i, j)));
 				nlsim_weights->pix(ii, jj) +=
 					r.weight();
+#ifdef USE_PTHREAD
+				pthread_mutex_unlock(lock);
+#endif
                         }
                 }
+
+		return NULL;
+	}
+
+	void _ip_frame_simulate(int frame_num, image *approximation, 
+			image *lsimulated, image *nlsimulated, 
+			transformation t, const raster *lresponse, 
+			const raster *nlresponse, const exposure &exp) {
+
+		/*
+		 * Threading initializations
+		 */
+
+		int N;
+
+#ifdef USE_PTHREAD
+		N = thread::count();
+
+		pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * N);
+		pthread_attr_t *thread_attr = (pthread_attr_t *) malloc(sizeof(pthread_attr_t) * N);
+		pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
+#else
+		N = 1;
+#endif
+
+		sim_subdomain_args *args = (sim_subdomain_args *) malloc(sizeof(sim_subdomain_args) * N);
+
+
+		/*
+		 * Initializations for linear filtering
+		 */
+
+		image_ale_real *lsim_weights = new image_ale_real(
+				lsimulated->height(),
+				lsimulated->width(),
+				lsimulated->depth());
+
+
+		for (int ti = 0; ti < N; ti++) {
+			args[ti].frame_num = frame_num;
+			args[ti].approximation = approximation;
+			args[ti].lsimulated = lsimulated;
+			args[ti].nlsimulated = nlsimulated;
+			args[ti].lsim_weights = lsim_weights;
+			args[ti].t = t;
+			args[ti].lresponse = lresponse;
+			args[ti].nlresponse = nlresponse;
+			args[ti].exp = &exp;
+			args[ti].i_min = (approximation->height() * ti) / N;
+			args[ti].i_max = (approximation->height() * (ti + 1)) / N;
+			args[ti].j_min = 0;
+			args[ti].j_max = approximation->width();
+
+#ifdef USE_PTHREAD
+			args[ti].lock = &lock;
+			pthread_attr_init(&thread_attr[ti]);
+			pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
+			pthread_create(&threads[ti], &thread_attr[ti], _ip_frame_simulate_subdomain_linear, &args[ti]);
+#else
+			_ip_frame_simulate_subdomain_linear(&args[ti]);
+#endif
+		}
+
+#ifdef USE_PTHREAD
+		for (int ti = 0; ti < N; ti++) {
+			pthread_join(threads[ti], NULL);
+		}
+#endif
+
+		/*
+		 * Normalize linear
+		 */
+
+		for (unsigned int ii = 0; ii < lsimulated->height(); ii++)
+		for (unsigned int jj = 0; jj < lsimulated->width(); jj++) {
+			pixel weight = lsim_weights->get_pixel(ii, jj);
+			const ale_real weight_floor = 0.00001;
+
+			if (weight[0] > weight_floor
+			 && weight[1] > weight_floor
+			 && weight[2] > weight_floor)
+				lsimulated->pix(ii, jj)
+					/= weight;
+			else
+				lsimulated->pix(ii, jj)
+					/= 0;  /* Generate a non-finite value */
+		}
+
+		/*
+		 * Finalize linear
+		 */
+
+		delete lsim_weights;
+
+		/*
+		 * Return if there is no non-linear step.
+		 */
+
+		if (nlsimulated == NULL) {
+			delete args;
+			return;
+		}
+
+		/*
+		 * Initialize non-linear
+		 */
+
+		image_ale_real *nlsim_weights = new image_ale_real(
+				nlsimulated->height(),
+				nlsimulated->width(),
+				nlsimulated->depth());
+
+		for (int ti = 0; ti < N; ti++) {
+			args[ti].nlsim_weights = nlsim_weights;
+			args[ti].i_min = (lsimulated->height() * ti) / N;
+			args[ti].i_max = (lsimulated->height() * (ti + 1)) / N;
+			args[ti].j_min = 0;
+			args[ti].j_max = lsimulated->width();
+
+#ifdef USE_PTHREAD
+			pthread_attr_init(&thread_attr[ti]);
+			pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
+			pthread_create(&threads[ti], &thread_attr[ti], _ip_frame_simulate_subdomain_nonlinear, &args[ti]);
+#else
+			_ip_frame_simulate_subdomain_nonlinear(&args[ti]);
+#endif
+		}
+
+#ifdef USE_PTHREAD
+		for (int ti = 0; ti < N; ti++) {
+			pthread_join(threads[ti], NULL);
+		}
+#endif
 
 		/*
 		 * Normalize non-linear
@@ -312,6 +461,8 @@ protected:
 		 */
 
 		delete nlsim_weights;
+
+		delete args;
 	}
 
 	struct correction_t {
@@ -752,6 +903,8 @@ protected:
 			transformation t, const raster *f, const backprojector *b,
 			const raster *nlf, const backprojector *nlb) {
 
+		ui::get()->d2_irani_peleg_start();
+
 		/*
 		 * Initialize simulated data structures
 		 */
@@ -789,6 +942,8 @@ protected:
 
                 delete lsimulated;
 		delete nlsimulated;
+
+		ui::get()->d2_irani_peleg_stop();
         }
 
 	/*
