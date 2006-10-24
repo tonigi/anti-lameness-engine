@@ -1280,7 +1280,7 @@ public:
 			if (!strcmp(argv[i], "--h3") || all)
 				hi.d3(), found_help = 1;
 			if (!strcmp(argv[i], "--hp") || all)
-				hi.parallel(), found_help = 1;
+				hi.process(), found_help = 1;
 			if (!strcmp(argv[i], "--hz") || all)
 				hi.undocumented(), found_help = 1;
 

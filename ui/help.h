@@ -100,7 +100,7 @@ public:
 			"--hi              User Interfaces.\n"
 			"--hv              Video stream processing (Experimental).\n"
 			"--h3              3D Modeling.\n"
-			"--hp              Parallel computation.\n"
+			"--hp              Process details.\n"
 			"--hz              Undocumented options.\n"
 			"--hA              Concatenate all help pages.\n"
 			"\n",
@@ -619,16 +619,16 @@ public:
 			"                         P    rotation around x-axis.\n"
 			"                         Y    rotation around y-axis.\n"
 			"                         R    rotation around z-axis.\n"
-			"--occ-norm        Normalize output with accumulated occupancy.          [default]\n"
+			"--occ-norm        Normalize output with accumulated occupancy.        [default]\n"
 			"--occ-nonorm      Don't normalize output with accumulated occupancy.\n"
-			"--et <x>          Set encounter threshold <x> for defined pixels.  [default is 0]\n"
+			"--et <x>          Set encounter threshold <x> for defined pixels.[default is 0]\n"
 			"--3dpx <args>     Exclude a specified spatial volume following full-scene\n"
 			"                  reconstruction.  <args> are:\n"
 			"                         <xmin> <xmax> <ymin> <ymax> <zmin> <zmax>\n"
-			"--3d-filter       Use filtering for 3D color output.                    [default]\n"
+			"--3d-filter       Use filtering for 3D color output.                  [default]\n"
 			"--3d-nofilter     Don't use filtering for 3D color output.\n"
-			"--3d-dmr <x>      Set radius for filtering median depth to <x>        [default 0]\n"
-			"--3d-fmr <x>      Set radius for filtering median diff to <x>         [default 0]\n"
+			"--3d-dmr <x>      Set radius for filtering median depth to <x>      [default 0]\n"
+			"--3d-fmr <x>      Set radius for filtering median diff to <x>       [default 0]\n"
 			"--focus <ft> <op> Create focus region with type <ft> and options <op>:\n"
 			"                     Focus type:\n"
 			"                        d <d>           focus at distance <d>\n"
@@ -662,13 +662,13 @@ public:
 			"                  in pixels or degrees [default is 32]\n"
 			"--cpp-lower=<x>   Set lower bound <x> for camera parameter perturbation,\n"
 			"                  in pixels or degrees [default is 0.125]\n"
-			"--cpp-err-mean    Use RMS error to determine camera parameters.         [default]\n"
+			"--cpp-err-mean    Use RMS error to determine camera parameters.       [default]\n"
 			"--cpp-err-median  Use median error to determine camera parameters.               \n"
-			"--va-upper=<x>    View-angle perturbation upper bound in degrees  [default is 32]\n"
-			"--st <x>          Set stereo threshold to <x> pixels.              [default is 4]\n"
-			"--vp-adjust       Adjust the view point                                 [default]\n"
+			"--va-upper=<x>    View-angle perturbation upper bound in degrees   [default 32]\n"
+			"--st <x>          Set stereo threshold to <x> pixels.            [default is 4]\n"
+			"--vp-adjust       Adjust the view point                               [default]\n"
 			"--vp-noadjust     Do not adjust the view point\n"
-			"--vo-adjust       Adjust the view orientation                           [default]\n"
+			"--vo-adjust       Adjust the view orientation                         [default]\n"
 			"--vo-noadjust     Do not adjust the view orientation\n"
 			BETWEEN_SECTIONS
 			"Transformation file operations:\n"
@@ -678,35 +678,37 @@ public:
 			BETWEEN_SECTIONS
 			"Model rules:\n"
 			HEADER_SPACE
-			"--di-upper <x>    Decimate primary input resolution by at most 2^x [default is 0]\n"
-			"--di-lower <x>    Decimate input resolutions by at least 2^x       [default is 0]\n"
-			"--do-try <x>      Decimate output resolution by 2^x if possible    [default is 0]\n"
+			"--di-upper <x>    Decimate primary input resolution by at most 2^x  [default 0]\n"
+			"--di-lower <x>    Decimate input resolutions by at least 2^x     [default is 0]\n"
+			"--do-try <x>      Decimate output resolution by 2^x if possible  [default is 0]\n"
 			"--oc              Clip scene to output regions.\n"
-			"--no-oc           Do not clip scene to output regions.                  [default]\n"
-			"--fc <x>          Set front-clip to <x> (0 < x < 1)                [default is 0]\n"
-			"--rc <x>          Set rear-clip to <x> (1 < x < inf)             [default is inf]\n"
-			"--fx <x>          Set falloff exponent to <x>                      [default is 0]\n"
-			"--tcem <x>        Set third-camera error multiplier to <x>         [default is 0]\n"
-			"--oui <x>         Set occupancy update iterations to <x>          [default is 10]\n"
-			"--pa <x>          Set pairwise ambiguity to <x>                    [default is 3]\n"
+			"--no-oc           Do not clip scene to output regions.                [default]\n"
+			"--fc <x>          Set front-clip to <x> (0 < x < 1)              [default is 0]\n"
+			"--rc <x>          Set rear-clip to <x> (1 < x < inf)           [default is inf]\n"
+			"--fx <x>          Set falloff exponent to <x>                    [default is 0]\n"
+			"--tcem <x>        Set third-camera error multiplier to <x>       [default is 0]\n"
+			"--oui <x>         Set occupancy update iterations to <x>        [default is 10]\n"
+			"--pa <x>          Set pairwise ambiguity to <x>                  [default is 3]\n"
 			"--pc <type>       Set the type of pairwise comparisons:\n"
-			"                     auto     Determine comparisons automatically.      [default]\n"
+			"                     auto     Determine comparisons automatically.    [default]\n"
 			"                     all      Perform all comparisons.\n"
 			"\n");
 	}
-	void parallel() {
-		banner("Parallel computation");
+	void process() {
+		banner("Process details");
 		fprintf(help_stream,
+			BETWEEN_SECTIONS
+			"Profiling:\n"
+			HEADER_SPACE
+			"--profile         Output performance data\n"
 			BETWEEN_SECTIONS
 			"Thread count:\n"
 			"\n"
-			"NOTE: If the number of CPUs cannot be determined, a warning will be produced,\n"
-			"      and the default number of threads will be determined by the --threads\n"
-			"      default.  Otherwise, the default number of threads will be determined by\n"
-			"      the --per-cpu default.\n"
+			"      If the CPU count cannot be determined, the default thread count\n"
+			"      is 4.  Otherwise, the default is one thread per CPU.\n"
 			"\n"
 			HEADER_SPACE
-			"--threads <n>     Use <n> threads.                                 [default is 4]\n"
+			"--threads <n>     Use <n> threads.\n"
 #ifndef USE_PTHREAD
 			"\n"
 			"                     NOTE: since this build of ALE does not link with a\n"
@@ -715,7 +717,7 @@ public:
 			"                           for threads.\n"
 			"\n"
 #endif
-			"--per-cpu <n>     Use <n> threads for each detected CPU.           [default is 1]\n"
+			"--per-cpu <n>     Use <n> threads for each detected CPU.\n"
 #ifndef USE_PTHREAD
 			"\n"
 			"                     NOTE: since this build of ALE does not link with a\n"
@@ -729,10 +731,6 @@ public:
 	void undocumented() {
 		banner("Undocumented");
 		fprintf(help_stream,
-			BETWEEN_SECTIONS
-			"Profiling:\n"
-			HEADER_SPACE
-			"--profile          Output performance data\n"
 			BETWEEN_SECTIONS
 			"Point-spread functions:\n"
 			HEADER_SPACE

@@ -66,9 +66,6 @@ public:
 		if (_cpu_count > 0) {
 			_count = THREAD_PER_CPU_DEFAULT * _cpu_count; 
 		} else {
-			fprintf(stderr, "\n\n");
-			fprintf(stderr, "Warning: Unable to determine CPU count.\n");
-			fprintf(stderr, "\n\n");
 			_count = THREAD_COUNT_DEFAULT;
 		}
 
@@ -85,8 +82,8 @@ public:
 		}
 		if (new_per_cpu == 0) {
 			fprintf(stderr, "\n\n");
-			fprintf(stderr, "Error: per-cpu thread count specified is zero.\n");
-			fprintf(stderr, "       Try setting a positive thread count.\n");
+			fprintf(stderr, "Error: --per-cpu argument must be positive\n");
+			fprintf(stderr, "\n");
 
 			exit(1);
 		}
@@ -98,8 +95,8 @@ public:
 	static void set_count(unsigned int new_count) {
 		if (new_count == 0) {
 			fprintf(stderr, "\n\n");
-			fprintf(stderr, "Error: thread count specified is zero.\n");
-			fprintf(stderr, "       Try setting a positive thread count.\n");
+			fprintf(stderr, "Error: --thread argument must be positive\n");
+			fprintf(stderr, "\n");
 
 			exit(1);
 		}
