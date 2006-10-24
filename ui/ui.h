@@ -512,9 +512,9 @@ public:
 			printf("Real time measurements\n");
 			printf("======================\n");
 			printf("\n");
-			printf("Alignment time:  %fs\n", (double) d2_align_total_time.tv_sec 
+			printf("Alignment time:  %f s\n", (double) d2_align_total_time.tv_sec 
 					              + (double) d2_align_total_time.tv_usec / (double) 1000000);
-			printf("Rendering time:  %fs\n", (double) d2_incremental_total_time.tv_sec 
+			printf("Rendering time:  %f s\n", (double) d2_incremental_total_time.tv_sec 
 					              + (double) d2_incremental_total_time.tv_usec / (double) 1000000);
 			printf("\n");
 		}
