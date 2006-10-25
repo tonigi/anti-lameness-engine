@@ -246,7 +246,7 @@ input::simple_option input::simple_option_table[] = {
 	{ "inc" },
 	{ "no-inc", "inc", "0" },
 
-	{ "exp-mult", NULL, NULL, 1 },
+	{ "exp-mult", NULL, NULL, 3 },
 	
 	{ "visp-scale", NULL, NULL, 1 },
 
