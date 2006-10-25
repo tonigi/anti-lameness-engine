@@ -497,7 +497,15 @@ private:
 		}
 
 		void add_hist(ale_accum result, ale_accum divisor) {
-			add_hist(log(result) / log(2), log(divisor) / log(2), 1);
+			ale_accum rbin = log(result) / log(2);
+			ale_accum dbin = log(divisor) / log(2);
+
+			if (!(rbin > INT_MIN))
+				rbin = INT_MIN;
+			if (!(dbin > INT_MIN))
+				dbin = INT_MIN;
+
+			add_hist((int) floor(rbin), (int) floor(dbin), 1);
 		}
 
 	public:
