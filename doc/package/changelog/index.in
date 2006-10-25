@@ -1,3 +1,9 @@
+V	0.8.5-prerelease
+
+o	Patch to correct --exp-mult arg count, from Gregory Maxwell.
+
+o	Allow file-scoped use of --perturb-upper.
+
 V	0.8.5-pre2 2006-Oct-25
 
 o	Modify d2::image::scale() to correctly handle offsets for
