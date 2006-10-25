@@ -452,9 +452,13 @@ private:
 		int hist_min_d;
 
 		hist_bin *histogram;
+		hist_bin hist_total;
 		int hist_size;
 
 		void add_hist(int r, int d, int count) {
+
+			hist_total += count;
+
 			int r_shift = 0, d_shift = 0;
 
 			if (r - hist_min_r >= hist_size) {
@@ -473,15 +477,20 @@ private:
 			if (r_shift || d_shift) {
 				for (int rr = 0; rr < hist_size; rr++)
 				for (int dd = 0; dd < hist_size; dd++) {
-					if (rr + r_shift >= hist_size
-					 || dd + d_shift >= hist_size) {
-						histogram[rr * hist_size + dd] = 0;
-						continue;
-					}
 
-					histogram[rr * hist_size + dd] =
-						histogram[(rr + r_shift) * hist_size
-						        + (dd + d_shift)];
+					hist_bin value = histogram[rr * hist_size + dd];
+
+					histogram[rr * hist_size + dd] = 0;
+
+					int rrr = rr - r_shift;
+					int ddd = dd - d_shift;
+
+					if (rrr < 0)
+						rrr = 0;
+					if (ddd < 0)
+						ddd = 0;
+
+					histogram[rrr * hist_size + ddd] += value;
 				}
 			}
 
@@ -515,21 +524,22 @@ private:
 			hist_min_r = INT_MIN;
 			hist_min_d = INT_MIN;
 			hist_size = 10;
-			histogram = (hist_bin *) malloc(sizeof(hist_bin) * hist_size * hist_size);
+			hist_total = 0;
+			histogram = (hist_bin *) calloc(hist_size * hist_size, sizeof(hist_bin));
 		}
 
 		~diff_stat_t() {
 			free(histogram);
 		}
 
-		void add(const diff_stat_t ds) {
-			result += ds.result;
-			divisor += ds.divisor;
+		void add(const diff_stat_t *ds) {
+			result += ds->result;
+			divisor += ds->divisor;
 
-			for (int r = 0; r < ds.hist_size; r++)
-			for (int d = 0; d < ds.hist_size; d++)
-				add_hist(r + ds.hist_min_r, d + ds.hist_min_d, 
-						ds.histogram[r * hist_size + d]);
+			for (int r = 0; r < ds->hist_size; r++)
+			for (int d = 0; d < ds->hist_size; d++)
+				add_hist(r + ds->hist_min_r, d + ds->hist_min_d, 
+						ds->histogram[r * hist_size + d]);
 		}
 
 		ale_accum get_result() {
@@ -538,6 +548,10 @@ private:
 
 		ale_accum get_divisor() {
 			return divisor;
+		}
+
+		ale_accum get_error() {
+			return pow(result / divisor, 1/metric_exponent);
 		}
 
 		void sample(int f, scale_cluster c, int i, int j, ale_pos ti, ale_pos tj) {
@@ -616,6 +630,28 @@ private:
 			divisor += this_divisor;
 
 			add_hist(this_result, this_divisor);
+		}
+
+		void print_hist() {
+			fprintf(stderr, "\n");
+			fprintf(stderr, "hist_min_r = %d\n", hist_min_r);
+			fprintf(stderr, "hist_min_d = %d\n", hist_min_d);
+			fprintf(stderr, "hist_size = %d\n", hist_size);
+			fprintf(stderr, "hist_total = %d\n", hist_total);
+			fprintf(stderr, "\n");
+
+			hist_bin recalc_total = 0;
+
+			for (int r = 0; r < hist_size; r++) {
+				for (int d = 0; d < hist_size; d++) {
+					recalc_total += histogram[r * hist_size + d];
+					fprintf(stderr, "\t%d", histogram[r * hist_size + d]);
+				}
+				fprintf(stderr, "\n");
+			}
+
+			fprintf(stderr, "\n");
+			fprintf(stderr, "recalc_total = %d\n", recalc_total);
 		}
 	};
 
@@ -783,7 +819,12 @@ private:
 	}
 
 	static ale_accum diff(struct scale_cluster c, transformation t,
-			ale_pos _mc_arg, int ax_count, int f) {
+			ale_pos _mc_arg, int ax_count, int f, diff_stat_t *diff_stat_in = NULL) {
+
+		diff_stat_t *diff_stat = diff_stat_in;
+
+		if (diff_stat == NULL)
+			diff_stat = new diff_stat_t();
 
 		ui::get()->d2_align_start();
 
@@ -800,8 +841,6 @@ private:
 #else
 		N = 1;
 #endif
-
-		ale_accum result_total = 0, divisor_total = 0;
 
 		subdomain_args *args = new subdomain_args[N];
 
@@ -831,8 +870,7 @@ private:
 #ifdef USE_PTHREAD
 			pthread_join(threads[ti], NULL);
 #endif
-			result_total += args[ti].diff_stat->get_result();
-			divisor_total += args[ti].diff_stat->get_divisor();
+			diff_stat->add(args[ti].diff_stat);
 
 			delete args[ti].diff_stat;
 		}
@@ -840,8 +878,13 @@ private:
 		delete[] args;
 
 		ui::get()->d2_align_stop();
-		
-		return pow(result_total / divisor_total, 1/metric_exponent);
+
+		ale_accum result = diff_stat->get_error();
+
+		if (diff_stat_in == NULL)
+			delete diff_stat;
+
+		return result;
 	}
 
 
@@ -1919,7 +1962,10 @@ private:
 		 */
 
 		ui::get()->postmatching();
-		here = diff(scale_clusters[0], offset, _mc, local_ax_count, m);
+		diff_stat_t *diff_stat = new diff_stat_t();
+		here = diff(scale_clusters[0], offset, _mc, local_ax_count, m, diff_stat);
+		diff_stat->print_hist();
+		delete diff_stat;
 		ui::get()->set_match(here);
 
 		/*
