@@ -442,14 +442,182 @@ private:
 	 *
 	 */
 
+	class diff_stat_t {
+		ale_accum result;
+		ale_accum divisor;
+
+		typedef unsigned int hist_bin;
+
+		int hist_min_r;
+		int hist_min_d;
+
+		hist_bin *histogram;
+		int hist_size;
+
+		void add_hist(int r, int d, int count) {
+			int r_shift = 0, d_shift = 0;
+
+			if (r - hist_min_r >= hist_size) {
+				r_shift = (r - hist_min_r) - hist_size + 1;
+				hist_min_r += r_shift;
+			}
+
+			if (d - hist_min_d >= hist_size) {
+				d_shift = (d - hist_min_d) - hist_size + 1;
+				hist_min_d += d_shift;
+			}
+
+			assert (r_shift >= 0);
+			assert (d_shift >= 0);
+
+			if (r_shift || d_shift) {
+				for (int rr = 0; rr < hist_size; rr++)
+				for (int dd = 0; dd < hist_size; dd++) {
+					if (rr + r_shift >= hist_size
+					 || dd + d_shift >= hist_size) {
+						histogram[rr * hist_size + dd] = 0;
+						continue;
+					}
+
+					histogram[rr * hist_size + dd] =
+						histogram[(rr + r_shift) * hist_size
+						        + (dd + d_shift)];
+				}
+			}
+
+			r -= hist_min_r;
+			d -= hist_min_d;
+
+			if (r < 0)
+				r = 0;
+			if (d < 0)
+				d = 0;
+
+			histogram[r * hist_size + d] += count;
+		}
+
+		void add_hist(ale_accum result, ale_accum divisor) {
+			add_hist(log(result) / log(2), log(divisor) / log(2), 1);
+		}
+
+	public:
+		diff_stat_t() {
+			result = 0;
+			divisor = 0;
+			hist_min_r = INT_MIN;
+			hist_min_d = INT_MIN;
+			hist_size = 10;
+			histogram = (hist_bin *) malloc(sizeof(hist_bin) * hist_size * hist_size);
+		}
+
+		~diff_stat_t() {
+			free(histogram);
+		}
+
+		void add(const diff_stat_t ds) {
+			result += ds.result;
+			divisor += ds.divisor;
+
+			for (int r = 0; r < ds.hist_size; r++)
+			for (int d = 0; d < ds.hist_size; d++)
+				add_hist(r + ds.hist_min_r, d + ds.hist_min_d, 
+						ds.histogram[r * hist_size + d]);
+		}
+
+		ale_accum get_result() {
+			return result;
+		}
+
+		ale_accum get_divisor() {
+			return divisor;
+		}
+
+		void sample(int f, scale_cluster c, int i, int j, ale_pos ti, ale_pos tj) {
+			pixel pa = c.accum->get_pixel(i, j);
+			pixel pb;
+			pixel weight;
+			ale_accum this_result = 0;
+			ale_accum this_divisor = 0;
+
+			if (interpolant != NULL)
+				interpolant->filtered(i, j, &pb, &weight, 1, f);
+			else {
+				pixel result[2];
+				c.input->get_bl(point(ti, tj), result);
+				pb = result[0];
+				weight = result[1];
+			}
+
+			/*
+			 * Handle certainty.
+			 */
+
+			if (certainty_weights == 0)
+				weight = pixel(1, 1, 1);
+
+			if (c.aweight != NULL)
+				weight *= c.aweight->get_pixel(i, j);
+
+			/*
+			 * Determine alignment type.
+			 */
+
+			if (channel_alignment_type == 0) {
+				/*
+				 * Align based on all channels.
+				 */
+
+
+				for (int k = 0; k < 3; k++) {
+					ale_real achan = pa[k];
+					ale_real bchan = pb[k];
+
+					this_result = weight[k] * pow(fabs(achan - bchan), metric_exponent);
+					this_divisor = weight[k] * pow(achan > bchan ? achan : bchan, metric_exponent);
+				}
+			} else if (channel_alignment_type == 1) {
+				/*
+				 * Align based on the green channel.
+				 */
+
+				ale_real achan = pa[1];
+				ale_real bchan = pb[1];
+
+				this_result = weight[1] * pow(fabs(achan - bchan), metric_exponent);
+				this_divisor = weight[1] * pow(achan > bchan ? achan : bchan, metric_exponent);
+			} else if (channel_alignment_type == 2) {
+				/*
+				 * Align based on the sum of all channels.
+				 */
+
+				ale_real asum = 0;
+				ale_real bsum = 0;
+				ale_real wsum = 0;
+
+				for (int k = 0; k < 3; k++) {
+					asum += pa[k];
+					bsum += pb[k];
+					wsum += weight[k] / 3;
+				}
+
+				this_result = wsum * pow(fabs(asum - bsum), metric_exponent);
+				this_divisor = wsum * pow(asum > bsum ? asum : bsum, metric_exponent);
+			}
+
+			result += this_result;
+			divisor += this_divisor;
+
+			add_hist(this_result, this_divisor);
+		}
+	};
+
 	struct subdomain_args {
 		struct scale_cluster c;
 		transformation t;
 		ale_pos _mc_arg;
 		int ax_count;
 		int f;
-		ale_accum result;
-		ale_accum divisor;
+		diff_stat_t diff_stat;
 		int i_min, i_max, j_min, j_max;
 		int subdomain;
 	};
@@ -463,8 +631,7 @@ private:
 		ale_pos _mc_arg = sargs->_mc_arg;
 		int ax_count = sargs->ax_count;
 		int f = sargs->f;
-		ale_accum *result = &sargs->result;
-		ale_accum *divisor = &sargs->divisor;
+		diff_stat_t local_diff_stat;
 		int i_min = sargs->i_min;
 		int i_max = sargs->i_max;
 		int j_min = sargs->j_min;
@@ -475,10 +642,7 @@ private:
 
 		point offset = c.accum->offset();
 
-		int i, j, k;
-
-		ale_accum local_result = 0;
-		ale_accum local_divisor = 0;
+		int i, j;
 
 		/*
 		 * We always use the same code for exhaustive and Monte Carlo
@@ -602,87 +766,15 @@ private:
 			 && ti <= c.input->height() - 1
 			 && tj >= 0
 			 && tj <= c.input->width() - 1
-			 && c.defined->get_pixel(i, j)[0] != 0) { 
+			 && c.defined->get_pixel(i, j)[0] != 0)
 
-				pixel pa = c.accum->get_pixel(i, j);
-				pixel pb;
-				pixel weight;
+				local_diff_stat.sample(f, c, i, j, ti, tj);
 
-				if (interpolant != NULL)
-					interpolant->filtered(i, j, &pb, &weight, 1, f);
-				else {
-					pixel result[2];
-					c.input->get_bl(point(ti, tj), result);
-					pb = result[0];
-					weight = result[1];
-				}
-
-				/*
-				 * Handle certainty.
-				 */
-
-				if (certainty_weights == 0)
-					weight = pixel(1, 1, 1);
-
-				if (c.aweight != NULL)
-					weight *= c.aweight->get_pixel(i, j);
-
-				/*
-				 * Determine alignment type.
-				 */
-
-				if (channel_alignment_type == 0) {
-					/*
-					 * Align based on all channels.
-					 */
-
-
-					for (k = 0; k < 3; k++) {
-						ale_real achan = pa[k];
-						ale_real bchan = pb[k];
-
-						local_result += weight[k] * pow(fabs(achan - bchan), metric_exponent);
-						local_divisor += weight[k] * pow(achan > bchan ? achan : bchan, metric_exponent);
-					}
-				} else if (channel_alignment_type == 1) {
-					/*
-					 * Align based on the green channel.
-					 */
-
-					ale_real achan = pa[1];
-					ale_real bchan = pb[1];
-
-					local_result += weight[1] * pow(fabs(achan - bchan), metric_exponent);
-					local_divisor += weight[1] * pow(achan > bchan ? achan : bchan, metric_exponent);
-				} else if (channel_alignment_type == 2) {
-					/*
-					 * Align based on the sum of all channels.
-					 */
-
-					ale_real asum = 0;
-					ale_real bsum = 0;
-					ale_real wsum = 0;
-
-					for (k = 0; k < 3; k++) {
-						asum += pa[k];
-						bsum += pb[k];
-						wsum += weight[k] / 3;
-					}
-
-					local_result += wsum * pow(fabs(asum - bsum), metric_exponent);
-					local_divisor += wsum * pow(asum > bsum ? asum : bsum, metric_exponent);
-				}
-			}
 		}
 
-		*result = local_result;
-		*divisor = local_divisor;
+		sargs->diff_stat.add(local_diff_stat);
 
-#ifdef USE_PTHREAD
-		pthread_exit(0);
-#else
 		return NULL;
-#endif
 	}
 
 	static ale_accum diff(struct scale_cluster c, transformation t,
@@ -706,7 +798,7 @@ private:
 
 		ale_accum result_total = 0, divisor_total = 0;
 
-		subdomain_args *args = (subdomain_args *) malloc(sizeof(subdomain_args) * N);
+		subdomain_args *args = new subdomain_args[N];
 
 		for (int ti = 0; ti < N; ti++) {
 			args[ti].c = c;
@@ -714,8 +806,6 @@ private:
 			args[ti]._mc_arg = _mc_arg;
 			args[ti].ax_count = ax_count;
 			args[ti].f = f;
-			args[ti].result = 0;
-			args[ti].divisor = 0;
 			args[ti].i_min = (c.accum->height() * ti) / N;
 			args[ti].i_max = (c.accum->height() * (ti + 1)) / N;
 			args[ti].j_min = 0;
@@ -735,11 +825,11 @@ private:
 #ifdef USE_PTHREAD
 			pthread_join(threads[ti], NULL);
 #endif
-			result_total += args[ti].result;
-			divisor_total += args[ti].divisor;
+			result_total += args[ti].diff_stat.get_result();
+			divisor_total += args[ti].diff_stat.get_divisor();
 		}
 
-		free(args);
+		delete[] args;
 
 		ui::get()->d2_align_stop();
 		
