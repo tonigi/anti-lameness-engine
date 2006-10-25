@@ -572,8 +572,8 @@ private:
 					ale_real achan = pa[k];
 					ale_real bchan = pb[k];
 
-					this_result = weight[k] * pow(fabs(achan - bchan), metric_exponent);
-					this_divisor = weight[k] * pow(achan > bchan ? achan : bchan, metric_exponent);
+					this_result += weight[k] * pow(fabs(achan - bchan), metric_exponent);
+					this_divisor += weight[k] * pow(achan > bchan ? achan : bchan, metric_exponent);
 				}
 			} else if (channel_alignment_type == 1) {
 				/*
