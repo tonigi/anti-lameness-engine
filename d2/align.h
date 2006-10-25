@@ -625,7 +625,7 @@ private:
 		ale_pos _mc_arg;
 		int ax_count;
 		int f;
-		diff_stat_t diff_stat;
+		diff_stat_t* diff_stat;
 		int i_min, i_max, j_min, j_max;
 		int subdomain;
 	};
@@ -639,7 +639,6 @@ private:
 		ale_pos _mc_arg = sargs->_mc_arg;
 		int ax_count = sargs->ax_count;
 		int f = sargs->f;
-		diff_stat_t local_diff_stat;
 		int i_min = sargs->i_min;
 		int i_max = sargs->i_max;
 		int j_min = sargs->j_min;
@@ -776,11 +775,9 @@ private:
 			 && tj <= c.input->width() - 1
 			 && c.defined->get_pixel(i, j)[0] != 0)
 
-				local_diff_stat.sample(f, c, i, j, ti, tj);
+				sargs->diff_stat->sample(f, c, i, j, ti, tj);
 
 		}
-
-		sargs->diff_stat.add(local_diff_stat);
 
 		return NULL;
 	}
@@ -814,6 +811,7 @@ private:
 			args[ti]._mc_arg = _mc_arg;
 			args[ti].ax_count = ax_count;
 			args[ti].f = f;
+			args[ti].diff_stat = new diff_stat_t();
 			args[ti].i_min = (c.accum->height() * ti) / N;
 			args[ti].i_max = (c.accum->height() * (ti + 1)) / N;
 			args[ti].j_min = 0;
@@ -833,8 +831,10 @@ private:
 #ifdef USE_PTHREAD
 			pthread_join(threads[ti], NULL);
 #endif
-			result_total += args[ti].diff_stat.get_result();
-			divisor_total += args[ti].diff_stat.get_divisor();
+			result_total += args[ti].diff_stat->get_result();
+			divisor_total += args[ti].diff_stat->get_divisor();
+
+			delete args[ti].diff_stat;
 		}
 
 		delete[] args;
