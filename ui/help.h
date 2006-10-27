@@ -239,6 +239,7 @@ public:
 			"--mcd-min <x>     Set the minimum dynamic sample count.       (1000 is default)\n"
 			"--mcd-upper <x>   Set the upper consensus threshold to x%%.      (75 is default)\n"
 			"--mcd-lower <x>   Set the lower consensus threshold to x%%.      (50 is default)\n"
+			"--mcd-runs <x>    Set the quorum of simulation runs to <x>.     (100 is default)\n"
 			BETWEEN_SECTIONS
 			"Tunable parameters:\n"
 			HEADER_SPACE

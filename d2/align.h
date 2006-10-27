@@ -284,6 +284,10 @@ private:
 	 */
 
 	static ale_pos _mc;
+	static int _mcd_min;
+	static ale_pos _mcd_upper;
+	static ale_pos _mcd_lower;
+	static int _mcd_runs;
 
 	/*
 	 * Certainty weight flag
@@ -455,6 +459,52 @@ private:
 		hist_bin hist_total;
 		int hist_size;
 
+		ale_accum simulated_error(rng_t rng, ale_pos mc) {
+			ale_accum result;
+			ale_accum divisor;
+
+			int samples = (int) floor(mc * hist_total);
+
+			for (int s = 0; s < samples; s++) {
+				int index = rng.get() % hist_total;
+				int histogram_index = -1;
+
+				while (index >= 0)
+					index -= histogram[++histogram_index];
+
+				result += pow(2, hist_min_r + histogram_index / hist_size);
+				divisor += pow(2, hist_min_r + histogram_index % hist_size);
+			}
+
+			return pow(result / divisor, 1 / metric_exponent);
+		}
+
+		struct consensus_subdomain {
+			diff_stat_t *better;
+			diff_stat_t *worse;
+			ale_pos mc;
+			int run_count;
+			int success;
+		};
+
+		static void *consensus_thread (void *args) {
+			consensus_subdomain *cs = (consensus_subdomain *) args;
+
+			for (int run = 0; run < cs->run_count; run++) {
+				rng_t rng;
+
+				rng.seed(run);
+
+				ale_accum b = cs->better->simulated_error(rng, cs->mc);
+				ale_accum w = cs->worse->simulated_error(rng, cs->mc);
+
+				if (b < w)
+					cs->success++;
+			}
+
+			return NULL;
+		}
+
 		void add_hist(int r, int d, int count) {
 
 			hist_total += count;
@@ -528,8 +578,31 @@ private:
 			histogram = (hist_bin *) calloc(hist_size * hist_size, sizeof(hist_bin));
 		}
 
+		void clear() {
+			free(histogram);
+
+			result = 0;
+			divisor = 0;
+			hist_min_r = INT_MIN;
+			hist_min_d = INT_MIN;
+			hist_size = 10;
+			hist_total = 0;
+			histogram = (hist_bin *) calloc(hist_size * hist_size, sizeof(hist_bin));
+		}
+
 		~diff_stat_t() {
 			free(histogram);
+		}
+
+		ale_pos consensus(diff_stat_t *with, ale_pos mc) {
+
+			consensus_subdomain cs = {
+				this, with, mc, _mcd_runs, 0
+			};
+
+			consensus_thread(&cs);
+
+			return ((double) cs.success / (double) _mcd_runs);
 		}
 
 		void add(const diff_stat_t *ds) {
@@ -825,6 +898,8 @@ private:
 
 		if (diff_stat == NULL)
 			diff_stat = new diff_stat_t();
+
+		diff_stat->clear();
 
 		ui::get()->d2_align_start();
 
@@ -1337,6 +1412,7 @@ private:
 		ale_pos perturb = local_upper;
 		transformation offset;
 		ale_accum here;
+		diff_stat_t *here_diff_stat = new diff_stat_t();
 		int lod;
 
 		if (_keep) {
@@ -1525,7 +1601,7 @@ private:
 		 */
 
 		ui::get()->prematching();
-		here = diff(si, offset, _mc_arg, local_ax_count, m);
+		here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
 		ui::get()->set_match(here);
 
 		/*
@@ -1962,10 +2038,11 @@ private:
 		 */
 
 		ui::get()->postmatching();
-		diff_stat_t *diff_stat = new diff_stat_t();
-		here = diff(scale_clusters[0], offset, _mc, local_ax_count, m, diff_stat);
-		diff_stat->print_hist();
-		delete diff_stat;
+		diff_stat_t *new_diff_stat = new diff_stat_t();
+		here = diff(scale_clusters[0], offset, _mc, local_ax_count, m, new_diff_stat);
+		new_diff_stat->print_hist();
+		fprintf(stderr, "consensus=%f\n", new_diff_stat->consensus(here_diff_stat, _mc));
+		delete new_diff_stat;
 		ui::get()->set_match(here);
 
 		/*
@@ -2645,6 +2722,22 @@ public:
 	 */
 	static void mc(ale_pos n) {
 		_mc = n;
+	}
+
+	static void mcd_min(int n) {
+		_mcd_min = n;
+	}
+
+	static void mcd_upper(ale_pos n) {
+		_mcd_upper = n;
+	}
+
+	static void mcd_lower(ale_pos n) {
+		_mcd_lower = n;
+	}
+
+	static void mcd_runs(int n) {
+		_mcd_runs = n;
 	}
 
 	/*
