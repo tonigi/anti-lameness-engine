@@ -460,8 +460,8 @@ private:
 		int hist_size;
 
 		ale_accum simulated_error(rng_t rng, ale_pos mc) {
-			ale_accum result;
-			ale_accum divisor;
+			ale_accum result = 0;
+			ale_accum divisor = 0;
 
 			int samples = (int) floor(mc * hist_total);
 
@@ -1879,6 +1879,8 @@ private:
 			transformation test_t;
 			ale_accum test_d;
 			ale_accum old_here = here;
+			diff_stat_t *old_here_diff_stat = here_diff_stat;
+			here_diff_stat = new diff_stat_t();
 
 			if (alignment_class < 2 && alignment_class >= 0) {
 
@@ -1893,7 +1895,7 @@ private:
 
 					test_t.eu_modify(i, adj_s);
 
-					test_d = diff(si, test_t, _mc_arg, local_ax_count, m);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
 
 					if (test_d < here || (!finite(here) && finite(test_d))) {
 						here = test_d;
@@ -1909,7 +1911,7 @@ private:
 
 					test_t.eu_modify(2, adj_s);
 
-					test_d = diff(si, test_t, _mc_arg, local_ax_count, m);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
 
 					if (test_d < here || (!finite(here) && finite(test_d))) {
 						here = test_d;
@@ -1937,7 +1939,7 @@ private:
 					else
 						assert(0);
 
-					test_d = diff(si, test_t, _mc_arg, local_ax_count, m);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
 
 					if (test_d < here || (!finite(here) && finite(test_d))) {
 						here = test_d;
@@ -1969,7 +1971,7 @@ private:
 
 					test_t.bd_modify(rd, adj_s);
 
-					test_d = diff(si, test_t, _mc_arg, local_ax_count, m);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
 
 					if (test_d < here || (!finite(here) && finite(test_d))) {
 						here = test_d;
@@ -1981,6 +1983,9 @@ private:
 			}
 			
 	done:
+
+			fprintf(stderr, "\nconsensus=%f\n", here_diff_stat->consensus(old_here_diff_stat, _mc));
+
 			if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
 				perturb *= 0.5;
 
@@ -2003,9 +2008,12 @@ private:
 					si = scale_clusters[lod];
 					_mc_arg /= 4;
 
-					here = diff(si, offset, _mc_arg, local_ax_count, m);
+					here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
+					delete old_here_diff_stat;
 
 				} else {
+					delete here_diff_stat;
+					here_diff_stat = old_here_diff_stat;
 					adj_p = perturb;
 				}
 
@@ -2014,6 +2022,9 @@ private:
 				 */
 
 				ui::get()->alignment_perturbation_level(perturb, lod);
+
+			} else {
+				delete old_here_diff_stat;
 			}
 
 			ui::get()->set_match(here);
