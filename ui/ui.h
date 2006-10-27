@@ -130,20 +130,19 @@ protected:
 	 */
 
 #if HAVE_GETTIMEOFDAY
-	struct timeval d2_align_start_time;
-	struct timeval d2_incremental_start_time;
-	struct timeval d2_irani_peleg_start_time;
-	struct timeval d2_align_total_time;
-	struct timeval d2_incremental_total_time;
-	struct timeval d2_irani_peleg_total_time;
+	typedef struct timeval ale_timer_t;
 #else
-	time_t d2_align_start_time;
-	time_t d2_incremental_start_time;
-	time_t d2_irani_peleg_start_time;
-	time_t d2_align_total_time;
-	time_t d2_incremental_total_time;
-	time_t d2_irani_peleg_total_time;
+	typedef time_t ale_timer_t;
 #endif
+
+	ale_timer_t d2_align_sample_start_time;
+	ale_timer_t d2_align_sim_start_time;
+	ale_timer_t d2_incremental_start_time;
+	ale_timer_t d2_irani_peleg_start_time;
+	ale_timer_t d2_align_sample_total_time;
+	ale_timer_t d2_align_sim_total_time;
+	ale_timer_t d2_incremental_total_time;
+	ale_timer_t d2_irani_peleg_total_time;
 
 	/*
 	 * Constructor
@@ -152,13 +151,19 @@ protected:
 	ui() {
 		ui_stream = stderr;
 #if HAVE_GETTIMEOFDAY
+		d2_irani_peleg_total_time.tv_usec = 0;
+		d2_irani_peleg_total_time.tv_sec = 0;
 		d2_incremental_total_time.tv_usec = 0;
 		d2_incremental_total_time.tv_sec = 0;
-		d2_align_total_time.tv_usec = 0;
-		d2_align_total_time.tv_sec = 0;
+		d2_align_sample_total_time.tv_usec = 0;
+		d2_align_sample_total_time.tv_sec = 0;
+		d2_align_sim_total_time.tv_usec = 0;
+		d2_align_sim_total_time.tv_sec = 0;
 #else
 		d2_incremental_total_time = 0;
-		d2_align_total_time = 0;
+		d2_irani_peleg_total_time = 0;
+		d2_align_sample_total_time = 0;
+		d2_align_sim_total_time = 0;
 #endif
 	}
 
@@ -256,12 +261,20 @@ public:
 	 * Messages from the engine
 	 */
 
-	void d2_align_start() {
-		timer_start((void *) &d2_align_start_time);
+	void d2_align_sim_start() {
+		timer_start((void *) &d2_align_sim_start_time);
 	}
 
-	void d2_align_stop() {
-		timer_stop((void *) &d2_align_start_time, (void *) &d2_align_total_time);
+	void d2_align_sim_stop() {
+		timer_stop((void *) &d2_align_sim_start_time, (void *) &d2_align_sim_total_time);
+	}
+
+	void d2_align_sample_start() {
+		timer_start((void *) &d2_align_sample_start_time);
+	}
+
+	void d2_align_sample_stop() {
+		timer_stop((void *) &d2_align_sample_start_time, (void *) &d2_align_sample_total_time);
 	}
 
 	void d2_incremental_start() {
@@ -544,14 +557,17 @@ public:
 			printf("======================\n");
 			printf("\n");
 #if HAVE_GETTIMEOFDAY
-			printf("Alignment     :  %f s\n", (double) d2_align_total_time.tv_sec 
-					              + (double) d2_align_total_time.tv_usec / (double) 1000000);
+			printf("Align (sample):  %f s\n", (double) d2_align_sample_total_time.tv_sec 
+					              + (double) d2_align_sample_total_time.tv_usec / (double) 1000000);
+			printf("Align (simul.):  %f s\n", (double) d2_align_sim_total_time.tv_sec 
+					              + (double) d2_align_sim_total_time.tv_usec / (double) 1000000);
 			printf("Incremental   :  %f s\n", (double) d2_incremental_total_time.tv_sec 
 					              + (double) d2_incremental_total_time.tv_usec / (double) 1000000);
 			printf("Irani-Peleg   :  %f s\n", (double) d2_irani_peleg_total_time.tv_sec 
 					              + (double) d2_irani_peleg_total_time.tv_usec / (double) 1000000);
 #else
-			printf("Alignment     :  %f s\n", (double) d2_align_total_time);
+			printf("Align (sample):  %f s\n", (double) d2_align_sample_total_time);
+			printf("Align (simul.):  %f s\n", (double) d2_align_sim_total_time);
 			printf("Incremental   :  %f s\n", (double) d2_incremental_total_time);
 			printf("Irani-Peleg   :  %f s\n", (double) d2_irani_peleg_total_time);
 #endif

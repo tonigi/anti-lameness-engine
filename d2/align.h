@@ -465,6 +465,8 @@ private:
 
 			int samples = (int) floor(mc * hist_total);
 
+			ui::get()->d2_align_sim_start();
+
 			for (int s = 0; s < samples; s++) {
 				int index = rng.get() % hist_total;
 				int histogram_index = -1;
@@ -475,6 +477,8 @@ private:
 				result += pow(2, hist_min_r + histogram_index / hist_size);
 				divisor += pow(2, hist_min_r + histogram_index % hist_size);
 			}
+
+			ui::get()->d2_align_sim_stop();
 
 			return pow(result / divisor, 1 / metric_exponent);
 		}
@@ -901,7 +905,7 @@ private:
 
 		diff_stat->clear();
 
-		ui::get()->d2_align_start();
+		ui::get()->d2_align_sample_start();
 
 		if (interpolant != NULL) 
 			interpolant->set_parameters(t, c.input, c.accum->offset());
@@ -952,7 +956,7 @@ private:
 
 		delete[] args;
 
-		ui::get()->d2_align_stop();
+		ui::get()->d2_align_sample_stop();
 
 		ale_accum result = diff_stat->get_error();
 
