@@ -557,19 +557,19 @@ public:
 			printf("======================\n");
 			printf("\n");
 #if HAVE_GETTIMEOFDAY
-			printf("Align (sample):  %f s\n", (double) d2_align_sample_total_time.tv_sec 
+			printf("Alignment (sampling)   :  %f s\n", (double) d2_align_sample_total_time.tv_sec 
 					              + (double) d2_align_sample_total_time.tv_usec / (double) 1000000);
-			printf("Align (simul.):  %f s\n", (double) d2_align_sim_total_time.tv_sec 
+			printf("Alignment (simulation) :  %f s\n", (double) d2_align_sim_total_time.tv_sec 
 					              + (double) d2_align_sim_total_time.tv_usec / (double) 1000000);
-			printf("Incremental   :  %f s\n", (double) d2_incremental_total_time.tv_sec 
+			printf("Incremental rendering  :  %f s\n", (double) d2_incremental_total_time.tv_sec 
 					              + (double) d2_incremental_total_time.tv_usec / (double) 1000000);
-			printf("Irani-Peleg   :  %f s\n", (double) d2_irani_peleg_total_time.tv_sec 
+			printf("Irani-Peleg rendering  :  %f s\n", (double) d2_irani_peleg_total_time.tv_sec 
 					              + (double) d2_irani_peleg_total_time.tv_usec / (double) 1000000);
 #else
-			printf("Align (sample):  %f s\n", (double) d2_align_sample_total_time);
-			printf("Align (simul.):  %f s\n", (double) d2_align_sim_total_time);
-			printf("Incremental   :  %f s\n", (double) d2_incremental_total_time);
-			printf("Irani-Peleg   :  %f s\n", (double) d2_irani_peleg_total_time);
+			printf("Alignment (sampling)   :  %f s\n", (double) d2_align_sample_total_time);
+			printf("Alignment (simulation) :  %f s\n", (double) d2_align_sim_total_time);
+			printf("Incremental rendering  :  %f s\n", (double) d2_incremental_total_time);
+			printf("Irani-Peleg rendering  :  %f s\n", (double) d2_irani_peleg_total_time);
 #endif
 			printf("\n");
 		}
