@@ -1885,6 +1885,8 @@ private:
 			ale_accum old_here = here;
 			diff_stat_t *old_here_diff_stat = here_diff_stat;
 			here_diff_stat = new diff_stat_t();
+			int found_better = 0;
+			int found_reliable_better = 0;
 
 			if (alignment_class < 2 && alignment_class >= 0) {
 
