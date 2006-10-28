@@ -1578,8 +1578,9 @@ private:
 		old_lod = lod;
 		offset = new_offset;
 
-		ale_pos _mc_arg = _mc * pow(2, 2 * lod);
 		struct scale_cluster si = scale_clusters[lod];
+		ale_pos _mc_arg = (_mc > 0) ? (_mc * pow(2, 2 * lod))
+			                    : ((double)_mcd_min / (si.accum->height() * si.accum->width()));
 
 		/*
 		 * Projective adjustment value
@@ -1887,6 +1888,7 @@ private:
 			here_diff_stat = new diff_stat_t();
 			int found_better = 0;
 			int found_reliable_better = 0;
+			int found_reliable_worse = 0;
 
 			if (alignment_class < 2 && alignment_class >= 0) {
 
@@ -1904,10 +1906,20 @@ private:
 					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
 
 					if (test_d < here || (!finite(here) && finite(test_d))) {
-						here = test_d;
-						offset = test_t;
-						goto done;
+						found_better = 1;
+						if (_mc > 0
+						 || here_diff_stat->consensus(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
+							found_reliable_better = 1;
+							here = test_d;
+							offset = test_t;
+							goto done;
+						}
 					}
+
+					if (_mc <= 0
+					 && test_d > here 
+					 && old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
+						found_reliable_worse = 1;
 				}
 
 				if (alignment_class == 1 && adj_o < rot_max)
@@ -1920,10 +1932,20 @@ private:
 					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
 
 					if (test_d < here || (!finite(here) && finite(test_d))) {
-						here = test_d;
-						offset = test_t;
-						goto done;
+						found_better = 1;
+						if (_mc > 0
+						 || here_diff_stat->consensus(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
+							found_reliable_better = 1;
+							here = test_d;
+							offset = test_t;
+							goto done;
+						}
 					}
+
+					if (_mc <= 0
+					 && test_d > here 
+					 && old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
+						found_reliable_worse = 1;
 				}
 
 			} else if (alignment_class == 2) {
@@ -1947,10 +1969,29 @@ private:
 
 					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
 
+					fprintf(stderr, "old\n");
+					old_here_diff_stat->print_hist();
+					fprintf(stderr, "new\n");
+					here_diff_stat->print_hist();
+
 					if (test_d < here || (!finite(here) && finite(test_d))) {
-						here = test_d;
-						offset = test_t;
-						adj_s += 3 * adj_p;
+						fprintf(stderr, "found better\n");
+						found_better = 1;
+						if (_mc > 0
+						 || here_diff_stat->consensus(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
+							fprintf(stderr, "found reliable better\n");
+							found_reliable_better = 1;
+							here = test_d;
+							offset = test_t;
+							adj_s += 3 * adj_p;
+						}
+					}
+
+					if (_mc <= 0
+					 && test_d > here 
+					 && old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower) {
+						fprintf(stderr, "found reliable worse\n");
+						found_reliable_worse = 1;
 					}
 				}
 
@@ -1980,19 +2021,34 @@ private:
 					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
 
 					if (test_d < here || (!finite(here) && finite(test_d))) {
-						here = test_d;
-						offset = test_t;
-						modified_bd[rd] += adj_s;
-						goto done;
+						found_better = 1;
+						if (_mc > 0
+						 || here_diff_stat->consensus(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
+							found_reliable_better = 1;
+							here = test_d;
+							offset = test_t;
+							modified_bd[rd] += adj_s;
+							goto done;
+						}
 					}
+
+					if (_mc <= 0
+					 && test_d > here 
+					 && old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
+						found_reliable_worse = 1;
 				}
 			}
 			
 	done:
 
-			fprintf(stderr, "\nconsensus=%f\n", here_diff_stat->consensus(old_here_diff_stat, _mc));
+			if (_mc_arg < 1 && _mc <= 0 && !found_reliable_worse && !found_reliable_better) {
+				fprintf(stderr, "increasing mc to %f\n", _mc_arg);
+				_mc_arg *= 2;
+				continue;
+			}
 
 			if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
+				fprintf(stderr, "increasing perturbation\n");
 				perturb *= 0.5;
 
 				if (lod > 0) {
@@ -2056,9 +2112,8 @@ private:
 
 		ui::get()->postmatching();
 		diff_stat_t *new_diff_stat = new diff_stat_t();
-		here = diff(scale_clusters[0], offset, _mc, local_ax_count, m, new_diff_stat);
+		here = diff(scale_clusters[0], offset, _mc_arg, local_ax_count, m, new_diff_stat);
 		new_diff_stat->print_hist();
-		fprintf(stderr, "consensus=%f\n", new_diff_stat->consensus(here_diff_stat, _mc));
 		delete new_diff_stat;
 		ui::get()->set_match(here);
 

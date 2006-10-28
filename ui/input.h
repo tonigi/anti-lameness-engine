@@ -2733,9 +2733,9 @@ public:
 				} else if (!strcmp(option_name, "mcd-min")) {
 					d2::align::mcd_min(env->get_int_arg(i->first, 1));
 				} else if (!strcmp(option_name, "mcd-upper")) {
-					d2::align::mcd_upper(env->get_double_arg(i->first, 1));
+					d2::align::mcd_upper(env->get_double_arg(i->first, 1) / 100);
 				} else if (!strcmp(option_name, "mcd-lower")) {
-					d2::align::mcd_lower(env->get_int_arg(i->first, 1));
+					d2::align::mcd_lower(env->get_double_arg(i->first, 1) / 100);
 				} else if (!strcmp(option_name, "mcd-runs")) {
 					d2::align::mcd_runs(env->get_int_arg(i->first, 1));
 				} else if (!strcmp(option_name, "perturb-upper")) {
