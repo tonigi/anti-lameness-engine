@@ -1580,7 +1580,8 @@ private:
 
 		struct scale_cluster si = scale_clusters[lod];
 		ale_pos _mc_arg = (_mc > 0) ? (_mc * pow(2, 2 * lod))
-			                    : ((double)_mcd_min / (si.accum->height() * si.accum->width()));
+			                    /* : ((double)_mcd_min / (si.accum->height() * si.accum->width())); */
+			                    : 1;
 
 		/*
 		 * Projective adjustment value
@@ -1889,6 +1890,7 @@ private:
 			int found_better = 0;
 			int found_reliable_better = 0;
 			int found_reliable_worse = 0;
+			int found_unreliable_worse = 0;
 
 			if (alignment_class < 2 && alignment_class >= 0) {
 
@@ -1908,6 +1910,7 @@ private:
 					if (test_d < here || (!finite(here) && finite(test_d))) {
 						found_better = 1;
 						if (_mc > 0
+						 || _mc_arg >= 1
 						 || here_diff_stat->consensus(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
 							found_reliable_better = 1;
 							here = test_d;
@@ -1916,10 +1919,13 @@ private:
 						}
 					}
 
-					if (_mc <= 0
-					 && test_d > here 
-					 && old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
-						found_reliable_worse = 1;
+					if (_mc <= 0 && test_d > here) {
+						if (_mc_arg >= 1
+						 || old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
+							found_reliable_worse = 1;
+						else
+							found_unreliable_worse = 1;
+					}
 				}
 
 				if (alignment_class == 1 && adj_o < rot_max)
@@ -1934,6 +1940,7 @@ private:
 					if (test_d < here || (!finite(here) && finite(test_d))) {
 						found_better = 1;
 						if (_mc > 0
+						 || _mc_arg >= 1
 						 || here_diff_stat->consensus(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
 							found_reliable_better = 1;
 							here = test_d;
@@ -1942,10 +1949,13 @@ private:
 						}
 					}
 
-					if (_mc <= 0
-					 && test_d > here 
-					 && old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
-						found_reliable_worse = 1;
+					if (_mc <= 0 && test_d > here) {
+						if (_mc_arg >= 1
+						 || old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
+							found_reliable_worse = 1;
+						else
+							found_unreliable_worse = 1;
+					}
 				}
 
 			} else if (alignment_class == 2) {
@@ -1969,17 +1979,20 @@ private:
 
 					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
 
+#if 0
 					fprintf(stderr, "old\n");
 					old_here_diff_stat->print_hist();
 					fprintf(stderr, "new\n");
 					here_diff_stat->print_hist();
+#endif
 
 					if (test_d < here || (!finite(here) && finite(test_d))) {
-						fprintf(stderr, "found better\n");
+						// fprintf(stderr, "found better\n");
 						found_better = 1;
 						if (_mc > 0
+						 || _mc_arg >= 1
 						 || here_diff_stat->consensus(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
-							fprintf(stderr, "found reliable better\n");
+							// fprintf(stderr, "found reliable better\n");
 							found_reliable_better = 1;
 							here = test_d;
 							offset = test_t;
@@ -1987,11 +2000,12 @@ private:
 						}
 					}
 
-					if (_mc <= 0
-					 && test_d > here 
-					 && old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower) {
-						fprintf(stderr, "found reliable worse\n");
-						found_reliable_worse = 1;
+					if (_mc <= 0 && test_d > here) {
+						if (_mc_arg >= 1
+						 || old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
+							found_reliable_worse = 1;
+						else
+							found_unreliable_worse = 1;
 					}
 				}
 
@@ -2023,6 +2037,7 @@ private:
 					if (test_d < here || (!finite(here) && finite(test_d))) {
 						found_better = 1;
 						if (_mc > 0
+						 || _mc_arg >= 1
 						 || here_diff_stat->consensus(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
 							found_reliable_better = 1;
 							here = test_d;
@@ -2032,19 +2047,32 @@ private:
 						}
 					}
 
-					if (_mc <= 0
-					 && test_d > here 
-					 && old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
-						found_reliable_worse = 1;
+					if (_mc <= 0 && test_d > here) {
+						if (_mc_arg >= 1
+						 || old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
+							found_reliable_worse = 1;
+						else
+							found_unreliable_worse = 1;
+					}
 				}
 			}
 			
 	done:
 
-			if (_mc_arg < 1 && _mc <= 0 && !found_reliable_worse && !found_reliable_better) {
-				fprintf(stderr, "increasing mc to %f\n", _mc_arg);
+			if (_mc_arg < 1 && _mc <= 0 
+			 /* && (!found_reliable_worse || found_better)  */
+			 && found_unreliable_worse
+			 && !found_reliable_better) {
 				_mc_arg *= 2;
+				fprintf(stderr, "increasing mc to %f\n", _mc_arg);
 				continue;
+			}
+
+			if (_mc <= 0 
+			 && found_reliable_better 
+			 && here_diff_stat->consensus(old_here_diff_stat, _mc_arg / 2) >= _mcd_upper) {
+				_mc_arg /= 2;
+				fprintf(stderr, "decreasing mc to %f\n", _mc_arg);
 			}
 
 			if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
@@ -2068,7 +2096,9 @@ private:
 
 					lod--;
 					si = scale_clusters[lod];
-					_mc_arg /= 4;
+
+					if (_mc > 0)
+						_mc_arg /= 4;
 
 					here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
 					delete old_here_diff_stat;
