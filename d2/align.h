@@ -456,8 +456,36 @@ private:
 		int hist_min_d;
 
 		hist_bin *histogram;
+		hist_bin *histogram_integral;
 		hist_bin hist_total;
 		int hist_size;
+
+		void init_histogram_integral() {
+			histogram_integral = (hist_bin *)malloc(sizeof(hist_bin) * hist_size);
+			hist_bin total = 0;
+			for (int i = 0; i < hist_size; i++) {
+				total += histogram[i];
+				histogram_integral[i] = total;
+			}
+		}
+
+		int histogram_integral_inverse(unsigned int i) {
+			assert (hist_size > 0);
+
+			int min = -1;
+			int max = hist_size;
+
+			while (min < max - 1) {
+				int mid = (min + max) / 2;
+				if (histogram_integral[mid] <= i) {
+					min = mid;
+				} else {
+					max = mid;
+				}
+			}
+
+			return min + 1;
+		}
 
 		ale_accum simulated_error(rng_t rng, ale_pos mc) {
 			ale_accum result = 0;
@@ -469,10 +497,7 @@ private:
 
 			for (int s = 0; s < samples; s++) {
 				int index = rng.get() % hist_total;
-				int histogram_index = -1;
-
-				while (index >= 0)
-					index -= histogram[++histogram_index];
+				int histogram_index = histogram_integral_inverse((unsigned int) index);
 
 				result += pow(2, hist_min_r + histogram_index / hist_size);
 				divisor += pow(2, hist_min_r + histogram_index % hist_size);
@@ -494,6 +519,9 @@ private:
 		static void *consensus_thread (void *args) {
 			consensus_subdomain *cs = (consensus_subdomain *) args;
 
+			cs->better->init_histogram_integral();
+			cs->worse->init_histogram_integral();
+
 			for (int run = 0; run < cs->run_count; run++) {
 				rng_t rng;
 
@@ -505,6 +533,9 @@ private:
 				if (b < w)
 					cs->success++;
 			}
+
+			free(cs->better->histogram_integral);
+			free(cs->worse->histogram_integral);
 
 			return NULL;
 		}
@@ -577,7 +608,7 @@ private:
 			divisor = 0;
 			hist_min_r = INT_MIN;
 			hist_min_d = INT_MIN;
-			hist_size = 10;
+			hist_size = 5;
 			hist_total = 0;
 			histogram = (hist_bin *) calloc(hist_size * hist_size, sizeof(hist_bin));
 		}
@@ -589,7 +620,6 @@ private:
 			divisor = 0;
 			hist_min_r = INT_MIN;
 			hist_min_d = INT_MIN;
-			hist_size = 10;
 			hist_total = 0;
 			histogram = (hist_bin *) calloc(hist_size * hist_size, sizeof(hist_bin));
 		}
@@ -2060,8 +2090,8 @@ private:
 	done:
 
 			if (_mc_arg < 1 && _mc <= 0 
-			 /* && (!found_reliable_worse || found_better)  */
-			 && found_unreliable_worse
+			 && (!found_reliable_worse || found_better) 
+			 /* && found_unreliable_worse */
 			 && !found_reliable_better) {
 				_mc_arg *= 2;
 				fprintf(stderr, "increasing mc to %f\n", _mc_arg);
@@ -2099,6 +2129,8 @@ private:
 
 					if (_mc > 0)
 						_mc_arg /= 4;
+					else
+						_mc_arg /= 2;
 
 					here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
 					delete old_here_diff_stat;
