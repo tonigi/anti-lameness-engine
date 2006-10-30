@@ -284,10 +284,7 @@ private:
 	 */
 
 	static ale_pos _mc;
-	static int _mcd_min;
-	static ale_pos _mcd_upper;
-	static ale_pos _mcd_lower;
-	static int _mcd_runs;
+	static int _mcd_limit;
 
 	/*
 	 * Certainty weight flag
@@ -2858,20 +2855,8 @@ public:
 		_mc = n;
 	}
 
-	static void mcd_min(int n) {
-		_mcd_min = n;
-	}
-
-	static void mcd_upper(ale_pos n) {
-		_mcd_upper = n;
-	}
-
-	static void mcd_lower(ale_pos n) {
-		_mcd_lower = n;
-	}
-
-	static void mcd_runs(int n) {
-		_mcd_runs = n;
+	static void mcd_limit(int n) {
+		_mcd_limit = n;
 	}
 
 	/*

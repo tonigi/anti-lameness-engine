@@ -94,10 +94,7 @@ ale_accum align::match_sum = 0;
 int align::match_count = 0;
 
 ale_pos align::_mc = 0;
-int align::_mcd_min = 1000;
-ale_pos align::_mcd_upper = 0.75;
-ale_pos align::_mcd_lower = 0.5;
-int align::_mcd_runs = 100;
+int align::_mcd_limit = 10;
 int align::certainty_weights = 0;
 int align::_gs = 0;
 unsigned int align::_gs_mo = 16;
