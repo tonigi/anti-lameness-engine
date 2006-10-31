@@ -236,7 +236,7 @@ public:
 			"--mc <x>          Statically sample ~x%% of available pixels       (0 < x < 100)\n"
                         "--no-mc           Statically sample all pixels.\n"
 			"--mcd             Dynamically sample with removal thresholds.         [default]\n"
-			"--mcd-limit <x>   Set the removal threshold to x pixels.        (10 is default)\n"
+			"--mcd-removal <x> Check robustness against removal of x pixels. (10 is default)\n"
 			BETWEEN_SECTIONS
 			"Tunable parameters:\n"
 			HEADER_SPACE

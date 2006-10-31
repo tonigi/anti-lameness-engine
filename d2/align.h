@@ -625,7 +625,42 @@ private:
 			free(histogram);
 		}
 
+		int check_removal(diff_stat_t *with) {
+			ale_accum bresult, bdivisor, wresult, wdivisor;
+			hist_bin *bhist, *whist;
+
+			bhist = (hist_bin *)malloc(sizeof(hist_bin) * hist_size);
+			whist = (hist_bin *)malloc(sizeof(hist_bin) * hist_size);
+
+			bresult = result;
+			bdivisor = divisor;
+			wresult = with->result;
+			wdivisor = with->divisor;
+
+			for (int i = 0; i < hist_size; i++) {
+				bhist[i] = histogram[i];
+				whist[i] = with->histogram[i];
+			}
+
+			for (int r = 0; r < _mcd_limit; r++) {
+				int max_gradient_bin = -1;
+				int max_gradient_hist = -1;
+				ale_accum max_gradient = 0;
+
+				for (int i = 0; i < hist_size; i++) {
+					ale_accum br = pow(2, hist_min_r + i / hist_size);
+					ale_accum bd = pow(2, hist_min_d + 
+					ale_accum b_test_gradient = (bdivisor - 
+				}
+			}
+
+			free(bhist);
+			free(whist);
+		}
+
 		ale_pos consensus(diff_stat_t *with, ale_pos mc) {
+
+			int _mcd_runs = 10;
 
 			consensus_subdomain cs = {
 				this, with, mc, _mcd_runs, 0
@@ -634,6 +669,14 @@ private:
 			consensus_thread(&cs);
 
 			return ((double) cs.success / (double) _mcd_runs);
+		}
+
+		int reliable(diff_stat_t *with, ale_pos mc) {
+#if 0
+			return consensus(with, mc) >= _mcd_lower;
+#else
+			return check_removal(with);
+#endif
 		}
 
 		void add(const diff_stat_t *ds) {
@@ -1938,7 +1981,7 @@ private:
 						found_better = 1;
 						if (_mc > 0
 						 || _mc_arg >= 1
-						 || here_diff_stat->consensus(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
+						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg)) {
 							found_reliable_better = 1;
 							here = test_d;
 							offset = test_t;
@@ -1948,7 +1991,7 @@ private:
 
 					if (_mc <= 0 && test_d > here) {
 						if (_mc_arg >= 1
-						 || old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
+						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg) >= _mcd_lower)
 							found_reliable_worse = 1;
 						else
 							found_unreliable_worse = 1;
@@ -1968,7 +2011,7 @@ private:
 						found_better = 1;
 						if (_mc > 0
 						 || _mc_arg >= 1
-						 || here_diff_stat->consensus(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
+						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
 							found_reliable_better = 1;
 							here = test_d;
 							offset = test_t;
@@ -1978,7 +2021,7 @@ private:
 
 					if (_mc <= 0 && test_d > here) {
 						if (_mc_arg >= 1
-						 || old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
+						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg) >= _mcd_lower)
 							found_reliable_worse = 1;
 						else
 							found_unreliable_worse = 1;
@@ -2018,7 +2061,7 @@ private:
 						found_better = 1;
 						if (_mc > 0
 						 || _mc_arg >= 1
-						 || here_diff_stat->consensus(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
+						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
 							// fprintf(stderr, "found reliable better\n");
 							found_reliable_better = 1;
 							here = test_d;
@@ -2029,7 +2072,7 @@ private:
 
 					if (_mc <= 0 && test_d > here) {
 						if (_mc_arg >= 1
-						 || old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
+						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg) >= _mcd_lower)
 							found_reliable_worse = 1;
 						else
 							found_unreliable_worse = 1;
@@ -2065,7 +2108,7 @@ private:
 						found_better = 1;
 						if (_mc > 0
 						 || _mc_arg >= 1
-						 || here_diff_stat->consensus(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
+						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
 							found_reliable_better = 1;
 							here = test_d;
 							offset = test_t;
@@ -2076,7 +2119,7 @@ private:
 
 					if (_mc <= 0 && test_d > here) {
 						if (_mc_arg >= 1
-						 || old_here_diff_stat->consensus(here_diff_stat, _mc_arg) >= _mcd_lower)
+						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg) >= _mcd_lower)
 							found_reliable_worse = 1;
 						else
 							found_unreliable_worse = 1;
