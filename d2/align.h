@@ -605,7 +605,7 @@ private:
 			divisor = 0;
 			hist_min_r = INT_MIN;
 			hist_min_d = INT_MIN;
-			hist_size = 5;
+			hist_size = 20;
 			hist_total = 0;
 			histogram = (hist_bin *) calloc(hist_size * hist_size, sizeof(hist_bin));
 		}
@@ -630,17 +630,18 @@ private:
 			hist_bin *bhist, *whist;
 
 			bhist = (hist_bin *)malloc(sizeof(hist_bin) * hist_size);
-			whist = (hist_bin *)malloc(sizeof(hist_bin) * hist_size);
+			whist = (hist_bin *)malloc(sizeof(hist_bin) * with->hist_size);
 
 			bresult = result;
 			bdivisor = divisor;
 			wresult = with->result;
 			wdivisor = with->divisor;
 
-			for (int i = 0; i < hist_size; i++) {
+			for (int i = 0; i < hist_size; i++)
 				bhist[i] = histogram[i];
+
+			for (int i = 0; i < with->hist_size; i++)
 				whist[i] = with->histogram[i];
-			}
 
 			for (int r = 0; r < _mcd_limit; r++) {
 				int max_gradient_bin = -1;
@@ -648,14 +649,55 @@ private:
 				ale_accum max_gradient = 0;
 
 				for (int i = 0; i < hist_size; i++) {
+					if (bhist[i] <= 0)
+						continue;
+
 					ale_accum br = pow(2, hist_min_r + i / hist_size);
-					ale_accum bd = pow(2, hist_min_d + 
-					ale_accum b_test_gradient = (bdivisor - 
+					ale_accum bd = pow(2, hist_min_d + i % hist_size);
+					ale_accum b_test_gradient = 
+						bresult / bdivisor - (bresult - br) / (bdivisor - bd);
+					
+					if (b_test_gradient > max_gradient) {
+						max_gradient_bin = i;
+						max_gradient_hist = 0;
+						max_gradient = b_test_gradient;
+					}
+				}
+
+				for (int i = 0; i < with->hist_size; i++) {
+					if (whist[i] <= 0)
+						continue;
+
+					ale_accum wr = pow(2, with->hist_min_r + i / with->hist_size);
+					ale_accum wd = pow(2, with->hist_min_d + i % with->hist_size);
+					ale_accum w_test_gradient = 
+						(wresult - wr) / (wdivisor - wd) - wresult / wdivisor;
+					
+					if (w_test_gradient > max_gradient) {
+						max_gradient_bin = i;
+						max_gradient_hist = 1;
+						max_gradient = w_test_gradient;
+					}
+				}
+
+				if (max_gradient_hist == 0) {
+					bhist[max_gradient_bin]--;
+					bresult -= pow(2, hist_min_r + max_gradient_bin / hist_size);
+					bdivisor -= pow(2, hist_min_d + max_gradient_bin / hist_size);
+				} else if (max_gradient_hist == 1) {
+					whist[max_gradient_bin]--;
+					wresult -= pow(2, with->hist_min_r + max_gradient_bin / with->hist_size);
+					wdivisor -= pow(2, with->hist_min_d + max_gradient_bin / with->hist_size);
 				}
 			}
 
 			free(bhist);
 			free(whist);
+
+			if (bresult / bdivisor < wresult / wdivisor)
+				return 1;
+			
+			return 0;
 		}
 
 		ale_pos consensus(diff_stat_t *with, ale_pos mc) {
@@ -1953,6 +1995,7 @@ private:
 			ale_pos adj_b = perturb * bda_mult;
 
 			transformation test_t;
+			transformation old_offset = offset;
 			ale_accum test_d;
 			ale_accum old_here = here;
 			diff_stat_t *old_here_diff_stat = here_diff_stat;
@@ -1991,7 +2034,7 @@ private:
 
 					if (_mc <= 0 && test_d > here) {
 						if (_mc_arg >= 1
-						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg) >= _mcd_lower)
+						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg))
 							found_reliable_worse = 1;
 						else
 							found_unreliable_worse = 1;
@@ -2011,7 +2054,7 @@ private:
 						found_better = 1;
 						if (_mc > 0
 						 || _mc_arg >= 1
-						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
+						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg)) {
 							found_reliable_better = 1;
 							here = test_d;
 							offset = test_t;
@@ -2021,7 +2064,7 @@ private:
 
 					if (_mc <= 0 && test_d > here) {
 						if (_mc_arg >= 1
-						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg) >= _mcd_lower)
+						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg))
 							found_reliable_worse = 1;
 						else
 							found_unreliable_worse = 1;
@@ -2061,7 +2104,7 @@ private:
 						found_better = 1;
 						if (_mc > 0
 						 || _mc_arg >= 1
-						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
+						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg)) {
 							// fprintf(stderr, "found reliable better\n");
 							found_reliable_better = 1;
 							here = test_d;
@@ -2072,7 +2115,7 @@ private:
 
 					if (_mc <= 0 && test_d > here) {
 						if (_mc_arg >= 1
-						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg) >= _mcd_lower)
+						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg))
 							found_reliable_worse = 1;
 						else
 							found_unreliable_worse = 1;
@@ -2108,7 +2151,7 @@ private:
 						found_better = 1;
 						if (_mc > 0
 						 || _mc_arg >= 1
-						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg) >= _mcd_lower) {
+						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg)) {
 							found_reliable_better = 1;
 							here = test_d;
 							offset = test_t;
@@ -2119,7 +2162,7 @@ private:
 
 					if (_mc <= 0 && test_d > here) {
 						if (_mc_arg >= 1
-						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg) >= _mcd_lower)
+						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg))
 							found_reliable_worse = 1;
 						else
 							found_unreliable_worse = 1;
@@ -2138,11 +2181,22 @@ private:
 				continue;
 			}
 
-			if (_mc <= 0 
-			 && found_reliable_better 
-			 && here_diff_stat->consensus(old_here_diff_stat, _mc_arg / 2) >= _mcd_upper) {
-				_mc_arg /= 2;
-				fprintf(stderr, "decreasing mc to %f\n", _mc_arg);
+			if (_mc <= 0
+			 && found_reliable_better) {
+				diff_stat_t *here_diff_stat_half = new diff_stat_t();
+				diff_stat_t *old_here_diff_stat_half = new diff_stat_t();
+
+				diff(si, offset, _mc_arg / 2, local_ax_count, m, here_diff_stat_half);
+				diff(si, old_offset, _mc_arg / 2, local_ax_count, m, old_here_diff_stat_half);
+
+				if (here_diff_stat_half->reliable(old_here_diff_stat_half, _mc_arg / 2)) {
+					_mc_arg /= 2;
+					fprintf(stderr, "decreasing mc to %f\n", _mc_arg);
+				}
+				delete here_diff_stat;
+				delete old_here_diff_stat;
+				here_diff_stat = here_diff_stat_half;
+				old_here_diff_stat = old_here_diff_stat_half;
 			}
 
 			if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
