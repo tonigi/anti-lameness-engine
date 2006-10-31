@@ -497,7 +497,7 @@ private:
 				int histogram_index = histogram_integral_inverse((unsigned int) index);
 
 				result += pow(2, hist_min_r + histogram_index / hist_size);
-				divisor += pow(2, hist_min_r + histogram_index % hist_size);
+				divisor += pow(2, hist_min_d + histogram_index % hist_size);
 			}
 
 			ui::get()->d2_align_sim_stop();
