@@ -1699,6 +1699,8 @@ private:
 			                    /* : ((double)_mcd_min / (si.accum->height() * si.accum->width())); */
 			                    : 1;
 
+		ui::get()->alignment_monte_carlo_parameter(_mc_arg);
+
 		/*
 		 * Projective adjustment value
 		 */
@@ -2181,7 +2183,7 @@ private:
 			 /* && found_unreliable_worse */
 			 && !found_reliable_better) {
 				_mc_arg *= 2;
-				fprintf(stderr, "increasing mc to %f\n", _mc_arg);
+				ui::get()->alignment_monte_carlo_parameter(_mc_arg);
 				continue;
 			}
 
@@ -2195,7 +2197,7 @@ private:
 
 				if (here_diff_stat_half->reliable(old_here_diff_stat_half, _mc_arg / 2)) {
 					_mc_arg /= 2;
-					fprintf(stderr, "decreasing mc to %f\n", _mc_arg);
+					ui::get()->alignment_monte_carlo_parameter(_mc_arg);
 				}
 				delete here_diff_stat;
 				delete old_here_diff_stat;
@@ -2204,7 +2206,6 @@ private:
 			}
 
 			if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
-				fprintf(stderr, "increasing perturbation\n");
 				perturb *= 0.5;
 
 				if (_mc <= 0)
@@ -2241,9 +2242,10 @@ private:
 				}
 
 				/*
-				 * Announce that we've dropped a perturbation level.
+				 * Announce changes
 				 */
 
+				ui::get()->alignment_monte_carlo_parameter(_mc_arg);
 				ui::get()->alignment_perturbation_level(perturb, lod);
 
 			} else {
@@ -2274,7 +2276,6 @@ private:
 		ui::get()->postmatching();
 		diff_stat_t *new_diff_stat = new diff_stat_t();
 		here = diff(scale_clusters[0], offset, _mc_arg, local_ax_count, m, new_diff_stat);
-		new_diff_stat->print_hist();
 		delete new_diff_stat;
 		ui::get()->set_match(here);
 

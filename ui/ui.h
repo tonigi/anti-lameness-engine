@@ -103,6 +103,7 @@ protected:
 		double exp_multiplier[3];
 		double perturb_size;
 		double align_lod;
+		double mc;
 		unsigned int frame_num;
 		unsigned int irani_peleg_stage;
 		unsigned int secondary_frame_num;
@@ -529,6 +530,10 @@ public:
 		update();
 	}
 
+	void alignment_monte_carlo_parameter(ale_pos mc) {
+		status.mc = (mc > 1) ? 1 : mc;
+	}
+
 	void alignment_perturbation_level(ale_pos perturb, ale_pos lod) {
 		status.perturb_size = perturb;
 		status.align_lod = lod;
@@ -559,7 +564,7 @@ public:
 #if HAVE_GETTIMEOFDAY
 			printf("Alignment (sampling)   :  %f s\n", (double) d2_align_sample_total_time.tv_sec 
 					              + (double) d2_align_sample_total_time.tv_usec / (double) 1000000);
-			printf("Alignment (simulation) :  %f s\n", (double) d2_align_sim_total_time.tv_sec 
+			printf("Alignment (checking)   :  %f s\n", (double) d2_align_sim_total_time.tv_sec 
 					              + (double) d2_align_sim_total_time.tv_usec / (double) 1000000);
 			printf("Incremental rendering  :  %f s\n", (double) d2_incremental_total_time.tv_sec 
 					              + (double) d2_incremental_total_time.tv_usec / (double) 1000000);
@@ -567,7 +572,7 @@ public:
 					              + (double) d2_irani_peleg_total_time.tv_usec / (double) 1000000);
 #else
 			printf("Alignment (sampling)   :  %f s\n", (double) d2_align_sample_total_time);
-			printf("Alignment (simulation) :  %f s\n", (double) d2_align_sim_total_time);
+			printf("Alignment (checking)   :  %f s\n", (double) d2_align_sim_total_time);
 			printf("Incremental rendering  :  %f s\n", (double) d2_incremental_total_time);
 			printf("Irani-Peleg rendering  :  %f s\n", (double) d2_irani_peleg_total_time);
 #endif

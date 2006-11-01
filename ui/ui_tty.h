@@ -167,10 +167,14 @@ private:
 				status_printf(3, "Calculating pre-alignment match", "Calculating match", "prematch");
 				break;
 			case status_type::ALIGN:
-				status_printf(4, "Aligning [perturb=%f] [lod=%f] [exp_mult=%f %f %f]", 
-						 "Aligning [perturb=%f] [lod=%f]", "Aligning...", "align",
+				status_printf(5, "Aligning [perturb=%f] [lod=%f] [mc=%f] [exp_mult=%f %f %f]", 
+						 "Aligning [perturb=%f] [lod=%f] [mc=%f]", 
+						 "Aligning [perturb=%f] [lod=%f]", 
+						 "Aligning...", 
+						 "align",
 						 status.perturb_size,
 						 pow(2, -status.align_lod),
+						 status.mc,
 						 status.exp_multiplier[0],
 						 status.exp_multiplier[1],
 						 status.exp_multiplier[2]);
