@@ -455,22 +455,22 @@ private:
 		hist_bin *histogram;
 		hist_bin *histogram_integral;
 		hist_bin hist_total;
-		int hist_size;
+		int hist_dim;
 
 		void init_histogram_integral() {
-			histogram_integral = (hist_bin *)malloc(sizeof(hist_bin) * hist_size);
+			histogram_integral = (hist_bin *)malloc(sizeof(hist_bin) * hist_dim * hist_dim);
 			hist_bin total = 0;
-			for (int i = 0; i < hist_size; i++) {
+			for (int i = 0; i < hist_dim * hist_dim; i++) {
 				total += histogram[i];
 				histogram_integral[i] = total;
 			}
 		}
 
 		int histogram_integral_inverse(unsigned int i) {
-			assert (hist_size > 0);
+			assert (hist_dim > 0);
 
 			int min = -1;
-			int max = hist_size;
+			int max = hist_dim * hist_dim;
 
 			while (min < max - 1) {
 				int mid = (min + max) / 2;
@@ -496,8 +496,8 @@ private:
 				int index = rng.get() % hist_total;
 				int histogram_index = histogram_integral_inverse((unsigned int) index);
 
-				result += pow(2, hist_min_r + histogram_index / hist_size);
-				divisor += pow(2, hist_min_d + histogram_index % hist_size);
+				result += pow(2, hist_min_r + histogram_index / hist_dim);
+				divisor += pow(2, hist_min_d + histogram_index % hist_dim);
 			}
 
 			ui::get()->d2_align_sim_stop();
@@ -543,13 +543,13 @@ private:
 
 			int r_shift = 0, d_shift = 0;
 
-			if (r - hist_min_r >= hist_size) {
-				r_shift = (r - hist_min_r) - hist_size + 1;
+			if (r - hist_min_r >= hist_dim) {
+				r_shift = (r - hist_min_r) - hist_dim + 1;
 				hist_min_r += r_shift;
 			}
 
-			if (d - hist_min_d >= hist_size) {
-				d_shift = (d - hist_min_d) - hist_size + 1;
+			if (d - hist_min_d >= hist_dim) {
+				d_shift = (d - hist_min_d) - hist_dim + 1;
 				hist_min_d += d_shift;
 			}
 
@@ -557,12 +557,12 @@ private:
 			assert (d_shift >= 0);
 
 			if (r_shift || d_shift) {
-				for (int rr = 0; rr < hist_size; rr++)
-				for (int dd = 0; dd < hist_size; dd++) {
+				for (int rr = 0; rr < hist_dim; rr++)
+				for (int dd = 0; dd < hist_dim; dd++) {
 
-					hist_bin value = histogram[rr * hist_size + dd];
+					hist_bin value = histogram[rr * hist_dim + dd];
 
-					histogram[rr * hist_size + dd] = 0;
+					histogram[rr * hist_dim + dd] = 0;
 
 					int rrr = rr - r_shift;
 					int ddd = dd - d_shift;
@@ -572,7 +572,7 @@ private:
 					if (ddd < 0)
 						ddd = 0;
 
-					histogram[rrr * hist_size + ddd] += value;
+					histogram[rrr * hist_dim + ddd] += value;
 				}
 			}
 
@@ -584,7 +584,7 @@ private:
 			if (d < 0)
 				d = 0;
 
-			histogram[r * hist_size + d] += count;
+			histogram[r * hist_dim + d] += count;
 		}
 
 		void add_hist(ale_accum result, ale_accum divisor) {
@@ -605,9 +605,9 @@ private:
 			divisor = 0;
 			hist_min_r = INT_MIN;
 			hist_min_d = INT_MIN;
-			hist_size = 20;
+			hist_dim = 20;
 			hist_total = 0;
-			histogram = (hist_bin *) calloc(hist_size * hist_size, sizeof(hist_bin));
+			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
 		}
 
 		void clear() {
@@ -618,7 +618,7 @@ private:
 			hist_min_r = INT_MIN;
 			hist_min_d = INT_MIN;
 			hist_total = 0;
-			histogram = (hist_bin *) calloc(hist_size * hist_size, sizeof(hist_bin));
+			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
 		}
 
 		~diff_stat_t() {
@@ -631,18 +631,18 @@ private:
 
 			ui::get()->d2_align_sim_start();
 
-			bhist = (hist_bin *)malloc(sizeof(hist_bin) * hist_size);
-			whist = (hist_bin *)malloc(sizeof(hist_bin) * with->hist_size);
+			bhist = (hist_bin *)malloc(sizeof(hist_bin) * hist_dim * hist_dim);
+			whist = (hist_bin *)malloc(sizeof(hist_bin) * with->hist_dim * with->hist_dim);
 
 			bresult = result;
 			bdivisor = divisor;
 			wresult = with->result;
 			wdivisor = with->divisor;
 
-			for (int i = 0; i < hist_size; i++)
+			for (int i = 0; i < hist_dim * hist_dim; i++)
 				bhist[i] = histogram[i];
 
-			for (int i = 0; i < with->hist_size; i++)
+			for (int i = 0; i < with->hist_dim * with->hist_dim; i++)
 				whist[i] = with->histogram[i];
 
 			for (int r = 0; r < _mcd_limit; r++) {
@@ -650,14 +650,14 @@ private:
 				int max_gradient_hist = -1;
 				ale_accum max_gradient = 0;
 
-				for (int i = 0; i < hist_size; i++) {
+				for (int i = 0; i < hist_dim * hist_dim; i++) {
 					if (bhist[i] <= 0)
 						continue;
 
-					ale_accum br = pow(2, hist_min_r + i / hist_size);
-					ale_accum bd = pow(2, hist_min_d + i % hist_size);
+					ale_accum br = pow(2, hist_min_r + i / hist_dim);
+					ale_accum bd = pow(2, hist_min_d + i % hist_dim);
 					ale_accum b_test_gradient = 
-						bresult / bdivisor - (bresult - br) / (bdivisor - bd);
+						(bresult - br) / (bdivisor - bd) - bresult / bdivisor;
 					
 					if (b_test_gradient > max_gradient) {
 						max_gradient_bin = i;
@@ -666,14 +666,14 @@ private:
 					}
 				}
 
-				for (int i = 0; i < with->hist_size; i++) {
+				for (int i = 0; i < with->hist_dim * with->hist_dim; i++) {
 					if (whist[i] <= 0)
 						continue;
 
-					ale_accum wr = pow(2, with->hist_min_r + i / with->hist_size);
-					ale_accum wd = pow(2, with->hist_min_d + i % with->hist_size);
+					ale_accum wr = pow(2, with->hist_min_r + i / with->hist_dim);
+					ale_accum wd = pow(2, with->hist_min_d + i % with->hist_dim);
 					ale_accum w_test_gradient = 
-						(wresult - wr) / (wdivisor - wd) - wresult / wdivisor;
+						wresult / wdivisor - (wresult - wr) / (wdivisor - wd);
 					
 					if (w_test_gradient > max_gradient) {
 						max_gradient_bin = i;
@@ -684,12 +684,12 @@ private:
 
 				if (max_gradient_hist == 0) {
 					bhist[max_gradient_bin]--;
-					bresult -= pow(2, hist_min_r + max_gradient_bin / hist_size);
-					bdivisor -= pow(2, hist_min_d + max_gradient_bin / hist_size);
+					bresult -= pow(2, hist_min_r + max_gradient_bin / hist_dim);
+					bdivisor -= pow(2, hist_min_d + max_gradient_bin % hist_dim);
 				} else if (max_gradient_hist == 1) {
 					whist[max_gradient_bin]--;
-					wresult -= pow(2, with->hist_min_r + max_gradient_bin / with->hist_size);
-					wdivisor -= pow(2, with->hist_min_d + max_gradient_bin / with->hist_size);
+					wresult -= pow(2, with->hist_min_r + max_gradient_bin / with->hist_dim);
+					wdivisor -= pow(2, with->hist_min_d + max_gradient_bin % with->hist_dim);
 				}
 			}
 
@@ -729,10 +729,10 @@ private:
 			result += ds->result;
 			divisor += ds->divisor;
 
-			for (int r = 0; r < ds->hist_size; r++)
-			for (int d = 0; d < ds->hist_size; d++)
+			for (int r = 0; r < ds->hist_dim; r++)
+			for (int d = 0; d < ds->hist_dim; d++)
 				add_hist(r + ds->hist_min_r, d + ds->hist_min_d, 
-						ds->histogram[r * hist_size + d]);
+						ds->histogram[r * hist_dim + d]);
 		}
 
 		ale_accum get_result() {
@@ -829,16 +829,16 @@ private:
 			fprintf(stderr, "\n");
 			fprintf(stderr, "hist_min_r = %d\n", hist_min_r);
 			fprintf(stderr, "hist_min_d = %d\n", hist_min_d);
-			fprintf(stderr, "hist_size = %d\n", hist_size);
+			fprintf(stderr, "hist_dim = %d\n", hist_dim);
 			fprintf(stderr, "hist_total = %d\n", hist_total);
 			fprintf(stderr, "\n");
 
 			hist_bin recalc_total = 0;
 
-			for (int r = 0; r < hist_size; r++) {
-				for (int d = 0; d < hist_size; d++) {
-					recalc_total += histogram[r * hist_size + d];
-					fprintf(stderr, "\t%d", histogram[r * hist_size + d]);
+			for (int r = 0; r < hist_dim; r++) {
+				for (int d = 0; d < hist_dim; d++) {
+					recalc_total += histogram[r * hist_dim + d];
+					fprintf(stderr, "\t%d", histogram[r * hist_dim + d]);
 				}
 				fprintf(stderr, "\n");
 			}
