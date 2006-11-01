@@ -629,6 +629,8 @@ private:
 			ale_accum bresult, bdivisor, wresult, wdivisor;
 			hist_bin *bhist, *whist;
 
+			ui::get()->d2_align_sim_start();
+
 			bhist = (hist_bin *)malloc(sizeof(hist_bin) * hist_size);
 			whist = (hist_bin *)malloc(sizeof(hist_bin) * with->hist_size);
 
@@ -693,6 +695,8 @@ private:
 
 			free(bhist);
 			free(whist);
+
+			ui::get()->d2_align_sim_stop();
 
 			if (bresult / bdivisor < wresult / wdivisor)
 				return 1;
