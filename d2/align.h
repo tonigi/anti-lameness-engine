@@ -2207,6 +2207,9 @@ private:
 				fprintf(stderr, "increasing perturbation\n");
 				perturb *= 0.5;
 
+				if (_mc <= 0)
+					_mc_arg /= 2;
+
 				if (lod > 0) {
 
 					/* 
@@ -2227,8 +2230,6 @@ private:
 
 					if (_mc > 0)
 						_mc_arg /= 4;
-					else
-						_mc_arg /= 2;
 
 					here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
 					delete old_here_diff_stat;
