@@ -1,5 +1,10 @@
 V	0.8.5-prerelease
 
+o	Modify default settings using Irani-Peleg rendering to use the
+	triangle:2 incremental rendering chain.
+
+o	Add dynamic monte carlo alignment, and make this default.
+
 o	Patch to correct --exp-mult arg count, from Gregory Maxwell.
 
 o	Allow file-scoped use of --perturb-upper.
