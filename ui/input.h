@@ -1440,19 +1440,19 @@ public:
 			"--no-cx "
 			"--3d-chain median:fine:sinc*lanc:8,triangle:2 ",
 
-			"--dchain sinc*lanc:8 "
-			"--achain sinc*lanc:8 "
+			"--dchain triangle:2 "
+			"--achain triangle:2 "
 			"--ips 4 "
 			"--exp-noextend "
 			"--no-cx "
-			"--3d-chain sinc*lanc:8",
+			"--3d-chain median:fine:sinc*lanc:8,triangle:2 ",
 
-			"--dchain sinc*lanc:8 "
-			"--achain sinc*lanc:8 "
+			"--dchain triangle:2 "
+			"--achain triangle:2 "
 			"--ips 6 "
 			"--exp-extend "
 			"--cx 0.7 "
-			"--3d-chain sinc*lanc:8"
+			"--3d-chain median:fine:sinc*lanc:8,triangle:2 "
 		};
 
 		int default_index;

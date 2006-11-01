@@ -148,21 +148,21 @@ public:
 			BETWEEN_SECTIONS
 			"q2 defaults:\n"
 			HEADER_SPACE
-			"   --dchain sinc*lanc:8\n"
-			"   --achain sinc*lanc:8\n"
+			"   --dchain triangle:2\n"
+			"   --achain triangle:2\n"
 			"   --ips 4\n"
 			"   --exp-noextend\n"
 			"   --no-cx\n"
-			"   --3d-chain sinc*lanc:8\n"
+			"   --3d-chain median:fine:sinc*lanc:8,triangle:2\n"
 			BETWEEN_SECTIONS
 			"Range-extended defaults:\n"
 			HEADER_SPACE
-			"   --dchain sinc*lanc:8\n"
-			"   --achain sinc*lanc:8\n"
+			"   --dchain triangle:2\n"
+			"   --achain triangle:2\n"
 			"   --ips 6\n"
 			"   --exp-extend\n"
 			"   --cx 0.7\n"
-			"   --3d-chain sinc*lanc:8\n"
+			"   --3d-chain median:fine:sinc*lanc:8,triangle:2\n"
 			"\n"
 		       );
 	}
