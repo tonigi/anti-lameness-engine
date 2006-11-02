@@ -1,8 +1,10 @@
-V	0.8.5-prerelease
+V	0.8.5-pre3 2006-Nov-03
 
+/alignment
 o	Fix a potential nondeterminism bug due to undefined seed bits in the
 	random number generator.  (Fixes certain alignment failures.)
 
+/
 o	Modify default settings using Irani-Peleg rendering to use the
 	triangle:2 incremental rendering chain.
 
