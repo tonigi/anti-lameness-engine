@@ -12,6 +12,8 @@ David Hilvert <dhilvert@auricle.dyndns.org>,
               <dhilvert@gmail.com>,
 	      <dhilvert@ugcs.caltech.edu>
 
+Gregory Maxwell <gmaxwell@gmail.com>
+
 
 
 Image-processing documentation
@@ -43,3 +45,11 @@ http://www.gnu.org/software/automake/
 http://www.gnu.org/software/autoconf/
 http://www.gnu.org/software/libtool/
 http://sourceware.org/autobook/
+
+The documentation Makefile is part of the DocBook Project XSL Stylesheet
+distribution, copyright (C) 1999, 2000, 2001, 2002 Norman Walsh.  The DocBook
+XSL stylesheets are maintained by Norman Walsh, <ndw@nwalsh.com>, and members
+of the DocBook Project, <docbook-developers@sf.net>.  See the COPYING file
+in the documentation directory for more details.  (This file may eventually be
+merged with the root COPYING file.)
+
