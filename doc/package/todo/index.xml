@@ -101,6 +101,14 @@
 	0.9.0
 </title>
 <edit by="David Hilvert" in-month="2006-Sep"/>
+<s>
+<t>Raw file handling</t>
+<ul>
+<li>Use Dave Coffin's dcraw program to extract information from raw files,
+including pixel data, as well as black level and other meta-data, as suggested
+by Gregory Maxwell.</li>
+</ul>
+</s>
 <section>
 <title>
 	Abstract and partial transformations
