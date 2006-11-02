@@ -2198,11 +2198,14 @@ private:
 				if (here_diff_stat_half->reliable(old_here_diff_stat_half, _mc_arg / 2)) {
 					_mc_arg /= 2;
 					ui::get()->alignment_monte_carlo_parameter(_mc_arg);
+					delete here_diff_stat;
+					delete old_here_diff_stat;
+					here_diff_stat = here_diff_stat_half;
+					old_here_diff_stat = old_here_diff_stat_half;
+				} else {
+					delete here_diff_stat_half;
+					delete old_here_diff_stat_half;
 				}
-				delete here_diff_stat;
-				delete old_here_diff_stat;
-				here_diff_stat = here_diff_stat_half;
-				old_here_diff_stat = old_here_diff_stat_half;
 			}
 
 			if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
