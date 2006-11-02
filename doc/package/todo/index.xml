@@ -201,13 +201,6 @@ having the smallest time difference from the target frame.
   </li></ul>
 </section>
 
-<section>
-<title>
-	Multi-threading
-</title>
-<ul><li> Add multi-threading options (e.g., for rendering code), so that a single
-  invocation of the program can run on multiple processors simultaneously.
-</li></ul>
 </section>
 </section>
 
