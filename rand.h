@@ -48,6 +48,8 @@ public:
 	void seed(unsigned int s) {
 #ifdef USE_PTHREAD
 		state_vars.state_us3[0] = (unsigned short) s;
+		state_vars.state_us3[1] = 0;
+		state_vars.state_us3[2] = 0;
 		state_vars.state_ui = s;
 #else
 		srand(s);
