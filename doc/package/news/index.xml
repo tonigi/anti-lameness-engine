@@ -19,6 +19,15 @@
 
 <news>
 
+<release version="0.8.5-pre3" date="2006-Nov-03">
+<p>This prerelease adds dynamic adjustment of the Monte Carlo alignment
+parameter, fixes a potential nondeterminism bug in the random number generator,
+and modifies default settings to improve the speed of high-quality runs.  Other
+changes include the addition of file-scoping for the perturb-upper option and a
+bugfix for exp-mult parameter processing.  Documentation is incomplete.</p>
+</release>
+
+
 <release version="0.8.5-pre2" date="2006-Oct-25">
 <p>This prerelease adds POSIX thread support for 2D alignment and rendering
 operations, and adds a profiling option to measure elapsed time for different
