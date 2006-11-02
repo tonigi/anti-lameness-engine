@@ -105,9 +105,9 @@ input::simple_option input::simple_option_table[] = {
 	{ "extend" },
 	{ "no-extend", "extend", "0" },
 
-	{ "no-mc", "mc", "100" },
 	{ "mcd", "mc", "0" },
-	{ "mc", NULL, NULL, 1 },
+	{ "no-mc", "mc", "1" },
+	{ "mc", "mc", "2", 1 },
 	{ "mcd-removal", NULL, NULL, 1 },
 
 	{ "threads", NULL, NULL, 1 },
