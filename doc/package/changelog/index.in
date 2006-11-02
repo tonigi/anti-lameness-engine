@@ -1,5 +1,8 @@
 V	0.8.5-prerelease
 
+o	Fix a potential nondeterminism bug due to undefined seed bits in the
+	random number generator.  (Fixes certain alignment failures.)
+
 o	Modify default settings using Irani-Peleg rendering to use the
 	triangle:2 incremental rendering chain.
 
