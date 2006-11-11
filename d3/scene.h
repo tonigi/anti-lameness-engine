@@ -4551,6 +4551,9 @@ public:
 		ale_pos d1 = (is1.xy() - is.xy()).norm();
 		ale_pos d2 = (is2.xy() - is.xy()).norm();
 
+		assert (reference_change > 0);
+		assert (d1 > 0 || d2 > 0);
+
 		if (is1[2] < 0 && is2[2] < 0) {
 
 			if (d1 > d2)
@@ -4580,6 +4583,11 @@ public:
 
 		ale_pos best = -1;
 		ale_pos best_depth = depth;
+
+		assert (depth_range > 0);
+
+		if (fabs(depth_range) < fabs(depth / 10000))
+			return _pt1.pw_unscaled(point(i, j, depth));
 
 		for (ale_pos d = depth - depth_range; d < depth + depth_range; d += depth_range / 10) {
 
@@ -4660,6 +4668,8 @@ public:
 
 			ale_pos depth_range = calc_depth_range(iw, _pt1, _pt2);
 
+			assert (depth_range > 0);
+
 			pt _pt1_lod = al->get(f1)->get_t(lod1);
 			pt _pt2_lod = al->get(f2)->get_t(lod2);
 
@@ -4671,7 +4681,7 @@ public:
 
 				point refined_point = get_refined_point(_pt1_lod, _pt2_lod, im + ii, jm + jj, 
 						f1, f2, lod1, lod2, depth1, depth_range);
-				
+
 				/*
 				 * Re-evaluate target dimension.
 				 */
