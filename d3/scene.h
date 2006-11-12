@@ -1585,6 +1585,14 @@ public:
 			space::traverse st = si.get();
 
 			/*
+			 * Reject out-of-bounds spaces.
+			 */
+			if (!weights->in_spatial_bounds(st)) {
+				si.next();
+				continue;
+			}
+				
+			/*
 			 * Skip spaces with no color information.
 			 *
 			 * XXX: This could be more efficient, perhaps.
