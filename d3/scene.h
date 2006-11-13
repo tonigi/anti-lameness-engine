@@ -4559,8 +4559,8 @@ public:
 		ale_pos d1 = (is1.xy() - is.xy()).norm();
 		ale_pos d2 = (is2.xy() - is.xy()).norm();
 
-		assert (reference_change > 0);
-		assert (d1 > 0 || d2 > 0);
+		// assert (reference_change > 0);
+		// assert (d1 > 0 || d2 > 0);
 
 		if (is1[2] < 0 && is2[2] < 0) {
 
