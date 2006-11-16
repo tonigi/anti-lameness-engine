@@ -4717,8 +4717,24 @@ public:
 				space::traverse st = 
 					refine_space(refined_point, target_dim_, use_filler || _pt1.scale_2d() != 1);
 
-				assert(resolution_ok(al->get(f1)->get_t(0), al->get(f1)->get_t(0).trilinear_coordinate(st)));
-				assert(resolution_ok(al->get(f2)->get_t(0), al->get(f2)->get_t(0).trilinear_coordinate(st)));
+// 				if (!resolution_ok(al->get(f1)->get_t(0), al->get(f1)->get_t(0).trilinear_coordinate(st))) {
+// 					pt transformation = al->get(f1)->get_t(0);
+// 					ale_pos tc = al->get(f1)->get_t(0).trilinear_coordinate(st);
+// 
+// 					fprintf(stderr, "Resolution not ok.\n");  
+// 					fprintf(stderr, "pow(2, tc)=%f\n", pow(2, tc));
+// 					fprintf(stderr, "transformation.unscaled_height()=%f\n", 
+// 							transformation.unscaled_height());
+// 					fprintf(stderr, "transformation.unscaled_width()=%f\n", 
+// 							transformation.unscaled_width());
+// 					fprintf(stderr, "tc=%f", tc);
+// 					fprintf(stderr, "input_decimation_lower - 1.5 = %f\n", 
+// 							input_decimation_lower - 1.5);
+// 
+// 				}
+// 
+// 				assert(resolution_ok(al->get(f1)->get_t(0), al->get(f1)->get_t(0).trilinear_coordinate(st)));
+// 				assert(resolution_ok(al->get(f2)->get_t(0), al->get(f2)->get_t(0).trilinear_coordinate(st)));
 			}
 
 		}
