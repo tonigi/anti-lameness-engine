@@ -1,1004 +1,1004 @@
 .:
-合計 100
-drwxr-sr-x 2 dhilvert dhilvert 4096 2002-10-12 08:09 ale-0.0.0/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2002-11-27 12:21 ale-0.1.0/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2002-12-09 18:10 ale-0.1.1/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2002-12-13 22:06 ale-0.1.2/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2003-01-02 10:38 ale-0.2.0/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2003-01-18 05:23 ale-0.3.0/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2003-03-26 10:16 ale-0.3.1/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2003-03-27 02:59 ale-0.3.2/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2003-03-30 17:37 ale-0.4.0/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2003-04-05 11:35 ale-0.4.0p1/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2003-04-29 22:28 ale-0.4.1/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2003-05-23 19:07 ale-0.4.2/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2003-05-30 09:51 ale-0.4.3/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2003-06-06 07:59 ale-0.4.4/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2003-06-23 17:09 ale-0.4.5/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2003-07-02 05:07 ale-0.4.6/
-drwxr-sr-x 3 dhilvert dhilvert 4096 2003-07-27 08:27 ale-0.4.7/
-drwxr-sr-x 3 dhilvert dhilvert 4096 2003-08-01 05:26 ale-0.4.8/
-drwxr-sr-x 3 dhilvert dhilvert 4096 2003-11-02 20:50 ale-0.5.0/
-drwxr-sr-x 3 dhilvert dhilvert 4096 2003-11-20 04:43 ale-0.5.1/
-drwxr-sr-x 4 dhilvert dhilvert 4096 2004-02-09 07:31 ale-0.6.0/
-drwxr-sr-x 4 dhilvert dhilvert 4096 2004-08-07 20:35 ale-0.7.0/
-drwxr-sr-x 4 dhilvert dhilvert 4096 2004-08-27 13:39 ale-0.7.1/
-drwxr-sr-x 6 dhilvert dhilvert 4096 2004-10-26 23:24 ale-0.7.2/
-drwxr-sr-x 6 dhilvert dhilvert 4096 2004-12-02 15:18 ale-0.7.3/
+total 100
+drwxr-sr-x 2 dhilvert dhilvert 4096 2002-10-12 08:09:30.000000000 +0800 ale-0.0.0/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2002-11-27 12:21:18.000000000 +0800 ale-0.1.0/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2002-12-09 18:10:22.000000000 +0800 ale-0.1.1/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2002-12-13 22:06:36.000000000 +0800 ale-0.1.2/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2003-01-02 10:38:37.000000000 +0800 ale-0.2.0/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2003-01-18 05:23:57.000000000 +0800 ale-0.3.0/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2003-03-26 10:16:01.000000000 +0800 ale-0.3.1/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2003-03-27 02:59:19.000000000 +0800 ale-0.3.2/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2003-03-30 17:37:31.000000000 +0800 ale-0.4.0/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2003-04-05 11:35:41.000000000 +0800 ale-0.4.0p1/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2003-04-29 22:28:21.000000000 +0800 ale-0.4.1/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2003-05-23 19:07:53.000000000 +0800 ale-0.4.2/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2003-05-30 09:51:08.000000000 +0800 ale-0.4.3/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2003-06-06 07:59:19.000000000 +0800 ale-0.4.4/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2003-06-23 17:09:41.000000000 +0800 ale-0.4.5/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2003-07-02 05:07:01.000000000 +0800 ale-0.4.6/
+drwxr-sr-x 3 dhilvert dhilvert 4096 2003-07-27 08:27:37.000000000 +0800 ale-0.4.7/
+drwxr-sr-x 3 dhilvert dhilvert 4096 2003-08-01 05:26:04.000000000 +0800 ale-0.4.8/
+drwxr-sr-x 3 dhilvert dhilvert 4096 2003-11-02 20:50:01.000000000 +0800 ale-0.5.0/
+drwxr-sr-x 3 dhilvert dhilvert 4096 2003-11-20 04:43:58.000000000 +0800 ale-0.5.1/
+drwxr-sr-x 4 dhilvert dhilvert 4096 2004-02-09 07:31:43.000000000 +0800 ale-0.6.0/
+drwxr-sr-x 4 dhilvert dhilvert 4096 2004-08-07 20:35:14.000000000 +0800 ale-0.7.0/
+drwxr-sr-x 4 dhilvert dhilvert 4096 2004-08-27 13:39:05.000000000 +0800 ale-0.7.1/
+drwxr-sr-x 6 dhilvert dhilvert 4096 2004-10-26 23:24:12.000000000 +0800 ale-0.7.2/
+drwxr-sr-x 6 dhilvert dhilvert 4096 2004-12-02 15:18:46.000000000 +0800 ale-0.7.3/
 
 ./ale-0.0.0:
-合計 44
--rw-r--r-- 1 dhilvert dhilvert 18005 2002-10-05 03:27 COPYING
--rw-r--r-- 1 dhilvert dhilvert   952 2002-10-07 03:51 Makefile
--rw-r--r-- 1 dhilvert dhilvert  1756 2002-10-09 05:42 README
--rw-r--r-- 1 dhilvert dhilvert  7290 2002-10-07 23:03 ale.c
--rw-r--r-- 1 dhilvert dhilvert  3852 2002-10-03 00:57 image.h
--rw-r--r-- 1 dhilvert dhilvert  2568 2002-10-12 08:08 ppm.h
+total 44
+-rw-r--r-- 1 dhilvert dhilvert 18005 2002-10-05 03:27:08.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert   952 2002-10-07 03:51:21.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  1756 2002-10-09 05:42:37.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert  7290 2002-10-07 23:03:50.000000000 +0800 ale.c
+-rw-r--r-- 1 dhilvert dhilvert  3852 2002-10-03 00:57:27.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  2568 2002-10-12 08:08:30.000000000 +0800 ppm.h
 
 ./ale-0.1.0:
-合計 52
--rw-r--r-- 1 dhilvert dhilvert 18005 2002-11-22 06:16 COPYING
--rw-r--r-- 1 dhilvert dhilvert   520 2002-11-27 12:15 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1157 2002-11-27 12:16 Makefile
--rw-r--r-- 1 dhilvert dhilvert  3041 2002-11-27 10:01 README
--rw-r--r-- 1 dhilvert dhilvert 10210 2002-11-27 12:18 ale.c
--rw-r--r-- 1 dhilvert dhilvert  3906 2002-11-26 16:54 image.h
--rw-r--r-- 1 dhilvert dhilvert  2568 2002-11-22 06:16 ppm.h
+total 52
+-rw-r--r-- 1 dhilvert dhilvert 18005 2002-11-22 06:16:44.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert   520 2002-11-27 12:15:44.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1157 2002-11-27 12:16:19.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  3041 2002-11-27 10:01:50.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 10210 2002-11-27 12:18:39.000000000 +0800 ale.c
+-rw-r--r-- 1 dhilvert dhilvert  3906 2002-11-26 16:54:01.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  2568 2002-11-22 06:16:44.000000000 +0800 ppm.h
 
 ./ale-0.1.1:
-合計 56
--rw-r--r-- 1 dhilvert dhilvert 18005 2002-12-05 15:26 COPYING
--rw-r--r-- 1 dhilvert dhilvert  1004 2002-12-09 18:09 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1157 2002-12-05 15:26 Makefile
--rw-r--r-- 1 dhilvert dhilvert  3035 2002-12-07 01:58 README
--rw-r--r-- 1 dhilvert dhilvert 11364 2002-12-09 18:00 ale.c
--rw-r--r-- 1 dhilvert dhilvert  4455 2002-12-07 02:26 image.h
--rw-r--r-- 1 dhilvert dhilvert  2568 2002-12-05 15:26 ppm.h
+total 56
+-rw-r--r-- 1 dhilvert dhilvert 18005 2002-12-05 15:26:45.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  1004 2002-12-09 18:09:52.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1157 2002-12-05 15:26:45.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  3035 2002-12-07 01:58:49.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 11364 2002-12-09 18:00:59.000000000 +0800 ale.c
+-rw-r--r-- 1 dhilvert dhilvert  4455 2002-12-07 02:26:25.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  2568 2002-12-05 15:26:45.000000000 +0800 ppm.h
 
 ./ale-0.1.2:
-合計 60
--rw-r--r-- 1 dhilvert dhilvert 18005 2002-12-11 03:37 COPYING
--rw-r--r-- 1 dhilvert dhilvert  1214 2002-12-13 22:01 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1536 2002-12-13 00:02 Makefile
--rw-r--r-- 1 dhilvert dhilvert  3675 2002-12-13 00:21 README
--rw-r--r-- 1 dhilvert dhilvert 11475 2002-12-13 22:02 ale.c
--rw-r--r-- 1 dhilvert dhilvert  4455 2002-12-11 04:21 image.h
--rw-r--r-- 1 dhilvert dhilvert  3914 2002-12-12 12:01 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  2800 2002-12-12 11:57 ppm.h
+total 60
+-rw-r--r-- 1 dhilvert dhilvert 18005 2002-12-11 03:37:38.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  1214 2002-12-13 22:01:28.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1536 2002-12-13 00:02:19.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  3675 2002-12-13 00:21:39.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 11475 2002-12-13 22:02:34.000000000 +0800 ale.c
+-rw-r--r-- 1 dhilvert dhilvert  4455 2002-12-11 04:21:01.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  3914 2002-12-12 12:01:42.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  2800 2002-12-12 11:57:29.000000000 +0800 ppm.h
 
 ./ale-0.2.0:
-合計 68
--rw-r--r-- 1 dhilvert dhilvert 18005 2002-12-28 09:50 COPYING
--rw-r--r-- 1 dhilvert dhilvert  1428 2003-01-02 10:33 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1536 2002-12-28 09:50 Makefile
--rw-r--r-- 1 dhilvert dhilvert  4346 2003-01-02 10:38 README
--rw-r--r-- 1 dhilvert dhilvert 15451 2003-01-02 09:49 ale.c
--rw-r--r-- 1 dhilvert dhilvert  4455 2002-12-28 09:50 image.h
--rw-r--r-- 1 dhilvert dhilvert  3914 2002-12-28 09:50 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  2800 2002-12-28 09:50 ppm.h
+total 68
+-rw-r--r-- 1 dhilvert dhilvert 18005 2002-12-28 09:50:01.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  1428 2003-01-02 10:33:41.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1536 2002-12-28 09:50:01.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  4346 2003-01-02 10:38:33.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 15451 2003-01-02 09:49:44.000000000 +0800 ale.c
+-rw-r--r-- 1 dhilvert dhilvert  4455 2002-12-28 09:50:01.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  3914 2002-12-28 09:50:02.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  2800 2002-12-28 09:50:02.000000000 +0800 ppm.h
 
 ./ale-0.3.0:
-合計 88
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-01-16 19:35 COPYING
--rw-r--r-- 1 dhilvert dhilvert  1767 2003-01-17 22:14 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1536 2003-01-18 05:23 Makefile
--rw-r--r-- 1 dhilvert dhilvert  5349 2003-01-17 22:06 README
--rw-r--r-- 1 dhilvert dhilvert 13202 2003-01-18 05:20 ale.c
--rw-r--r-- 1 dhilvert dhilvert  4312 2003-01-18 05:20 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  4455 2003-01-16 19:35 image.h
--rw-r--r-- 1 dhilvert dhilvert  3914 2003-01-16 19:35 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-01-17 17:49 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  2800 2003-01-16 19:35 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  5432 2003-01-17 18:35 tfile.h
+total 88
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-01-16 19:35:19.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  1767 2003-01-17 22:14:22.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1536 2003-01-18 05:23:32.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  5349 2003-01-17 22:06:39.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 13202 2003-01-18 05:20:18.000000000 +0800 ale.c
+-rw-r--r-- 1 dhilvert dhilvert  4312 2003-01-18 05:20:16.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  4455 2003-01-16 19:35:19.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  3914 2003-01-16 19:35:19.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-01-17 17:49:36.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  2800 2003-01-16 19:35:19.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  5432 2003-01-17 18:35:14.000000000 +0800 tfile.h
 
 ./ale-0.3.1:
-合計 92
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-02-04 07:36 COPYING
--rw-r--r-- 1 dhilvert dhilvert  1954 2003-03-26 10:06 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1536 2003-02-04 07:36 Makefile
--rw-r--r-- 1 dhilvert dhilvert  5779 2003-03-26 10:15 README
--rw-r--r-- 1 dhilvert dhilvert 14581 2003-03-26 10:12 ale.c
--rw-r--r-- 1 dhilvert dhilvert  4312 2003-02-04 07:36 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  2506 2003-03-26 08:40 hf-filter.h
--rw-r--r-- 1 dhilvert dhilvert  4455 2003-03-25 09:59 image.h
--rw-r--r-- 1 dhilvert dhilvert  3914 2003-02-04 07:36 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-02-04 07:36 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  2800 2003-02-04 07:36 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  5910 2003-03-25 08:14 tfile.h
+total 92
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-02-04 07:36:41.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  1954 2003-03-26 10:06:03.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1536 2003-02-04 07:36:41.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  5779 2003-03-26 10:15:30.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 14581 2003-03-26 10:12:42.000000000 +0800 ale.c
+-rw-r--r-- 1 dhilvert dhilvert  4312 2003-02-04 07:36:41.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  2506 2003-03-26 08:40:45.000000000 +0800 hf-filter.h
+-rw-r--r-- 1 dhilvert dhilvert  4455 2003-03-25 09:59:49.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  3914 2003-02-04 07:36:41.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-02-04 07:36:41.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  2800 2003-02-04 07:36:41.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  5910 2003-03-25 08:14:43.000000000 +0800 tfile.h
 
 ./ale-0.3.2:
-合計 92
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-03-27 02:55 COPYING
--rw-r--r-- 1 dhilvert dhilvert  2082 2003-03-27 02:59 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1536 2003-03-27 02:55 Makefile
--rw-r--r-- 1 dhilvert dhilvert  5779 2003-03-27 02:57 README
--rw-r--r-- 1 dhilvert dhilvert 14600 2003-03-27 02:56 ale.c
--rw-r--r-- 1 dhilvert dhilvert  4312 2003-03-27 02:55 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  2506 2003-03-27 02:55 hf-filter.h
--rw-r--r-- 1 dhilvert dhilvert  4455 2003-03-27 02:55 image.h
--rw-r--r-- 1 dhilvert dhilvert  3914 2003-03-27 02:55 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-03-27 02:55 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  2800 2003-03-27 02:55 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  5910 2003-03-27 02:55 tfile.h
+total 92
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-03-27 02:55:28.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  2082 2003-03-27 02:59:19.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1536 2003-03-27 02:55:28.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  5779 2003-03-27 02:57:12.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 14600 2003-03-27 02:56:57.000000000 +0800 ale.c
+-rw-r--r-- 1 dhilvert dhilvert  4312 2003-03-27 02:55:28.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  2506 2003-03-27 02:55:28.000000000 +0800 hf-filter.h
+-rw-r--r-- 1 dhilvert dhilvert  4455 2003-03-27 02:55:28.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  3914 2003-03-27 02:55:28.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-03-27 02:55:28.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  2800 2003-03-27 02:55:28.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  5910 2003-03-27 02:55:28.000000000 +0800 tfile.h
 
 ./ale-0.4.0:
-合計 92
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-03-29 05:34 COPYING
--rw-r--r-- 1 dhilvert dhilvert  2597 2003-03-30 17:09 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1536 2003-03-29 05:34 Makefile
--rw-r--r-- 1 dhilvert dhilvert  5750 2003-03-30 17:37 README
--rw-r--r-- 1 dhilvert dhilvert 15045 2003-03-30 17:36 ale.c
--rw-r--r-- 1 dhilvert dhilvert  4312 2003-03-29 05:34 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  3080 2003-03-29 09:16 hf-filter.h
--rw-r--r-- 1 dhilvert dhilvert  4455 2003-03-29 05:34 image.h
--rw-r--r-- 1 dhilvert dhilvert  3914 2003-03-29 05:34 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-03-29 05:34 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  2800 2003-03-29 05:34 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  5910 2003-03-29 05:34 tfile.h
+total 92
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-03-29 05:34:13.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  2597 2003-03-30 17:09:42.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1536 2003-03-29 05:34:13.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  5750 2003-03-30 17:37:18.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 15045 2003-03-30 17:36:32.000000000 +0800 ale.c
+-rw-r--r-- 1 dhilvert dhilvert  4312 2003-03-29 05:34:13.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  3080 2003-03-29 09:16:46.000000000 +0800 hf-filter.h
+-rw-r--r-- 1 dhilvert dhilvert  4455 2003-03-29 05:34:13.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  3914 2003-03-29 05:34:13.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-03-29 05:34:13.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  2800 2003-03-29 05:34:13.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  5910 2003-03-29 05:34:13.000000000 +0800 tfile.h
 
 ./ale-0.4.0p1:
-合計 96
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-04-03 10:00 COPYING
--rw-r--r-- 1 dhilvert dhilvert  2798 2003-04-05 11:34 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1536 2003-04-03 10:00 Makefile
--rw-r--r-- 1 dhilvert dhilvert  5750 2003-04-03 10:00 README
--rw-r--r-- 1 dhilvert dhilvert 15283 2003-04-03 15:47 ale.c
--rw-r--r-- 1 dhilvert dhilvert  4312 2003-04-03 10:00 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  3080 2003-04-03 10:00 hf-filter.h
--rw-r--r-- 1 dhilvert dhilvert  4455 2003-04-03 10:00 image.h
--rw-r--r-- 1 dhilvert dhilvert  4154 2003-04-03 10:34 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-04-03 10:00 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  2800 2003-04-03 10:00 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  5910 2003-04-03 10:00 tfile.h
+total 96
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-04-03 10:00:24.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  2798 2003-04-05 11:34:31.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1536 2003-04-03 10:00:24.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  5750 2003-04-03 10:00:24.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 15283 2003-04-03 15:47:30.000000000 +0800 ale.c
+-rw-r--r-- 1 dhilvert dhilvert  4312 2003-04-03 10:00:24.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  3080 2003-04-03 10:00:24.000000000 +0800 hf-filter.h
+-rw-r--r-- 1 dhilvert dhilvert  4455 2003-04-03 10:00:24.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  4154 2003-04-03 10:34:29.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-04-03 10:00:24.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  2800 2003-04-03 10:00:24.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  5910 2003-04-03 10:00:24.000000000 +0800 tfile.h
 
 ./ale-0.4.1:
-合計 120
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-04-12 01:02 COPYING
--rw-r--r-- 1 dhilvert dhilvert  3827 2003-04-28 23:06 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1535 2003-04-28 20:15 Makefile
--rw-r--r-- 1 dhilvert dhilvert  8709 2003-04-29 22:27 README
--rw-r--r-- 1 dhilvert dhilvert 25771 2003-04-27 20:56 ale.c
--rw-r--r-- 1 dhilvert dhilvert 14422 2003-04-28 22:50 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  3102 2003-04-23 08:51 hf-filter.h
--rw-r--r-- 1 dhilvert dhilvert  5825 2003-04-28 02:22 image.h
--rw-r--r-- 1 dhilvert dhilvert  4176 2003-04-23 09:16 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-04-12 01:02 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  2836 2003-04-23 08:54 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  6635 2003-04-28 22:27 tfile.h
+total 120
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-04-12 01:02:03.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  3827 2003-04-28 23:06:13.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1535 2003-04-28 20:15:04.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  8709 2003-04-29 22:27:49.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 25771 2003-04-27 20:56:45.000000000 +0800 ale.c
+-rw-r--r-- 1 dhilvert dhilvert 14422 2003-04-28 22:50:18.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  3102 2003-04-23 08:51:01.000000000 +0800 hf-filter.h
+-rw-r--r-- 1 dhilvert dhilvert  5825 2003-04-28 02:22:25.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  4176 2003-04-23 09:16:19.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-04-12 01:02:03.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  2836 2003-04-23 08:54:17.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  6635 2003-04-28 22:27:55.000000000 +0800 tfile.h
 
 ./ale-0.4.2:
-合計 180
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-05-01 02:40 COPYING
--rw-r--r-- 1 dhilvert dhilvert  4386 2003-05-23 13:51 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1623 2003-05-22 18:01 Makefile
--rw-r--r-- 1 dhilvert dhilvert  8781 2003-05-23 19:07 README
--rw-r--r-- 1 dhilvert dhilvert 10863 2003-05-23 12:31 ale.cc
--rw-r--r-- 1 dhilvert dhilvert   876 2003-05-22 14:13 align.cc
--rw-r--r-- 1 dhilvert dhilvert 16051 2003-05-22 14:50 align.h
--rw-r--r-- 1 dhilvert dhilvert  2866 2003-05-21 17:44 combine.h
--rw-r--r-- 1 dhilvert dhilvert  7094 2003-05-21 22:56 drizzle.h
--rw-r--r-- 1 dhilvert dhilvert 15497 2003-05-20 16:51 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  4668 2003-05-22 10:01 hf_filter.h
--rw-r--r-- 1 dhilvert dhilvert  6123 2003-05-20 17:03 image.h
--rw-r--r-- 1 dhilvert dhilvert  1208 2003-05-21 15:24 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert  7356 2003-05-21 15:24 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert 12774 2003-05-22 20:35 ip.h
--rw-r--r-- 1 dhilvert dhilvert  5198 2003-05-21 22:56 merge.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-05-01 02:40 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  1211 2003-05-19 15:17 point.h
--rw-r--r-- 1 dhilvert dhilvert  3708 2003-05-22 12:04 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  1581 2003-05-22 10:01 render.h
--rw-r--r-- 1 dhilvert dhilvert  6746 2003-05-21 14:21 tfile.h
+total 180
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-05-01 02:40:00.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  4386 2003-05-23 13:51:17.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1623 2003-05-22 18:01:30.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  8781 2003-05-23 19:07:53.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 10863 2003-05-23 12:31:15.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert   876 2003-05-22 14:13:22.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 16051 2003-05-22 14:50:16.000000000 +0800 align.h
+-rw-r--r-- 1 dhilvert dhilvert  2866 2003-05-21 17:44:42.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert  7094 2003-05-21 22:56:59.000000000 +0800 drizzle.h
+-rw-r--r-- 1 dhilvert dhilvert 15497 2003-05-20 16:51:55.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  4668 2003-05-22 10:01:27.000000000 +0800 hf_filter.h
+-rw-r--r-- 1 dhilvert dhilvert  6123 2003-05-20 17:03:10.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  1208 2003-05-21 15:24:27.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert  7356 2003-05-21 15:24:30.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert 12774 2003-05-22 20:35:13.000000000 +0800 ip.h
+-rw-r--r-- 1 dhilvert dhilvert  5198 2003-05-21 22:56:14.000000000 +0800 merge.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-05-01 02:40:00.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1211 2003-05-19 15:17:38.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  3708 2003-05-22 12:04:46.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  1581 2003-05-22 10:01:08.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  6746 2003-05-21 14:21:12.000000000 +0800 tfile.h
 
 ./ale-0.4.3:
-合計 184
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-05-28 04:04 COPYING
--rw-r--r-- 1 dhilvert dhilvert  4552 2003-05-30 05:31 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1623 2003-05-28 04:04 Makefile
--rw-r--r-- 1 dhilvert dhilvert 10206 2003-05-30 07:48 README
--rw-r--r-- 1 dhilvert dhilvert 11767 2003-05-30 07:49 ale.cc
--rw-r--r-- 1 dhilvert dhilvert   899 2003-05-28 04:57 align.cc
--rw-r--r-- 1 dhilvert dhilvert 20398 2003-05-29 15:57 align.h
--rw-r--r-- 1 dhilvert dhilvert  2866 2003-05-28 04:04 combine.h
--rw-r--r-- 1 dhilvert dhilvert  7094 2003-05-28 04:04 drizzle.h
--rw-r--r-- 1 dhilvert dhilvert 15497 2003-05-28 04:04 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  4668 2003-05-28 04:04 hf_filter.h
--rw-r--r-- 1 dhilvert dhilvert  6123 2003-05-28 04:04 image.h
--rw-r--r-- 1 dhilvert dhilvert  1208 2003-05-28 04:04 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert  7356 2003-05-28 04:04 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert 12774 2003-05-28 04:04 ip.h
--rw-r--r-- 1 dhilvert dhilvert  5198 2003-05-28 04:04 merge.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-05-28 04:04 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  1211 2003-05-28 04:04 point.h
--rw-r--r-- 1 dhilvert dhilvert  3708 2003-05-28 04:04 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  1581 2003-05-28 04:04 render.h
--rw-r--r-- 1 dhilvert dhilvert  6746 2003-05-28 04:04 tfile.h
+total 184
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-05-28 04:04:19.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  4552 2003-05-30 05:31:49.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1623 2003-05-28 04:04:19.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert 10206 2003-05-30 07:48:40.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 11767 2003-05-30 07:49:05.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert   899 2003-05-28 04:57:08.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 20398 2003-05-29 15:57:55.000000000 +0800 align.h
+-rw-r--r-- 1 dhilvert dhilvert  2866 2003-05-28 04:04:19.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert  7094 2003-05-28 04:04:19.000000000 +0800 drizzle.h
+-rw-r--r-- 1 dhilvert dhilvert 15497 2003-05-28 04:04:19.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  4668 2003-05-28 04:04:19.000000000 +0800 hf_filter.h
+-rw-r--r-- 1 dhilvert dhilvert  6123 2003-05-28 04:04:19.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  1208 2003-05-28 04:04:19.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert  7356 2003-05-28 04:04:19.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert 12774 2003-05-28 04:04:19.000000000 +0800 ip.h
+-rw-r--r-- 1 dhilvert dhilvert  5198 2003-05-28 04:04:19.000000000 +0800 merge.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-05-28 04:04:19.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1211 2003-05-28 04:04:19.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  3708 2003-05-28 04:04:19.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  1581 2003-05-28 04:04:19.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  6746 2003-05-28 04:04:19.000000000 +0800 tfile.h
 
 ./ale-0.4.4:
-合計 188
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-06-02 02:24 COPYING
--rw-r--r-- 1 dhilvert dhilvert  4850 2003-06-06 07:59 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1623 2003-06-06 00:33 Makefile
--rw-r--r-- 1 dhilvert dhilvert 10206 2003-06-02 04:59 README
--rw-r--r-- 1 dhilvert dhilvert 11767 2003-06-06 01:43 ale.cc
--rw-r--r-- 1 dhilvert dhilvert   899 2003-06-02 02:24 align.cc
--rw-r--r-- 1 dhilvert dhilvert 21178 2003-06-04 05:42 align.h
--rw-r--r-- 1 dhilvert dhilvert  2866 2003-06-02 02:24 combine.h
--rw-r--r-- 1 dhilvert dhilvert  7094 2003-06-02 02:24 drizzle.h
--rw-r--r-- 1 dhilvert dhilvert 15497 2003-06-02 02:24 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  4668 2003-06-02 02:24 hf_filter.h
--rw-r--r-- 1 dhilvert dhilvert  6123 2003-06-02 02:24 image.h
--rw-r--r-- 1 dhilvert dhilvert  1208 2003-06-02 02:24 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert  7356 2003-06-02 02:24 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert 13000 2003-06-06 00:32 ip.h
--rw-r--r-- 1 dhilvert dhilvert  5198 2003-06-02 02:24 merge.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-06-02 02:24 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  1211 2003-06-02 02:24 point.h
--rw-r--r-- 1 dhilvert dhilvert  3710 2003-06-02 02:28 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  1581 2003-06-02 02:24 render.h
--rw-r--r-- 1 dhilvert dhilvert  6746 2003-06-02 02:24 tfile.h
+total 188
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-06-02 02:24:59.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  4850 2003-06-06 07:59:06.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1623 2003-06-06 00:33:11.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert 10206 2003-06-02 04:59:09.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 11767 2003-06-06 01:43:06.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert   899 2003-06-02 02:24:59.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 21178 2003-06-04 05:42:55.000000000 +0800 align.h
+-rw-r--r-- 1 dhilvert dhilvert  2866 2003-06-02 02:24:59.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert  7094 2003-06-02 02:24:59.000000000 +0800 drizzle.h
+-rw-r--r-- 1 dhilvert dhilvert 15497 2003-06-02 02:24:59.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  4668 2003-06-02 02:24:59.000000000 +0800 hf_filter.h
+-rw-r--r-- 1 dhilvert dhilvert  6123 2003-06-02 02:24:59.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  1208 2003-06-02 02:24:59.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert  7356 2003-06-02 02:24:59.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert 13000 2003-06-06 00:32:03.000000000 +0800 ip.h
+-rw-r--r-- 1 dhilvert dhilvert  5198 2003-06-02 02:24:59.000000000 +0800 merge.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-06-02 02:24:59.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1211 2003-06-02 02:24:59.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  3710 2003-06-02 02:28:22.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  1581 2003-06-02 02:24:59.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  6746 2003-06-02 02:24:59.000000000 +0800 tfile.h
 
 ./ale-0.4.5:
-合計 192
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-06-08 13:18 COPYING
--rw-r--r-- 1 dhilvert dhilvert  6251 2003-06-23 17:06 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1623 2003-06-22 19:48 Makefile
--rw-r--r-- 1 dhilvert dhilvert 10152 2003-06-23 17:04 README
--rw-r--r-- 1 dhilvert dhilvert 12219 2003-06-23 17:04 ale.cc
--rw-r--r-- 1 dhilvert dhilvert   928 2003-06-13 14:45 align.cc
--rw-r--r-- 1 dhilvert dhilvert 22286 2003-06-22 20:05 align.h
--rw-r--r-- 1 dhilvert dhilvert  2866 2003-06-08 13:18 combine.h
--rw-r--r-- 1 dhilvert dhilvert  7011 2003-06-15 12:14 drizzle.h
--rw-r--r-- 1 dhilvert dhilvert 15650 2003-06-15 10:00 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  4668 2003-06-08 13:18 hf_filter.h
--rw-r--r-- 1 dhilvert dhilvert 11656 2003-06-22 11:44 image.h
--rw-r--r-- 1 dhilvert dhilvert  1177 2003-06-15 12:25 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert  7317 2003-06-15 09:59 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert 12413 2003-06-15 12:16 ip.h
--rw-r--r-- 1 dhilvert dhilvert  5404 2003-06-15 17:33 merge.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-06-08 13:18 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  1211 2003-06-08 13:18 point.h
--rw-r--r-- 1 dhilvert dhilvert  3864 2003-06-13 10:58 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  1581 2003-06-08 13:18 render.h
--rw-r--r-- 1 dhilvert dhilvert  6746 2003-06-08 13:18 tfile.h
+total 192
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-06-08 13:18:46.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  6251 2003-06-23 17:06:00.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1623 2003-06-22 19:48:04.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert 10152 2003-06-23 17:04:37.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 12219 2003-06-23 17:04:50.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert   928 2003-06-13 14:45:06.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 22286 2003-06-22 20:05:33.000000000 +0800 align.h
+-rw-r--r-- 1 dhilvert dhilvert  2866 2003-06-08 13:18:46.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert  7011 2003-06-15 12:14:58.000000000 +0800 drizzle.h
+-rw-r--r-- 1 dhilvert dhilvert 15650 2003-06-15 10:00:59.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  4668 2003-06-08 13:18:46.000000000 +0800 hf_filter.h
+-rw-r--r-- 1 dhilvert dhilvert 11656 2003-06-22 11:44:54.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  1177 2003-06-15 12:25:55.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert  7317 2003-06-15 09:59:10.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert 12413 2003-06-15 12:16:37.000000000 +0800 ip.h
+-rw-r--r-- 1 dhilvert dhilvert  5404 2003-06-15 17:33:49.000000000 +0800 merge.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-06-08 13:18:46.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1211 2003-06-08 13:18:46.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  3864 2003-06-13 10:58:21.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  1581 2003-06-08 13:18:46.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  6746 2003-06-08 13:18:46.000000000 +0800 tfile.h
 
 ./ale-0.4.6:
-合計 192
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-07-01 13:15 COPYING
--rw-r--r-- 1 dhilvert dhilvert  6496 2003-07-01 14:33 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1623 2003-07-01 13:15 Makefile
--rw-r--r-- 1 dhilvert dhilvert 10152 2003-07-01 14:04 README
--rw-r--r-- 1 dhilvert dhilvert 12219 2003-07-02 05:07 ale.cc
--rw-r--r-- 1 dhilvert dhilvert   928 2003-07-01 13:15 align.cc
--rw-r--r-- 1 dhilvert dhilvert 22286 2003-07-01 13:15 align.h
--rw-r--r-- 1 dhilvert dhilvert  2866 2003-07-01 13:15 combine.h
--rw-r--r-- 1 dhilvert dhilvert  7116 2003-07-01 13:47 drizzle.h
--rw-r--r-- 1 dhilvert dhilvert 15650 2003-07-01 13:15 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  4691 2003-07-01 14:29 hf_filter.h
--rw-r--r-- 1 dhilvert dhilvert 11656 2003-07-01 13:15 image.h
--rw-r--r-- 1 dhilvert dhilvert  1177 2003-07-01 13:15 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert  7317 2003-07-01 13:15 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert 12436 2003-07-01 14:29 ip.h
--rw-r--r-- 1 dhilvert dhilvert  5404 2003-07-01 13:15 merge.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-07-01 13:15 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  1211 2003-07-01 13:15 point.h
--rw-r--r-- 1 dhilvert dhilvert  3864 2003-07-01 13:15 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  1581 2003-07-01 13:15 render.h
--rw-r--r-- 1 dhilvert dhilvert  6746 2003-07-01 13:15 tfile.h
+total 192
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-07-01 13:15:12.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  6496 2003-07-01 14:33:56.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1623 2003-07-01 13:15:12.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert 10152 2003-07-01 14:04:45.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 12219 2003-07-02 05:07:01.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert   928 2003-07-01 13:15:12.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 22286 2003-07-01 13:15:12.000000000 +0800 align.h
+-rw-r--r-- 1 dhilvert dhilvert  2866 2003-07-01 13:15:12.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert  7116 2003-07-01 13:47:33.000000000 +0800 drizzle.h
+-rw-r--r-- 1 dhilvert dhilvert 15650 2003-07-01 13:15:12.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  4691 2003-07-01 14:29:51.000000000 +0800 hf_filter.h
+-rw-r--r-- 1 dhilvert dhilvert 11656 2003-07-01 13:15:12.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  1177 2003-07-01 13:15:12.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert  7317 2003-07-01 13:15:12.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert 12436 2003-07-01 14:29:33.000000000 +0800 ip.h
+-rw-r--r-- 1 dhilvert dhilvert  5404 2003-07-01 13:15:12.000000000 +0800 merge.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-07-01 13:15:12.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1211 2003-07-01 13:15:12.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  3864 2003-07-01 13:15:12.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  1581 2003-07-01 13:15:12.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  6746 2003-07-01 13:15:12.000000000 +0800 tfile.h
 
 ./ale-0.4.7:
-合計 196
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-07-15 12:04 COPYING
--rw-r--r-- 1 dhilvert dhilvert  7297 2003-07-26 07:19 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1624 2003-07-27 03:28 Makefile
--rw-r--r-- 1 dhilvert dhilvert 11308 2003-07-27 03:29 README
--rw-r--r-- 1 dhilvert dhilvert 13729 2003-07-26 03:12 ale.cc
--rw-r--r-- 1 dhilvert dhilvert   928 2003-07-15 12:04 align.cc
--rw-r--r-- 1 dhilvert dhilvert 22280 2003-07-15 12:04 align.h
--rw-r--r-- 1 dhilvert dhilvert  2848 2003-07-15 12:04 combine.h
--rw-r--r-- 1 dhilvert dhilvert  7110 2003-07-15 12:04 drizzle.h
--rw-r--r-- 1 dhilvert dhilvert 15650 2003-07-15 12:04 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  4667 2003-07-15 12:04 hf_filter.h
--rw-r--r-- 1 dhilvert dhilvert 11656 2003-07-15 12:04 image.h
--rw-r--r-- 1 dhilvert dhilvert  1177 2003-07-15 12:04 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert  7317 2003-07-15 12:04 image_rw.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2003-07-27 03:36 ipc/
--rw-r--r-- 1 dhilvert dhilvert 11500 2003-07-21 02:42 ipc.h
--rw-r--r-- 1 dhilvert dhilvert  5496 2003-07-26 03:14 merge.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-07-15 12:04 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  1310 2003-07-15 12:04 point.h
--rw-r--r-- 1 dhilvert dhilvert  3864 2003-07-15 12:04 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  1569 2003-07-15 12:04 render.h
--rw-r--r-- 1 dhilvert dhilvert  6746 2003-07-15 12:04 tfile.h
+total 196
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-07-15 12:04:07.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  7297 2003-07-26 07:19:27.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1624 2003-07-27 03:28:27.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert 11308 2003-07-27 03:29:21.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 13729 2003-07-26 03:12:10.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert   928 2003-07-15 12:04:07.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 22280 2003-07-15 12:04:07.000000000 +0800 align.h
+-rw-r--r-- 1 dhilvert dhilvert  2848 2003-07-15 12:04:07.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert  7110 2003-07-15 12:04:07.000000000 +0800 drizzle.h
+-rw-r--r-- 1 dhilvert dhilvert 15650 2003-07-15 12:04:07.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  4667 2003-07-15 12:04:07.000000000 +0800 hf_filter.h
+-rw-r--r-- 1 dhilvert dhilvert 11656 2003-07-15 12:04:07.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  1177 2003-07-15 12:04:07.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert  7317 2003-07-15 12:04:07.000000000 +0800 image_rw.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2003-07-27 03:36:09.000000000 +0800 ipc/
+-rw-r--r-- 1 dhilvert dhilvert 11500 2003-07-21 02:42:15.000000000 +0800 ipc.h
+-rw-r--r-- 1 dhilvert dhilvert  5496 2003-07-26 03:14:47.000000000 +0800 merge.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-07-15 12:04:07.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1310 2003-07-15 12:04:07.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  3864 2003-07-15 12:04:07.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  1569 2003-07-15 12:04:07.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  6746 2003-07-15 12:04:07.000000000 +0800 tfile.h
 
 ./ale-0.4.7/ipc:
-合計 28
--rwxr-xr-x 1 dhilvert dhilvert 4310 2003-07-27 03:33 ale-calibrate*
--rw-r--r-- 1 dhilvert dhilvert 2687 2003-07-25 07:56 box.h
--rw-r--r-- 1 dhilvert dhilvert 5833 2003-07-25 07:56 stdin.h
--rw-r--r-- 1 dhilvert dhilvert 5726 2003-07-27 00:38 xvp610_320x240.h
+total 28
+-rwxr-xr-x 1 dhilvert dhilvert 4310 2003-07-27 03:33:10.000000000 +0800 ale-calibrate*
+-rw-r--r-- 1 dhilvert dhilvert 2687 2003-07-25 07:56:39.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 5833 2003-07-25 07:56:59.000000000 +0800 stdin.h
+-rw-r--r-- 1 dhilvert dhilvert 5726 2003-07-27 00:38:02.000000000 +0800 xvp610_320x240.h
 
 ./ale-0.4.8:
-合計 196
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-07-29 10:03 COPYING
--rw-r--r-- 1 dhilvert dhilvert  8048 2003-07-31 23:40 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1735 2003-07-29 12:30 Makefile
--rw-r--r-- 1 dhilvert dhilvert 11851 2003-07-31 23:36 README
--rw-r--r-- 1 dhilvert dhilvert 14455 2003-07-31 23:33 ale.cc
--rw-r--r-- 1 dhilvert dhilvert  1225 2003-07-30 05:53 align.cc
--rw-r--r-- 1 dhilvert dhilvert 23742 2003-07-31 02:06 align.h
--rw-r--r-- 1 dhilvert dhilvert  2848 2003-07-29 10:03 combine.h
--rw-r--r-- 1 dhilvert dhilvert  7110 2003-07-29 10:03 drizzle.h
--rw-r--r-- 1 dhilvert dhilvert 15650 2003-07-29 10:03 gpt.h
--rw-r--r-- 1 dhilvert dhilvert  4667 2003-07-29 10:03 hf_filter.h
--rw-r--r-- 1 dhilvert dhilvert 11656 2003-07-29 10:03 image.h
--rw-r--r-- 1 dhilvert dhilvert  1177 2003-07-29 10:03 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert  7317 2003-07-29 10:03 image_rw.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2003-07-31 08:41 ipc/
--rw-r--r-- 1 dhilvert dhilvert 11581 2003-07-31 04:03 ipc.h
--rw-r--r-- 1 dhilvert dhilvert  5496 2003-07-29 10:03 merge.h
--rw-r--r-- 1 dhilvert dhilvert  1010 2003-07-29 10:03 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  1310 2003-07-29 10:03 point.h
--rw-r--r-- 1 dhilvert dhilvert  3864 2003-07-29 10:03 ppm.h
--rw-r--r-- 1 dhilvert dhilvert  1569 2003-07-29 10:03 render.h
--rw-r--r-- 1 dhilvert dhilvert  6746 2003-07-29 10:03 tfile.h
+total 196
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-07-29 10:03:36.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  8048 2003-07-31 23:40:59.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1735 2003-07-29 12:30:14.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert 11851 2003-07-31 23:36:17.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 14455 2003-07-31 23:33:10.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert  1225 2003-07-30 05:53:08.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 23742 2003-07-31 02:06:26.000000000 +0800 align.h
+-rw-r--r-- 1 dhilvert dhilvert  2848 2003-07-29 10:03:36.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert  7110 2003-07-29 10:03:36.000000000 +0800 drizzle.h
+-rw-r--r-- 1 dhilvert dhilvert 15650 2003-07-29 10:03:36.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert  4667 2003-07-29 10:03:36.000000000 +0800 hf_filter.h
+-rw-r--r-- 1 dhilvert dhilvert 11656 2003-07-29 10:03:36.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  1177 2003-07-29 10:03:36.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert  7317 2003-07-29 10:03:36.000000000 +0800 image_rw.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2003-07-31 08:41:40.000000000 +0800 ipc/
+-rw-r--r-- 1 dhilvert dhilvert 11581 2003-07-31 04:03:33.000000000 +0800 ipc.h
+-rw-r--r-- 1 dhilvert dhilvert  5496 2003-07-29 10:03:36.000000000 +0800 merge.h
+-rw-r--r-- 1 dhilvert dhilvert  1010 2003-07-29 10:03:36.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1310 2003-07-29 10:03:36.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  3864 2003-07-29 10:03:36.000000000 +0800 ppm.h
+-rw-r--r-- 1 dhilvert dhilvert  1569 2003-07-29 10:03:36.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  6746 2003-07-29 10:03:36.000000000 +0800 tfile.h
 
 ./ale-0.4.8/ipc:
-合計 28
--rwxr-xr-x 1 dhilvert dhilvert 4316 2003-07-31 07:02 ale-calibrate*
--rw-r--r-- 1 dhilvert dhilvert 2687 2003-07-29 10:03 box.h
--rw-r--r-- 1 dhilvert dhilvert 5833 2003-07-29 10:03 stdin.h
--rw-r--r-- 1 dhilvert dhilvert 5726 2003-07-29 10:03 xvp610_320x240.h
+total 28
+-rwxr-xr-x 1 dhilvert dhilvert 4316 2003-07-31 07:02:31.000000000 +0800 ale-calibrate*
+-rw-r--r-- 1 dhilvert dhilvert 2687 2003-07-29 10:03:36.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 5833 2003-07-29 10:03:36.000000000 +0800 stdin.h
+-rw-r--r-- 1 dhilvert dhilvert 5726 2003-07-29 10:03:36.000000000 +0800 xvp610_320x240.h
 
 ./ale-0.5.0:
-合計 172
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-09-21 02:34 COPYING
--rw-r--r-- 1 dhilvert dhilvert  9265 2003-11-02 18:50 Changelog
--rw-r--r-- 1 dhilvert dhilvert  1672 2003-10-31 19:38 Makefile
--rw-r--r-- 1 dhilvert dhilvert 11860 2003-11-02 19:55 README
--rw-r--r-- 1 dhilvert dhilvert 14730 2003-11-02 19:09 ale.cc
--rw-r--r-- 1 dhilvert dhilvert  1422 2003-11-01 16:57 align.cc
--rw-r--r-- 1 dhilvert dhilvert 27248 2003-11-02 20:11 align.h
--rw-r--r-- 1 dhilvert dhilvert 16019 2003-11-01 16:41 gpt.h
--rw-r--r-- 1 dhilvert dhilvert 11732 2003-11-02 18:03 image.h
--rw-r--r-- 1 dhilvert dhilvert  1235 2003-11-01 16:57 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert  7577 2003-11-01 17:01 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  1022 2003-11-01 16:39 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  1310 2003-09-21 02:34 point.h
--rw-r--r-- 1 dhilvert dhilvert  4153 2003-11-01 16:21 ppm.h
-drwxr-sr-x 3 dhilvert dhilvert  4096 2003-11-02 02:42 render/
--rw-r--r-- 1 dhilvert dhilvert  1920 2003-11-01 16:38 render.h
--rw-r--r-- 1 dhilvert dhilvert  9053 2003-11-01 16:54 tfile.h
+total 172
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-09-21 02:34:30.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert  9265 2003-11-02 18:50:40.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  1672 2003-10-31 19:38:51.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert 11860 2003-11-02 19:55:39.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 14730 2003-11-02 19:09:20.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert  1422 2003-11-01 16:57:11.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 27248 2003-11-02 20:11:44.000000000 +0800 align.h
+-rw-r--r-- 1 dhilvert dhilvert 16019 2003-11-01 16:41:05.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert 11732 2003-11-02 18:03:15.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  1235 2003-11-01 16:57:31.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert  7577 2003-11-01 17:01:42.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  1022 2003-11-01 16:39:29.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1310 2003-09-21 02:34:30.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  4153 2003-11-01 16:21:10.000000000 +0800 ppm.h
+drwxr-sr-x 3 dhilvert dhilvert  4096 2003-11-02 02:42:18.000000000 +0800 render/
+-rw-r--r-- 1 dhilvert dhilvert  1920 2003-11-01 16:38:56.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  9053 2003-11-01 16:54:48.000000000 +0800 tfile.h
 
 ./ale-0.5.0/render:
-合計 44
--rw-r--r-- 1 dhilvert dhilvert  2920 2003-11-01 16:42 combine.h
--rw-r--r-- 1 dhilvert dhilvert  7327 2003-11-01 16:43 drizzle.h
--rw-r--r-- 1 dhilvert dhilvert  4804 2003-11-01 16:43 hf_filter.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2003-11-01 16:50 ipc/
--rw-r--r-- 1 dhilvert dhilvert 11781 2003-11-01 16:46 ipc.h
--rw-r--r-- 1 dhilvert dhilvert  5911 2003-11-01 16:50 merge.h
+total 44
+-rw-r--r-- 1 dhilvert dhilvert  2920 2003-11-01 16:42:00.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert  7327 2003-11-01 16:43:06.000000000 +0800 drizzle.h
+-rw-r--r-- 1 dhilvert dhilvert  4804 2003-11-01 16:43:53.000000000 +0800 hf_filter.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2003-11-01 16:50:51.000000000 +0800 ipc/
+-rw-r--r-- 1 dhilvert dhilvert 11781 2003-11-01 16:46:46.000000000 +0800 ipc.h
+-rw-r--r-- 1 dhilvert dhilvert  5911 2003-11-01 16:50:32.000000000 +0800 merge.h
 
 ./ale-0.5.0/render/ipc:
-合計 28
--rwxr-xr-x 1 dhilvert dhilvert 4316 2003-09-21 02:34 ale-calibrate*
--rw-r--r-- 1 dhilvert dhilvert 2568 2003-10-25 22:08 box.h
--rw-r--r-- 1 dhilvert dhilvert 5714 2003-10-25 22:08 stdin.h
--rw-r--r-- 1 dhilvert dhilvert 5607 2003-10-25 22:07 xvp610_320x240.h
+total 28
+-rwxr-xr-x 1 dhilvert dhilvert 4316 2003-09-21 02:34:30.000000000 +0800 ale-calibrate*
+-rw-r--r-- 1 dhilvert dhilvert 2568 2003-10-25 22:08:00.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 5714 2003-10-25 22:08:04.000000000 +0800 stdin.h
+-rw-r--r-- 1 dhilvert dhilvert 5607 2003-10-25 22:07:57.000000000 +0800 xvp610_320x240.h
 
 ./ale-0.5.1:
-合計 184
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-11-05 03:42 COPYING
--rw-r--r-- 1 dhilvert dhilvert 10770 2003-11-17 04:44 Changelog
--rw-r--r-- 1 dhilvert dhilvert  2058 2003-11-09 15:15 Makefile
--rw-r--r-- 1 dhilvert dhilvert 13570 2003-11-20 04:43 README
--rw-r--r-- 1 dhilvert dhilvert 14846 2003-11-17 04:29 ale.cc
--rw-r--r-- 1 dhilvert dhilvert  1422 2003-11-05 03:42 align.cc
--rw-r--r-- 1 dhilvert dhilvert 27248 2003-11-05 03:42 align.h
--rw-r--r-- 1 dhilvert dhilvert  1131 2003-11-05 03:52 channel.h
--rw-r--r-- 1 dhilvert dhilvert 16019 2003-11-05 03:42 gpt.h
--rw-r--r-- 1 dhilvert dhilvert 11577 2003-11-05 03:50 image.h
--rw-r--r-- 1 dhilvert dhilvert  1235 2003-11-05 03:42 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert  9140 2003-11-09 22:40 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  1022 2003-11-05 03:42 my_real.h
--rw-r--r-- 1 dhilvert dhilvert  1310 2003-11-05 03:42 point.h
--rw-r--r-- 1 dhilvert dhilvert  5387 2003-11-09 22:46 ppm.h
-drwxr-sr-x 3 dhilvert dhilvert  4096 2003-11-05 19:47 render/
--rw-r--r-- 1 dhilvert dhilvert  1920 2003-11-05 03:42 render.h
--rw-r--r-- 1 dhilvert dhilvert  9053 2003-11-05 03:42 tfile.h
+total 184
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-11-05 03:42:24.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert 10770 2003-11-17 04:44:13.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  2058 2003-11-09 15:15:03.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert 13570 2003-11-20 04:43:57.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 14846 2003-11-17 04:29:16.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert  1422 2003-11-05 03:42:24.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 27248 2003-11-05 03:42:24.000000000 +0800 align.h
+-rw-r--r-- 1 dhilvert dhilvert  1131 2003-11-05 03:52:41.000000000 +0800 channel.h
+-rw-r--r-- 1 dhilvert dhilvert 16019 2003-11-05 03:42:24.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert 11577 2003-11-05 03:50:38.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  1235 2003-11-05 03:42:24.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert  9140 2003-11-09 22:40:07.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  1022 2003-11-05 03:42:24.000000000 +0800 my_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1310 2003-11-05 03:42:24.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  5387 2003-11-09 22:46:15.000000000 +0800 ppm.h
+drwxr-sr-x 3 dhilvert dhilvert  4096 2003-11-05 19:47:05.000000000 +0800 render/
+-rw-r--r-- 1 dhilvert dhilvert  1920 2003-11-05 03:42:24.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  9053 2003-11-05 03:42:24.000000000 +0800 tfile.h
 
 ./ale-0.5.1/render:
-合計 44
--rw-r--r-- 1 dhilvert dhilvert  2920 2003-11-05 03:42 combine.h
--rw-r--r-- 1 dhilvert dhilvert  7327 2003-11-05 03:42 drizzle.h
--rw-r--r-- 1 dhilvert dhilvert  4820 2003-11-05 03:55 hf_filter.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2003-11-05 19:47 ipc/
--rw-r--r-- 1 dhilvert dhilvert 11831 2003-11-05 03:54 ipc.h
--rw-r--r-- 1 dhilvert dhilvert  5929 2003-11-05 03:54 merge.h
+total 44
+-rw-r--r-- 1 dhilvert dhilvert  2920 2003-11-05 03:42:24.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert  7327 2003-11-05 03:42:24.000000000 +0800 drizzle.h
+-rw-r--r-- 1 dhilvert dhilvert  4820 2003-11-05 03:55:28.000000000 +0800 hf_filter.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2003-11-05 19:47:05.000000000 +0800 ipc/
+-rw-r--r-- 1 dhilvert dhilvert 11831 2003-11-05 03:54:49.000000000 +0800 ipc.h
+-rw-r--r-- 1 dhilvert dhilvert  5929 2003-11-05 03:54:27.000000000 +0800 merge.h
 
 ./ale-0.5.1/render/ipc:
-合計 28
--rwxr-xr-x 1 dhilvert dhilvert 4316 2003-11-05 03:42 ale-calibrate*
--rw-r--r-- 1 dhilvert dhilvert 2568 2003-11-05 03:42 box.h
--rw-r--r-- 1 dhilvert dhilvert 5714 2003-11-05 03:42 stdin.h
--rw-r--r-- 1 dhilvert dhilvert 5607 2003-11-05 03:42 xvp610_320x240.h
+total 28
+-rwxr-xr-x 1 dhilvert dhilvert 4316 2003-11-05 03:42:25.000000000 +0800 ale-calibrate*
+-rw-r--r-- 1 dhilvert dhilvert 2568 2003-11-05 03:42:25.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 5714 2003-11-05 03:42:25.000000000 +0800 stdin.h
+-rw-r--r-- 1 dhilvert dhilvert 5607 2003-11-05 03:42:25.000000000 +0800 xvp610_320x240.h
 
 ./ale-0.6.0:
-合計 104
--rw-r--r-- 1 dhilvert dhilvert 18005 2003-11-22 09:34 COPYING
--rw-r--r-- 1 dhilvert dhilvert 14716 2004-01-29 11:04 Changelog
--rw-r--r-- 1 dhilvert dhilvert  2814 2004-01-27 13:15 Makefile
--rw-r--r-- 1 dhilvert dhilvert  5720 2004-02-08 03:53 README
--rw-r--r-- 1 dhilvert dhilvert 23595 2004-02-08 03:13 ale.cc
--rw-r--r-- 1 dhilvert dhilvert  1124 2004-01-27 09:43 ale_accum.h
--rw-r--r-- 1 dhilvert dhilvert  1529 2004-01-27 09:43 ale_pos.h
--rw-r--r-- 1 dhilvert dhilvert  4332 2004-01-27 10:22 ale_real.h
-drwxr-sr-x 4 dhilvert dhilvert  4096 2004-02-09 07:25 d2/
--rw-r--r-- 1 dhilvert dhilvert  1166 2004-01-11 11:01 d2.cc
--rw-r--r-- 1 dhilvert dhilvert  2250 2004-01-26 06:32 d2.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-02-09 07:25 device/
+total 104
+-rw-r--r-- 1 dhilvert dhilvert 18005 2003-11-22 09:34:23.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert 14716 2004-01-29 11:04:02.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  2814 2004-01-27 13:15:06.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  5720 2004-02-08 03:53:51.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 23595 2004-02-08 03:13:09.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert  1124 2004-01-27 09:43:21.000000000 +0800 ale_accum.h
+-rw-r--r-- 1 dhilvert dhilvert  1529 2004-01-27 09:43:10.000000000 +0800 ale_pos.h
+-rw-r--r-- 1 dhilvert dhilvert  4332 2004-01-27 10:22:35.000000000 +0800 ale_real.h
+drwxr-sr-x 4 dhilvert dhilvert  4096 2004-02-09 07:25:57.000000000 +0800 d2/
+-rw-r--r-- 1 dhilvert dhilvert  1166 2004-01-11 11:01:45.000000000 +0800 d2.cc
+-rw-r--r-- 1 dhilvert dhilvert  2250 2004-01-26 06:32:08.000000000 +0800 d2.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-02-09 07:25:57.000000000 +0800 device/
 
 ./ale-0.6.0/d2:
-合計 140
--rw-r--r-- 1 dhilvert dhilvert  2291 2004-01-25 12:54 align.cc
--rw-r--r-- 1 dhilvert dhilvert 25482 2004-02-05 01:33 align.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-02-09 07:29 exposure/
--rw-r--r-- 1 dhilvert dhilvert 20620 2004-01-25 13:01 gpt.h
--rw-r--r-- 1 dhilvert dhilvert 13866 2004-02-05 01:30 image.h
--rw-r--r-- 1 dhilvert dhilvert  2952 2004-02-05 01:27 image_ale_real.h
--rw-r--r-- 1 dhilvert dhilvert  1483 2004-01-10 20:01 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert  9619 2004-02-05 04:06 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  3305 2004-01-26 06:50 pixel.h
--rw-r--r-- 1 dhilvert dhilvert  3699 2004-01-25 12:27 pixel_accum.h
--rw-r--r-- 1 dhilvert dhilvert  1516 2004-01-25 13:12 point.h
--rw-r--r-- 1 dhilvert dhilvert  5146 2004-02-05 01:19 ppm.h
-drwxr-sr-x 3 dhilvert dhilvert  4096 2004-02-09 07:25 render/
--rw-r--r-- 1 dhilvert dhilvert  1923 2004-01-07 22:56 render.h
--rw-r--r-- 1 dhilvert dhilvert  2191 2004-01-26 08:22 spixel.h
--rw-r--r-- 1 dhilvert dhilvert  9175 2004-01-25 16:33 tfile.h
+total 140
+-rw-r--r-- 1 dhilvert dhilvert  2291 2004-01-25 12:54:19.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 25482 2004-02-05 01:33:56.000000000 +0800 align.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-02-09 07:29:16.000000000 +0800 exposure/
+-rw-r--r-- 1 dhilvert dhilvert 20620 2004-01-25 13:01:55.000000000 +0800 gpt.h
+-rw-r--r-- 1 dhilvert dhilvert 13866 2004-02-05 01:30:08.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  2952 2004-02-05 01:27:50.000000000 +0800 image_ale_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1483 2004-01-10 20:01:29.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert  9619 2004-02-05 04:06:19.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  3305 2004-01-26 06:50:39.000000000 +0800 pixel.h
+-rw-r--r-- 1 dhilvert dhilvert  3699 2004-01-25 12:27:32.000000000 +0800 pixel_accum.h
+-rw-r--r-- 1 dhilvert dhilvert  1516 2004-01-25 13:12:14.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  5146 2004-02-05 01:19:44.000000000 +0800 ppm.h
+drwxr-sr-x 3 dhilvert dhilvert  4096 2004-02-09 07:25:57.000000000 +0800 render/
+-rw-r--r-- 1 dhilvert dhilvert  1923 2004-01-07 22:56:56.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  2191 2004-01-26 08:22:47.000000000 +0800 spixel.h
+-rw-r--r-- 1 dhilvert dhilvert  9175 2004-01-25 16:33:08.000000000 +0800 tfile.h
 
 ./ale-0.6.0/d2/exposure:
-合計 20
--rw-r--r-- 1 dhilvert dhilvert 1014 2004-01-25 12:59 exposure.cc
--rw-r--r-- 1 dhilvert dhilvert 4135 2004-02-09 07:29 exposure.h
--rw-r--r-- 1 dhilvert dhilvert 1550 2004-01-22 14:55 exposure_default.h
--rw-r--r-- 1 dhilvert dhilvert 1310 2004-01-10 19:26 exposure_linear.h
+total 20
+-rw-r--r-- 1 dhilvert dhilvert 1014 2004-01-25 12:59:30.000000000 +0800 exposure.cc
+-rw-r--r-- 1 dhilvert dhilvert 4135 2004-02-09 07:29:16.000000000 +0800 exposure.h
+-rw-r--r-- 1 dhilvert dhilvert 1550 2004-01-22 14:55:43.000000000 +0800 exposure_default.h
+-rw-r--r-- 1 dhilvert dhilvert 1310 2004-01-10 19:26:24.000000000 +0800 exposure_linear.h
 
 ./ale-0.6.0/d2/render:
-合計 56
--rw-r--r-- 1 dhilvert dhilvert  3701 2004-01-13 06:43 combine.h
--rw-r--r-- 1 dhilvert dhilvert  7097 2004-01-25 13:14 drizzle.h
--rw-r--r-- 1 dhilvert dhilvert 21309 2004-02-05 04:40 ipc.h
--rw-r--r-- 1 dhilvert dhilvert  6140 2004-02-05 02:29 merge.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-02-09 07:25 psf/
--rw-r--r-- 1 dhilvert dhilvert  5387 2004-02-05 01:34 usm.h
+total 56
+-rw-r--r-- 1 dhilvert dhilvert  3701 2004-01-13 06:43:06.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert  7097 2004-01-25 13:14:27.000000000 +0800 drizzle.h
+-rw-r--r-- 1 dhilvert dhilvert 21309 2004-02-05 04:40:10.000000000 +0800 ipc.h
+-rw-r--r-- 1 dhilvert dhilvert  6140 2004-02-05 02:29:23.000000000 +0800 merge.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-02-09 07:25:57.000000000 +0800 psf/
+-rw-r--r-- 1 dhilvert dhilvert  5387 2004-02-05 01:34:13.000000000 +0800 usm.h
 
 ./ale-0.6.0/d2/render/psf:
-合計 76
--rwxr-xr-x 1 dhilvert dhilvert 7311 2004-02-02 20:04 ale-psf-calibrate*
--rw-r--r-- 1 dhilvert dhilvert 9683 2004-01-22 17:52 backprojector.h
--rw-r--r-- 1 dhilvert dhilvert 2376 2004-01-25 13:15 box.h
--rw-r--r-- 1 dhilvert dhilvert 3761 2004-01-21 05:12 normalizer.h
--rw-r--r-- 1 dhilvert dhilvert 3928 2004-01-14 16:03 psf.h
--rw-r--r-- 1 dhilvert dhilvert 8913 2004-02-05 01:35 psf_calibrate.h
--rw-r--r-- 1 dhilvert dhilvert 3411 2004-01-27 08:41 psf_template.h
--rw-r--r-- 1 dhilvert dhilvert 6248 2004-01-21 05:08 raster.h
--rw-r--r-- 1 dhilvert dhilvert 5197 2004-01-21 21:16 rasterizer.h
--rw-r--r-- 1 dhilvert dhilvert 5552 2004-01-25 13:18 stdin.h
--rw-r--r-- 1 dhilvert dhilvert 3685 2004-01-25 13:19 sum.h
+total 76
+-rwxr-xr-x 1 dhilvert dhilvert 7311 2004-02-02 20:04:14.000000000 +0800 ale-psf-calibrate*
+-rw-r--r-- 1 dhilvert dhilvert 9683 2004-01-22 17:52:11.000000000 +0800 backprojector.h
+-rw-r--r-- 1 dhilvert dhilvert 2376 2004-01-25 13:15:58.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 3761 2004-01-21 05:12:15.000000000 +0800 normalizer.h
+-rw-r--r-- 1 dhilvert dhilvert 3928 2004-01-14 16:03:56.000000000 +0800 psf.h
+-rw-r--r-- 1 dhilvert dhilvert 8913 2004-02-05 01:35:18.000000000 +0800 psf_calibrate.h
+-rw-r--r-- 1 dhilvert dhilvert 3411 2004-01-27 08:41:44.000000000 +0800 psf_template.h
+-rw-r--r-- 1 dhilvert dhilvert 6248 2004-01-21 05:08:01.000000000 +0800 raster.h
+-rw-r--r-- 1 dhilvert dhilvert 5197 2004-01-21 21:16:57.000000000 +0800 rasterizer.h
+-rw-r--r-- 1 dhilvert dhilvert 5552 2004-01-25 13:18:55.000000000 +0800 stdin.h
+-rw-r--r-- 1 dhilvert dhilvert 3685 2004-01-25 13:19:07.000000000 +0800 sum.h
 
 ./ale-0.6.0/device:
-合計 4
--rw-r--r-- 1 dhilvert dhilvert 2906 2004-02-05 16:29 xvp610_320x240.h
+total 4
+-rw-r--r-- 1 dhilvert dhilvert 2906 2004-02-05 16:29:31.000000000 +0800 xvp610_320x240.h
 
 ./ale-0.7.0:
-合計 144
--rw-r--r-- 1 dhilvert dhilvert 18005 2004-02-19 07:41 COPYING
--rw-r--r-- 1 dhilvert dhilvert 17272 2004-08-05 04:51 Changelog
--rw-r--r-- 1 dhilvert dhilvert  2891 2004-08-05 04:46 Makefile
--rw-r--r-- 1 dhilvert dhilvert  6279 2004-08-07 20:35 README
--rw-r--r-- 1 dhilvert dhilvert 30872 2004-08-05 06:42 ale.cc
--rw-r--r-- 1 dhilvert dhilvert  1124 2004-02-19 07:41 ale_accum.h
--rw-r--r-- 1 dhilvert dhilvert  1529 2004-02-19 07:41 ale_pos.h
--rw-r--r-- 1 dhilvert dhilvert  4332 2004-02-19 07:41 ale_real.h
-drwxr-sr-x 6 dhilvert dhilvert  4096 2004-08-07 20:34 d2/
--rw-r--r-- 1 dhilvert dhilvert  1243 2004-05-31 07:59 d2.cc
--rw-r--r-- 1 dhilvert dhilvert  2536 2004-08-05 07:12 d2.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-07 20:34 device/
--rw-r--r-- 1 dhilvert dhilvert 19099 2004-08-05 06:36 help.h
--rw-r--r-- 1 dhilvert dhilvert  1762 2004-03-31 23:38 implication.h
--rw-r--r-- 1 dhilvert dhilvert  1824 2004-06-07 14:08 unsupported.h
+total 144
+-rw-r--r-- 1 dhilvert dhilvert 18005 2004-02-19 07:41:16.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert 17272 2004-08-05 04:51:11.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  2891 2004-08-05 04:46:34.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  6279 2004-08-07 20:35:13.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 30872 2004-08-05 06:42:00.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert  1124 2004-02-19 07:41:16.000000000 +0800 ale_accum.h
+-rw-r--r-- 1 dhilvert dhilvert  1529 2004-02-19 07:41:16.000000000 +0800 ale_pos.h
+-rw-r--r-- 1 dhilvert dhilvert  4332 2004-02-19 07:41:16.000000000 +0800 ale_real.h
+drwxr-sr-x 6 dhilvert dhilvert  4096 2004-08-07 20:34:31.000000000 +0800 d2/
+-rw-r--r-- 1 dhilvert dhilvert  1243 2004-05-31 07:59:48.000000000 +0800 d2.cc
+-rw-r--r-- 1 dhilvert dhilvert  2536 2004-08-05 07:12:53.000000000 +0800 d2.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-07 20:34:31.000000000 +0800 device/
+-rw-r--r-- 1 dhilvert dhilvert 19099 2004-08-05 06:36:46.000000000 +0800 help.h
+-rw-r--r-- 1 dhilvert dhilvert  1762 2004-03-31 23:38:50.000000000 +0800 implication.h
+-rw-r--r-- 1 dhilvert dhilvert  1824 2004-06-07 14:08:06.000000000 +0800 unsupported.h
 
 ./ale-0.7.0/d2:
-合計 228
--rw-r--r-- 1 dhilvert dhilvert  2872 2004-08-05 06:37 align.cc
--rw-r--r-- 1 dhilvert dhilvert 36971 2004-08-07 20:23 align.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-07 20:34 exposure/
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-07 20:34 filter/
--rw-r--r-- 1 dhilvert dhilvert  1545 2004-06-17 09:31 filter.h
--rw-r--r-- 1 dhilvert dhilvert 14708 2004-08-04 13:31 image.h
--rw-r--r-- 1 dhilvert dhilvert  3150 2004-06-15 14:03 image_ale_real.h
--rw-r--r-- 1 dhilvert dhilvert  5090 2004-06-17 17:33 image_bayer_ale_real.h
--rw-r--r-- 1 dhilvert dhilvert  1560 2004-06-15 09:24 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert 10725 2004-08-04 13:33 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  6296 2004-06-15 14:07 image_zero.h
--rw-r--r-- 1 dhilvert dhilvert  4356 2004-06-12 05:23 pixel.h
--rw-r--r-- 1 dhilvert dhilvert  3699 2004-02-19 07:41 pixel_accum.h
--rw-r--r-- 1 dhilvert dhilvert  3044 2004-07-13 08:47 point.h
--rw-r--r-- 1 dhilvert dhilvert  5554 2004-06-15 14:33 ppm.h
-drwxr-sr-x 3 dhilvert dhilvert  4096 2004-08-07 20:34 render/
--rw-r--r-- 1 dhilvert dhilvert  1259 2004-06-09 07:24 render.cc
--rw-r--r-- 1 dhilvert dhilvert  6101 2004-06-09 11:33 render.h
--rw-r--r-- 1 dhilvert dhilvert  5863 2004-06-10 01:15 render_parse.h
--rw-r--r-- 1 dhilvert dhilvert  2191 2004-02-19 07:41 spixel.h
--rw-r--r-- 1 dhilvert dhilvert  1083 2004-05-25 01:40 tfile.cc
--rw-r--r-- 1 dhilvert dhilvert 19464 2004-07-17 07:50 tfile.h
--rw-r--r-- 1 dhilvert dhilvert 25740 2004-06-17 09:30 transformation.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-07 20:34 vise/
--rw-r--r-- 1 dhilvert dhilvert  2542 2004-06-11 11:46 vise.h
--rw-r--r-- 1 dhilvert dhilvert  1144 2004-06-11 11:43 vise_core.cc
--rw-r--r-- 1 dhilvert dhilvert  3916 2004-06-11 11:45 vise_core.h
+total 228
+-rw-r--r-- 1 dhilvert dhilvert  2872 2004-08-05 06:37:31.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 36971 2004-08-07 20:23:15.000000000 +0800 align.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-07 20:34:31.000000000 +0800 exposure/
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-07 20:34:31.000000000 +0800 filter/
+-rw-r--r-- 1 dhilvert dhilvert  1545 2004-06-17 09:31:32.000000000 +0800 filter.h
+-rw-r--r-- 1 dhilvert dhilvert 14708 2004-08-04 13:31:55.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  3150 2004-06-15 14:03:12.000000000 +0800 image_ale_real.h
+-rw-r--r-- 1 dhilvert dhilvert  5090 2004-06-17 17:33:30.000000000 +0800 image_bayer_ale_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1560 2004-06-15 09:24:46.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert 10725 2004-08-04 13:33:32.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  6296 2004-06-15 14:07:22.000000000 +0800 image_zero.h
+-rw-r--r-- 1 dhilvert dhilvert  4356 2004-06-12 05:23:06.000000000 +0800 pixel.h
+-rw-r--r-- 1 dhilvert dhilvert  3699 2004-02-19 07:41:16.000000000 +0800 pixel_accum.h
+-rw-r--r-- 1 dhilvert dhilvert  3044 2004-07-13 08:47:34.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  5554 2004-06-15 14:33:28.000000000 +0800 ppm.h
+drwxr-sr-x 3 dhilvert dhilvert  4096 2004-08-07 20:34:31.000000000 +0800 render/
+-rw-r--r-- 1 dhilvert dhilvert  1259 2004-06-09 07:24:37.000000000 +0800 render.cc
+-rw-r--r-- 1 dhilvert dhilvert  6101 2004-06-09 11:33:20.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  5863 2004-06-10 01:15:10.000000000 +0800 render_parse.h
+-rw-r--r-- 1 dhilvert dhilvert  2191 2004-02-19 07:41:16.000000000 +0800 spixel.h
+-rw-r--r-- 1 dhilvert dhilvert  1083 2004-05-25 01:40:02.000000000 +0800 tfile.cc
+-rw-r--r-- 1 dhilvert dhilvert 19464 2004-07-17 07:50:05.000000000 +0800 tfile.h
+-rw-r--r-- 1 dhilvert dhilvert 25740 2004-06-17 09:30:50.000000000 +0800 transformation.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-07 20:34:31.000000000 +0800 vise/
+-rw-r--r-- 1 dhilvert dhilvert  2542 2004-06-11 11:46:38.000000000 +0800 vise.h
+-rw-r--r-- 1 dhilvert dhilvert  1144 2004-06-11 11:43:56.000000000 +0800 vise_core.cc
+-rw-r--r-- 1 dhilvert dhilvert  3916 2004-06-11 11:45:36.000000000 +0800 vise_core.h
 
 ./ale-0.7.0/d2/exposure:
-合計 24
--rw-r--r-- 1 dhilvert dhilvert 1014 2004-02-19 07:41 exposure.cc
--rw-r--r-- 1 dhilvert dhilvert 4350 2004-06-17 09:23 exposure.h
--rw-r--r-- 1 dhilvert dhilvert 1416 2004-08-05 06:58 exposure_boolean.h
--rw-r--r-- 1 dhilvert dhilvert 1550 2004-02-19 07:41 exposure_default.h
--rw-r--r-- 1 dhilvert dhilvert 1310 2004-02-19 07:41 exposure_linear.h
+total 24
+-rw-r--r-- 1 dhilvert dhilvert 1014 2004-02-19 07:41:16.000000000 +0800 exposure.cc
+-rw-r--r-- 1 dhilvert dhilvert 4350 2004-06-17 09:23:31.000000000 +0800 exposure.h
+-rw-r--r-- 1 dhilvert dhilvert 1416 2004-08-05 06:58:05.000000000 +0800 exposure_boolean.h
+-rw-r--r-- 1 dhilvert dhilvert 1550 2004-02-19 07:41:16.000000000 +0800 exposure_default.h
+-rw-r--r-- 1 dhilvert dhilvert 1310 2004-02-19 07:41:16.000000000 +0800 exposure_linear.h
 
 ./ale-0.7.0/d2/filter:
-合計 44
--rw-r--r-- 1 dhilvert dhilvert 1774 2004-07-12 22:52 box.h
--rw-r--r-- 1 dhilvert dhilvert 1366 2004-06-09 19:29 filter.h
--rw-r--r-- 1 dhilvert dhilvert 2096 2004-07-12 22:53 lanczos.h
--rw-r--r-- 1 dhilvert dhilvert 1905 2004-06-06 08:50 mult.h
--rw-r--r-- 1 dhilvert dhilvert 8377 2004-07-30 10:43 scaled_filter.h
--rw-r--r-- 1 dhilvert dhilvert 2014 2004-06-08 05:41 sinc.h
--rw-r--r-- 1 dhilvert dhilvert 2238 2004-07-12 22:53 ssfe.h
--rw-r--r-- 1 dhilvert dhilvert 1844 2004-07-13 09:05 triangle.h
--rw-r--r-- 1 dhilvert dhilvert 1417 2004-06-08 05:43 zero.h
+total 44
+-rw-r--r-- 1 dhilvert dhilvert 1774 2004-07-12 22:52:05.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 1366 2004-06-09 19:29:18.000000000 +0800 filter.h
+-rw-r--r-- 1 dhilvert dhilvert 2096 2004-07-12 22:53:29.000000000 +0800 lanczos.h
+-rw-r--r-- 1 dhilvert dhilvert 1905 2004-06-06 08:50:15.000000000 +0800 mult.h
+-rw-r--r-- 1 dhilvert dhilvert 8377 2004-07-30 10:43:47.000000000 +0800 scaled_filter.h
+-rw-r--r-- 1 dhilvert dhilvert 2014 2004-06-08 05:41:12.000000000 +0800 sinc.h
+-rw-r--r-- 1 dhilvert dhilvert 2238 2004-07-12 22:53:58.000000000 +0800 ssfe.h
+-rw-r--r-- 1 dhilvert dhilvert 1844 2004-07-13 09:05:04.000000000 +0800 triangle.h
+-rw-r--r-- 1 dhilvert dhilvert 1417 2004-06-08 05:43:35.000000000 +0800 zero.h
 
 ./ale-0.7.0/d2/render:
-合計 60
--rw-r--r-- 1 dhilvert dhilvert  4007 2004-06-09 05:50 combine.h
--rw-r--r-- 1 dhilvert dhilvert  8796 2004-07-15 07:34 incremental.h
--rw-r--r-- 1 dhilvert dhilvert  1941 2004-06-08 05:36 invariant.h
--rw-r--r-- 1 dhilvert dhilvert 21580 2004-07-11 14:46 ipc.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-07 20:34 psf/
--rw-r--r-- 1 dhilvert dhilvert  5425 2004-06-08 05:38 usm.h
--rw-r--r-- 1 dhilvert dhilvert  2243 2004-07-15 07:34 zero.h
+total 60
+-rw-r--r-- 1 dhilvert dhilvert  4007 2004-06-09 05:50:13.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert  8796 2004-07-15 07:34:59.000000000 +0800 incremental.h
+-rw-r--r-- 1 dhilvert dhilvert  1941 2004-06-08 05:36:16.000000000 +0800 invariant.h
+-rw-r--r-- 1 dhilvert dhilvert 21580 2004-07-11 14:46:26.000000000 +0800 ipc.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-07 20:34:31.000000000 +0800 psf/
+-rw-r--r-- 1 dhilvert dhilvert  5425 2004-06-08 05:38:02.000000000 +0800 usm.h
+-rw-r--r-- 1 dhilvert dhilvert  2243 2004-07-15 07:34:58.000000000 +0800 zero.h
 
 ./ale-0.7.0/d2/render/psf:
-合計 88
--rwxr-xr-x 1 dhilvert dhilvert 8670 2004-07-23 03:22 ale-psf-calibrate*
--rw-r--r-- 1 dhilvert dhilvert 9696 2004-07-05 09:05 backprojector.h
--rw-r--r-- 1 dhilvert dhilvert 2376 2004-02-19 07:41 box.h
--rw-r--r-- 1 dhilvert dhilvert 3773 2004-07-05 09:13 normalizer.h
--rw-r--r-- 1 dhilvert dhilvert 3947 2004-07-05 09:03 psf.h
--rw-r--r-- 1 dhilvert dhilvert 9767 2004-07-09 11:27 psf_calibrate.h
--rw-r--r-- 1 dhilvert dhilvert 3411 2004-02-19 07:41 psf_template.h
--rw-r--r-- 1 dhilvert dhilvert 6339 2004-07-05 09:11 raster.h
--rw-r--r-- 1 dhilvert dhilvert 5258 2004-07-05 09:11 rasterizer.h
--rw-r--r-- 1 dhilvert dhilvert 5552 2004-02-19 07:41 stdin.h
--rw-r--r-- 1 dhilvert dhilvert 6495 2004-07-05 12:28 stdin_vg.h
--rw-r--r-- 1 dhilvert dhilvert 3698 2004-07-05 09:14 sum.h
+total 88
+-rwxr-xr-x 1 dhilvert dhilvert 8670 2004-07-23 03:22:20.000000000 +0800 ale-psf-calibrate*
+-rw-r--r-- 1 dhilvert dhilvert 9696 2004-07-05 09:05:26.000000000 +0800 backprojector.h
+-rw-r--r-- 1 dhilvert dhilvert 2376 2004-02-19 07:41:16.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 3773 2004-07-05 09:13:11.000000000 +0800 normalizer.h
+-rw-r--r-- 1 dhilvert dhilvert 3947 2004-07-05 09:03:38.000000000 +0800 psf.h
+-rw-r--r-- 1 dhilvert dhilvert 9767 2004-07-09 11:27:55.000000000 +0800 psf_calibrate.h
+-rw-r--r-- 1 dhilvert dhilvert 3411 2004-02-19 07:41:16.000000000 +0800 psf_template.h
+-rw-r--r-- 1 dhilvert dhilvert 6339 2004-07-05 09:11:22.000000000 +0800 raster.h
+-rw-r--r-- 1 dhilvert dhilvert 5258 2004-07-05 09:11:52.000000000 +0800 rasterizer.h
+-rw-r--r-- 1 dhilvert dhilvert 5552 2004-02-19 07:41:16.000000000 +0800 stdin.h
+-rw-r--r-- 1 dhilvert dhilvert 6495 2004-07-05 12:28:13.000000000 +0800 stdin_vg.h
+-rw-r--r-- 1 dhilvert dhilvert 3698 2004-07-05 09:14:39.000000000 +0800 sum.h
 
 ./ale-0.7.0/d2/vise:
-合計 16
--rw-r--r-- 1 dhilvert dhilvert 5487 2004-08-05 00:02 ma.h
--rw-r--r-- 1 dhilvert dhilvert 4534 2004-08-05 00:01 sf.h
+total 16
+-rw-r--r-- 1 dhilvert dhilvert 5487 2004-08-05 00:02:18.000000000 +0800 ma.h
+-rw-r--r-- 1 dhilvert dhilvert 4534 2004-08-05 00:01:47.000000000 +0800 sf.h
 
 ./ale-0.7.0/device:
-合計 8
--rw-r--r-- 1 dhilvert dhilvert 2979 2004-03-30 22:59 xvp610_320x240.h
--rw-r--r-- 1 dhilvert dhilvert 3427 2004-07-14 15:28 xvp610_640x480.h
+total 8
+-rw-r--r-- 1 dhilvert dhilvert 2979 2004-03-30 22:59:19.000000000 +0800 xvp610_320x240.h
+-rw-r--r-- 1 dhilvert dhilvert 3427 2004-07-14 15:28:33.000000000 +0800 xvp610_640x480.h
 
 ./ale-0.7.1:
-合計 144
--rw-r--r-- 1 dhilvert dhilvert 18005 2004-08-23 14:08 COPYING
--rw-r--r-- 1 dhilvert dhilvert 18630 2004-08-27 07:29 Changelog
--rw-r--r-- 1 dhilvert dhilvert  2891 2004-08-23 14:08 Makefile
--rw-r--r-- 1 dhilvert dhilvert  6279 2004-08-26 06:43 README
--rw-r--r-- 1 dhilvert dhilvert 32375 2004-08-27 07:38 ale.cc
--rw-r--r-- 1 dhilvert dhilvert  1124 2004-08-23 14:08 ale_accum.h
--rw-r--r-- 1 dhilvert dhilvert  1529 2004-08-23 14:08 ale_pos.h
--rw-r--r-- 1 dhilvert dhilvert  4332 2004-08-23 14:08 ale_real.h
-drwxr-sr-x 6 dhilvert dhilvert  4096 2004-08-27 07:22 d2/
--rw-r--r-- 1 dhilvert dhilvert  1243 2004-08-23 14:08 d2.cc
--rw-r--r-- 1 dhilvert dhilvert  2571 2004-08-24 05:07 d2.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-27 13:36 device/
--rw-r--r-- 1 dhilvert dhilvert 19518 2004-08-27 05:20 help.h
--rw-r--r-- 1 dhilvert dhilvert  1762 2004-08-23 14:08 implication.h
--rw-r--r-- 1 dhilvert dhilvert  1824 2004-08-23 14:08 unsupported.h
+total 144
+-rw-r--r-- 1 dhilvert dhilvert 18005 2004-08-23 14:08:16.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert 18630 2004-08-27 07:29:19.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  2891 2004-08-23 14:08:16.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  6279 2004-08-26 06:43:48.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 32375 2004-08-27 07:38:53.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert  1124 2004-08-23 14:08:16.000000000 +0800 ale_accum.h
+-rw-r--r-- 1 dhilvert dhilvert  1529 2004-08-23 14:08:16.000000000 +0800 ale_pos.h
+-rw-r--r-- 1 dhilvert dhilvert  4332 2004-08-23 14:08:16.000000000 +0800 ale_real.h
+drwxr-sr-x 6 dhilvert dhilvert  4096 2004-08-27 07:22:22.000000000 +0800 d2/
+-rw-r--r-- 1 dhilvert dhilvert  1243 2004-08-23 14:08:16.000000000 +0800 d2.cc
+-rw-r--r-- 1 dhilvert dhilvert  2571 2004-08-24 05:07:51.000000000 +0800 d2.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-27 13:36:00.000000000 +0800 device/
+-rw-r--r-- 1 dhilvert dhilvert 19518 2004-08-27 05:20:46.000000000 +0800 help.h
+-rw-r--r-- 1 dhilvert dhilvert  1762 2004-08-23 14:08:17.000000000 +0800 implication.h
+-rw-r--r-- 1 dhilvert dhilvert  1824 2004-08-23 14:08:16.000000000 +0800 unsupported.h
 
 ./ale-0.7.1/d2:
-合計 236
--rw-r--r-- 1 dhilvert dhilvert  2851 2004-08-23 14:08 align.cc
--rw-r--r-- 1 dhilvert dhilvert 43647 2004-08-26 01:38 align.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-23 14:08 exposure/
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-27 08:54 filter/
--rw-r--r-- 1 dhilvert dhilvert  1545 2004-08-23 14:08 filter.h
--rw-r--r-- 1 dhilvert dhilvert 18039 2004-08-23 14:08 image.h
--rw-r--r-- 1 dhilvert dhilvert  3150 2004-08-23 14:08 image_ale_real.h
--rw-r--r-- 1 dhilvert dhilvert  5090 2004-08-23 14:08 image_bayer_ale_real.h
--rw-r--r-- 1 dhilvert dhilvert  1560 2004-08-23 14:08 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert 10725 2004-08-23 14:08 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  6296 2004-08-23 14:08 image_zero.h
--rw-r--r-- 1 dhilvert dhilvert  4356 2004-08-23 14:08 pixel.h
--rw-r--r-- 1 dhilvert dhilvert  3699 2004-08-23 14:08 pixel_accum.h
--rw-r--r-- 1 dhilvert dhilvert  3105 2004-08-23 14:08 point.h
--rw-r--r-- 1 dhilvert dhilvert  5554 2004-08-23 14:08 ppm.h
-drwxr-sr-x 3 dhilvert dhilvert  4096 2004-08-23 14:08 render/
--rw-r--r-- 1 dhilvert dhilvert  1259 2004-08-23 14:08 render.cc
--rw-r--r-- 1 dhilvert dhilvert  6101 2004-08-23 14:08 render.h
--rw-r--r-- 1 dhilvert dhilvert  5863 2004-08-23 14:08 render_parse.h
--rw-r--r-- 1 dhilvert dhilvert  2191 2004-08-23 14:08 spixel.h
--rw-r--r-- 1 dhilvert dhilvert  1083 2004-08-23 14:08 tfile.cc
--rw-r--r-- 1 dhilvert dhilvert 19464 2004-08-23 14:08 tfile.h
--rw-r--r-- 1 dhilvert dhilvert 26357 2004-08-23 14:08 transformation.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-27 07:28 vise/
--rw-r--r-- 1 dhilvert dhilvert  2542 2004-08-23 14:08 vise.h
--rw-r--r-- 1 dhilvert dhilvert  1144 2004-08-23 14:08 vise_core.cc
--rw-r--r-- 1 dhilvert dhilvert  3916 2004-08-23 14:08 vise_core.h
+total 236
+-rw-r--r-- 1 dhilvert dhilvert  2851 2004-08-23 14:08:48.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 43647 2004-08-26 01:38:25.000000000 +0800 align.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-23 14:08:16.000000000 +0800 exposure/
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-27 08:54:44.000000000 +0800 filter/
+-rw-r--r-- 1 dhilvert dhilvert  1545 2004-08-23 14:08:16.000000000 +0800 filter.h
+-rw-r--r-- 1 dhilvert dhilvert 18039 2004-08-23 14:08:48.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  3150 2004-08-23 14:08:16.000000000 +0800 image_ale_real.h
+-rw-r--r-- 1 dhilvert dhilvert  5090 2004-08-23 14:08:16.000000000 +0800 image_bayer_ale_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1560 2004-08-23 14:08:16.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert 10725 2004-08-23 14:08:16.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  6296 2004-08-23 14:08:16.000000000 +0800 image_zero.h
+-rw-r--r-- 1 dhilvert dhilvert  4356 2004-08-23 14:08:16.000000000 +0800 pixel.h
+-rw-r--r-- 1 dhilvert dhilvert  3699 2004-08-23 14:08:16.000000000 +0800 pixel_accum.h
+-rw-r--r-- 1 dhilvert dhilvert  3105 2004-08-23 14:08:48.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  5554 2004-08-23 14:08:16.000000000 +0800 ppm.h
+drwxr-sr-x 3 dhilvert dhilvert  4096 2004-08-23 14:08:16.000000000 +0800 render/
+-rw-r--r-- 1 dhilvert dhilvert  1259 2004-08-23 14:08:16.000000000 +0800 render.cc
+-rw-r--r-- 1 dhilvert dhilvert  6101 2004-08-23 14:08:16.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  5863 2004-08-23 14:08:16.000000000 +0800 render_parse.h
+-rw-r--r-- 1 dhilvert dhilvert  2191 2004-08-23 14:08:16.000000000 +0800 spixel.h
+-rw-r--r-- 1 dhilvert dhilvert  1083 2004-08-23 14:08:16.000000000 +0800 tfile.cc
+-rw-r--r-- 1 dhilvert dhilvert 19464 2004-08-23 14:08:16.000000000 +0800 tfile.h
+-rw-r--r-- 1 dhilvert dhilvert 26357 2004-08-23 14:08:48.000000000 +0800 transformation.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-27 07:28:04.000000000 +0800 vise/
+-rw-r--r-- 1 dhilvert dhilvert  2542 2004-08-23 14:08:16.000000000 +0800 vise.h
+-rw-r--r-- 1 dhilvert dhilvert  1144 2004-08-23 14:08:16.000000000 +0800 vise_core.cc
+-rw-r--r-- 1 dhilvert dhilvert  3916 2004-08-23 14:08:16.000000000 +0800 vise_core.h
 
 ./ale-0.7.1/d2/exposure:
-合計 24
--rw-r--r-- 1 dhilvert dhilvert 1014 2004-08-23 14:08 exposure.cc
--rw-r--r-- 1 dhilvert dhilvert 4350 2004-08-23 14:08 exposure.h
--rw-r--r-- 1 dhilvert dhilvert 1416 2004-08-23 14:08 exposure_boolean.h
--rw-r--r-- 1 dhilvert dhilvert 1550 2004-08-23 14:08 exposure_default.h
--rw-r--r-- 1 dhilvert dhilvert 1310 2004-08-23 14:08 exposure_linear.h
+total 24
+-rw-r--r-- 1 dhilvert dhilvert 1014 2004-08-23 14:08:16.000000000 +0800 exposure.cc
+-rw-r--r-- 1 dhilvert dhilvert 4350 2004-08-23 14:08:16.000000000 +0800 exposure.h
+-rw-r--r-- 1 dhilvert dhilvert 1416 2004-08-23 14:08:16.000000000 +0800 exposure_boolean.h
+-rw-r--r-- 1 dhilvert dhilvert 1550 2004-08-23 14:08:16.000000000 +0800 exposure_default.h
+-rw-r--r-- 1 dhilvert dhilvert 1310 2004-08-23 14:08:16.000000000 +0800 exposure_linear.h
 
 ./ale-0.7.1/d2/filter:
-合計 44
--rw-r--r-- 1 dhilvert dhilvert 1774 2004-08-23 14:08 box.h
--rw-r--r-- 1 dhilvert dhilvert 1366 2004-08-23 14:08 filter.h
--rw-r--r-- 1 dhilvert dhilvert 2096 2004-08-23 14:08 lanczos.h
--rw-r--r-- 1 dhilvert dhilvert 1905 2004-08-23 14:08 mult.h
--rw-r--r-- 1 dhilvert dhilvert 9099 2004-08-23 14:08 scaled_filter.h
--rw-r--r-- 1 dhilvert dhilvert 2014 2004-08-23 14:08 sinc.h
--rw-r--r-- 1 dhilvert dhilvert 2238 2004-08-23 14:08 ssfe.h
--rw-r--r-- 1 dhilvert dhilvert 1844 2004-08-23 14:08 triangle.h
--rw-r--r-- 1 dhilvert dhilvert 1417 2004-08-23 14:08 zero.h
+total 44
+-rw-r--r-- 1 dhilvert dhilvert 1774 2004-08-23 14:08:16.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 1366 2004-08-23 14:08:16.000000000 +0800 filter.h
+-rw-r--r-- 1 dhilvert dhilvert 2096 2004-08-23 14:08:16.000000000 +0800 lanczos.h
+-rw-r--r-- 1 dhilvert dhilvert 1905 2004-08-23 14:08:16.000000000 +0800 mult.h
+-rw-r--r-- 1 dhilvert dhilvert 9099 2004-08-23 14:08:48.000000000 +0800 scaled_filter.h
+-rw-r--r-- 1 dhilvert dhilvert 2014 2004-08-23 14:08:16.000000000 +0800 sinc.h
+-rw-r--r-- 1 dhilvert dhilvert 2238 2004-08-23 14:08:16.000000000 +0800 ssfe.h
+-rw-r--r-- 1 dhilvert dhilvert 1844 2004-08-23 14:08:16.000000000 +0800 triangle.h
+-rw-r--r-- 1 dhilvert dhilvert 1417 2004-08-23 14:08:16.000000000 +0800 zero.h
 
 ./ale-0.7.1/d2/render:
-合計 60
--rw-r--r-- 1 dhilvert dhilvert  4007 2004-08-23 14:08 combine.h
--rw-r--r-- 1 dhilvert dhilvert  8796 2004-08-23 14:08 incremental.h
--rw-r--r-- 1 dhilvert dhilvert  1941 2004-08-23 14:08 invariant.h
--rw-r--r-- 1 dhilvert dhilvert 21580 2004-08-23 14:08 ipc.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-24 05:36 psf/
--rw-r--r-- 1 dhilvert dhilvert  5425 2004-08-23 14:08 usm.h
--rw-r--r-- 1 dhilvert dhilvert  2243 2004-08-23 14:08 zero.h
+total 60
+-rw-r--r-- 1 dhilvert dhilvert  4007 2004-08-23 14:08:16.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert  8796 2004-08-23 14:08:16.000000000 +0800 incremental.h
+-rw-r--r-- 1 dhilvert dhilvert  1941 2004-08-23 14:08:16.000000000 +0800 invariant.h
+-rw-r--r-- 1 dhilvert dhilvert 21580 2004-08-23 14:08:16.000000000 +0800 ipc.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-08-24 05:36:33.000000000 +0800 psf/
+-rw-r--r-- 1 dhilvert dhilvert  5425 2004-08-23 14:08:16.000000000 +0800 usm.h
+-rw-r--r-- 1 dhilvert dhilvert  2243 2004-08-23 14:08:16.000000000 +0800 zero.h
 
 ./ale-0.7.1/d2/render/psf:
-合計 92
--rwxr-xr-x 1 dhilvert dhilvert 8670 2004-08-23 14:08 ale-psf-calibrate*
--rw-r--r-- 1 dhilvert dhilvert 9696 2004-08-23 14:08 backprojector.h
--rw-r--r-- 1 dhilvert dhilvert 2376 2004-08-23 14:08 box.h
--rw-r--r-- 1 dhilvert dhilvert 2549 2004-08-24 05:36 circle.h
--rw-r--r-- 1 dhilvert dhilvert 3773 2004-08-23 14:08 normalizer.h
--rw-r--r-- 1 dhilvert dhilvert 3947 2004-08-23 14:08 psf.h
--rw-r--r-- 1 dhilvert dhilvert 9767 2004-08-23 14:08 psf_calibrate.h
--rw-r--r-- 1 dhilvert dhilvert 3411 2004-08-23 14:08 psf_template.h
--rw-r--r-- 1 dhilvert dhilvert 6339 2004-08-23 14:08 raster.h
--rw-r--r-- 1 dhilvert dhilvert 5258 2004-08-23 14:08 rasterizer.h
--rw-r--r-- 1 dhilvert dhilvert 5552 2004-08-23 14:08 stdin.h
--rw-r--r-- 1 dhilvert dhilvert 6495 2004-08-23 14:08 stdin_vg.h
--rw-r--r-- 1 dhilvert dhilvert 3698 2004-08-23 14:08 sum.h
+total 92
+-rwxr-xr-x 1 dhilvert dhilvert 8670 2004-08-23 14:08:16.000000000 +0800 ale-psf-calibrate*
+-rw-r--r-- 1 dhilvert dhilvert 9696 2004-08-23 14:08:16.000000000 +0800 backprojector.h
+-rw-r--r-- 1 dhilvert dhilvert 2376 2004-08-23 14:08:16.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 2549 2004-08-24 05:36:07.000000000 +0800 circle.h
+-rw-r--r-- 1 dhilvert dhilvert 3773 2004-08-23 14:08:16.000000000 +0800 normalizer.h
+-rw-r--r-- 1 dhilvert dhilvert 3947 2004-08-23 14:08:16.000000000 +0800 psf.h
+-rw-r--r-- 1 dhilvert dhilvert 9767 2004-08-23 14:08:16.000000000 +0800 psf_calibrate.h
+-rw-r--r-- 1 dhilvert dhilvert 3411 2004-08-23 14:08:16.000000000 +0800 psf_template.h
+-rw-r--r-- 1 dhilvert dhilvert 6339 2004-08-23 14:08:16.000000000 +0800 raster.h
+-rw-r--r-- 1 dhilvert dhilvert 5258 2004-08-23 14:08:16.000000000 +0800 rasterizer.h
+-rw-r--r-- 1 dhilvert dhilvert 5552 2004-08-23 14:08:16.000000000 +0800 stdin.h
+-rw-r--r-- 1 dhilvert dhilvert 6495 2004-08-23 14:08:16.000000000 +0800 stdin_vg.h
+-rw-r--r-- 1 dhilvert dhilvert 3698 2004-08-23 14:08:16.000000000 +0800 sum.h
 
 ./ale-0.7.1/d2/vise:
-合計 16
--rw-r--r-- 1 dhilvert dhilvert 5494 2004-08-27 07:26 ma.h
--rw-r--r-- 1 dhilvert dhilvert 4559 2004-08-27 07:25 sf.h
+total 16
+-rw-r--r-- 1 dhilvert dhilvert 5494 2004-08-27 07:26:25.000000000 +0800 ma.h
+-rw-r--r-- 1 dhilvert dhilvert 4559 2004-08-27 07:25:28.000000000 +0800 sf.h
 
 ./ale-0.7.1/device:
-合計 12
--rw-r--r-- 1 dhilvert dhilvert 2489 2004-08-27 13:35 ov7620_raw_linear.h
--rw-r--r-- 1 dhilvert dhilvert 2979 2004-08-23 14:08 xvp610_320x240.h
--rw-r--r-- 1 dhilvert dhilvert 3427 2004-08-23 14:08 xvp610_640x480.h
+total 12
+-rw-r--r-- 1 dhilvert dhilvert 2489 2004-08-27 13:35:25.000000000 +0800 ov7620_raw_linear.h
+-rw-r--r-- 1 dhilvert dhilvert 2979 2004-08-23 14:08:17.000000000 +0800 xvp610_320x240.h
+-rw-r--r-- 1 dhilvert dhilvert 3427 2004-08-23 14:08:17.000000000 +0800 xvp610_640x480.h
 
 ./ale-0.7.2:
-合計 168
--rw-r--r-- 1 dhilvert dhilvert 18005 2004-09-05 04:11 COPYING
--rw-r--r-- 1 dhilvert dhilvert 20373 2004-10-26 21:18 Changelog
--rw-r--r-- 1 dhilvert dhilvert  3269 2004-10-26 23:23 Makefile
--rw-r--r-- 1 dhilvert dhilvert  6279 2004-10-26 20:41 README
--rw-r--r-- 1 dhilvert dhilvert 37668 2004-10-26 21:17 ale.cc
--rw-r--r-- 1 dhilvert dhilvert  1124 2004-09-05 04:11 ale_accum.h
--rw-r--r-- 1 dhilvert dhilvert  1529 2004-09-05 04:11 ale_pos.h
--rw-r--r-- 1 dhilvert dhilvert  4332 2004-09-05 04:11 ale_real.h
-drwxr-sr-x 6 dhilvert dhilvert  4096 2004-10-26 05:12 d2/
--rw-r--r-- 1 dhilvert dhilvert  1243 2004-09-05 04:11 d2.cc
--rw-r--r-- 1 dhilvert dhilvert  2571 2004-09-05 04:11 d2.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-10-26 22:41 d3/
--rw-r--r-- 1 dhilvert dhilvert  1129 2004-09-17 16:02 d3.cc
--rw-r--r-- 1 dhilvert dhilvert  1177 2004-10-24 04:58 d3.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-10-26 12:20 device/
--rw-r--r-- 1 dhilvert dhilvert 20427 2004-10-26 21:16 help.h
--rw-r--r-- 1 dhilvert dhilvert  1762 2004-09-05 04:11 implication.h
-drwxr-sr-x 5 dhilvert dhilvert  4096 2004-09-09 05:08 testsuite/
--rw-r--r-- 1 dhilvert dhilvert  1824 2004-09-05 04:11 unsupported.h
+total 168
+-rw-r--r-- 1 dhilvert dhilvert 18005 2004-09-05 04:11:39.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert 20373 2004-10-26 21:18:13.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  3269 2004-10-26 23:23:47.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  6279 2004-10-26 20:41:30.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 37668 2004-10-26 21:17:29.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert  1124 2004-09-05 04:11:39.000000000 +0800 ale_accum.h
+-rw-r--r-- 1 dhilvert dhilvert  1529 2004-09-05 04:11:39.000000000 +0800 ale_pos.h
+-rw-r--r-- 1 dhilvert dhilvert  4332 2004-09-05 04:11:39.000000000 +0800 ale_real.h
+drwxr-sr-x 6 dhilvert dhilvert  4096 2004-10-26 05:12:15.000000000 +0800 d2/
+-rw-r--r-- 1 dhilvert dhilvert  1243 2004-09-05 04:11:39.000000000 +0800 d2.cc
+-rw-r--r-- 1 dhilvert dhilvert  2571 2004-09-05 04:11:39.000000000 +0800 d2.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-10-26 22:41:49.000000000 +0800 d3/
+-rw-r--r-- 1 dhilvert dhilvert  1129 2004-09-17 16:02:44.000000000 +0800 d3.cc
+-rw-r--r-- 1 dhilvert dhilvert  1177 2004-10-24 04:58:51.000000000 +0800 d3.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-10-26 12:20:02.000000000 +0800 device/
+-rw-r--r-- 1 dhilvert dhilvert 20427 2004-10-26 21:16:41.000000000 +0800 help.h
+-rw-r--r-- 1 dhilvert dhilvert  1762 2004-09-05 04:11:39.000000000 +0800 implication.h
+drwxr-sr-x 5 dhilvert dhilvert  4096 2004-09-09 05:08:23.000000000 +0800 testsuite/
+-rw-r--r-- 1 dhilvert dhilvert  1824 2004-09-05 04:11:39.000000000 +0800 unsupported.h
 
 ./ale-0.7.2/d2:
-合計 240
--rw-r--r-- 1 dhilvert dhilvert  3116 2004-09-15 14:35 align.cc
--rw-r--r-- 1 dhilvert dhilvert 47571 2004-09-15 08:48 align.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-09-05 04:11 exposure/
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-09-06 13:17 filter/
--rw-r--r-- 1 dhilvert dhilvert  1545 2004-09-05 04:11 filter.h
--rw-r--r-- 1 dhilvert dhilvert 18038 2004-10-21 10:04 image.h
--rw-r--r-- 1 dhilvert dhilvert  3495 2004-09-06 10:49 image_ale_real.h
--rw-r--r-- 1 dhilvert dhilvert  5161 2004-09-06 04:42 image_bayer_ale_real.h
--rw-r--r-- 1 dhilvert dhilvert  1560 2004-09-05 04:11 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert 10797 2004-10-21 13:11 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  6256 2004-09-06 04:49 image_zero.h
--rw-r--r-- 1 dhilvert dhilvert  4356 2004-09-05 04:11 pixel.h
--rw-r--r-- 1 dhilvert dhilvert  3699 2004-09-05 04:11 pixel_accum.h
--rw-r--r-- 1 dhilvert dhilvert  3105 2004-09-05 04:11 point.h
--rw-r--r-- 1 dhilvert dhilvert  5554 2004-09-05 04:11 ppm.h
-drwxr-sr-x 3 dhilvert dhilvert  4096 2004-09-15 12:40 render/
--rw-r--r-- 1 dhilvert dhilvert  1259 2004-09-05 04:11 render.cc
--rw-r--r-- 1 dhilvert dhilvert  6322 2004-09-06 12:51 render.h
--rw-r--r-- 1 dhilvert dhilvert  5863 2004-09-05 04:11 render_parse.h
--rw-r--r-- 1 dhilvert dhilvert  2191 2004-09-05 04:11 spixel.h
--rw-r--r-- 1 dhilvert dhilvert  1083 2004-09-05 04:11 tfile.cc
--rw-r--r-- 1 dhilvert dhilvert 19464 2004-09-05 04:11 tfile.h
--rw-r--r-- 1 dhilvert dhilvert 26990 2004-09-05 07:34 transformation.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-09-06 18:43 vise/
--rw-r--r-- 1 dhilvert dhilvert  2542 2004-09-05 04:11 vise.h
--rw-r--r-- 1 dhilvert dhilvert  1144 2004-09-05 04:11 vise_core.cc
--rw-r--r-- 1 dhilvert dhilvert  3916 2004-09-05 04:11 vise_core.h
+total 240
+-rw-r--r-- 1 dhilvert dhilvert  3116 2004-09-15 14:35:09.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 47571 2004-09-15 08:48:26.000000000 +0800 align.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-09-05 04:11:39.000000000 +0800 exposure/
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-09-06 13:17:36.000000000 +0800 filter/
+-rw-r--r-- 1 dhilvert dhilvert  1545 2004-09-05 04:11:39.000000000 +0800 filter.h
+-rw-r--r-- 1 dhilvert dhilvert 18038 2004-10-21 10:04:06.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  3495 2004-09-06 10:49:26.000000000 +0800 image_ale_real.h
+-rw-r--r-- 1 dhilvert dhilvert  5161 2004-09-06 04:42:31.000000000 +0800 image_bayer_ale_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1560 2004-09-05 04:11:39.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert 10797 2004-10-21 13:11:17.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  6256 2004-09-06 04:49:54.000000000 +0800 image_zero.h
+-rw-r--r-- 1 dhilvert dhilvert  4356 2004-09-05 04:11:39.000000000 +0800 pixel.h
+-rw-r--r-- 1 dhilvert dhilvert  3699 2004-09-05 04:11:39.000000000 +0800 pixel_accum.h
+-rw-r--r-- 1 dhilvert dhilvert  3105 2004-09-05 04:11:39.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  5554 2004-09-05 04:11:39.000000000 +0800 ppm.h
+drwxr-sr-x 3 dhilvert dhilvert  4096 2004-09-15 12:40:21.000000000 +0800 render/
+-rw-r--r-- 1 dhilvert dhilvert  1259 2004-09-05 04:11:39.000000000 +0800 render.cc
+-rw-r--r-- 1 dhilvert dhilvert  6322 2004-09-06 12:51:26.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  5863 2004-09-05 04:11:39.000000000 +0800 render_parse.h
+-rw-r--r-- 1 dhilvert dhilvert  2191 2004-09-05 04:11:39.000000000 +0800 spixel.h
+-rw-r--r-- 1 dhilvert dhilvert  1083 2004-09-05 04:11:39.000000000 +0800 tfile.cc
+-rw-r--r-- 1 dhilvert dhilvert 19464 2004-09-05 04:11:39.000000000 +0800 tfile.h
+-rw-r--r-- 1 dhilvert dhilvert 26990 2004-09-05 07:34:14.000000000 +0800 transformation.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-09-06 18:43:37.000000000 +0800 vise/
+-rw-r--r-- 1 dhilvert dhilvert  2542 2004-09-05 04:11:39.000000000 +0800 vise.h
+-rw-r--r-- 1 dhilvert dhilvert  1144 2004-09-05 04:11:39.000000000 +0800 vise_core.cc
+-rw-r--r-- 1 dhilvert dhilvert  3916 2004-09-05 04:11:39.000000000 +0800 vise_core.h
 
 ./ale-0.7.2/d2/exposure:
-合計 24
--rw-r--r-- 1 dhilvert dhilvert 1014 2004-09-05 04:11 exposure.cc
--rw-r--r-- 1 dhilvert dhilvert 4350 2004-09-05 04:11 exposure.h
--rw-r--r-- 1 dhilvert dhilvert 1416 2004-09-05 04:11 exposure_boolean.h
--rw-r--r-- 1 dhilvert dhilvert 1550 2004-09-05 04:11 exposure_default.h
--rw-r--r-- 1 dhilvert dhilvert 1310 2004-09-05 04:11 exposure_linear.h
+total 24
+-rw-r--r-- 1 dhilvert dhilvert 1014 2004-09-05 04:11:39.000000000 +0800 exposure.cc
+-rw-r--r-- 1 dhilvert dhilvert 4350 2004-09-05 04:11:39.000000000 +0800 exposure.h
+-rw-r--r-- 1 dhilvert dhilvert 1416 2004-09-05 04:11:39.000000000 +0800 exposure_boolean.h
+-rw-r--r-- 1 dhilvert dhilvert 1550 2004-09-05 04:11:39.000000000 +0800 exposure_default.h
+-rw-r--r-- 1 dhilvert dhilvert 1310 2004-09-05 04:11:39.000000000 +0800 exposure_linear.h
 
 ./ale-0.7.2/d2/filter:
-合計 44
--rw-r--r-- 1 dhilvert dhilvert 1774 2004-09-05 04:11 box.h
--rw-r--r-- 1 dhilvert dhilvert 1366 2004-09-05 04:11 filter.h
--rw-r--r-- 1 dhilvert dhilvert 2096 2004-09-05 04:11 lanczos.h
--rw-r--r-- 1 dhilvert dhilvert 1905 2004-09-05 04:11 mult.h
--rw-r--r-- 1 dhilvert dhilvert 9099 2004-09-06 12:42 scaled_filter.h
--rw-r--r-- 1 dhilvert dhilvert 2014 2004-09-05 04:11 sinc.h
--rw-r--r-- 1 dhilvert dhilvert 2486 2004-09-06 13:10 ssfe.h
--rw-r--r-- 1 dhilvert dhilvert 1844 2004-09-05 04:11 triangle.h
--rw-r--r-- 1 dhilvert dhilvert 1417 2004-09-05 04:11 zero.h
+total 44
+-rw-r--r-- 1 dhilvert dhilvert 1774 2004-09-05 04:11:39.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 1366 2004-09-05 04:11:39.000000000 +0800 filter.h
+-rw-r--r-- 1 dhilvert dhilvert 2096 2004-09-05 04:11:39.000000000 +0800 lanczos.h
+-rw-r--r-- 1 dhilvert dhilvert 1905 2004-09-05 04:11:39.000000000 +0800 mult.h
+-rw-r--r-- 1 dhilvert dhilvert 9099 2004-09-06 12:42:15.000000000 +0800 scaled_filter.h
+-rw-r--r-- 1 dhilvert dhilvert 2014 2004-09-05 04:11:39.000000000 +0800 sinc.h
+-rw-r--r-- 1 dhilvert dhilvert 2486 2004-09-06 13:10:46.000000000 +0800 ssfe.h
+-rw-r--r-- 1 dhilvert dhilvert 1844 2004-09-05 04:11:39.000000000 +0800 triangle.h
+-rw-r--r-- 1 dhilvert dhilvert 1417 2004-09-05 04:11:39.000000000 +0800 zero.h
 
 ./ale-0.7.2/d2/render:
-合計 60
--rw-r--r-- 1 dhilvert dhilvert  4007 2004-09-05 04:11 combine.h
--rw-r--r-- 1 dhilvert dhilvert 10806 2004-09-06 12:45 incremental.h
--rw-r--r-- 1 dhilvert dhilvert  1941 2004-09-05 04:11 invariant.h
--rw-r--r-- 1 dhilvert dhilvert 21580 2004-09-05 04:11 ipc.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-09-08 02:01 psf/
--rw-r--r-- 1 dhilvert dhilvert  5425 2004-09-05 04:11 usm.h
--rw-r--r-- 1 dhilvert dhilvert  2267 2004-09-06 04:33 zero.h
+total 60
+-rw-r--r-- 1 dhilvert dhilvert  4007 2004-09-05 04:11:39.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert 10806 2004-09-06 12:45:03.000000000 +0800 incremental.h
+-rw-r--r-- 1 dhilvert dhilvert  1941 2004-09-05 04:11:39.000000000 +0800 invariant.h
+-rw-r--r-- 1 dhilvert dhilvert 21580 2004-09-05 04:11:39.000000000 +0800 ipc.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-09-08 02:01:33.000000000 +0800 psf/
+-rw-r--r-- 1 dhilvert dhilvert  5425 2004-09-05 04:11:39.000000000 +0800 usm.h
+-rw-r--r-- 1 dhilvert dhilvert  2267 2004-09-06 04:33:32.000000000 +0800 zero.h
 
 ./ale-0.7.2/d2/render/psf:
-合計 92
--rwxr-xr-x 1 dhilvert dhilvert 8670 2004-09-05 04:11 ale-psf-calibrate*
--rw-r--r-- 1 dhilvert dhilvert 9696 2004-09-05 04:11 backprojector.h
--rw-r--r-- 1 dhilvert dhilvert 2376 2004-09-05 04:11 box.h
--rw-r--r-- 1 dhilvert dhilvert 2549 2004-09-05 04:11 circle.h
--rw-r--r-- 1 dhilvert dhilvert 3773 2004-09-05 04:11 normalizer.h
--rw-r--r-- 1 dhilvert dhilvert 3947 2004-09-05 04:11 psf.h
--rw-r--r-- 1 dhilvert dhilvert 9767 2004-09-05 04:11 psf_calibrate.h
--rw-r--r-- 1 dhilvert dhilvert 3411 2004-09-05 04:11 psf_template.h
--rw-r--r-- 1 dhilvert dhilvert 6339 2004-09-05 04:11 raster.h
--rw-r--r-- 1 dhilvert dhilvert 5258 2004-09-05 04:11 rasterizer.h
--rw-r--r-- 1 dhilvert dhilvert 5552 2004-09-05 04:11 stdin.h
--rw-r--r-- 1 dhilvert dhilvert 6495 2004-09-05 04:11 stdin_vg.h
--rw-r--r-- 1 dhilvert dhilvert 3698 2004-09-05 04:11 sum.h
+total 92
+-rwxr-xr-x 1 dhilvert dhilvert 8670 2004-09-05 04:11:39.000000000 +0800 ale-psf-calibrate*
+-rw-r--r-- 1 dhilvert dhilvert 9696 2004-09-05 04:11:39.000000000 +0800 backprojector.h
+-rw-r--r-- 1 dhilvert dhilvert 2376 2004-09-05 04:11:39.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 2549 2004-09-05 04:11:39.000000000 +0800 circle.h
+-rw-r--r-- 1 dhilvert dhilvert 3773 2004-09-05 04:11:39.000000000 +0800 normalizer.h
+-rw-r--r-- 1 dhilvert dhilvert 3947 2004-09-05 04:11:39.000000000 +0800 psf.h
+-rw-r--r-- 1 dhilvert dhilvert 9767 2004-09-05 04:11:39.000000000 +0800 psf_calibrate.h
+-rw-r--r-- 1 dhilvert dhilvert 3411 2004-09-05 04:11:39.000000000 +0800 psf_template.h
+-rw-r--r-- 1 dhilvert dhilvert 6339 2004-09-05 04:11:39.000000000 +0800 raster.h
+-rw-r--r-- 1 dhilvert dhilvert 5258 2004-09-05 04:11:39.000000000 +0800 rasterizer.h
+-rw-r--r-- 1 dhilvert dhilvert 5552 2004-09-05 04:11:39.000000000 +0800 stdin.h
+-rw-r--r-- 1 dhilvert dhilvert 6495 2004-09-05 04:11:39.000000000 +0800 stdin_vg.h
+-rw-r--r-- 1 dhilvert dhilvert 3698 2004-09-05 04:11:39.000000000 +0800 sum.h
 
 ./ale-0.7.2/d2/vise:
-合計 16
--rw-r--r-- 1 dhilvert dhilvert 5494 2004-09-05 04:11 ma.h
--rw-r--r-- 1 dhilvert dhilvert 4559 2004-09-05 04:11 sf.h
+total 16
+-rw-r--r-- 1 dhilvert dhilvert 5494 2004-09-05 04:11:39.000000000 +0800 ma.h
+-rw-r--r-- 1 dhilvert dhilvert 4559 2004-09-05 04:11:39.000000000 +0800 sf.h
 
 ./ale-0.7.2/d3:
-合計 88
--rw-r--r-- 1 dhilvert dhilvert  1086 2004-09-17 16:03 align.cc
--rw-r--r-- 1 dhilvert dhilvert 15940 2004-09-17 16:03 align.h
--rw-r--r-- 1 dhilvert dhilvert  5959 2004-09-17 16:03 et.h
--rw-r--r-- 1 dhilvert dhilvert  2498 2004-10-21 12:43 point.h
--rw-r--r-- 1 dhilvert dhilvert  1578 2004-09-17 16:03 render.h
--rw-r--r-- 1 dhilvert dhilvert 16774 2004-10-26 20:43 scene.cc
--rw-r--r-- 1 dhilvert dhilvert 25551 2004-10-26 22:40 scene.h
--rw-r--r-- 1 dhilvert dhilvert  1639 2004-09-17 16:03 view.h
+total 88
+-rw-r--r-- 1 dhilvert dhilvert  1086 2004-09-17 16:03:03.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 15940 2004-09-17 16:03:03.000000000 +0800 align.h
+-rw-r--r-- 1 dhilvert dhilvert  5959 2004-09-17 16:03:03.000000000 +0800 et.h
+-rw-r--r-- 1 dhilvert dhilvert  2498 2004-10-21 12:43:25.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  1578 2004-09-17 16:03:03.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert 16774 2004-10-26 20:43:24.000000000 +0800 scene.cc
+-rw-r--r-- 1 dhilvert dhilvert 25551 2004-10-26 22:40:05.000000000 +0800 scene.h
+-rw-r--r-- 1 dhilvert dhilvert  1639 2004-09-17 16:03:03.000000000 +0800 view.h
 
 ./ale-0.7.2/device:
-合計 16
--rw-r--r-- 1 dhilvert dhilvert 2134 2004-10-26 05:59 canon_300d_raw_linear.h
--rw-r--r-- 1 dhilvert dhilvert 2489 2004-09-05 04:11 ov7620_raw_linear.h
--rw-r--r-- 1 dhilvert dhilvert 2979 2004-09-05 04:11 xvp610_320x240.h
--rw-r--r-- 1 dhilvert dhilvert 3427 2004-09-05 04:11 xvp610_640x480.h
+total 16
+-rw-r--r-- 1 dhilvert dhilvert 2134 2004-10-26 05:59:53.000000000 +0800 canon_300d_raw_linear.h
+-rw-r--r-- 1 dhilvert dhilvert 2489 2004-09-05 04:11:39.000000000 +0800 ov7620_raw_linear.h
+-rw-r--r-- 1 dhilvert dhilvert 2979 2004-09-05 04:11:39.000000000 +0800 xvp610_320x240.h
+-rw-r--r-- 1 dhilvert dhilvert 3427 2004-09-05 04:11:39.000000000 +0800 xvp610_640x480.h
 
 ./ale-0.7.2/testsuite:
-合計 12
-drwxr-sr-x 3 dhilvert dhilvert 4096 2004-10-26 23:07 ale.00/
-drwxr-sr-x 3 dhilvert dhilvert 4096 2004-10-26 23:23 ale.01/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2004-09-15 13:47 config/
+total 12
+drwxr-sr-x 3 dhilvert dhilvert 4096 2004-10-26 23:07:47.000000000 +0800 ale.00/
+drwxr-sr-x 3 dhilvert dhilvert 4096 2004-10-26 23:23:29.000000000 +0800 ale.01/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2004-09-15 13:47:07.000000000 +0800 config/
 
 ./ale-0.7.2/testsuite/ale.00:
-合計 8
--rw-r--r-- 1 dhilvert dhilvert 1239 2004-09-10 14:38 sanity.exp
-drwxr-sr-x 2 dhilvert dhilvert 4096 2004-10-26 23:07 svg/
+total 8
+-rw-r--r-- 1 dhilvert dhilvert 1239 2004-09-10 14:38:06.000000000 +0800 sanity.exp
+drwxr-sr-x 2 dhilvert dhilvert 4096 2004-10-26 23:07:48.000000000 +0800 svg/
 
 ./ale-0.7.2/testsuite/ale.00/svg:
-合計 4
--rw-r--r-- 1 dhilvert dhilvert 2130 2004-09-09 11:23 ellipse.svg
+total 4
+-rw-r--r-- 1 dhilvert dhilvert 2130 2004-09-09 11:23:24.000000000 +0800 ellipse.svg
 
 ./ale-0.7.2/testsuite/ale.01:
-合計 8
--rw-r--r-- 1 dhilvert dhilvert 3709 2004-09-14 12:34 align.exp
-drwxr-sr-x 2 dhilvert dhilvert 4096 2004-10-26 23:07 svg/
+total 8
+-rw-r--r-- 1 dhilvert dhilvert 3709 2004-09-14 12:34:52.000000000 +0800 align.exp
+drwxr-sr-x 2 dhilvert dhilvert 4096 2004-10-26 23:07:48.000000000 +0800 svg/
 
 ./ale-0.7.2/testsuite/ale.01/svg:
-合計 0
+total 0
 
 ./ale-0.7.2/testsuite/config:
-合計 8
--rw-r--r-- 1 dhilvert dhilvert 5987 2004-09-14 12:35 unix.exp
+total 8
+-rw-r--r-- 1 dhilvert dhilvert 5987 2004-09-14 12:35:44.000000000 +0800 unix.exp
 
 ./ale-0.7.3:
-合計 180
--rw-r--r-- 1 dhilvert dhilvert 18005 2004-11-05 16:59 COPYING
--rw-r--r-- 1 dhilvert dhilvert 22595 2004-12-02 14:33 Changelog
--rw-r--r-- 1 dhilvert dhilvert  3389 2004-12-02 03:55 Makefile
--rw-r--r-- 1 dhilvert dhilvert  6279 2004-11-30 11:43 README
--rw-r--r-- 1 dhilvert dhilvert 39124 2004-12-02 14:20 ale.cc
--rw-r--r-- 1 dhilvert dhilvert  1124 2004-11-05 16:59 ale_accum.h
--rw-r--r-- 1 dhilvert dhilvert  1529 2004-11-05 16:59 ale_pos.h
--rw-r--r-- 1 dhilvert dhilvert  4332 2004-11-05 16:59 ale_real.h
-drwxr-sr-x 6 dhilvert dhilvert  4096 2004-12-02 14:56 d2/
--rw-r--r-- 1 dhilvert dhilvert  1243 2004-11-05 16:59 d2.cc
--rw-r--r-- 1 dhilvert dhilvert  2845 2004-11-11 17:26 d2.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-12-02 15:17 d3/
--rw-r--r-- 1 dhilvert dhilvert  1129 2004-11-05 16:59 d3.cc
--rw-r--r-- 1 dhilvert dhilvert  1177 2004-11-05 16:59 d3.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-12-02 14:56 device/
--rw-r--r-- 1 dhilvert dhilvert 21026 2004-12-02 04:09 help.h
--rw-r--r-- 1 dhilvert dhilvert  1762 2004-11-05 16:59 implication.h
--rw-r--r-- 1 dhilvert dhilvert  1737 2004-11-27 05:15 optimizations.h
-drwxr-sr-x 5 dhilvert dhilvert  4096 2004-11-05 16:59 testsuite/
--rw-r--r-- 1 dhilvert dhilvert  1837 2004-12-01 18:20 unsupported.h
+total 180
+-rw-r--r-- 1 dhilvert dhilvert 18005 2004-11-05 16:59:48.000000000 +0800 COPYING
+-rw-r--r-- 1 dhilvert dhilvert 22595 2004-12-02 14:33:33.000000000 +0800 Changelog
+-rw-r--r-- 1 dhilvert dhilvert  3389 2004-12-02 03:55:06.000000000 +0800 Makefile
+-rw-r--r-- 1 dhilvert dhilvert  6279 2004-11-30 11:43:04.000000000 +0800 README
+-rw-r--r-- 1 dhilvert dhilvert 39124 2004-12-02 14:20:58.000000000 +0800 ale.cc
+-rw-r--r-- 1 dhilvert dhilvert  1124 2004-11-05 16:59:48.000000000 +0800 ale_accum.h
+-rw-r--r-- 1 dhilvert dhilvert  1529 2004-11-05 16:59:48.000000000 +0800 ale_pos.h
+-rw-r--r-- 1 dhilvert dhilvert  4332 2004-11-05 16:59:48.000000000 +0800 ale_real.h
+drwxr-sr-x 6 dhilvert dhilvert  4096 2004-12-02 14:56:36.000000000 +0800 d2/
+-rw-r--r-- 1 dhilvert dhilvert  1243 2004-11-05 16:59:48.000000000 +0800 d2.cc
+-rw-r--r-- 1 dhilvert dhilvert  2845 2004-11-11 17:26:47.000000000 +0800 d2.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-12-02 15:17:20.000000000 +0800 d3/
+-rw-r--r-- 1 dhilvert dhilvert  1129 2004-11-05 16:59:48.000000000 +0800 d3.cc
+-rw-r--r-- 1 dhilvert dhilvert  1177 2004-11-05 16:59:48.000000000 +0800 d3.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-12-02 14:56:36.000000000 +0800 device/
+-rw-r--r-- 1 dhilvert dhilvert 21026 2004-12-02 04:09:30.000000000 +0800 help.h
+-rw-r--r-- 1 dhilvert dhilvert  1762 2004-11-05 16:59:48.000000000 +0800 implication.h
+-rw-r--r-- 1 dhilvert dhilvert  1737 2004-11-27 05:15:34.000000000 +0800 optimizations.h
+drwxr-sr-x 5 dhilvert dhilvert  4096 2004-11-05 16:59:48.000000000 +0800 testsuite/
+-rw-r--r-- 1 dhilvert dhilvert  1837 2004-12-01 18:20:22.000000000 +0800 unsupported.h
 
 ./ale-0.7.3/d2:
-合計 240
--rw-r--r-- 1 dhilvert dhilvert  3116 2004-11-05 16:59 align.cc
--rw-r--r-- 1 dhilvert dhilvert 47571 2004-11-05 16:59 align.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-12-02 14:56 exposure/
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-12-02 14:56 filter/
--rw-r--r-- 1 dhilvert dhilvert  1545 2004-11-05 16:59 filter.h
--rw-r--r-- 1 dhilvert dhilvert 18300 2004-11-21 22:13 image.h
--rw-r--r-- 1 dhilvert dhilvert  3495 2004-11-05 16:59 image_ale_real.h
--rw-r--r-- 1 dhilvert dhilvert  5161 2004-11-05 16:59 image_bayer_ale_real.h
--rw-r--r-- 1 dhilvert dhilvert  1616 2004-11-17 14:39 image_rw.cc
--rw-r--r-- 1 dhilvert dhilvert 11545 2004-11-17 15:05 image_rw.h
--rw-r--r-- 1 dhilvert dhilvert  6256 2004-11-05 16:59 image_zero.h
--rw-r--r-- 1 dhilvert dhilvert  4356 2004-11-05 16:59 pixel.h
--rw-r--r-- 1 dhilvert dhilvert  3699 2004-11-05 16:59 pixel_accum.h
--rw-r--r-- 1 dhilvert dhilvert  3105 2004-11-05 16:59 point.h
--rw-r--r-- 1 dhilvert dhilvert  5554 2004-11-05 16:59 ppm.h
-drwxr-sr-x 3 dhilvert dhilvert  4096 2004-12-02 14:56 render/
--rw-r--r-- 1 dhilvert dhilvert  1259 2004-11-05 16:59 render.cc
--rw-r--r-- 1 dhilvert dhilvert  6503 2004-11-27 05:16 render.h
--rw-r--r-- 1 dhilvert dhilvert  5896 2004-11-08 18:12 render_parse.h
--rw-r--r-- 1 dhilvert dhilvert  2191 2004-11-05 16:59 spixel.h
--rw-r--r-- 1 dhilvert dhilvert  1083 2004-11-05 16:59 tfile.cc
--rw-r--r-- 1 dhilvert dhilvert 19464 2004-11-05 16:59 tfile.h
--rw-r--r-- 1 dhilvert dhilvert 26990 2004-11-05 16:59 transformation.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-12-02 14:56 vise/
--rw-r--r-- 1 dhilvert dhilvert  2542 2004-11-05 16:59 vise.h
--rw-r--r-- 1 dhilvert dhilvert  1144 2004-11-05 16:59 vise_core.cc
--rw-r--r-- 1 dhilvert dhilvert  3916 2004-11-05 16:59 vise_core.h
+total 240
+-rw-r--r-- 1 dhilvert dhilvert  3116 2004-11-05 16:59:48.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 47571 2004-11-05 16:59:48.000000000 +0800 align.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-12-02 14:56:36.000000000 +0800 exposure/
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-12-02 14:56:36.000000000 +0800 filter/
+-rw-r--r-- 1 dhilvert dhilvert  1545 2004-11-05 16:59:48.000000000 +0800 filter.h
+-rw-r--r-- 1 dhilvert dhilvert 18300 2004-11-21 22:13:53.000000000 +0800 image.h
+-rw-r--r-- 1 dhilvert dhilvert  3495 2004-11-05 16:59:48.000000000 +0800 image_ale_real.h
+-rw-r--r-- 1 dhilvert dhilvert  5161 2004-11-05 16:59:48.000000000 +0800 image_bayer_ale_real.h
+-rw-r--r-- 1 dhilvert dhilvert  1616 2004-11-17 14:39:56.000000000 +0800 image_rw.cc
+-rw-r--r-- 1 dhilvert dhilvert 11545 2004-11-17 15:05:03.000000000 +0800 image_rw.h
+-rw-r--r-- 1 dhilvert dhilvert  6256 2004-11-05 16:59:48.000000000 +0800 image_zero.h
+-rw-r--r-- 1 dhilvert dhilvert  4356 2004-11-05 16:59:48.000000000 +0800 pixel.h
+-rw-r--r-- 1 dhilvert dhilvert  3699 2004-11-05 16:59:48.000000000 +0800 pixel_accum.h
+-rw-r--r-- 1 dhilvert dhilvert  3105 2004-11-05 16:59:48.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  5554 2004-11-05 16:59:48.000000000 +0800 ppm.h
+drwxr-sr-x 3 dhilvert dhilvert  4096 2004-12-02 14:56:36.000000000 +0800 render/
+-rw-r--r-- 1 dhilvert dhilvert  1259 2004-11-05 16:59:48.000000000 +0800 render.cc
+-rw-r--r-- 1 dhilvert dhilvert  6503 2004-11-27 05:16:22.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert  5896 2004-11-08 18:12:55.000000000 +0800 render_parse.h
+-rw-r--r-- 1 dhilvert dhilvert  2191 2004-11-05 16:59:48.000000000 +0800 spixel.h
+-rw-r--r-- 1 dhilvert dhilvert  1083 2004-11-05 16:59:48.000000000 +0800 tfile.cc
+-rw-r--r-- 1 dhilvert dhilvert 19464 2004-11-05 16:59:48.000000000 +0800 tfile.h
+-rw-r--r-- 1 dhilvert dhilvert 26990 2004-11-05 16:59:48.000000000 +0800 transformation.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-12-02 14:56:36.000000000 +0800 vise/
+-rw-r--r-- 1 dhilvert dhilvert  2542 2004-11-05 16:59:48.000000000 +0800 vise.h
+-rw-r--r-- 1 dhilvert dhilvert  1144 2004-11-05 16:59:48.000000000 +0800 vise_core.cc
+-rw-r--r-- 1 dhilvert dhilvert  3916 2004-11-05 16:59:48.000000000 +0800 vise_core.h
 
 ./ale-0.7.3/d2/exposure:
-合計 24
--rw-r--r-- 1 dhilvert dhilvert 1014 2004-11-05 16:59 exposure.cc
--rw-r--r-- 1 dhilvert dhilvert 4350 2004-11-05 16:59 exposure.h
--rw-r--r-- 1 dhilvert dhilvert 1416 2004-11-05 16:59 exposure_boolean.h
--rw-r--r-- 1 dhilvert dhilvert 1550 2004-11-05 16:59 exposure_default.h
--rw-r--r-- 1 dhilvert dhilvert 1310 2004-11-05 16:59 exposure_linear.h
+total 24
+-rw-r--r-- 1 dhilvert dhilvert 1014 2004-11-05 16:59:48.000000000 +0800 exposure.cc
+-rw-r--r-- 1 dhilvert dhilvert 4350 2004-11-05 16:59:48.000000000 +0800 exposure.h
+-rw-r--r-- 1 dhilvert dhilvert 1416 2004-11-05 16:59:48.000000000 +0800 exposure_boolean.h
+-rw-r--r-- 1 dhilvert dhilvert 1550 2004-11-05 16:59:48.000000000 +0800 exposure_default.h
+-rw-r--r-- 1 dhilvert dhilvert 1310 2004-11-05 16:59:48.000000000 +0800 exposure_linear.h
 
 ./ale-0.7.3/d2/filter:
-合計 44
--rw-r--r-- 1 dhilvert dhilvert 1774 2004-11-05 16:59 box.h
--rw-r--r-- 1 dhilvert dhilvert 1366 2004-11-05 16:59 filter.h
--rw-r--r-- 1 dhilvert dhilvert 2096 2004-11-05 16:59 lanczos.h
--rw-r--r-- 1 dhilvert dhilvert 1905 2004-11-05 16:59 mult.h
--rw-r--r-- 1 dhilvert dhilvert 9099 2004-11-05 16:59 scaled_filter.h
--rw-r--r-- 1 dhilvert dhilvert 2014 2004-11-05 16:59 sinc.h
--rw-r--r-- 1 dhilvert dhilvert 2486 2004-11-05 16:59 ssfe.h
--rw-r--r-- 1 dhilvert dhilvert 1844 2004-11-05 16:59 triangle.h
--rw-r--r-- 1 dhilvert dhilvert 1417 2004-11-05 16:59 zero.h
+total 44
+-rw-r--r-- 1 dhilvert dhilvert 1774 2004-11-05 16:59:48.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 1366 2004-11-05 16:59:48.000000000 +0800 filter.h
+-rw-r--r-- 1 dhilvert dhilvert 2096 2004-11-05 16:59:48.000000000 +0800 lanczos.h
+-rw-r--r-- 1 dhilvert dhilvert 1905 2004-11-05 16:59:48.000000000 +0800 mult.h
+-rw-r--r-- 1 dhilvert dhilvert 9099 2004-11-05 16:59:48.000000000 +0800 scaled_filter.h
+-rw-r--r-- 1 dhilvert dhilvert 2014 2004-11-05 16:59:48.000000000 +0800 sinc.h
+-rw-r--r-- 1 dhilvert dhilvert 2486 2004-11-05 16:59:48.000000000 +0800 ssfe.h
+-rw-r--r-- 1 dhilvert dhilvert 1844 2004-11-05 16:59:48.000000000 +0800 triangle.h
+-rw-r--r-- 1 dhilvert dhilvert 1417 2004-11-05 16:59:48.000000000 +0800 zero.h
 
 ./ale-0.7.3/d2/render:
-合計 60
--rw-r--r-- 1 dhilvert dhilvert  4080 2004-11-27 05:19 combine.h
--rw-r--r-- 1 dhilvert dhilvert 10877 2004-11-27 05:17 incremental.h
--rw-r--r-- 1 dhilvert dhilvert  1941 2004-11-05 16:59 invariant.h
--rw-r--r-- 1 dhilvert dhilvert 21614 2004-11-27 05:20 ipc.h
-drwxr-sr-x 2 dhilvert dhilvert  4096 2004-12-02 14:56 psf/
--rw-r--r-- 1 dhilvert dhilvert  5425 2004-11-05 16:59 usm.h
--rw-r--r-- 1 dhilvert dhilvert  2293 2004-11-27 05:16 zero.h
+total 60
+-rw-r--r-- 1 dhilvert dhilvert  4080 2004-11-27 05:19:01.000000000 +0800 combine.h
+-rw-r--r-- 1 dhilvert dhilvert 10877 2004-11-27 05:17:32.000000000 +0800 incremental.h
+-rw-r--r-- 1 dhilvert dhilvert  1941 2004-11-05 16:59:48.000000000 +0800 invariant.h
+-rw-r--r-- 1 dhilvert dhilvert 21614 2004-11-27 05:20:37.000000000 +0800 ipc.h
+drwxr-sr-x 2 dhilvert dhilvert  4096 2004-12-02 14:56:36.000000000 +0800 psf/
+-rw-r--r-- 1 dhilvert dhilvert  5425 2004-11-05 16:59:48.000000000 +0800 usm.h
+-rw-r--r-- 1 dhilvert dhilvert  2293 2004-11-27 05:16:45.000000000 +0800 zero.h
 
 ./ale-0.7.3/d2/render/psf:
-合計 112
--rwxr-xr-x 1 dhilvert dhilvert 8670 2004-11-05 16:59 ale-psf-calibrate*
--rw-r--r-- 1 dhilvert dhilvert 9696 2004-11-05 16:59 backprojector.h
--rw-r--r-- 1 dhilvert dhilvert 2376 2004-11-05 16:59 box.h
--rw-r--r-- 1 dhilvert dhilvert 2549 2004-11-05 16:59 circle.h
--rw-r--r-- 1 dhilvert dhilvert 4374 2004-11-15 16:14 convolution.h
--rw-r--r-- 1 dhilvert dhilvert 3773 2004-11-05 16:59 normalizer.h
--rw-r--r-- 1 dhilvert dhilvert 3947 2004-11-05 16:59 psf.h
--rw-r--r-- 1 dhilvert dhilvert 9793 2004-11-27 05:19 psf_calibrate.h
--rw-r--r-- 1 dhilvert dhilvert 5068 2004-11-15 14:58 psf_parse.h
--rw-r--r-- 1 dhilvert dhilvert 3411 2004-11-05 16:59 psf_template.h
--rw-r--r-- 1 dhilvert dhilvert 6339 2004-11-05 16:59 raster.h
--rw-r--r-- 1 dhilvert dhilvert 5574 2004-11-15 16:38 rasterizer.h
--rw-r--r-- 1 dhilvert dhilvert 2913 2004-11-08 13:20 scalar_mult.h
--rw-r--r-- 1 dhilvert dhilvert 5552 2004-11-05 16:59 stdin.h
--rw-r--r-- 1 dhilvert dhilvert 6495 2004-11-05 16:59 stdin_vg.h
--rw-r--r-- 1 dhilvert dhilvert 3698 2004-11-05 16:59 sum.h
+total 112
+-rwxr-xr-x 1 dhilvert dhilvert 8670 2004-11-05 16:59:48.000000000 +0800 ale-psf-calibrate*
+-rw-r--r-- 1 dhilvert dhilvert 9696 2004-11-05 16:59:48.000000000 +0800 backprojector.h
+-rw-r--r-- 1 dhilvert dhilvert 2376 2004-11-05 16:59:48.000000000 +0800 box.h
+-rw-r--r-- 1 dhilvert dhilvert 2549 2004-11-05 16:59:48.000000000 +0800 circle.h
+-rw-r--r-- 1 dhilvert dhilvert 4374 2004-11-15 16:14:36.000000000 +0800 convolution.h
+-rw-r--r-- 1 dhilvert dhilvert 3773 2004-11-05 16:59:48.000000000 +0800 normalizer.h
+-rw-r--r-- 1 dhilvert dhilvert 3947 2004-11-05 16:59:48.000000000 +0800 psf.h
+-rw-r--r-- 1 dhilvert dhilvert 9793 2004-11-27 05:19:46.000000000 +0800 psf_calibrate.h
+-rw-r--r-- 1 dhilvert dhilvert 5068 2004-11-15 14:58:22.000000000 +0800 psf_parse.h
+-rw-r--r-- 1 dhilvert dhilvert 3411 2004-11-05 16:59:48.000000000 +0800 psf_template.h
+-rw-r--r-- 1 dhilvert dhilvert 6339 2004-11-05 16:59:48.000000000 +0800 raster.h
+-rw-r--r-- 1 dhilvert dhilvert 5574 2004-11-15 16:38:06.000000000 +0800 rasterizer.h
+-rw-r--r-- 1 dhilvert dhilvert 2913 2004-11-08 13:20:06.000000000 +0800 scalar_mult.h
+-rw-r--r-- 1 dhilvert dhilvert 5552 2004-11-05 16:59:48.000000000 +0800 stdin.h
+-rw-r--r-- 1 dhilvert dhilvert 6495 2004-11-05 16:59:48.000000000 +0800 stdin_vg.h
+-rw-r--r-- 1 dhilvert dhilvert 3698 2004-11-05 16:59:48.000000000 +0800 sum.h
 
 ./ale-0.7.3/d2/vise:
-合計 16
--rw-r--r-- 1 dhilvert dhilvert 5494 2004-11-05 16:59 ma.h
--rw-r--r-- 1 dhilvert dhilvert 4559 2004-11-05 16:59 sf.h
+total 16
+-rw-r--r-- 1 dhilvert dhilvert 5494 2004-11-05 16:59:48.000000000 +0800 ma.h
+-rw-r--r-- 1 dhilvert dhilvert 4559 2004-11-05 16:59:48.000000000 +0800 sf.h
 
 ./ale-0.7.3/d3:
-合計 96
--rw-r--r-- 1 dhilvert dhilvert  1086 2004-11-05 16:59 align.cc
--rw-r--r-- 1 dhilvert dhilvert 16973 2004-11-26 13:06 align.h
--rw-r--r-- 1 dhilvert dhilvert  5959 2004-11-05 16:59 et.h
--rw-r--r-- 1 dhilvert dhilvert  2707 2004-11-24 09:31 point.h
--rw-r--r-- 1 dhilvert dhilvert  1578 2004-11-05 16:59 render.h
--rw-r--r-- 1 dhilvert dhilvert 16777 2004-11-26 02:57 scene.cc
--rw-r--r-- 1 dhilvert dhilvert 30720 2004-12-02 15:14 scene.h
--rw-r--r-- 1 dhilvert dhilvert  1639 2004-11-05 16:59 view.h
+total 96
+-rw-r--r-- 1 dhilvert dhilvert  1086 2004-11-05 16:59:48.000000000 +0800 align.cc
+-rw-r--r-- 1 dhilvert dhilvert 16973 2004-11-26 13:06:13.000000000 +0800 align.h
+-rw-r--r-- 1 dhilvert dhilvert  5959 2004-11-05 16:59:48.000000000 +0800 et.h
+-rw-r--r-- 1 dhilvert dhilvert  2707 2004-11-24 09:31:10.000000000 +0800 point.h
+-rw-r--r-- 1 dhilvert dhilvert  1578 2004-11-05 16:59:48.000000000 +0800 render.h
+-rw-r--r-- 1 dhilvert dhilvert 16777 2004-11-26 02:57:23.000000000 +0800 scene.cc
+-rw-r--r-- 1 dhilvert dhilvert 30720 2004-12-02 15:14:26.000000000 +0800 scene.h
+-rw-r--r-- 1 dhilvert dhilvert  1639 2004-11-05 16:59:48.000000000 +0800 view.h
 
 ./ale-0.7.3/device:
-合計 32
--rw-r--r-- 1 dhilvert dhilvert 2134 2004-11-05 16:59 canon_300d_raw_linear.h
--rw-r--r-- 1 dhilvert dhilvert 1412 2004-11-22 23:20 canon_300d_raw_linear_50mm_1_4.h
--rw-r--r-- 1 dhilvert dhilvert 4039 2004-11-20 23:12 canon_300d_raw_linear_50mm_1_4_1_4.h
--rw-r--r-- 1 dhilvert dhilvert 1412 2004-11-22 23:20 canon_300d_raw_linear_50mm_1_8.h
--rw-r--r-- 1 dhilvert dhilvert 1412 2004-11-22 23:20 canon_300d_raw_linear_85mm_1_8.h
--rw-r--r-- 1 dhilvert dhilvert 2489 2004-11-05 16:59 ov7620_raw_linear.h
--rw-r--r-- 1 dhilvert dhilvert 2979 2004-11-18 20:18 xvp610_320x240.h
--rw-r--r-- 1 dhilvert dhilvert 3427 2004-11-05 16:59 xvp610_640x480.h
+total 32
+-rw-r--r-- 1 dhilvert dhilvert 2134 2004-11-05 16:59:48.000000000 +0800 canon_300d_raw_linear.h
+-rw-r--r-- 1 dhilvert dhilvert 1412 2004-11-22 23:20:23.000000000 +0800 canon_300d_raw_linear_50mm_1_4.h
+-rw-r--r-- 1 dhilvert dhilvert 4039 2004-11-20 23:12:23.000000000 +0800 canon_300d_raw_linear_50mm_1_4_1_4.h
+-rw-r--r-- 1 dhilvert dhilvert 1412 2004-11-22 23:20:37.000000000 +0800 canon_300d_raw_linear_50mm_1_8.h
+-rw-r--r-- 1 dhilvert dhilvert 1412 2004-11-22 23:20:53.000000000 +0800 canon_300d_raw_linear_85mm_1_8.h
+-rw-r--r-- 1 dhilvert dhilvert 2489 2004-11-05 16:59:48.000000000 +0800 ov7620_raw_linear.h
+-rw-r--r-- 1 dhilvert dhilvert 2979 2004-11-18 20:18:42.000000000 +0800 xvp610_320x240.h
+-rw-r--r-- 1 dhilvert dhilvert 3427 2004-11-05 16:59:48.000000000 +0800 xvp610_640x480.h
 
 ./ale-0.7.3/testsuite:
-合計 12
-drwxr-sr-x 3 dhilvert dhilvert 4096 2004-12-02 14:56 ale.00/
-drwxr-sr-x 3 dhilvert dhilvert 4096 2004-12-02 14:56 ale.01/
-drwxr-sr-x 2 dhilvert dhilvert 4096 2004-12-02 14:56 config/
+total 12
+drwxr-sr-x 3 dhilvert dhilvert 4096 2004-12-02 14:56:36.000000000 +0800 ale.00/
+drwxr-sr-x 3 dhilvert dhilvert 4096 2004-12-02 14:56:36.000000000 +0800 ale.01/
+drwxr-sr-x 2 dhilvert dhilvert 4096 2004-12-02 14:56:36.000000000 +0800 config/
 
 ./ale-0.7.3/testsuite/ale.00:
-合計 8
--rw-r--r-- 1 dhilvert dhilvert 1239 2004-11-05 16:59 sanity.exp
-drwxr-sr-x 2 dhilvert dhilvert 4096 2004-12-02 14:56 svg/
+total 8
+-rw-r--r-- 1 dhilvert dhilvert 1239 2004-11-05 16:59:48.000000000 +0800 sanity.exp
+drwxr-sr-x 2 dhilvert dhilvert 4096 2004-12-02 14:56:36.000000000 +0800 svg/
 
 ./ale-0.7.3/testsuite/ale.00/svg:
-合計 4
--rw-r--r-- 1 dhilvert dhilvert 2130 2004-11-05 16:59 ellipse.svg
+total 4
+-rw-r--r-- 1 dhilvert dhilvert 2130 2004-11-05 16:59:48.000000000 +0800 ellipse.svg
 
 ./ale-0.7.3/testsuite/ale.01:
-合計 8
--rw-r--r-- 1 dhilvert dhilvert 3709 2004-11-05 16:59 align.exp
-drwxr-sr-x 2 dhilvert dhilvert 4096 2004-11-05 16:59 svg/
+total 8
+-rw-r--r-- 1 dhilvert dhilvert 3709 2004-11-05 16:59:48.000000000 +0800 align.exp
+drwxr-sr-x 2 dhilvert dhilvert 4096 2004-11-05 16:59:48.000000000 +0800 svg/
 
 ./ale-0.7.3/testsuite/ale.01/svg:
-合計 0
+total 0
 
 ./ale-0.7.3/testsuite/config:
-合計 8
--rw-r--r-- 1 dhilvert dhilvert 5987 2004-11-05 16:59 unix.exp
+total 8
+-rw-r--r-- 1 dhilvert dhilvert 5987 2004-11-05 16:59:48.000000000 +0800 unix.exp
