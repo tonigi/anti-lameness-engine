@@ -683,7 +683,7 @@ public:
 			"--no-oc           Do not clip scene to output regions.                [default]\n"
 			"--fc <x>          Set front-clip to <x> (0 < x < 1)              [default is 0]\n"
 			"--rc <x>          Set rear-clip to <x> (1 < x < inf)           [default is inf]\n"
-			"--fx <x>          Set falloff exponent to <x>                    [default is 0]\n"
+			"--fx <x>          Set falloff exponent to <x>                    [default is 1]\n"
 			"--tcem <x>        Set third-camera error multiplier to <x>       [default is 0]\n"
 			"--oui <x>         Set occupancy update iterations to <x>        [default is 10]\n"
 			"--pa <x>          Set pairwise ambiguity to <x>                  [default is 3]\n"

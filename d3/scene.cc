@@ -51,7 +51,7 @@ int scene::normalize_weights = 1;
 int scene::use_filter = 1;
 const char *scene::d3chain_type = "";
 
-double scene::falloff_exponent = 0;
+double scene::falloff_exponent = 1;
 double scene::tc_multiplier = 0;
 unsigned int scene::ou_iterations = 10;
 unsigned int scene::pairwise_ambiguity = 3;
