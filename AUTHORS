@@ -3,34 +3,35 @@ ALE Contributors
 ================
 
 This article lists contributors of included documentation, code and patches.
+E-mail addresses have been slightly obscured, with '_a&_' substituted for '@'.
 
 
 Image-processing code
 ---------------------
 
-David Hilvert <dhilvert@auricle.dyndns.org>,
-              <dhilvert@gmail.com>,
-	      <dhilvert@ugcs.caltech.edu>
+David Hilvert (dhilvert_a&_auricle.dyndns.org),
+              (dhilvert_a&_gmail.com),
+	      (dhilvert_a&_ugcs.caltech.edu)
 
-Gregory Maxwell <gmaxwell@gmail.com>
+Gregory Maxwell (gmaxwell_a&_gmail.com)
 
 
 
 Image-processing documentation
 ------------------------------
 
-David Hilvert <dhilvert@auricle.dyndns.org>,
-              <dhilvert@gmail.com>,
-	      <dhilvert@ugcs.caltech.edu>
+David Hilvert (dhilvert_a&_auricle.dyndns.org),
+              (dhilvert_a&_gmail.com),
+	      (dhilvert_a&_ugcs.caltech.edu)
 
 
 
 Build and installation code and documentation
 ---------------------------------------------
 
-David Hilvert <dhilvert@auricle.dyndns.org>,
-              <dhilvert@gmail.com>,
-	      <dhilvert@ugcs.caltech.edu>
+David Hilvert (dhilvert_a&_auricle.dyndns.org),
+              (dhilvert_a&_gmail.com),
+	      (dhilvert_a&_ugcs.caltech.edu)
 
 Distributions of this software may be based on the GNU project build tools
 ("autotools"), which may automatically import code written by authors other
@@ -48,8 +49,8 @@ http://sourceware.org/autobook/
 
 The documentation Makefile is part of the DocBook Project XSL Stylesheet
 distribution, copyright (C) 1999, 2000, 2001, 2002 Norman Walsh.  The DocBook
-XSL stylesheets are maintained by Norman Walsh, <ndw@nwalsh.com>, and members
-of the DocBook Project, <docbook-developers@sf.net>.  See the COPYING file
+XSL stylesheets are maintained by Norman Walsh, (ndw_a&_nwalsh.com), and members
+of the DocBook Project, (docbook-developers_a&_sf.net).  See the COPYING file
 in the documentation directory for more details.  (This file may eventually be
 merged with the root COPYING file.)
 
