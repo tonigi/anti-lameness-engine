@@ -101,6 +101,15 @@
 	0.9.0
 </title>
 <edit by="David Hilvert" in-month="2006-Sep"/>
+<edit by="David Hilvert" in-month="2006-Nov"/>
+<s>
+<t>Interchange formats</t>
+<ul>
+<li>Add support for a commonly-used interchange format, such as autopano pto,
+suggested by Peter Miller.</li>
+</ul>
+</s>
+
 <s>
 <t>Raw file handling</t>
 <ul>
