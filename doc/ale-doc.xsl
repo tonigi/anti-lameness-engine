@@ -273,9 +273,9 @@
 
 	<xsl:template match="setinfo|bookinfo|articleinfo">
 	<xsl:copy>
-	  <xsl:param name="objectroot" select=".."/>
-	  <xsl:param name="editors-unique" select="$objectroot//edit[count(.|key('editors', &editor;)[&scope;][1]) = 1]"/>
-	  <xsl:param name="editor-years-unique" select="$objectroot//edit[count(.|key('editor-years', &editor-year;)[&scope;][1]) = 1]"/>
+	  <xsl:variable name="objectroot" select=".."/>
+	  <xsl:variable name="editors-unique" select="$objectroot//edit[count(.|key('editors', &editor;)[&scope;][1]) = 1]"/>
+	  <xsl:variable name="editor-years-unique" select="$objectroot//edit[count(.|key('editor-years', &editor-year;)[&scope;][1]) = 1]"/>
 
   	  <!-- 
 	    -  Generate the title, if available.
@@ -311,7 +311,7 @@
 
 	    <xsl:for-each select="$editors-unique">
 	      <xsl:sort select="&editor-sort-order;"/>
-	      <xsl:param name="this-editor" select="&editor;"/>
+	      <xsl:variable name="this-editor" select="&editor;"/>
 	      <copyright>
 	      <holder>
 	        <xsl:value-of select="&editor;"/>
