@@ -103,6 +103,19 @@
 <edit by="David Hilvert" in-month="2006-Sep"/>
 <edit by="David Hilvert" in-month="2006-Nov"/>
 <s>
+<t>PSF windowing and infinite-support PSFs for Irani-Peleg rendering</t>
+<ul>
+<li>Add syntax for PSF windowing and new PSF types with infinite support, including the gaussian kernel, suggested by HJ Hornbeck.
+</li>
+</ul>
+</s>
+<s>
+<t>Variable lighting</t>
+<ul>
+<li>Add a facility for handling variation in lighting between input frames.</li>
+</ul>
+</s>
+<s>
 <t>Interchange formats</t>
 <ul>
 <li>Add support for a commonly-used interchange format, such as autopano pto,
