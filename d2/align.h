@@ -457,86 +457,6 @@ private:
 		hist_bin hist_total;
 		int hist_dim;
 
-		void init_histogram_integral() {
-			histogram_integral = (hist_bin *)malloc(sizeof(hist_bin) * hist_dim * hist_dim);
-			hist_bin total = 0;
-			for (int i = 0; i < hist_dim * hist_dim; i++) {
-				total += histogram[i];
-				histogram_integral[i] = total;
-			}
-		}
-
-		int histogram_integral_inverse(unsigned int i) {
-			assert (hist_dim > 0);
-
-			int min = -1;
-			int max = hist_dim * hist_dim;
-
-			while (min < max - 1) {
-				int mid = (min + max) / 2;
-				if (histogram_integral[mid] <= i) {
-					min = mid;
-				} else {
-					max = mid;
-				}
-			}
-
-			return min + 1;
-		}
-
-		ale_accum simulated_error(rng_t rng, ale_pos mc) {
-			ale_accum result = 0;
-			ale_accum divisor = 0;
-
-			int samples = (int) floor(mc * hist_total);
-
-			ui::get()->d2_align_sim_start();
-
-			for (int s = 0; s < samples; s++) {
-				int index = rng.get() % hist_total;
-				int histogram_index = histogram_integral_inverse((unsigned int) index);
-
-				result += pow(2, hist_min_r + histogram_index / hist_dim);
-				divisor += pow(2, hist_min_d + histogram_index % hist_dim);
-			}
-
-			ui::get()->d2_align_sim_stop();
-
-			return pow(result / divisor, 1 / metric_exponent);
-		}
-
-		struct consensus_subdomain {
-			diff_stat_t *better;
-			diff_stat_t *worse;
-			ale_pos mc;
-			int run_count;
-			int success;
-		};
-
-		static void *consensus_thread (void *args) {
-			consensus_subdomain *cs = (consensus_subdomain *) args;
-
-			cs->better->init_histogram_integral();
-			cs->worse->init_histogram_integral();
-
-			for (int run = 0; run < cs->run_count; run++) {
-				rng_t rng;
-
-				rng.seed(run);
-
-				ale_accum b = cs->better->simulated_error(rng, cs->mc);
-				ale_accum w = cs->worse->simulated_error(rng, cs->mc);
-
-				if (b < w)
-					cs->success++;
-			}
-
-			free(cs->better->histogram_integral);
-			free(cs->worse->histogram_integral);
-
-			return NULL;
-		}
-
 		void add_hist(int r, int d, int count) {
 
 			hist_total += count;
@@ -704,25 +624,8 @@ private:
 			return 0;
 		}
 
-		ale_pos consensus(diff_stat_t *with, ale_pos mc) {
-
-			int _mcd_runs = 10;
-
-			consensus_subdomain cs = {
-				this, with, mc, _mcd_runs, 0
-			};
-
-			consensus_thread(&cs);
-
-			return ((double) cs.success / (double) _mcd_runs);
-		}
-
 		int reliable(diff_stat_t *with, ale_pos mc) {
-#if 0
-			return consensus(with, mc) >= _mcd_lower;
-#else
 			return check_removal(with);
-#endif
 		}
 
 		void add(const diff_stat_t *ds) {
