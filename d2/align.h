@@ -447,6 +447,9 @@ private:
 		ale_accum result;
 		ale_accum divisor;
 
+		point max, min;
+		ale_accum centroid[2], centroid_divisor;
+
 		typedef unsigned int hist_bin;
 
 		int hist_min_r;
@@ -528,6 +531,13 @@ private:
 			hist_dim = 20;
 			hist_total = 0;
 			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
+
+			min = point::posinf();
+			max = point::neginf();
+
+			centroid[0] = 0;
+			centroid[1] = 0;
+			centroid_divisor = 0;
 		}
 
 		void clear() {
