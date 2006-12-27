@@ -71,6 +71,15 @@ private:
 			fprintf(stderr, "get_SF_atomic type %s\n", type);
 			syntax_error("Unable to get filter.");
 		}
+
+		assert (0);
+
+		/*
+		 * This line should never be reached; it's included to avoid
+		 * 'unreachable' messages emitted by some compilers.
+		 */
+
+		return NULL;
 	}
 
 	static filter::filter *get_SF(const char *orig_type) {

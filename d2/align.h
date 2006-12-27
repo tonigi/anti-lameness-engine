@@ -646,6 +646,16 @@ private:
 			for (int d = 0; d < ds->hist_dim; d++)
 				add_hist(r + ds->hist_min_r, d + ds->hist_min_d, 
 						ds->histogram[r * hist_dim + d]);
+
+			for (int d = 0; d < 2; d++) {
+				if (min[d] > ds->min[d])
+					min[d] = ds->min[d];
+				if (max[d] < ds->max[d])
+					max[d] = ds->max[d];
+				centroid[d] += ds->centroid[d];
+			}
+
+			centroid_divisor += ds->centroid_divisor;
 		}
 
 		ale_accum get_result() {
@@ -667,6 +677,7 @@ private:
 			ale_accum this_result = 0;
 			ale_accum this_divisor = 0;
 
+
 			if (interpolant != NULL)
 				interpolant->filtered(i, j, &pb, &weight, 1, f);
 			else {
@@ -685,6 +696,23 @@ private:
 
 			if (c.aweight != NULL)
 				weight *= c.aweight->get_pixel(i, j);
+
+			/*
+			 * Update sampling area statistics
+			 */
+
+			if (min[0] > i)
+				min[0] = i;
+			if (min[1] > j)
+				min[1] = j;
+			if (max[0] < i)
+				max[0] = i;
+			if (max[1] < j)
+				max[1] = j;
+
+			centroid[0] += (weight[0] + weight[1] + weight[2]) * i;
+			centroid[1] += (weight[0] + weight[1] + weight[2]) * j;
+			centroid_divisor += (weight[0] + weight[1] + weight[2]);
 
 			/*
 			 * Determine alignment type.
