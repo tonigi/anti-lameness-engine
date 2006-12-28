@@ -507,6 +507,18 @@ public:
 	}
 
 	/*
+	 * Rotate about a given point in the original reference frame.
+	 */
+	void eu_rotate_about_scaled(point center, ale_pos diff) {
+		point fixpoint = scaled_inverse_transform(center);
+		eu_modify(2, diff);
+		point offset = transform_scaled(fixpoint) - center;
+
+		eu_modify(0, offset[0]);
+		eu_modify(1, offset[1]);
+	}
+
+	/*
 	 * Modify all euclidean parameters at once.
 	 */
 	void eu_set(ale_pos eu[3]) {
