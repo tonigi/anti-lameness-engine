@@ -512,7 +512,7 @@ public:
 	void eu_rotate_about_scaled(point center, ale_pos diff) {
 		point fixpoint = scaled_inverse_transform(center);
 		eu_modify(2, diff);
-		point offset = transform_scaled(fixpoint) - center;
+		point offset = center - transform_scaled(fixpoint);
 
 		eu_modify(0, offset[0]);
 		eu_modify(1, offset[1]);
