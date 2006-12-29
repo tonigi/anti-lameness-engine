@@ -1995,11 +1995,12 @@ private:
 				if (alignment_class == 1 && adj_o < rot_max)
 				for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
 
-					point sample_centroid = old_here_diff_stat->get_centroid();
+					point sample_centroid = old_here_diff_stat->get_centroid() + si.accum->offset();
 
 					test_t = offset;
 
 					// test_t.eu_modify(2, adj_s);
+					//
 
 					test_t.eu_rotate_about_scaled(sample_centroid, adj_s);
 
