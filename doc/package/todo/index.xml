@@ -15,8 +15,8 @@
 
 <edit by="David Hilvert" in-month="2006-Sep"/>
 <edit by="David Hilvert" in-month="2006-Oct"/>
+<edit by="David Hilvert" in-month="2007-Jan"/>
 
-<note>This release may be combined with 0.9.0.</note>
 <section>
 <title>
   Documentation
@@ -53,47 +53,6 @@
   <li> Ensure consistency between the website hierarchy and the README.</li>
   </ul>
 </section>
-<section>
-<title>
-  Packaging
-</title>
-  <section>
-  <title>
-    Complete Package
-  </title>
-<ul><li> Investigate options for distributing a 'complete' package including full
-  revision history, pre-built documentation (if the ordinary distribution does
-  not include this), and, possibly, example image sets.  Direct download,
-  bittorrent and CD are the most prominent candidates for distribution.
-  <ul>
-  <li> In the case of CD distribution, information should probably be added to the
-    manuals regarding how to update CD-provided program source.
-  </li>
-  </ul>
-  </li>
-  </ul>
-
-  </section><section>
-  <title>
-    Windows Package
-  </title>
-<ul>
-<li> Investigate options for creating and distributing a combined source and
-  binary Windows package containing sufficient software to ensure support for
-  common image types (e.g., by statically linking with libraries for opening
-  JPEG and PNG files).  BitTorrent and CD are the most obvious candidates for
-  distribution.
-  <ul>
-  <li> This package could build on the package described above, as a 'for Windows'
-    variant or some such.
-  </li><li> This package could make use of an application such as InstallJammer
-    or Nullsoft Scriptable Install System for installation.
-  </li>
-  </ul>
-  </li>
-</ul>
-</section>
-</section>
 </section>
 
 <section>
@@ -102,6 +61,13 @@
 </title>
 <edit by="David Hilvert" in-month="2006-Sep"/>
 <edit by="David Hilvert" in-month="2006-Nov"/>
+<edit by="David Hilvert" in-month="2007-Jan"/>
+<s>
+<t>3D scenes and depth recovery</t>
+<ul>
+<li>Revise 3D scene reconstruction algorithm to perform acceptably on a wider variety of scenes.</li>
+</ul>
+</s>
 <s>
 <t>PSF windowing and infinite-support PSFs for Irani-Peleg rendering</t>
 <ul>
@@ -266,6 +232,7 @@ having the smallest time difference from the target frame.
 </title>
 <edit by="David Hilvert" in-month="2006-Sep"/>
 <edit by="David Hilvert" in-month="2006-Oct"/>
+<edit by="David Hilvert" in-month="2007-Jan"/>
 <section>
 <title>
 	Documentation
@@ -300,6 +267,47 @@ the complete set of manuals.
 </title>
 <ul><li> Add bindings for other programming languages.
 </li></ul>
+</section>
+<section>
+<title>
+  Packaging
+</title>
+  <section>
+  <title>
+    Complete Package
+  </title>
+<ul><li> Investigate options for distributing a 'complete' package including full
+  revision history, pre-built documentation (if the ordinary distribution does
+  not include this), and, possibly, example image sets.  Direct download,
+  bittorrent and CD are the most prominent candidates for distribution.
+  <ul>
+  <li> In the case of CD distribution, information should probably be added to the
+    manuals regarding how to update CD-provided program source.
+  </li>
+  </ul>
+  </li>
+  </ul>
+
+  </section><section>
+  <title>
+    Windows Package
+  </title>
+<ul>
+<li> Investigate options for creating and distributing a combined source and
+  binary Windows package containing sufficient software to ensure support for
+  common image types (e.g., by statically linking with libraries for opening
+  JPEG and PNG files).  BitTorrent and CD are the most obvious candidates for
+  distribution.
+  <ul>
+  <li> This package could build on the package described above, as a 'for Windows'
+    variant or some such.
+  </li><li> This package could make use of an application such as InstallJammer
+    or Nullsoft Scriptable Install System for installation.
+  </li>
+  </ul>
+  </li>
+</ul>
+</section>
 </section>
 </section>
 
