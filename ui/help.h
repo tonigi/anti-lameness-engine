@@ -697,6 +697,14 @@ public:
 		banner("Argument scope [experimental]");
 		fprintf(help_stream,
 			BETWEEN_SECTIONS
+			"List of arguments admitting scoping:\n"
+			HEADER_SPACE
+			"--mc              (see --ha for more details)\n"
+			"--mcd-removal     (see --ha for more details)\n"
+			"--threads         (see --hp for more details)\n"
+			"--per-cpu         (see --hp for more details)\n"
+			"--perturb-upper   (see --ha for more details)\n"
+			BETWEEN_SECTIONS
 			"Implicit file scope (implementation may be buggy):\n"
 			HEADER_SPACE
 			"arg1 file1 arg2   <arg2> applies only to files later than <file1>.\n"
