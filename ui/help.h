@@ -98,9 +98,10 @@ public:
 			"--hl              Filtering (PSFs, rendering chains).\n"
 			"--hd              Devices.\n"
 			"--hi              User Interfaces.\n"
+			"--hp              Process details.\n"
+			"--hs              Argument scope (Experimental).\n"
 			"--hv              Video stream processing (Experimental).\n"
 			"--h3              3D Modeling (Experimental).\n"
-			"--hp              Process details.\n"
 			"--hz              Undocumented options.\n"
 			"--hA              Concatenate all help pages.\n"
 			"\n",
@@ -690,6 +691,39 @@ public:
 			"--pc <type>       Set the type of pairwise comparisons:\n"
 			"                     auto     Determine comparisons automatically.    [default]\n"
 			"                     all      Perform all comparisons.\n"
+			"\n");
+	}
+	void scope() {
+		banner("Argument scope [experimental]");
+		fprintf(help_stream,
+			BETWEEN_SECTIONS
+			"Implicit file scope (implementation may be buggy):\n"
+			HEADER_SPACE
+			"arg1 file1 arg2   <arg2> applies only to files later than <file1>.\n"
+			"                    Example:\n"
+			"\n"
+			"                         --mc 10 file1 --mc 20 file2\n"
+			"\n"
+			"                    (file1 has monte-carlo argument 10; file2 has --mc 20.)\n"
+			"\n"
+			BETWEEN_SECTIONS
+			"Hidden scope (implementation may be buggy):\n"
+			HEADER_SPACE
+			"[ args ]          Hide the effects of <args> options within [ ... ] scope\n"
+			"                    Example:\n"
+			"\n"
+			"                         file1 [ --mc 20 file2 ] file3\n"
+			"\n"
+			"                    (The monte-carlo argument is limited to file2.)\n"
+			"\n"
+			BETWEEN_SECTIONS
+			"Exposed scope (implementation may be buggy):\n"
+			HEADER_SPACE
+			"[ arg1 < arg2 > ] Expose the effects of <arg2> outside of [ ... ] scope\n"
+			BETWEEN_SECTIONS
+			"Fully-exposed scope (implementation may be buggy):\n"
+			HEADER_SPACE
+			"{ arg1 }          Same as [ < arg1 > ].\n"
 			"\n");
 	}
 	void process() {
