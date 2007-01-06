@@ -63,6 +63,12 @@
 <edit by="David Hilvert" in-month="2006-Nov"/>
 <edit by="David Hilvert" in-month="2007-Jan"/>
 <s>
+<t>Multiple-pass registration</t>
+<ul>
+<li>Revise alignment algorithm to allow multiple passes for less sensitivity to noise and better estimation of tonal certainty.</li>
+</ul>
+</s>
+<s>
 <t>3D scenes and depth recovery</t>
 <ul>
 <li>Revise 3D scene reconstruction algorithm to perform acceptably on a wider variety of scenes.</li>
