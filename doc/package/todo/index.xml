@@ -203,12 +203,17 @@ having the smallest time difference from the target frame.
 	1.0.0 (Stable)
 </title>
 <edit by="David Hilvert" in-month="2006-Sep"/>
+<edit by="David Hilvert" in-month="2006-Jan"/>
 <section>
 <title>
 	Performance
 </title>
 <ul><li> Refine rendering and alignment code for better performance.
   </li></ul>
+</section>
+<section>
+<t>Synchronized frame set syntax</t>
+<ul><li>Add syntax to identify synchronized frame sets.</li></ul>
 </section>
 <section>
 <title>
