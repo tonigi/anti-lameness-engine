@@ -1,3 +1,15 @@
+V	0.8.5-pre4
+
+o	Add help text for argument scope.
+
+o	Modify rotational alignment search to rotate about the centroid
+	of the sample region.
+
+o	Revert 3D code to experimental status due to poor handling of
+	real image sets.
+
+o	Modify 3D code for slightly better handling of real image sets.
+
 V	0.8.5-pre3 2006-Nov-03
 
 /alignment
