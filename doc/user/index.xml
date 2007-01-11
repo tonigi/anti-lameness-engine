@@ -14,8 +14,10 @@
 <edit by="David Hilvert" in-year="2004"/>
 <edit by="David Hilvert" in-year="2005"/>
 <edit by="David Hilvert" in-year="2006"/>
+<edit by="David Hilvert" in-year="2007"/>
 
 <xi:include href="overview/index.xml"/>
 <xi:include href="defaults/index.xml"/>
+<xi:include href="file/index.xml"/>
 
 </book>

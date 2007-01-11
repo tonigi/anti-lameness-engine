@@ -8,8 +8,9 @@
 <section><title>Purpose</title>
 
 <para>This manual describes program operation and command-line usage for ALE
-versions 0.8.0 through <ver/>.  Features specific to a particular version
-are annotated (e.g.  [ALE 0.8.1 and later]).</para>
+version <ver/>.  Features specific to a particular version
+may be annotated (e.g.  [ALE 0.8.1 and later]), but comprehensive coverage of
+versions other than <ver/> is beyond the scope of this manual.</para>
 
 <!-- <para>For more information on ALE, see the <a
 href="http://auricle.dyndns.org/ALE/">ALE Home Page</a>.</para> -->

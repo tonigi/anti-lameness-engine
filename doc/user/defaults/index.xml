@@ -17,10 +17,11 @@ image quality, speed, or some other rendering characteristic, as follows:</p>
 </ll>
 
 <p>These settings specify defaults for other options: <l>--dchain</l>,
-<l>--achain</l>, <l>--mc</l>, <l>--ips</l>, <l>--exp-extend</l>, and
+<l>--achain</l>, <l>--3d-chain</l>, <l>--ips</l>, <l>--exp-extend</l>, and
 <l>--cx</l>.  For more information about these options, see <link
-linkend="user-alignment"/> and <link linkend="../rendering/"/>.  Details
-regarding these defaults are provided in the following sections.</p>
+linkend="user-alignment"/>, <link linkend="user-rendering"/>, and <link
+linkend="user-3d"/>.  Details regarding these defaults are provided in the
+following sections.</p>
 
 <s><t>High speed (--q0)</t>
 
@@ -30,10 +31,10 @@ sets other options' defaults as follows:
 <ll>
    --dchain fine:box:1,triangle:2
    --achain triangle:2
-   --mc 30
    --ips 0
    --exp-noextend
    --no-cx
+   --3d-chain fine:box:1,triangle:2
 </ll>
 
 </s>
@@ -45,10 +46,10 @@ sets the following defaults:
 <ll>
    --dchain sinc*lanc:6
    --achain sinc*lanc:6
-   --mc 50
    --ips 0
    --exp-noextend
    --no-cx
+   --3d-chain sinc*lanc:6
 </ll>
 
 </s>
@@ -57,27 +58,15 @@ sets the following defaults:
 
 <code>--q1</code> balances image quality and rendering speed, offering higher
 resolution than <code>--qn</code>.  In versions 0.8.1 and later, this option
-uses median values, which can be very memory-intensive to calculate.  The
-following defaults are used in versions 0.8.1 and later:
+uses median values, which can be very memory-intensive to calculate.  
 
 <ll>
-   --dchain median:fine:sinc*lanc:8,triangle:2  [0.8.1 and later]
-   --achain triangle:2                          [0.8.1 and later]
-   --mc 50
+   --dchain median:fine:sinc*lanc:8,triangle:2
+   --achain triangle:2
    --ips 0
    --exp-noextend
    --no-cx
-</ll>
-
-In 0.8.0, the following defaults are used:
-
-<ll>
-   --dchain fine:sinc*lanc:6,sinc*lanc:6        [0.8.0]
-   --achain sinc*lanc:6                         [0.8.0]
-   --mc 50
-   --ips 0
-   --exp-noextend
-   --no-cx
+   --3d-chain median:fine:sinc*lanc:8,triangle:2
 </ll>
 
 </s>
@@ -89,16 +78,16 @@ emphasis for high-frequency details than <l>--q0</l>, <l>--qn</l>,
 or <l>--q1</l>.  It depends on the <l>--lpsf</l> and
 <l>--nlpsf</l> options, which can be set indirectly via the
 <l>--device</l> option.  (More information about these options can be
-found on the <a href="../rendering/psf">PSF</a> and <a href="../device/">device</a> pages.)  <l>--q2</l>
+found on the <link linkend="user-rendering-psf"/> and <link linkend="user-device"/>.)  <l>--q2</l>
 sets the following defaults:</p>
 
 <ll>
-   --dchain sinc*lanc:8
-   --achain sinc*lanc:8
-   --no-mc
+   --dchain triangle:2
+   --achain triangle:2
    --ips 4
    --exp-noextend
    --no-cx
+   --3d-chain median:fine:sinc*lanc:8,triangle:2
 </ll>
 
 </s>
@@ -111,12 +100,12 @@ cases, it might exacerbate noise in light and dark regions, and so should not
 be used.  This option sets the following defaults:</p>
 
 <ll>
-   --dchain sinc*lanc:8
-   --achain sinc*lanc:8
-   --no-mc
+   --dchain triangle:2
+   --achain triangle:2
    --ips 6
    --exp-extend
    --cx 0.7
+   --3d-chain median:fine:sinc*lanc:8,triangle:2
 </ll>
 
 </s>

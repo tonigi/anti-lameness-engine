@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
+	"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd">
+
+<chapter id="user-file"><title>File Output</title>
+
+<p>File output options determine the format in which rendered images are written,
+and how frequently they are written.  Depending on the compilation options used,
+available file output options vary.</p>
+
+<s><t>Output Color Depth</t>
+
+<p>Output color depth of 8 or 16 bits of precision per color channel can be specified,
+for 24-bit or 48-bit color, respectively. </p> 
+
+<ll>
+--8bpc            Write 8 bit per channel output [default]
+--16bpc           Write 16 bit per channel output
+</ll>
+</s>
+
+<s><t>Extension-based file type determination</t>
+
+<p>If ALE has been built with ImageMagick support, then the output file type can
+be determined automatically by file extension.  This is the default behavior
+for ImageMagick builds.  The <code>--auto</code> flag explicitly specifies that
+the default behavior should be used; it generates an error on builds compiled
+without ImageMagick support. </p> 
+
+<ll>
+--auto            Determine file type automatically
+</ll>
+</s>
+
+<s><t>PPM Output</t>
+
+<p>All builds of ALE support PPM output.  PPM can be written in plain (ASCII) or
+raw (binary) format.  If ALE has been built without ImageMagick support, or if
+the file type cannot be automatically determined by file extension, then raw
+PPM output is used by default.</p>
+
+<ll>
+--raw             Write raw PPM output
+--plain           Write plain PPM output
+</ll>
+</s>
+
+<s><t>Incremental Output</t>
+
+<p>By default, ALE writes intermediate results periodically throughout the rendering
+process.  This behavior can be disabled, however, so that output is written only
+after rendering is complete.</p>
+
+<ll>
+--inc             Produce incremental output.  [default]
+--no-inc          Don't produce incremental output.
+</ll>
+</s>
+
+<s><t>Undefined Values [0.8.3 and later]</t>
+
+<p>By default, ALE colors undefined values black.  To assign nearest-neighbor colors
+to undefined pixels, the <code>--def-nn</code> option can be used.  This option is only
+available in versions 0.8.3 and later.</p>
+
+<ll>
+--def-nn &lt;R>      Use nearest-neighbor defined values within             [0.8.3 and later]
+                  radius &lt;R>, zero outside.  Default radius is 0.
+		  </ll>
+</s>
+</chapter>
