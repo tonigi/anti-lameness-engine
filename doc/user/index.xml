@@ -19,5 +19,6 @@
 <xi:include href="overview/index.xml"/>
 <xi:include href="defaults/index.xml"/>
 <xi:include href="file/index.xml"/>
+<xi:include href="rendering/index.xml"/>
 
 </book>
