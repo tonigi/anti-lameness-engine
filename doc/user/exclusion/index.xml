@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
+	"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd">
+
+<chapter id="user-exclusion"><title>Exclusion Regions</title>
+
+<p>ALE offers exclusion regions as a way to disallow certain areas from being
+used in alignment and (optionally) rendering.  Spatial coordinates are
+expressed in the rendering coordinate system (prior to scaling).  In cases
+where the default transformation is used with the original frame, this is
+identical to the unscaled original frame coordinate system, taking the
+upper-left corner to be (0, 0).  Frame numbering begins with 0, which represents
+the original frame.</p>
+
+<s><t>Rectangular Exclusion</t>
+
+<p>All specified volumes are excluded from alignment (except where they affect
+the alignment reference image), and are excluded from rendering by default.
+(See <xref linkend="user-chains"/> for information on how to ignore exclusion
+regions.)  Exclusion region syntax is as follows:</p>
+
+<ll>--ex &lt;args&gt;       Exclude a specified volume.
+                     &lt;args&gt; are space-delimited horizontal,
+                     vertical, and frame limits:
+                         &lt;xmin&gt; &lt;xmax&gt; &lt;ymin&gt; &lt;ymax&gt; &lt;fmin&gt; &lt;fmax&gt;
+</ll>
+
+</s><s><t>Cropping</t>
+
+<p>Cropping excludes the spatial complement of an area over a specified set of
+frames.</p>
+
+<ll>--crop &lt;args&gt;     Exclude the spatial complement of an area over a
+                  specified set of frames.  &lt;args&gt; are:
+                         &lt;xmin&gt; &lt;xmax&gt; &lt;ymin&gt; &lt;ymax&gt; &lt;fmin&gt; &lt;fmax&gt;
+</ll>
+</s>
+</chapter>
