@@ -21,6 +21,7 @@
 <xi:include href="defaults/index.xml"/>
 <xi:include href="file/index.xml"/>
 <xi:include href="rendering/index.xml"/>
+<xi:include href="alignment/index.xml"/>
 
 <!-- appendices -->
 <xi:include href="psf/index.xml"/>
