@@ -16,13 +16,20 @@
 <edit by="David Hilvert" in-year="2006"/>
 <edit by="David Hilvert" in-year="2007"/>
 
-<!-- main chapters -->
+<!-- overview chapter -->
 <xi:include href="overview/index.xml"/>
+
+<!-- main chapters covering command-line options -->
 <xi:include href="defaults/index.xml"/>
 <xi:include href="file/index.xml"/>
 <xi:include href="rendering/index.xml"/>
 <xi:include href="alignment/index.xml"/>
 <xi:include href="exclusion/index.xml"/>
+
+<!-- chapters covering experimental invocations -->
+<xi:include href="scope/index.xml"/>
+
+<!-- chapters covering experimental command-line options -->
 
 <!-- appendices -->
 <xi:include href="psf/index.xml"/>
