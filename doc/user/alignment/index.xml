@@ -35,8 +35,7 @@ translations occur.</p>
 
 <s><t>Transformation Class Options</t>
 
-<ll>
---translation     Only adjust the position of images
+<ll>--translation     Only adjust the position of images
 --euclidean       Adjust the position and orientation of images [default]
 --projective      Use projective transformations.  Best quality, but slow.
 </ll>
@@ -52,8 +51,7 @@ alignment in several passes, or when refining rendering options.  A
 transformation data file is required for barrel/pincushion distortion
 correction.</p>
 
-<ll>
---trans-load=x    Load initial transformation settings from file x
+<ll>--trans-load=x    Load initial transformation settings from file x
 --trans-save=x    Save final transformation data in file x
 </ll>
 
@@ -63,8 +61,7 @@ correction.</p>
 adjacent frames in the sequence than with the original frame.  This hint can be
 useful even when initial alignment information is loaded from a file.</p>
 
-<ll>
---identity        Frames align closely with the original frame.  [default]
+<ll>--identity        Frames align closely with the original frame.  [default]
 --follow          Frames align closely with their immediate predecessor.
 </ll>
 
@@ -84,8 +81,7 @@ effectively when match values are lower than 100%.</p>
 <p>A match threshold can be specified; no images with final match statistics
 falling below this threshold will contribute to the final output.</p>
 
-<ll>
---threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)
+<ll>--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)
 </ll>
 
 </s><s><t>Alignment failure</t>
@@ -95,8 +91,7 @@ assigned to the frame (e.g., for writing to a <a href="file/">transformation
 data file</a>).  The assigned transformation can be either the optimal
 alignment found (this is default) or the default transformation.</p>
 
-<ll>
---fail-optimal    Frames beneath threshold are aligned optimally.  [default]
+<ll>--fail-optimal    Frames beneath threshold are aligned optimally.  [default]
 --fail-default    Frames beneath threshold keep their default alignment.
 </ll>
 
@@ -108,8 +103,7 @@ The value <i>x</i> is called the error metric exponent, and is 2 by default.
 Larger numbers indicate that alignment will be more influenced by smaller
 image features.</p>
 
-<ll>
---metric=x        Set the alignment error metric exponent.       (2 is default)
+<ll>--metric=x        Set the alignment error metric exponent.       (2 is default)
 </ll>
 
 </s><s><t>Alignment Channel Options</t>
@@ -119,8 +113,7 @@ can handle color channels.  By default, ALE adds the channels before
 calculating the match, but it can also be configured to rely solely on the
 green color channel, or to use all three channels separately.</p>
 
-<ll>
---align-all       Align images using all color channels
+<ll>--align-all       Align images using all color channels
 --align-green     Align images using the green channel
 --align-sum       Align images using a sum of channels [default]
 </ll>
@@ -134,8 +127,7 @@ pixels used is specified as a percentage, and smaller numbers usually mean
 faster, but less precise, alignment.  For defaults, see the <a href="../defaults/">
 default settings</a> page.</p>
 
-<ll>
---mc &lt;x&gt;          Align using, on average, x% of available pixels (0 &lt; x &lt; 100)
+<ll>--mc &lt;x&gt;          Align using, on average, x% of available pixels (0 &lt; x &lt; 100)
 --no-mc           Align using all pixels.
 </ll>
 
@@ -149,8 +141,7 @@ coincide with the upper-left corner of the first frame in the sequence, then a
 non-zero offset should be specified to indicate the difference.  See also <a
 href="../exclusion/">exclusion regions</a>.</p>
 
-<ll>
---wm &lt;f&gt; &lt;x&gt; &lt;y&gt;  Use weight map image &lt;f&gt; at offset (&lt;x&gt;, &lt;y&gt;)
+<ll>--wm &lt;f&gt; &lt;x&gt; &lt;y&gt;  Use weight map image &lt;f&gt; at offset (&lt;x&gt;, &lt;y&gt;)
 </ll>
 
 </s><s><t>Frequency weighting</t>
@@ -164,8 +155,7 @@ all) and 1 (pass none).  If any limit is assigned a value of 1, no alignment
 will occur, since all frequencies will have been excluded.  An output file can
 optionally be specified for high-pass filtered data.</p>
 
-<ll>
---fl &lt;h&gt; &lt;v&gt; &lt;a&gt;  High-pass filters: horizontal &lt;h&gt;, vertical &lt;v&gt;, average &lt;a&gt;.
+<ll>--fl &lt;h&gt; &lt;v&gt; &lt;a&gt;  High-pass filters: horizontal &lt;h&gt;, vertical &lt;v&gt;, average &lt;a&gt;.
 --flshow &lt;o&gt;      Write high-pass filtered data to file &lt;o&gt;.
 </ll>
 
@@ -174,8 +164,7 @@ optionally be specified for high-pass filtered data.</p>
 <p>Certainty weighting causes contributions to alignment error to be weighted
 by certainty values.</p>
 
-<ll>
---cw              Weight alignment error by certainty.
+<ll>--cw              Weight alignment error by certainty.
 --no-cw           Don't weight alignment error by certainty. [default]
 </ll>
 
@@ -186,8 +175,7 @@ to specified files, executes a specified program with these arguments, and then
 reads back alignment weights.  This option requires POSIX libraries, and
 requires that ALE have been built with POSIX support enabled.</p>
 
-<ll>
---wmx &lt;e&gt; &lt;r&gt; &lt;d&gt; Write reference &lt;r&gt;, definition &lt;d&gt;, execute `&lt;e&gt; &lt;f&gt; &lt;d&gt;`,
+<ll>--wmx &lt;e&gt; &lt;r&gt; &lt;d&gt; Write reference &lt;r&gt;, definition &lt;d&gt;, execute `&lt;e&gt; &lt;f&gt; &lt;d&gt;`,
                   read weights &lt;r&gt; back.
 </ll>
 
@@ -210,8 +198,7 @@ dimension.  The rot-upper bound disables rotational perturbation above a
 certain perturbation size (in degrees).  To disable alignment, set
 perturb-upper to zero.</p>
 
-<ll>
---perturb-upper=x Perturbation upper bound pixels/arclength    (14% is default)
+<ll>--perturb-upper=x Perturbation upper bound pixels/arclength    (14% is default)
                      ('x%' uses a fraction of the smallest image dimension.)
 --perturb-lower=x Perturbation lower bound pixels/arclength   (.125 is default)
                      ('x%' uses a fraction of the smallest image dimension.)
@@ -229,8 +216,7 @@ barrel distortion parameter can be limited to a specified maximum.  To disable
 frame-to-frame adjustment of barrel/pincushion distortion parameters, set
 bda-mult to zero.  Setting bda-rate to zero disables rate limitation.</p>
 
-<ll>
---bda-mult=x      Barrel distortion adjustment multiplier   (0.0001 is default)
+<ll>--bda-mult=x      Barrel distortion adjustment multiplier   (0.0001 is default)
 --bda-rate=x      Barrel distortion rate of change maximum  (0.0004 is default)
 </ll>
 
@@ -240,8 +226,7 @@ bda-mult to zero.  Setting bda-rate to zero disables rate limitation.</p>
 reduced-detail images.  To disable this, set lod-max to
 log<sub>2</sub>(perturb-upper).</p>
 
-<ll>
---lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (1 is def.)
+<ll>--lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (1 is def.)
 </ll>
 
 </s><s><t>Perturbation Types (experimental)</t>
@@ -249,8 +234,7 @@ log<sub>2</sub>(perturb-upper).</p>
 <p>Perturbations are normally performed in output image coordinates.  To perform
 perturbations in source image coordinates, specify <l>--perturb-source</l>.</p>
 
-<ll>
---perturb-output  Apply perturbations in output image coordinates. [default]
+<ll>--perturb-output  Apply perturbations in output image coordinates. [default]
 --perturb-source  Apply perturbations in source image coordinates.
 </ll>
 
@@ -265,8 +249,7 @@ global (as opposed to local) search.  To avoid misalignment, a minimum overlap
 area can be specified.  In versions 0.8.1 and later, the search type 'points'
 searches for a control point metric minimum.</p>
 
-<ll>
---gs &lt;type>       Set global search to &lt;type>, one of:
+<ll>--gs &lt;type>       Set global search to &lt;type>, one of:
                      local     Local alignment only [default]
                      inner     Alignment reference image inner region
                      outer     Alignment reference image outer region
