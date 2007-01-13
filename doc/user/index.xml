@@ -16,9 +16,18 @@
 <edit by="David Hilvert" in-year="2006"/>
 <edit by="David Hilvert" in-year="2007"/>
 
+<!-- main chapters -->
 <xi:include href="overview/index.xml"/>
 <xi:include href="defaults/index.xml"/>
 <xi:include href="file/index.xml"/>
 <xi:include href="rendering/index.xml"/>
+
+<!-- appendices -->
+<xi:include href="psf/index.xml"/>
+
+<!--
+<xi:include href="chains/index.xml"/>
+<xi:include href="eppm/index.xml"/>
+-->
 
 </book>

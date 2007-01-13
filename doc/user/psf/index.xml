@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
+	"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd">
+
+<appendix id="user-psf"><title>Point Spread Functions</title>
+<p>The ALE Irani-Peleg renderer uses a point-spread function to model the optical
+and electronic properties of the capture device used.  The PSF can be specified
+in terms of one linear and one non-linear component.</p>
+
+<s><t>PSF specification</t>
+
+<p>The PSF can be explicitly specified by using one or both of the psf options.</p>
+
+<ll>--lpsf &lt;p>        Set linear colorspace point-spread function to &lt;p>
+--nlpsf &lt;p>       Set non-linear colorspace point-spread function to &lt;p>
+</ll>
+
+<p>Available explicit point-spread functions are as follows:</p>
+
+<ll>box=&lt;d>           Set the PSF to a box filter with diameter &lt;d>.
+circle=&lt;d>        Set the PSF to a circular filter with diameter &lt;d>.
+stdin             Specify a custom filter at runtime.
+stdin_vg          stdin with vertically-oriented gaps after every 8th pixel.
+&lt;p>+&lt;p>           Summation of two functions
+&lt;p>^&lt;p>           Convolution of two functions.
+&lt;n>*&lt;p>           Multiplication by a scalar &lt;n>.
+</ll>
+
+<p>If a device is known to ALE, then its PSF can be implicitly set with the
+<l>--device</l> option.  (See the <a href="../../device/">device</a> page
+for more information.)  If a device is not specified, then the default linear
+PSF component is <l>box=1</l>.  The non-linear PSF component is disabled
+by default.</p>
+
+</s><s><t>Determining the PSF</t>
+
+<p>The PSF can be approximated based on images of known scenes.  The ALE source
+distribution includes an experimental script that numerically approximates the
+PSF in this way (<l>d2/render/psf/ale-psf-calibrate</l>).  Other, more
+efficient methods for approximating the PSF are likely possible, however.</p>
+
+</s>
+
+</appendix>

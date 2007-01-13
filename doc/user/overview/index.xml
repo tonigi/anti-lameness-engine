@@ -68,6 +68,8 @@ settings.  For more information, see:</para>
 </li><li><xref linkend="user-device"/>
 </li><li><xref linkend="user-ui"/>
 </li><li><xref linkend="user-3d"/>
+</li><li><xref linkend="user-chains"/>
+</li><li><xref linkend="user-psf"/>
 </li></ul>
 
 </s>
@@ -105,6 +107,8 @@ convert between PPM and other formats.</para>
 
 <para>See the README included in the source distribution of ALE for more information about
 compile-time configuration of file handlers.</para>
+
+<p>Usage of extended PPM syntax for specifying image metadata is outlined in <xref linkend="user-eppm"/>.</p>
 
 </s>
 

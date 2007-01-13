@@ -18,8 +18,8 @@ image quality, speed, or some other rendering characteristic, as follows:</p>
 
 <p>These settings specify defaults for other options: <l>--dchain</l>,
 <l>--achain</l>, <l>--3d-chain</l>, <l>--ips</l>, <l>--exp-extend</l>, and
-<l>--cx</l>.  For more information about these options, see <link
-linkend="user-alignment"/>, <link linkend="user-rendering"/>, and <link
+<l>--cx</l>.  For more information about these options, see <xref
+linkend="user-alignment"/>, <xref linkend="user-rendering"/>, and <xref
 linkend="user-3d"/>.  Details regarding these defaults are provided in the
 following sections.</p>
 
@@ -78,7 +78,7 @@ emphasis for high-frequency details than <l>--q0</l>, <l>--qn</l>,
 or <l>--q1</l>.  It depends on the <l>--lpsf</l> and
 <l>--nlpsf</l> options, which can be set indirectly via the
 <l>--device</l> option.  (More information about these options can be
-found on the <link linkend="user-rendering-psf"/> and <link linkend="user-device"/>.)  <l>--q2</l>
+found in <xref linkend="user-psf"/> and <xref linkend="user-device"/>.)  <l>--q2</l>
 sets the following defaults:</p>
 
 <ll>
