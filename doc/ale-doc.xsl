@@ -782,10 +782,22 @@
 	</section>
 	</xsl:template>
 
+	<xsl:template match="code">
+	<literal>
+	  <xsl:apply-templates/>
+	</literal>
+	</xsl:template>
+
 	<xsl:template match="l">
 	<literal>
 	  <xsl:apply-templates/>
 	</literal>
+	</xsl:template>
+
+	<xsl:template match="pre">
+	<literallayout class="monospaced">
+	  <xsl:apply-templates/>
+	</literallayout>
 	</xsl:template>
 
 	<xsl:template match="ll">
