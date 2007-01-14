@@ -19,15 +19,15 @@
 <!-- overview chapter -->
 <xi:include href="overview/index.xml"/>
 
+<!-- chapters covering experimental invocations -->
+<xi:include href="scope/index.xml"/>
+
 <!-- main chapters covering command-line options -->
 <xi:include href="defaults/index.xml"/>
 <xi:include href="file/index.xml"/>
 <xi:include href="rendering/index.xml"/>
 <xi:include href="alignment/index.xml"/>
 <xi:include href="exclusion/index.xml"/>
-
-<!-- chapters covering experimental invocations -->
-<xi:include href="scope/index.xml"/>
 
 <!-- chapters covering experimental command-line options -->
 
