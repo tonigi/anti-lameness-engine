@@ -28,6 +28,7 @@
 <xi:include href="rendering/index.xml"/>
 <xi:include href="alignment/index.xml"/>
 <xi:include href="exclusion/index.xml"/>
+<xi:include href="device/index.xml"/>
 
 <!-- chapters covering experimental command-line options -->
 
