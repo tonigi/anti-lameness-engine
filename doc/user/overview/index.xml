@@ -45,7 +45,7 @@ frames into an output file:</para>
 
 <ll>ale [&lt;option>]* &lt;original-frame> [&lt;supplemental-frame>]* &lt;output-file></ll>
 
-<p>Experimental argument scoping syntax is covered in <xref linkend="user-scope"/>.</p>
+<p>Experimental syntax for specifying argument scope is covered in <xref linkend="user-scope"/>.</p>
 
 <s><t>Option Arguments</t>
 
