@@ -19,18 +19,21 @@
 <!-- overview chapter -->
 <xi:include href="overview/index.xml"/>
 
-<!-- chapters covering experimental invocations -->
+<!-- main chapters covering ordinary invocations -->
+
+<!-- main chapters covering experimental invocations -->
 <xi:include href="scope/index.xml"/>
 
-<!-- main chapters covering command-line options -->
+<!-- main chapters covering ordinary command-line options -->
 <xi:include href="defaults/index.xml"/>
 <xi:include href="file/index.xml"/>
 <xi:include href="rendering/index.xml"/>
 <xi:include href="alignment/index.xml"/>
 <xi:include href="exclusion/index.xml"/>
 <xi:include href="device/index.xml"/>
+<xi:include href="ui/index.xml"/>
 
-<!-- chapters covering experimental command-line options -->
+<!-- main chapters covering experimental command-line options -->
 
 <!-- appendices -->
 <xi:include href="psf/index.xml"/>

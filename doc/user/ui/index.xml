@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
+	"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd">
+
+<chapter id="user-ui"><title>User Interfaces</title>
+
+<p>ALE currently supports two user interface types.  The traditional interface
+is the stream interface, which produces only printing characters and
+whitespace.  If ALE is compiled with IOCTL support, additional information can
+be provided through the tty interface, which is default.</p>
+
+<pre>--ui=&lt;type&gt;       Set user interface to &lt;type&gt;, one of:
+                     stream
+                     tty [default]
+</pre>
+
+
+</chapter>
