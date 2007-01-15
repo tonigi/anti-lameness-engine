@@ -53,9 +53,10 @@ and, in versions 0.8.1 and later, the median.  By default, the mean is used.
 memory linear in the number of frames.)  The syntax is as follows:</p>
 
 <table>
+<caption>Invariant types</caption>
 <tr><th>Syntax</th><th>Description</th></tr>
 <tr><td>avg:&lt;SSFE&gt;</td><td>Mean value</td></tr>
-<tr><td>median:&lt;SSFE&gt;</td><td>Median value  [0.8.1 and later]</td></tr>
+<tr><td>median:&lt;SSFE&gt;</td><td>Median value</td></tr>
 <tr><td>max:&lt;SSFE&gt;</td><td>Maximum value</td></tr>
 <tr><td>min:&lt;SSFE&gt;</td><td>Minimum value</td></tr>
 <tr><td>first:&lt;SSFE&gt;</td><td>First value</td></tr>
@@ -68,6 +69,7 @@ memory linear in the number of frames.)  The syntax is as follows:</p>
 <p>SSFEs qualify SSFs, indicating whether exclusion regions should be honored.</p>
 
 <table>
+<caption>Scaled sampling filter with exclusion (SSFE) types</caption>
 <tr><th>Syntax</th><th>Description</th></tr>
 <tr><td>ex:&lt;SSF&gt;</td><td>Honor exclusion regions</td></tr>
 <tr><td>nex:&lt;SSF&gt;</td><td>Don't honor exclusion regions</td></tr>
@@ -81,6 +83,7 @@ image, or at the minimum of input and output image resolutions.  The former prev
 of details; the latter prevents aliasing.</p>
 
 <table>
+<caption>Scaled sampling filter (SSF) types</caption>
 <tr><th>Syntax</th><th>Description</th></tr>
 <tr><td>fine:&lt;SF&gt;</td><td>Filter at full output image resolution</td></tr>
 <tr><td>coarse:&lt;SF&gt;</td><td>Filter at minimum resolution</td></tr>
@@ -98,6 +101,7 @@ of details; the latter prevents aliasing.</p>
 functions (windowing) are available.</p>
 
 <table>
+<caption>Sampling filter (SF) types</caption>
 <tr><th>Syntax</th><th>Description</th></tr>
 <tr><td>sinc</td><td>Sinc filter: (sin &pi;x) / (&pi;x)</td></tr>
 <tr><td>lanc:&lt;x&gt;</td><td>Lanczos, diameter x.</td></tr>
