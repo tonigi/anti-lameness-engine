@@ -48,4 +48,8 @@
 <!-- experimental invocations -->
 <xi:include href="scope/index.xml"/>
 
+<!-- experimental options -->
+<xi:include href="3d/index.xml"/>
+
+
 </book>
