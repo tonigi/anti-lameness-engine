@@ -3,7 +3,7 @@
 <!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
 	"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd">
 
-<appendix id="user-psf"><title>Point Spread Functions</title>
+<chapter id="user-psf"><title>Point Spread Functions</title>
 <p>The ALE Irani-Peleg renderer uses a point-spread function to model the optical
 and electronic properties of the capture device used.  The PSF can be specified
 in terms of one linear and one non-linear component.</p>
@@ -42,4 +42,4 @@ efficient methods for approximating the PSF are likely possible, however.</p>
 
 </s>
 
-</appendix>
+</chapter>
