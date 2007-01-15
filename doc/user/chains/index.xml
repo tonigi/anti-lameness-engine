@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
+	"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd">
+
+<chapter id="user-chains"><title>Rendering Chains</title>
+<p>The ALE incremental renderer is configured using rendering chains.  Rendering chains are
+constructed hierarchically from: invariants, SSFEs (scaled sampling filters
+with exclusion), SSFs (scaled sampling filters), and sampling filters.  Each of
+these components is described in a section below.  Defaults are outlined in the
+final section.
+
+<s><t>Chains</t>
+
+<p>The chain is the top level of the rendering chain hierarchy, and is composed of a
+sequence of invariants.  Syntactically, a chain is specified as a number of
+invariants separated by commas:
+
+<blockquote>
+<code>invariant<sub>1</sub>,invariant<sub>2</sub>,invariant<sub>3</sub>,...,invariant<sub>n</sub></code>
+</blockquote>
+
+<p>Each rendered pixel is assigned a value at the first invariant whose weight
+exceeds the weight threshold, or otherwise at the last invariant in the sequence.
+
+<s><t>Chain Options</t>
+
+<pre>
+--wt &lt;w&gt;          Set weight threshold for defined pixels [default is 0.8 in v0.8.0; 0.1 in v0.8.1 and later]
+--dchain &lt;g&gt;      Use chain &lt;g&gt; to render the default output.
+--ochain &lt;g&gt; &lt;o&gt;  Use chain &lt;g&gt; to render output file &lt;o&gt;.
+--achain &lt;g&gt;      Use chain &lt;g&gt; to render the alignment reference image.
+--3d-chain &lt;g>    Use chain <g> by default to render 3d output.  [0.8.4 and later]
+
+</pre>
+
+</s><s><t>Chain Examples</t>
+
+<pre>
+             triangle:2                           ALE 0.6.0 merging (roughly)
+             fine:box:1                           Drizzling (roughly)
+             fine:sinc*lanc:8                     High-frequency preservation
+             last:nex:sinc*lanc:8                 Useful for video stabilization
+             fine:box:1,triangle:2                Multi-resolution rendering
+             fine:sinc*lanc:8,sinc*lanc:8         Multi-resolution rendering
+</pre>
+
+</s></s><s><t>Invariants</t>
+
+<p>Invariants determine whether the rendered pixel value should be taken from a
+single frame, or from an average of all frames.  If from a single frame, it can
+be the first, last, minimal, or maximal pixel value.  Averages include mean
+and, in versions 0.8.1 and later, the median.  By default, the mean is used.
+(Note that using the median value may require allocation of a quantity of
+memory linear in the number of frames.)  The syntax is as follows:
+
+<blockquote>
+<table>
+<tr><th align=left>Syntax</th><th><pre>   </pre></th><th align=left>Description</th></tr>
+<tr><td>avg:&lt;SSFE&gt;<td><td>Mean value
+<tr><td>median:&lt;SSFE&gt;<td><td>Median value  [0.8.1 and later]
+<tr><td>max:&lt;SSFE&gt;<td><td>Maximum value
+<tr><td>min:&lt;SSFE&gt;<td><td>Minimum value
+<tr><td>first:&lt;SSFE&gt;<td><td>First value
+<tr><td>last:&lt;SSFE&gt;<td><td>Last value
+<tr><td>&lt;SSFE&gt;<td><td>Same as avg:&lt;SSFE&gt;
+</table>
+</blockquote>
+
+</s><s><t>Scaled Sampling Filter with Exclusion (SSFE)</t>
+
+<p>SSFEs qualify SSFs, indicating whether exclusion regions should be honored.
+
+<blockquote>
+<table>
+<tr><th align=left>Syntax</th><th><pre>   </pre></th><th align=left>Description</th></tr>
+<tr><td>ex:&lt;SSF&gt;<td><td>Honor exclusion regions
+<tr><td>nex:&lt;SSF&gt;<td><td>Don't honor exclusion regions
+<tr><td>&lt;SSF&gt;<td><td>Same as ex:&lt;SSF&gt;
+</table>
+</blockquote>
+
+</s><s><t>Scaled Sampling Filter (SSF)</t>
+
+<p>SSFs indicate whether filtering should occur at the resolution of the output
+image, or at the minimum of input and output image resolutions.  The former prevents loss
+of details; the latter prevents aliasing.
+
+<blockquote>
+<table>
+<tr><th align=left>Syntax</th><th><pre>   </pre></th><th align=left>Description</th></tr>
+<tr><td>fine:&lt;SF&gt;<td><td>Filter at full output image resolution
+<tr><td>coarse:&lt;SF&gt;<td><td>Filter at minimum resolution
+<tr><td>&lt;SF&gt;<td><td>Same as coarse:&lt;SF&gt;
+</table>
+</blockquote>
+
+<s><t>SSF Options</t>
+<pre>
+--afilter &lt;s&gt;     Use SSF &lt;s&gt; to interpolate points in alignment.
+</pre>
+
+</s></s><s><t>Sampling Filter (SF)</t>
+
+<p>SFs are used to limit bandwidth.  Primitive functions and pointwise multiplication of these
+functions (windowing) are available.
+
+<blockquote>
+<table>
+<tr><th align=left>Syntax</th><th><pre>   </pre></th><th align=left>Description</th></tr>
+<tr><td>sinc<td><td>Sinc filter: (sin &pi;x) / (&pi;x)</td>
+<tr><td>lanc:&lt;x&gt;<td><td>Lanczos, diameter x.
+<tr><td>triangle:&lt;x&gt;<td><td>Triangle, diameter x.
+<tr><td>box:&lt;x&gt;<td><td>Box, diameter x.
+<tr><td>zero<td><td>Zero function
+<tr><td>&lt;f&gt;*&lt;f&gt;<td><td>Pointwise multiplication (windowing)
+</table>
+</blockquote>
+
+</s><s><t>Defaults</t>
+
+<p>ALE defaults are as follows:</p>
+
+<pre>
+                     dchain         Varies by <a href="../../defaults/">default setting</a>
+                     achain         Varies by <a href="../../defaults/">default setting</a>
+                     afilter        internal (approximates triangle:2)
+</pre>
+
+</s>
+
+</chapter>
