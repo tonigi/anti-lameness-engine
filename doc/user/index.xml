@@ -17,7 +17,7 @@
 <edit by="David Hilvert" in-year="2007"/>
 
 <!--
-  -- Main chapters
+  -  Main chapters
   -->
 
 
@@ -42,7 +42,7 @@
 <xi:include href="eppm/index.xml"/>
 
 <!-- 
-  -- Appendices 
+  -  Appendices 
   -->
 
 <!-- experimental invocations -->

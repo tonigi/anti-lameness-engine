@@ -8,20 +8,18 @@
 constructed hierarchically from: invariants, SSFEs (scaled sampling filters
 with exclusion), SSFs (scaled sampling filters), and sampling filters.  Each of
 these components is described in a section below.  Defaults are outlined in the
-final section.
+final section.</p>
 
 <s><t>Chains</t>
 
 <p>The chain is the top level of the rendering chain hierarchy, and is composed of a
 sequence of invariants.  Syntactically, a chain is specified as a number of
-invariants separated by commas:
+invariants separated by commas:</p>
 
-<blockquote>
-<code>invariant<sub>1</sub>,invariant<sub>2</sub>,invariant<sub>3</sub>,...,invariant<sub>n</sub></code>
-</blockquote>
+<p><code>invariant<sub>1</sub>,invariant<sub>2</sub>,invariant<sub>3</sub>,...,invariant<sub>n</sub></code></p>
 
 <p>Each rendered pixel is assigned a value at the first invariant whose weight
-exceeds the weight threshold, or otherwise at the last invariant in the sequence.
+exceeds the weight threshold, or otherwise at the last invariant in the sequence.</p>
 
 <s><t>Chain Options</t>
 
@@ -30,7 +28,7 @@ exceeds the weight threshold, or otherwise at the last invariant in the sequence
 --dchain &lt;g&gt;      Use chain &lt;g&gt; to render the default output.
 --ochain &lt;g&gt; &lt;o&gt;  Use chain &lt;g&gt; to render output file &lt;o&gt;.
 --achain &lt;g&gt;      Use chain &lt;g&gt; to render the alignment reference image.
---3d-chain &lt;g>    Use chain <g> by default to render 3d output.  [0.8.4 and later]
+--3d-chain &lt;g>    Use chain &lt;g> by default to render 3d output.  [0.8.4 and later]
 
 </pre>
 
@@ -52,48 +50,42 @@ single frame, or from an average of all frames.  If from a single frame, it can
 be the first, last, minimal, or maximal pixel value.  Averages include mean
 and, in versions 0.8.1 and later, the median.  By default, the mean is used.
 (Note that using the median value may require allocation of a quantity of
-memory linear in the number of frames.)  The syntax is as follows:
+memory linear in the number of frames.)  The syntax is as follows:</p>
 
-<blockquote>
 <table>
-<tr><th align=left>Syntax</th><th><pre>   </pre></th><th align=left>Description</th></tr>
-<tr><td>avg:&lt;SSFE&gt;<td><td>Mean value
-<tr><td>median:&lt;SSFE&gt;<td><td>Median value  [0.8.1 and later]
-<tr><td>max:&lt;SSFE&gt;<td><td>Maximum value
-<tr><td>min:&lt;SSFE&gt;<td><td>Minimum value
-<tr><td>first:&lt;SSFE&gt;<td><td>First value
-<tr><td>last:&lt;SSFE&gt;<td><td>Last value
-<tr><td>&lt;SSFE&gt;<td><td>Same as avg:&lt;SSFE&gt;
+<tr><th>Syntax</th><th>Description</th></tr>
+<tr><td>avg:&lt;SSFE&gt;</td><td>Mean value</td></tr>
+<tr><td>median:&lt;SSFE&gt;</td><td>Median value  [0.8.1 and later]</td></tr>
+<tr><td>max:&lt;SSFE&gt;</td><td>Maximum value</td></tr>
+<tr><td>min:&lt;SSFE&gt;</td><td>Minimum value</td></tr>
+<tr><td>first:&lt;SSFE&gt;</td><td>First value</td></tr>
+<tr><td>last:&lt;SSFE&gt;</td><td>Last value</td></tr>
+<tr><td>&lt;SSFE&gt;</td><td>Same as avg:&lt;SSFE&gt;</td></tr>
 </table>
-</blockquote>
 
 </s><s><t>Scaled Sampling Filter with Exclusion (SSFE)</t>
 
-<p>SSFEs qualify SSFs, indicating whether exclusion regions should be honored.
+<p>SSFEs qualify SSFs, indicating whether exclusion regions should be honored.</p>
 
-<blockquote>
 <table>
-<tr><th align=left>Syntax</th><th><pre>   </pre></th><th align=left>Description</th></tr>
-<tr><td>ex:&lt;SSF&gt;<td><td>Honor exclusion regions
-<tr><td>nex:&lt;SSF&gt;<td><td>Don't honor exclusion regions
-<tr><td>&lt;SSF&gt;<td><td>Same as ex:&lt;SSF&gt;
+<tr><th>Syntax</th><th>Description</th></tr>
+<tr><td>ex:&lt;SSF&gt;</td><td>Honor exclusion regions</td></tr>
+<tr><td>nex:&lt;SSF&gt;</td><td>Don't honor exclusion regions</td></tr>
+<tr><td>&lt;SSF&gt;</td><td>Same as ex:&lt;SSF&gt;</td></tr>
 </table>
-</blockquote>
 
 </s><s><t>Scaled Sampling Filter (SSF)</t>
 
 <p>SSFs indicate whether filtering should occur at the resolution of the output
 image, or at the minimum of input and output image resolutions.  The former prevents loss
-of details; the latter prevents aliasing.
+of details; the latter prevents aliasing.</p>
 
-<blockquote>
 <table>
-<tr><th align=left>Syntax</th><th><pre>   </pre></th><th align=left>Description</th></tr>
-<tr><td>fine:&lt;SF&gt;<td><td>Filter at full output image resolution
-<tr><td>coarse:&lt;SF&gt;<td><td>Filter at minimum resolution
-<tr><td>&lt;SF&gt;<td><td>Same as coarse:&lt;SF&gt;
+<tr><th>Syntax</th><th>Description</th></tr>
+<tr><td>fine:&lt;SF&gt;</td><td>Filter at full output image resolution</td></tr>
+<tr><td>coarse:&lt;SF&gt;</td><td>Filter at minimum resolution</td></tr>
+<tr><td>&lt;SF&gt;</td><td>Same as coarse:&lt;SF&gt;</td></tr>
 </table>
-</blockquote>
 
 <s><t>SSF Options</t>
 <pre>
@@ -103,26 +95,23 @@ of details; the latter prevents aliasing.
 </s></s><s><t>Sampling Filter (SF)</t>
 
 <p>SFs are used to limit bandwidth.  Primitive functions and pointwise multiplication of these
-functions (windowing) are available.
+functions (windowing) are available.</p>
 
-<blockquote>
 <table>
-<tr><th align=left>Syntax</th><th><pre>   </pre></th><th align=left>Description</th></tr>
-<tr><td>sinc<td><td>Sinc filter: (sin &pi;x) / (&pi;x)</td>
-<tr><td>lanc:&lt;x&gt;<td><td>Lanczos, diameter x.
-<tr><td>triangle:&lt;x&gt;<td><td>Triangle, diameter x.
-<tr><td>box:&lt;x&gt;<td><td>Box, diameter x.
-<tr><td>zero<td><td>Zero function
-<tr><td>&lt;f&gt;*&lt;f&gt;<td><td>Pointwise multiplication (windowing)
+<tr><th>Syntax</th><th>Description</th></tr>
+<tr><td>sinc</td><td>Sinc filter: (sin &pi;x) / (&pi;x)</td></tr>
+<tr><td>lanc:&lt;x&gt;</td><td>Lanczos, diameter x.</td></tr>
+<tr><td>triangle:&lt;x&gt;</td><td>Triangle, diameter x.</td></tr>
+<tr><td>box:&lt;x&gt;</td><td>Box, diameter x.</td></tr>
+<tr><td>zero</td><td>Zero function</td></tr>
+<tr><td>&lt;f&gt;*&lt;f&gt;</td><td>Pointwise multiplication (windowing)</td></tr>
 </table>
-</blockquote>
 
 </s><s><t>Defaults</t>
 
 <p>ALE defaults are as follows:</p>
 
-<pre>
-                     dchain         Varies by <a href="../../defaults/">default setting</a>
+<pre>                     dchain         Varies by <a href="../../defaults/">default setting</a>
                      achain         Varies by <a href="../../defaults/">default setting</a>
                      afilter        internal (approximates triangle:2)
 </pre>

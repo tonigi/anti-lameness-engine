@@ -6,10 +6,9 @@
 <chapter id="user-eppm"><title>Extended PPM (EPPM) Files</title>
 
 <p>EPPM is an extension to the PPM file format that allows specification of
-metadata.  The header of an EPPM file conforms to the following template:
+metadata.  The header of an EPPM file conforms to the following template:</p>
 
-<pre>
-P6#E
+<pre>P6#E
 # Tag1: Value
 # Tag2: Value
 # Tag3: Value
@@ -20,26 +19,24 @@ Width Height Maxval
 Data
 </pre>
 
-<p>Tags recognized by ALE are outlined below.
+<p>Tags recognized by ALE are outlined below.</p>
 
 <s><t>Black level</t>
 
-<P>The black level tag specifies a value that should be subtracted from
+<p>The black level tag specifies a value that should be subtracted from
 all pixels in order to achieve linearity.  A modified version of dcraw (<a
 href="/darcs/dcraw">darcs repository</a>) can be used to generate files
-containing this tag.
+containing this tag.</p>
 
-<pre>
-# Black-level: &lt;value&gt;
+<pre># Black-level: &lt;value&gt;
 </pre>
 
 </s><s><t>Exposure tags</t>
 
 <p>Exposure tags can be used for determining tonal registration through
-specification of shutter speed, aperture, and ISO sensitivity (or gain).
+specification of shutter speed, aperture, and ISO sensitivity (or gain).</p>
 
-<pre>
-# Shutter: &lt;value&gt;
+<pre># Shutter: &lt;value&gt;
 # Shutter: 1/&lt;value&gt;
 # Aperture: &lt;f-number&gt;
 # ISO: &lt;value&gt;
