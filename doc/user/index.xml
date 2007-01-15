@@ -16,15 +16,18 @@
 <edit by="David Hilvert" in-year="2006"/>
 <edit by="David Hilvert" in-year="2007"/>
 
+<!--
+  -- Main chapters
+  -->
+
+
 <!-- overview chapter -->
 <xi:include href="overview/index.xml"/>
 
-<!-- main chapters covering ordinary invocations -->
+<!-- ordinary invocations -->
+<!-- (this topic is subsumed within the overview) -->
 
-<!-- main chapters covering experimental invocations -->
-<xi:include href="scope/index.xml"/>
-
-<!-- main chapters covering ordinary command-line options -->
+<!-- ordinary command-line options -->
 <xi:include href="defaults/index.xml"/>
 <xi:include href="file/index.xml"/>
 <xi:include href="rendering/index.xml"/>
@@ -32,15 +35,17 @@
 <xi:include href="exclusion/index.xml"/>
 <xi:include href="device/index.xml"/>
 <xi:include href="ui/index.xml"/>
-
-<!-- main chapters covering experimental command-line options -->
-
-<!-- appendices -->
+<xi:include href="chains/index.xml"/>
 <xi:include href="psf/index.xml"/>
 
-<!--
-<xi:include href="chains/index.xml"/>
+<!-- file formats -->
 <xi:include href="eppm/index.xml"/>
--->
+
+<!-- 
+  -- Appendices 
+  -->
+
+<!-- experimental invocations -->
+<xi:include href="scope/index.xml"/>
 
 </book>
