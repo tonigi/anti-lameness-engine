@@ -19,9 +19,8 @@ image quality, speed, or some other rendering characteristic, as follows:</p>
 <p>These settings specify defaults for other options: <l>--dchain</l>,
 <l>--achain</l>, <l>--3d-chain</l>, <l>--ips</l>, <l>--exp-extend</l>, and
 <l>--cx</l>.  For more information about these options, see <xref
-linkend="user-alignment"/>, <xref linkend="user-rendering"/>, and <xref
-linkend="user-3d"/>.  Details regarding these defaults are provided in the
-following sections.</p>
+linkend="user-rendering"/> and <xref linkend="user-3d"/>.  Details regarding
+these defaults are provided in the following sections.</p>
 
 <s><t>High speed (--q0)</t>
 
