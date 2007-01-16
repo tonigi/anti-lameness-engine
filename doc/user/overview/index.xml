@@ -130,9 +130,9 @@ File handler:     ImageMagick
 Color data:       SINGLE
 Coordinate data:  SINGLE
 DFT:              FFTW3
+Threads:          POSIX
 Assertions:       Enabled
-Optimizations:    Enabled
-</ll>
+Optimizations:    Enabled</ll>
 
 <para>The first line of output indicates the version of ALE source code being
 used; the remaining lines reflect the build options selected at compile
@@ -161,7 +161,7 @@ of the following form:</para>
 <para>Available help options, and their corresponding help topics, are outlined
 below:</para>
 
-<ll>--hu              Usage.
+<ll>--hu              Usage (this message).
 --hq              Default settings.
 --hf              Image files.
 --he              Exclusion regions.
@@ -169,15 +169,16 @@ below:</para>
 --hr              Rendering (not exposure-related).
 --hx              Exposure.
 --ht              Transformation data files.
---hc              Control points.  [0.8.1 and later]
+--hc              Control points.
 --hl              Filtering (PSFs, rendering chains).
 --hd              Devices.
 --hi              User Interfaces.
+--hp              Process details.
+--hs              Argument scope (Experimental).
 --hv              Video stream processing (Experimental).
---h3              3D Modeling.
+--h3              3D Modeling (Experimental).
 --hz              Undocumented options.
---hA              Concatenate all help pages.
-</ll>
+--hA              Concatenate all help pages.</ll>
 
 </s>
 
