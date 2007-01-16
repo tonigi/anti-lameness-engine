@@ -13,45 +13,48 @@ stream processing are also available.</p>
 
 <s><t>Incremental Rendering</t>
 
-<p>The incremental renderer uses configurable <a href="chains/">rendering
-chains</a> to determine the output image.  It can increase resolution and
-reduce aliasing, but it cannot reduce blur.</p>
+<p>The incremental renderer uses configurable rendering chains to determine the
+output image.  It can increase resolution and reduce aliasing, but it cannot
+reduce blur.  For more information on rendering chains, see <xref
+linkend="user-chains"/>.</p>
 
 </s><s><t>Irani-Peleg Rendering</t>
 
-<p>The Irani-Peleg renderer uses configurable <a href="psf/">point-spread
-functions</a> to model blur, which is then reduced by an iterative
-backprojection technique.  (For iteration defaults, see the <a
-href="../defaults/"> default settings</a> page.)  In versions 0.8.1 and
-later, using the median correction value can be specified.  By default,
-the mean correction value is used.</p>
+<p>The Irani-Peleg renderer uses configurable point-spread functions to model
+blur, which is then reduced by an iterative backprojection technique.  By
+default, mean correction values are used at each iteration step, but median
+correction can also be specified.  For more information about point-spread
+functions, see <xref linkend="user-psf"/>.  For iteration defaults, see
+<xref linkend="user-defaults"/>.
+
+</p>
 
 <ll>--ips &lt;i&gt;         Run &lt;i&gt; iterations.
---ip-mean         Use the mean correction [default]   [0.8.1 and later]
---ip-median       Use the median correction           [0.8.1 and later]
+--ip-mean         Use the mean correction [default]
+--ip-median       Use the median correction
 </ll>
 
 </s><s><t>Exposure Registration</t>
 
 <p>By default, ALE adjusts an exposure model to minimize differences in tone
-between frames.  The option <l>--exp-noregister</l> indicates that
-exposure should be assumed uniform across all frames.  In this case, no
-adjustment is performed.  The option <l>--exp-meta-only</l> indicates
-that only exposure information included in the image files should be used for
-registration.  Currently, <a href="EPPM/">EPPM</a> is the only type of exposure
-metadata supported by this option.</p>
+between frames.  The option <l>--exp-noregister</l> indicates that exposure
+should be assumed uniform across all frames.  In this case, no adjustment is
+performed.  The option <l>--exp-meta-only</l> indicates that only exposure
+information included in the image files should be used for registration.
+Currently, EPPM is the only type of exposure metadata supported by this option;
+for more information, see <xref linkend="user-eppm"/>.</p>
 
 <ll>--exp-register    Register exposure between frames.  [default]
 --exp-noregister  Assume uniform exposure across all frames.
 --exp-meta-only   Use only image metadata for registering exposure.
 </ll>
 
-</s><s><t>Color Adjustment [0.8.1 and later]</t>
+</s><s><t>Color Adjustment</t>
 
 <p>To adjust the color of the output image (e.g., for white balance) in
 versions 0.8.1 and later, the --exp-mult= option can be used.</p>
 
-<ll>--exp-mult=c,r,b   Adjust all channels by &lt;c&gt;, red by &lt;r&gt;, and blue by &lt;b&gt;.  [0.8.1 and later]
+<ll>--exp-mult=c,r,b   Adjust all channels by &lt;c&gt;, red by &lt;r&gt;, and blue by &lt;b&gt;.
 </ll>
 
 </s><s><t>Certainty-weighted Rendering</t>
@@ -60,9 +63,9 @@ versions 0.8.1 and later, the --exp-mult= option can be used.</p>
 quantifies the reliability of sensor measurements.  By default, this function
 is raised to the zeroth power, to obtain uniform certainty for all measurements.
 To specify a different certainty exponent, the option <l>--cx</l> can be
-used.  This option is best used in combination with <l>--exp-extend</l>
-(see below) and <l>--ips</l>.  For defaults, see the <a href="../defaults/">
-default settings</a> page.</p>
+used.  This option is best used in combination with <l>--exp-extend</l> (see
+below) and <l>--ips</l>.  For defaults, see <xref
+linkend="user-defaults"/>.</p>
 
 <ll>--cx &lt;x>          Render with certainty exponent &lt;x>
 --no-cx           Render with uniform certainty.
@@ -82,8 +85,7 @@ quality, but can also increase alignment and rendering times.</p>
 <p>The --extend option records pixel data that falls outside of the region of the
 first frame in the sequence.  This can be useful for providing additional
 alignment constraints or creating panoramic image mosaics.  (For mosaics, see
-also the description of the --follow option in the <a
-href="../alignment">alignment</a> section.)</p>
+also the description of the --follow option in <xref linkend="user-alignment"/>.)</p>
 
 <ll>--extend          Increase image extents to accommodate all pixel data.
 --no-extend       Don't increase extents; crop to original frame. [default]
@@ -93,8 +95,7 @@ href="../alignment">alignment</a> section.)</p>
 
 <p>By default, ALE restricts the output range to that of the original frame.
 To adjust the output range to accommodate the ranges of all input frames,
-specify <l>--exp-extend</l>.  For defaults, see the <a href="../defaults/">
-default settings</a> page.</p>
+specify <l>--exp-extend</l>.  For defaults, see <xref linkend="user-defaults"/></p>
 
 <ll>--exp-extend      Extend range to include all calculated values.
 --exp-noextend    Restrict to the original frame's range.
