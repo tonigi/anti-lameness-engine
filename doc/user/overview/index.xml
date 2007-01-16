@@ -8,9 +8,9 @@
 <section><title>Purpose</title>
 
 <para>This manual describes program operation and command-line usage for ALE
-version <ver/>.  Features specific to a particular version
-may be annotated (e.g.  [ALE 0.8.1 and later]), but comprehensive coverage of
-versions other than <ver/> is beyond the scope of this manual.</para>
+version <ver/>.  Features limited to specific versions may be annotated (e.g.
+[ALE 0.8.1 and later]), but comprehensive coverage of versions other than
+<ver/> is beyond the scope of this manual.</para>
 
 <!-- <para>For more information on ALE, see the <a
 href="http://auricle.dyndns.org/ALE/">ALE Home Page</a>.</para> -->
@@ -52,7 +52,7 @@ frames into an output file:</para>
 <s><t>Default Settings</t>
 
 <para>Certain basic modes of operation, emphasizing image quality, speed, or
-other rendering characteristics, are now established in the form of default
+other rendering characteristics, are established in the form of default
 settings.  For more information, see:</para>
 
 <ul><li><xref linkend="user-defaults"/>
@@ -61,7 +61,7 @@ settings.  For more information, see:</para>
 </s>
 
 <s><t>Other options</t>
-<para>Other options are outlined in subsequent chapters:</para>
+<para>For information about other options, see:</para>
 
 <ul><li><xref linkend="user-file"/>
 </li><li><xref linkend="user-rendering"/>
