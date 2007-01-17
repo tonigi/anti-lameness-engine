@@ -1,5 +1,7 @@
 V	0.8.5-pre4
 
+o	Make the --follow alignment option default.
+
 o	Add help text for argument scope.
 
 o	Modify rotational alignment search to rotate about the centroid
