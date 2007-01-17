@@ -54,7 +54,7 @@ int align::latest_ok;
 int align::latest = -1;
 
 int align::alignment_class = 1;
-int align::default_initial_alignment_type = 0;
+int align::default_initial_alignment_type = 1;
 int align::perturb_type = 0;
 transformation align::default_initial_alignment;
 int align::is_default = 1;

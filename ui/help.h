@@ -219,8 +219,8 @@ public:
 			BETWEEN_SECTIONS
 			"Alignment following:\n"
 			HEADER_SPACE
-			"--identity        Frames align closely with the original frame.  [default]\n"
-			"--follow          Frames align closely with their immediate predecessor.\n"
+			"--follow          Frames align closely with their predecessor.  [default]\n"
+			"--identity        Frames align closely with the original frame.\n"
 			BETWEEN_SECTIONS
 			"Alignment failure:\n"
 			HEADER_SPACE

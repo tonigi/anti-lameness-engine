@@ -58,11 +58,12 @@ correction.</p>
 </s><s><t>Alignment following</t>
 
 <p>The --follow option hints that frames tend to be more closely aligned with
-adjacent frames in the sequence than with the original frame.  This hint can be
+adjacent frames in the sequence than with the original frame.  --identity 
+indicates that frames tend to closely align with the original frame.  These hints can be
 useful even when initial alignment information is loaded from a file.</p>
 
-<ll>--identity        Frames align closely with the original frame.  [default]
---follow          Frames align closely with their immediate predecessor.
+<ll>--follow          Frames align closely with their predecessor.  [default]
+--identity        Frames align closely with the original frame.
 </ll>
 
 </s></s><s><t>Match statistics</t>
