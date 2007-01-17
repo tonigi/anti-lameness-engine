@@ -103,7 +103,7 @@ functions (windowing) are available.</p>
 <table>
 <caption>Sampling filter (SF) types</caption>
 <tr><th>Syntax</th><th>Description</th></tr>
-<tr><td>sinc</td><td>Sinc filter: (sin &pi;x) / (&pi;x)</td></tr>
+<tr><td>sinc</td><td>sinc filter</td></tr>
 <tr><td>lanc:&lt;x&gt;</td><td>Lanczos, diameter x.</td></tr>
 <tr><td>triangle:&lt;x&gt;</td><td>Triangle, diameter x.</td></tr>
 <tr><td>box:&lt;x&gt;</td><td>Box, diameter x.</td></tr>
