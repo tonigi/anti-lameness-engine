@@ -24,8 +24,8 @@ these defaults are provided in the following sections.</p>
 
 <s><t>High speed (--q0)</t>
 
-<code>--q0</code> emphasizes speed over image quality.  This option is default, and
-sets other options' defaults as follows:
+<p><code>--q0</code> emphasizes speed over image quality.  This option is default, and
+sets other options' defaults as follows:</p>
 
 <ll>--dchain fine:box:1,triangle:2
 --achain triangle:2
@@ -38,8 +38,8 @@ sets other options' defaults as follows:
 </s>
 <s><t>Low noise (--qn)</t>
 
-<code>--qn</code> emphasizes low noise over resolution and rendering speed, and
-sets the following defaults:
+<p><code>--qn</code> emphasizes low noise over resolution and rendering speed, and
+sets the following defaults:</p>
 
 <ll>--dchain sinc*lanc:6
 --achain sinc*lanc:6
@@ -53,9 +53,9 @@ sets the following defaults:
 
 <s><t>Balanced quality and speed (--q1)</t>
 
-<code>--q1</code> balances image quality and rendering speed, offering higher
+<p><code>--q1</code> balances image quality and rendering speed, offering higher
 resolution than <code>--qn</code>.  In versions 0.8.1 and later, this option
-uses median values, which can be very memory-intensive to calculate.  
+uses median values, which can be very memory-intensive to calculate.</p>
 
 <ll>--dchain median:fine:sinc*lanc:8,triangle:2
 --achain triangle:2
