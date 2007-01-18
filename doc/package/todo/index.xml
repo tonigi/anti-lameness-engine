@@ -11,30 +11,6 @@
   <abstract>This article contains a tentative list of future versions and features.</abstract>
 </articleinfo>
 
-<section><title>0.8.5</title>
-
-<edit by="David Hilvert" in-month="2006-Sep"/>
-<edit by="David Hilvert" in-month="2006-Oct"/>
-<edit by="David Hilvert" in-month="2007-Jan"/>
-
-<section>
-<title>
-  Documentation
-</title>
-  <ul><li>Add a section to the README indicating how to obtain and update source via
-    darcs.
-  </li></ul>
-</section>
-<section>
-<title>
-  Website
-</title>
-  <ul>
-  <li> Ensure consistency between the website hierarchy and the README.</li>
-  </ul>
-</section>
-</section>
-
 <section>
 <title>
 	0.9.0
