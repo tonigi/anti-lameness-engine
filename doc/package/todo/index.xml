@@ -21,27 +21,7 @@
 <title>
   Documentation
 </title>
-  <ul>
-  <li>Complete migration of existing documentation from the localhost sub-directory,
-    removing superfluous license terms in the footers.
-  </li><li>Centralize licensing and authorship information (e.g., there should be only
-    one COPYING file and only one AUTHORS file).
-  </li><li>Include license and copyright terms for the doc tree Makefile
-    as copyright notices in the AUTHORS and/or COPYING files (or equivalent).
-  </li><li>Complete the documentation.
-  </li><li>Revise the user manual for new features and syntax.
-    <ul>
-    <li>Document new scoping operators {}, [], and [&lt;>].
-    </li><li>Document other changes in UI, including regularization of syntax.
-      <ul>
-      <li>in particular, commas can no longer appear in single-argument options
-        when using assignment-delimited syntax; use space-delimited syntax
-        instead.  This behavior is inconsistent with 0.8.4.
-      </li>
-      </ul>
-    </li>
-    </ul>
-  </li><li>Add a section to the README indicating how to obtain and update source via
+  <ul><li>Add a section to the README indicating how to obtain and update source via
     darcs.
   </li></ul>
 </section>
@@ -254,6 +234,25 @@ the complete set of manuals.
     guide.
   </li><li> Remedy meaningless page numbers for book title pages in the set
   ToC.
+  </li><li>Complete migration of existing documentation from the localhost sub-directory,
+    removing superfluous license terms in the footers.
+  </li><li>Centralize licensing and authorship information (e.g., there should be only
+    one COPYING file and only one AUTHORS file).
+  </li><li>Include license and copyright terms for the doc tree Makefile
+    as copyright notices in the AUTHORS and/or COPYING files (or equivalent).
+  </li><li>Complete the documentation.
+  </li><li>Revise the user manual for new features and syntax.
+    <ul>
+    <li>Document new scoping operators {}, [], and [&lt;>].
+    </li><li>Document other changes in UI, including regularization of syntax.
+      <ul>
+      <li>in particular, commas can no longer appear in single-argument options
+        when using assignment-delimited syntax; use space-delimited syntax
+        instead.  This behavior is inconsistent with 0.8.4.
+      </li>
+      </ul>
+    </li>
+    </ul>
 </li></ul>
 </section>
 <section>
