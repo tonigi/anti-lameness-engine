@@ -72,12 +72,23 @@ mkdir -p m4
 cp /usr/share/autoconf-archive/acx_pthread.m4 m4/.
 
 #
+# Prune documentation
+#
+
+if ! -e _darcs; then 
+	rm -rf doc/user
+	rm -rf doc/technical
+	rm -rf doc/tutorial
+	rm -rf doc/localhost
+fi
+
+#
 # Make documentation
 #
 
 chmod a+x doc/make-changelog
 chmod a+x doc/make-infos
-make -C doc
+make -C doc ../TODO ../README ../ChangeLog ../NEWS ../REPORTING-BUGS
 
 #
 # Import GNU extension strndup
