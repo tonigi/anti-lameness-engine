@@ -75,7 +75,7 @@ cp /usr/share/autoconf-archive/acx_pthread.m4 m4/.
 # Prune documentation
 #
 
-if ! -e _darcs; then 
+if ! test -e _darcs; then 
 	rm -rf doc/user
 	rm -rf doc/technical
 	rm -rf doc/tutorial
