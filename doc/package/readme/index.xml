@@ -12,6 +12,7 @@
   instructions.</abstract>
 </articleinfo>
 
+<edit by="David Hilvert" in-year="2007"/>
 <edit by="David Hilvert" in-year="2006"/>
 <edit by="David Hilvert" in-year="2005"/>
 <edit by="David Hilvert" in-year="2004"/>
@@ -264,16 +265,14 @@ file 'INSTALL' in the source package.</p>
 
 <s><t>Further Documentation</t>
 
-<p>For information about command-line usage, program options, and program
-operation, see the manuals included with the source package.  Manuals may
-also be available on-line at the URL listed in the following section.</p>
+<p>This alpha release only includes standard package documentation files.</p>
 
 </s>
 
 <s><t>On-line resources</t>
 
 <ll>Home Page               http://auricle.dyndns.org/ALE/
-Manuals                 http://auricle.dyndns.org/ALE/manuals/
+darcs repository        http://auricle.dyndns.org/darcs/ale/
 Mailing list archive    http://ventricle.dyndns.org/pipermail/ale/
 </ll>
 
