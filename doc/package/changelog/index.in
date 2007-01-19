@@ -1,5 +1,8 @@
 V	0.8.5-pre4
 
+o	Remove binaries and documentation sections from the readme, and
+	prune non-package documentation for source distributions.
+
 o	Make the --follow alignment option default.
 
 o	Add help text for argument scope.
