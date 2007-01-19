@@ -18,6 +18,13 @@
 <edit by="David Hilvert" in-month="2006-Sep"/>
 <edit by="David Hilvert" in-month="2006-Nov"/>
 <edit by="David Hilvert" in-month="2007-Jan"/>
+
+<s>
+<t>Argument scope</t>
+<ul><li>Fix bugs in argument scope handling.</li>
+</ul>
+</s>
+
 <s>
 <t>Multiple-pass registration</t>
 <ul>
