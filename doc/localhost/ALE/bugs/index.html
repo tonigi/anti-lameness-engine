@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE Known Bugs, version 0.5.1</title>
+</head>
+<body>
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE Known Bugs</h1>
+
+<!-- No known bugs. -->
+<h2>Version 0.8.2</h2>
+
+<table border width=100%>
+<tr>
+<th width=10%>Packages Affected</th>
+<th width=60%>Bug</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>All</td>
+<td>3D subspace bounding boxes are miscalculated</td>
+<td>Fixed in 0.8.3</td>
+</tr>
+<tr>
+<td>All</td>
+<td>--ip-median and/or --dchain median:* may cause image degradation when --scale is less than 1.0</td>
+<td>Unconfirmed</td>
+</tr>
+</table>
+
+<h2>Version 0.8.1</h2>
+
+<table border width=100%>
+<tr>
+<th width=10%>Packages Affected</th>
+<th width=60%>Bug</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>All</td>
+<td>--ip-median and/or --dchain median:* may cause image degradation when --scale is less than 1.0</td>
+<td>Unconfirmed</td>
+</tr>
+<tr>
+<td>All</td>
+<td>2D alignment with control points does not work properly.
+<td>Fixed in 0.8.2.</td>
+</tr>
+</table>
+
+<h2>Version 0.8.0</h2>
+
+<table border width=100%>
+<tr>
+<th width=10%>Packages Affected</th>
+<th width=60%>Bug</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>Source</td>
+<td>Fails to compile with GCC 3.4.
+<td>Fixed in 0.8.1.</td>
+</tr>
+</table>
+
+<h2>Version 0.7.1</h2>
+
+<table border width=100%>
+<tr>
+<th width=10%>Packages Affected</th>
+<th width=60%>Bug</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>All</td>
+<td>Exclusion regions may be wrong when <code>--extend</code> is used.
+<td>Fixed in patch 1.</td>
+</tr>
+<tr>
+<td>All</td>
+<td>Next frame's default alignment may be incorrect following an alignment failure.
+<td>Fixed in patch 1.</td>
+</tr>
+</table>
+
+<h2>Version 0.7.0</h2>
+
+<table border width=100%>
+<tr>
+<th width=10%>Packages Affected</th>
+<th width=60%>Bug</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>All</td>
+<td><code>--visp</code> segfaults when used with non-last invariant.
+<td>Fixed in 0.7.1.</td>
+</tr>
+<tr>
+<td>All</td>
+<td>Euclidean and translational alignment break when used with
+<code>--scale</code>, and multiple-LOD alignment does not work properly.</td>
+<td>Fixed in patch 1.</td>
+</tr>
+</table>
+
+<h2>Version 0.6.0</h2>
+
+<table border width=100%>
+<tr>
+<th width=10%>Packages Affected</th>
+<th width=60%>Bug</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>All</td>
+<td>Multiple-LOD alignment does not work properly.</td>
+<td>Fixed in 0.7.1.</td>
+</tr>
+</table>
+
+
+<h2>Version 0.5.1</h2>
+
+<table border width=100%>
+<tr>
+<th width=10%>Packages Affected</th>
+<th width=60%>Bug</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>All</td>
+<td>Multiple-LOD alignment does not work properly.</td>
+<td>Fixed in 0.7.1.</td>
+</tr>
+<tr>
+<td>All</td>
+<td>Drizzling without --drizzle-only results in a memory leak that grows as
+O(n) with the total size of image data from all frames.</td>
+<td>Fixed in patch 3.  
+</tr>
+<tr>
+<td>All</td>
+<td>Rendering an image mosaic that has been extended upwards or to the left of the
+original frame using the Irani-Peleg renderer results in corrupted output.
+<td>Fixed in patch 2.  
+</tr>
+<tr>
+<td>Source distribution only</td>
+<td>Using an 8-bit ALE build with 16-bit ImageMagick truncates the most
+significant bits of pixel data on 16-bit input image files.  This does not
+affect 8-bit input files.  This bug does not affect the Windows package.
+</td>
+<td>Fixed in patch 1.
+</tr>
+</table>
+
+<h2>Previous Versions</h2>
+
+<p>See the changelog in the darcs repository linked from the <a href="../download/">download page</a>.</p>
+
+<br>
+<hr>
+<i>Copyright 2003, 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+
+</body>
+</html>

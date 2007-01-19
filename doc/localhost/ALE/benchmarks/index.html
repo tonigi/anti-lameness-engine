@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ALE Benchmarks</title>
+</head>
+<body>
+<p><b>[ <a href="../">Up</a> ]</b></p>
+<h1>ALE Benchmarks</h1>
+
+<p>Times listed are process user time; ALE is compiled with GCC 3.3.4 and
+linked with ImageMagick version 6.0.1; and all images are 3x8-bit RGB
+non-interlaced PNGs.  Test names are constructed as follows:</p>
+
+<table border=1>
+<tr>
+<th>Machine code</th>
+<th>Description</th>
+</tr>
+<tr><td>PIII<td>Pentium III 700MHz 100MHz FSB 256K L2 cache
+<tr><td>ATH<td>Athlon XP 3000+ 400MHz FSB 512K L2 cache
+<tr>
+<th>Test code</th>
+<th>Description</th>
+<tr><td>A+R<td>3 256x256 100% white images, --perturb-upper=32
+<tr><td>R  <td>3 256x256 100% white images, --perturb-upper=0
+<tr>
+<th>Run Code</th>
+<th>Description</th>
+<tr><td>1<td>Run number 1
+<tr><td>2<td>Run number 2
+<tr><td>3<td>Run number 3
+</table>
+
+<h2>Benchmark Table</h2>
+
+<table border=1>
+<tr>
+<th>Version</th>
+<th>Configuration</th>
+<td>PIII A+R 1</td>
+<td>PIII A+R 2</td>
+<td>PIII A+R 3</td>
+<td>PIII R 1</td>
+<td>PIII R 2</td>
+<td>PIII R 3</td>
+<td>ATH A+R 1</td>
+<td>ATH A+R 2</td>
+<td>ATH A+R 3</td>
+<td>ATH R 1</td>
+<td>ATH R 2</td>
+<td>ATH R 3</td>
+</tr>
+<tr>
+<td>0.5.1-patch3</td>  
+<td>IMAGEMAGICK=1<br>
+    BITS=8</td>
+<td>0m16.830s
+<td>0m16.884s
+<td>0m16.871s
+<td>0m1.432s
+<td>0m1.438s
+<td>0m1.432s
+<td>0m4.819s
+<td>0m4.821s
+<td>0m4.818s
+<td>0m0.400s
+<td>0m0.401s
+<td>0m0.401s
+</tr>
+<tr>
+<td>0.5.1-patch3</td>  
+<td>IMAGEMAGICK=1<br>
+    BITS=16</td>
+<td>0m17.024s
+<td>0m17.062s
+<td>0m17.060s
+<td>0m1.493s
+<td>0m1.500s
+<td>0m1.493s
+<td>0m4.904s
+<td>0m4.902s
+<td>0m4.904s
+<td>0m0.414s
+<td>0m0.415s
+<td>0m0.415s
+</tr>
+<tr>
+<td>0.6.0</td>  
+<td>IMAGEMAGICK=1<br>
+    --8bpc
+<td>0m13.917s
+<td>0m13.881s
+<td>0m13.888s
+<td>0m2.632s
+<td>0m2.642s
+<td>0m2.640s
+<td>0m4.251s
+<td>0m4.257s
+<td>0m4.254s
+<td>0m0.771s
+<td>0m0.764s
+<td>0m0.750s
+</tr>
+<tr>
+<td>0.6.0</td>  
+<td>IMAGEMAGICK=1<br>
+    --16bpc
+<td>0m14.007s
+<td>0m14.015s
+<td>0m14.020s
+<td>0m2.754s
+<td>0m2.751s
+<td>0m2.753s
+<td>0m4.307s
+<td>0m4.299s
+<td>0m4.302s
+<td>0m0.794s
+<td>0m0.803s
+<td>0m0.796s
+</tr>
+<tr>
+<td>0.7.0</td>  
+<td>IMAGEMAGICK=1<br>
+    --q0<br>
+    --8bpc<br>
+<td>0m13.328s
+<td>0m13.366s
+<td>0m13.352s
+<td>0m8.245s
+<td>0m8.255s
+<td>0m8.253s
+<td>0m3.739s
+<td>0m3.742s
+<td>0m3.731s
+<td>0m2.325s
+<td>0m2.328s
+<td>0m2.322s
+</tr>
+<tr>
+<td>0.7.0</td>  
+<td>IMAGEMAGICK=1<br>
+    --q0<br>
+    --16bpc<br>
+<td>0m13.439s
+<td>0m13.466s
+<td>0m13.462s
+<td>0m8.378s
+<td>0m8.337s
+<td>0m8.342s
+<td>0m3.765s
+<td>0m3.762s
+<td>0m3.768s
+<td>0m2.356s
+<td>0m2.354s
+<td>0m2.354s
+</tr>
+<tr>
+<td>0.7.1</td>  
+<td>IMAGEMAGICK=1<br>
+    --q0<br>
+    --8bpc<br>
+<td>0m13.133s
+<td>0m13.153s
+<td>0m13.143s
+<td>0m8.100s
+<td>0m8.109s
+<td>0m8.108s
+<td>0m3.774s
+<td>0m3.781s
+<td>0m3.776s
+<td>0m2.327s
+<td>0m2.332s
+<td>0m2.322s
+</tr>
+<tr>
+<td>0.7.1</td>  
+<td>IMAGEMAGICK=1<br>
+    --q0<br>
+    --16bpc<br>
+<td>0m13.243s
+<td>0m13.249s
+<td>0m13.269s
+<td>0m8.177s
+<td>0m8.196s
+<td>0m8.204s
+<td>0m3.808s
+<td>0m3.810s
+<td>0m3.799s
+<td>0m2.371s
+<td>0m2.368s
+<td>0m2.365s
+</tr>
+</table>
+
+<h2>Summary</h2>
+
+Between versions 0.5.1 and 0.7.0, alignment times show a steady improvement,
+but this can be partly explained by a change in the default alignment settings
+in 0.7.0.  Rendering times, on the other hand, are about 6 times longer for
+0.7.0 than for 0.5.1, as a consequence of renderer changes.  More detailed
+summaries for alignment and rendering tests follow.
+
+<h3>Alignment</h3>
+
+<p>Alignment times improve as the version number increases, through version
+0.7.0, but note that version 0.7.0 with the --q0 option defaults to --mc 30,
+which offers less accurate alignment than is offered by other versions'
+configurations.  (Instead of sampling the difference between images for each
+reference image pixel, --mc 30 specifies that differences be sampled at roughly
+30% of reference image pixels.)
+
+<h3>Rendering</h3>
+
+<p>Rendering times increase significantly with version number, through version
+0.7.0, the most significant increase being between 0.6.0 and 0.7.0, as the
+latter uses a computationally more expensive rendering technique.  Whether the
+improved rendering quality is worth the extra rendering time likely depends on
+subjective criteria, but the differences seem to be most apparent when
+performing relatively complex rendering tasks.</p>
+
+<br>
+<hr>
+<i>Copyright 2004 <a href="mailto:dhilvert@auricle.dyndns.org">David Hilvert</a></i>
+<p>Verbatim copying and distribution of this entire article is permitted in any medium, provided this notice is preserved.
+</body>
+</html>
