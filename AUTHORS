@@ -1,9 +1,11 @@
-================
-ALE Contributors
-================
+===========
+ALE Authors
+===========
 
-This article lists contributors of included documentation, code and patches.
-E-mail addresses have been slightly obscured, with '_a&_' substituted for '@'.
+This article lists authors of documentation, code and patches in the source
+repository, including (but not limited to) all files distributed in source
+releases.  E-mail addresses have been slightly obscured, with '_a&_'
+substituted for '@'.
 
 
 Image-processing code
@@ -29,13 +31,9 @@ David Hilvert (dhilvert_a&_auricle.dyndns.org),
 Build and installation code and documentation
 ---------------------------------------------
 
-David Hilvert (dhilvert_a&_auricle.dyndns.org),
-              (dhilvert_a&_gmail.com),
-	      (dhilvert_a&_ugcs.caltech.edu)
-
 Distributions of this software may be based on the GNU project build tools
 ("autotools"), which may automatically import code written by authors other
-than those listed above.  These authors may include, but are not limited to:
+than those listed below.  These authors may include, but are not limited to:
 
 X Consortium
 Free Software Foundation (FSF)
@@ -53,4 +51,8 @@ XSL stylesheets are maintained by Norman Walsh, (ndw_a&_nwalsh.com), and members
 of the DocBook Project, (docbook-developers_a&_sf.net).  See the COPYING file
 in the documentation directory for more details.  (This file may eventually be
 merged with the root COPYING file.)
+
+David Hilvert (dhilvert_a&_auricle.dyndns.org),
+              (dhilvert_a&_gmail.com),
+	      (dhilvert_a&_ugcs.caltech.edu)
 
