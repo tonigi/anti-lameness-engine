@@ -1,4 +1,4 @@
-V	0.8.5-pre4
+V	0.8.5 2007-Jan-19
 
 o	Remove binaries and documentation sections from the readme, and
 	prune non-package documentation for source distributions.
