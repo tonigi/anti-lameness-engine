@@ -19,11 +19,11 @@
 <edit by="David Hilvert" in-year="2003"/>
 <edit by="David Hilvert" in-year="2002"/>
 
+<!--
 <s><t>Binaries</t>
 
 <p>Official binaries are not available for this alpha release.</p>
 
-<!--
 <s><t>URLs</t>
 
 <ul><li><winurl/>
@@ -40,9 +40,9 @@ the archive.  </p>
 open a command prompt window to use ALE successfully.  For more information
 about command-line usage and options, see the User Manual.  </p>
 </s>
--->
 
 </s>
+-->
 
 <s><t>Compiling from source</t>
 
@@ -263,11 +263,13 @@ file 'INSTALL' in the source package.</p>
 </s>
 </s>
 
+<!--
 <s><t>Further Documentation</t>
 
 <p>This alpha release only includes standard package documentation files.</p>
 
 </s>
+-->
 
 <s><t>On-line resources</t>
 
