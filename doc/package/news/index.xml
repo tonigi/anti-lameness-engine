@@ -19,6 +19,13 @@
 
 <news>
 
+<release version="0.8.5" date="2007-Jan-19">
+<p>This release includes an autoconf build system, multi-threading, and dynamic
+Monte Carlo alignment.  Changes since the latest prerelease include revised 
+Euclidean alignment, added help text for the experimental argument scope syntax, 
+and reversion of 3D options to experimental status.</p>
+</release>
+
 <release version="0.8.5-pre3" date="2006-Nov-03">
 <p>This prerelease adds dynamic adjustment of the Monte Carlo alignment
 parameter, fixes a potential nondeterminism bug in the random number generator,
