@@ -37,6 +37,7 @@
 <xi:include href="ui/index.xml"/>
 <xi:include href="chains/index.xml"/>
 <xi:include href="psf/index.xml"/>
+<xi:include href="cp/index.xml"/>
 
 <!-- file formats -->
 <xi:include href="eppm/index.xml"/>

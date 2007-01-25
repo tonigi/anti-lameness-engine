@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
+	"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd">
+
+<chapter id="user-cp"><title>Control Points</title>
+
+<p>Control points are used for 2D and 3D alignment, and to constrain 3D scene
+models.  Control point data is loaded from a control point file.  Scripts to
+generate and manipulate control point files are included in the
+<code>scripts</code> directory of the source distribution; the file
+specification is outlined in the final section below.</p>
+
+<s><t>Loading a Control Point File</t>
+
+<p>The --cpf-load= option is used to load data from a control point file.</p>
+
+<pre>--cpf-load=&lt;f>    Load control point data from file &lt;f>   [0.8.1 and later]
+</pre>
+
+</s><s><t>Control Point File Format (version 0)</t>
+
+<p>The version 0 control point file format consists of a version command followed
+by a sequence of control points, with one control point per line of the file.</p>
+
+<pre>V 0
+<i>Control Point 1</i>
+<i>Control Point 2</i>
+<i>Control Point 3</i>
+.
+.
+.
+</pre>
+
+<p>Control points can be one of three types:</p>
+
+<s><t>Type A control points</t>
+
+<p>Type A control points specify a sequence of 2D points, one for each frame,
+where each point is specified as a pair of floating point numbers.  If there is
+no data for a frame, then "nan" should be specified.  E.g.:</p>
+
+<pre>A 20  30  nan nan 10  10  10  15
+A 23  22  25  25  nan nan nan nan
+</pre>
+
+</s><s><t>Type B control points</t>
+
+<p>Type B control points specify a 3D coordinate.  E.g.:</p>
+
+<pre>B 10 30 -400
+B 10 15 -425
+</pre>
+
+</s><s><t>Type C control points</t>
+
+<p>Type C control points specify both 2D and 3D data.  There is a single 3D point
+specified, as well as one 2D point for each frame.  The 3D point appears at the
+end of the line.  E.g.:</p>
+
+<pre>C 20  30  nan nan 10  10  10  15  10 30 -400
+C 23  22  25  25  nan nan nan nan 10 15 -425
+</pre>
+
+</s></s>
+
+
+
+
+</chapter>
