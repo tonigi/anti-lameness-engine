@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V3.1.4//EN"
+	"file:///usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd">
+
+<chapter id="user-tdf"><title>Transformation Data Files</title>
+
+<p>Transformation data files are useful when performing alignment in several
+passes or refining rendering options, and are necessary for specifying
+barrel/pincushion distortion parameters.  They also offer a way to manually
+specify alignment when ALE cannot automatically align images.  </p>
+
+<s><t>Multiple-pass alignment</t>
+
+<p>To align images in multiple passes, load the saved results of each previous
+pass, as follows:</p>
+
+<pre>$ ale --trans-save=a.t &lt;first pass arguments&gt;
+$ ale --trans-load=a.t --trans-save=b.t &lt;second pass arguments&gt;
+$ ale --trans-load=b.t --trans-save=c.t &lt;third pass arguments&gt;
+.
+.
+.
+</pre>
+
+</s><s><t>Rendering option refinement</t>
+
+<p>To refine rendering options using the same alignment, first save the alignment
+for the first option set, and then load the saved alignment information with
+each subsequent option set, setting the perturbation upper bound to zero to
+prevent a new alignment pass from occurring:</p>
+
+<pre>$ ale --trans-save=a.t &lt;first option set&gt;
+$ ale --trans-load=a.t --perturb-upper=0 &lt;second option set&gt;
+$ ale --trans-load=a.t --perturb-upper=0 &lt;third option set&gt;
+.
+.
+.
+</pre>
+
+</s><s><t>Alignment file syntax (version 2)</t>
+
+<p>There are two varieties of alignment file syntax that are both read and written
+by ALE 0.7.0.  The most basic of these is version 2.  Version 3 is slightly
+more complex, and is covered in the next section.</p>
+
+<p>At the highest level, version 2 transformation data files contain the following
+components: (a) a version command, and (b) a sequence of transformation
+commands, one for each supplemental frame.  Each line of text should contain at
+most one command, between which optional comments may be interspersed.  A
+transformation command can be Euclidean, projective, or default.  Euclidean and
+projective commands take several arguments, including the width and height of
+the supplemental frame.  Default commands take no arguments.  Commands are
+outlined in more detail below.</p>
+
+<s><t>Version command</t>
+
+<p>The version 2 version command is as follows:</p>
+
+<pre>V 2
+</pre>
+
+</s><s><t>Euclidean commands</t>
+
+<p>The structure of a Euclidean command is as follows:</p>
+
+<pre>E &lt;image width&gt; &lt;image height&gt; &lt;x-offset&gt; &lt;y-offset&gt; &lt;rotation-angle&gt;
+</pre>
+
+</s><s><t>Projective commands</t>
+
+<p>Projective commands map the four corners of the supplemental frame to four
+points in the rendering coordinate system:</p>
+
+<pre>P &lt;image width&gt; &lt;image height&gt; &lt;top-left-x&gt; &lt;top-left-y&gt; &lt;blx&gt; &lt;bly&gt; &lt;brx&gt; &lt;bry&gt; &lt;trx&gt; &lt;try&gt;
+</pre>
+
+</s><s><t>Default commands</t>
+
+<p>Default commands can be explicitly written as follows:</p>
+
+<pre>D
+</pre>
+
+<p>Alternatively, if there are more frames than alignment commands (euclidean,
+projective, or default), then the last supplemental frames in the frame
+sequence will be assigned the default command.</p>
+
+</s><s><t>Comments</t>
+
+Comments can be inserted with the following syntax:
+
+<pre># This comment extends to the end of this line.  I can write anything I want here.
+</pre>
+
+</s></s><s><t>Alignment file syntax (version 3)</t>
+
+<p>Version 3 syntax is required for specifying transformations for the original
+frame, and for specifying barrel/pincushion distortion parameters.  </p>
+
+<p>In version 3, the first transformation command is associated with the
+original frame, instead of being associated with the first supplemental frame.
+Also, barrel/pincushion distortion commands can precede each projective,
+Euclidean, or default command.</p>
+
+<s><t>Version command</t>
+
+<p>The version 3 version command is as follows:</p>
+
+<pre>V 3
+</pre>
+
+</s><s><t>Barrel/pincushion distortion command</t>
+
+<p>In version 3, barrel/pincushion distortion commands are supported.  Distortion
+is modeled as a transformation affecting the distance of image features from the
+image center.  The distorted distance is expressed as a polynomial function of
+the undistorted distance.  Zeroth and first order coefficients are fixed or
+automatically determined; additional coefficients can be specified explicitly,
+using the following syntax:</p>
+
+<pre>B &lt;n&gt; &lt;coefficient 2&gt; &lt;coefficient 3&gt; ... &lt;coefficient n+1&gt;
+</pre>
+
+<p>Barrel/pincushion distortion commands should precede the projective, Euclidean,
+or default transformation command for the corresponding frame.</p>
+
+</s></s>
+
+</chapter>
