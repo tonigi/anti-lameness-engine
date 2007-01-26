@@ -40,16 +40,15 @@ translations occur.</p>
 --projective      Use projective transformations.  Best quality, but slow.
 </ll>
 
-<p>For more information on barrel distortion correction, see the sub-page on 
-<a href="file/">transformation data files</a>.</p>
+<p>For more information on barrel distortion correction, see <xref linkend="user-tdf"/>.</p>
 
 </s><s><t>Transformation data file options</t>
 
-<p>Transformations used in alignment can be loaded from, or saved to, a <a
-href="file/">transformation data file</a>.  This can be useful when performing
-alignment in several passes, or when refining rendering options.  A
-transformation data file is required for barrel/pincushion distortion
-correction.</p>
+<p>Transformations used in alignment can be loaded from, or saved to, a
+transformation data file..  This can be useful when performing alignment in
+several passes, or when refining rendering options.  A transformation data file
+is required for barrel/pincushion distortion correction.  For more information, 
+see <xref linkend="user-tdf"/>.</p>
 
 <ll>--trans-load=x    Load initial transformation settings from file x
 --trans-save=x    Save final transformation data in file x
@@ -88,9 +87,10 @@ falling below this threshold will contribute to the final output.</p>
 </s><s><t>Alignment failure</t>
 
 <p>When an image fails to meet the match threshold, a transformation is still
-assigned to the frame (e.g., for writing to a <a href="file/">transformation
-data file</a>).  The assigned transformation can be either the optimal
-alignment found (this is default) or the default transformation.</p>
+assigned to the frame (e.g., for writing to a <xref
+linkend="user-tdf">transformation data file</xref>).  The assigned
+transformation can be either the optimal alignment found (this is default) or
+the default transformation.</p>
 
 <ll>--fail-optimal    Frames beneath threshold are aligned optimally.  [default]
 --fail-default    Frames beneath threshold keep their default alignment.
@@ -125,8 +125,7 @@ green color channel, or to use all three channels separately.</p>
 determining the match statistic, so it is often desirable to examine a smaller
 subset of pixels.  The Monte Carlo alignment option allows this.  The number of
 pixels used is specified as a percentage, and smaller numbers usually mean
-faster, but less precise, alignment.  For defaults, see the <a href="../defaults/">
-default settings</a> page.</p>
+faster, but less precise, alignment.  For defaults, see <xref linkend="user-defaults"/>.</p>
 
 <ll>--mc &lt;x&gt;          Align using, on average, x% of available pixels (0 &lt; x &lt; 100)
 --no-mc           Align using all pixels.
@@ -139,8 +138,7 @@ image contribute equally to the match statistic.  To weight pixels differently,
 a weight map can be used.  The scale of the map should correspond with that of
 the alignment reference image, and if the upper-left corner of the map does not
 coincide with the upper-left corner of the first frame in the sequence, then a
-non-zero offset should be specified to indicate the difference.  See also <a
-href="../exclusion/">exclusion regions</a>.</p>
+non-zero offset should be specified to indicate the difference.  See also <xref linkend="user-exclusion"/>.</p>
 
 <ll>--wm &lt;f&gt; &lt;x&gt; &lt;y&gt;  Use weight map image &lt;f&gt; at offset (&lt;x&gt;, &lt;y&gt;)
 </ll>
