@@ -411,7 +411,7 @@ public:
 			"                     lanc:<x>       Lanczos, diameter <x>.\n"
 			"                     triangle:<x>   Triangle, diameter <x>.\n"
 			"                     box:<x>        Box, diameter <x>.\n"
-            "                     gauss:<x>      Gaussian, standard deviation <x> (0.75 works well).\n"
+			"                     gauss:<x>      Gaussian, standard deviation <x>.\n"
 			"                     zero           Zero function.\n"
 			"                     <f>*<f>        Pointwise multiplication (windowing).\n"
 			"                  Defaults:\n"
