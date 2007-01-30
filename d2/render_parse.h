@@ -65,6 +65,10 @@ private:
 			if (sscanf(type + strlen("box:"), "%lf", &param) != 1) 
 				syntax_error("Unable to get box diameter.");
 			return new filter::box(param/2);
+        } else if (!strpfix("gauss:", type)) {
+            if (sscanf(type + strlen("gauss:"), "%lf", &param) != 1)
+                syntax_error("Unable to get gauss deviation.");
+            return new filter::gauss(param);
 		} else if (!strpfix("zero", type)) {
 			return new filter::zero();
 		} else {

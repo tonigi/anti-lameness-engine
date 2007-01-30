@@ -42,6 +42,7 @@ namespace filter {
 #include "filter/lanczos.h"
 #include "filter/triangle.h"
 #include "filter/box.h"
+#include "filter/gauss.h"
 #include "filter/zero.h"
 #include "filter/mult.h"
 #include "filter/scaled_filter.h"

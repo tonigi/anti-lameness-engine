@@ -26,6 +26,7 @@
 #include "sinc.h"
 #include "triangle.h"
 #include "box.h"
+#include "gauss.h"
 #include "lanczos.h"
 
 /*
