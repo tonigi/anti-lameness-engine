@@ -98,11 +98,10 @@ the default transformation.</p>
 
 </s><s><t>Alignment error metric exponent</t>
 
-<p>The function calculated at each pixel to determine the match statistic is called
-the alignment error metric, and is of the form <i>(a-b)<sup>x</sup></i>.
-The value <i>x</i> is called the error metric exponent, and is 2 by default.
-Larger numbers indicate that alignment will be more influenced by smaller
-image features.</p>
+<p>The function calculated at each pixel to determine the match statistic is of
+the form <i>(a-b)<sup>x</sup></i>.  The exponent value <i>x</i>
+is 2 by default.  Larger numbers give greater influence to smaller image
+features.</p>
 
 <ll>--metric=x        Set the alignment error metric exponent.       (2 is default)
 </ll>
