@@ -51,8 +51,8 @@ for more information, see <xref linkend="user-eppm"/>.</p>
 
 </s><s><t>Color Adjustment</t>
 
-<p>To adjust the color of the output image (e.g., for white balance) in
-versions 0.8.1 and later, the --exp-mult= option can be used.</p>
+<p>To adjust the color of the output image (e.g., for white balance), the
+--exp-mult= option can be used.</p>
 
 <ll>--exp-mult=c,r,b   Adjust all channels by &lt;c&gt;, red by &lt;r&gt;, and blue by &lt;b&gt;.
 </ll>
