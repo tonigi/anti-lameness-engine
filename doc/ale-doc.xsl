@@ -824,5 +824,17 @@
 	</emphasis>
 	</xsl:template>
 
+	<xsl:template match="sup">
+	<superscript>
+	  <xsl:apply-templates/>
+	</superscript>
+	</xsl:template>
+
+	<xsl:template match="sub">
+	<subscript>
+	  <xsl:apply-templates/>
+	</subscript>
+	</xsl:template>
+
 
 </xsl:stylesheet>
