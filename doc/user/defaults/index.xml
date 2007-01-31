@@ -54,8 +54,8 @@ sets the following defaults:</p>
 <s><t>Balanced quality and speed (--q1)</t>
 
 <p><code>--q1</code> balances image quality and rendering speed, offering higher
-resolution than <code>--qn</code>.  In versions 0.8.1 and later, this option
-uses median values, which can be very memory-intensive to calculate.</p>
+resolution than <code>--qn</code>.  As this option uses median values, its memory use
+is linear in the number of input images (rather than constant).</p>
 
 <ll>--dchain median:fine:sinc*lanc:8,triangle:2
 --achain triangle:2

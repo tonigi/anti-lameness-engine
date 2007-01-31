@@ -10,7 +10,7 @@
 <para>This manual describes program operation and command-line usage for ALE
 version <ver/>.  Features limited to specific versions may be annotated (e.g.
 [ALE 0.8.1 and later]), but comprehensive coverage of versions other than
-<ver/> is beyond the scope of this manual.</para>
+<ver/> is not provided.</para>
 
 <!-- <para>For more information on ALE, see the <a
 href="http://auricle.dyndns.org/ALE/">ALE Home Page</a>.</para> -->
@@ -45,7 +45,7 @@ frames into an output file:</para>
 
 <ll>ale [&lt;option>]* &lt;original-frame> [&lt;supplemental-frame>]* &lt;output-file></ll>
 
-<p>For experimental argument scope syntax details, see <xref linkend="user-scope"/>.</p>
+<p>For experimental argument scope syntax, see <xref linkend="user-scope"/>.</p>
 
 <s><t>Option Arguments</t>
 
