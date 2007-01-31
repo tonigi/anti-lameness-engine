@@ -338,7 +338,7 @@ public:
 			BETWEEN_SECTIONS
 			"Bayer pattern:\n"
 			HEADER_SPACE
-			"--bayer <b>       Set the bayer pattern to <b>, one of:\n"
+			"--bayer <b>       Set the Bayer pattern to <b>, one of:\n"
 			"                    (clockwise from top left pixel)\n"
 			"                      rgbg      Red-green-blue-green\n"
 			"                      gbgr      Green-blue-green-red\n"
@@ -425,7 +425,7 @@ public:
 		banner("Device");
 		fprintf(help_stream,
 			BETWEEN_SECTIONS
-			"Device (may set PSF, bayer pattern, exposure, and view angle):\n"
+			"Device (may set PSF, Bayer pattern, exposure, and view angle):\n"
 			HEADER_SPACE
 			"--device <d>      Set the capture device to <d>.\n"
 			"                     Available devices:\n"

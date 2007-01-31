@@ -8,7 +8,7 @@
 aligned input frames, and occurs in two stages: incremental rendering and
 Irani-Peleg rendering.  Additional rendering options include exposure
 registration, certainty-weighted rendering, spatial extension, range extension,
-scaling, and bayer pattern specification.  Experimental options for video
+scaling, and Bayer pattern specification.  Experimental options for video
 stream processing are also available.</p>
 
 <s><t>Incremental Rendering</t>
@@ -104,9 +104,9 @@ specify <l>--exp-extend</l>.  For defaults, see <xref linkend="user-defaults"/><
 </s><s><t>Bayer pattern specification</t>
 
 <p>Many cameras sample only one color channel per output pixel.  To ignore the
-other channels, a bayer pattern can be specified.</p>
+other channels, a Bayer pattern can be specified.</p>
 
-<ll>--bayer &lt;b&gt;       Set the bayer pattern to &lt;b&gt;, one of:
+<ll>--bayer &lt;b&gt;       Set the Bayer pattern to &lt;b&gt;, one of:
                     (clockwise from top left pixel)
                       rgbg      Red-green-blue-green
                       gbgr      Green-blue-green-red
