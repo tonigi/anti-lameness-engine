@@ -818,5 +818,11 @@
 	</emphasis>
 	</xsl:template>
 
+	<xsl:template match="i">
+	<emphasis>
+	  <xsl:apply-templates/>
+	</emphasis>
+	</xsl:template>
+
 
 </xsl:stylesheet>
