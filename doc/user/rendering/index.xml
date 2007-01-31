@@ -59,7 +59,7 @@ for more information, see <xref linkend="user-eppm"/>.</p>
 
 </s><s><t>Certainty-weighted Rendering</t>
 
-<p>The exposure model in ALE includes an associated certainty function, which
+<p>The exposure model includes an associated certainty function, which
 quantifies the reliability of sensor measurements.  By default, this function
 is raised to the zeroth power, to obtain uniform certainty for all measurements.
 To specify a different certainty exponent, the option <l>--cx</l> can be
