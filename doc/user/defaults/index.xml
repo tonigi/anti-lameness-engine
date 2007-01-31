@@ -91,8 +91,8 @@ sets the following defaults:</p>
 
 <p><code>--qr</code> is similar to <code>--q2</code>, but offers improved
 rendering when input images have been taken with unequal exposures.  In other
-cases, it might exacerbate noise in light and dark regions, and so should not
-be used.  This option sets the following defaults:</p>
+cases, it may exacerbate noise in light and dark regions.  This option sets the
+following defaults:</p>
 
 <ll>--dchain triangle:2
 --achain triangle:2
