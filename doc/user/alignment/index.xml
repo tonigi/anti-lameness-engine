@@ -88,7 +88,7 @@ falling below this threshold will contribute to the final output.</p>
 
 <p>When an image fails to meet the match threshold, a transformation is still
 assigned to the frame (e.g., for writing to a <link
-linkend="user-tdf">transformation data file</xref>).  The assigned
+linkend="user-tdf">transformation data file</link>).  The assigned
 transformation can be either the optimal alignment found (this is default) or
 the default transformation.</p>
 
