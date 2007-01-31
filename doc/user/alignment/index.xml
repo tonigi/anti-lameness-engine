@@ -120,11 +120,11 @@ green color channel, or to use all three channels separately.</p>
 
 </s><s><t>Monte Carlo Alignment</t>
 
-<p>Aligning large images can take a very long time if all pixels are examined in
-determining the match statistic, so it is often desirable to examine a smaller
-subset of pixels.  The Monte Carlo alignment option allows this.  The number of
-pixels used is specified as a percentage, and smaller numbers usually mean
-faster, but less precise, alignment.  For defaults, see <xref linkend="user-defaults"/>.</p>
+<p>As aligning large images can take a long time if all pixels are examined, it
+is often desirable to examine a smaller subset of pixels.  The Monte Carlo
+alignment option samples a subset of pixels, specified as a percentage of the
+total pixel count, with smaller numbers providing faster, but less precise,
+alignment.  For defaults, see <xref linkend="user-defaults"/>.</p>
 
 <ll>--mc &lt;x&gt;          Align using, on average, x% of available pixels (0 &lt; x &lt; 100)
 --no-mc           Align using all pixels.
