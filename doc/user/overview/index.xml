@@ -8,9 +8,7 @@
 <section><title>Purpose</title>
 
 <para>This manual describes program operation and command-line usage for ALE
-version <ver/>.  Features limited to specific versions may be annotated (e.g.
-[ALE 0.8.1 and later]), but comprehensive coverage of versions other than
-<ver/> is not provided.</para>
+version <ver/>.</para>
 
 <!-- <para>For more information on ALE, see the <a
 href="http://auricle.dyndns.org/ALE/">ALE Home Page</a>.</para> -->
@@ -108,7 +106,7 @@ Input files must be PPM, and output files are written as PPM.
 <para>Note that many external programs, including ImageMagick's <ulink url="http://www.imagemagick.org/">command line utilities</ulink>, can be used to
 convert between PPM and other formats.</para>
 
-<para>See the README included in the source distribution of ALE for more information about
+<para>See the README included in the source distribution for more information about
 compile-time configuration of file handlers.</para>
 
 <p>Usage of extended PPM syntax for specifying image metadata is outlined in <xref linkend="user-eppm"/>.</p>
@@ -135,12 +133,11 @@ Threads:          POSIX
 Assertions:       Enabled
 Optimizations:    Enabled</ll>
 
-<para>The first line of output indicates the version of ALE source code being
-used; the remaining lines reflect the build options selected at compile
-time.</para>
+<para>The first line of output indicates the program version; the remaining
+lines reflect the build options selected at compile time.</para>
 
 <para>For more information about build options, see the README file included in
-the ALE source distribution.</para>
+the source distribution.</para>
 
 </section>
 <section>
