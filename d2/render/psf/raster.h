@@ -109,57 +109,65 @@ private:
 		assert (response_array != NULL);
 
 		psf_result result;
-               int il, jl, ih, jh;
+		int il, jl, ih, jh;
 
-               /** precompute a few values **/
-               ale_real range_i = 2 * _height;
-               ale_real range_j = 2 * _width;
-               ale_real premult_i = _filter_dim_i / range_i;
-               ale_real premult_j = _filter_dim_j / range_j;
+		/** precompute a few values **/
+		ale_real range_i = 2 * _height;
+		ale_real range_j = 2 * _width;
+		ale_real premult_i = _filter_dim_i / range_i;
+		ale_real premult_j = _filter_dim_j / range_j;
 
 
-               /** handle the outliers in an intelligent manner **/
-               if (top < -_height) {
+		/** handle the outliers in an intelligent manner **/
+		if (top < -_height) {
 
-                       il = 0;
-                       top = -_height;
-                       }
-               else
-                       il = (int) floor( (top + _height) * premult_i );
+			il = 0;
+			top = -_height;
+		}
+		else
+			il = (int) floor( (top + _height) * premult_i );
 
-               if (lef < -_width) {
+		if (lef < -_width) {
+			jl = 0;
+			lef = -_width;
+		}
+		else
+			jl = (int) floor( (lef + _width) * premult_j );
 
-                       jl = 0;
-                       lef = -_width;
-                       }
-               else
-                       jl = (int) floor( (lef + _width) * premult_j );
+		/**   are the funny-looking subtractions needed?  **/
+		/*
+		 *   The -0.001 terms set a lower bound for each dimension, and
+		 *   were added to avoid loss of precision, and hence image
+		 *   artifacts, due to division by small numbers.  An
+		 *   alternative approach could be used instead.
+		 *   	
+		 *       --dhilvert, 03-Feb-2007
+		*/
 
-               /** are the funny-looking subtractions needed? **/
-               if (bot > _height) {
-              
-                       ih = (int) floor( _filter_dim_i - 0.001 );
-                       bot = _height;
-                       }
-               else
-                       ih = (int) floor( (bot + _height) / range_i * (_filter_dim_i - 0.001) );
+		if (bot > _height) {
+
+			ih = (int) floor( _filter_dim_i - 0.001 );
+			bot = _height;
+		}
+		else
+			ih = (int) floor( (bot + _height) / range_i * (_filter_dim_i - 0.001) );
                       
-               if (rig > _width) {
+		if (rig > _width) {
 
-                       jh = (int) floor( _filter_dim_j - 0.001 );
-                       rig = _width;
-                       }
-               else
-                       jh = (int) floor( (rig + _width) / range_j * (_filter_dim_i - 0.001) );
+			jh = (int) floor( _filter_dim_j - 0.001 );
+			rig = _width;
+		}
+		else
+			jh = (int) floor( (rig + _width) / range_j * (_filter_dim_i - 0.001) );
 
 
 		for (int ii = il; ii <= ih; ii++)
 		for (int jj = jl; jj <= jh; jj++) {
 
-                       float ltop = ((float) ii) / premult_i - _height;
-                       float lbot = ((float) ii + 1) / premult_i - _height;
-                       float llef = ((float) jj) / premult_j - _width;
-                       float lrig = ((float) jj + 1) / premult_j - _width;
+			float ltop = ((float) ii) / premult_i - _height;
+			float lbot = ((float) ii + 1) / premult_i - _height;
+			float llef = ((float) jj) / premult_j - _width;
+			float lrig = ((float) jj + 1) / premult_j - _width;
 
 			if (ltop < top)
 				ltop = top;
