@@ -50,21 +50,21 @@ public:
 	 * support may include everything up to and including the boundaries
 	 * specified here.
 	 */
-	float min_i() const { return -_height; }
-	float max_i() const { return  _height; }
-	float min_j() const { return -_width; }
-	float max_j() const { return  _width; }
+       inline ale_real min_i() const { return -_height; }
+       inline ale_real max_i() const { return  _height; }
+       inline ale_real min_j() const { return -_width; }
+       inline ale_real max_j() const { return  _width; }
 
 	/*
 	 * Element accessor methods.
 	 */
-	unsigned int max_elem_i() {
+       inline unsigned int max_elem_i() {
 		return _filter_dim_i;
 	}
-	unsigned int max_elem_j() {
+       inline unsigned int max_elem_j() {
 		return _filter_dim_j;
 	}
-	ale_real element(unsigned int n, unsigned int i, unsigned int j, unsigned int k) {
+       inline ale_real element(unsigned int n, unsigned int i, unsigned int j, unsigned int k) {
 
 		assert (n < num_arrays);
 		assert (i < _filter_dim_i);
@@ -74,7 +74,7 @@ public:
 		return response_arrays[n][i * _filter_dim_j * 3 + j * 3 + k];
 	}
 #if 0
-	ale_real element(unsigned int i, unsigned int j, unsigned int k) {
+       inline ale_real element(unsigned int i, unsigned int j, unsigned int k) {
 		assert (i < _filter_dim_i);
 		assert (j < _filter_dim_j);
 		assert (k < 3);
@@ -109,28 +109,57 @@ private:
 		assert (response_array != NULL);
 
 		psf_result result;
+               int il, jl, ih, jh;
 
-		if (top < min_i())
-			top = min_i();
-		if (bot > max_i())
-			bot = max_i();
-		if (lef < min_j())
-			lef = min_j();
-		if (rig > max_j())
-			rig = max_j();
+               /** precompute a few values **/
+               ale_real range_i = 2 * _height;
+               ale_real range_j = 2 * _width;
+               ale_real premult_i = _filter_dim_i / range_i;
+               ale_real premult_j = _filter_dim_j / range_j;
 
-		int il = (int) floor((top - min_i()) / (max_i() - min_i()) * _filter_dim_i);
-		int ih = (int) floor((bot - min_i()) / (max_i() - min_i()) * (_filter_dim_i - 0.001));
-		int jl = (int) floor((lef - min_j()) / (max_j() - min_j()) * _filter_dim_j);
-		int jh = (int) floor((rig - min_j()) / (max_j() - min_j()) * (_filter_dim_j - 0.001));
+
+               /** handle the outliers in an intelligent manner **/
+               if (top < -_height) {
+
+                       il = 0;
+                       top = -_height;
+                       }
+               else
+                       il = (int) floor( (top + _height) * premult_i );
+
+               if (lef < -_width) {
+
+                       jl = 0;
+                       lef = -_width;
+                       }
+               else
+                       jl = (int) floor( (lef + _width) * premult_j );
+
+               /** are the funny-looking subtractions needed? **/
+               if (bot > _height) {
+              
+                       ih = (int) floor( _filter_dim_i - 0.001 );
+                       bot = _height;
+                       }
+               else
+                       ih = (int) floor( (bot + _height) / range_i * (_filter_dim_i - 0.001) );
+                      
+               if (rig > _width) {
+
+                       jh = (int) floor( _filter_dim_j - 0.001 );
+                       rig = _width;
+                       }
+               else
+                       jh = (int) floor( (rig + _width) / range_j * (_filter_dim_i - 0.001) );
+
 
 		for (int ii = il; ii <= ih; ii++)
 		for (int jj = jl; jj <= jh; jj++) {
 
-			float ltop = ((float) ii) / _filter_dim_i * (max_i() - min_i()) + min_i();
-			float lbot = ((float) ii + 1) / _filter_dim_i * (max_i() - min_i()) + min_i();
-			float llef = ((float) jj) / _filter_dim_j * (max_j() - min_j()) + min_j();
-			float lrig = ((float) jj + 1) / _filter_dim_j * (max_j() - min_j()) + min_j();
+                       float ltop = ((float) ii) / premult_i - _height;
+                       float lbot = ((float) ii + 1) / premult_i - _height;
+                       float llef = ((float) jj) / premult_j - _width;
+                       float lrig = ((float) jj + 1) / premult_j - _width;
 
 			if (ltop < top)
 				ltop = top;
