@@ -351,7 +351,7 @@ public:
 
 	virtual const image *get_image() {
 		assert (accum_image != NULL);
-		return accum_image->get_colors();
+		return accum_image;
 	}
 
 	/*

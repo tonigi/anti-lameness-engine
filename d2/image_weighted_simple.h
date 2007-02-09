@@ -213,6 +213,7 @@ public:
 	}
 
 	image *get_colors() {
+		assert(0);
 		return colors;
 	}
 };
