@@ -87,20 +87,13 @@ public:
 		 */
 		for (unsigned int k = 0; k < 3; k++) {
 
-			const double min_weight = 0.001;
-
 			/*
 			 * Cases independent of the old pixel value and weight
-			 * for which the update can be ignored.   XXX: the
-			 * minimum weight used here should probably be less
-			 * than or equal to the certainty floor.
+			 * for which the update can be ignored.
 			 */
 
-			if (fabs(new_weight[k]) < min_weight
-			 || (!inv->is_avg()
-			  && new_weight[k] < render::get_wt())) {
+			if (!inv->is_avg() && new_weight[k] < render::get_wt())
 				continue;
-			}
 
 			/*
 			 * Cases independent of the old pixel value and weight for which
@@ -108,7 +101,7 @@ public:
 			 */
 
 			if (inv->is_last() && new_weight[k] >= render::get_wt()) {
-				colors->chan(i, j, k) = new_value[k];
+				colors->chan(i, j, k) = new_value[k] * new_weight[k];
 				weights->chan(i, j, k) = new_weight[k];
 				continue;
 			}
@@ -137,7 +130,7 @@ public:
 			 || (old_weight < render::get_wt()
 			  && !inv->is_avg())) {
 				weights->chan(i, j, k) = new_weight[k];
-				colors ->chan(i, j, k) = new_value[k];
+				colors ->chan(i, j, k) = new_value[k] * new_weight[k];
 				continue;
 			}
 
@@ -145,7 +138,7 @@ public:
 			 * Obtain the old pixel value
 			 */
 
-			ale_real old_value = colors->chan(i, j, k);
+			ale_real old_value = colors->chan(i, j, k) / weights->chan(i, j, k);
 
 			/*
 			 * Cases in which the old pixel value can be ignored
@@ -156,7 +149,7 @@ public:
 			 || (inv->is_min()
 			  && new_value[k] < old_value)) {
 				weights->chan(i, j, k) = new_weight[k];
-				colors-> chan(i, j, k) = new_value[k];
+				colors-> chan(i, j, k) = new_value[k] * new_weight[k];
 				continue;
 			}
 
@@ -172,40 +165,17 @@ public:
 			}
 
 			/*
-			 * Update the weight
+			 * Update weight and color values.
 			 */
 
-			ale_real updated_weight = old_weight + new_weight[k];
-
-			if (fabs(updated_weight) < min_weight) {
-				/*
-				 * XXX: Give up.  Because of the way we
-				 * represent weights and values, we can't
-				 * handle small weights (although we could
-				 * probably handle smaller weights than we
-				 * currently handle).  This could be fixed
-				 * by always storing unnormalized values
-				 * separately from weights, and dividing only
-				 * once, just prior to image output.
-				 */
-				continue;
-			}
-
-			weights->chan(i, j, k) = updated_weight;
-
-			/*
-			 * Update the channel
-			 */
-
-			colors->chan(i, j, k) = (old_weight * colors->chan(i, j, k)
-					      + new_weight[k] * new_value[k])
-				             / updated_weight;
+			weights->chan(i, j, k) += new_weight[k];
+			colors->chan(i, j, k) += new_weight[k] * new_value[k];
 		}
 	}
 
 
 	pixel get_pixel(unsigned int y, unsigned int x) const {
-		return colors->get_pixel(y, x);
+		return colors->get_pixel(y, x) / weights->get_pixel(y, x);
 	}
 
 	image *get_weights() {
