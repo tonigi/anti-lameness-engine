@@ -1,3 +1,12 @@
+V	0.8.6-pre
+
+o	Revise incremental renderer to store unnormalized values, for better
+	handling of small weights, and eliminate the minimum contribution weight.
+
+o	Inlining and pre-calculation for Irani-Peleg by HJ Hornbeck.
+
+o	Gaussian sampling filter ('gauss') by HJ Hornbeck.
+
 V	0.8.5 2007-Jan-19
 
 o	Remove binaries and documentation sections from the readme, and
