@@ -114,20 +114,47 @@ public:
 			BETWEEN_SECTIONS
 			"Default settings:\n"
 			HEADER_SPACE
-			"--q0              Low quality, high speed. [default]\n"
-			"--qn              Low noise, moderate speed.\n"
-			"--q1              Moderate quality and speed; high memory use.\n"
-			"--q2              High quality, low speed.\n"
+			"--q0              Low quality, high speed.\n"
+			"--q1              Moderate quality and speed.\n"
+			"--q2              High quality, low speed. [default]\n"
 			"--qr              Range-extended high quality.\n"
+			"--qn              Low noise, moderate speed.\n"
 			BETWEEN_SECTIONS
 			"q0 defaults:\n"
 			HEADER_SPACE
-			"   --dchain fine:box:1,triangle:2\n"
+			"   --dchain fine:triangle:2,triangle:2\n"
 			"   --achain triangle:2\n"
 			"   --ips 0\n"
 			"   --exp-noextend\n"
 			"   --no-cx\n"
-			"   --3d-chain fine:box:1,triangle:2\n"
+			"   --3d-chain fine:triangle:2,triangle:2\n"
+			BETWEEN_SECTIONS
+			"q1 defaults:\n"
+			HEADER_SPACE
+			"   --dchain fine:triangle:2,fine:gauss:0.75,triangle:2\n"
+			"   --achain triangle:2\n"
+			"   --ips 0\n"
+			"   --exp-noextend\n"
+			"   --no-cx\n"
+			"   --3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2\n"
+			BETWEEN_SECTIONS
+			"q2 defaults:\n"
+			HEADER_SPACE
+			"   --dchain triangle:2\n"
+			"   --achain triangle:2\n"
+			"   --ips 4\n"
+			"   --exp-noextend\n"
+			"   --no-cx\n"
+			"   --3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2\n"
+			BETWEEN_SECTIONS
+			"Range-extended defaults:\n"
+			HEADER_SPACE
+			"   --dchain triangle:2\n"
+			"   --achain triangle:2\n"
+			"   --ips 6\n"
+			"   --exp-extend\n"
+			"   --cx 0.7\n"
+			"   --3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2\n"
 			BETWEEN_SECTIONS
 			"Low noise defaults:\n"
 			HEADER_SPACE
@@ -137,33 +164,6 @@ public:
 			"   --exp-noextend\n"
 			"   --no-cx\n"
 			"   --3d-chain sinc*lanc:6\n"
-			BETWEEN_SECTIONS
-			"q1 defaults:\n"
-			HEADER_SPACE
-			"   --dchain median:fine:sinc*lanc:8,triangle:2\n"
-			"   --achain triangle:2\n"
-			"   --ips 0\n"
-			"   --exp-noextend\n"
-			"   --no-cx\n"
-			"   --3d-chain median:fine:sinc*lanc:8,triangle:2\n"
-			BETWEEN_SECTIONS
-			"q2 defaults:\n"
-			HEADER_SPACE
-			"   --dchain triangle:2\n"
-			"   --achain triangle:2\n"
-			"   --ips 4\n"
-			"   --exp-noextend\n"
-			"   --no-cx\n"
-			"   --3d-chain median:fine:sinc*lanc:8,triangle:2\n"
-			BETWEEN_SECTIONS
-			"Range-extended defaults:\n"
-			HEADER_SPACE
-			"   --dchain triangle:2\n"
-			"   --achain triangle:2\n"
-			"   --ips 6\n"
-			"   --exp-extend\n"
-			"   --cx 0.7\n"
-			"   --3d-chain median:fine:sinc*lanc:8,triangle:2\n"
 			"\n"
 		       );
 	}

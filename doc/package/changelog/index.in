@@ -1,5 +1,9 @@
 V	0.8.6-pre
 
+o	Update default settings according to time and image quality test
+	results.  fine:triangle:2 and combining fine:triangle:2 and gauss were
+	initially suggested by HJ Hornbeck.
+
 o	Revise incremental renderer to store unnormalized values, for better
 	handling of small weights, and eliminate the minimum contribution weight.
 

@@ -1421,12 +1421,12 @@ public:
 			ui::get()->error("more than one default setting option --q* was specified");
 
 		const char *defaults[] = {
-   			"--dchain fine:box:1,triangle:2 "
+   			"--dchain fine:triangle:2,triangle:2 "
 			"--achain triangle:2 "
 			"--ips 0 "
 			"--exp-noextend "
 			"--no-cx "
-			"--3d-chain fine:box:1,triangle:2",
+			"--3d-chain fine:triangle:2,triangle:2 ",
 
 			"--dchain sinc*lanc:6 "
 			"--achain sinc*lanc:6 "
@@ -1435,26 +1435,26 @@ public:
 			"--no-cx "
 			"--3d-chain sinc*lanc:6 ",
    
-			"--dchain median:fine:sinc*lanc:8,triangle:2 "
+			"--dchain fine:triangle:2,fine:gauss:0.75,triangle:2 "
 			"--achain triangle:2 "
 			"--ips 0 "
 			"--exp-noextend "
 			"--no-cx "
-			"--3d-chain median:fine:sinc*lanc:8,triangle:2 ",
+			"--3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2 ",
 
 			"--dchain triangle:2 "
 			"--achain triangle:2 "
 			"--ips 4 "
 			"--exp-noextend "
 			"--no-cx "
-			"--3d-chain median:fine:sinc*lanc:8,triangle:2 ",
+			"--3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2 ",
 
 			"--dchain triangle:2 "
 			"--achain triangle:2 "
 			"--ips 6 "
 			"--exp-extend "
 			"--cx 0.7 "
-			"--3d-chain median:fine:sinc*lanc:8,triangle:2 "
+			"--3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2 "
 		};
 
 		int default_index;
@@ -1470,9 +1470,9 @@ public:
 			default_index = 4;
 		} else {
 			/*
-			 * Same as --q0
+			 * Same as --q2
 			 */
-			default_index = 0;
+			default_index = 3;
 		}
 
 		token_reader *default_reader = new cstring_token_reader(defaults[default_index]);
