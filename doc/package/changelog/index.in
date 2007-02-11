@@ -41,8 +41,10 @@ o	Reformat most help text to fit a 79 column screen.
 o	Add option --profile to measure elapsed real time for 2D alignment
 	and rendering operations.
 
-o	Add support for POSIX threads to 2D alignment and rendering
-	code.
+o	Add support for POSIX threads to 2D alignment and rendering code.
+	(Adding multithreading support was first suggested by Jody (Joe)
+	Harris.  Testing of multithreaded code on multiprocessor hardware was
+	done by Gregory Maxwell.)
 
 V	0.8.5-pre1 2006-Oct-16
 
