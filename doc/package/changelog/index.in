@@ -5,10 +5,10 @@ o	Disable certainty-weighted alignment.
 o	When --cx is positive, don't use certainty for estimating tonal
 	registration in Irani-Peleg passes.
 
-o	Remove --qr default setting, as certainty and range-extension are now
-	always enabled.
+o	Remove --qr default setting, as certainty and range-extension now have
+	established general defaults.
 
-o	Change --cx to 0.7 by default.  Change --exp-extend to be enabled by
+o	Change --cx to 1 by default.  Change --exp-extend to be disabled by
 	default.  Remove these flags from default settings.
 
 o	Modify --cx to only affect Irani-Peleg rendering, as there is currently
