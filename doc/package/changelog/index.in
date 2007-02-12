@@ -1,5 +1,16 @@
 V	0.8.6-pre
 
+o	Remove --qr default setting, as certainty and range-extension are now
+	always enabled.
+
+o	Change --cx to 0.7 by default.  Change --exp-extend to be enabled by
+	default.  Remove these flags from default settings.
+
+o	Modify --cx to only affect Irani-Peleg rendering, as there is currently
+	no estimate-based rendering method for incremental rendering (e.g., multi-
+	pass rendering).  With this change, it should be possible to make --cx
+	positive by default.
+
 o	Update driver names to omit file type qualifiers, according to the
 	convention used in HJ Hornbeck's Nikon D50 device configuration patch.
 
