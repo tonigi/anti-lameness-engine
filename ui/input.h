@@ -1374,7 +1374,7 @@ public:
 		int exposure_register = 1;
 		const char *wm_filename = NULL;
 		int wm_offsetx = 0, wm_offsety = 0;
-		double cx_parameter = 0;
+		double cx_parameter = 0.7;
 		double *d3px_parameters = NULL;
 		int d3px_count = 0;
 		d2::exclusion *ex_parameters = NULL;
@@ -1425,37 +1425,22 @@ public:
    			"--dchain fine:triangle:2,triangle:2 "
 			"--achain triangle:2 "
 			"--ips 0 "
-			"--exp-noextend "
-			"--no-cx "
 			"--3d-chain fine:triangle:2,triangle:2 ",
 
 			"--dchain sinc*lanc:6 "
 			"--achain sinc*lanc:6 "
 			"--ips 0 "
-			"--exp-noextend "
-			"--no-cx "
 			"--3d-chain sinc*lanc:6 ",
    
 			"--dchain fine:triangle:2,fine:gauss:0.75,triangle:2 "
 			"--achain triangle:2 "
 			"--ips 0 "
-			"--exp-noextend "
-			"--no-cx "
 			"--3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2 ",
 
 			"--dchain triangle:2 "
 			"--achain triangle:2 "
 			"--ips 4 "
-			"--exp-noextend "
-			"--no-cx "
 			"--3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2 ",
-
-			"--dchain triangle:2 "
-			"--achain triangle:2 "
-			"--ips 6 "
-			"--exp-extend "
-			"--cx 0.7 "
-			"--3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2 "
 		};
 
 		int default_index;

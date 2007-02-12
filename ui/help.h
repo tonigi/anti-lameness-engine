@@ -117,7 +117,6 @@ public:
 			"--q0              Low quality, high speed.\n"
 			"--q1              Moderate quality and speed.\n"
 			"--q2              High quality, low speed. [default]\n"
-			"--qr              Range-extended high quality.\n"
 			"--qn              Low noise, moderate speed.\n"
 			BETWEEN_SECTIONS
 			"q0 defaults:\n"
@@ -125,8 +124,6 @@ public:
 			"   --dchain fine:triangle:2,triangle:2\n"
 			"   --achain triangle:2\n"
 			"   --ips 0\n"
-			"   --exp-noextend\n"
-			"   --no-cx\n"
 			"   --3d-chain fine:triangle:2,triangle:2\n"
 			BETWEEN_SECTIONS
 			"q1 defaults:\n"
@@ -134,8 +131,6 @@ public:
 			"   --dchain fine:triangle:2,fine:gauss:0.75,triangle:2\n"
 			"   --achain triangle:2\n"
 			"   --ips 0\n"
-			"   --exp-noextend\n"
-			"   --no-cx\n"
 			"   --3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2\n"
 			BETWEEN_SECTIONS
 			"q2 defaults:\n"
@@ -143,17 +138,6 @@ public:
 			"   --dchain triangle:2\n"
 			"   --achain triangle:2\n"
 			"   --ips 4\n"
-			"   --exp-noextend\n"
-			"   --no-cx\n"
-			"   --3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2\n"
-			BETWEEN_SECTIONS
-			"Range-extended defaults:\n"
-			HEADER_SPACE
-			"   --dchain triangle:2\n"
-			"   --achain triangle:2\n"
-			"   --ips 6\n"
-			"   --exp-extend\n"
-			"   --cx 0.7\n"
 			"   --3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2\n"
 			BETWEEN_SECTIONS
 			"Low noise defaults:\n"
@@ -161,8 +145,6 @@ public:
 			"   --dchain sinc*lanc:6\n"
 			"   --achain sinc*lanc:6\n"
 			"   --ips 0\n"
-			"   --exp-noextend\n"
-			"   --no-cx\n"
 			"   --3d-chain sinc*lanc:6\n"
 			"\n"
 		       );
@@ -475,9 +457,9 @@ public:
 		banner("Exposure");
 		fprintf(help_stream, 
 			BETWEEN_SECTIONS
-			"Certainty-weighted rendering (see --hq for defaults):\n"
+			"Certainty-weighted rendering (currently only enabled for Irani-Peleg):\n"
 			HEADER_SPACE
-			"--cx <x>          Render with certainty exponent <x>.\n"
+			"--cx <x>          Render with certainty exponent <x>. (default is 0.7)\n"
 			"--no-cx           Render with uniform certainty.\n"
 			BETWEEN_SECTIONS
 			"Options that may be useful when using --cx:\n"
@@ -492,7 +474,7 @@ public:
 			BETWEEN_SECTIONS
 			"Range extension (see --hq for defaults):\n"
 			HEADER_SPACE
-			"--exp-extend      Extend range to include all calculated values.\n"
+			"--exp-extend      Extend to include all calculated values.  [default]\n"
 			"--exp-noextend    Restrict to the original frame's range.\n"
 			"\n"
 		       );

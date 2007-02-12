@@ -212,7 +212,18 @@ private:
 				point a = point(i, j);
 
 				ale_real v = im->chan(i, j, k);
+
+				/*
+				 * Don't use certainty calculations until a
+				 * robust estimate-weighted certainty can be
+				 * implemented for incremental rendering (e.g.,
+				 * using multiple passes).
+				 */
+#if 0
 				ale_real w = im->exp().confidence(k, v) * f->response((a - mapped_p) / fscale);
+#else
+				ale_real w = f->response((a - mapped_p) / fscale);
+#endif
 
 				(*weight)[k] += w;
 				(*result)[k] += w * v;
@@ -269,7 +280,19 @@ private:
 				point a = transform(point(i, j));
 
 				ale_real v = im->chan(i, j, k);
+
+				/*
+				 * Don't use certainty calculations until a
+				 * robust estimate-weighted certainty can be
+				 * implemented for incremental rendering (e.g.,
+				 * using multiple passes).
+				 */
+#if 0
 				ale_real w = im->exp().confidence(k, v) * f->response((a - p) * point(hscale, wscale));
+#else
+				ale_real w = f->response((a - p) * point(hscale, wscale));
+#endif
+
 
 				(*weight)[k] += w;
 				(*result)[k] += w * v;
