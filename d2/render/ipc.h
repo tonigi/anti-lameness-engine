@@ -989,6 +989,9 @@ protected:
 #if 0
 				pixel confidence = real->exp().confidence(r)
 					         * real->exp().confidence(s);
+
+				ssum += confidence * s;
+				rsum += confidence * r;
 #else
 				/*
 				 * Since we now have certainty enabled for all
@@ -999,11 +1002,10 @@ protected:
 				 * term.
 				 */
 
-				pixel confidence = 1;
+				ssum += s;
+				rsum += r;
 #endif
 
-				ssum += confidence * s;
-				rsum += confidence * r;
 			}
 
 			ec = ssum / rsum;
