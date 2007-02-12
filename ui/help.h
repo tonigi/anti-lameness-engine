@@ -437,6 +437,7 @@ public:
 			"                        canon_300d_raw_linear+50mm_1.4@1.4\n"
 			"                        canon_300d_raw_linear+50mm_1.8\n"
 			"                        canon_300d_raw_linear+85mm_1.8\n"
+			"                        nikon_d50\n"
 			"\n"
 		       );
 	}
