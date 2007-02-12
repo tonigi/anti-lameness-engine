@@ -1,5 +1,7 @@
 V	0.8.6-pre
 
+o	Disable certainty-weighted alignment.
+
 o	When --cx is positive, don't use certainty for estimating tonal
 	registration in Irani-Peleg passes.
 

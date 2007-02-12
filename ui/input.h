@@ -1925,6 +1925,7 @@ public:
 			} else if (!strcmp(option_name, "pc")) {
 				d3::scene::pc(env->get_string_arg(i->first, 1));
 			} else if (!strcmp(option_name, "cw")) {
+				unsupported::fornow("certainty-weighted alignment");
 				d2::align::certainty_weighted(env->get_unsigned_arg(i->first, 0));
 			} else if (!strcmp(option_name, "wm")) {
 				if (wm_filename != NULL)

@@ -234,9 +234,9 @@ public:
 			"--bda-rate=x      Barrel distortion rate of change maximum  (0.0004 is default)\n"   
 			"--lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (1 is def.)\n"
 			BETWEEN_SECTIONS
-			"Certainty-weighted alignment:\n"
+			"Certainty-weighted alignment (currently disabled):\n"
 			HEADER_SPACE
-			"--cw              Weight alignment error by certainty.\n"
+			"--cw              Weight alignment error by certainty.  (currently disabled)\n"
 			"--no-cw           Don't weight alignment error by certainty. [default]\n"
 			BETWEEN_SECTIONS
 			"Alignment weight maps:\n"
