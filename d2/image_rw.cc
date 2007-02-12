@@ -44,4 +44,4 @@ exposure **image_rw::input_exposure = NULL;
 exposure *image_rw::output_exposure = NULL;
 unsigned int image_rw::bayer_default = 0;
 unsigned int *image_rw::bayer_specific = NULL;
-int image_rw::exposure_scale = 1;
+int image_rw::exposure_scale = 0;

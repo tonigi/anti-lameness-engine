@@ -1374,7 +1374,7 @@ public:
 		int exposure_register = 1;
 		const char *wm_filename = NULL;
 		int wm_offsetx = 0, wm_offsety = 0;
-		double cx_parameter = 0.7;
+		double cx_parameter = 1;
 		double *d3px_parameters = NULL;
 		int d3px_count = 0;
 		d2::exclusion *ex_parameters = NULL;

@@ -459,7 +459,7 @@ public:
 			BETWEEN_SECTIONS
 			"Certainty-weighted rendering (currently only enabled for Irani-Peleg):\n"
 			HEADER_SPACE
-			"--cx <x>          Render with certainty exponent <x>. (default is 0.7)\n"
+			"--cx <x>          Render with certainty exponent <x>. (default is 1)\n"
 			"--no-cx           Render with uniform certainty.\n"
 			BETWEEN_SECTIONS
 			"Exposure registration:\n"
@@ -470,8 +470,8 @@ public:
 			BETWEEN_SECTIONS
 			"Range extension:\n"
 			HEADER_SPACE
-			"--exp-extend      Extend to include all calculated values.  [default]\n"
-			"--exp-noextend    Restrict to the original frame's range.\n"
+			"--exp-extend      Extend to include all calculated values.\n"
+			"--exp-noextend    Restrict to the original frame's range.  [default]\n"
 			"\n"
 		       );
 	}
