@@ -1,5 +1,8 @@
 V	0.8.6-pre
 
+o	When --cx is positive, don't use certainty for estimating tonal
+	registration in Irani-Peleg passes.
+
 o	Remove --qr default setting, as certainty and range-extension are now
 	always enabled.
 
