@@ -2,8 +2,8 @@ V	0.8.6-pre
 
 o	Disable certainty-weighted alignment.
 
-o	When --cx is positive, don't use certainty for estimating tonal
-	registration in Irani-Peleg passes.
+o	When --cx is positive, use only certainty calculated from the simulated
+	scene for estimating tonal registration in Irani-Peleg passes.
 
 o	Remove --qr default setting, as certainty and range-extension now have
 	established general defaults.

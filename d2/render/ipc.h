@@ -986,25 +986,11 @@ protected:
 			for (unsigned int j = 0; j < lreal->width(); j++) {
 				pixel s = lsimulated->get_pixel(i, j);
 				pixel r = lreal->get_pixel(i, j);
-#if 0
-				pixel confidence = real->exp().confidence(r)
-					         * real->exp().confidence(s);
+
+				pixel confidence = real->exp().confidence(s);
 
 				ssum += confidence * s;
 				rsum += confidence * r;
-#else
-				/*
-				 * Since we now have certainty enabled for all
-				 * cases, make this more conservative in the
-				 * common case, where exposures are similar.
-				 * An alternative would be to use just
-				 * confidence(s), eliminating the confidence(r)
-				 * term.
-				 */
-
-				ssum += s;
-				rsum += r;
-#endif
 
 			}
 
