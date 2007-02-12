@@ -2445,13 +2445,13 @@ public:
 				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new xvp610_320x240::exposure();
 				view_angle = xvp610_320x240::view_angle();
-			} else if (!strcmp(device, "ov7620_raw_linear")) {
+			} else if (!strcmp(device, "ov7620")) {
 				device_response[psf_linear] = new ov7620_raw_linear::lpsf();
 				device_response[psf_nonlinear] = NULL;
 				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new ov7620_raw_linear::exposure();
 				d2::image_rw::set_default_bayer(IMAGE_BAYER_BGRG);
-			} else if (!strcmp(device, "canon_300d_raw_linear")) {
+			} else if (!strcmp(device, "canon_300d")) {
 				device_response[psf_linear] = new canon_300d_raw_linear::lpsf();
 				device_response[psf_nonlinear] = NULL;
 				for (int ii = 0; ii < input_file_count; ii++)
@@ -2463,28 +2463,28 @@ public:
 				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new nikon_d50::exposure();
 				d2::image_rw::set_default_bayer( nikon_d50::bayer() );
-			} else if (!strcmp(device, "canon_300d_raw_linear+85mm_1.8")) {
+			} else if (!strcmp(device, "canon_300d+85mm_1.8")) {
 				device_response[psf_linear] = new canon_300d_raw_linear_85mm_1_8::lpsf();
 				device_response[psf_nonlinear] = NULL;
 				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new canon_300d_raw_linear_85mm_1_8::exposure();
 				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
 				view_angle = canon_300d_raw_linear_85mm_1_8::view_angle();
-			} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.8")) {
+			} else if (!strcmp(device, "canon_300d+50mm_1.8")) {
 				device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_8::lpsf();
 				device_response[psf_nonlinear] = NULL;
 				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new canon_300d_raw_linear_50mm_1_8::exposure();
 				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
 				view_angle = canon_300d_raw_linear_50mm_1_8::view_angle();
-			} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.4")) {
+			} else if (!strcmp(device, "canon_300d+50mm_1.4")) {
 				device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_4::lpsf();
 				device_response[psf_nonlinear] = NULL;
 				for (int ii = 0; ii < input_file_count; ii++)
 					input_exposure[ii] = new canon_300d_raw_linear_50mm_1_4::exposure();
 				d2::image_rw::set_default_bayer(IMAGE_BAYER_RGBG);
 				view_angle = canon_300d_raw_linear_50mm_1_4::view_angle();
-			} else if (!strcmp(device, "canon_300d_raw_linear+50mm_1.4@1.4")) {
+			} else if (!strcmp(device, "canon_300d+50mm_1.4@1.4")) {
 				device_response[psf_linear] = new canon_300d_raw_linear_50mm_1_4_1_4::lpsf();
 				device_response[psf_nonlinear] = NULL;
 				for (int ii = 0; ii < input_file_count; ii++)
