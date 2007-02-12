@@ -462,17 +462,13 @@ public:
 			"--cx <x>          Render with certainty exponent <x>. (default is 0.7)\n"
 			"--no-cx           Render with uniform certainty.\n"
 			BETWEEN_SECTIONS
-			"Options that may be useful when using --cx:\n"
-			"--ips <i>         Uses one-sided certainty.  (see --hr for details)\n"
-			"--exp-extend      Extends the output range.  (see below for details)\n"
-			BETWEEN_SECTIONS
 			"Exposure registration:\n"
 			HEADER_SPACE
 			"--exp-register    Register exposure between frames.  [default]\n"
 			"--exp-noregister  Assume uniform exposure across all frames.\n"
 			"--exp-meta-only   Use only image metadata for registering exposure.\n"
 			BETWEEN_SECTIONS
-			"Range extension (see --hq for defaults):\n"
+			"Range extension:\n"
 			HEADER_SPACE
 			"--exp-extend      Extend to include all calculated values.  [default]\n"
 			"--exp-noextend    Restrict to the original frame's range.\n"
