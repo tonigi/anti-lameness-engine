@@ -1,5 +1,10 @@
 V	0.8.6-pre
 
+o	Update driver names to omit file type qualifiers, according to the
+	convention used in HJ Hornbeck's Nikon D50 device configuration patch.
+
+o	Add Nikon D50 device configuration.  (HJ Hornbeck)
+
 o	Update default settings according to time and image quality test
 	results.  fine:triangle:2 and combining fine:triangle:2 and gauss were
 	initially suggested by HJ Hornbeck.
@@ -7,9 +12,9 @@ o	Update default settings according to time and image quality test
 o	Revise incremental renderer to store unnormalized values, for better
 	handling of small weights, and eliminate the minimum contribution weight.
 
-o	Inlining and pre-calculation for Irani-Peleg by HJ Hornbeck.
+o	Add inlining and pre-calculation to Irani-Peleg.  (HJ Hornbeck)
 
-o	Gaussian sampling filter ('gauss') by HJ Hornbeck.
+o	Add gaussian sampling filter.  (HJ Hornbeck)
 
 V	0.8.5 2007-Jan-19
 
@@ -40,7 +45,7 @@ o	Modify default settings using Irani-Peleg rendering to use the
 
 o	Add dynamic monte carlo alignment, and make this default.
 
-o	Patch to correct --exp-mult arg count, from Gregory Maxwell.
+o	Correct --exp-mult arg count.  (Gregory Maxwell)
 
 o	Allow file-scoped use of --perturb-upper.
 
