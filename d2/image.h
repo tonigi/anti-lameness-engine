@@ -349,11 +349,9 @@ public:
 #else
 		/*
 		 * Use bilinear interpolation for confidence
-		 *
-		 * (Disable certainty for now.)
 		 */
 
-		if  (_exp && 0) {
+		if  (_exp) {
 			result[1] = pixel(0, 0, 0);
 			for (int n = 0; n < 4; n++)
 				result[1] += factor[n] * _exp->confidence(neighbor[n]);
