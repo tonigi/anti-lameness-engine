@@ -829,6 +829,9 @@ protected:
 					
 				// One-sided estimate-based certainty
 				pixel conf = real->exp().one_sided_confidence(comp_simu, bpv);
+
+				// One-sided approximation-based certainty
+				// pixel conf = real->exp().one_sided_confidence(approximation->pix(i, j), bpv);
 					
 				/*
 				 * If a color is bayer-interpolated, then we have no confidence in its
@@ -984,6 +987,11 @@ protected:
 
 				pixel confidence = real->exp().confidence(s);
 
+				if (!s.finite()
+				 || !r.finite()
+				 || !confidence.finite())
+					continue;
+
 				ssum += confidence * s;
 				rsum += confidence * r;
 
@@ -993,8 +1001,12 @@ protected:
 
 #endif
 
-			real->exp().set_multiplier(
-				real->exp().get_multiplier() * ec);
+			if (ec.finite() 
+			 && rsum[0] > 0.001
+			 && rsum[1] > 0.001
+			 && rsum[2] > 0.001)
+				real->exp().set_multiplier(
+					real->exp().get_multiplier() * ec);
 		}
 		for (int ti = 0; ti < N; ti++) {
 			args[ti].lreal = (d2::image *) lreal;
