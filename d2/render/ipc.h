@@ -1154,7 +1154,7 @@ protected:
 
 				for (unsigned int k = 0; k < 3; k++) {
 
-					const ale_real cc_floor = 0.00001;
+					const ale_real cc_floor = 0.0000001;
 
 					if (ccpix[k] < cc_floor)
 						continue;
