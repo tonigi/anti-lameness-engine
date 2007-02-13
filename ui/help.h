@@ -356,7 +356,7 @@ public:
 			BETWEEN_SECTIONS
 			"Incremental rendering chains:\n"
 			HEADER_SPACE
-			"--wt <w>          Set weight threshold for defined pixels    (default is 0.1).\n"
+			"--wt <w>          Set weight threshold for defined pixels (default is 0.0001).\n"
 			"--dchain <g>      Use chain <g> to render the default output.\n"
 			"--ochain <g> <o>  Use chain <g> to render output file <o>.\n"
 			"--achain <g>      Use chain <g> to render the alignment reference image.\n"
