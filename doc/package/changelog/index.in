@@ -1,6 +1,6 @@
 V	0.8.6-pre
 
-o	Disable certainty-weighted alignment.
+o	Adjust weight for defined pixels to account for the certainty floor.
 
 o	Use a rudimentary, single-pass estimate-based certainty approach for
 	incremental rendering.
