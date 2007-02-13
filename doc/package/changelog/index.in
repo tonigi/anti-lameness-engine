@@ -24,8 +24,8 @@ o	Update driver names to omit file type qualifiers, according to the
 o	Add Nikon D50 device configuration.  (HJ Hornbeck)
 
 o	Update default settings according to time and image quality test
-	results.  fine:triangle:2 and combining fine:triangle:2 and gauss were
-	initially suggested by HJ Hornbeck.
+	results.  fine:triangle:2, gauss:0.75, and combinations of these
+	filters were suggested by HJ Hornbeck.
 
 o	Revise incremental renderer to store unnormalized values, for better
 	handling of small weights, and eliminate the minimum contribution weight.
