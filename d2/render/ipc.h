@@ -943,14 +943,9 @@ protected:
 
 		/*
 		 * Perform exposure adjustment.
-		 *
-		 * XXX: it would be cleaner to remove the 'nlsimulated' term
-		 * from the following test, but, empirically, this causes
-		 * problems with raw Bayer pattern data, so we leave this as-is
-		 * for now.
 		 */
 
-		if (exposure_register && nlsimulated) {
+		if (exposure_register) {
 
 			pixel ec;
 
