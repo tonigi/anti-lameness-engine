@@ -76,7 +76,8 @@ public:
 	 * specified by the inverse of transformation T based on data taken
 	 * from image IM.
 	 */
-	void filtered(int i, int j, int frame, pixel *result, pixel *weight) const {
+	void filtered(int i, int j, int frame, pixel *result, 
+			pixel *weight, pixel prev_value = pixel(0, 0, 0), pixel prev_weight = pixel(0, 0, 0)) const {
 
 		/*
 		 * We need a valid offset in order to determine exclusion
@@ -91,7 +92,7 @@ public:
 		if (honor_exclusion && render::is_excluded_r(_offset, i, j, frame))
 			return;
 
-		f->filtered(i, j, result, weight, honor_exclusion, frame);
+		f->filtered(i, j, result, weight, honor_exclusion, frame, prev_value, prev_weight);
 	}
 };
 #endif

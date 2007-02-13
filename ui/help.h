@@ -457,7 +457,7 @@ public:
 		banner("Exposure");
 		fprintf(help_stream, 
 			BETWEEN_SECTIONS
-			"Certainty-weighted rendering (currently only enabled for Irani-Peleg):\n"
+			"Certainty-weighted rendering:\n"
 			HEADER_SPACE
 			"--cx <x>          Render with certainty exponent <x>. (default is 1)\n"
 			"--no-cx           Render with uniform certainty.\n"

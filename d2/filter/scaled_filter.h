@@ -151,7 +151,9 @@ private:
 	}
 
 	void filter_channel(point p, point mapped_p, unsigned int k, ale_pos hscale,
-			ale_pos wscale, pixel *result, pixel *weight, int honor_exclusion, int frame) const {
+			ale_pos wscale, pixel *result, pixel *weight, int honor_exclusion, 
+			int frame, pixel prev_value = pixel(0, 0, 0), 
+			pixel prev_weight = pixel(0, 0, 0)) const {
 
 #if 1
 		/*
@@ -213,17 +215,15 @@ private:
 
 				ale_real v = im->chan(i, j, k);
 
-				/*
-				 * Don't use certainty calculations until a
-				 * robust estimate-weighted certainty can be
-				 * implemented for incremental rendering (e.g.,
-				 * using multiple passes).
-				 */
-#if 0
-				ale_real w = im->exp().confidence(k, v) * f->response((a - mapped_p) / fscale);
-#else
-				ale_real w = f->response((a - mapped_p) / fscale);
-#endif
+				ale_real response = f->response((a - mapped_p) / fscale);
+
+				ale_real w = im->exp().confidence(k, v) * response;
+
+				if (prev_weight[k] > 0) {
+					ale_real est_v = (prev_value[k] * prev_weight[k] + v * w) 
+						       / (prev_weight[k] + w);
+					w = im->exp().confidence(k, est_v) * response;
+				}
 
 				(*weight)[k] += w;
 				(*result)[k] += w * v;
@@ -281,18 +281,15 @@ private:
 
 				ale_real v = im->chan(i, j, k);
 
-				/*
-				 * Don't use certainty calculations until a
-				 * robust estimate-weighted certainty can be
-				 * implemented for incremental rendering (e.g.,
-				 * using multiple passes).
-				 */
-#if 0
-				ale_real w = im->exp().confidence(k, v) * f->response((a - p) * point(hscale, wscale));
-#else
-				ale_real w = f->response((a - p) * point(hscale, wscale));
-#endif
+				ale_real response = f->response((a - p) * point(hscale, wscale));
 
+				ale_real w = im->exp().confidence(k, v) * response;
+
+				if (prev_weight[k] > 0) {
+					ale_real est_v = (prev_value[k] * prev_weight[k] + v * w) 
+						       / (prev_weight[k] + w);
+					w = im->exp().confidence(k, est_v) * response;
+				}
 
 				(*weight)[k] += w;
 				(*result)[k] += w * v;
@@ -361,7 +358,10 @@ public:
 	 * specified by the inverse of transformation T based on data taken
 	 * from image IM.
 	 */
-	void filtered(int i, int j, pixel *result, pixel *weight, int honor_exclusion, int frame) const {
+	void filtered(int i, int j, pixel *result, pixel *weight, 
+			int honor_exclusion, int frame, 
+			pixel prev_value = pixel(0, 0, 0), 
+			pixel prev_weight = pixel(0, 0, 0)) const {
 
 		point p = point(i, j) + offset;
 
@@ -388,9 +388,9 @@ public:
 
 		freq_limit(p, mapped_p, &hscale_g, &hscale_rb, &wscale_g, &wscale_rb);
 
-		filter_channel(p, mapped_p, 0, hscale_rb, wscale_rb, result, weight, honor_exclusion, frame);
-		filter_channel(p, mapped_p, 2, hscale_rb, hscale_rb, result, weight, honor_exclusion, frame);
-		filter_channel(p, mapped_p, 1, hscale_g , hscale_g , result, weight, honor_exclusion, frame);
+		filter_channel(p, mapped_p, 0, hscale_rb, wscale_rb, result, weight, honor_exclusion, frame, prev_value, prev_weight);
+		filter_channel(p, mapped_p, 2, hscale_rb, hscale_rb, result, weight, honor_exclusion, frame, prev_value, prev_weight);
+		filter_channel(p, mapped_p, 1, hscale_g , hscale_g , result, weight, honor_exclusion, frame, prev_value, prev_weight);
 
 		for (unsigned int k = 0; k < 3; k++) {
 			if (fabs((*weight)[k]) < 0.0001) {

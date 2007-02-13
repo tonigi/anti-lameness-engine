@@ -192,7 +192,7 @@ protected:
 
 		pixel value, confidence;
 
-		_ssfe->filtered(i, j, frame, &value, &confidence);
+		_ssfe->filtered(i, j, frame, &value, &confidence, accum_image->get_pixel(i, j), accum_image->get_weights()->get_pixel(i, j));
 
 		accum_image->accumulate(i, j, frame, value, confidence);
 	}
@@ -253,7 +253,7 @@ protected:
 
 			pixel value, confidence;
 
-			_ssfe->filtered(i, j, frame, &value, &confidence);
+			_ssfe->filtered(i, j, frame, &value, &confidence, accum_image->get_pixel(i, j), accum_image->get_weights()->get_pixel(i, j));
 
 			accum_image->accumulate(i, j, frame, value, confidence);
 #endif
