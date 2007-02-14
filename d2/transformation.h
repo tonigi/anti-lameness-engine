@@ -428,6 +428,7 @@ public:
 	 * Projective/euclidean inverse followed by barrel distortion.
 	 */
 	struct point scaled_inverse_transform(struct point p) const {
+		assert (p.defined());
 		point q = unscaled_inverse_transform(p);
 
 		q[0] *= scale_factor;
@@ -510,6 +511,7 @@ public:
 	 * Rotate about a given point in the original reference frame.
 	 */
 	void eu_rotate_about_scaled(point center, ale_pos diff) {
+		assert(center.defined());
 		point fixpoint = scaled_inverse_transform(center);
 		eu_modify(2, diff);
 		point offset = center - transform_scaled(fixpoint);
