@@ -667,7 +667,13 @@ private:
 		}
 
 		point get_centroid() {
-			return point(centroid[0] / centroid_divisor, centroid[1] / centroid_divisor);
+			point result = point(centroid[0] / centroid_divisor, centroid[1] / centroid_divisor);
+
+			assert (finite(centroid[0]) 
+			     && finite(centroid[1]) 
+			     && (result.defined() || centroid_divisor == 0));
+
+			return result;
 		}
 
 		ale_accum get_error() {
@@ -1996,13 +2002,13 @@ private:
 				for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
 
 					point sample_centroid = old_here_diff_stat->get_centroid() + si.accum->offset();
-
 					test_t = offset;
 
-					// test_t.eu_modify(2, adj_s);
-					//
-
-					test_t.eu_rotate_about_scaled(sample_centroid, adj_s);
+					if (sample_centroid.defined()) {
+						test_t.eu_rotate_about_scaled(sample_centroid, adj_s);
+					} else {
+						test_t.eu_modify(2, adj_s);
+					}
 
 					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
 
