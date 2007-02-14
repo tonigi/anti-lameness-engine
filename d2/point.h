@@ -147,7 +147,7 @@ public:
 
 		a = a / z;
 
-		assert (isinf(a) == +1);
+		assert (isinf(a) && a > 0);
 
 		return point(a, a);
 	}
@@ -155,7 +155,7 @@ public:
 	static point neginf() {
 		point n = -posinf();
 
-		assert (isinf(n[0]) == -1);
+		assert (isinf(n[0]) && n[0] < 0);
 
 		return n;
 	}
