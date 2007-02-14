@@ -1,5 +1,8 @@
 V	0.8.6-pre
 
+o	Modify d2::point::{neg,pos}inf() assertions to allow for isinf() 
+	implementations returning any non-zero value for any infinity.
+
 o	Re-adjust exposure in Irani-Peleg even when no non-linear stage is 
 	present.
 
