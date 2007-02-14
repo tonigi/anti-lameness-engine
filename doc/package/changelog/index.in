@@ -1,5 +1,8 @@
 V	0.8.6-pre
 
+o	In d2::align, use rotation about the frame center as an alternative
+	in cases where the sampling centroid is undefined.
+
 o	Modify d2::point::{neg,pos}inf() assertions to allow for isinf() 
 	implementations returning any non-zero value for any infinity.
 
