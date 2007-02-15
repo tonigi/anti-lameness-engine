@@ -55,7 +55,7 @@
  */
 
 extern "C" {
-#include "strndup.h"
+#include "string_.h"
 }
 
 /*
