@@ -1551,7 +1551,7 @@ public:
 			ale_pos zero = +0;
 
 			rear_clip = one / zero;
-			assert(isinf(rear_clip) == +1);
+			assert(isinf(rear_clip) && rear_clip > 0);
 		}
 
 		/*

@@ -1631,7 +1631,7 @@ public:
 				double zero = +0;
 				double inf = one / zero;
 
-				assert (isinf(inf) == +1);
+				assert (isinf(inf) && inf > 0);
 
 				/*
 				 * Focus type
