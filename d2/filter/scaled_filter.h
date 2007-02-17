@@ -155,6 +155,8 @@ private:
 			int frame, pixel prev_value = pixel(0, 0, 0), 
 			pixel prev_weight = pixel(0, 0, 0)) const {
 
+		ale_real temp_result = (*result)[k], temp_weight = (*weight)[k];
+
 #if 1
 		/*
 		 * This test matches the technical description.
@@ -217,16 +219,13 @@ private:
 
 				ale_real response = f->response((a - mapped_p) / fscale);
 
-				ale_real w = im->exp().confidence(k, v) * response;
+				ale_real w = 0.001 * response;  /* Certainty floor. */
 
-				if (prev_weight[k] > 0) {
-					ale_real est_v = (prev_value[k] * prev_weight[k] + v * w) 
-						       / (prev_weight[k] + w);
-					w = im->exp().confidence(k, est_v) * response;
-				}
+				if (prev_weight[k] > 0)
+					w = im->exp().confidence(k, prev_value[k]) * response;
 
-				(*weight)[k] += w;
-				(*result)[k] += w * v;
+				temp_weight += w;
+				temp_result += w * v;
 			}
 		} else {
 			/*
@@ -283,18 +282,24 @@ private:
 
 				ale_real response = f->response((a - p) * point(hscale, wscale));
 
-				ale_real w = im->exp().confidence(k, v) * response;
+				ale_real w = 0.001 * response;  /* Certainty floor. */
 
-				if (prev_weight[k] > 0) {
-					ale_real est_v = (prev_value[k] * prev_weight[k] + v * w) 
-						       / (prev_weight[k] + w);
-					w = im->exp().confidence(k, est_v) * response;
-				}
+				if (prev_weight[k] > 0) 
+					w = im->exp().confidence(k, prev_value[k]) * response;
 
-				(*weight)[k] += w;
-				(*result)[k] += w * v;
+				temp_weight += w;
+				temp_result += w * v;
 			}
+		}
 
+		if (!(prev_weight[k] > 0) && temp_weight > 0) {
+			prev_weight[k] = temp_weight;
+			prev_value[k] = temp_result / temp_weight;
+			filter_channel(p, mapped_p, k, hscale, wscale, result, weight, honor_exclusion,
+					frame, prev_value, prev_weight);
+		} else {
+			(*result)[k] = temp_result;
+			(*weight)[k] = temp_weight;
 		}
 	}
 
