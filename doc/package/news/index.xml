@@ -19,6 +19,13 @@
 
 <news>
 
+<release version="0.8.6" date="2007-Feb-17">
+
+<p>This release updates certainty calculation, adds a Nikon D50 device option,
+and resolves certain assertion failures.</p>
+
+</release>
+
 <release version="0.8.5" date="2007-Jan-19">
 <p>This release includes an autoconf build system, multi-threading, and dynamic
 Monte Carlo alignment.  Changes since the latest prerelease include revised 
