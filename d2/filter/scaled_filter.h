@@ -152,10 +152,15 @@ private:
 
 	void filter_channel(point p, point mapped_p, unsigned int k, ale_pos hscale,
 			ale_pos wscale, pixel *result, pixel *weight, int honor_exclusion, 
-			int frame, pixel prev_value = pixel(0, 0, 0), 
-			pixel prev_weight = pixel(0, 0, 0)) const {
+			int frame, ale_real prev_value = 0, ale_real prev_weight = 0) const {
 
 		ale_real temp_result = (*result)[k], temp_weight = (*weight)[k];
+		ale_real certainty;
+
+		if (prev_weight > 0)
+			certainty = im->exp().confidence(k, prev_value);
+		else
+			certainty = 0.001;        /* Certainty floor */
 
 #if 1
 		/*
@@ -219,10 +224,7 @@ private:
 
 				ale_real response = f->response((a - mapped_p) / fscale);
 
-				ale_real w = 0.001 * response;  /* Certainty floor. */
-
-				if (prev_weight[k] > 0)
-					w = im->exp().confidence(k, prev_value[k]) * response;
+				ale_real w = certainty * response;
 
 				temp_weight += w;
 				temp_result += w * v;
@@ -282,21 +284,16 @@ private:
 
 				ale_real response = f->response((a - p) * point(hscale, wscale));
 
-				ale_real w = 0.001 * response;  /* Certainty floor. */
-
-				if (prev_weight[k] > 0) 
-					w = im->exp().confidence(k, prev_value[k]) * response;
+				ale_real w = certainty * response;
 
 				temp_weight += w;
 				temp_result += w * v;
 			}
 		}
 
-		if (!(prev_weight[k] > 0) && temp_weight > 0) {
-			prev_weight[k] = temp_weight;
-			prev_value[k] = temp_result / temp_weight;
+		if (!(prev_weight > 0) && temp_weight > 0) {
 			filter_channel(p, mapped_p, k, hscale, wscale, result, weight, honor_exclusion,
-					frame, prev_value, prev_weight);
+					frame, temp_result / temp_weight, temp_weight);
 		} else {
 			(*result)[k] = temp_result;
 			(*weight)[k] = temp_weight;
@@ -393,9 +390,9 @@ public:
 
 		freq_limit(p, mapped_p, &hscale_g, &hscale_rb, &wscale_g, &wscale_rb);
 
-		filter_channel(p, mapped_p, 0, hscale_rb, wscale_rb, result, weight, honor_exclusion, frame, prev_value, prev_weight);
-		filter_channel(p, mapped_p, 2, hscale_rb, hscale_rb, result, weight, honor_exclusion, frame, prev_value, prev_weight);
-		filter_channel(p, mapped_p, 1, hscale_g , hscale_g , result, weight, honor_exclusion, frame, prev_value, prev_weight);
+		filter_channel(p, mapped_p, 0, hscale_rb, wscale_rb, result, weight, honor_exclusion, frame, prev_value[0], prev_weight[0]);
+		filter_channel(p, mapped_p, 2, hscale_rb, hscale_rb, result, weight, honor_exclusion, frame, prev_value[2], prev_weight[2]);
+		filter_channel(p, mapped_p, 1, hscale_g , hscale_g , result, weight, honor_exclusion, frame, prev_value[1], prev_weight[1]);
 
 		for (unsigned int k = 0; k < 3; k++) {
 			if (fabs((*weight)[k]) < 0.0001) {
