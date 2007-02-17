@@ -1,4 +1,4 @@
-V	0.8.6-pre
+V	0.8.6 2007-Feb-17
 
 o	In d2::align, use rotation about the frame center as an alternative
 	in cases where the sampling centroid is undefined.
