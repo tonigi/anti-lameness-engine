@@ -160,7 +160,7 @@ private:
 		if (prev_weight > 0)
 			certainty = im->exp().confidence(k, prev_value);
 		else
-			certainty = 0.001;        /* Certainty floor */
+			certainty = 1;   /* We calculate certainty later */
 
 #if 1
 		/*
@@ -292,12 +292,18 @@ private:
 		}
 
 		if (!(prev_weight > 0) && temp_weight > 0) {
-			filter_channel(p, mapped_p, k, hscale, wscale, result, weight, honor_exclusion,
-					frame, temp_result / temp_weight, temp_weight);
-		} else {
-			(*result)[k] = temp_result;
-			(*weight)[k] = temp_weight;
+
+			/*
+			 * Calculate certainty for the first pass.
+			 */
+
+			certainty = im->exp().confidence(k, temp_result / temp_weight);
+			temp_weight *= certainty;
+			temp_result *= certainty;
 		}
+
+		(*result)[k] = temp_result;
+		(*weight)[k] = temp_weight;
 	}
 
 public:
