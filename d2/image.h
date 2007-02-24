@@ -838,13 +838,13 @@ public:
 				* ((j < is->width() - 1)
 				    ? ppow(get_pixel(2 * i, 2 * j + 1), 0.125)
 				    : pixel(0, 0, 0))
-				+ ((i < is->height() - 1 && j > 0)
+				* ((i < is->height() - 1 && j > 0)
 				    ? ppow(get_pixel(2 * i + 1, 2 * j - 1), 0.0625)
 				    : pixel(0, 0, 0))
-				+ ((i < is->height() - 1)
+				* ((i < is->height() - 1)
 				    ? ppow(get_pixel(2 * i + 1, 2 * j), 0.125)
 				    : pixel(0, 0, 0))
-				+ ((i < is->height() && j < is->width() - 1)
+				* ((i < is->height() && j < is->width() - 1)
 				    ? ppow(get_pixel(2 * i + 1, 2 * j + 1), 0.0625)
 				    : pixel(0, 0, 0))));
 
