@@ -802,20 +802,10 @@ public:
 	 *
 	 * Whereas scaling of image weight arrays is not generally obvious in
 	 * either purpose or method, ALE requires that image definition arrays
-	 * be scalable, and the method we implement here is a fairly obvious
-	 * one.  In particular, if any source pixel contributing to the value of 
-	 * a scaled target pixel has an undefined value, then the scaled target
-	 * pixel is undefined (zero).  Otherwise, it is defined (non-zero).
-	 * 
-	 * Since there are many possible ways of implementing this function, we
-	 * choose an easy way and simply multiply the numerical values of the
-	 * source pixels to obtain the value of the scaled target pixel.
+	 * be scalable.
 	 *
-	 * XXX: we consider all pixels within a 9-pixel square to contribute.
-	 * There are other approaches.  For example, edge pixels could be
-	 * considered to have six contributing pixels and corner pixels four
-	 * contributing pixels.  To use this convention, change the ': 0' text
-	 * in the code below to ': 1'.
+	 * We currently use a geometric mean to implement scaling of
+	 * definition arrays.
 	 */
 
 	image *defined_scale_by_half(char *name) const {
@@ -828,35 +818,43 @@ public:
 		assert(is);
 
 		for (unsigned int i = 0; i < is->height(); i++)
-		for (unsigned int j = 0; j < is->width(); j++) 
+		for (unsigned int j = 0; j < is->width(); j++) {
 
-			is->set_pixel(i, j, 
+			pixel value = pixel
 
-				( ((i > 0 && j > 0) 
-				    ? get_pixel(2 * i - 1, 2 * j - 1)
-				    : pixel())
+			      ( ( ((i > 0 && j > 0) 
+				    ? ppow(get_pixel(2 * i - 1, 2 * j - 1), 0.0625) 
+				    : pixel(0, 0, 0))
 				* ((i > 0)
-				    ? get_pixel(2 * i - 1, 2 * j)
-				    : pixel())
+				    ? ppow(get_pixel(2 * i - 1, 2 * j), 0.125)
+				    : pixel(0, 0, 0))
 				* ((i > 0 && j < is->width() - 1)
-				    ? get_pixel(2 * i - 1, 2 * j + 1)
-				    : pixel())
+				    ? ppow(get_pixel(2 * i - 1, 2 * j + 1), 0.0625)
+				    : pixel(0, 0, 0))
 				* ((j > 0)
-				    ? get_pixel(2 * i, 2 * j - 1)
-				    : pixel())
-				* get_pixel(2 * i, 2 * j)
+				    ? ppow(get_pixel(2 * i, 2 * j - 1), 0.125)
+				    : pixel(0, 0, 0))
+				* ppow(get_pixel(2 * i, 2 * j), 0.25) 
 				* ((j < is->width() - 1)
-				    ? get_pixel(2 * i, 2 * j + 1)
-				    : pixel())
-				* ((i < is->height() - 1 && j > 0)
-				    ? get_pixel(2 * i + 1, 2 * j - 1)
-				    : pixel())
-				* ((i < is->height() - 1)
-				    ? get_pixel(2 * i + 1, 2 * j)
-				    : pixel())
-				* ((i < is->height() && j < is->width() - 1)
-				    ? get_pixel(2 * i + 1, 2 * j + 1)
-				    : pixel())));
+				    ? ppow(get_pixel(2 * i, 2 * j + 1), 0.125)
+				    : pixel(0, 0, 0))
+				+ ((i < is->height() - 1 && j > 0)
+				    ? ppow(get_pixel(2 * i + 1, 2 * j - 1), 0.0625)
+				    : pixel(0, 0, 0))
+				+ ((i < is->height() - 1)
+				    ? ppow(get_pixel(2 * i + 1, 2 * j), 0.125)
+				    : pixel(0, 0, 0))
+				+ ((i < is->height() && j < is->width() - 1)
+				    ? ppow(get_pixel(2 * i + 1, 2 * j + 1), 0.0625)
+				    : pixel(0, 0, 0))));
+
+
+			for (int k = 0; k < 3; k++)
+				if (!finite(value[k]))
+					value[k] = 0;
+
+			is->set_pixel(i, j, value);
+		}
 
 		is->_offset = point(_offset[0] * f, _offset[1] * f);
 
