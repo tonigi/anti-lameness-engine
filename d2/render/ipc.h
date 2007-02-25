@@ -116,6 +116,7 @@ protected:
 	psf *lresponse, *nlresponse;
 	int exposure_register;
 	int use_weighted_median;
+	double weight_limit;
 
 	/*
 	 * Calculate the simulated input frame SIMULATED from the image
@@ -479,6 +480,11 @@ protected:
 		image_weighted_median *iwm;
 
 		/*
+		 * Weight limit
+		 */
+		double weight_limit;
+
+		/*
 		 * Common
 		 */
 		image *c;
@@ -487,10 +493,11 @@ protected:
 		/*
 		 * Create correction structures.
 		 */
-		correction_t(int use_weighted_median, unsigned int h, unsigned int w, unsigned int d) {
+		correction_t(int use_weighted_median, double weight_limit, unsigned int h, unsigned int w, unsigned int d) {
 			this->use_weighted_median = use_weighted_median;
 			if (use_weighted_median)
 				iwm = new image_weighted_median(h, w, d);
+			this->weight_limit = weight_limit;
 			c = new image_ale_real(h, w, d);
 			cc = new image_ale_real(h, w, d);
 		}
@@ -513,6 +520,19 @@ protected:
 				return iwm->get_weights()->get_pixel(i, j);
 			else
 				return cc->get_pixel(i, j);
+		}
+
+		/*
+		 * Check for weight limit
+		 */
+		int weight_limited(int i, int j) {
+			if (weight_limit
+			 && get_count(i, j)[0] >= weight_limit
+			 && get_count(i, j)[1] >= weight_limit
+			 && get_count(i, j)[2] >= weight_limit)
+				return 1;
+
+			return 0;
 		}
 
 		/*
@@ -591,6 +611,7 @@ protected:
 		const backprojector *lresponse;
 		const backprojector *nlresponse;
 		unsigned int i_min, i_max, j_min, j_max;
+		double weight_limit;
 	};
 
 	static void *_ip_frame_correct_subdomain_nonlinear(void *args) {
@@ -728,6 +749,13 @@ protected:
 
                 for (unsigned int i = i_min; i < i_max; i++)
                 for (unsigned int j = j_min; j < j_max; j++) {
+
+			/*
+			 * Check correction count against any weight limit.
+			 */
+
+			if (cu->weight_limited(i, j))
+				continue;
 
 			/*
 			 * Obtain the position Q and dimensions D of image
@@ -1125,6 +1153,7 @@ protected:
 
 			correction_t *correction = new correction_t(
 					use_weighted_median,
+					weight_limit,
 					approximation->height(),
 					approximation->width(),
 					approximation->depth());
@@ -1220,8 +1249,9 @@ protected:
 
 public:
 
-        ipc(render *input, unsigned int iterations, int _inc, psf *lresponse, psf *nlresponse, int exposure_register,
-			int use_weighted_median) {
+        ipc(render *input, unsigned int iterations, int _inc, psf *lresponse, 
+			psf *nlresponse, int exposure_register,
+			int use_weighted_median, double ipwl) {
                 this->input = input;
                 done = 0;
 		inc = _inc;
@@ -1230,6 +1260,7 @@ public:
 		this->nlresponse = nlresponse;
 		this->exposure_register = exposure_register;
 		this->use_weighted_median = use_weighted_median;
+		this->weight_limit = ipwl;
         }
 
         const image *get_image() {

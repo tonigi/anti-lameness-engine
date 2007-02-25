@@ -1365,6 +1365,7 @@ public:
 		struct d3::tsave_t *d3_tsave = NULL;
 		int ip_iterations = 0;
 		int ip_use_median = 0;
+		double ipwl = 3;
 		enum { psf_linear, psf_nonlinear, psf_N };
 		const char *psf[psf_N] = {NULL, NULL};
 		const char *device = NULL;
@@ -2189,6 +2190,8 @@ public:
 					ip_use_median = 1;
 			} else if (!strcmp(option_name, "ips")) {
 				ip_iterations = env->get_int_arg(i->first, 1);
+			} else if (!strcmp(option_name, "ip-wl")) {
+				ipwl = env->get_double_arg(i->first, 1);
 			} else if (!strcmp(option_name, "ipc")) {
 				unsupported::discontinued("--ipc <c> <i>", "--ips <i> --lpsf <c>", "--ips <i> --device <c>");
 			} else if (!strcmp(option_name, "exp-extend")) {
@@ -2699,7 +2702,7 @@ public:
 			ochain[0] = new d2::ipc( ochain[0], ip_iterations,
 					inc, response[psf_linear],
 					response[psf_nonlinear],
-					(exposure_register == 1), ip_use_median);
+					(exposure_register == 1), ip_use_median, ipwl);
 		}
 
 		/*
