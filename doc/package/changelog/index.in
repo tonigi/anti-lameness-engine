@@ -1,7 +1,10 @@
-V	0.8.6.1 prerelease
+V	0.8.7 prerelease
+
+o	Add incremental renderer mean invariant avgf:<x>:<e> weight-limited to
+	initial values.
 
 o	Modify d2::image::defined_scale_by_half() to use a geometric mean, so
-	that alignment at reduced level of detail will still work at large
+	that alignment at reduced level of detail will still work at larger
 	reductions when using non-zero certainty.
 
 V	0.8.6 2007-Feb-17
