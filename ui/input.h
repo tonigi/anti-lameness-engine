@@ -2191,7 +2191,12 @@ public:
 			} else if (!strcmp(option_name, "ips")) {
 				ip_iterations = env->get_int_arg(i->first, 1);
 			} else if (!strcmp(option_name, "ip-wl")) {
-				ipwl = env->get_double_arg(i->first, 1);
+				int limited = env->get_int_arg(i->first, 0);
+				if (limited) {
+					ipwl = env->get_double_arg(i->first, 1);
+				} else {
+					ipwl = 0;
+				}
 			} else if (!strcmp(option_name, "ipc")) {
 				unsupported::discontinued("--ipc <c> <i>", "--ips <i> --lpsf <c>", "--ips <i> --device <c>");
 			} else if (!strcmp(option_name, "exp-extend")) {

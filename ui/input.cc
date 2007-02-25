@@ -221,7 +221,7 @@ input::simple_option input::simple_option_table[] = {
 	{ "ip-mean", "ip-statistic", "mean" },
 	{ "ip-median", "ip-statistic", "median" },
 
-	{ "ip-wl", NULL, NULL, 1 },
+	{ "ip-wl", "ip-wl", "1", 1 },
 	{ "ip-nowl", "ip-wl", "0" },
 
 	{ "ips", NULL, NULL, 1 },
