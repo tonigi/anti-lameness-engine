@@ -374,6 +374,7 @@ public:
 			"                     <i>            Use rendering invariant <i>.\n"
 			"                  Rendering invariants <i> are:\n"
 			"                     avg:<e>        Avg. (mean) value using SSFE <e>.\n"
+			"                     avgf:<x>:<e>   Avg. first up to weight <x> using SSFE <e>.\n"
 			"                     first:<e>      First defined value using SSFE <e>.\n"
 			"                     last:<e>       Last defined value using SSFE <e>.\n"
 			"                     max:<e>        Maximum defined value using SSFE <e>.\n"

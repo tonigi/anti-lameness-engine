@@ -33,18 +33,22 @@
 #define first 3
 #define last 4
 #define median 5
+#define avgf 6
 
 class invariant {
 public:
 	int type;
+	double type_param;
 	filter::ssfe *s;
 
 	invariant(filter::ssfe *s) {
 		this->s = s;
 		type = 2;
+		type_param = 0;
 	}
 	int equals(const invariant *i) const {
 		return (i->type == type
+		     && i->type_param == type_param
 		     && s->equals(i->ssfe()));
 	}
 	const filter::ssfe *ssfe() const {
@@ -58,6 +62,12 @@ public:
 	}
 	int is_avg() const {
 		return type == avg;
+	}
+	int is_avgf() const {
+		return type == avgf;
+	}
+	int is_avgx() const {
+		return (type == avg || type == avgf);
 	}
 	int is_first() const {
 		return type == first;
@@ -77,6 +87,10 @@ public:
 	void set_avg() {
 		type = avg;
 	}
+	void set_avgf(double p) {
+		type = avgf;
+		type_param = p;
+	}
 	void set_first() {
 		type = first;
 	}
@@ -85,6 +99,9 @@ public:
 	}
 	void set_median() {
 		type = median;
+	}
+	double get_param() {
+		return type_param;
 	}
 	~invariant() {
 		delete s;

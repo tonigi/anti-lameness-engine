@@ -73,6 +73,14 @@ public:
 		 */
 		if (inv->is_first() && weights->get_pixel(i, j)[0] != 0)
 			return 1;
+		/*
+		 * Weight limit satisfied
+		 */
+		if (inv->is_avgf() 
+		 && weights->get_pixel(i, j)[0] > inv->get_param()
+		 && weights->get_pixel(i, j)[1] > inv->get_param()
+		 && weights->get_pixel(i, j)[2] > inv->get_param())
+			return 1;
 
 		return 0;
 	}
@@ -92,7 +100,8 @@ public:
 			 * for which the update can be ignored.
 			 */
 
-			if (!inv->is_avg() && new_weight[k] < render::get_wt())
+			if (!inv->is_avgx() 
+			 && new_weight[k] < render::get_wt())
 				continue;
 
 			/*
@@ -121,6 +130,10 @@ public:
 			 && inv->is_first())
 				continue;
 
+			if (inv->is_avgf()
+			 && old_weight >= inv->get_param())
+				continue;
+
 			/*
 			 * Cases independent of the old pixel value for which previous
 			 * pixel values can be ignored.
@@ -128,7 +141,7 @@ public:
 
 			if (old_weight == 0
 			 || (old_weight < render::get_wt()
-			  && !inv->is_avg())) {
+			  && !inv->is_avgx())) {
 				weights->chan(i, j, k) = new_weight[k];
 				colors ->chan(i, j, k) = new_value[k] * new_weight[k];
 				continue;

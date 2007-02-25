@@ -132,6 +132,8 @@ public:
 	}
 
 	static render *get_invariant(const char *type) {
+		double param;
+		int offset;
 		invariant *i;
 		if (!strpfix("min:", type)) {
 			i = new invariant(get_SSFE(type + strlen("min:")));
@@ -148,6 +150,11 @@ public:
 		} else if (!strpfix("avg:", type)) {
 			i = new invariant(get_SSFE(type + strlen("avg:")));
 			i->set_avg();
+		} else if (!strpfix("avgf:", type)) {
+			if (sscanf(type + strlen("avgf:"), "%lf%n", &param, &offset) != 1) 
+				syntax_error("Unable to get avgf weight criterion.");
+			i = new invariant(get_SSFE(type + strlen("avgf:") + offset + strlen(":")));
+			i->set_avgf(param);
 		} else if (!strpfix("median:", type)) {
 			i = new invariant(get_SSFE(type + strlen("median:")));
 			i->set_median();
