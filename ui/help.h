@@ -310,8 +310,8 @@ public:
 			"--ips <i>         Run <i> iterations.  (see also --hx, --hl and --hd)\n"
 			"--ip-mean         Use the mean correction [default]\n"
 			"--ip-median       Use the median correction\n"
-			"--ip-wl <x>       Use weight limit <x>.  (3 is default)\n"
-			"--ip-nowl         Use no weight limit.\n"
+			"--ip-wl <x>       Use weight limit <x>\n"
+			"--ip-nowl         Use no weight limit [default]\n"
 #if 0
 			BETWEEN_SECTIONS
 			"Unsharp Mask (was 'High-frequency Enhancement'):\n"

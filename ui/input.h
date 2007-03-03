@@ -1365,7 +1365,7 @@ public:
 		struct d3::tsave_t *d3_tsave = NULL;
 		int ip_iterations = 0;
 		int ip_use_median = 0;
-		double ipwl = 3;
+		double ipwl = 0;
 		enum { psf_linear, psf_nonlinear, psf_N };
 		const char *psf[psf_N] = {NULL, NULL};
 		const char *device = NULL;
