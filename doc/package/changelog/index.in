@@ -1,7 +1,6 @@
 V	0.8.7 prerelease
 
-o	Add a weight-limiting option to the Irani-Peleg renderer, with a
-	default limit of 3.
+o	Add a weight-limiting option to the Irani-Peleg renderer.
 
 o	Add incremental renderer mean invariant avgf:<x>:<e> weight-limited to
 	initial values.
