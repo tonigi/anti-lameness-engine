@@ -34,6 +34,57 @@
 #include <sys/time.h>
 #endif
 
+#include <map>
+
+/*
+ * Time structures.
+ */
+
+class ale_timer_t {
+#if HAVE_GETTIMEOFDAY
+	struct timeval tv;
+#else
+	time_t tt;
+#endif
+	double total;
+
+public:
+
+	ale_timer_t() {
+		total = 0;
+	}
+
+	void start() {
+#if HAVE_GETTIMEOFDAY
+		gettimeofday(&tv, NULL);
+#else
+		tt = time(NULL);
+#endif
+	}
+
+	void stop() {
+#if HAVE_GETTIMEOFDAY
+		timeval t;
+
+		gettimeofday(&t, NULL);
+
+		t.tv_sec -= tv.tv_sec;
+		t.tv_usec -= tv.tv_usec;
+		
+		total += t.tv_sec + ((double) 1 / (double) 1000000) * t.tv_usec;
+#else
+		time_t t = time(NULL);
+		t -= tt;
+
+		total += t;
+#endif
+	}
+
+	double get_total() {
+		return total;
+	}
+};
+
 /*
  * User interface messages.
  */
@@ -130,20 +181,11 @@ protected:
 	 * Performance data
 	 */
 
-#if HAVE_GETTIMEOFDAY
-	typedef struct timeval ale_timer_t;
-#else
-	typedef time_t ale_timer_t;
-#endif
-
-	ale_timer_t d2_align_sample_start_time;
-	ale_timer_t d2_align_sim_start_time;
-	ale_timer_t d2_incremental_start_time;
-	ale_timer_t d2_irani_peleg_start_time;
-	ale_timer_t d2_align_sample_total_time;
-	ale_timer_t d2_align_sim_total_time;
-	ale_timer_t d2_incremental_total_time;
-	ale_timer_t d2_irani_peleg_total_time;
+	ale_timer_t d2_align_sample;
+	ale_timer_t d2_align_sim;
+	ale_timer_t d2_incremental;
+	ale_timer_t d2_irani_peleg;
+	std::map<double,ale_timer_t> perturb_timers;
 
 	/*
 	 * Constructor
@@ -151,21 +193,6 @@ protected:
 
 	ui() {
 		ui_stream = stderr;
-#if HAVE_GETTIMEOFDAY
-		d2_irani_peleg_total_time.tv_usec = 0;
-		d2_irani_peleg_total_time.tv_sec = 0;
-		d2_incremental_total_time.tv_usec = 0;
-		d2_incremental_total_time.tv_sec = 0;
-		d2_align_sample_total_time.tv_usec = 0;
-		d2_align_sample_total_time.tv_sec = 0;
-		d2_align_sim_total_time.tv_usec = 0;
-		d2_align_sim_total_time.tv_sec = 0;
-#else
-		d2_incremental_total_time = 0;
-		d2_irani_peleg_total_time = 0;
-		d2_align_sample_total_time = 0;
-		d2_align_sim_total_time = 0;
-#endif
 	}
 
 	/*
@@ -193,45 +220,6 @@ protected:
 	char *format_string_working() {
 		return "      (%f%% match)";
 	}
-
-	void timer_start(void *t) {
-#if HAVE_GETTIMEOFDAY
-		gettimeofday((timeval *) t, NULL);
-#else
-		*((time_t *) t) = time(NULL);
-#endif
-	}
-
-	void timer_stop(void *start_v, void *total_v) {
-#if HAVE_GETTIMEOFDAY
-		timeval t;
-		timeval *start = (timeval *) start_v;
-		timeval *total = (timeval *) total_v;
-
-		gettimeofday(&t, NULL);
-
-		t.tv_sec -= start->tv_sec;
-		t.tv_usec -= start->tv_usec;
-
-		total->tv_sec += t.tv_sec;
-		total->tv_usec += t.tv_usec;
-
-		while (total->tv_usec >= 1000000) {
-			total->tv_sec += 1;
-			total->tv_usec -= 1000000;
-		}
-
-		while (total->tv_usec < 0) {
-			total->tv_sec -= 1;
-			total->tv_usec += 1000000;
-		}
-#else
-		time_t t = time(NULL);
-		t -= *((time_t *) start_v);
-		*((time_t *) total_v) += t;
-#endif
-	}
-
 
 public:
 
@@ -263,35 +251,35 @@ public:
 	 */
 
 	void d2_align_sim_start() {
-		timer_start((void *) &d2_align_sim_start_time);
+		d2_align_sim.start();
 	}
 
 	void d2_align_sim_stop() {
-		timer_stop((void *) &d2_align_sim_start_time, (void *) &d2_align_sim_total_time);
+		d2_align_sim.stop();
 	}
 
 	void d2_align_sample_start() {
-		timer_start((void *) &d2_align_sample_start_time);
+		d2_align_sample.start();
 	}
 
 	void d2_align_sample_stop() {
-		timer_stop((void *) &d2_align_sample_start_time, (void *) &d2_align_sample_total_time);
+		d2_align_sample.stop();
 	}
 
 	void d2_incremental_start() {
-		timer_start((void *) &d2_incremental_start_time);
+		d2_incremental.start();
 	}
 
 	void d2_incremental_stop() {
-		timer_stop((void *) &d2_incremental_start_time, (void *) &d2_incremental_total_time);
+		d2_incremental.stop();
 	}
 
 	void d2_irani_peleg_start() {
-		timer_start((void *) &d2_irani_peleg_start_time);
+		d2_irani_peleg.start();
 	}
 
 	void d2_irani_peleg_stop() {
-		timer_stop((void *) &d2_irani_peleg_start_time, (void *) &d2_irani_peleg_total_time);
+		d2_irani_peleg.stop();
 	}
 
 	void exp_multiplier(double m0, double m1, double m2) {
@@ -350,6 +338,7 @@ public:
 	}
 
 	void aligning(ale_pos perturb, ale_pos lod) {
+		perturb_timers[perturb].start();
 		status.perturb_size = perturb;
 		status.align_lod = lod;
 		status.code = status.ALIGN;
@@ -535,6 +524,8 @@ public:
 	}
 
 	void alignment_perturbation_level(ale_pos perturb, ale_pos lod) {
+		perturb_timers[status.perturb_size].stop();
+		perturb_timers[perturb].start();
 		status.perturb_size = perturb;
 		status.align_lod = lod;
 		status.steps_completed++;
@@ -561,21 +552,18 @@ public:
 			printf("Real time measurements\n");
 			printf("======================\n");
 			printf("\n");
-#if HAVE_GETTIMEOFDAY
-			printf("Alignment (sampling)   :  %f s\n", (double) d2_align_sample_total_time.tv_sec 
-					              + (double) d2_align_sample_total_time.tv_usec / (double) 1000000);
-			printf("Alignment (checking)   :  %f s\n", (double) d2_align_sim_total_time.tv_sec 
-					              + (double) d2_align_sim_total_time.tv_usec / (double) 1000000);
-			printf("Incremental rendering  :  %f s\n", (double) d2_incremental_total_time.tv_sec 
-					              + (double) d2_incremental_total_time.tv_usec / (double) 1000000);
-			printf("Irani-Peleg rendering  :  %f s\n", (double) d2_irani_peleg_total_time.tv_sec 
-					              + (double) d2_irani_peleg_total_time.tv_usec / (double) 1000000);
-#else
-			printf("Alignment (sampling)   :  %f s\n", (double) d2_align_sample_total_time);
-			printf("Alignment (checking)   :  %f s\n", (double) d2_align_sim_total_time);
-			printf("Incremental rendering  :  %f s\n", (double) d2_incremental_total_time);
-			printf("Irani-Peleg rendering  :  %f s\n", (double) d2_irani_peleg_total_time);
-#endif
+			printf("Alignment (sampling)   :  %f s\n", d2_align_sample.get_total());
+			printf("Alignment (checking)   :  %f s\n", d2_align_sim.get_total());
+			printf("Incremental rendering  :  %f s\n", d2_incremental.get_total());
+			printf("Irani-Peleg rendering  :  %f s\n", d2_irani_peleg.get_total());
+			printf("\n");
+			printf("Details (local alignment)\n");
+			printf("-------------------------\n");
+			for (std::map<double,ale_timer_t>::iterator i = perturb_timers.begin(); 
+			     i != perturb_timers.end(); i++) {
+				printf("Alignment (perturb %f): %f s\n", 
+						i->first, i->second.get_total());
+			}
 			printf("\n");
 		}
 	}

@@ -1926,9 +1926,9 @@ private:
 		 * Perturbation adjustment loop.  
 		 */
 
-		while (perturb >= local_lower) {
+		ui::get()->aligning(perturb, lod);
 
-			ui::get()->aligning(perturb, lod);
+		while (perturb >= local_lower) {
 
 			ale_pos adj_s;
 
