@@ -1,3 +1,8 @@
+V	0.8.8 prerelease
+
+o	Add breakdown of profiling information by perturbation size for local
+	alignment.
+
 V	0.8.7 2007-Mar-04
 
 o	Add a weight-limiting option to the Irani-Peleg renderer.
