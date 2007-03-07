@@ -561,6 +561,9 @@ public:
 			printf("-------------------------\n");
 			for (std::map<double,ale_timer_t>::iterator i = perturb_timers.begin(); 
 			     i != perturb_timers.end(); i++) {
+				if (i->second.get_total() == 0.0
+				 && i == perturb_timers.begin())
+					continue;
 				printf("Alignment (perturb %f): %f s\n", 
 						i->first, i->second.get_total());
 			}
