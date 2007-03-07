@@ -52,10 +52,8 @@ struct extended_t {
 static inline void error_ppm(const char *filename) {
 	fprintf(stderr, 
 		"\n\n*** '%s' doesn't look like a PPM file.\n"
-		"\n*** To handle other file types, compile ALE with\n"
-		"*** ImageMagick support ('make IMAGEMAGICK=1').\n"
-		"*** (To do this, you must have a source distribution\n"
-		"*** of ALE, and you must have ImageMagick installed.)\n\n", 
+		"\n*** (To handle other file types, use a version of ALE with\n"
+		"*** ImageMagick support enabled.)\n\n",
 		filename);
 	exit(1);
 }
