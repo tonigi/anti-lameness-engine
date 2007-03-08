@@ -2736,6 +2736,17 @@ public:
 					int type = env->get_int_arg(i->first, 0);
 					d2::align::mc((type == 2) ? env->get_double_arg(i->first, 1) / 100 
 							          : (double) type);
+				} else if (!strcmp(option_name, "ev")) {
+					double ev = env->get_double_arg(i->first, 1);
+					double gain_value = pow(2, -ev);
+
+					if (j == 0)
+						d2::exposure::set_gain_reference(gain_value);
+					else 
+						input_exposure[j]->set_gain_multiplier(
+								d2::exposure::get_gain_reference()
+							      / gain_value);
+
 				} else if (!strcmp(option_name, "mcd-removal")) {
 					d2::align::mcd_limit(env->get_int_arg(i->first, 1));
 				} else if (!strcmp(option_name, "perturb-upper")) {

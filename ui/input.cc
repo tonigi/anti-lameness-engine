@@ -40,6 +40,7 @@ const char *input::supported_nonglobal_option_table[] = {
 	"threads",
 	"per-cpu",
 	"perturb-upper",
+	"ev",
 	NULL
 };
 
@@ -109,6 +110,8 @@ input::simple_option input::simple_option_table[] = {
 	{ "no-mc", "mc", "1" },
 	{ "mc", "mc", "2", 1 },
 	{ "mcd-removal", NULL, NULL, 1 },
+
+	{ "ev", NULL, NULL, 1 },
 
 	{ "threads", NULL, NULL, 1 },
 	{ "per-cpu", NULL, NULL, 1 },

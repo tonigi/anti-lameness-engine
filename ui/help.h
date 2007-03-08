@@ -469,12 +469,16 @@ public:
 			HEADER_SPACE
 			"--exp-register    Register exposure between frames.  [default]\n"
 			"--exp-noregister  Assume uniform exposure across all frames.\n"
-			"--exp-meta-only   Use only image metadata for registering exposure.\n"
+			"--exp-meta-only   Use only meta-data for registering exposure.\n"
 			BETWEEN_SECTIONS
 			"Range extension:\n"
 			HEADER_SPACE
 			"--exp-extend      Extend to include all calculated values.\n"
 			"--exp-noextend    Restrict to the original frame's range.  [default]\n"
+			BETWEEN_SECTIONS
+			"Exposure value meta-data:\n"
+			HEADER_SPACE
+			"--ev <x>          Set exposure value (EV) meta-data <x>.  (default is 0)\n"
 			"\n"
 		       );
 	}
@@ -687,6 +691,7 @@ public:
 			"--threads         (see --hp for more details)\n"
 			"--per-cpu         (see --hp for more details)\n"
 			"--perturb-upper   (see --ha for more details)\n"
+			"--ev              (see --hx for more details)\n"
 			BETWEEN_SECTIONS
 			"Implicit file scope (implementation may be buggy):\n"
 			HEADER_SPACE
