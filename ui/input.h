@@ -2375,6 +2375,7 @@ public:
 		}
 #endif
 
+#if 0
 		if (cx_parameter != 0 && !exposure_register) {
 			implication::changed("Certainty-based rendering requires exposure registration.",
 					     "Exposure registration is now enabled.",
@@ -2382,6 +2383,7 @@ public:
 			d2::align::exp_register();
 			exposure_register = 1;
 		}
+#endif
 
 		/*
 		 * Set alignment class exclusion region static variables
