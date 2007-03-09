@@ -1,5 +1,10 @@
 V	0.8.8 prerelease
 
+o	Add --black option for specifying black level as a fraction of
+	saturation.
+
+o	Add --ev option for specifying ISO100-equivalent EV value.
+
 o	Add breakdown of profiling information by perturbation size for local
 	alignment.
 
