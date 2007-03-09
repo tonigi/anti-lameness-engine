@@ -35,7 +35,7 @@
 
 struct extended_t {
 	int is_extended;
-	int black_level;
+	ale_real black_level;
 	ale_real aperture; /* 1 == f/1.0, 1.4 == f/1.4, etc. */
 	ale_real shutter;  /* 1 == 1 sec, 0.5 == 1/2 sec, etc. */
 	ale_real gain;     /* 1 == ISO 100, 2 == ISO 200, etc. */
@@ -205,6 +205,10 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 	n = fscanf(f, "%d", &mcv);
 	assert(n == 1);
 	assert(mcv <= 65535 || m2 == '3');
+
+	if (extended.black_level == 0) {
+		extended.black_level = e->get_black_level() * mcv;
+	}
 
 	if (n != 1 || (mcv > 65535 && m2 == '6'))
 		error_ppm(filename);

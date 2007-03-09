@@ -2747,6 +2747,9 @@ public:
 								d2::exposure::get_gain_reference()
 							      / gain_value);
 
+				} else if (!strcmp(option_name, "black")) {
+					double black = env->get_double_arg(i->first, 1);
+					input_exposure[j]->set_black_level(black);
 				} else if (!strcmp(option_name, "mcd-removal")) {
 					d2::align::mcd_limit(env->get_int_arg(i->first, 1));
 				} else if (!strcmp(option_name, "perturb-upper")) {

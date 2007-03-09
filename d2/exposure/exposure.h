@@ -40,6 +40,7 @@ private:
 	pixel _multiplier;
 	ale_real _gain_multiplier;
 	static ale_real _gain_reference;
+	ale_real _black_level;
 
 public:
 
@@ -144,6 +145,14 @@ public:
 		return _gain_multiplier;
 	}
 
+	void set_black_level(ale_real b) {
+		_black_level = b;
+	}
+
+	ale_real get_black_level() {
+		return _black_level;
+	}
+
 	static void set_gain_reference(ale_real r) {
 		_gain_reference = r;
 	}
@@ -223,6 +232,7 @@ public:
 		listener_head = NULL;
 		_multiplier = pixel(1, 1, 1);
 		_gain_multiplier = 1;
+		_black_level = 0;
 	}
 
 	virtual ~exposure() {

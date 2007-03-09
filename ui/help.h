@@ -478,7 +478,8 @@ public:
 			BETWEEN_SECTIONS
 			"Exposure value meta-data:\n"
 			HEADER_SPACE
-			"--ev <x>          Set exposure value (EV) meta-data <x>.  (default is 0)\n"
+			"--ev <x>          Set ISO 100 equivalent EV <x>.  (default is 0)\n"
+			"--black <x>       Set black level <x> as a fraction of saturation.  (default 0)\n"
 			"\n"
 		       );
 	}

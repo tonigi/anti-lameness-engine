@@ -153,6 +153,8 @@ public:
 
 		unsigned int i, j;
 
+		ale_real black_level = exp->get_black_level() * MaxRGB;
+
 		GetExceptionInfo(&exception);
 		image_info = CloneImageInfo((ImageInfo *) NULL);
 
@@ -180,9 +182,9 @@ public:
 				exit(1);
 
 			for (j = 0; j < mi->columns; j++) {
-				pixel input( (ale_real) p->red / MaxRGB,
-					     (ale_real) p->green / MaxRGB,
-					     (ale_real) p->blue / MaxRGB );
+				pixel input( (ale_real) (p->red - black_level) / (MaxRGB - black_level),
+					     (ale_real) (p->green - black_level) / (MaxRGB - black_level),
+					     (ale_real) (p->blue - black_level) / (MaxRGB - black_level) );
 
 				im->set_pixel(i, j, exp->linearize(input));
 
