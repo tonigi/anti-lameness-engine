@@ -1,5 +1,8 @@
 V	0.8.8 prerelease
 
+o	Ignore fex regions for nex SSFEs, resolving a bug noted by Gregory
+	Maxwell.
+
 o	Add --black option for specifying black level as a fraction of
 	saturation.
 
