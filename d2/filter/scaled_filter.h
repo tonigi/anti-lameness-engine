@@ -211,7 +211,7 @@ private:
 			for (int j = (int) ceil (min[1]); 
 				 j<= (int) floor(max[1]); j++) {
 
-				if (render::is_excluded_f(i, j, frame))
+				if (honor_exclusion && render::is_excluded_f(i, j, frame))
 					continue;
 
 				if (bayer != IMAGE_BAYER_NONE
@@ -271,7 +271,7 @@ private:
 			for (int j = (int) ceil (min[1]); 
 				 j<= (int) floor(max[1]); j++) {
 
-				if (render::is_excluded_f(i, j, frame))
+				if (honor_exclusion && render::is_excluded_f(i, j, frame))
 					continue;
 
 				if (bayer != IMAGE_BAYER_NONE
