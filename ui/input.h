@@ -1622,10 +1622,6 @@ public:
 					d3::scene::oc();
 				else 
 					d3::scene::no_oc();
-			} else if (!strcmp(option_name, "gs")) {
-				d2::align::gs(env->get_string_arg(i->first, 1));
-			} else if (!strcmp(option_name, "gs-mo")) {
-				d2::align::gs_mo(env->get_unsigned_arg(i->first, 1));
 			} else if (!strcmp(option_name, "focus")) {
 
 				double one = +1;
@@ -2736,6 +2732,10 @@ public:
 					int type = env->get_int_arg(i->first, 0);
 					d2::align::mc((type == 2) ? env->get_double_arg(i->first, 1) / 100 
 							          : (double) type);
+				} else if (!strcmp(option_name, "gs")) {
+					d2::align::gs(env->get_string_arg(i->first, 1));
+				} else if (!strcmp(option_name, "gs-mo")) {
+					d2::align::gs_mo(env->get_unsigned_arg(i->first, 1));
 				} else if (!strcmp(option_name, "ev")) {
 					double ev = env->get_double_arg(i->first, 1);
 					double gain_value = pow(2, -ev);
