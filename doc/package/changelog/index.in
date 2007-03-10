@@ -1,12 +1,14 @@
 V	0.8.8 prerelease
 
+o	Allow file-scoped --gs and --gs-mo options.
+
 o	Ignore fex regions for nex SSFEs, resolving a bug noted by Gregory
 	Maxwell.
 
 o	Add --black option for specifying black level as a fraction of
 	saturation.
 
-o	Add --ev option for specifying ISO100-equivalent EV value.
+o	Add --ev option for specifying ISO100-equivalent EV.
 
 o	Add breakdown of profiling information by perturbation size for local
 	alignment.
