@@ -689,10 +689,13 @@ public:
 			HEADER_SPACE
 			"--mc              (see --ha for more details)\n"
 			"--mcd-removal     (see --ha for more details)\n"
+			"--gs              (see --ha for more details)\n"
+			"--gs-mo           (see --ha for more details)\n"
 			"--threads         (see --hp for more details)\n"
 			"--per-cpu         (see --hp for more details)\n"
 			"--perturb-upper   (see --ha for more details)\n"
 			"--ev              (see --hx for more details)\n"
+			"--black           (see --hx for more details)\n"
 			BETWEEN_SECTIONS
 			"Implicit file scope (implementation may be buggy):\n"
 			HEADER_SPACE
