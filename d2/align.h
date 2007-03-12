@@ -310,6 +310,18 @@ private:
 	static int _gs;
 
 	/*
+	 * Multi-alignment cardinality.
+	 */
+
+	static int _ma_card;
+
+	/*
+	 * Multi-alignment contiguity.
+	 */
+
+	static double _ma_cont;
+
+	/*
 	 * Minimum overlap for global searches
 	 */
 
@@ -2948,6 +2960,20 @@ public:
 		} else {
 			ui::get()->error("bad global search type");
 		}
+	}
+
+	/*
+	 * Multi-alignment contiguity
+	 */
+	static void ma_cont(double value) {
+		_ma_cont = value;
+	}
+
+	/*
+	 * Multi-alignment cardinality
+	 */
+	static void ma_card(unsigned int value) {
+		_ma_card = value;
 	}
 
 	/*

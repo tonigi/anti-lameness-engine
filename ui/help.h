@@ -282,6 +282,11 @@ public:
 			"                     central   inner if below threshold or better; else, outer.\n"
 			"                     points    Align by control points.  Ignores gs-mo.\n"
 			"--gs-mo <x>       Set <x> pixel min. overlap for global search. (16 is default)\n"
+			BETWEEN_SECTIONS
+			"Multi-alignment:\n"
+			HEADER_SPACE
+			"--ma-card <x>     Maximum number of multi-alignment elements.  (0 is default)\n"
+			"--ma-cont <x>     Minimum contiguous area of each MA region.  (100 is default)\n"
 			"\n"
 		       );
 	}
