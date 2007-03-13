@@ -180,19 +180,26 @@ private:
 	static int perturb_type;
 
 	/*
-	 * Helper variables for new --follow semantics (as of 0.5.0).
+	 * Follow semantics data structure
 	 *
-	 * These variables implement delta following.  The change between the
-	 * non-default old initial alignment and old final alignment is used to
-	 * adjust the non-default current initial alignment.  If either the old
-	 * or new initial alignment is a default alignment, the old --follow
-	 * semantics are preserved.
+	 * This structure contains variables implementing delta following.  The
+	 * change between the non-default old initial alignment and old final
+	 * alignment is used to adjust the non-default current initial
+	 * alignment.  If either the old or new initial alignment is a default
+	 * alignment, the old --follow semantics are preserved.
 	 */
 
-	static int is_default, old_is_default;
-	static int old_lod;
-	static transformation old_initial_alignment;
-	static transformation old_final_alignment;
+	struct follow_t {
+		int is_default, old_is_default;
+		int old_lod;
+		transformation old_initial_alignment;
+		transformation old_final_alignment;
+
+	public:
+		follow_t() {
+			is_default = 1;
+		}
+	};
 
 	/*
 	 * Alignment for failed frames -- default or optimal?
@@ -1434,7 +1441,7 @@ private:
 	 * one case where special care must be taken to ensure that the scale
 	 * is always set correctly (by using the 'rescale' method).
 	 */
-	static ale_accum _align(int m, int local_gs) {
+	static ale_accum _align(int m, int local_gs, follow_t *follow) {
 
 		/*
 		 * Open the input frame.
@@ -1560,7 +1567,7 @@ private:
 		else
 			assert(0);
 
-		old_is_default = is_default;
+		follow->old_is_default = follow->is_default;
 
 		/*
 		 * Scale default initial transform for lod
@@ -1572,11 +1579,13 @@ private:
 		 * Load any file-specified transformation
 		 */
 
-		offset = tload_next(tload, alignment_class == 2, default_initial_alignment, &is_default);
+		offset = tload_next(tload, alignment_class == 2, default_initial_alignment, 
+				&follow->is_default);
 
 		transformation new_offset = offset;
 		
-		if (!old_is_default && !is_default && default_initial_alignment_type == 1) {
+		if (!follow->old_is_default && !follow->is_default && 
+				default_initial_alignment_type == 1) {
 
 			/*
 			 * Implement new delta --follow semantics.
@@ -1602,16 +1611,18 @@ private:
 			 * alignment.
 			 */
 
-			old_final_alignment.rescale (1 / pow(2, lod));
-			old_initial_alignment.rescale(1 / pow(2, lod - old_lod));
+			follow->old_final_alignment.rescale (1 / pow(2, lod));
+			follow->old_initial_alignment.rescale(1 / pow(2, lod - follow->old_lod));
 
 			if (alignment_class == 0) {
 				/*
 				 * Translational transformations
 				 */
 	
-				ale_pos t0 = -old_initial_alignment.eu_get(0) + old_final_alignment.eu_get(0);
-				ale_pos t1 = -old_initial_alignment.eu_get(1) + old_final_alignment.eu_get(1);
+				ale_pos t0 = -follow->old_initial_alignment.eu_get(0) 
+					   +  follow->old_final_alignment.eu_get(0);
+				ale_pos t1 = -follow->old_initial_alignment.eu_get(1) 
+					   +  follow->old_final_alignment.eu_get(1);
 
 				new_offset.eu_modify(0, t0);
 				new_offset.eu_modify(1, t1);
@@ -1621,14 +1632,15 @@ private:
 				 * Euclidean transformations
 				 */
 
-				ale_pos t2 = -old_initial_alignment.eu_get(2) + old_final_alignment.eu_get(2);
+				ale_pos t2 = -follow->old_initial_alignment.eu_get(2) 
+					   +  follow->old_final_alignment.eu_get(2);
 
 				new_offset.eu_modify(2, t2);
 
-				point p( offset.scaled_height()/2 + offset.eu_get(0) - old_initial_alignment.eu_get(0),
-					 offset.scaled_width()/2 + offset.eu_get(1) - old_initial_alignment.eu_get(1) );
+				point p( offset.scaled_height()/2 + offset.eu_get(0) - follow->old_initial_alignment.eu_get(0),
+					 offset.scaled_width()/2 + offset.eu_get(1) - follow->old_initial_alignment.eu_get(1) );
 
-				p = old_final_alignment.transform_scaled(p);
+				p = follow->old_final_alignment.transform_scaled(p);
 
 				new_offset.eu_modify(0, p[0] - offset.scaled_height()/2 - offset.eu_get(0));
 				new_offset.eu_modify(1, p[1] - offset.scaled_width()/2 - offset.eu_get(1));
@@ -1640,21 +1652,21 @@ private:
 
 				point p[4];
 
-				p[0] = old_final_alignment.transform_scaled(old_initial_alignment
+				p[0] = follow->old_final_alignment.transform_scaled(follow->old_initial_alignment
 				     . scaled_inverse_transform(offset.transform_scaled(point(      0        ,       0       ))));
-				p[1] = old_final_alignment.transform_scaled(old_initial_alignment
+				p[1] = follow->old_final_alignment.transform_scaled(follow->old_initial_alignment
 				     . scaled_inverse_transform(offset.transform_scaled(point(offset.scaled_height(),       0       ))));
-				p[2] = old_final_alignment.transform_scaled(old_initial_alignment
+				p[2] = follow->old_final_alignment.transform_scaled(follow->old_initial_alignment
 				     . scaled_inverse_transform(offset.transform_scaled(point(offset.scaled_height(), offset.scaled_width()))));
-				p[3] = old_final_alignment.transform_scaled(old_initial_alignment
+				p[3] = follow->old_final_alignment.transform_scaled(follow->old_initial_alignment
 				     . scaled_inverse_transform(offset.transform_scaled(point(      0        , offset.scaled_width()))));
 
 				new_offset.gpt_set(p);
 			}
 		}
 
-		old_initial_alignment = offset;
-		old_lod = lod;
+		follow->old_initial_alignment = offset;
+		follow->old_lod = lod;
 		offset = new_offset;
 
 		struct scale_cluster si = scale_clusters[lod];
@@ -2266,7 +2278,7 @@ private:
 			 */
 			latest_ok = 1;
 			default_initial_alignment = offset;
-			old_final_alignment = offset;
+			follow->old_final_alignment = offset;
 			ui::get()->alignment_match_ok();
 		} else if (local_gs == 4) {
 
@@ -2279,7 +2291,7 @@ private:
 			 * since variables like old_initial_value have been overwritten.
 			 */
 
-			ale_accum nested_result = _align(m, -1);
+			ale_accum nested_result = _align(m, -1, follow);
 
 			if ((1 - nested_result) * 100 > match_threshold) {
 				return nested_result;
@@ -2556,6 +2568,9 @@ private:
 	 * Update alignment to frame N.
 	 */
 	static void update_to(int n) {
+
+		static follow_t follow;
+
 		assert (n <= latest + 1);
 
 		if (latest < 0) {
@@ -2611,7 +2626,7 @@ private:
 			assert (reference_image != NULL);
 			assert (reference_defined != NULL);
 
-			_align(i, _gs);
+			_align(i, _gs, &follow);
 		}
 	}
 
