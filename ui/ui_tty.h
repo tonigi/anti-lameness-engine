@@ -26,6 +26,13 @@
 #include <string.h>
 #include <assert.h>
 
+#if HAVE_TIME_H
+#include <time.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+
 #include "../d2.h"
 #include "ui.h"
 #include "util.h"
@@ -40,6 +47,12 @@ private:
 	char *buffer;
 	int buffer_index;
 	int status_index;
+	int dirty;
+
+#ifdef USE_PTHREAD
+	pthread_mutex_t lock;
+	pthread_t update_thread;
+#endif
 
 	void clear_buffer() {
 		buffer[0] = '\0';
@@ -70,7 +83,6 @@ private:
 
 
 	void status_printf(int count, ...) {
-
 		if (buffer_index < 0)
 			return;
 
@@ -110,6 +122,7 @@ private:
 
 			return;
 		}
+
 
 		/*
 		 * If we reach this point, then there was no valid string produced.
@@ -262,6 +275,9 @@ private:
 
 
 	void printf(char *format, ...) {
+#ifdef USE_PTHREAD
+		pthread_mutex_lock(&lock);
+#endif
 		va_list ap;
 		int n = -1;
 
@@ -309,6 +325,9 @@ private:
 			buffer_index = 0;
 			buffer[0] = '\0';
 		}
+#ifdef USE_PTHREAD
+		pthread_mutex_unlock(&lock);
+#endif
 	}
 
 	void update() {
@@ -321,32 +340,74 @@ private:
 
 		if (status.code == status_type::FRAME_DONE) {
 			printf(".");
+#ifdef USE_PTHREAD
+			pthread_mutex_lock(&lock);
+#endif
 			fputc('\n', ui_stream);
+#ifdef USE_PTHREAD
+			pthread_mutex_unlock(&lock);
+#endif
 			buffer_index = 0;
 			buffer[0] = '\0';
-			return;
+		} else if (status.code == status_type::SET_DONE) {
+#ifdef USE_PTHREAD
+			pthread_mutex_lock(&lock);
+#endif
+			fputc('\n', ui_stream);
+#ifdef USE_PTHREAD
+			pthread_mutex_unlock(&lock);
+#endif
+			buffer_index = 0;
+			buffer[0] = '\0';
+		} else { 
+
+			/*
+			 * Handle optional output.
+			 */
+
+#ifdef USE_PTHREAD
+			pthread_mutex_lock(&lock);
+#endif
+			if (now == last_update) {
+				dirty = 1;
+			} else {
+				dirty = 0;
+				last_update = now;
+				write_all();
+			}
+#ifdef USE_PTHREAD
+			pthread_mutex_unlock(&lock);
+#endif
 		}
-
-		if (status.code == status_type::SET_DONE) {
-			fputc('\n', ui_stream);
-			buffer_index = 0;
-			buffer[0] = '\0';
-			return;
-		} 
-
-		/*
-		 * Handle optional output.
-		 */
-
-		if (now == last_update)
-			return;
-		else
-			last_update = now;
-
-		write_all();
 	}
 
 public:
+
+#ifdef USE_PTHREAD
+	static void *update_loop(void *vu) {
+		ui_tty *u = (ui_tty *) vu;
+
+		for(;;) {
+#ifdef HAVE_NANOSLEEP
+			struct timespec t;
+			t.tv_sec = 0;
+			t.tv_nsec = 100000000;
+			nanosleep(&t, NULL);
+#else
+			sleep(1);
+#endif
+			if (u->dirty) {
+				u->write_all();
+				pthread_mutex_lock(&u->lock);
+				u->dirty = 0;
+				pthread_mutex_unlock(&u->lock);
+			}
+		}
+
+		return NULL;
+	}
+#endif
+
 	/*
 	 * Constructor may throw an exception to signal that using ui_wo would
 	 * be more appropriate.
@@ -376,9 +437,26 @@ public:
 
 		buffer[0] = '\0';
 		buffer_index = 0;
+
+		dirty = 0;
+
+		/*
+		 * Start an updating thread if possible.
+		 */
+#ifdef USE_PTHREAD
+		pthread_mutex_init(&lock, NULL);
+		pthread_attr_t pattr;
+		pthread_attr_init(&pattr);
+		pthread_attr_setdetachstate(&pattr, PTHREAD_CREATE_JOINABLE);
+		pthread_create(&update_thread, NULL, update_loop, (void *) this);
+#endif
 	}
 
 	~ui_tty() {
+#ifdef USE_PTHREAD
+		pthread_cancel(update_thread);
+		pthread_join(update_thread, NULL);
+#endif
 		free(buffer);
 	}
 };
