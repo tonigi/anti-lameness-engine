@@ -159,7 +159,7 @@ private:
 	static int alignment_class;
 
 	/*
-	 * Default initial alignment.
+	 * Default initial alignment type.
 	 *
 	 * 0. Identity transformation.
 	 *
@@ -167,7 +167,6 @@ private:
 	 */
 
 	static int default_initial_alignment_type;
-	static transformation default_initial_alignment;
 
 	/*
 	 * Projective group behavior
@@ -180,24 +179,28 @@ private:
 	static int perturb_type;
 
 	/*
-	 * Follow semantics data structure
+	 * Alignment element
 	 *
-	 * This structure contains variables implementing delta following.  The
-	 * change between the non-default old initial alignment and old final
-	 * alignment is used to adjust the non-default current initial
-	 * alignment.  If either the old or new initial alignment is a default
-	 * alignment, the old --follow semantics are preserved.
+	 * This structure contains variables necessary for handling a
+	 * multi-alignment element.  The change between the non-default old
+	 * initial alignment and old final alignment is used to adjust the
+	 * non-default current initial alignment.  If either the old or new
+	 * initial alignment is a default alignment, the old --follow semantics
+	 * are preserved.
 	 */
 
-	struct follow_t {
+	struct element_t {
 		int is_default, old_is_default;
 		int old_lod;
 		transformation old_initial_alignment;
 		transformation old_final_alignment;
+		transformation default_initial_alignment;
+		const image *input_frame;
 
 	public:
-		follow_t() {
+		element_t() {
 			is_default = 1;
+			input_frame = NULL;
 		}
 	};
 
@@ -1441,15 +1444,9 @@ private:
 	 * one case where special care must be taken to ensure that the scale
 	 * is always set correctly (by using the 'rescale' method).
 	 */
-	static ale_accum _align(int m, int local_gs, follow_t *follow) {
+	static ale_accum _align(int m, int local_gs, element_t *element) {
 
-		/*
-		 * Open the input frame.
-		 */
-
-
-		ui::get()->loading_file();
-		const image *input_frame = image_rw::open(m);
+		const image *input_frame = element->input_frame;
 
 		/*
 		 * Local upper/lower data, possibly dependent on image
@@ -1552,8 +1549,8 @@ private:
 			 * setting new image dimensions.
 			 */
 
-			default_initial_alignment = orig_t;
-			default_initial_alignment.set_dimensions(input_frame);
+			element->default_initial_alignment = orig_t;
+			element->default_initial_alignment.set_dimensions(input_frame);
 
 		} else if (default_initial_alignment_type == 1)
 
@@ -1562,29 +1559,29 @@ private:
 			 * dimensions.
 			 */
 
-			default_initial_alignment.set_dimensions(input_frame);
+			element->default_initial_alignment.set_dimensions(input_frame);
 
 		else
 			assert(0);
 
-		follow->old_is_default = follow->is_default;
+		element->old_is_default = element->is_default;
 
 		/*
 		 * Scale default initial transform for lod
 		 */
 
-		default_initial_alignment.rescale(1 / pow(2, lod));
+		element->default_initial_alignment.rescale(1 / pow(2, lod));
 
 		/*
 		 * Load any file-specified transformation
 		 */
 
-		offset = tload_next(tload, alignment_class == 2, default_initial_alignment, 
-				&follow->is_default);
+		offset = tload_next(tload, alignment_class == 2, element->default_initial_alignment, 
+				&element->is_default);
 
 		transformation new_offset = offset;
 		
-		if (!follow->old_is_default && !follow->is_default && 
+		if (!element->old_is_default && !element->is_default && 
 				default_initial_alignment_type == 1) {
 
 			/*
@@ -1611,18 +1608,18 @@ private:
 			 * alignment.
 			 */
 
-			follow->old_final_alignment.rescale (1 / pow(2, lod));
-			follow->old_initial_alignment.rescale(1 / pow(2, lod - follow->old_lod));
+			element->old_final_alignment.rescale (1 / pow(2, lod));
+			element->old_initial_alignment.rescale(1 / pow(2, lod - element->old_lod));
 
 			if (alignment_class == 0) {
 				/*
 				 * Translational transformations
 				 */
 	
-				ale_pos t0 = -follow->old_initial_alignment.eu_get(0) 
-					   +  follow->old_final_alignment.eu_get(0);
-				ale_pos t1 = -follow->old_initial_alignment.eu_get(1) 
-					   +  follow->old_final_alignment.eu_get(1);
+				ale_pos t0 = -element->old_initial_alignment.eu_get(0) 
+					   +  element->old_final_alignment.eu_get(0);
+				ale_pos t1 = -element->old_initial_alignment.eu_get(1) 
+					   +  element->old_final_alignment.eu_get(1);
 
 				new_offset.eu_modify(0, t0);
 				new_offset.eu_modify(1, t1);
@@ -1632,15 +1629,15 @@ private:
 				 * Euclidean transformations
 				 */
 
-				ale_pos t2 = -follow->old_initial_alignment.eu_get(2) 
-					   +  follow->old_final_alignment.eu_get(2);
+				ale_pos t2 = -element->old_initial_alignment.eu_get(2) 
+					   +  element->old_final_alignment.eu_get(2);
 
 				new_offset.eu_modify(2, t2);
 
-				point p( offset.scaled_height()/2 + offset.eu_get(0) - follow->old_initial_alignment.eu_get(0),
-					 offset.scaled_width()/2 + offset.eu_get(1) - follow->old_initial_alignment.eu_get(1) );
+				point p( offset.scaled_height()/2 + offset.eu_get(0) - element->old_initial_alignment.eu_get(0),
+					 offset.scaled_width()/2 + offset.eu_get(1) - element->old_initial_alignment.eu_get(1) );
 
-				p = follow->old_final_alignment.transform_scaled(p);
+				p = element->old_final_alignment.transform_scaled(p);
 
 				new_offset.eu_modify(0, p[0] - offset.scaled_height()/2 - offset.eu_get(0));
 				new_offset.eu_modify(1, p[1] - offset.scaled_width()/2 - offset.eu_get(1));
@@ -1652,21 +1649,21 @@ private:
 
 				point p[4];
 
-				p[0] = follow->old_final_alignment.transform_scaled(follow->old_initial_alignment
+				p[0] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
 				     . scaled_inverse_transform(offset.transform_scaled(point(      0        ,       0       ))));
-				p[1] = follow->old_final_alignment.transform_scaled(follow->old_initial_alignment
+				p[1] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
 				     . scaled_inverse_transform(offset.transform_scaled(point(offset.scaled_height(),       0       ))));
-				p[2] = follow->old_final_alignment.transform_scaled(follow->old_initial_alignment
+				p[2] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
 				     . scaled_inverse_transform(offset.transform_scaled(point(offset.scaled_height(), offset.scaled_width()))));
-				p[3] = follow->old_final_alignment.transform_scaled(follow->old_initial_alignment
+				p[3] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
 				     . scaled_inverse_transform(offset.transform_scaled(point(      0        , offset.scaled_width()))));
 
 				new_offset.gpt_set(p);
 			}
 		}
 
-		follow->old_initial_alignment = offset;
-		follow->old_lod = lod;
+		element->old_initial_alignment = offset;
+		element->old_lod = lod;
 		offset = new_offset;
 
 		struct scale_cluster si = scale_clusters[lod];
@@ -2203,7 +2200,7 @@ private:
 					 */
 
 					offset.rescale(2);
-					default_initial_alignment.rescale(2);
+					element->default_initial_alignment.rescale(2);
 
 					/*
 					 * Work with images twice as large
@@ -2240,7 +2237,7 @@ private:
 
 		if (lod > 0) {
 			offset.rescale(pow(2, lod));
-			default_initial_alignment.rescale(pow(2, lod));
+			element->default_initial_alignment.rescale(pow(2, lod));
 		}
 
 		/*
@@ -2277,8 +2274,8 @@ private:
 			 * Update alignment variables
 			 */
 			latest_ok = 1;
-			default_initial_alignment = offset;
-			follow->old_final_alignment = offset;
+			element->default_initial_alignment = offset;
+			element->old_final_alignment = offset;
 			ui::get()->alignment_match_ok();
 		} else if (local_gs == 4) {
 
@@ -2291,7 +2288,7 @@ private:
 			 * since variables like old_initial_value have been overwritten.
 			 */
 
-			ale_accum nested_result = _align(m, -1, follow);
+			ale_accum nested_result = _align(m, -1, element);
 
 			if ((1 - nested_result) * 100 > match_threshold) {
 				return nested_result;
@@ -2301,7 +2298,7 @@ private:
 			}
 
 			if (is_fail_default)
-				offset = default_initial_alignment;
+				offset = element->default_initial_alignment;
 
 			ui::get()->set_match(here);
 			ui::get()->alignment_no_match();
@@ -2314,7 +2311,7 @@ private:
 
 		} else {
 			if (is_fail_default)
-				offset = default_initial_alignment;
+				offset = element->default_initial_alignment;
 			latest_ok = 0;
 			ui::get()->alignment_no_match();
 		}
@@ -2341,12 +2338,6 @@ private:
 		match_sum += (1 - here) * 100;
 		match_count++;
 		latest = m;
-
-		/*
-		 * Close the image file.
-		 */
-
-		image_rw::close(m);
 
 		return here;
 	}
@@ -2569,19 +2560,27 @@ private:
 	 */
 	static void update_to(int n) {
 
-		static follow_t follow;
+		static element_t element;
 
 		assert (n <= latest + 1);
+		assert (n >= 0);
 
 		if (latest < 0) {
-			const image *i = image_rw::open(n);
+
+			/*
+			 * Handle the initial frame
+			 */
+
+			ui::get()->loading_file();
+			element.input_frame = image_rw::open(n);
+
+			const image *i = element.input_frame;
 			int is_default;
 			transformation result = alignment_class == 2
 				? transformation::gpt_identity(i, scale_factor)
 				: transformation::eu_identity(i, scale_factor);
 			result = tload_first(tload, alignment_class == 2, result, &is_default);
 			tsave_first(tsave, result, alignment_class == 2);
-			image_rw::close(n);
 
 			if (_keep > 0) {
 				kept_t = (transformation *) malloc(image_rw::count()
@@ -2602,11 +2601,18 @@ private:
 			latest_ok = 1;
 			latest_t = result;
 
-			default_initial_alignment = result;
+			element.default_initial_alignment = result;
 			orig_t = result;
+
+			image_rw::close(n);
 		}
 
 		for (int i = latest + 1; i <= n; i++) {
+
+			/*
+			 * Handle supplemental frames.
+			 */
+
 			assert (reference != NULL);
 
 			ui::get()->set_arender_current();
@@ -2626,7 +2632,12 @@ private:
 			assert (reference_image != NULL);
 			assert (reference_defined != NULL);
 
-			_align(i, _gs, &follow);
+			ui::get()->loading_file();
+			element.input_frame = image_rw::open(i);
+
+			_align(i, _gs, &element);
+
+			image_rw::close(n);
 		}
 	}
 
