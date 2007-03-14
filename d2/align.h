@@ -191,6 +191,7 @@ private:
 
 	struct element_t {
 		int is_default, old_is_default;
+		int is_primary;
 		int old_lod;
 		transformation old_initial_alignment;
 		transformation old_final_alignment;
@@ -1577,7 +1578,7 @@ private:
 		 */
 
 		offset = tload_next(tload, alignment_class == 2, element->default_initial_alignment, 
-				&element->is_default);
+				&element->is_default, element->is_primary);
 
 		transformation new_offset = offset;
 		
@@ -2327,7 +2328,7 @@ private:
 		 * Save the transformation information
 		 */
 
-		tsave_next(tsave, offset, alignment_class == 2);
+		tsave_next(tsave, offset, alignment_class == 2, element->is_primary);
 
 		latest_t = offset;
 
@@ -2634,6 +2635,7 @@ private:
 
 			ui::get()->loading_file();
 			element.input_frame = image_rw::open(i);
+			element.is_primary = 1;
 
 			_align(i, _gs, &element);
 

@@ -381,10 +381,14 @@ static inline transformation tload_first(struct tload_t *t, int is_p,
  * 	DEFAULT_TRANSFORM is the default transformation result.
  *
  *	IS_DEFAULT is used to signal a non-default transformation result.
+ *
+ *	IS_PRIMARY is used to differentiate primary and non-primary 
+ *	transformations
  */
 
 static inline transformation tload_next(struct tload_t *t, int is_p, 
-		transformation default_transform, int *is_default) {
+		transformation default_transform, int *is_default, 
+		int is_primary) {
 
 	transformation result = default_transform;
 
@@ -395,6 +399,21 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 	 */
 
 	while (t && !feof(t->file)) {
+
+		char c = fgetc(t->file);
+
+		if (feof(t->file)
+		 || (!is_primary
+		  && c != EOF
+		  && c != 'F'
+		  && c != 'f'
+		  && c != 'Q'
+		  && c != 'q')) {
+			return result;
+		} else {
+			ungetc(c, t->file);
+		}
+
 		char line[1024];
 
 		fgets(line, 1024, t->file);
@@ -470,6 +489,10 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 					result.bd_set(bdc, parameters);
 				}
 				break;
+			case 'Q':
+			case 'q':
+				if (is_primary)
+					break;
 			case 'P':
 			case 'p':
 				/* Projective transformation data */
@@ -525,6 +548,10 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 					return result;
 				}
 				break;
+			case 'F':
+			case 'f':
+				if (is_primary)
+					break;
 			case 'E':
 			case 'e':
 				/* Euclidean transformation data */
@@ -700,16 +727,19 @@ static inline void tsave_first(struct tsave_t *t, transformation offset, int is_
  *
  * 	IS_PROJECTIVE indicates whether to write a projective transformation.
  *
+ * 	IS_PRIMARY indicates whether to write a primary transformation
+ *
  */
 
-static inline void tsave_next(struct tsave_t *t, transformation offset, int is_projective) {
+static inline void tsave_next(struct tsave_t *t, transformation offset, int is_projective,
+		int is_primary) {
 
 	if (t == NULL)
 		return;
 
 	t->file = fopen(t->filename, "a");
 	
-	if (offset.bd_count() > 0) {
+	if (is_primary && offset.bd_count() > 0) {
 		assert (tfile_output_version >= 3);
 		unsigned int i;
 
@@ -723,13 +753,13 @@ static inline void tsave_next(struct tsave_t *t, transformation offset, int is_p
 	if (is_projective) {
 		int i, j;
 
-		fprintf(t->file, "P ");
+		fprintf(t->file, is_primary ? "P " : "Q ");
 		fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
 		for (i = 0; i < 4; i++)
 			for (j = 1; j >= 0; j--)
 				fprintf(t->file, "%f ", (double) offset.gpt_get(i, j));
 	} else {
-		fprintf(t->file, "E ");
+		fprintf(t->file, is_primary ? "E " : "F ");
 		fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
 		fprintf(t->file, "%f ",    (double) offset.eu_get(1));
 		fprintf(t->file, "%f ",    (double) offset.eu_get(0));
