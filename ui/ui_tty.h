@@ -344,21 +344,21 @@ private:
 			pthread_mutex_lock(&lock);
 #endif
 			fputc('\n', ui_stream);
+			buffer_index = 0;
+			buffer[0] = '\0';
 #ifdef USE_PTHREAD
 			pthread_mutex_unlock(&lock);
 #endif
-			buffer_index = 0;
-			buffer[0] = '\0';
 		} else if (status.code == status_type::SET_DONE) {
 #ifdef USE_PTHREAD
 			pthread_mutex_lock(&lock);
 #endif
 			fputc('\n', ui_stream);
+			buffer_index = 0;
+			buffer[0] = '\0';
 #ifdef USE_PTHREAD
 			pthread_mutex_unlock(&lock);
 #endif
-			buffer_index = 0;
-			buffer[0] = '\0';
 		} else { 
 
 			/*
@@ -397,8 +397,8 @@ public:
 			sleep(1);
 #endif
 			if (u->dirty) {
-				u->write_all();
 				pthread_mutex_lock(&u->lock);
+				u->write_all();
 				u->dirty = 0;
 				pthread_mutex_unlock(&u->lock);
 			}
