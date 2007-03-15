@@ -2561,10 +2561,13 @@ private:
 	 */
 	static void update_to(int n) {
 
-		static element_t element;
-
 		assert (n <= latest + 1);
 		assert (n >= 0);
+
+		static element_t *element = NULL;
+		static std::vector<element_t> elements;
+
+		elements.resize(_ma_card);
 
 		if (latest < 0) {
 
@@ -2573,9 +2576,9 @@ private:
 			 */
 
 			ui::get()->loading_file();
-			element.input_frame = image_rw::open(n);
+			elements[0].input_frame = image_rw::open(n);
 
-			const image *i = element.input_frame;
+			const image *i = elements[0].input_frame;
 			int is_default;
 			transformation result = alignment_class == 2
 				? transformation::gpt_identity(i, scale_factor)
@@ -2602,13 +2605,14 @@ private:
 			latest_ok = 1;
 			latest_t = result;
 
-			element.default_initial_alignment = result;
+			elements[0].default_initial_alignment = result;
 			orig_t = result;
 
 			image_rw::close(n);
 		}
 
-		for (int i = latest + 1; i <= n; i++) {
+		for (int i = latest + 1; i <= n; i++) 
+		for (int j = 0; j < _ma_card; j++) {
 
 			/*
 			 * Handle supplemental frames.
@@ -2634,10 +2638,10 @@ private:
 			assert (reference_defined != NULL);
 
 			ui::get()->loading_file();
-			element.input_frame = image_rw::open(i);
-			element.is_primary = 1;
+			elements[j].input_frame = image_rw::open(i);
+			elements[j].is_primary = 1;
 
-			_align(i, _gs, &element);
+			_align(i, _gs, &elements[j]);
 
 			image_rw::close(n);
 		}
@@ -3001,6 +3005,7 @@ public:
 	 * Multi-alignment cardinality
 	 */
 	static void ma_card(unsigned int value) {
+		assert (value >= 1);
 		_ma_card = value;
 	}
 

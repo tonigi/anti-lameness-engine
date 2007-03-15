@@ -2733,7 +2733,10 @@ public:
 					d2::align::mc((type == 2) ? env->get_double_arg(i->first, 1) / 100 
 							          : (double) type);
 				} else if (!strcmp(option_name, "ma-card")) {
-					d2::align::ma_card(env->get_int_arg(i->first, 1));
+					int card = env->get_int_arg(i->first, 1);
+					if (card < 1)
+						ui::get()->error("--ma-card requires a positive integer");
+					d2::align::ma_card(card);
 				} else if (!strcmp(option_name, "ma-cont")) {
 					d2::align::ma_cont(env->get_double_arg(i->first, 1));
 				} else if (!strcmp(option_name, "gs")) {

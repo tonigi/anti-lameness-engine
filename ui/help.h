@@ -285,7 +285,7 @@ public:
 			BETWEEN_SECTIONS
 			"Multi-alignment:\n"
 			HEADER_SPACE
-			"--ma-card <x>     Maximum number of multi-alignment elements.  (0 is default)\n"
+			"--ma-card <x>     Maximum number of multi-alignment elements.  (1 is default)\n"
 			"--ma-cont <x>     Minimum contiguous area of each MA region.  (100 is default)\n"
 			"\n"
 		       );
