@@ -324,7 +324,7 @@ private:
 	 * Multi-alignment cardinality.
 	 */
 
-	static int _ma_card;
+	static unsigned int _ma_card;
 
 	/*
 	 * Multi-alignment contiguity.
@@ -2564,12 +2564,11 @@ private:
 		assert (n <= latest + 1);
 		assert (n >= 0);
 
-		static element_t *element = NULL;
 		static std::vector<element_t> elements;
 
-		elements.resize(_ma_card);
-
 		if (latest < 0) {
+
+			elements.resize(1);
 
 			/*
 			 * Handle the initial frame
@@ -2612,7 +2611,12 @@ private:
 		}
 
 		for (int i = latest + 1; i <= n; i++) 
-		for (int j = 0; j < _ma_card; j++) {
+		for (unsigned int j = 0; j < _ma_card; j++) {
+
+			if (j >= elements.size()) {
+				elements.resize(j + 1);
+				elements[j] = elements[0];
+			}
 
 			/*
 			 * Handle supplemental frames.
@@ -2639,12 +2643,15 @@ private:
 
 			ui::get()->loading_file();
 			elements[j].input_frame = image_rw::open(i);
-			elements[j].is_primary = 1;
+			elements[j].is_primary = (j == 0);
 
 			_align(i, _gs, &elements[j]);
 
 			image_rw::close(n);
 		}
+
+		if (elements.size() > _ma_card)
+			elements.resize(_ma_card);
 	}
 
 public:
