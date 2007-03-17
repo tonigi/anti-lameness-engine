@@ -401,6 +401,8 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 	while (t && !feof(t->file)) {
 
 		char c = fgetc(t->file);
+		if (!feof(t->file) && c != EOF)
+			ungetc(c, t->file);
 
 		if (feof(t->file)
 		 || (!is_primary
@@ -410,8 +412,6 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 		  && c != 'Q'
 		  && c != 'q')) {
 			return result;
-		} else {
-			ungetc(c, t->file);
 		}
 
 		char line[1024];
