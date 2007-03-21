@@ -56,7 +56,7 @@ protected:
 
 	virtual void specific_rescale(ale_pos factor) = 0;
 	virtual void reset_memos() = 0;
-	virtual void specific_set_dimensions(image *im) = 0;
+	virtual void specific_set_dimensions(const image *im) = 0;
 
 public:	
 
@@ -351,7 +351,7 @@ public:
 	 * Rescale a transform with a given factor.
 	 */
 	void rescale(ale_pos factor) {
-		specific_rescale();
+		specific_rescale(factor);
 		scale_factor *= factor;
 	}
 
@@ -369,6 +369,10 @@ public:
 	 * Set the dimensions of the image.
 	 */
 	void set_dimensions(const image *im) {
+
+		int new_height = (int) im->height();
+		int new_width  = (int) im->width();
+
 		reset_memos();
 		specific_set_dimensions(im);
 		input_height = new_height;
@@ -552,6 +556,9 @@ public:
 	virtual void eu_v0_set(ale_pos eu[3]) = 0;
 
 	virtual void debug_output() = 0;
+
+	virtual ~trans_abstract() {
+	}
 };
 
 #endif
