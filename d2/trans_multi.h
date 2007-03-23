@@ -185,7 +185,7 @@ public:
 	 */
 	void specific_rescale(ale_pos factor) {
 		for (unsigned int t = 0; t < trans_stack.size(); t++)
-			trans_stack[t].specific_rescale(factor);
+			trans_stack[t].rescale(factor);
 	}
 
 	/*
@@ -193,7 +193,7 @@ public:
 	 */
 	void specific_set_dimensions(const image *im) {
 		for (unsigned int t = 0; t < trans_stack.size(); t++)
-			trans_stack[t].specific_set_dimensions(im);
+			trans_stack[t].set_dimensions(im);
 	} 
 
 	/*
