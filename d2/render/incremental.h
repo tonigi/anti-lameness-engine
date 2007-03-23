@@ -296,7 +296,7 @@ protected:
 		N = 1;
 #endif
 
-		subdomain_args *args = (subdomain_args *) malloc(sizeof(subdomain_args) * N);
+		subdomain_args *args = new subdomain_args[N];
 
 		for (int ti = 0; ti < N; ti++) {
 			args[ti].instance = this;
@@ -323,7 +323,7 @@ protected:
 		}
 #endif
 
-		free(args);
+		delete[] args;
 
 		ui::get()->d2_incremental_stop();
 	}
