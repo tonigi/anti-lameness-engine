@@ -31,7 +31,8 @@
 #define __transformation_h__
 
 #include "trans_single.h"
+#include "trans_multi.h"
 
-typedef trans_single transformation;
+typedef trans_multi transformation;
 
 #endif

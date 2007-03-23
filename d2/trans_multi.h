@@ -31,29 +31,36 @@
 
 struct trans_multi : public trans_abstract {
 private:
-	std::stack<trans_single> trans_stack;
-
+	std::vector<trans_single> trans_stack;
+	
 public:	
+
+	trans_multi() : trans_stack() {
+	}
+
+	trans_multi(const trans_multi &tm) : trans_abstract(*(trans_abstract *) &tm) {
+		trans_stack = tm.trans_stack;
+	}
 
 	/*
 	 * Returns non-zero if the transformation might be non-Euclidean.
 	 */
 	int is_projective() {
-		return trans_stack[0].is_projective();
+		return trans_stack.front().is_projective();
 	}
 
 	/*
 	 * Projective/Euclidean transformations
 	 */
 	struct point pe(struct point p) const {
-		return trans_stack[0].pe(p);
+		return trans_stack.front().pe(p);
 	}
 
 	/*
 	 * Inverse transformations
 	 */
 	struct point pei(struct point p) const {
-		return trans_stack[0].pei(p);
+		return trans_stack.front().pei(p);
 	}
 
 
@@ -62,7 +69,7 @@ public:
 	 * transformation.
 	 */
 	void eu_to_gpt() {
-		for (int t = 0; t < trans_stack.size(); t++)
+		for (unsigned int t = 0; t < trans_stack.size(); t++)
 			trans_stack[t].eu_to_gpt();
 	}
 
@@ -71,7 +78,10 @@ public:
 	 */
 	static struct trans_multi eu_identity(const image *i = NULL, ale_pos scale_factor = 1) {
 		struct trans_multi r;
-		r.trans_stack.push(trans_single::eu_identity(i, scale_factor));
+		r.input_width = i ? i->width() : 2;
+		r.input_height = i ? i->height() : 2;
+		r.scale_factor = scale_factor;
+		r.trans_stack.push_back(trans_single::eu_identity(i, scale_factor));
 		return r;
 	}
 
@@ -88,85 +98,85 @@ public:
 	 * Modify a euclidean transform in the indicated manner.
 	 */
 	void eu_modify(int i1, ale_pos diff) {
-		trans_stack.top().eu_modify(i1, diff);
+		trans_stack.back().eu_modify(i1, diff);
 	}
 
 	/*
 	 * Rotate about a given point in the original reference frame.
 	 */
 	void eu_rotate_about_scaled(point center, ale_pos diff) {
-		trans_stack.top().eu_rotate_about_scaled(center, diff);
+		trans_stack.back().eu_rotate_about_scaled(center, diff);
 	}
 
 	/*
 	 * Modify all euclidean parameters at once.
 	 */
 	void eu_set(ale_pos eu[3]) {
-		trans_stack.top().eu_set(eu);
+		trans_stack.back().eu_set(eu);
 	}
 
 	/*
 	 * Get the specified euclidean parameter
 	 */
 	ale_pos eu_get(int param) {
-		return trans_stack.top().eu_get(param);
+		return trans_stack.back().eu_get(param);
 	}
 
 	/*
 	 * Modify a projective transform in the indicated manner.
 	 */
 	void gpt_modify(int i1, int i2, ale_pos diff) {
-		trans_stack.top().gpt_modify(i1, i2, diff);
+		trans_stack.back().gpt_modify(i1, i2, diff);
 	}
 
 	/*
 	 * Modify a projective transform according to the group operation.
 	 */
 	void gr_modify(int i1, int i2, ale_pos diff) {
-		trans_stack.top().gr_modify(i1, i2, diff);
+		trans_stack.back().gr_modify(i1, i2, diff);
 	}
 
 	/*
 	 * Modify all projective parameters at once.
 	 */
 	void gpt_set(point x[4]) {
-		trans_stack.top().gpt_set(x);
+		trans_stack.back().gpt_set(x);
 	}
 
 	void gpt_set(point x1, point x2, point x3, point x4) {
-		trans_stack.top().gpt_set(x1, x2, x3, x4);
+		trans_stack.back().gpt_set(x1, x2, x3, x4);
 	}
 
 	/*
 	 * Get the specified projective parameter
 	 */
 	point gpt_get(int point) {
-		return trans_stack.top().gpt_get(point);
+		return trans_stack.back().gpt_get(point);
 	}
 
 	/*
 	 * Get the specified projective parameter
 	 */
 	ale_pos gpt_get(int point, int dim) {
-		return trans_stack.top().gpt_get(point, dim);
+		return trans_stack.back().gpt_get(point, dim);
 	}
 
 	/*
 	 * Translate by a given amount
 	 */
 	void translate(point p) {
-		trans_stack.top().translate(p);
+		trans_stack.back().translate(p);
 	}
 
 	/*
 	 * Rotate by a given amount about a given point.
 	 */
 	void rotate(point p, ale_pos degrees) {
-		trans_stack.top().rotate();
+		trans_stack.back().rotate(p, degrees);
 	}
 
 	void reset_memos() {
-		for (int t = 0; t < trans_stack.size(); t++)
+		for (unsigned int t = 0; t < trans_stack.size(); t++)
 			trans_stack[t].reset_memos();
 	}
 
@@ -174,16 +184,16 @@ public:
 	 * Rescale a transform with a given factor.
 	 */
 	void specific_rescale(ale_pos factor) {
-		for (int t = 0; t < trans_stack.size(); t++)
-			trans_stack[t].specific_rescale();
+		for (unsigned int t = 0; t < trans_stack.size(); t++)
+			trans_stack[t].specific_rescale(factor);
 	}
 
 	/*
 	 * Set the dimensions of the image.
 	 */
 	void specific_set_dimensions(const image *im) {
-		for (int t = 0; t < trans_stack.size(); t++)
-			trans_stack[t].specific_set_dimensions();
+		for (unsigned int t = 0; t < trans_stack.size(); t++)
+			trans_stack[t].specific_set_dimensions(im);
 	} 
 
 	/*
@@ -193,7 +203,7 @@ public:
 	 * file created with an old version of ALE.
 	 */
 	void gpt_v0_set(point x[4]) {
-		trans_stack.top().gpt_v0_set(x);
+		trans_stack.back().gpt_v0_set(x);
 	}
 
 	/*
@@ -203,11 +213,11 @@ public:
 	 * file created with an old version of ALE.
 	 */
 	void eu_v0_set(ale_pos eu[3]) {
-		trans_stack.top().eu_v0_set(eu);
+		trans_stack.back().eu_v0_set(eu);
 	}
 
 	void debug_output() {
-		for (int t = 0; t < trans_stack.size(); t++)
+		for (unsigned int t = 0; t < trans_stack.size(); t++)
 			trans_stack[t].debug_output();
 	}
 };

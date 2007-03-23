@@ -60,6 +60,23 @@ protected:
 
 public:	
 
+	trans_abstract() {
+		bdcnum = 0;
+	}
+
+	trans_abstract (const trans_abstract &ta) {
+		scale_factor = ta.scale_factor;
+		input_width = ta.input_width;
+		input_height = ta.input_height;
+
+		bdcnum = ta.bdcnum;
+
+		assert (bdcnum < BARREL_DEGREE);
+
+		for (unsigned int d = 0; d < bdcnum; d++)
+			bdc[d] = ta.bdc[d];
+	}
+
 	/*
 	 * Returns non-zero if the transformation might be non-Euclidean.
 	 */
@@ -105,6 +122,7 @@ public:
 	 * Barrel distortion radial component.
 	 */
 	ale_pos bdr(ale_pos r) const {
+		assert (bdcnum < BARREL_DEGREE);
 		ale_pos s = r;
 		for (unsigned int d = 0; d < bdcnum; d++)
 			s += bdc[d] * (pow(r, d + 2) - r);
@@ -115,6 +133,7 @@ public:
 	 * Derivative of the barrel distortion radial component.
 	 */
 	ale_pos bdrd(ale_pos r) const {
+		assert (bdcnum < BARREL_DEGREE);
 		ale_pos s = 1;
 		for (unsigned int d = 0; d < bdcnum; d++)
 			s += bdc[d] * (pow(r, d + 1) - 1);

@@ -33,6 +33,7 @@
 #include <limits.h>
 
 #include <vector>
+#include <stack>
 #include <algorithm>
 
 #include "ale_real.h"
