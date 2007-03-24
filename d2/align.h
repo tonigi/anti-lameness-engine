@@ -2586,8 +2586,7 @@ private:
 			tsave_first(tsave, result, alignment_class == 2);
 
 			if (_keep > 0) {
-				kept_t = (transformation *) malloc(image_rw::count()
-						* sizeof(transformation));
+				kept_t = new transformation[image_rw::count()];
 				kept_ok = (int *) malloc(image_rw::count()
 						* sizeof(int));
 				assert (kept_t);
