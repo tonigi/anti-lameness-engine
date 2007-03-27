@@ -331,7 +331,7 @@ protected:
 		N = 1;
 #endif
 
-		sim_subdomain_args *args = (sim_subdomain_args *) malloc(sizeof(sim_subdomain_args) * N);
+		sim_subdomain_args *args = new sim_subdomain_args[N];
 
 
 		/*
@@ -405,7 +405,7 @@ protected:
 		 */
 
 		if (nlsimulated == NULL) {
-			delete args;
+			delete[] args;
 			return;
 		}
 
@@ -465,7 +465,7 @@ protected:
 
 		delete nlsim_weights;
 
-		delete args;
+		delete[] args;
 	}
 
 	struct correction_t {
@@ -916,7 +916,7 @@ protected:
 		N = 1;
 #endif
 
-		correct_subdomain_args *args = (correct_subdomain_args *) malloc(sizeof(correct_subdomain_args) * N);
+		correct_subdomain_args *args = new correct_subdomain_args[N];
 
 		for (int ti = 0; ti < N; ti++) {
 			args[ti].frame_num = frame_num;
@@ -1060,6 +1060,8 @@ protected:
 
 		if (nlsimulated)
 			delete lreal;
+
+		delete[] args;
 	}
 
 	/* 
