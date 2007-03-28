@@ -52,7 +52,7 @@ public:
 
 	static d2::psf *lpsf() {
 
-		return d2::psf_parse::get( 1, "box=1^circle=1.1^circle=1.1" );
+		return d2::psf_parse::get( 1, "circle=1.3^circle=1.3" );
 		}
 
 	/*
