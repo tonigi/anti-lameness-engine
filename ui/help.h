@@ -353,6 +353,7 @@ public:
 			"                     Available point-spread functions:\n"
 			"                        box=<diameter>\n"
 			"                        circle=<diameter>\n"
+			"                        sgauss=<std. deviation x2>x<inner diameter>\n"
 			"                        stdin\n"
 			"                        stdin_vg\n"
 			"                        <p>+<p> (summation)\n"
