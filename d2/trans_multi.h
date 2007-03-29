@@ -42,6 +42,12 @@ public:
 		trans_stack = tm.trans_stack;
 	}
 
+	trans_single get_element(int index) {
+		assert (index < trans_stack.size());
+
+		return trans_stack[index];
+	}
+
 	/*
 	 * Returns non-zero if the transformation might be non-Euclidean.
 	 */
