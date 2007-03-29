@@ -2615,6 +2615,9 @@ private:
 			if (j >= elements.size()) {
 				elements.resize(j + 1);
 				elements[j] = elements[0];
+				elements[j].default_initial_alignment =
+					elements[j - 1].default_initial_alignment;
+				elements[j].default_initial_alignment.push_element();
 			}
 
 			/*

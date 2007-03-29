@@ -42,10 +42,25 @@ public:
 		trans_stack = tm.trans_stack;
 	}
 
-	trans_single get_element(int index) {
+	trans_single get_element(unsigned int index) {
 		assert (index < trans_stack.size());
 
 		return trans_stack[index];
+	}
+
+	trans_single set_element(unsigned int index, trans_single t) {
+		assert (index < trans_stack.size());
+
+		trans_stack[index] = t;
+	}
+
+
+	void push_element() {
+		trans_stack.push_back(trans_stack.back());
+	}
+
+	unsigned int stack_depth() {
+		return trans_stack.size();
 	}
 
 	/*
