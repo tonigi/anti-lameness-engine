@@ -943,6 +943,9 @@ private:
 			if (ref_excluded(i, j, offset, c.ax_parameters, ax_count))
 				continue;
 
+			if (!t.supported((int) (i + offset[0]), (int) (j + offset[1])))
+				continue;
+
 			/*
 			 * Transform
 			 */
