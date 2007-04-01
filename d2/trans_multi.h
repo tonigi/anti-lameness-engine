@@ -1,5 +1,5 @@
-// Copyright 2002, 2004 David Hilvert <dhilvert@auricle.dyndns.org>, 
-//                                    <dhilvert@ugcs.caltech.edu>
+// Copyright 2002, 2004, 2007 David Hilvert <dhilvert@auricle.dyndns.org>, 
+//                                          <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
 
@@ -32,14 +32,17 @@
 struct trans_multi : public trans_abstract {
 private:
 	std::vector<trans_single> trans_stack;
+	int full_support;
 	
 public:	
 
 	trans_multi() : trans_stack() {
+		full_support = 0;
 	}
 
 	trans_multi(const trans_multi &tm) : trans_abstract(*(trans_abstract *) &tm) {
 		trans_stack = tm.trans_stack;
+		full_support = tm.full_support;
 	}
 
 	trans_single get_element(unsigned int index) {
@@ -64,10 +67,18 @@ public:
 	}
 
 	int supported(int i, int j) {
-		if (stack_depth() == 1)
+		if (full_support || stack_depth() == 1)
 			return 1;
 
 		return 0;
+	}
+	
+	void use_full_support() {
+		full_support = 1;
+	}
+
+	void use_restricted_support() {
+		full_support = 0;
 	}
 
 	/*

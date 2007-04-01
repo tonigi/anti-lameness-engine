@@ -943,6 +943,10 @@ private:
 			if (ref_excluded(i, j, offset, c.ax_parameters, ax_count))
 				continue;
 
+			/*
+			 * Check transformation support.
+			 */
+
 			if (!t.supported((int) (i + offset[0]), (int) (j + offset[1])))
 				continue;
 
@@ -2259,7 +2263,9 @@ private:
 
 		ui::get()->postmatching();
 		diff_stat_t *new_diff_stat = new diff_stat_t();
+		offset.use_full_support();
 		here = diff(scale_clusters[0], offset, _mc_arg, local_ax_count, m, new_diff_stat);
+		offset.use_restricted_support();
 		delete new_diff_stat;
 		ui::get()->set_match(here);
 
