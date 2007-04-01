@@ -63,6 +63,13 @@ public:
 		return trans_stack.size();
 	}
 
+	int supported(int i, int j) {
+		if (stack_depth() == 1)
+			return 1;
+
+		return 0;
+	}
+
 	/*
 	 * Returns non-zero if the transformation might be non-Euclidean.
 	 */
