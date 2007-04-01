@@ -51,12 +51,15 @@ public:
 		return trans_stack[index];
 	}
 
-	trans_single set_element(unsigned int index, trans_single t) {
+	void set_element(unsigned int index, trans_single t) {
 		assert (index < trans_stack.size());
 
 		trans_stack[index] = t;
 	}
 
+	void set_current_element(trans_single t) {
+		trans_stack[trans_stack.size() - 1] = t;
+	}
 
 	void push_element() {
 		trans_stack.push_back(trans_stack.back());

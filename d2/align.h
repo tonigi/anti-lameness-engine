@@ -1557,7 +1557,8 @@ private:
 			 * setting new image dimensions.
 			 */
 
-			element->default_initial_alignment = orig_t;
+			// element->default_initial_alignment = orig_t;
+			element->default_initial_alignment.set_current_element(orig_t.get_element(0));
 			element->default_initial_alignment.set_dimensions(input_frame);
 
 		} else if (default_initial_alignment_type == 1)
