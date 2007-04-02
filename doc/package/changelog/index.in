@@ -1,7 +1,9 @@
 V	0.8.8 prerelease
 
+o	Add Gaussian PSF.  (HJ Hornbeck)
+
 o	Recalculate diff statistics after increasing the mc parameter in
-	dynamic monte carlo alignment, resolving an alignment bug.
+	dynamic monte carlo alignment.
 
 o	Update Nikon D50 PSF.  (HJ Hornbeck)
 
