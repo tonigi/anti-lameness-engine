@@ -2170,6 +2170,7 @@ private:
 			 && !found_reliable_better) {
 				_mc_arg *= 2;
 				ui::get()->alignment_monte_carlo_parameter(_mc_arg);
+				here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
 				continue;
 			}
 
