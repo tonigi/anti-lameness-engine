@@ -1,5 +1,8 @@
 V	0.8.8 prerelease
 
+o	Recalculate diff statistics after increasing the mc parameter in
+	dynamic monte carlo alignment, resolving an alignment bug.
+
 o	Allow file-scoped --gs and --gs-mo options.
 
 o	Ignore fex regions for nex SSFEs, resolving a bug noted by Gregory
