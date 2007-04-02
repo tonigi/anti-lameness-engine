@@ -24,7 +24,7 @@
 #include "psf.h"
 #include "box.h"
 #include "circle.h"
-#include "sgauss.h"
+#include "gauss.h"
 #include "sum.h"
 #include "convolution.h"
 #include "scalar_mult.h"
@@ -56,7 +56,7 @@ private:
 	 * Evaluate a type string having no remaining binary operators.
 	 */
 	static psf *get_atomic(int is_linear, const char *orig_type) {
-		double param, param2;
+		double param;
 
 		if (!strcmp(orig_type, "stdin")) {
 
@@ -80,10 +80,10 @@ private:
 			if (sscanf(orig_type + strlen("circle="), "%lf", &param) != 1)
 				syntax_error("Unable to get circle diameter.");
 			return new circle(param / 2);
-	       } else if (!strpfix("sgauss=", orig_type)) {
-		       if (sscanf(orig_type + strlen("sgauss="), "%lfx%lf", &param, &param2) != 2)
-			       syntax_error("Unable to get sgauss diameters.");
-		       return new sgauss(param / 2, param2 / 2);
+		} else if (!strpfix("gauss=", orig_type)) {
+			if (sscanf(orig_type + strlen("gauss="), "%lf", &param) != 1)
+				syntax_error("Unable to parse gauss std deviation.");
+			return new gauss(param / 2);
 		} else {
 			fprintf(stderr, "get_atomic type %s\n", orig_type);
 			syntax_error("Unable to get filter.");
