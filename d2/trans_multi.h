@@ -33,16 +33,19 @@ struct trans_multi : public trans_abstract {
 private:
 	std::vector<trans_single> trans_stack;
 	int full_support;
+	unsigned int current_element;
 	
 public:	
 
 	trans_multi() : trans_stack() {
 		full_support = 0;
+		current_element = 0;
 	}
 
 	trans_multi(const trans_multi &tm) : trans_abstract(*(trans_abstract *) &tm) {
 		trans_stack = tm.trans_stack;
 		full_support = tm.full_support;
+		current_element = tm.current_element;
 	}
 
 	trans_single get_element(unsigned int index) {
@@ -58,11 +61,24 @@ public:
 	}
 
 	void set_current_element(trans_single t) {
-		trans_stack[trans_stack.size() - 1] = t;
+		set_element(current_element, t);
 	}
 
 	void push_element() {
-		trans_stack.push_back(trans_stack.back());
+		assert (trans_stack.size() > 0);
+
+		if (++current_element == trans_stack.size())
+			trans_stack.push_back(trans_stack.back());
+	}
+
+	unsigned int get_current_index() {
+		return current_element;
+	}
+
+	void set_current_index(unsigned int i) {
+		assert (i < trans_stack.size());
+
+		current_element = i;
 	}
 
 	unsigned int stack_depth() {
@@ -70,7 +86,7 @@ public:
 	}
 
 	int supported(int i, int j) {
-		if (full_support || stack_depth() == 1)
+		if (full_support || current_element == 0)
 			return 1;
 
 		return 0;
@@ -124,6 +140,7 @@ public:
 		r.input_height = i ? i->height() : 2;
 		r.scale_factor = scale_factor;
 		r.trans_stack.push_back(trans_single::eu_identity(i, scale_factor));
+		r.current_element = 0;
 		return r;
 	}
 
@@ -140,81 +157,81 @@ public:
 	 * Modify a euclidean transform in the indicated manner.
 	 */
 	void eu_modify(int i1, ale_pos diff) {
-		trans_stack.back().eu_modify(i1, diff);
+		trans_stack[current_element].eu_modify(i1, diff);
 	}
 
 	/*
 	 * Rotate about a given point in the original reference frame.
 	 */
 	void eu_rotate_about_scaled(point center, ale_pos diff) {
-		trans_stack.back().eu_rotate_about_scaled(center, diff);
+		trans_stack[current_element].eu_rotate_about_scaled(center, diff);
 	}
 
 	/*
 	 * Modify all euclidean parameters at once.
 	 */
 	void eu_set(ale_pos eu[3]) {
-		trans_stack.back().eu_set(eu);
+		trans_stack[current_element].eu_set(eu);
 	}
 
 	/*
 	 * Get the specified euclidean parameter
 	 */
 	ale_pos eu_get(int param) {
-		return trans_stack.back().eu_get(param);
+		return trans_stack[current_element].eu_get(param);
 	}
 
 	/*
 	 * Modify a projective transform in the indicated manner.
 	 */
 	void gpt_modify(int i1, int i2, ale_pos diff) {
-		trans_stack.back().gpt_modify(i1, i2, diff);
+		trans_stack[current_element].gpt_modify(i1, i2, diff);
 	}
 
 	/*
 	 * Modify a projective transform according to the group operation.
 	 */
 	void gr_modify(int i1, int i2, ale_pos diff) {
-		trans_stack.back().gr_modify(i1, i2, diff);
+		trans_stack[current_element].gr_modify(i1, i2, diff);
 	}
 
 	/*
 	 * Modify all projective parameters at once.
 	 */
 	void gpt_set(point x[4]) {
-		trans_stack.back().gpt_set(x);
+		trans_stack[current_element].gpt_set(x);
 	}
 
 	void gpt_set(point x1, point x2, point x3, point x4) {
-		trans_stack.back().gpt_set(x1, x2, x3, x4);
+		trans_stack[current_element].gpt_set(x1, x2, x3, x4);
 	}
 
 	/*
 	 * Get the specified projective parameter
 	 */
 	point gpt_get(int point) {
-		return trans_stack.back().gpt_get(point);
+		return trans_stack[current_element].gpt_get(point);
 	}
 
 	/*
 	 * Get the specified projective parameter
 	 */
 	ale_pos gpt_get(int point, int dim) {
-		return trans_stack.back().gpt_get(point, dim);
+		return trans_stack[current_element].gpt_get(point, dim);
 	}
 
 	/*
 	 * Translate by a given amount
 	 */
 	void translate(point p) {
-		trans_stack.back().translate(p);
+		trans_stack[current_element].translate(p);
 	}
 
 	/*
 	 * Rotate by a given amount about a given point.
 	 */
 	void rotate(point p, ale_pos degrees) {
-		trans_stack.back().rotate(p, degrees);
+		trans_stack[current_element].rotate(p, degrees);
 	}
 
 	void reset_memos() {
@@ -245,7 +262,7 @@ public:
 	 * file created with an old version of ALE.
 	 */
 	void gpt_v0_set(point x[4]) {
-		trans_stack.back().gpt_v0_set(x);
+		trans_stack[current_element].gpt_v0_set(x);
 	}
 
 	/*
@@ -255,7 +272,7 @@ public:
 	 * file created with an old version of ALE.
 	 */
 	void eu_v0_set(ale_pos eu[3]) {
-		trans_stack.back().eu_v0_set(eu);
+		trans_stack[current_element].eu_v0_set(eu);
 	}
 
 	void debug_output() {

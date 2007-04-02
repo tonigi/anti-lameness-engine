@@ -2196,48 +2196,63 @@ private:
 			}
 
 			if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
-				perturb *= 0.5;
-
-				if (_mc <= 0)
-					_mc_arg /= 2;
-
-				if (lod > 0) {
-
-					/* 
-					 * We're about to work with images
-					 * twice as large, so rescale the 
-					 * transforms.
-					 */
-
-					offset.rescale(2);
-					element->default_initial_alignment.rescale(2);
-
-					/*
-					 * Work with images twice as large
-					 */
-
-					lod--;
-					si = scale_clusters[lod];
-
-					if (_mc > 0)
-						_mc_arg /= 4;
-
+				if (offset.get_current_index() + 1 < _ma_card) {
+					offset.push_element();
 					here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
 					delete old_here_diff_stat;
-
+					element->is_primary = 0;
 				} else {
-					delete here_diff_stat;
-					here_diff_stat = old_here_diff_stat;
-					adj_p = perturb;
+
+					offset.set_current_index(0);
+					element->is_primary = 1;
+
+					perturb *= 0.5;
+
+					if (_mc <= 0)
+						_mc_arg /= 2;
+
+					if (lod > 0) {
+
+						/* 
+						 * We're about to work with images
+						 * twice as large, so rescale the 
+						 * transforms.
+						 */
+
+						offset.rescale(2);
+						element->default_initial_alignment.rescale(2);
+
+						/*
+						 * Work with images twice as large
+						 */
+
+						lod--;
+						si = scale_clusters[lod];
+
+						if (_mc > 0)
+							_mc_arg /= 4;
+
+						here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
+						delete old_here_diff_stat;
+
+					} else if (_ma_card > 1) {
+						here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
+						delete old_here_diff_stat;
+						adj_p = perturb;
+					} else {
+						delete here_diff_stat;
+						here_diff_stat = old_here_diff_stat;
+						adj_p = perturb;
+					}
+
+					/*
+					 * Announce changes
+					 */
+
+					ui::get()->alignment_monte_carlo_parameter(_mc_arg);
+					ui::get()->alignment_perturbation_level(perturb, lod);
+
 				}
-
-				/*
-				 * Announce changes
-				 */
-
-				ui::get()->alignment_monte_carlo_parameter(_mc_arg);
-				ui::get()->alignment_perturbation_level(perturb, lod);
-
 			} else {
 				delete old_here_diff_stat;
 			}
@@ -2620,16 +2635,8 @@ private:
 			image_rw::close(n);
 		}
 
-		for (int i = latest + 1; i <= n; i++) 
-		for (unsigned int j = 0; j < _ma_card; j++) {
-
-			if (j >= elements.size()) {
-				elements.resize(j + 1);
-				elements[j] = elements[0];
-				elements[j].default_initial_alignment =
-					elements[j - 1].default_initial_alignment;
-				elements[j].default_initial_alignment.push_element();
-			}
+		for (int i = latest + 1; i <= n; i++) {
+			int j = 0;
 
 			/*
 			 * Handle supplemental frames.
@@ -2656,7 +2663,7 @@ private:
 
 			ui::get()->loading_file();
 			elements[j].input_frame = image_rw::open(i);
-			elements[j].is_primary = (j == 0);
+			elements[j].is_primary = 1;
 
 			_align(i, _gs, &elements[j]);
 
