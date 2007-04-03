@@ -1469,7 +1469,10 @@ private:
 		 */
 
 		if (!element->old_is_default && !element->is_default && 
-				default_initial_alignment_type == 1) {
+				default_initial_alignment_type == 1) 
+		for (offset.set_current_index(0);
+		     offset.get_current_index() < _ma_card;
+		     offset.push_element()) {
 
 			/*
 			 * Ensure that the lod for the old initial and final
@@ -1519,13 +1522,13 @@ private:
 				point p[4];
 
 				p[0] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
-				     . scaled_inverse_transform(offset.transform_scaled(point(      0        ,       0       ))));
+				     . scaled_inverse_transform(offset.get_current_element().transform_scaled(point(      0        ,       0       ))));
 				p[1] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
-				     . scaled_inverse_transform(offset.transform_scaled(point(offset.scaled_height(),       0       ))));
+				     . scaled_inverse_transform(offset.get_current_element().transform_scaled(point(offset.scaled_height(),       0       ))));
 				p[2] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
-				     . scaled_inverse_transform(offset.transform_scaled(point(offset.scaled_height(), offset.scaled_width()))));
+				     . scaled_inverse_transform(offset.get_current_element().transform_scaled(point(offset.scaled_height(), offset.scaled_width()))));
 				p[3] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
-				     . scaled_inverse_transform(offset.transform_scaled(point(      0        , offset.scaled_width()))));
+				     . scaled_inverse_transform(offset.get_current_element().transform_scaled(point(      0        , offset.scaled_width()))));
 
 				new_offset.gpt_set(p);
 			}
@@ -1673,13 +1676,31 @@ private:
 		element->default_initial_alignment.rescale(1 / pow(2, lod));
 
 		/*
-		 * Load any file-specified transformation
+		 * Set the default transformation.
 		 */
 
-		offset = tload_next(tload, alignment_class == 2, element->default_initial_alignment, 
-				&element->is_default, element->is_primary);
+		offset = element->default_initial_alignment;
+
+		/*
+		 * Load any file-specified transformations
+		 */
+
+		for (offset.set_current_index(0); 
+		     offset.get_current_index() < _ma_card; 
+		     offset.push_element()) {
+
+			offset = tload_next(tload, alignment_class == 2, 
+					offset, 
+					&element->is_default, 
+					offset.get_current_index() == 0);
+
+		}
+
+		offset.set_current_index(0);
 
 		transformation new_offset = follow(element, offset, lod);
+
+		new_offset.set_current_index(0);
 		
 		element->old_initial_alignment = offset;
 		element->old_lod = lod;
@@ -2270,6 +2291,8 @@ private:
 			ui::get()->set_match(here);
 		}
 
+		offset.set_current_index(0);
+
 		if (lod > 0) {
 			offset.rescale(pow(2, lod));
 			element->default_initial_alignment.rescale(pow(2, lod));
@@ -2364,7 +2387,15 @@ private:
 		 * Save the transformation information
 		 */
 
-		tsave_next(tsave, offset, alignment_class == 2, element->is_primary);
+		for (offset.set_current_index(0); 
+		     offset.get_current_index() < _ma_card; 
+		     offset.push_element()) {
+
+			tsave_next(tsave, offset, alignment_class == 2, 
+					  offset.get_current_index() == 0);
+		}
+
+		offset.set_current_index(0);
 
 		latest_t = offset;
 
