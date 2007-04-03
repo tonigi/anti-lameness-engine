@@ -1487,8 +1487,6 @@ private:
 			     offset.get_current_index() < _ma_card;
 
 			     offset.push_element(),
-			     element->old_initial_alignment.push_element(),
-			     element->old_final_alignment.push_element(),
 			     new_offset.push_element()) {
 
 				if (alignment_class == 0) {
