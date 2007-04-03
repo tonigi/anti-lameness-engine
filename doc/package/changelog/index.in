@@ -1,5 +1,11 @@
 V	0.8.8 prerelease
 
+o	Revise ordering of ui_tty status output so that more informative 
+	fields occur earlier in the string.
+
+o	Modify numerical formatting of certain UI elements to preserve
+	constancy of field locations in typical cases.
+
 o	Add Gaussian PSF.  (HJ Hornbeck)
 
 o	Recalculate diff statistics after increasing the mc parameter in
