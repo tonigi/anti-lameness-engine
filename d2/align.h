@@ -1444,6 +1444,97 @@ private:
 	}
 
 	/*
+	 * Implement new delta --follow semantics.
+	 *
+	 * If we have a transformation T such that
+	 *
+	 * 	prev_final == T(prev_init)
+	 *
+	 * Then we also have
+	 *
+	 * 	current_init_follow == T(current_init)
+	 *
+	 * We can calculate T as follows:
+	 *
+	 * 	T == prev_final(prev_init^-1)
+	 *
+	 * Where ^-1 is the inverse operator.
+	 */
+	static transformation follow(element_t *element, transformation offset, int lod) {
+
+		transformation new_offset = offset;
+
+		/*
+		 * Criteria for using following.
+		 */
+
+		if (!element->old_is_default && !element->is_default && 
+				default_initial_alignment_type == 1) {
+
+			/*
+			 * Ensure that the lod for the old initial and final
+			 * alignments are equal to the lod for the new initial
+			 * alignment.
+			 */
+
+			element->old_final_alignment.rescale (1 / pow(2, lod));
+			element->old_initial_alignment.rescale(1 / pow(2, lod - element->old_lod));
+
+			if (alignment_class == 0) {
+				/*
+				 * Translational transformations
+				 */
+	
+				ale_pos t0 = -element->old_initial_alignment.eu_get(0) 
+					   +  element->old_final_alignment.eu_get(0);
+				ale_pos t1 = -element->old_initial_alignment.eu_get(1) 
+					   +  element->old_final_alignment.eu_get(1);
+
+				new_offset.eu_modify(0, t0);
+				new_offset.eu_modify(1, t1);
+
+			} else if (alignment_class == 1) {
+				/*
+				 * Euclidean transformations
+				 */
+
+				ale_pos t2 = -element->old_initial_alignment.eu_get(2) 
+					   +  element->old_final_alignment.eu_get(2);
+
+				new_offset.eu_modify(2, t2);
+
+				point p( offset.scaled_height()/2 + offset.eu_get(0) - element->old_initial_alignment.eu_get(0),
+					 offset.scaled_width()/2 + offset.eu_get(1) - element->old_initial_alignment.eu_get(1) );
+
+				p = element->old_final_alignment.transform_scaled(p);
+
+				new_offset.eu_modify(0, p[0] - offset.scaled_height()/2 - offset.eu_get(0));
+				new_offset.eu_modify(1, p[1] - offset.scaled_width()/2 - offset.eu_get(1));
+				
+			} else if (alignment_class == 2) {
+				/*
+				 * Projective transformations
+				 */
+
+				point p[4];
+
+				p[0] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
+				     . scaled_inverse_transform(offset.transform_scaled(point(      0        ,       0       ))));
+				p[1] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
+				     . scaled_inverse_transform(offset.transform_scaled(point(offset.scaled_height(),       0       ))));
+				p[2] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
+				     . scaled_inverse_transform(offset.transform_scaled(point(offset.scaled_height(), offset.scaled_width()))));
+				p[3] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
+				     . scaled_inverse_transform(offset.transform_scaled(point(      0        , offset.scaled_width()))));
+
+				new_offset.gpt_set(p);
+			}
+		}
+
+		return new_offset;
+	}
+
+	/*
 	 * Align frame m against the reference.
 	 *
 	 * XXX: the transformation class currently combines ordinary
@@ -1588,89 +1679,8 @@ private:
 		offset = tload_next(tload, alignment_class == 2, element->default_initial_alignment, 
 				&element->is_default, element->is_primary);
 
-		transformation new_offset = offset;
+		transformation new_offset = follow(element, offset, lod);
 		
-		if (!element->old_is_default && !element->is_default && 
-				default_initial_alignment_type == 1) {
-
-			/*
-			 * Implement new delta --follow semantics.
-			 *
-			 * If we have a transformation T such that
-			 *
-			 * 	prev_final == T(prev_init)
-			 *
-			 * Then we also have
-			 *
-			 * 	current_init_follow == T(current_init)
-			 *
-			 * We can calculate T as follows:
-			 *
-			 * 	T == prev_final(prev_init^-1)
-			 *
-			 * Where ^-1 is the inverse operator.
-			 */
-
-			/*
-			 * Ensure that the lod for the old initial and final
-			 * alignments are equal to the lod for the new initial
-			 * alignment.
-			 */
-
-			element->old_final_alignment.rescale (1 / pow(2, lod));
-			element->old_initial_alignment.rescale(1 / pow(2, lod - element->old_lod));
-
-			if (alignment_class == 0) {
-				/*
-				 * Translational transformations
-				 */
-	
-				ale_pos t0 = -element->old_initial_alignment.eu_get(0) 
-					   +  element->old_final_alignment.eu_get(0);
-				ale_pos t1 = -element->old_initial_alignment.eu_get(1) 
-					   +  element->old_final_alignment.eu_get(1);
-
-				new_offset.eu_modify(0, t0);
-				new_offset.eu_modify(1, t1);
-
-			} else if (alignment_class == 1) {
-				/*
-				 * Euclidean transformations
-				 */
-
-				ale_pos t2 = -element->old_initial_alignment.eu_get(2) 
-					   +  element->old_final_alignment.eu_get(2);
-
-				new_offset.eu_modify(2, t2);
-
-				point p( offset.scaled_height()/2 + offset.eu_get(0) - element->old_initial_alignment.eu_get(0),
-					 offset.scaled_width()/2 + offset.eu_get(1) - element->old_initial_alignment.eu_get(1) );
-
-				p = element->old_final_alignment.transform_scaled(p);
-
-				new_offset.eu_modify(0, p[0] - offset.scaled_height()/2 - offset.eu_get(0));
-				new_offset.eu_modify(1, p[1] - offset.scaled_width()/2 - offset.eu_get(1));
-				
-			} else if (alignment_class == 2) {
-				/*
-				 * Projective transformations
-				 */
-
-				point p[4];
-
-				p[0] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
-				     . scaled_inverse_transform(offset.transform_scaled(point(      0        ,       0       ))));
-				p[1] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
-				     . scaled_inverse_transform(offset.transform_scaled(point(offset.scaled_height(),       0       ))));
-				p[2] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
-				     . scaled_inverse_transform(offset.transform_scaled(point(offset.scaled_height(), offset.scaled_width()))));
-				p[3] = element->old_final_alignment.transform_scaled(element->old_initial_alignment
-				     . scaled_inverse_transform(offset.transform_scaled(point(      0        , offset.scaled_width()))));
-
-				new_offset.gpt_set(p);
-			}
-		}
-
 		element->old_initial_alignment = offset;
 		element->old_lod = lod;
 		offset = new_offset;
