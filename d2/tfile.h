@@ -293,7 +293,7 @@ static inline transformation tload_first(struct tload_t *t, int is_p,
 					int count, i;
 					point x[4];
 
-					count = sscanf(line, "P %lf%lf%lf%lf%lf%lf%lf%lf%lf%lf", &width, &height,
+					count = sscanf(line + 1, " %lf%lf%lf%lf%lf%lf%lf%lf%lf%lf", &width, &height,
 							&values[0], &values[1], &values[2], &values[3],
 							&values[4], &values[5], &values[6], &values[7]);
 				
@@ -329,7 +329,7 @@ static inline transformation tload_first(struct tload_t *t, int is_p,
 					int count, i;
 					ale_pos eu[3];
 
-					count = sscanf(line, "E %lf%lf%lf%lf%lf",
+					count = sscanf(line + 1, " %lf%lf%lf%lf%lf",
 							&width, &height,
 							&values[0], &values[1], &values[2]);
 
@@ -407,10 +407,14 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 		if (feof(t->file)
 		 || (!is_primary
 		  && c != EOF
-		  && c != 'F'
-		  && c != 'f'
-		  && c != 'Q'
-		  && c != 'q')) {
+		  && (c == 'E'
+		   || c == 'e'
+		   || c == 'P'
+		   || c == 'p'
+		   || c == 'D'
+		   || c == 'd'
+		   || c == 'B'
+		   || c == 'b'))) {
 			return result;
 		}
 
@@ -509,7 +513,7 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 					int count, i;
 					point x[4];
 
-					count = sscanf(line, "P %lf%lf%lf%lf%lf%lf%lf%lf%lf%lf", &width, &height,
+					count = sscanf(line + 1, " %lf%lf%lf%lf%lf%lf%lf%lf%lf%lf", &width, &height,
 							&values[0], &values[1], &values[2], &values[3],
 							&values[4], &values[5], &values[6], &values[7]);
 				
@@ -562,7 +566,7 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 					int count, i;
 					ale_pos eu[3];
 
-					count = sscanf(line, "E %lf%lf%lf%lf%lf",
+					count = sscanf(line + 1, " %lf%lf%lf%lf%lf",
 							&width, &height,
 							&values[0], &values[1], &values[2]);
 
