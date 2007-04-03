@@ -212,13 +212,13 @@ protected:
 	 */
 
 	char *format_string_ok() {
-		return " okay (%f%% match)";
+		return " okay (%9.6f%% match)";
 	}
 	char *format_string_no_match() {
-		return " no match (%f%% match)";
+		return " no match (%9.6f%% match)";
 	}
 	char *format_string_working() {
-		return "      (%f%% match)";
+		return "      (%9.6f%% match)";
 	}
 
 public:
