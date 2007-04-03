@@ -173,16 +173,16 @@ private:
 				status_printf(3, "Registering exposure (first pass)", "Registering exposure", "regexp1");
 				break;
 			case status_type::LODCLUSTER_CREATE:
-				status_printf(3, "Creating LOD cluster, scale %f", "Creating LOD clusters", "lodcluster", 
+				status_printf(3, "Creating LOD cluster, scale %g", "Creating LOD clusters", "lodcluster", 
 						pow(2, -status.align_lod));
 				break;
 			case status_type::PREMATCH:
 				status_printf(3, "Calculating pre-alignment match", "Calculating match", "prematch");
 				break;
 			case status_type::ALIGN:
-				status_printf(5, "Aligning [perturb=%f] [lod=%f] [mc=%f] [exp_mult=%f %f %f]", 
-						 "Aligning [perturb=%f] [lod=%f] [mc=%f]", 
-						 "Aligning [perturb=%f] [lod=%f]", 
+				status_printf(5, "Aligning [perturb=%g] [lod=%g] [mc=%g] [exp_mult=%g %g %g]", 
+						 "Aligning [perturb=%g] [lod=%g] [mc=%g]", 
+						 "Aligning [perturb=%g] [lod=%g]", 
 						 "Aligning...", 
 						 "align",
 						 status.perturb_size,
@@ -227,7 +227,7 @@ private:
 				status_printf(3, "Writing '%s'", "Writing", "write", d2::image_rw::output_name());
 				break;
 			case status_type::D3_CONTROL_POINT_SOLVE:
-				status_printf(1, "Aligning control points, %f%% done, error=%f", 
+				status_printf(1, "Aligning control points, %g%% done, error=%g", 
 						log(status.cp_cur_perturb / status.cp_max_perturb) 
 					      / log(status.cp_min_perturb / status.cp_max_perturb), 
 					        status.cp_cur_error);
