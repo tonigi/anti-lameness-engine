@@ -104,6 +104,10 @@ public:
 		full_support = 0;
 	}
 
+	int is_nontrivial() {
+		return 0;
+	}
+
 	/*
 	 * Returns non-zero if the transformation might be non-Euclidean.
 	 */

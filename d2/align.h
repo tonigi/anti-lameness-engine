@@ -1544,6 +1544,95 @@ private:
 		return new_offset;
 	}
 
+	static void calculate_element_region(transformation *t, scale_cluster si) {
+	}
+
+	static void make_element_nontrivial(transformation *t, scale_cluster si, 
+			int local_ax_count, ale_pos adj_p, ale_pos adj_o, point sample_centroid) {
+
+		if (t->is_nontrivial())
+			return;
+
+		calculate_element_region(t, si);
+
+		if (t->is_nontrivial())
+			return;
+
+		ale_pos adj_s;
+
+		transformation &offset = *t;
+		transformation test_t;
+
+		if (alignment_class < 2 && alignment_class >= 0) {
+
+			/* 
+			 * Translational or euclidean transformation
+			 */
+
+			for (int i = 0; i < 2; i++)
+			for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+
+				test_t = offset;
+
+				test_t.eu_modify(i, adj_s);
+
+				calculate_element_region(&test_t, si);
+
+				if (test_t.is_nontrivial()) {
+					*t = test_t;
+					return;
+				}
+			}
+
+			if (alignment_class == 1 && adj_o < rot_max)
+			for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
+
+				test_t = offset;
+
+				if (sample_centroid.defined()) {
+					test_t.eu_rotate_about_scaled(sample_centroid, adj_s);
+				} else {
+					test_t.eu_modify(2, adj_s);
+				}
+
+				calculate_element_region(&test_t, si);
+
+				if (test_t.is_nontrivial()) {
+					*t = test_t;
+					return;
+				}
+			}
+
+		} else if (alignment_class == 2) {
+
+			/*
+			 * Projective transformation
+			 */
+
+			for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 2; j++)
+			for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+
+				test_t = offset;
+
+				if (perturb_type == 0)
+					test_t.gpt_modify(j, i, adj_s);
+				else if (perturb_type == 1)
+					test_t.gr_modify(j, i, adj_s);
+				else
+					assert(0);
+
+				calculate_element_region(&test_t, si);
+
+				if (test_t.is_nontrivial()) {
+					*t = test_t;
+					return;
+				}
+			}
+
+		} else assert(0);
+	}
+
 	/*
 	 * Align frame m against the reference.
 	 *
@@ -2236,6 +2325,10 @@ private:
 			if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
 				if (offset.get_current_index() + 1 < _ma_card) {
 					offset.push_element();
+					point sample_centroid = old_here_diff_stat->get_centroid() 
+						              + si.accum->offset();
+					make_element_nontrivial(&offset, si, local_ax_count, 
+							adj_p, adj_o, sample_centroid);
 					here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
 					delete old_here_diff_stat;
 					element->is_primary = 0;
