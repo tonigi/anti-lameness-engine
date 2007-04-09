@@ -2324,7 +2324,14 @@ private:
 			}
 
 			if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
+
+				if (offset.get_current_index() > 0 && offset.is_nontrivial()) {
+					calculate_element_region(&offset, si, 
+							local_ax_count);
+				}
+
 				if (offset.get_current_index() + 1 < _ma_card) {
+
 					offset.push_element();
 					point sample_centroid = old_here_diff_stat->get_centroid() 
 						              + si.accum->offset();
