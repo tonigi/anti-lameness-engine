@@ -1544,7 +1544,8 @@ private:
 		return new_offset;
 	}
 
-	static void calculate_element_region(transformation *t, scale_cluster si) {
+	static void calculate_element_region(transformation *t, scale_cluster si, 
+			int local_ax_count) {
 	}
 
 	static void make_element_nontrivial(transformation *t, scale_cluster si, 
@@ -1553,7 +1554,7 @@ private:
 		if (t->is_nontrivial())
 			return;
 
-		calculate_element_region(t, si);
+		calculate_element_region(t, si, local_ax_count);
 
 		if (t->is_nontrivial())
 			return;
@@ -1576,7 +1577,7 @@ private:
 
 				test_t.eu_modify(i, adj_s);
 
-				calculate_element_region(&test_t, si);
+				calculate_element_region(&test_t, si, local_ax_count);
 
 				if (test_t.is_nontrivial()) {
 					*t = test_t;
@@ -1595,7 +1596,7 @@ private:
 					test_t.eu_modify(2, adj_s);
 				}
 
-				calculate_element_region(&test_t, si);
+				calculate_element_region(&test_t, si, local_ax_count);
 
 				if (test_t.is_nontrivial()) {
 					*t = test_t;
@@ -1622,7 +1623,7 @@ private:
 				else
 					assert(0);
 
-				calculate_element_region(&test_t, si);
+				calculate_element_region(&test_t, si, local_ax_count);
 
 				if (test_t.is_nontrivial()) {
 					*t = test_t;
