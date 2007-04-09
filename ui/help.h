@@ -230,8 +230,8 @@ public:
 			"--perturb-lower=x Perturbation lower bound pixels/arclength   (.125 is default)\n"
 			"                     ('x%%' uses a fraction of the smallest image dimension.)\n"
 			"--rot-upper=x     Rotation-specific upper bound in degrees    (32.0 is default)\n"
-			"--bda-mult=x      Barrel distortion adjustment multiplier   (0.0001 is default)\n"
-			"--bda-rate=x      Barrel distortion rate of change maximum  (0.0004 is default)\n"   
+			"--bda-mult=x      Barrel distortion adjustment multiplier      (2.0 is default)\n"
+			"--bda-rate=x      Barrel distortion rate of change maximum     (8.0 is default)\n"   
 			"--lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (1 is def.)\n"
 			BETWEEN_SECTIONS
 			"Certainty-weighted alignment:\n"

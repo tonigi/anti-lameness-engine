@@ -82,8 +82,8 @@ int align::perturb_upper_percent = 1;
 int align::lod_max = 1;
 
 ale_pos align::rot_max = 32.0;
-ale_pos align::bda_mult = 0.0001;
-ale_pos align::bda_rate = 0.0004;
+ale_pos align::bda_mult = 2;
+ale_pos align::bda_rate = 8;
 ale_accum align::match_sum = 0;
 int align::match_count = 0;
 
