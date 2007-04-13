@@ -1808,6 +1808,14 @@ private:
 			                    /* : ((double)_mcd_min / (si.accum->height() * si.accum->width())); */
 			                    : 1;
 
+		std::vector<ale_accum> mc_array;
+		mc_array.resize(_ma_card);
+
+		for (unsigned int ma_index = 0; ma_index < _ma_card; ma_index++) {
+			mc_array[ma_index] = _mc_arg;
+		}
+
+
 		ui::get()->alignment_monte_carlo_parameter(_mc_arg);
 
 		/*
@@ -2332,7 +2340,10 @@ private:
 
 				if (offset.get_current_index() + 1 < _ma_card) {
 
+					mc_array[offset.get_current_index()] = _mc_arg;
 					offset.push_element();
+					_mc_arg = mc_array[offset.get_current_index()];
+
 					point sample_centroid = old_here_diff_stat->get_centroid() 
 						              + si.accum->offset();
 					make_element_nontrivial(&offset, si, local_ax_count, 
@@ -2342,13 +2353,22 @@ private:
 					element->is_primary = 0;
 				} else {
 
+					mc_array[offset.get_current_index()] = _mc_arg;
 					offset.set_current_index(0);
+					_mc_arg = mc_array[offset.get_current_index()];
+
 					element->is_primary = 1;
 
 					perturb *= 0.5;
 
-					if (_mc <= 0)
+					if (_mc <= 0) {
 						_mc_arg /= 2;
+
+						for (unsigned int ma_index = 0; 
+						     ma_index < _ma_card; 
+						     ma_index++)
+							mc_array[ma_index] /= 2;
+					}
 
 					if (lod > 0) {
 
@@ -2368,8 +2388,14 @@ private:
 						lod--;
 						si = scale_clusters[lod];
 
-						if (_mc > 0)
+						if (_mc > 0) {
 							_mc_arg /= 4;
+
+							for (unsigned int ma_index = 0;
+							     ma_index < _ma_card;
+							     ma_index++)
+								mc_array[ma_index] /= 4;
+						}
 
 						here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
 						delete old_here_diff_stat;
