@@ -108,6 +108,22 @@ public:
 		return 0;
 	}
 
+	void begin_calculate_scaled_region(unsigned int i_max, unsigned int j_max, point offset) {
+		assert(0);
+	}
+
+	void begin_calculate_unscaled_region(unsigned int i_max, unsigned int j_max, point offset) {
+		assert(0);
+	}
+
+	void end_calculate_region() {
+		assert(0);
+	}
+
+	point get_query_point(int i, int j) {
+		return point::undefined();
+	}
+
 	/*
 	 * Returns non-zero if the transformation might be non-Euclidean.
 	 */

@@ -1544,10 +1544,57 @@ private:
 		return new_offset;
 	}
 
+	/*
+	 * Calculate the region associated with the current multi-alignment
+	 * element.
+	 */
 	static void calculate_element_region(transformation *t, scale_cluster si, 
 			int local_ax_count) {
+
+		unsigned int i_max = si.accum->height();
+		unsigned int j_max = si.accum->width();
+		point offset = si.accum->offset();
+
+		if (si.input_scale < 1.0 && interpolant == NULL)
+			t->begin_calculate_scaled_region(i_max, j_max, offset);
+		else
+			t->begin_calculate_unscaled_region(i_max, j_max, offset);
+
+		for (unsigned int i = 0; i < i_max; i++) 
+		for (unsigned int j = 0; j < j_max; j++) {
+
+			if (ref_excluded(i, j, offset, si.ax_parameters, local_ax_count))
+				continue;
+
+			point q;
+
+			while ((q = t->get_query_point((int) (i + offset[0]), 
+							(int) (j + offset[1]))).defined()) {
+
+				ale_pos ti = q[0];
+				ale_pos tj = q[1];
+
+				if (input_excluded(ti, tj, si.ax_parameters, ax_count))
+					continue;
+
+				if (ti >= 0
+				 && ti <= si.input->height() - 1
+				 && tj >= 0
+				 && tj <= si.input->width() - 1
+				 && si.defined->get_pixel(i, j)[0] != 0) {
+
+					assert(0);
+				}
+			}
+		}
+
+		t->end_calculate_region();
 	}
 
+	/*
+	 * Attempt to make the current element non-trivial, by finding a nearby
+	 * alignment admitting a non-empty element region.
+	 */
 	static void make_element_nontrivial(transformation *t, scale_cluster si, 
 			int local_ax_count, ale_pos adj_p, ale_pos adj_o, point sample_centroid) {
 
