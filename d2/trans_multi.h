@@ -267,6 +267,16 @@ public:
 	 * Rescale a transform with a given factor.
 	 */
 	void specific_rescale(ale_pos factor) {
+
+		if (trans_stack.size() > 1) {
+
+			/*
+			 * Rescale region map.
+			 */
+
+			assert(0);
+		}
+
 		for (unsigned int t = 0; t < trans_stack.size(); t++)
 			trans_stack[t].rescale(factor);
 	}
