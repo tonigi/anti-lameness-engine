@@ -43,9 +43,9 @@ struct extended_t {
 	extended_t() {
 		is_extended = 0;
 		black_level = 0;
-		aperture = 1;
-		shutter = 1;
-		gain = 1;
+		aperture = 0;
+		shutter = 0;
+		gain = 0;
 	}
 };
 
@@ -281,14 +281,27 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 	/* Handle exposure and gain */
 
 	if (extended.is_extended) {
-		double combined_gain = (1 / pow(extended.aperture, 2))
-			             * extended.shutter
-			             * extended.gain;
-		if (init_reference_gain)
-			exposure::set_gain_reference(combined_gain);
-		else
-			e->set_gain_multiplier(exposure::get_gain_reference()
-					     / combined_gain);
+		if (extended.aperture != 0
+		 || extended.shutter != 0
+		 || extended.gain != 0) {
+
+			if (extended.aperture == 0)
+				extended.aperture = 1;
+			if (extended.shutter == 0)
+				extended.shutter = 1;
+			if (extended.gain == 0)
+				extended.gain = 1;
+
+			double combined_gain = (1 / pow(extended.aperture, 2))
+					     * extended.shutter
+					     * extended.gain;
+			
+			if (init_reference_gain)
+				exposure::set_gain_reference(combined_gain);
+			else
+				e->set_gain_multiplier(exposure::get_gain_reference()
+						     / combined_gain);
+		}
 	}
 
 	/* Done */
