@@ -48,6 +48,121 @@ private:
 public:
 	ui_log() {
 	}
+
+	void exp_multiplier(double m0, double m1, double m2) {
+		ui::exp_multiplier(m0, m1, m2);
+		printf("Exposure multiplier: %g, %g, %g\n", m0, m1, m2);
+	}
+
+	void set_steps(int count) {
+		printf("%d steps to complete\n", count);
+	}
+
+	void set_steps_completed(int count) {
+		printf("%d steps completed\n", count);
+	}
+
+	void set_match(double match) {
+		printf("Match value %g\n", match);
+	}
+
+	void loading_file() {
+		printf("Loading file.\n");
+	}
+
+	void exposure_1() {
+		printf("Exposure pass 1.\n");
+	}
+
+	void exposure_2() {
+		printf("Exposure pass 2.\n");
+	}
+
+	void prematching() {
+		printf("Prematching.\n");
+	}
+
+	void postmatching() {
+		printf("Postmatching.\n");
+	}
+
+	void constructing_lod_clusters(ale_pos lod) {
+		printf("Constructing LOD cluster (%f)\n", lod);
+	}
+
+	void aligning(ale_pos perturb, ale_pos lod) {
+		perturb_timers[perturb].start();
+		status.perturb_size = perturb;
+		printf("Aligning (perturb=%f, lod=%f).\n", perturb, lod);
+	}
+
+	void set_orender_current(int num) {
+		printf("Rendering output (index %d)\n", num);
+	}
+
+
+	void set_arender_current() {
+		printf("Rendering alignment reference image.\n");
+	}
+
+	void writing_output(int num) {
+		printf("Writing output (index %d)\n", num);
+	}
+
+	void ip_frame_start(unsigned int num) {
+		printf("Starting Irani-Peleg frame %d.\n", num);
+	}
+
+	void ip_frame_simulate_start() {
+		printf("Simulating frame.");
+	}
+
+	void ip_frame_correct_start() {
+		printf("Correcting frame.\n");
+	}
+
+	void ip_write() {
+		printf("Writing.\n");
+	}
+
+	void ip_done() {
+		printf("Irani-Peleg done.\n");
+	}
+
+	void original_frame_start(const char *name) {
+		printf("Starting original frame (%s)\n", name);
+	}
+
+	void original_frame_done() {
+		printf("Finished original frame\n");
+	}
+
+	void supplemental_frame_start(const char *name) {
+		printf("Starting supplemental frame (%s)\n", name);
+	}
+
+	void supplemental_frame_done() {
+		printf("Supplemental frame done.\n");
+	}
+
+	void alignment_monte_carlo_parameter(ale_pos mc) {
+		printf("Monte carlo parameter is %g\n", mc);
+	}
+
+	void alignment_perturbation_level(ale_pos perturb, ale_pos lod) {
+		perturb_timers[status.perturb_size].stop();
+		status.perturb_size = perturb;
+		perturb_timers[perturb].start();
+		printf("Perturbation set to %g; LOD set to %g.\n", perturb, lod);
+	}
+
+	void alignment_match_ok() {
+		printf("Alignment match OK.\n");
+	}
+
+	void alignment_no_match() {
+		printf("Alignment failed to match.\n");
+	}
 };
 
 #endif

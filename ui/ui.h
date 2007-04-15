@@ -294,9 +294,8 @@ public:
 		status.exp_multiplier[2] = m2;
 	}
 
-	virtual void exp_multiplier(double mult[3]) {
-		for (int k = 0; k < 3; k++)
-			status.exp_multiplier[k] = mult[k];
+	void exp_multiplier(double mult[3]) {
+		exp_multiplier(mult[0], mult[1], mult[2]);
 	}
 
 	virtual void set_steps(int count) {
