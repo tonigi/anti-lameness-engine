@@ -1,4 +1,4 @@
-// Copyright 2004 David Hilvert <dhilvert@auricle.dyndns.org>, 
+// Copyright 2004 David Hilvert <dhilvert@auricle.dyndns.org>,
 //                              <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
@@ -18,44 +18,36 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "ui_wo.h"
-#include "ui_tty.h"
-#include "ui_log.h"
-#include "input.h"
+#ifndef __ui_log_h__
+#define __ui_log_h__
+
 #include "ui.h"
 
 /*
- * See ui.h for details on these variables.
+ * Logging user interface.
  */
 
-ui *ui::singleton = NULL;
-int ui::type = 1;   /* TTY is default */
-int ui::output_performance_data = 0;
+class ui_log : public ui {
+private:
+	void printf(char *format, ...) {
 
-ui *ui::get() {
-	if (singleton == NULL) {
-		switch (type) {
-		case 0:
-			singleton = new ui_wo();
-			break;
-		case 1:
-			try {
-				singleton = new ui_tty();
-			} catch (...) {
-				singleton = new ui_wo();
-			}
-			break;
-		case 2:
-			singleton = new ui_log();
-			break;
-		default:
-			assert(0);
-		}
+		fprintf(ui_stream, "ale: %u: ", (unsigned int) time(NULL));
+
+		va_list ap;
+		va_start(ap, format);
+		vfprintf(ui_stream, format, ap);
+		va_end(ap);
+
+		if (format[strlen(format) - 1] != '\n')
+			fprintf(ui_stream, "\n");
 	}
 
-	return singleton;
-}
-	
-void ui::handle_input(int argc, const char *argv[], const char *package, const char *short_version, const char *version) {
-	input::handle(argc, argv, package, short_version, version);
-}
+	void update() {
+	}
+
+public:
+	ui_log() {
+	}
+};
+
+#endif

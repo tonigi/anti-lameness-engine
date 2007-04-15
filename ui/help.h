@@ -575,6 +575,7 @@ public:
 			"--ui=<type>       Set user interface to <type>, one of:\n"
 			"                     stream\n"
 			"                     tty [default]\n"
+			"                     log\n"
 #ifndef USE_IOCTL
 			"\n"
 			"                     NOTE: since ALE was compiled without terminal size check,\n"

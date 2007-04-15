@@ -100,6 +100,7 @@ private:
 	 *
 	 * 0. stream
 	 * 1. tty
+	 * 2. log
 	 */
 
 	static int type;
@@ -242,6 +243,11 @@ public:
 		type = 1;
 	}
 
+	static void set_log() {
+		assert (singleton == NULL);
+		type = 2;
+	}
+
 	static void set_profile() {
 		output_performance_data = 1;
 	}
@@ -250,94 +256,94 @@ public:
 	 * Messages from the engine
 	 */
 
-	void d2_align_sim_start() {
+	virtual void d2_align_sim_start() {
 		d2_align_sim.start();
 	}
 
-	void d2_align_sim_stop() {
+	virtual void d2_align_sim_stop() {
 		d2_align_sim.stop();
 	}
 
-	void d2_align_sample_start() {
+	virtual void d2_align_sample_start() {
 		d2_align_sample.start();
 	}
 
-	void d2_align_sample_stop() {
+	virtual void d2_align_sample_stop() {
 		d2_align_sample.stop();
 	}
 
-	void d2_incremental_start() {
+	virtual void d2_incremental_start() {
 		d2_incremental.start();
 	}
 
-	void d2_incremental_stop() {
+	virtual void d2_incremental_stop() {
 		d2_incremental.stop();
 	}
 
-	void d2_irani_peleg_start() {
+	virtual void d2_irani_peleg_start() {
 		d2_irani_peleg.start();
 	}
 
-	void d2_irani_peleg_stop() {
+	virtual void d2_irani_peleg_stop() {
 		d2_irani_peleg.stop();
 	}
 
-	void exp_multiplier(double m0, double m1, double m2) {
+	virtual void exp_multiplier(double m0, double m1, double m2) {
 		status.exp_multiplier[0] = m0;
 		status.exp_multiplier[1] = m1;
 		status.exp_multiplier[2] = m2;
 	}
 
-	void exp_multiplier(double mult[3]) {
+	virtual void exp_multiplier(double mult[3]) {
 		for (int k = 0; k < 3; k++)
 			status.exp_multiplier[k] = mult[k];
 	}
 
-	void set_steps(int count) {
+	virtual void set_steps(int count) {
 		status.steps = count;
 	}
 
-	void set_steps_completed(int count) {
+	virtual void set_steps_completed(int count) {
 		status.steps_completed = count;
 	}
 
-	void set_match(double match) {
+	virtual void set_match(double match) {
 		status.match_value = (1 - match) * 100;
 		update();
 	}
 
-	void loading_file() {
+	virtual void loading_file() {
 		status.code = status.LOAD_FILE;
 		update();
 	}
 
-	void exposure_1() {
+	virtual void exposure_1() {
 		status.code = status.EXPOSURE_PASS_1;
 		update();
 	}
 
-	void exposure_2() {
+	virtual void exposure_2() {
 		status.code = status.EXPOSURE_PASS_2;
 		update();
 	}
 
-	void prematching() {
+	virtual void prematching() {
 		status.code = status.PREMATCH;
 		update();
 	}
 
-	void postmatching() {
+	virtual void postmatching() {
 		status.code = status.POSTMATCH;
 		update();
 	}
 
-	void constructing_lod_clusters(ale_pos lod) {
+	virtual void constructing_lod_clusters(ale_pos lod) {
 		status.code = status.LODCLUSTER_CREATE;
 		status.align_lod = lod;
 		update();
 	}
 
-	void aligning(ale_pos perturb, ale_pos lod) {
+	virtual void aligning(ale_pos perturb, ale_pos lod) {
 		perturb_timers[perturb].start();
 		status.perturb_size = perturb;
 		status.align_lod = lod;
@@ -345,7 +351,7 @@ public:
 		update();
 	}
 
-	void set_orender_current(int num) {
+	virtual void set_orender_current(int num) {
 		status.onum = num;
 		if (num == 0)
 			status.orender_current = status.RENDERD;
@@ -353,15 +359,15 @@ public:
 			status.orender_current = status.RENDERO;
 	}
 
-	void set_arender_current() {
+	virtual void set_arender_current() {
 		status.arender_current = 1;
 	}
 
-	void clear_arender_current() {
+	virtual void clear_arender_current() {
 		status.arender_current = 0;
 	}
 
-	void rendering() {
+	virtual void rendering() {
 		/*
 		 * Current alignment rendering tasks must complete
 		 * before any current output rendering tasks can
@@ -376,7 +382,7 @@ public:
 		update();
 	}
 
-	void writing_output(int num) {
+	virtual void writing_output(int num) {
 		status.onum = num;
 		if (num == 0)
 			status.code = status.WRITED;
@@ -385,7 +391,7 @@ public:
 		update();
 	}
 
-	void d3_control_point_data(double max_perturbation, double min_perturbation, double cur_perturbation, 
+	virtual void d3_control_point_data(double max_perturbation, double min_perturbation, double cur_perturbation, 
 			double current_error) {
 		status.cp_max_perturb = max_perturbation;
 		status.cp_min_perturb = min_perturbation;
@@ -394,12 +400,12 @@ public:
 		update();
 	}
 
-	void d3_control_point_step() {
+	virtual void d3_control_point_step() {
 		printf(".");
 		update();
 	}
 
-	void d3_subdivision_status(unsigned int primary_frame, unsigned int secondary_frame,
+	virtual void d3_subdivision_status(unsigned int primary_frame, unsigned int secondary_frame,
 			unsigned int i, unsigned int j) {
 		status.code = status.D3_SUBDIVIDING_SPACE;
 		status.frame_num = primary_frame;
@@ -410,27 +416,27 @@ public:
 		update();
 	}
 
-	void d3_total_spaces(int total_spaces) {
+	virtual void d3_total_spaces(int total_spaces) {
 		status.total_spaces = total_spaces;
 	}
 
-	void d3_increment_spaces() {
+	virtual void d3_increment_spaces() {
 		status.total_spaces++;
 	}
 
-	void d3_occupancy_status(int frame) {
+	virtual void d3_occupancy_status(int frame) {
 		status.code = status.D3_UPDATING_OCCUPANCY;
 		status.frame_num = frame;
 		status.space_num = 0;
 		update();
 	}
 
-	void d3_increment_space_num() {
+	virtual void d3_increment_space_num() {
 		status.space_num++;
 		update();
 	}
 
-	void d3_render_status(int filter, int focus, int frame, int view, int i, int j, int space) {
+	virtual void d3_render_status(int filter, int focus, int frame, int view, int i, int j, int space) {
 		status.code = status.D3_RENDER;
 
 		status.filtering = filter;
@@ -451,57 +457,57 @@ public:
 	 * Informational output
 	 */
 
-	void ip_start() {
+	virtual void ip_start() {
 		printf("Iterating Irani-Peleg");
 	}
 
-	void ip_frame_start(unsigned int num) {
+	virtual void ip_frame_start(unsigned int num) {
 		status.code = status.IP_RENDER;
 		status.frame_num = num;
 		status.irani_peleg_stage = 0;
 	}
 
-	void ip_frame_simulate_start() {
+	virtual void ip_frame_simulate_start() {
 		status.irani_peleg_stage = 1;
 		update();
 	}
 
-	void ip_frame_correct_start() {
+	virtual void ip_frame_correct_start() {
 		status.irani_peleg_stage = 2;
 		update();
 	}
 
-	void ip_update() {
+	virtual void ip_update() {
 		status.code = status.IP_UPDATE;
 		update();
 	}
 
-	void ip_write() {
+	virtual void ip_write() {
 		status.code = status.IP_WRITE;
 		update();
 	}
 
-	void ip_step_done() {
+	virtual void ip_step_done() {
 		status.code = status.IP_STEP_DONE;
 		printf(".");
 	}
 
-	void ip_done() {
+	virtual void ip_done() {
 		printf("\n");
 	}
 
-	void original_frame_start(const char *name) {
+	virtual void original_frame_start(const char *name) {
 		status.code = status.UNDEFINED;
 		printf("Original Frame:\n");
 		printf(" '%s'", name);
 	}
 
-	void original_frame_done() {
+	virtual void original_frame_done() {
 		status.code = status.FRAME_DONE;
 		update();
 	}
 
-	void supplemental_frame_start(const char *name) {
+	virtual void supplemental_frame_start(const char *name) {
 		static int section_announced = 0;
 
 		if (!section_announced) {
@@ -514,16 +520,16 @@ public:
 		printf(" '%s'", name);
 	}
 
-	void supplemental_frame_done() {
+	virtual void supplemental_frame_done() {
 		status.code = status.FRAME_DONE;
 		update();
 	}
 
-	void alignment_monte_carlo_parameter(ale_pos mc) {
+	virtual void alignment_monte_carlo_parameter(ale_pos mc) {
 		status.mc = (mc > 1) ? 1 : mc;
 	}
 
-	void alignment_perturbation_level(ale_pos perturb, ale_pos lod) {
+	virtual void alignment_perturbation_level(ale_pos perturb, ale_pos lod) {
 		perturb_timers[status.perturb_size].stop();
 		perturb_timers[perturb].start();
 		status.perturb_size = perturb;
@@ -532,17 +538,17 @@ public:
 		printf(".");
 	}
 
-	void alignment_match_ok() {
+	virtual void alignment_match_ok() {
 		status.code = status.UNDEFINED;
 		printf(format_string_ok(), status.match_value);
 	}
 
-	void alignment_no_match() {
+	virtual void alignment_no_match() {
 		status.code = status.UNDEFINED;
 		printf(format_string_no_match(), status.match_value);
 	}
 
-	void ale_2d_done(double value) {
+	virtual void ale_2d_done(double value) {
 		status.code = status.UNDEFINED;
 		printf("Average match: %f%%", value);
 		status.code = status.SET_DONE;
@@ -582,53 +588,53 @@ public:
 		}
 	}
 
-	void d3_start() {
+	virtual void d3_start() {
 		status.code = status.UNDEFINED;
 		printf("Rendering 3D");
 		update();
 	}
 
-	void d3_control_point_solve() {
+	virtual void d3_control_point_solve() {
 		status.code = status.D3_CONTROL_POINT_SOLVE;
 		update();
 	}
 
-	void d3_init_view_angle(double angle) {
+	virtual void d3_init_view_angle(double angle) {
 		status.code = status.UNDEFINED;
 		update();
 	}
 
-	void d3_final_view_angle(double angle) {
+	virtual void d3_final_view_angle(double angle) {
 		status.code = status.UNDEFINED;
 		update();
 	}
 
-	void d3_control_point_solve_done() {
+	virtual void d3_control_point_solve_done() {
 		status.code = status.UNDEFINED;
 		update();
 	}
 
-	void d3_subdividing_space() {
+	virtual void d3_subdividing_space() {
 		status.code = status.D3_SUBDIVIDING_SPACE;
 		update();
 	}
 
-	void d3_subdividing_space_done() {
+	virtual void d3_subdividing_space_done() {
 		status.code = status.UNDEFINED;
 		update();
 	}
 
-	void d3_updating_occupancy() {
+	virtual void d3_updating_occupancy() {
 		status.code = status.D3_UPDATING_OCCUPANCY;
 		update();
 	}
 
-	void d3_updating_occupancy_done() {
+	virtual void d3_updating_occupancy_done() {
 		status.code = status.UNDEFINED;
 		update();
 	}
 
-	void d3_writing_output(const char *name) {
+	virtual void d3_writing_output(const char *name) {
 		static int section_announced = 0;
 
 		if (!section_announced) {
@@ -641,7 +647,7 @@ public:
 		update();
 	}
 
-	void d3_writing_output_done() {
+	virtual void d3_writing_output_done() {
 		status.code = status.UNDEFINED;
 		printf(".\n");
 		update();
@@ -651,7 +657,7 @@ public:
 	 * Warnings
 	 */
 
-	void warn(const char *string) {
+	virtual void warn(const char *string) {
 		printf("\n\n*** Warning: %s. ***\n\n\n");
 	}
 
@@ -659,52 +665,52 @@ public:
 	 * Errors
 	 */
 
-	void exec_failure(const char *exec, const char *arg1, const char *arg2) {
+	virtual void exec_failure(const char *exec, const char *arg1, const char *arg2) {
 		printf("\n\n*** An error occurred while running `%s %s %s`. ***\n\n\n", exec, arg1, arg2);
 		exit(1);
 	}
 
-	void fork_failure(const char *location) {
+	virtual void fork_failure(const char *location) {
 		printf("\n\n*** Could not fork in %s.  ***\n\n\n", location);
 		exit(1);
 	}
 
-	void memory_error(const char *purpose) {
+	virtual void memory_error(const char *purpose) {
 		printf("Unable to allocate memory for %s.\n", purpose);
 		exit(1);
 	}
 
-	void memory_error_location(const char *location) {
+	virtual void memory_error_location(const char *location) {
 		printf("Unable to allocate memory in %s.\n", location);
 		exit(1);
 	}
 
-	void cli_not_enough(const char *option) {
+	virtual void cli_not_enough(const char *option) {
 		printf("\n\n*** Not enough arguments for `%s' ***\n\n", option);
 		exit(1);
 	}
 
-	void cli_bad_arg(const char *option) {
+	virtual void cli_bad_arg(const char *option) {
 		printf("\n\n*** Bad argument to `%s' ***\n\n", option);
 		exit(1);
 	}
 
-	void error(const char *string) {
+	virtual void error(const char *string) {
 		printf("\n\n*** Error: %s. ***\n\n\n", string);
 		exit(1);
 	}
 
-	void illegal_option(const char *string) {
+	virtual void illegal_option(const char *string) {
 		printf("\n\n*** Error: illegal option %s ***\n\n", string);
 		exit(1);
 	}
 
-	void unknown_device(const char *string) {
+	virtual void unknown_device(const char *string) {
 		printf("\n\n*** Error: unknown device %s ***\n\n", string);
 		exit(1);
 	}
 
-	void error_hint(const char *error, const char *hint) {
+	virtual void error_hint(const char *error, const char *hint) {
 		printf("\n\n*** Error: %s", error);
 		printf(  "\n*** Hint:  %s\n\n\n", hint);
 		exit(1);

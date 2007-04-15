@@ -1879,6 +1879,8 @@ public:
 					ui::set_stream();
 				else if (!strcmp(env->get_string_arg(i->first, 1), "tty"))
 					ui::set_tty();
+				else if (!strcmp(env->get_string_arg(i->first, 1), "log"))
+					ui::set_log();
 				else
 					assert(0);
 			} else if (!strcmp(option_name, "3d-fmr")) {
