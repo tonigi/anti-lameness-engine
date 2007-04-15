@@ -63,7 +63,7 @@ public:
 	}
 
 	void set_match(double match) {
-		printf("Match value %g\n", match);
+		printf("match %g / mismatch %g\n", (1 - match), match);
 	}
 
 	void loading_file() {
