@@ -557,16 +557,27 @@ public:
 			printf("Incremental rendering  :  %f s\n", d2_incremental.get_total());
 			printf("Irani-Peleg rendering  :  %f s\n", d2_irani_peleg.get_total());
 			printf("\n");
+
 			printf("Details (local alignment)\n");
 			printf("-------------------------\n");
+
+			int have_details = 0;
 			for (std::map<double,ale_timer_t>::iterator i = perturb_timers.begin(); 
 			     i != perturb_timers.end(); i++) {
 				if (i->second.get_total() == 0.0
 				 && i == perturb_timers.begin())
 					continue;
+
 				printf("Alignment (perturb %f): %f s\n", 
 						i->first, i->second.get_total());
+				
+				have_details = 1;
 			}
+
+			if (!have_details) {
+				printf("No local alignment performed.\n");
+			}
+
 			printf("\n");
 		}
 	}
