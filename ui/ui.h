@@ -256,6 +256,10 @@ public:
 	 * Messages from the engine
 	 */
 
+	virtual void identify_output(const char *name) {
+		printf("Output file will be '%s'.\n", name);
+	}
+
 	virtual void d2_align_sim_start() {
 		d2_align_sim.start();
 	}

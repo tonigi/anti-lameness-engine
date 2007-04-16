@@ -242,9 +242,7 @@ public:
 		for (unsigned int i = 0; i < file_count; i++)
 			bayer_specific[i] = IMAGE_BAYER_DEFAULT;
 
-		fprintf(stderr, "Output file will be '%s'.\n", 
-				output_filename);
-
+		ui::get()->identify_output(output_filename);
 	}
 
 	static void ppm_plain() {
