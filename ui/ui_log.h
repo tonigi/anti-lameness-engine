@@ -125,6 +125,10 @@ public:
 		printf("Writing.\n");
 	}
 
+	void ip_step_done() {
+		printf("Finished frame.");
+	}
+
 	void ip_done() {
 		printf("Irani-Peleg done.\n");
 	}
