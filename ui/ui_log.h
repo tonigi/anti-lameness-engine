@@ -126,7 +126,7 @@ public:
 	}
 
 	void ip_step_done() {
-		printf("Finished frame.");
+		printf("Finished pass.");
 	}
 
 	void ip_done() {
