@@ -101,6 +101,7 @@ private:
 	 * 0. stream
 	 * 1. tty
 	 * 2. log
+	 * 3. quiet
 	 */
 
 	static int type;
@@ -246,6 +247,11 @@ public:
 	static void set_log() {
 		assert (singleton == NULL);
 		type = 2;
+	}
+
+	static void set_quiet() {
+		assert(singleton == NULL);
+		type = 3;
 	}
 
 	static void set_profile() {
@@ -679,17 +685,17 @@ public:
 	}
 
 	virtual void memory_error(const char *purpose) {
-		printf("Unable to allocate memory for %s.\n", purpose);
+		printf("\n\n*** Unable to allocate memory for %s. ***\n\n\n", purpose);
 		exit(1);
 	}
 
 	virtual void memory_error_location(const char *location) {
-		printf("Unable to allocate memory in %s.\n", location);
+		printf("\n\n*** Unable to allocate memory in %s.\n\n\n", location);
 		exit(1);
 	}
 
 	virtual void cli_not_enough(const char *option) {
-		printf("\n\n*** Not enough arguments for `%s' ***\n\n", option);
+		printf("\n\n*** Not enough arguments for `%s' ***\n\n\n", option);
 		exit(1);
 	}
 

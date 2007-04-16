@@ -573,6 +573,7 @@ public:
 			"User Interfaces:\n"
 			HEADER_SPACE
 			"--ui=<type>       Set user interface to <type>, one of:\n"
+			"                     quiet\n"
 			"                     stream\n"
 			"                     tty [default]\n"
 			"                     log\n"

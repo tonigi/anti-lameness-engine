@@ -1881,6 +1881,8 @@ public:
 					ui::set_tty();
 				else if (!strcmp(env->get_string_arg(i->first, 1), "log"))
 					ui::set_log();
+				else if (!strcmp(env->get_string_arg(i->first, 1), "quiet"))
+					ui::set_quiet();
 				else
 					assert(0);
 			} else if (!strcmp(option_name, "3d-fmr")) {

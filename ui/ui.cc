@@ -21,6 +21,7 @@
 #include "ui_wo.h"
 #include "ui_tty.h"
 #include "ui_log.h"
+#include "ui_quiet.h"
 #include "input.h"
 #include "ui.h"
 
@@ -47,6 +48,9 @@ ui *ui::get() {
 			break;
 		case 2:
 			singleton = new ui_log();
+			break;
+		case 3:
+			singleton = new ui_quiet();
 			break;
 		default:
 			assert(0);
