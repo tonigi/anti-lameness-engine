@@ -188,6 +188,10 @@ public:
 		return pixel(0, 0, 0);
 	}
 
+	static pixel one() {
+		return pixel(1, 1, 1);
+	}
+
 	int operator==(const pixel &p) {
 		return x[0] == p[0]
 		    && x[1] == p[1]

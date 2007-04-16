@@ -207,7 +207,9 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 	assert(mcv <= 65535 || m2 == '3');
 
 	if (extended.black_level == 0) {
-		extended.black_level = e->get_black_level() * mcv;
+		extended.black_level = e->get_black_level();
+	} else {
+		extended.black_level /= mcv;
 	}
 
 	if (n != 1 || (mcv > 65535 && m2 == '6'))
@@ -271,11 +273,14 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 					error_ppm(filename);
 			}
 
-			p[k] = (ale_real) (ival - (extended.is_extended ? extended.black_level : 0)) 
-			     / (ale_real) (mcv  - (extended.is_extended ? extended.black_level : 0));
+			p[k] = ((ale_real) ival) / ((ale_real) mcv);
+
 		}
 
-		im->set_pixel(i, j, e->linearize(p));
+		pixel p_linear =     (e->linearize(p) - pixel::one() * extended.black_level)
+			       / (e->get_multiplier() - pixel::one() * extended.black_level);
+
+		im->set_pixel(i, j, p_linear);
 	}
 
 	/* Handle exposure and gain */
