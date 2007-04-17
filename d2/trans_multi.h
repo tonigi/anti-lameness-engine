@@ -274,7 +274,7 @@ public:
 			 * Rescale region map.
 			 */
 
-			assert(0);
+#warning d2::trans_multi::specific_rescale() does no region map rescaling.
 		}
 
 		for (unsigned int t = 0; t < trans_stack.size(); t++)
