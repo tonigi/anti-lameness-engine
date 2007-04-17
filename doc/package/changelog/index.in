@@ -1,5 +1,13 @@
 V	0.8.8 prerelease
 
+o	Add user interface options --ui=log and --ui=quiet, with greater and
+	lesser verbosity.
+
+o	Modify black level handling to always use linear values.
+
+o	Modify match and --ui=tty status format strings to produce
+	constant-width output in the typical case.
+
 o	Increase barrel distortion multiplier and rate maximum to 2.0
 	and 8.0, respectively.
 
