@@ -40,6 +40,11 @@
  * Time structures.
  */
 
+namespace d2 {
+	struct trans_multi;
+	typedef trans_multi transformation;
+}
+
 class ale_timer_t {
 #if HAVE_GETTIMEOFDAY
 	struct timeval tv;
@@ -320,6 +325,8 @@ public:
 		status.match_value = (1 - match) * 100;
 		update();
 	}
+
+	virtual void set_offset(d2::transformation offset);
 
 	virtual void loading_file() {
 		status.code = status.LOAD_FILE;

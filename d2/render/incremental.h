@@ -375,7 +375,6 @@ public:
 			const image *im = image_rw::open(0);
 
 			ui::get()->rendering();
-
 			if (inv->is_median())
 				accum_image = new image_weighted_median(1, 1, 3);
 			else

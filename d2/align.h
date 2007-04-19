@@ -1907,6 +1907,7 @@ private:
 		ui::get()->prematching();
 		here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
 		ui::get()->set_match(here);
+		ui::get()->set_offset(offset);
 
 		/*
 		 * Current and modified barrel distortion parameters
@@ -2038,6 +2039,7 @@ private:
 			here = lowest_v;
 
 			ui::get()->set_match(here);
+			ui::get()->set_offset(offset);
 		}
 
 		/*
@@ -2391,6 +2393,7 @@ private:
 			}
 
 			ui::get()->set_match(here);
+			ui::get()->set_offset(offset);
 		}
 
 		offset.set_current_index(0);
@@ -2743,7 +2746,6 @@ private:
 			 * Handle the initial frame
 			 */
 
-			ui::get()->loading_file();
 			elements[0].input_frame = image_rw::open(n);
 
 			const image *i = elements[0].input_frame;
@@ -2804,7 +2806,6 @@ private:
 			assert (reference_image != NULL);
 			assert (reference_defined != NULL);
 
-			ui::get()->loading_file();
 			elements[j].input_frame = image_rw::open(i);
 			elements[j].is_primary = 1;
 

@@ -66,6 +66,8 @@ public:
 		printf("match %g / mismatch %g\n", (1 - match), match);
 	}
 
+	void set_offset(d2::transformation);
+
 	void loading_file() {
 		printf("Loading file.\n");
 	}
@@ -97,12 +99,16 @@ public:
 	}
 
 	void set_orender_current(int num) {
-		printf("Rendering output (index %d)\n", num);
+		printf("Preparing to render output (index %d)\n", num);
 	}
 
 
 	void set_arender_current() {
-		printf("Rendering alignment reference image.\n");
+		printf("Preparing to render alignment reference image.\n");
+	}
+
+	void rendering() {
+		printf("Rendering.\n");
 	}
 
 	void writing_output(int num) {

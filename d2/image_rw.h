@@ -546,6 +546,7 @@ public:
 			files_open[n] = 1;
 		} else {
 
+			ui::get()->loading_file();
 			image *i = read_image(filenames[n], input_exposure[n], "file", bayer(n), (n == 0));
 
 			images[n] = i;

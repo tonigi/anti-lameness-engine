@@ -24,6 +24,7 @@
 #include "ui_quiet.h"
 #include "input.h"
 #include "ui.h"
+#include "d2.h"
 
 /*
  * See ui.h for details on these variables.
@@ -62,4 +63,7 @@ ui *ui::get() {
 	
 void ui::handle_input(int argc, const char *argv[], const char *package, const char *short_version, const char *version) {
 	input::handle(argc, argv, package, short_version, version);
+}
+
+void ui::set_offset(d2::transformation offset) {
 }
