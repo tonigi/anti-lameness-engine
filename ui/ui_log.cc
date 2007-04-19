@@ -36,7 +36,7 @@ void ui_log::set_offset(d2::transformation offset) {
 				offset.gpt_get(3, 1),
 				offset.gpt_get(3, 0) );
 	} else {
-		printf("Alignment [E %f %f %f]\n",
+		printf("Alignment [E %f %f %f %f %f]\n",
 				offset.scaled_width(),
 				offset.scaled_height(),
 				offset.eu_get(1),
