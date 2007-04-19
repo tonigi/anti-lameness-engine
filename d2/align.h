@@ -1594,7 +1594,8 @@ private:
 	/*
 	 * Get the set of transformations produced by a given perturbation
 	 */
-	static void get_perturb_set(std::vector<transformation> *set, transformation t, ale_pos adj_p, 
+	static void get_perturb_set(std::vector<transformation> *set, 
+			transformation t, ale_pos adj_p, 
 			ale_pos adj_o, point sample_centroid) {
 
 		ale_pos adj_s;
@@ -1673,79 +1674,18 @@ private:
 		if (t->is_nontrivial())
 			return;
 
-		ale_pos adj_s;
+		std::vector<transformation> t_set;
+		get_perturb_set(&t_set, *t, adj_p, adj_o, sample_centroid);
 
-		transformation &offset = *t;
-		transformation test_t;
+		for (unsigned int i = 0; i < t_set.size(); i++) {
 
-		if (alignment_class < 2 && alignment_class >= 0) {
+			calculate_element_region(&t_set[i], si, local_ax_count);
 
-			/* 
-			 * Translational or euclidean transformation
-			 */
-
-			for (int i = 0; i < 2; i++)
-			for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
-
-				test_t = offset;
-
-				test_t.eu_modify(i, adj_s);
-
-				calculate_element_region(&test_t, si, local_ax_count);
-
-				if (test_t.is_nontrivial()) {
-					*t = test_t;
-					return;
-				}
+			if (t_set[i].is_nontrivial()) {
+				*t = t_set[i];
+				return;
 			}
-
-			if (alignment_class == 1 && adj_o < rot_max)
-			for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
-
-				test_t = offset;
-
-				if (sample_centroid.defined()) {
-					test_t.eu_rotate_about_scaled(sample_centroid, adj_s);
-				} else {
-					test_t.eu_modify(2, adj_s);
-				}
-
-				calculate_element_region(&test_t, si, local_ax_count);
-
-				if (test_t.is_nontrivial()) {
-					*t = test_t;
-					return;
-				}
-			}
-
-		} else if (alignment_class == 2) {
-
-			/*
-			 * Projective transformation
-			 */
-
-			for (int i = 0; i < 4; i++)
-			for (int j = 0; j < 2; j++)
-			for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
-
-				test_t = offset;
-
-				if (perturb_type == 0)
-					test_t.gpt_modify(j, i, adj_s);
-				else if (perturb_type == 1)
-					test_t.gr_modify(j, i, adj_s);
-				else
-					assert(0);
-
-				calculate_element_region(&test_t, si, local_ax_count);
-
-				if (test_t.is_nontrivial()) {
-					*t = test_t;
-					return;
-				}
-			}
-
-		} else assert(0);
+		}
 	}
 
 	/*
@@ -2231,7 +2171,6 @@ private:
 
 			ale_pos adj_b = perturb * bda_mult;
 
-			transformation test_t;
 			transformation old_offset = offset;
 			ale_accum test_d;
 			ale_accum old_here = here;
@@ -2242,129 +2181,37 @@ private:
 			int found_reliable_worse = 0;
 			int found_unreliable_worse = 0;
 
-			if (alignment_class < 2 && alignment_class >= 0) {
+			point sample_centroid = old_here_diff_stat->get_centroid() 
+				              + si.accum->offset();
 
-				/* 
-				 * Translational or euclidean transformation
-				 */
+			std::vector<transformation> t_set;
+			get_perturb_set(&t_set, offset, adj_p, adj_o, sample_centroid);
 
-				for (int i = 0; i < 2; i++)
-				for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+			for (unsigned int i = 0; i < t_set.size(); i++) {
 
-					test_t = offset;
+				test_d = diff(si, t_set[i], _mc_arg, 
+					      local_ax_count, m, here_diff_stat);
 
-					test_t.eu_modify(i, adj_s);
-
-					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
-
-					if (test_d < here || (!finite(here) && finite(test_d))) {
-						found_better = 1;
-						if (_mc > 0
-						 || _mc_arg >= 1
-						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg)) {
-							found_reliable_better = 1;
-							here = test_d;
-							offset = test_t;
-							goto done;
-						}
-					}
-
-					if (_mc <= 0 && test_d > here) {
-						if (_mc_arg >= 1
-						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg))
-							found_reliable_worse = 1;
-						else
-							found_unreliable_worse = 1;
+				if (test_d < here || (!finite(here) && finite(test_d))) {
+					found_better = 1;
+					if (_mc > 0
+					 || _mc_arg >= 1
+					 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg)) {
+						found_reliable_better = 1;
+						here = test_d;
+						offset = t_set[i];
+						goto done;
 					}
 				}
 
-				if (alignment_class == 1 && adj_o < rot_max)
-				for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
-
-					point sample_centroid = old_here_diff_stat->get_centroid() + si.accum->offset();
-					test_t = offset;
-
-					if (sample_centroid.defined()) {
-						test_t.eu_rotate_about_scaled(sample_centroid, adj_s);
-					} else {
-						test_t.eu_modify(2, adj_s);
-					}
-
-					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
-
-					if (test_d < here || (!finite(here) && finite(test_d))) {
-						found_better = 1;
-						if (_mc > 0
-						 || _mc_arg >= 1
-						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg)) {
-							found_reliable_better = 1;
-							here = test_d;
-							offset = test_t;
-							goto done;
-						}
-					}
-
-					if (_mc <= 0 && test_d > here) {
-						if (_mc_arg >= 1
-						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg))
-							found_reliable_worse = 1;
-						else
-							found_unreliable_worse = 1;
-					}
-				}
-
-			} else if (alignment_class == 2) {
-
-				/*
-				 * Projective transformation
-				 */
-
-				for (int i = 0; i < 4; i++)
-				for (int j = 0; j < 2; j++)
-				for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
-
-					test_t = offset;
-
-					if (perturb_type == 0)
-						test_t.gpt_modify(j, i, adj_s);
-					else if (perturb_type == 1)
-						test_t.gr_modify(j, i, adj_s);
+				if (_mc <= 0 && test_d > here) {
+					if (_mc_arg >= 1
+					 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg))
+						found_reliable_worse = 1;
 					else
-						assert(0);
-
-					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
-
-#if 0
-					fprintf(stderr, "old\n");
-					old_here_diff_stat->print_hist();
-					fprintf(stderr, "new\n");
-					here_diff_stat->print_hist();
-#endif
-
-					if (test_d < here || (!finite(here) && finite(test_d))) {
-						// fprintf(stderr, "found better\n");
-						found_better = 1;
-						if (_mc > 0
-						 || _mc_arg >= 1
-						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg)) {
-							// fprintf(stderr, "found reliable better\n");
-							found_reliable_better = 1;
-							here = test_d;
-							offset = test_t;
-							adj_s += 3 * adj_p;
-						}
-					}
-
-					if (_mc <= 0 && test_d > here) {
-						if (_mc_arg >= 1
-						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg))
-							found_reliable_worse = 1;
-						else
-							found_unreliable_worse = 1;
-					}
+						found_unreliable_worse = 1;
 				}
-
-			} else assert(0);
+			}
 
 			/*
 			 * Barrel distortion
@@ -2383,7 +2230,7 @@ private:
 					if (bda_rate > 0 && fabs(modified_bd[rd] + adj_s - current_bd[rd]) > bda_rate)
 						continue;
 				
-					test_t = offset;
+					transformation test_t = offset;
 
 					test_t.bd_modify(rd, adj_s);
 
@@ -2458,8 +2305,6 @@ private:
 					offset.push_element();
 					_mc_arg = mc_array[offset.get_current_index()];
 
-					point sample_centroid = old_here_diff_stat->get_centroid() 
-						              + si.accum->offset();
 					make_element_nontrivial(&offset, si, local_ax_count, 
 							adj_p, adj_o, sample_centroid);
 					here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
