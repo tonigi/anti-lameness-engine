@@ -94,7 +94,7 @@ int align::_gs = 3;
 unsigned int align::_ma_card = 1;
 double align::_ma_cont = 100;
 
-ale_pos align::_gs_mo = 44;
+ale_pos align::_gs_mo = 67;
 int align::gs_mo_percent = 1;
 
 exclusion *align::ax_parameters = NULL;

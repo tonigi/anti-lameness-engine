@@ -281,7 +281,7 @@ public:
 			"                     all       Union of inner and outer [default]\n"
 			"                     central   inner if below threshold or better; else, outer.\n"
 			"                     points    Align by control points.  Ignores gs-mo.\n"
-			"--gs-mo <x>       Set <x> pixel min. overlap for global search.   (44%% default)\n"
+			"--gs-mo <x>       Set <x> pixel min. overlap for global search.   (67%% default)\n"
 			"                     ('x%%' uses a fraction of the smallest image dimension.)\n"
 			BETWEEN_SECTIONS
 			"Multi-alignment:\n"
