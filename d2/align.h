@@ -1592,6 +1592,73 @@ private:
 	}
 
 	/*
+	 * Get the set of transformations produced by a given perturbation
+	 */
+	static void get_perturb_set(std::vector<transformation> *set, transformation t, ale_pos adj_p, 
+			ale_pos adj_o, point sample_centroid) {
+
+		ale_pos adj_s;
+
+		transformation offset = t;
+		transformation test_t;
+
+		if (alignment_class < 2 && alignment_class >= 0) {
+
+			/* 
+			 * Translational or euclidean transformation
+			 */
+
+			for (int i = 0; i < 2; i++)
+			for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+
+				test_t = offset;
+
+				test_t.eu_modify(i, adj_s);
+
+				set->push_back(test_t);
+
+			}
+
+			if (alignment_class == 1 && adj_o < rot_max)
+			for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
+
+				test_t = offset;
+
+				if (sample_centroid.defined()) {
+					test_t.eu_rotate_about_scaled(sample_centroid, adj_s);
+				} else {
+					test_t.eu_modify(2, adj_s);
+				}
+
+				set->push_back(test_t);
+			}
+
+		} else if (alignment_class == 2) {
+
+			/*
+			 * Projective transformation
+			 */
+
+			for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 2; j++)
+			for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+
+				test_t = offset;
+
+				if (perturb_type == 0)
+					test_t.gpt_modify(j, i, adj_s);
+				else if (perturb_type == 1)
+					test_t.gr_modify(j, i, adj_s);
+				else
+					assert(0);
+
+				set->push_back(test_t);
+			}
+
+		} else assert(0);
+	}
+
+	/*
 	 * Attempt to make the current element non-trivial, by finding a nearby
 	 * alignment admitting a non-empty element region.
 	 */
