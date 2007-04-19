@@ -275,13 +275,14 @@ public:
 			"Global searching:\n"
 			HEADER_SPACE
 			"--gs <type>       Set global search to <type>, one of:\n"
-			"                     local     Local alignment only [default]\n"
+			"                     local     Local alignment only\n"
 			"                     inner     Alignment reference image inner region\n"
 			"                     outer     Alignment reference image outer region\n"
-			"                     all       Union of inner and outer\n"
+			"                     all       Union of inner and outer [default]\n"
 			"                     central   inner if below threshold or better; else, outer.\n"
 			"                     points    Align by control points.  Ignores gs-mo.\n"
-			"--gs-mo <x>       Set <x> pixel min. overlap for global search. (16 is default)\n"
+			"--gs-mo <x>       Set <x> pixel min. overlap for global search.   (44%% default)\n"
+			"                     ('x%%' uses a fraction of the smallest image dimension.)\n"
 			BETWEEN_SECTIONS
 			"Multi-alignment:\n"
 			HEADER_SPACE

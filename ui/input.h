@@ -2746,7 +2746,14 @@ public:
 				} else if (!strcmp(option_name, "gs")) {
 					d2::align::gs(env->get_string_arg(i->first, 1));
 				} else if (!strcmp(option_name, "gs-mo")) {
-					d2::align::gs_mo(env->get_unsigned_arg(i->first, 1));
+					const char *option = env->get_string_arg(i->first, 1);
+					double gs_mo;
+					int characters;
+					sscanf(option, "%lf%n", &gs_mo, &characters);
+					if (*(option + characters) == '%')
+						d2::align::gs_mo(gs_mo, 1);
+					else
+						d2::align::gs_mo(gs_mo, 0);
 				} else if (!strcmp(option_name, "ev")) {
 					double ev = env->get_double_arg(i->first, 1);
 					double gain_value = pow(2, -ev);

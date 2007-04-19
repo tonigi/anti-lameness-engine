@@ -90,10 +90,13 @@ int align::match_count = 0;
 ale_pos align::_mc = 0;
 int align::_mcd_limit = 100;
 int align::certainty_weights = 0;
-int align::_gs = 0;
+int align::_gs = 3;
 unsigned int align::_ma_card = 1;
 double align::_ma_cont = 100;
-unsigned int align::_gs_mo = 16;
+
+ale_pos align::_gs_mo = 44;
+int align::gs_mo_percent = 1;
+
 exclusion *align::ax_parameters = NULL;
 int align::ax_count = 0;
 

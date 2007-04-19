@@ -336,7 +336,8 @@ private:
 	 * Minimum overlap for global searches
 	 */
 
-	static unsigned int _gs_mo;
+	static ale_pos _gs_mo;
+	static int gs_mo_percent;
 
 	/*
 	 * Exclusion regions
@@ -1706,7 +1707,7 @@ private:
 		 * dimensions.
 		 */
 
-		ale_pos local_lower, local_upper;
+		ale_pos local_lower, local_upper, local_gs_mo;
 
 		/*
 		 * Select the minimum dimension as the reference.
@@ -1715,6 +1716,8 @@ private:
 		ale_pos reference_size = input_frame->height();
 		if (input_frame->width() < reference_size)
 			reference_size = input_frame->width();
+		ale_pos reference_area = input_frame->height()
+			               * input_frame->width();
 
 		if (perturb_lower_percent)
 			local_lower = perturb_lower
@@ -1733,6 +1736,12 @@ private:
 			local_upper = perturb_upper;
 
 		local_upper = pow(2, floor(log(local_upper) / log(2)));
+
+		if (gs_mo_percent)
+			local_gs_mo = _gs_mo
+				    * reference_area
+				    * 0.01
+				    * scale_factor;
 
 		/*
 		 * Logarithms aren't exact, so we divide repeatedly to discover
@@ -3173,8 +3182,9 @@ public:
 	/*
 	 * Set the minimum overlap for global searching
 	 */
-	static void gs_mo(unsigned int value) {
+	static void gs_mo(ale_pos value, int _gs_mo_percent) {
 		_gs_mo = value;
+		gs_mo_percent = _gs_mo_percent;
 	}
 
 	/*
