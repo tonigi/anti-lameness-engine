@@ -573,6 +573,13 @@ private:
 			hist_min_d = INT_MIN;
 			hist_total = 0;
 			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
+
+			min = point::posinf();
+			max = point::neginf();
+
+			centroid[0] = 0;
+			centroid[1] = 0;
+			centroid_divisor = 0;
 		}
 
 		~diff_stat_t() {
@@ -680,6 +687,93 @@ private:
 			}
 
 			centroid_divisor += ds->centroid_divisor;
+		}
+
+		diff_stat_t(const diff_stat_t &dst) {
+			/*
+			 * Initialize
+			 */
+			result = 0;
+			divisor = 0;
+			hist_min_r = INT_MIN;
+			hist_min_d = INT_MIN;
+			hist_dim = 20;
+			hist_total = 0;
+			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
+
+			min = point::posinf();
+			max = point::neginf();
+
+			centroid[0] = 0;
+			centroid[1] = 0;
+			centroid_divisor = 0;
+
+			/*
+			 * Add
+			 */
+			result += dst.result;
+			divisor += dst.divisor;
+
+			for (int r = 0; r < dst.hist_dim; r++)
+			for (int d = 0; d < dst.hist_dim; d++)
+				add_hist(r + dst.hist_min_r, d + dst.hist_min_d, 
+						dst.histogram[r * hist_dim + d]);
+
+			for (int d = 0; d < 2; d++) {
+				if (min[d] > dst.min[d])
+					min[d] = dst.min[d];
+				if (max[d] < dst.max[d])
+					max[d] = dst.max[d];
+				centroid[d] += dst.centroid[d];
+			}
+
+			centroid_divisor += dst.centroid_divisor;
+		}
+
+		diff_stat_t &operator=(const diff_stat_t &dst) {
+
+			/*
+			 * Clear
+			 */
+			free(histogram);
+
+			result = 0;
+			divisor = 0;
+			hist_min_r = INT_MIN;
+			hist_min_d = INT_MIN;
+			hist_dim = 20;
+			hist_total = 0;
+			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
+
+			min = point::posinf();
+			max = point::neginf();
+
+			centroid[0] = 0;
+			centroid[1] = 0;
+			centroid_divisor = 0;
+
+			/*
+			 * Add
+			 */
+			result += dst.result;
+			divisor += dst.divisor;
+
+			for (int r = 0; r < dst.hist_dim; r++)
+			for (int d = 0; d < dst.hist_dim; d++)
+				add_hist(r + dst.hist_min_r, d + dst.hist_min_d, 
+						dst.histogram[r * hist_dim + d]);
+
+			for (int d = 0; d < 2; d++) {
+				if (min[d] > dst.min[d])
+					min[d] = dst.min[d];
+				if (max[d] < dst.max[d])
+					max[d] = dst.max[d];
+				centroid[d] += dst.centroid[d];
+			}
+
+			centroid_divisor += dst.centroid_divisor;
+
+			return *this;
 		}
 
 		ale_accum get_result() {
@@ -1763,7 +1857,8 @@ private:
 		ale_pos perturb = local_upper;
 		transformation offset;
 		ale_accum here;
-		diff_stat_t *here_diff_stat = new diff_stat_t();
+		// diff_stat_t *here_diff_stat = new diff_stat_t();
+		diff_stat_t here_diff_stat;
 		int lod;
 
 		if (_keep) {
@@ -1911,7 +2006,7 @@ private:
 		 */
 
 		ui::get()->prematching();
-		here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
+		here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
 		ui::get()->set_match(here);
 		ui::get()->set_offset(offset);
 
@@ -2190,15 +2285,16 @@ private:
 
 			transformation old_offset = offset;
 			ale_accum test_d;
+			diff_stat_t test_diff_stat;
 			ale_accum old_here = here;
-			diff_stat_t *old_here_diff_stat = here_diff_stat;
-			here_diff_stat = new diff_stat_t();
+			// diff_stat_t *old_here_diff_stat = here_diff_stat;
+			diff_stat_t old_here_diff_stat = here_diff_stat;
 			int found_better = 0;
 			int found_reliable_better = 0;
 			int found_reliable_worse = 0;
 			int found_unreliable_worse = 0;
 
-			point sample_centroid = old_here_diff_stat->get_centroid() 
+			point sample_centroid = old_here_diff_stat.get_centroid() 
 				              + si.accum->offset();
 
 			std::vector<transformation> t_set;
@@ -2207,28 +2303,34 @@ private:
 			for (unsigned int i = 0; i < t_set.size(); i++) {
 
 				test_d = diff(si, t_set[i], _mc_arg, 
-					      local_ax_count, m, here_diff_stat);
+					      local_ax_count, m, &test_diff_stat);
 
-				if (test_d < here || (!finite(here) && finite(test_d))) {
+				if (test_d < old_here || (!finite(old_here) && finite(test_d))) {
 					found_better = 1;
 					if (_mc > 0
 					 || _mc_arg >= 1
-					 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg)) {
+					 || test_diff_stat.reliable(&old_here_diff_stat, _mc_arg)) {
 						found_reliable_better = 1;
-						here = test_d;
-						offset = t_set[i];
-						goto done;
+
+						if (test_d < here) {
+							here = test_d;
+							here_diff_stat = test_diff_stat;
+							offset = t_set[i];
+						}
 					}
 				}
 
-				if (_mc <= 0 && test_d > here) {
+				if (_mc <= 0 && test_d > old_here) {
 					if (_mc_arg >= 1
-					 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg))
+					 || old_here_diff_stat.reliable(&test_diff_stat, _mc_arg))
 						found_reliable_worse = 1;
 					else
 						found_unreliable_worse = 1;
 				}
 			}
+
+			if (here < old_here)
+				goto done;
 
 			/*
 			 * Barrel distortion
@@ -2251,24 +2353,25 @@ private:
 
 					test_t.bd_modify(rd, adj_s);
 
-					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, here_diff_stat);
+					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, &test_diff_stat);
 
-					if (test_d < here || (!finite(here) && finite(test_d))) {
+					if (test_d < old_here || (!finite(old_here) && finite(test_d))) {
 						found_better = 1;
 						if (_mc > 0
 						 || _mc_arg >= 1
-						 || here_diff_stat->reliable(old_here_diff_stat, _mc_arg)) {
+						 || test_diff_stat.reliable(&old_here_diff_stat, _mc_arg)) {
 							found_reliable_better = 1;
 							here = test_d;
 							offset = test_t;
 							modified_bd[rd] += adj_s;
+							here_diff_stat = test_diff_stat;
 							goto done;
 						}
 					}
 
-					if (_mc <= 0 && test_d > here) {
+					if (_mc <= 0 && test_d > old_here) {
 						if (_mc_arg >= 1
-						 || old_here_diff_stat->reliable(here_diff_stat, _mc_arg))
+						 || old_here_diff_stat.reliable(&test_diff_stat, _mc_arg))
 							found_reliable_worse = 1;
 						else
 							found_unreliable_worse = 1;
@@ -2284,28 +2387,24 @@ private:
 			 && !found_reliable_better) {
 				_mc_arg *= 2;
 				ui::get()->alignment_monte_carlo_parameter(_mc_arg);
-				here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
+				here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
 				continue;
 			}
 
 			if (_mc <= 0
 			 && found_reliable_better) {
-				diff_stat_t *here_diff_stat_half = new diff_stat_t();
-				diff_stat_t *old_here_diff_stat_half = new diff_stat_t();
 
-				diff(si, offset, _mc_arg / 2, local_ax_count, m, here_diff_stat_half);
-				diff(si, old_offset, _mc_arg / 2, local_ax_count, m, old_here_diff_stat_half);
+				diff_stat_t here_diff_stat_half;
+				diff_stat_t old_here_diff_stat_half;
 
-				if (here_diff_stat_half->reliable(old_here_diff_stat_half, _mc_arg / 2)) {
+				diff(si, offset, _mc_arg / 2, local_ax_count, m, &here_diff_stat_half);
+				diff(si, old_offset, _mc_arg / 2, local_ax_count, m, &old_here_diff_stat_half);
+
+				if (here_diff_stat_half.reliable(&old_here_diff_stat_half, _mc_arg / 2)) {
 					_mc_arg /= 2;
 					ui::get()->alignment_monte_carlo_parameter(_mc_arg);
-					delete here_diff_stat;
-					delete old_here_diff_stat;
 					here_diff_stat = here_diff_stat_half;
 					old_here_diff_stat = old_here_diff_stat_half;
-				} else {
-					delete here_diff_stat_half;
-					delete old_here_diff_stat_half;
 				}
 			}
 
@@ -2324,8 +2423,7 @@ private:
 
 					make_element_nontrivial(&offset, si, local_ax_count, 
 							adj_p, adj_o, sample_centroid);
-					here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
-					delete old_here_diff_stat;
+					here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
 					element->is_primary = 0;
 				} else {
 
@@ -2373,15 +2471,12 @@ private:
 								mc_array[ma_index] /= 4;
 						}
 
-						here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
-						delete old_here_diff_stat;
+						here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
 
 					} else if (_ma_card > 1) {
-						here = diff(si, offset, _mc_arg, local_ax_count, m, here_diff_stat);
-						delete old_here_diff_stat;
+						here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
 						adj_p = perturb;
 					} else {
-						delete here_diff_stat;
 						here_diff_stat = old_here_diff_stat;
 						adj_p = perturb;
 					}
@@ -2394,8 +2489,6 @@ private:
 					ui::get()->alignment_perturbation_level(perturb, lod);
 
 				}
-			} else {
-				delete old_here_diff_stat;
 			}
 
 			ui::get()->set_match(here);
