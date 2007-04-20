@@ -328,6 +328,9 @@ public:
 
 	virtual void set_offset(d2::transformation offset);
 
+	virtual void gs_mo(ale_pos gs_mo) {
+	}
+
 	virtual void loading_file() {
 		status.code = status.LOAD_FILE;
 		update();

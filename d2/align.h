@@ -1742,6 +1742,8 @@ private:
 				    * reference_area
 				    * 0.01
 				    * scale_factor;
+		else
+			local_gs_mo = _gs_mo;
 
 		/*
 		 * Logarithms aren't exact, so we divide repeatedly to discover
@@ -1888,6 +1890,10 @@ private:
 		ale_pos adj_p = (perturb >= pow(2, lod_diff))
 			     ? pow(2, lod_diff) : (double) perturb;
 
+		local_gs_mo /= pow(pow(2, lod), 2);
+
+		ui::get()->gs_mo(local_gs_mo);
+
 		/*
 		 * Pre-alignment exposure adjustment
 		 */
@@ -1967,7 +1973,7 @@ private:
 					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
 					unsigned int ovl = overlap(si, t, local_ax_count);
 
-					if ((v < lowest_v && ovl >= _gs_mo) 
+					if ((v < lowest_v && ovl >= local_gs_mo) 
 					 || (!finite(lowest_v) && finite(v))) {
 						lowest_v = v;
 						lowest_t = t;
@@ -1988,7 +1994,7 @@ private:
 					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
 					unsigned int ovl = overlap(si, t, local_ax_count);
 
-					if ((v < lowest_v && ovl >= _gs_mo)
+					if ((v < lowest_v && ovl >= local_gs_mo)
 					 || (!finite(lowest_v) && finite(v))) {
 						lowest_v = v;
 						lowest_t = t;
@@ -2001,7 +2007,7 @@ private:
 					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
 					unsigned int ovl = overlap(si, t, local_ax_count);
 
-					if ((v < lowest_v && ovl >= _gs_mo)
+					if ((v < lowest_v && ovl >= local_gs_mo)
 					 || (!finite(lowest_v) && finite(v))) {
 						lowest_v = v;
 						lowest_t = t;
@@ -2014,7 +2020,7 @@ private:
 					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
 					unsigned int ovl = overlap(si, t, local_ax_count);
 
-					if ((v < lowest_v && ovl >= _gs_mo)
+					if ((v < lowest_v && ovl >= local_gs_mo)
 					 || (!finite(lowest_v) && finite(v))) {
 						lowest_v = v;
 						lowest_t = t;
@@ -2027,7 +2033,7 @@ private:
 					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
 					unsigned int ovl = overlap(si, t, local_ax_count);
 
-					if ((v < lowest_v && ovl >= _gs_mo)
+					if ((v < lowest_v && ovl >= local_gs_mo)
 					 || (!finite(lowest_v) && finite(v))) {
 						lowest_v = v;
 						lowest_t = t;
