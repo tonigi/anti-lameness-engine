@@ -1,5 +1,10 @@
 V	0.8.8 prerelease
 
+o	Enable global searches by default.
+
+o	Modify --gs-mo to allow specification as a percentage, and make 67%
+	default.
+
 o	Add user interface options --ui=log and --ui=quiet, with greater and
 	lesser verbosity, respectively.
 
