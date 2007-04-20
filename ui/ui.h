@@ -484,14 +484,17 @@ public:
 		status.code = status.IP_RENDER;
 		status.frame_num = num;
 		status.irani_peleg_stage = 0;
+		update();
 	}
 
 	virtual void ip_frame_simulate_start() {
+		status.code = status.IP_RENDER;
 		status.irani_peleg_stage = 1;
 		update();
 	}
 
 	virtual void ip_frame_correct_start() {
+		status.code = status.IP_RENDER;
 		status.irani_peleg_stage = 2;
 		update();
 	}
@@ -546,6 +549,7 @@ public:
 
 	virtual void alignment_monte_carlo_parameter(ale_pos mc) {
 		status.mc = (mc > 1) ? 1 : mc;
+		update();
 	}
 
 	virtual void alignment_perturbation_level(ale_pos perturb, ale_pos lod) {
