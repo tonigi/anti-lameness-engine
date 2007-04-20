@@ -10,7 +10,7 @@ o	Add user interface options --ui=log and --ui=quiet, with greater and
 
 o	Modify black level handling to always use linear values.
 
-o	Increase barrel distortion multiplier and rate maximum to 2.0
+o	Increase default barrel distortion multiplier and rate maximum to 2.0
 	and 8.0, respectively.
 
 o	Revise ordering of ui_tty status output so that more informative 
