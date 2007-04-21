@@ -1,5 +1,7 @@
 V	0.8.8 prerelease
 
+o	Make --no-inc default.
+
 o	Enable global searches by default.
 
 o	Modify --gs-mo to allow specification as a percentage, and make 67%
