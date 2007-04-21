@@ -586,6 +586,15 @@ private:
 			free(histogram);
 		}
 
+		/*
+		 * XXX: A better removal technique would probably match
+		 * removals between compared transformations, but this would
+		 * probably require traversing the actual images rather than
+		 * traversing histograms.  We use this simpler approach for
+		 * now, which is likely to under-estimate reliability for any
+		 * given removal count, due to its less constrained method of
+		 * performing removals.
+		 */
 		int check_removal(diff_stat_t *with) {
 			ale_accum bresult, bdivisor, wresult, wdivisor;
 			hist_bin *bhist, *whist;
