@@ -1,5 +1,8 @@
 V	0.8.8 prerelease
 
+o	Modify alignment procedure to select the best error from the
+	perturbation set instead of the first better error.
+
 o	Make --no-inc default.
 
 o	Enable global searches by default.
