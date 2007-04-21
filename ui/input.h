@@ -1371,7 +1371,7 @@ public:
 		const char *device = NULL;
 		int psf_match = 0;
 		double psf_match_args[6];
-		int inc = 1;
+		int inc = 0;
 		int exposure_register = 1;
 		const char *wm_filename = NULL;
 		int wm_offsetx = 0, wm_offsety = 0;

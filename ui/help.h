@@ -172,8 +172,8 @@ public:
 			BETWEEN_SECTIONS
 			"Incremental output:\n"
 			HEADER_SPACE
-			"--inc             Produce incremental output.  [default]\n"
-			"--no-inc          Don't produce incremental output.\n"
+			"--inc             Produce incremental output.\n"
+			"--no-inc          Don't produce incremental output.  [default]\n"
 
 			BETWEEN_SECTIONS
 			"Undefined values:\n"
