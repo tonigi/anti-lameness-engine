@@ -479,7 +479,7 @@ public:
 
 		if  (_is_projective)
 		for (int i = 0; i < 4; i++)
-			x[i]+=p;
+			x[i] += p;
 		else {
 			eu[0] += p[0] / scale_factor;
 			eu[1] += p[1] / scale_factor;
@@ -526,6 +526,9 @@ public:
 	 * Rescale a transform with a given factor.
 	 */
 	void specific_rescale(ale_pos factor) {
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
 
 		if (_is_projective) {
 

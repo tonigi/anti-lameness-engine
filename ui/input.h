@@ -2869,8 +2869,10 @@ public:
 		 */
 
 		for (int opt = 0; opt < oc_count; opt++) 
-		if  ((ochain[opt]->sync() || !inc) && !psf_match)
+		if  ((ochain[opt]->sync() || !inc) && !psf_match) {
+			ui::get()->writing_output(opt);
 			d2::image_rw::write_image(ochain_names[opt], ochain[opt]->get_image());
+		}
 
 		/*
 		 * Output a summary match statistic.

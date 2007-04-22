@@ -2395,7 +2395,9 @@ private:
 			 /* && (!found_reliable_worse || found_better) */
 			 && (found_unreliable_worse || found_better)
 			 && !found_reliable_better) {
-				_mc_arg *= 2;
+				ale_pos mc_multiplier = 2;
+
+				_mc_arg *= mc_multiplier;
 				ui::get()->alignment_monte_carlo_parameter(_mc_arg);
 				here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
 				continue;
@@ -2406,19 +2408,22 @@ private:
 
 				diff_stat_t here_diff_stat_half;
 				diff_stat_t old_here_diff_stat_half;
+				ale_pos here_half;
 
-				diff(si, offset, _mc_arg / 2, local_ax_count, m, &here_diff_stat_half);
-				diff(si, old_offset, _mc_arg / 2, local_ax_count, m, &old_here_diff_stat_half);
+				ale_pos mc_divisor = 2;
 
-				if (here_diff_stat_half.reliable(&old_here_diff_stat_half, _mc_arg / 2)) {
-					_mc_arg /= 2;
+				here_half = diff(si, offset, _mc_arg / mc_divisor, local_ax_count, m, &here_diff_stat_half);
+				diff(si, old_offset, _mc_arg / mc_divisor, local_ax_count, m, &old_here_diff_stat_half);
+
+				if (here_diff_stat_half.reliable(&old_here_diff_stat_half, _mc_arg / mc_divisor)) {
+					ale_pos mc_divisor = 2;
+
+					_mc_arg /= mc_divisor;
 					ui::get()->alignment_monte_carlo_parameter(_mc_arg);
-					here_diff_stat = here_diff_stat_half;
-					old_here_diff_stat = old_here_diff_stat_half;
+					here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
 				}
-			}
 
-			if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
+			} else if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
 
 				if (offset.get_current_index() > 0 && offset.is_nontrivial()) {
 					calculate_element_region(&offset, si, 
@@ -2446,12 +2451,14 @@ private:
 					perturb *= 0.5;
 
 					if (_mc <= 0) {
-						_mc_arg /= 2;
+						ale_pos mc_divisor = 2;
+
+						_mc_arg /= mc_divisor;
 
 						for (unsigned int ma_index = 0; 
 						     ma_index < _ma_card; 
 						     ma_index++)
-							mc_array[ma_index] /= 2;
+							mc_array[ma_index] /= mc_divisor;
 					}
 
 					if (lod > 0) {
@@ -2483,7 +2490,7 @@ private:
 
 						here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
 
-					} else if (_ma_card > 1) {
+					} else if (_ma_card > 1 || _mc <= 0) {
 						here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
 						adj_p = perturb;
 					} else {
