@@ -2387,12 +2387,13 @@ private:
 					}
 				}
 			}
-			
+
 	done:
 
+
 			if (_mc_arg < 1 && _mc <= 0 
-			 && (!found_reliable_worse || found_better) 
-			 /* && found_unreliable_worse */
+			 /* && (!found_reliable_worse || found_better) */
+			 && (found_unreliable_worse || found_better)
 			 && !found_reliable_better) {
 				_mc_arg *= 2;
 				ui::get()->alignment_monte_carlo_parameter(_mc_arg);
