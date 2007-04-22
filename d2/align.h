@@ -1795,7 +1795,7 @@ private:
 	/*
 	 * Test the reliability of a given change in transformation.
 	 */
-	int is_reliable(diff_stat_t *destination, diff_stat_t *origin, ale_pos _mc_arg) {
+	static int is_reliable(diff_stat_t *destination, diff_stat_t *origin, ale_pos _mc_arg) {
 		return (_mc > 0
 		     || _mc_arg >= 1
 		     || destination->reliable(origin, _mc_arg));
@@ -2373,7 +2373,7 @@ private:
 
 					if (test_d < old_here || (!finite(old_here) && finite(test_d))) {
 						found_better = 1;
-						if (is_reliable(&test_diff_stat, &old_here_diff_stat, _mc_arg) {
+						if (is_reliable(&test_diff_stat, &old_here_diff_stat, _mc_arg)) {
 							found_reliable_better = 1;
 							here = test_d;
 							offset = test_t;
@@ -2419,7 +2419,7 @@ private:
 				here_half = diff(si, offset, _mc_arg / mc_divisor, local_ax_count, m, &here_diff_stat_half);
 				diff(si, old_offset, _mc_arg / mc_divisor, local_ax_count, m, &old_here_diff_stat_half);
 
-				if (is_reliable(&here_diff_stat_half, &old_here_diff_stat_half, _mc_arg / mc_divisor) {
+				if (is_reliable(&here_diff_stat_half, &old_here_diff_stat_half, _mc_arg / mc_divisor)) {
 					ale_pos mc_divisor = 2;
 
 					_mc_arg /= mc_divisor;
