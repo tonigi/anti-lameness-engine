@@ -219,7 +219,7 @@ public:
 			"--mc <x>          Statically sample ~x%% of available pixels       (0 < x < 100)\n"
                         "--no-mc           Statically sample all pixels.\n"
 			"--mcd             Dynamically sample with robustness checks.          [default]\n"
-			"--mcd-removal <x> Check robustness against removing x pixels.  (100 is default)\n"
+			"--mcd-removal <x> Check robustness against removing x pixels.    (1 is default)\n"
 			BETWEEN_SECTIONS
 			"Tunable parameters:\n"
 			HEADER_SPACE
