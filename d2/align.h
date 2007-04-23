@@ -1792,6 +1792,13 @@ private:
 		}
 	}
 
+	static int is_better (diff_stat_t *destination, diff_stat_t *origin, ale_pos _mc_arg) {
+		ale_accum o = origin->get_error();
+		ale_accum d = destination->get_error();
+
+		return (d < o || (!finite(o) && finite(d)));
+	}
+
 	/*
 	 * Test the reliability of a given change in transformation.
 	 */
