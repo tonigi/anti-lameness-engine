@@ -1883,8 +1883,11 @@ public:
 					ui::set_log();
 				else if (!strcmp(env->get_string_arg(i->first, 1), "quiet"))
 					ui::set_quiet();
-				else
-					assert(0);
+				else {
+					fprintf(stderr, "Error: Unknown user interface type '%s'\n", 
+							env->get_string_arg(i->first, 1));
+					exit(1);
+				}
 			} else if (!strcmp(option_name, "3d-fmr")) {
 				d3::scene::fmr(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "3d-dmr")) {
