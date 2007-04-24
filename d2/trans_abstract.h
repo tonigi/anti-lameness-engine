@@ -80,7 +80,7 @@ public:
 	/*
 	 * Returns non-zero if the transformation might be non-Euclidean.
 	 */
-	virtual int is_projective() = 0;
+	virtual int is_projective() const = 0;
 
 	/*
 	 * Get scale factor.
@@ -271,7 +271,7 @@ public:
 	/*
 	 * Get the specified euclidean parameter
 	 */
-	virtual ale_pos eu_get(int param) = 0;
+	virtual ale_pos eu_get(int param) const = 0;
 
 	/*
 	 * Modify a projective transform in the indicated manner.
@@ -293,12 +293,42 @@ public:
 	/*
 	 * Get the specified projective parameter
 	 */
-	virtual point gpt_get(int point) = 0;
+	virtual point gpt_get(int point) const = 0;
 
 	/*
 	 * Get the specified projective parameter
 	 */
 	virtual ale_pos gpt_get(int point, int dim) = 0;
+
+	/*
+	 * Check equality of transformation parameters.
+	 */
+	virtual int operator==(const trans_abstract &t) const {
+		if (scale() != t.scale())
+			return 0;
+
+		if (is_projective() != t.is_projective())
+			return 0;
+
+		if (is_projective()) {
+			assert (t.is_projective());
+			for (int i = 0; i < 4; i++)
+				if (gpt_get(i) != t.gpt_get(i))
+					return 0;
+		} else {
+			assert (!t.is_projective());
+			for (int i = 0; i < 3; i++) 
+				if (eu_get(i) != t.eu_get(i))
+					return 0;
+		}
+
+		return 1;
+	}
+
+	virtual int operator!=(const trans_abstract &t) const {
+		return !(operator==(t));
+	}
+
 
 	/*
 	 * Translate by a given amount

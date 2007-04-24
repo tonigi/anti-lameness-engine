@@ -225,7 +225,7 @@ public:
 	/*
 	 * Returns non-zero if the transformation might be non-Euclidean.
 	 */
-	int is_projective() {
+	int is_projective() const {
 		return _is_projective;
 	}
 
@@ -376,7 +376,7 @@ public:
 	/*
 	 * Get the specified euclidean parameter
 	 */
-	ale_pos eu_get(int param) {
+	ale_pos eu_get(int param) const {
 		assert (!_is_projective);
 		assert (param >= 0);
 		assert (param < 3);
@@ -450,7 +450,7 @@ public:
 	/*
 	 * Get the specified projective parameter
 	 */
-	point gpt_get(int point) {
+	point gpt_get(int point) const {
 		assert (_is_projective);
 		assert (point >= 0);
 		assert (point <  4);

@@ -205,4 +205,14 @@ inline point operator*(double d, const point &p) {
 inline point operator*(float d, const point &p) {
 	return p.mult(d);
 }
+inline bool operator!=(const point &p, const point &q) {
+	for (int d = 0; d < 2; d++) {
+		if (p[0] != q[0])
+			return 1;
+		if (p[1] != q[1])
+			return 1;
+	}
+
+	return 0;
+}
 #endif

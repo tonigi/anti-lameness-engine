@@ -75,7 +75,7 @@ public:
 			trans_stack.push_back(trans_stack.back());
 	}
 
-	unsigned int get_current_index() {
+	unsigned int get_current_index() const {
 		return current_element;
 	}
 
@@ -127,7 +127,7 @@ public:
 	/*
 	 * Returns non-zero if the transformation might be non-Euclidean.
 	 */
-	int is_projective() {
+	int is_projective() const {
 		return trans_stack.front().is_projective();
 	}
 
@@ -201,7 +201,7 @@ public:
 	/*
 	 * Get the specified euclidean parameter
 	 */
-	ale_pos eu_get(int param) {
+	ale_pos eu_get(int param) const {
 		return trans_stack[current_element].eu_get(param);
 	}
 
@@ -233,7 +233,7 @@ public:
 	/*
 	 * Get the specified projective parameter
 	 */
-	point gpt_get(int point) {
+	point gpt_get(int point) const {
 		return trans_stack[current_element].gpt_get(point);
 	}
 

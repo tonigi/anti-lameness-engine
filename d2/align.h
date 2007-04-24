@@ -450,6 +450,82 @@ private:
 	}
 
 	/*
+	 * Calculate the region associated with the current multi-alignment
+	 * element.
+	 */
+	static void calculate_element_region(transformation *t, scale_cluster si, 
+			int local_ax_count) {
+
+		unsigned int i_max = si.accum->height();
+		unsigned int j_max = si.accum->width();
+		point offset = si.accum->offset();
+
+		if (si.input_scale < 1.0 && interpolant == NULL)
+			t->begin_calculate_scaled_region(i_max, j_max, offset);
+		else
+			t->begin_calculate_unscaled_region(i_max, j_max, offset);
+
+		for (unsigned int i = 0; i < i_max; i++) 
+		for (unsigned int j = 0; j < j_max; j++) {
+
+			if (ref_excluded(i, j, offset, si.ax_parameters, local_ax_count))
+				continue;
+
+			point q;
+
+			while ((q = t->get_query_point((int) (i + offset[0]), 
+							(int) (j + offset[1]))).defined()) {
+
+				ale_pos ti = q[0];
+				ale_pos tj = q[1];
+
+				if (input_excluded(ti, tj, si.ax_parameters, ax_count))
+					continue;
+
+				if (ti >= 0
+				 && ti <= si.input->height() - 1
+				 && tj >= 0
+				 && tj <= si.input->width() - 1
+				 && si.defined->get_pixel(i, j)[0] != 0) {
+
+					assert(0);
+				}
+			}
+		}
+
+		t->end_calculate_region();
+	}
+
+	/*
+	 * Attempt to make the current element non-trivial, by finding a nearby
+	 * alignment admitting a non-empty element region.
+	 */
+	static void make_element_nontrivial(transformation *t, scale_cluster si, 
+			int local_ax_count, ale_pos adj_p, ale_pos adj_o, point sample_centroid) {
+
+		if (t->is_nontrivial())
+			return;
+
+		calculate_element_region(t, si, local_ax_count);
+
+		if (t->is_nontrivial())
+			return;
+
+		std::vector<transformation> t_set;
+		get_perturb_set(&t_set, *t, adj_p, adj_o, sample_centroid);
+
+		for (unsigned int i = 0; i < t_set.size(); i++) {
+
+			calculate_element_region(&t_set[i], si, local_ax_count);
+
+			if (t_set[i].is_nontrivial()) {
+				*t = t_set[i];
+				return;
+			}
+		}
+	}
+
+	/*
 	 * Not-quite-symmetric difference function.  Determines the difference in areas
 	 * where the arrays overlap.  Uses the reference array's notion of pixel positions.
 	 *
@@ -468,13 +544,100 @@ private:
 	 */
 
 	class diff_stat_t {
+
+		static void *diff_subdomain(void *args);
+
+		struct subdomain_args {
+			struct scale_cluster c;
+			transformation t;
+			ale_pos _mc_arg;
+			int ax_count;
+			int f;
+			diff_stat_t* diff_stat;
+			int i_min, i_max, j_min, j_max;
+			int subdomain;
+		};
+
+		class memo_entry {
+		public:
+			int frame;
+			transformation offset[2];
+			ale_pos mc;
+
+			memo_entry(int _frame, transformation better, transformation worse, ale_pos _mc) {
+				frame = _frame;
+				offset[0] = better;
+				offset[1] = worse;
+				mc = _mc;
+			}
+
+			int subequals(const memo_entry &m, int o, int u) const {
+
+				if (frame != m.frame)
+					return 0;
+
+				if (offset[o] != m.offset[u])
+					return 0;
+
+				return 1;
+			}
+
+			int equals(const memo_entry &m) const {
+				return subequals(m, 0, 0) && subequals(m, 1, 1);
+			}
+
+			int conflicts(const memo_entry &m) const {
+				memo_entry mr(m.frame, m.offset[1], m.offset[0], mc);
+
+				return equals(mr);
+			}
+		};
+
+		static std::vector<memo_entry> memos;
+
+		static int is_loop(std::vector<memo_entry> mf) {
+			assert (mf.size() > 0);
+
+			/*
+			 * Loop containing me
+			 */
+			if (mf.back().subequals(mf.front(), 1, 0))
+				return 1;
+
+			/*
+			 * Loop not containing me
+			 */
+			for (unsigned int i = 1; i < mf.size(); i++) {
+				if (mf.back().subequals(mf[i], 1, 0))
+					return 0;
+			}
+
+			for (unsigned int i = 0; i < memos.size(); i++) {
+				if (memos[i].subequals(mf.back(), 0, 1)) {
+					mf.push_back(memos[i]);
+					if (is_loop(mf))
+						return 1;
+					mf.pop_back();
+				}
+			}
+
+			return 0;
+		}
+
 		ale_accum result;
 		ale_accum divisor;
+
+		transformation offset;
+		struct scale_cluster si;
+		int ax_count;
+		int frame;
 
 		point max, min;
 		ale_accum centroid[2], centroid_divisor;
 
 		typedef unsigned int hist_bin;
+
+		std::vector<ale_accum> mc_array;
 
 		int hist_min_r;
 		int hist_min_d;
@@ -546,24 +709,104 @@ private:
 			add_hist((int) floor(rbin), (int) floor(dbin), 1);
 		}
 
-	public:
-		diff_stat_t() {
-			result = 0;
-			divisor = 0;
-			hist_min_r = INT_MIN;
-			hist_min_d = INT_MIN;
-			hist_dim = 20;
-			hist_total = 0;
-			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
-
-			min = point::posinf();
-			max = point::neginf();
-
-			centroid[0] = 0;
-			centroid[1] = 0;
-			centroid_divisor = 0;
+public:
+		ale_pos get_mc() const {
+			return mc_array[offset.get_current_index()];
 		}
 
+		void diff(struct scale_cluster c, transformation t, int _ax_count, int f) {
+			clear();
+
+			si = c;
+			offset = t;
+			ax_count = _ax_count;
+			frame = f;
+
+			ale_pos _mc_arg = get_mc();
+
+			assert (_mc_arg > 0);
+
+			ui::get()->d2_align_sample_start();
+
+			if (interpolant != NULL) 
+				interpolant->set_parameters(t, c.input, c.accum->offset());
+
+			int N;
+#ifdef USE_PTHREAD
+			N = thread::count();
+
+			pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * N);
+			pthread_attr_t *thread_attr = (pthread_attr_t *) malloc(sizeof(pthread_attr_t) * N);
+
+#else
+			N = 1;
+#endif
+
+			subdomain_args *args = new subdomain_args[N];
+
+			for (int ti = 0; ti < N; ti++) {
+				args[ti].c = c;
+				args[ti].t = t;
+				args[ti]._mc_arg = _mc_arg;
+				args[ti].ax_count = ax_count;
+				args[ti].f = f;
+				args[ti].diff_stat = new diff_stat_t(_mc_arg);
+				args[ti].i_min = (c.accum->height() * ti) / N;
+				args[ti].i_max = (c.accum->height() * (ti + 1)) / N;
+				args[ti].j_min = 0;
+				args[ti].j_max = c.accum->width();
+				args[ti].subdomain = ti;
+
+#ifdef USE_PTHREAD
+				pthread_attr_init(&thread_attr[ti]);
+				pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
+				pthread_create(&threads[ti], &thread_attr[ti], diff_subdomain, &args[ti]);
+#else
+				diff_subdomain(&args[ti]);
+#endif
+			}
+
+			for (int ti = 0; ti < N; ti++) {
+#ifdef USE_PTHREAD
+				pthread_join(threads[ti], NULL);
+#endif
+				add(args[ti].diff_stat);
+
+				delete args[ti].diff_stat;
+			}
+
+			delete[] args;
+
+			ui::get()->d2_align_sample_stop();
+
+		}
+
+	private:
+		void rediff() {
+			diff(si, offset, ax_count, frame);
+		}
+
+	public:
+		void mcd_increase() {
+			assert (_mc <= 0);
+
+			mc_array[offset.get_current_index()] *= 2;
+
+			ui::get()->alignment_monte_carlo_parameter(
+					mc_array[offset.get_current_index()]);
+
+			rediff();
+		}
+
+		void mcd_decrease() {
+			assert (_mc <= 0);
+
+			mc_array[offset.get_current_index()] /= 2;
+
+			rediff();
+		}
+
+	private:
 		void clear() {
 			free(histogram);
 
@@ -582,10 +825,6 @@ private:
 			centroid_divisor = 0;
 		}
 
-		~diff_stat_t() {
-			free(histogram);
-		}
-
 		/*
 		 * XXX: A better removal technique would probably match
 		 * removals between compared transformations, but this would
@@ -595,7 +834,14 @@ private:
 		 * given removal count, due to its less constrained method of
 		 * performing removals.
 		 */
-		int check_removal(diff_stat_t *with) {
+		int check_removal(const diff_stat_t *with) const {
+
+			if (get_error() > with->get_error())
+				return with->check_removal(this);
+
+			if (!(get_error() < with->get_error()))
+				return 0;
+
 			ale_accum bresult, bdivisor, wresult, wdivisor;
 			hist_bin *bhist, *whist;
 
@@ -629,7 +875,7 @@ private:
 					ale_accum b_test_gradient = 
 						(bresult - br) / (bdivisor - bd) - bresult / bdivisor;
 					
-					if (b_test_gradient > max_gradient) {
+					if (!(b_test_gradient < max_gradient)) {
 						max_gradient_bin = i;
 						max_gradient_hist = 0;
 						max_gradient = b_test_gradient;
@@ -645,12 +891,15 @@ private:
 					ale_accum w_test_gradient = 
 						wresult / wdivisor - (wresult - wr) / (wdivisor - wd);
 					
-					if (w_test_gradient > max_gradient) {
+					if (!(w_test_gradient < max_gradient)) {
 						max_gradient_bin = i;
 						max_gradient_hist = 1;
 						max_gradient = w_test_gradient;
 					}
 				}
+
+				if (max_gradient_hist == -1)
+					break;
 
 				if (max_gradient_hist == 0) {
 					bhist[max_gradient_bin]--;
@@ -668,143 +917,95 @@ private:
 
 			ui::get()->d2_align_sim_stop();
 
-			if (bresult / bdivisor < wresult / wdivisor)
+			if (finite(bresult / bdivisor)
+			 && finite(wresult / wdivisor)
+			 && bresult / bdivisor < wresult / wdivisor)
 				return 1;
 			
 			return 0;
 		}
 
-		int reliable(diff_stat_t *with, ale_pos mc) {
-			return check_removal(with);
-		}
+public:
+		int reliable(const diff_stat_t &with) const {
 
-		void add(const diff_stat_t *ds) {
-			result += ds->result;
-			divisor += ds->divisor;
+			if (_mc > 0)
+				return 1;
 
-			for (int r = 0; r < ds->hist_dim; r++)
-			for (int d = 0; d < ds->hist_dim; d++)
-				add_hist(r + ds->hist_min_r, d + ds->hist_min_d, 
-						ds->histogram[r * hist_dim + d]);
+			if (get_mc() >= 1 && with.get_mc() >= 1)
+				return 1;
 
-			for (int d = 0; d < 2; d++) {
-				if (min[d] > ds->min[d])
-					min[d] = ds->min[d];
-				if (max[d] < ds->max[d])
-					max[d] = ds->max[d];
-				centroid[d] += ds->centroid[d];
+			if (hist_total < 100 || with.hist_total < 100)
+				return 0;
+
+			if (!check_removal(&with))
+				return 0;
+
+			memo_entry me(frame, offset, with.offset, get_mc());
+
+			int better = 1;
+
+			if (get_error() > with.get_error()) {
+				better = 0;
+				me.offset[0] = with.offset;
+				me.offset[1] = offset;
 			}
 
-			centroid_divisor += ds->centroid_divisor;
-		}
+			for (unsigned int i = 0; i < memos.size(); i++) {
 
-		diff_stat_t(const diff_stat_t &dst) {
-			/*
-			 * Initialize
-			 */
-			result = 0;
-			divisor = 0;
-			hist_min_r = INT_MIN;
-			hist_min_d = INT_MIN;
-			hist_dim = 20;
-			hist_total = 0;
-			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
+				if (me.equals(memos[i])) {
+					if (me.mc > memos[i].mc) {
+						memos[i] = me;
+						return 1;
+					}
 
-			min = point::posinf();
-			max = point::neginf();
+					std::vector<memo_entry> mf;
+					mf.push_back(me);
 
-			centroid[0] = 0;
-			centroid[1] = 0;
-			centroid_divisor = 0;
+					if (is_loop(mf))
+						return 0;
 
-			/*
-			 * Add
-			 */
-			result += dst.result;
-			divisor += dst.divisor;
+					return 1;
+				}
+				if (me.conflicts(memos[i])) {
+					if (me.mc > memos[i].mc) {
+						memos[i] = me;
+						return 1;
+					}
 
-			for (int r = 0; r < dst.hist_dim; r++)
-			for (int d = 0; d < dst.hist_dim; d++)
-				add_hist(r + dst.hist_min_r, d + dst.hist_min_d, 
-						dst.histogram[r * hist_dim + d]);
-
-			for (int d = 0; d < 2; d++) {
-				if (min[d] > dst.min[d])
-					min[d] = dst.min[d];
-				if (max[d] < dst.max[d])
-					max[d] = dst.max[d];
-				centroid[d] += dst.centroid[d];
+					return 0;
+				}
 			}
 
-			centroid_divisor += dst.centroid_divisor;
+			if (better)
+				memos.push_back(me);
+
+			return 1;
 		}
 
-		diff_stat_t &operator=(const diff_stat_t &dst) {
+private:
+		void try_decrease(diff_stat_t &origin);
 
-			/*
-			 * Clear
-			 */
-			free(histogram);
+		int better_than(diff_stat_t &origin) {
+			assert (get_mc() == origin.get_mc());
+			// assert (si == origin.si);
+			assert (ax_count == origin.ax_count);
+			assert (frame == origin.frame);
 
-			result = 0;
-			divisor = 0;
-			hist_min_r = INT_MIN;
-			hist_min_d = INT_MIN;
-			hist_dim = 20;
-			hist_total = 0;
-			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
+			int unbounded = 1;
 
-			min = point::posinf();
-			max = point::neginf();
-
-			centroid[0] = 0;
-			centroid[1] = 0;
-			centroid_divisor = 0;
-
-			/*
-			 * Add
-			 */
-			result += dst.result;
-			divisor += dst.divisor;
-
-			for (int r = 0; r < dst.hist_dim; r++)
-			for (int d = 0; d < dst.hist_dim; d++)
-				add_hist(r + dst.hist_min_r, d + dst.hist_min_d, 
-						dst.histogram[r * hist_dim + d]);
-
-			for (int d = 0; d < 2; d++) {
-				if (min[d] > dst.min[d])
-					min[d] = dst.min[d];
-				if (max[d] < dst.max[d])
-					max[d] = dst.max[d];
-				centroid[d] += dst.centroid[d];
+			while (!reliable(origin)) {
+				unbounded = 0;
+				mcd_increase();
+				origin.mcd_increase();
 			}
 
-			centroid_divisor += dst.centroid_divisor;
+			if (unbounded) {
+				if (_mc <= 0)
+					try_decrease(origin);
+			}
 
-			return *this;
-		}
-
-		ale_accum get_result() {
-			return result;
-		}
-
-		ale_accum get_divisor() {
-			return divisor;
-		}
-
-		point get_centroid() {
-			point result = point(centroid[0] / centroid_divisor, centroid[1] / centroid_divisor);
-
-			assert (finite(centroid[0]) 
-			     && finite(centroid[1]) 
-			     && (result.defined() || centroid_divisor == 0));
-
-			return result;
-		}
-
-		ale_accum get_error() {
-			return pow(result / divisor, 1/metric_exponent);
+			return (get_error() < origin.get_error() 
+			     || (!finite(origin.get_error()) && finite(get_error())));
 		}
 
 		void sample(int f, scale_cluster c, int i, int j, ale_pos ti, ale_pos tj) {
@@ -924,248 +1125,245 @@ private:
 			fprintf(stderr, "\n");
 			fprintf(stderr, "recalc_total = %d\n", recalc_total);
 		}
+
+		void set_offset(transformation o) {
+			offset = o;
+		}
+
+	public:
+		diff_stat_t(ale_pos _mc_arg) {
+			result = 0;
+			divisor = 0;
+			hist_min_r = INT_MIN;
+			hist_min_d = INT_MIN;
+			hist_dim = 20;
+			hist_total = 0;
+			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
+
+			min = point::posinf();
+			max = point::neginf();
+
+			centroid[0] = 0;
+			centroid[1] = 0;
+			centroid_divisor = 0;
+
+			mc_array.resize(_ma_card);
+
+			for (unsigned int ma_index = 0; ma_index < _ma_card; ma_index++)
+				mc_array[ma_index] = _mc_arg;
+		}
+
+		void rescale(ale_pos scale, scale_cluster _si) {
+
+			si = _si;
+			
+			offset.rescale(scale);
+			if (_mc > 0) {
+				for (unsigned int ma_index = 0;
+				     ma_index < _ma_card;
+				     ma_index++)
+					mc_array[ma_index] /= pow(scale, 2);
+			}
+
+			rediff();
+		}
+
+		void push_element() {
+			offset.push_element();
+			rediff();
+		}
+
+		unsigned int get_current_index() {
+			return offset.get_current_index();
+		}
+
+		void set_current_index(unsigned int i) {
+			offset.set_current_index(i);
+			rediff();
+		}
+
+		void calculate_element_region() {
+			if (get_offset().get_current_index() > 0
+			 && get_offset().is_nontrivial()) 
+				align::calculate_element_region(&offset, si, ax_count);
+		}
+
+		~diff_stat_t() {
+			free(histogram);
+		}
+
+		void add(const diff_stat_t *ds) {
+			result += ds->result;
+			divisor += ds->divisor;
+
+			for (int r = 0; r < ds->hist_dim; r++)
+			for (int d = 0; d < ds->hist_dim; d++)
+				add_hist(r + ds->hist_min_r, d + ds->hist_min_d, 
+						ds->histogram[r * hist_dim + d]);
+
+			for (int d = 0; d < 2; d++) {
+				if (min[d] > ds->min[d])
+					min[d] = ds->min[d];
+				if (max[d] < ds->max[d])
+					max[d] = ds->max[d];
+				centroid[d] += ds->centroid[d];
+			}
+
+			centroid_divisor += ds->centroid_divisor;
+		}
+
+		diff_stat_t(const diff_stat_t &dst) {
+			/*
+			 * Initialize
+			 */
+			result = 0;
+			divisor = 0;
+			hist_min_r = INT_MIN;
+			hist_min_d = INT_MIN;
+			hist_dim = 20;
+			hist_total = 0;
+			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
+
+			min = point::posinf();
+			max = point::neginf();
+
+			centroid[0] = 0;
+			centroid[1] = 0;
+			centroid_divisor = 0;
+
+			/*
+			 * Copy diff variables
+			 */
+			mc_array = dst.mc_array;
+			offset = dst.offset;
+			si = dst.si;
+			ax_count = dst.ax_count;
+			frame = dst.frame;
+
+
+			/*
+			 * Add
+			 */
+			result += dst.result;
+			divisor += dst.divisor;
+
+			for (int r = 0; r < dst.hist_dim; r++)
+			for (int d = 0; d < dst.hist_dim; d++)
+				add_hist(r + dst.hist_min_r, d + dst.hist_min_d, 
+						dst.histogram[r * hist_dim + d]);
+
+			for (int d = 0; d < 2; d++) {
+				if (min[d] > dst.min[d])
+					min[d] = dst.min[d];
+				if (max[d] < dst.max[d])
+					max[d] = dst.max[d];
+				centroid[d] += dst.centroid[d];
+			}
+
+			centroid_divisor += dst.centroid_divisor;
+		}
+
+		diff_stat_t &operator=(const diff_stat_t &dst) {
+
+			/*
+			 * Clear
+			 */
+			free(histogram);
+
+			result = 0;
+			divisor = 0;
+			hist_min_r = INT_MIN;
+			hist_min_d = INT_MIN;
+			hist_dim = 20;
+			hist_total = 0;
+			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
+
+			min = point::posinf();
+			max = point::neginf();
+
+			centroid[0] = 0;
+			centroid[1] = 0;
+			centroid_divisor = 0;
+
+			/*
+			 * Copy diff variables
+			 */
+
+			mc_array = dst.mc_array;
+			offset = dst.offset;
+			si = dst.si;
+			ax_count = dst.ax_count;
+			frame = dst.frame;
+
+			/*
+			 * Add
+			 */
+			result += dst.result;
+			divisor += dst.divisor;
+
+			for (int r = 0; r < dst.hist_dim; r++)
+			for (int d = 0; d < dst.hist_dim; d++)
+				add_hist(r + dst.hist_min_r, d + dst.hist_min_d, 
+						dst.histogram[r * hist_dim + d]);
+
+			for (int d = 0; d < 2; d++) {
+				if (min[d] > dst.min[d])
+					min[d] = dst.min[d];
+				if (max[d] < dst.max[d])
+					max[d] = dst.max[d];
+				centroid[d] += dst.centroid[d];
+			}
+
+			centroid_divisor += dst.centroid_divisor;
+
+			return *this;
+		}
+
+		ale_accum get_result() {
+			return result;
+		}
+
+		ale_accum get_divisor() {
+			return divisor;
+		}
+
+		transformation get_offset() {
+			return offset;
+		}
+
+		int operator<(diff_stat_t &param) {
+			return better_than(param);
+		}
+
+		int operator!=(diff_stat_t &param) {
+			return (get_mc() != param.get_mc()
+			     || get_error() != param.get_error());
+		}
+
+		int operator==(diff_stat_t &param) {
+			return !(operator!=(param));
+		}
+
+		point get_centroid() {
+			point result = point(centroid[0] / centroid_divisor, centroid[1] / centroid_divisor);
+
+			assert (finite(centroid[0]) 
+			     && finite(centroid[1]) 
+			     && (result.defined() || centroid_divisor == 0));
+
+			return result;
+		}
+
+		ale_accum get_error() const {
+			return pow(result / divisor, 1/metric_exponent);
+		}
+
+		void make_element_nontrivial(ale_pos adj_p, ale_pos adj_o) {
+			align::make_element_nontrivial(&this->offset, si, ax_count, adj_p, adj_o, 
+					get_centroid() + si.accum->offset());
+		}
+
 	};
-
-	struct subdomain_args {
-		struct scale_cluster c;
-		transformation t;
-		ale_pos _mc_arg;
-		int ax_count;
-		int f;
-		diff_stat_t* diff_stat;
-		int i_min, i_max, j_min, j_max;
-		int subdomain;
-	};
-
-	static void *diff_subdomain(void *args) {
-
-		subdomain_args *sargs = (subdomain_args *) args;
-
-		struct scale_cluster c = sargs->c;
-		transformation t = sargs->t;
-		ale_pos _mc_arg = sargs->_mc_arg;
-		int ax_count = sargs->ax_count;
-		int f = sargs->f;
-		int i_min = sargs->i_min;
-		int i_max = sargs->i_max;
-		int j_min = sargs->j_min;
-		int j_max = sargs->j_max;
-		int subdomain = sargs->subdomain;
-
-		assert (reference_image);
-
-		point offset = c.accum->offset();
-
-		int i, j;
-
-		/*
-		 * We always use the same code for exhaustive and Monte Carlo
-		 * pixel sampling, setting _mc_arg = 1 when all pixels are to
-		 * be sampled.
-		 */
-
-		if (_mc_arg <= 0 || _mc_arg >= 1)
-			_mc_arg = 1;
-
-		int index;
-
-		int index_max = (i_max - i_min) * (j_max - j_min);
-		
-		/*
-		 * We use a random process for which the expected
-		 * number of sampled pixels is +/- .000003 from mc_arg
-		 * in the range [.005,.995] for an image with 100,000
-		 * pixels.  (The actual number may still deviate from
-		 * the expected number by more than this amount,
-		 * however.)  The method is as follows:
-		 *
-		 * We have mc_arg == USE/ALL, or (expected # pixels to
-		 * use)/(# total pixels).  We derive from this
-		 * SKIP/USE.
-		 *
-		 * SKIP/USE == (SKIP/ALL)/(USE/ALL) == (1 - (USE/ALL))/(USE/ALL)
-		 *
-		 * Once we have SKIP/USE, we know the expected number
-		 * of pixels to skip in each iteration.  We use a random
-		 * selection process that provides SKIP/USE close to
-		 * this calculated value.
-		 *
-		 * If we can draw uniformly to select the number of
-		 * pixels to skip, we do.  In this case, the maximum
-		 * number of pixels to skip is twice the expected
-		 * number.
-		 *
-		 * If we cannot draw uniformly, we still assign equal
-		 * probability to each of the integer values in the
-		 * interval [0, 2 * (SKIP/USE)], but assign an unequal
-		 * amount to the integer value ceil(2 * SKIP/USE) + 1.
-		 */
-
-		ale_pos u = (1 - _mc_arg) / _mc_arg;
-
-		ale_pos mc_max = (floor(2*u) * (1 + floor(2*u)) + 2*u)
-			      / (2 + 2 * floor(2*u) - 2*u);
-
-		/*
-		 * Reseed the random number generator;  we want the
-		 * same set of pixels to be used when comparing two
-		 * alignment options.  If we wanted to avoid bias from
-		 * repeatedly utilizing the same seed, we could seed
-		 * with the number of the frame most recently aligned:
-		 *
-		 * 	srand(latest);
-		 *
-		 * However, in cursory tests, it seems okay to just use
-		 * the default seed of 1, and so we do this, since it
-		 * is simpler; both of these approaches to reseeding
-		 * achieve better results than not reseeding.  (1 is
-		 * the default seed according to the GNU Manual Page
-		 * for rand(3).)
-		 * 
-		 * For subdomain calculations, we vary the seed by subdomain.
-		 */
-
-		rng_t rng;
-
-		rng.seed(1 + subdomain);
-
-		for(index = -1 + (int) ceil((mc_max+1) 
-					  * ( (1 + ((ale_pos) (rng.get())) ) 
-					    / (1 + ((ale_pos) RAND_MAX)) ));
-		    index < index_max;
-		    index += (int) ceil((mc_max+1) 
-				      * ( (1 + ((ale_pos) (rng.get())) ) 
-					/ (1 + ((ale_pos) RAND_MAX)) ))){
-
-			i = index / (j_max - j_min) + i_min;
-			j = index % (j_max - j_min) + j_min;
-
-			/*
-			 * Check for exclusion in render coordinates.
-			 */
-
-			if (ref_excluded(i, j, offset, c.ax_parameters, ax_count))
-				continue;
-
-			/*
-			 * Check transformation support.
-			 */
-
-			if (!t.supported((int) (i + offset[0]), (int) (j + offset[1])))
-				continue;
-
-			/*
-			 * Transform
-			 */
-
-			struct point q;
-
-			q = (c.input_scale < 1.0 && interpolant == NULL)
-			  ? t.scaled_inverse_transform(
-				point(i + offset[0], j + offset[1]))
-			  : t.unscaled_inverse_transform(
-				point(i + offset[0], j + offset[1]));
-
-			ale_pos ti = q[0];
-			ale_pos tj = q[1];
-
-			/*
-			 * Check that the transformed coordinates are within
-			 * the boundaries of array c.input and that they
-			 * are not subject to exclusion.
-			 *
-			 * Also, check that the weight value in the accumulated array
-			 * is nonzero, unless we know it is nonzero by virtue of the
-			 * fact that it falls within the region of the original frame
-			 * (e.g. when we're not increasing image extents).
-			 */
-
-			if (input_excluded(ti, tj, c.ax_parameters, ax_count))
-				continue;
-
-			if (ti >= 0
-			 && ti <= c.input->height() - 1
-			 && tj >= 0
-			 && tj <= c.input->width() - 1
-			 && c.defined->get_pixel(i, j)[0] != 0)
-
-				sargs->diff_stat->sample(f, c, i, j, ti, tj);
-
-		}
-
-		return NULL;
-	}
-
-	static ale_accum diff(struct scale_cluster c, transformation t,
-			ale_pos _mc_arg, int ax_count, int f, diff_stat_t *diff_stat_in = NULL) {
-
-		diff_stat_t *diff_stat = diff_stat_in;
-
-		if (diff_stat == NULL)
-			diff_stat = new diff_stat_t();
-
-		diff_stat->clear();
-
-		ui::get()->d2_align_sample_start();
-
-		if (interpolant != NULL) 
-			interpolant->set_parameters(t, c.input, c.accum->offset());
-
-		int N;
-#ifdef USE_PTHREAD
-		N = thread::count();
-
-		pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * N);
-		pthread_attr_t *thread_attr = (pthread_attr_t *) malloc(sizeof(pthread_attr_t) * N);
-
-#else
-		N = 1;
-#endif
-
-		subdomain_args *args = new subdomain_args[N];
-
-		for (int ti = 0; ti < N; ti++) {
-			args[ti].c = c;
-			args[ti].t = t;
-			args[ti]._mc_arg = _mc_arg;
-			args[ti].ax_count = ax_count;
-			args[ti].f = f;
-			args[ti].diff_stat = new diff_stat_t();
-			args[ti].i_min = (c.accum->height() * ti) / N;
-			args[ti].i_max = (c.accum->height() * (ti + 1)) / N;
-			args[ti].j_min = 0;
-			args[ti].j_max = c.accum->width();
-			args[ti].subdomain = ti;
-
-#ifdef USE_PTHREAD
-			pthread_attr_init(&thread_attr[ti]);
-			pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
-			pthread_create(&threads[ti], &thread_attr[ti], diff_subdomain, &args[ti]);
-#else
-			diff_subdomain(&args[ti]);
-#endif
-		}
-
-		for (int ti = 0; ti < N; ti++) {
-#ifdef USE_PTHREAD
-			pthread_join(threads[ti], NULL);
-#endif
-			diff_stat->add(args[ti].diff_stat);
-
-			delete args[ti].diff_stat;
-		}
-
-		delete[] args;
-
-		ui::get()->d2_align_sample_stop();
-
-		ale_accum result = diff_stat->get_error();
-
-		if (diff_stat_in == NULL)
-			delete diff_stat;
-
-		return result;
-	}
 
 
 	/*
@@ -1649,50 +1847,83 @@ private:
 	}
 
 	/*
-	 * Calculate the region associated with the current multi-alignment
-	 * element.
+	 * Get the set of global transformations for a given density
 	 */
-	static void calculate_element_region(transformation *t, scale_cluster si, 
-			int local_ax_count) {
+	static void get_global_set(std::vector<transformation> *set, 
+			scale_cluster si, transformation t, int local_gs, ale_pos adj_p) {
 
-		unsigned int i_max = si.accum->height();
-		unsigned int j_max = si.accum->width();
-		point offset = si.accum->offset();
+		transformation offset = t;
 
-		if (si.input_scale < 1.0 && interpolant == NULL)
-			t->begin_calculate_scaled_region(i_max, j_max, offset);
-		else
-			t->begin_calculate_unscaled_region(i_max, j_max, offset);
+		point min, max;
 
-		for (unsigned int i = 0; i < i_max; i++) 
-		for (unsigned int j = 0; j < j_max; j++) {
+		transformation offset_p = offset;
 
-			if (ref_excluded(i, j, offset, si.ax_parameters, local_ax_count))
-				continue;
+		if (!offset_p.is_projective())
+			offset_p.eu_to_gpt();
 
-			point q;
-
-			while ((q = t->get_query_point((int) (i + offset[0]), 
-							(int) (j + offset[1]))).defined()) {
-
-				ale_pos ti = q[0];
-				ale_pos tj = q[1];
-
-				if (input_excluded(ti, tj, si.ax_parameters, ax_count))
-					continue;
-
-				if (ti >= 0
-				 && ti <= si.input->height() - 1
-				 && tj >= 0
-				 && tj <= si.input->width() - 1
-				 && si.defined->get_pixel(i, j)[0] != 0) {
-
-					assert(0);
-				}
-			}
+		min = max = offset_p.gpt_get(0);
+		for (int p_index = 1; p_index < 4; p_index++) {
+			point p = offset_p.gpt_get(p_index);
+			if (p[0] < min[0])
+				min[0] = p[0];
+			if (p[1] < min[1])
+				min[1] = p[1];
+			if (p[0] > max[0])
+				max[0] = p[0];
+			if (p[1] > max[1])
+				max[1] = p[1];
 		}
 
-		t->end_calculate_region();
+		point inner_min_t = -min;
+		point inner_max_t = -max + point(si.accum->height(), si.accum->width());
+		point outer_min_t = -max + point(adj_p - 1, adj_p - 1);
+		point outer_max_t = point(si.accum->height(), si.accum->width()) - point(adj_p, adj_p);
+
+		if (local_gs == 1 || local_gs == 3 || local_gs == 4) {
+
+			/*
+			 * Inner
+			 */
+
+			for (ale_pos i = inner_min_t[0]; i <= inner_max_t[0]; i += adj_p)
+			for (ale_pos j = inner_min_t[1]; j <= inner_max_t[1]; j += adj_p) {
+				transformation test_t = offset;
+				test_t.translate(point(i, j));
+				set->push_back(test_t);
+			}
+		} 
+		
+		if (local_gs == 2 || local_gs == 3 || local_gs == -1) {
+
+			/*
+			 * Outer
+			 */
+
+			for (ale_pos i = outer_min_t[0]; i <= outer_max_t[0]; i += adj_p)
+			for (ale_pos j = outer_min_t[1]; j <  inner_min_t[1]; j += adj_p) {
+				transformation test_t = offset;
+				test_t.translate(point(i, j));
+				set->push_back(test_t);
+			}
+			for (ale_pos i = outer_min_t[0]; i <= outer_max_t[0]; i += adj_p)
+			for (ale_pos j = outer_max_t[1]; j >  inner_max_t[1]; j -= adj_p) {
+				transformation test_t = offset;
+				test_t.translate(point(i, j));
+				set->push_back(test_t);
+			}
+			for (ale_pos i = outer_min_t[0]; i <  inner_min_t[0]; i += adj_p)
+			for (ale_pos j = outer_min_t[1]; j <= outer_max_t[1]; j += adj_p) {
+				transformation test_t = offset;
+				test_t.translate(point(i, j));
+				set->push_back(test_t);
+			}
+			for (ale_pos i = outer_max_t[0]; i >  inner_max_t[0]; i -= adj_p)
+			for (ale_pos j = outer_min_t[1]; j <= outer_max_t[1]; j += adj_p) {
+				transformation test_t = offset;
+				test_t.translate(point(i, j));
+				set->push_back(test_t);
+			}
+		}
 	}
 
 	/*
@@ -1763,51 +1994,6 @@ private:
 		} else assert(0);
 	}
 
-	/*
-	 * Attempt to make the current element non-trivial, by finding a nearby
-	 * alignment admitting a non-empty element region.
-	 */
-	static void make_element_nontrivial(transformation *t, scale_cluster si, 
-			int local_ax_count, ale_pos adj_p, ale_pos adj_o, point sample_centroid) {
-
-		if (t->is_nontrivial())
-			return;
-
-		calculate_element_region(t, si, local_ax_count);
-
-		if (t->is_nontrivial())
-			return;
-
-		std::vector<transformation> t_set;
-		get_perturb_set(&t_set, *t, adj_p, adj_o, sample_centroid);
-
-		for (unsigned int i = 0; i < t_set.size(); i++) {
-
-			calculate_element_region(&t_set[i], si, local_ax_count);
-
-			if (t_set[i].is_nontrivial()) {
-				*t = t_set[i];
-				return;
-			}
-		}
-	}
-
-	static int is_better (diff_stat_t *destination, diff_stat_t *origin, ale_pos _mc_arg) {
-		ale_accum o = origin->get_error();
-		ale_accum d = destination->get_error();
-
-		return (d < o || (!finite(o) && finite(d)));
-	}
-
-	/*
-	 * Test the reliability of a given change in transformation.
-	 */
-	static int is_reliable(diff_stat_t *destination, diff_stat_t *origin, ale_pos _mc_arg) {
-		return (_mc > 0
-		     || _mc_arg >= 1
-		     || destination->reliable(origin, _mc_arg));
-	}
-
 
 	/*
 	 * Align frame m against the reference.
@@ -1818,7 +2004,7 @@ private:
 	 * one case where special care must be taken to ensure that the scale
 	 * is always set correctly (by using the 'rescale' method).
 	 */
-	static ale_accum _align(int m, int local_gs, element_t *element) {
+	static diff_stat_t _align(int m, int local_gs, element_t *element) {
 
 		const image *input_frame = element->input_frame;
 
@@ -1881,10 +2067,6 @@ private:
 		ui::get()->set_steps(step_count);
 
 		ale_pos perturb = local_upper;
-		transformation offset;
-		ale_accum here;
-		// diff_stat_t *here_diff_stat = new diff_stat_t();
-		diff_stat_t here_diff_stat;
 		int lod;
 
 		if (_keep) {
@@ -1962,7 +2144,7 @@ private:
 		 * Set the default transformation.
 		 */
 
-		offset = element->default_initial_alignment;
+		transformation offset = element->default_initial_alignment;
 
 		/*
 		 * Load any file-specified transformations
@@ -1991,16 +2173,7 @@ private:
 
 		struct scale_cluster si = scale_clusters[lod];
 		ale_pos _mc_arg = (_mc > 0) ? (_mc * pow(2, 2 * lod))
-			                    /* : ((double)_mcd_min / (si.accum->height() * si.accum->width())); */
 			                    : 1;
-
-		std::vector<ale_accum> mc_array;
-		mc_array.resize(_ma_card);
-
-		for (unsigned int ma_index = 0; ma_index < _ma_card; ma_index++) {
-			mc_array[ma_index] = _mc_arg;
-		}
-
 
 		ui::get()->alignment_monte_carlo_parameter(_mc_arg);
 
@@ -2028,13 +2201,19 @@ private:
 		}
 
 		/*
+		 * Alignment statistics.
+		 */
+
+		diff_stat_t here(_mc_arg);
+
+		/*
 		 * Current difference (error) value
 		 */
 
 		ui::get()->prematching();
-		here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
-		ui::get()->set_match(here);
-		ui::get()->set_offset(offset);
+		here.diff(si, offset, local_ax_count, m);
+		ui::get()->set_match(here.get_error());
+		ui::get()->set_offset(here.get_offset());
 
 		/*
 		 * Current and modified barrel distortion parameters
@@ -2052,121 +2231,27 @@ private:
 		if (perturb >= local_lower && local_gs != 0 && local_gs != 5) {
 			
 			ui::get()->aligning(perturb, lod);
-			
-			transformation lowest_t = offset;
-			ale_accum lowest_v = here;
 
-			point min, max;
+			std::vector<transformation> t_set;
 
-			transformation offset_p = offset;
+			get_global_set(&t_set, si, here.get_offset(), local_gs, adj_p);
 
-			if (!offset_p.is_projective())
-				offset_p.eu_to_gpt();
+			for (unsigned int i = 0; i < t_set.size(); i++) {
 
-			min = max = offset_p.gpt_get(0);
-			for (int p_index = 1; p_index < 4; p_index++) {
-				point p = offset_p.gpt_get(p_index);
-				if (p[0] < min[0])
-					min[0] = p[0];
-				if (p[1] < min[1])
-					min[1] = p[1];
-				if (p[0] > max[0])
-					max[0] = p[0];
-				if (p[1] > max[1])
-					max[1] = p[1];
+				transformation t = t_set[i];
+
+				diff_stat_t test(here);
+
+				test.diff(si, t, local_ax_count, m);
+
+				unsigned int ovl = overlap(si, t, local_ax_count);
+
+				if (ovl >= local_gs_mo && test < here)
+					here = test;
 			}
 
-			point inner_min_t = -min;
-			point inner_max_t = -max + point(si.accum->height(), si.accum->width());
-			point outer_min_t = -max + point(adj_p - 1, adj_p - 1);
-			point outer_max_t = point(si.accum->height(), si.accum->width()) - point(adj_p, adj_p);
-
-			if (local_gs == 1 || local_gs == 3 || local_gs == 4) {
-
-				/*
-				 * Inner
-				 */
-
-				for (ale_pos i = inner_min_t[0]; i <= inner_max_t[0]; i += adj_p)
-				for (ale_pos j = inner_min_t[1]; j <= inner_max_t[1]; j += adj_p) {
-					transformation t = offset;
-					t.translate(point(i, j));
-					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
-					unsigned int ovl = overlap(si, t, local_ax_count);
-
-					if ((v < lowest_v && ovl >= local_gs_mo) 
-					 || (!finite(lowest_v) && finite(v))) {
-						lowest_v = v;
-						lowest_t = t;
-					}
-				}
-			} 
-			
-			if (local_gs == 2 || local_gs == 3 || local_gs == -1) {
-
-				/*
-				 * Outer
-				 */
-
-				for (ale_pos i = outer_min_t[0]; i <= outer_max_t[0]; i += adj_p)
-				for (ale_pos j = outer_min_t[1]; j <  inner_min_t[1]; j += adj_p) {
-					transformation t = offset;
-					t.translate(point(i, j));
-					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
-					unsigned int ovl = overlap(si, t, local_ax_count);
-
-					if ((v < lowest_v && ovl >= local_gs_mo)
-					 || (!finite(lowest_v) && finite(v))) {
-						lowest_v = v;
-						lowest_t = t;
-					}
-				}
-				for (ale_pos i = outer_min_t[0]; i <= outer_max_t[0]; i += adj_p)
-				for (ale_pos j = outer_max_t[1]; j >  inner_max_t[1]; j -= adj_p) {
-					transformation t = offset;
-					t.translate(point(i, j));
-					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
-					unsigned int ovl = overlap(si, t, local_ax_count);
-
-					if ((v < lowest_v && ovl >= local_gs_mo)
-					 || (!finite(lowest_v) && finite(v))) {
-						lowest_v = v;
-						lowest_t = t;
-					}
-				}
-				for (ale_pos i = outer_min_t[0]; i <  inner_min_t[0]; i += adj_p)
-				for (ale_pos j = outer_min_t[1]; j <= outer_max_t[1]; j += adj_p) {
-					transformation t = offset;
-					t.translate(point(i, j));
-					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
-					unsigned int ovl = overlap(si, t, local_ax_count);
-
-					if ((v < lowest_v && ovl >= local_gs_mo)
-					 || (!finite(lowest_v) && finite(v))) {
-						lowest_v = v;
-						lowest_t = t;
-					}
-				}
-				for (ale_pos i = outer_max_t[0]; i >  inner_max_t[0]; i -= adj_p)
-				for (ale_pos j = outer_min_t[1]; j <= outer_max_t[1]; j += adj_p) {
-					transformation t = offset;
-					t.translate(point(i, j));
-					ale_accum v = diff(si, t, _mc_arg, local_ax_count, m);
-					unsigned int ovl = overlap(si, t, local_ax_count);
-
-					if ((v < lowest_v && ovl >= local_gs_mo)
-					 || (!finite(lowest_v) && finite(v))) {
-						lowest_v = v;
-						lowest_t = t;
-					}
-				}
-			}
-
-			offset = lowest_t;
-			here = lowest_v;
-
-			ui::get()->set_match(here);
-			ui::get()->set_offset(offset);
+			ui::get()->set_match(here.get_error());
+			ui::get()->set_offset(here.get_offset());
 		}
 
 		/*
@@ -2175,7 +2260,8 @@ private:
 
 		if (local_gs == 5) {
 
-			transformation o = offset;
+			transformation o = here.get_offset();
+
 			for (int k = lod; k > 0; k--)
 				o.rescale(2);
 
@@ -2277,7 +2363,9 @@ private:
 			for (int k = lod; k > 0; k--)
 				o.rescale(0.5);
 
-			offset = o;
+			here.diff(si, o, local_ax_count, m);
+			ui::get()->set_match(here.get_error());
+			ui::get()->set_offset(here.get_offset());
 		}
 
 		/*
@@ -2309,51 +2397,50 @@ private:
 
 			ale_pos adj_b = perturb * bda_mult;
 
-			transformation old_offset = offset;
-			ale_accum test_d;
-			diff_stat_t test_diff_stat;
-			ale_accum old_here = here;
-			// diff_stat_t *old_here_diff_stat = here_diff_stat;
-			diff_stat_t old_here_diff_stat = here_diff_stat;
-			int found_better = 0;
-			int found_reliable_better = 0;
-			int found_reliable_worse = 0;
-			int found_unreliable_worse = 0;
+			diff_stat_t test = here;
+			diff_stat_t old_here = here;
 
-			point sample_centroid = old_here_diff_stat.get_centroid() 
+			point sample_centroid = old_here.get_centroid() 
 				              + si.accum->offset();
 
 			std::vector<transformation> t_set;
-			get_perturb_set(&t_set, offset, adj_p, adj_o, sample_centroid);
 
-			for (unsigned int i = 0; i < t_set.size(); i++) {
+			get_perturb_set(&t_set, here.get_offset(), 
+					adj_p, adj_o, sample_centroid);
 
-				test_d = diff(si, t_set[i], _mc_arg, 
-					      local_ax_count, m, &test_diff_stat);
+			int found_unreliable = 1;
+			std::vector<int> tested(t_set.size());
 
-				if (test_d < old_here || (!finite(old_here) && finite(test_d))) {
-					found_better = 1;
-					if (is_reliable(&test_diff_stat, &old_here_diff_stat, _mc_arg)) {
-						found_reliable_better = 1;
+			while (found_unreliable) {
 
-						if (test_d < here) {
-							here = test_d;
-							here_diff_stat = test_diff_stat;
-							offset = t_set[i];
-						}
+				found_unreliable = 0;
+
+				for (unsigned int i = 0; i < t_set.size(); i++) {
+
+					if (tested[i])
+						continue;
+
+					test.diff(si, t_set[i], local_ax_count, m);
+
+					if (!test.reliable(here)) {
+						found_unreliable = 1;
+						continue;
 					}
+
+					tested[i] = 1;
+
+					if (test < here)
+						here = test;
 				}
 
-				if (_mc <= 0 && test_d > old_here) {
-					if (is_reliable(&old_here_diff_stat, &test_diff_stat, _mc_arg))
-						found_reliable_worse = 1;
-					else
-						found_unreliable_worse = 1;
+				if (here.get_offset() != old_here.get_offset())
+					goto done;
+
+				if (found_unreliable) {
+					here.mcd_increase();
+					test.mcd_increase();
 				}
 			}
-
-			if (here < old_here)
-				goto done;
 
 			/*
 			 * Barrel distortion
@@ -2372,116 +2459,43 @@ private:
 					if (bda_rate > 0 && fabs(modified_bd[rd] + adj_s - current_bd[rd]) > bda_rate)
 						continue;
 				
-					transformation test_t = offset;
+					transformation test_t = here.get_offset();
 
 					test_t.bd_modify(rd, adj_s);
 
-					test_d = diff(si, test_t, _mc_arg, local_ax_count, m, &test_diff_stat);
+					test.diff(si, test_t, local_ax_count, m);
 
-					if (test_d < old_here || (!finite(old_here) && finite(test_d))) {
-						found_better = 1;
-						if (is_reliable(&test_diff_stat, &old_here_diff_stat, _mc_arg)) {
-							found_reliable_better = 1;
-							here = test_d;
-							offset = test_t;
-							modified_bd[rd] += adj_s;
-							here_diff_stat = test_diff_stat;
-							goto done;
-						}
-					}
-
-					if (_mc <= 0 && test_d > old_here) {
-						if (is_reliable(&old_here_diff_stat, &test_diff_stat, _mc_arg))
-							found_reliable_worse = 1;
-						else
-							found_unreliable_worse = 1;
+					if (test < here) {
+						modified_bd[rd] += adj_s;
+						here = test;
+						goto done;
 					}
 				}
 			}
 
 	done:
 
+			if (here.get_offset() == old_here.get_offset()) {
 
-			if (_mc_arg < 1 && _mc <= 0 
-			 /* && (!found_reliable_worse || found_better) */
-			 && (found_unreliable_worse || found_better)
-			 && !found_reliable_better) {
-				ale_pos mc_multiplier = 2;
+				here.calculate_element_region();
 
-				_mc_arg *= mc_multiplier;
-				ui::get()->alignment_monte_carlo_parameter(_mc_arg);
-				here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
-				continue;
-			}
-
-			if (_mc <= 0
-			 && found_reliable_better) {
-
-				diff_stat_t here_diff_stat_half;
-				diff_stat_t old_here_diff_stat_half;
-				ale_pos here_half;
-
-				ale_pos mc_divisor = 2;
-
-				here_half = diff(si, offset, _mc_arg / mc_divisor, local_ax_count, m, &here_diff_stat_half);
-				diff(si, old_offset, _mc_arg / mc_divisor, local_ax_count, m, &old_here_diff_stat_half);
-
-				if (is_reliable(&here_diff_stat_half, &old_here_diff_stat_half, _mc_arg / mc_divisor)) {
-					ale_pos mc_divisor = 2;
-
-					_mc_arg /= mc_divisor;
-					ui::get()->alignment_monte_carlo_parameter(_mc_arg);
-					here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
-				}
-
-			} else if (!(here < old_here) && !(!finite(old_here) && finite(here))) {
-
-				if (offset.get_current_index() > 0 && offset.is_nontrivial()) {
-					calculate_element_region(&offset, si, 
-							local_ax_count);
-				}
-
-				if (offset.get_current_index() + 1 < _ma_card) {
-
-					mc_array[offset.get_current_index()] = _mc_arg;
-					offset.push_element();
-					_mc_arg = mc_array[offset.get_current_index()];
-
-					make_element_nontrivial(&offset, si, local_ax_count, 
-							adj_p, adj_o, sample_centroid);
-					here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
+				if (here.get_current_index() + 1 < _ma_card) {
+					here.push_element();
+					here.make_element_nontrivial(adj_p, adj_o);
 					element->is_primary = 0;
 				} else {
 
-					mc_array[offset.get_current_index()] = _mc_arg;
-					offset.set_current_index(0);
-					_mc_arg = mc_array[offset.get_current_index()];
+					here.set_current_index(0);
 
 					element->is_primary = 1;
 
 					perturb *= 0.5;
 
 					if (_mc <= 0) {
-						ale_pos mc_divisor = 2;
-
-						_mc_arg /= mc_divisor;
-
-						for (unsigned int ma_index = 0; 
-						     ma_index < _ma_card; 
-						     ma_index++)
-							mc_array[ma_index] /= mc_divisor;
+						here.mcd_decrease();
 					}
 
 					if (lod > 0) {
-
-						/* 
-						 * We're about to work with images
-						 * twice as large, so rescale the 
-						 * transforms.
-						 */
-
-						offset.rescale(2);
-						element->default_initial_alignment.rescale(2);
 
 						/*
 						 * Work with images twice as large
@@ -2490,22 +2504,14 @@ private:
 						lod--;
 						si = scale_clusters[lod];
 
-						if (_mc > 0) {
-							_mc_arg /= 4;
+						/* 
+						 * Rescale the transforms.
+						 */
 
-							for (unsigned int ma_index = 0;
-							     ma_index < _ma_card;
-							     ma_index++)
-								mc_array[ma_index] /= 4;
-						}
+						here.rescale(2, si);
+						element->default_initial_alignment.rescale(2);
 
-						here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
-
-					} else if (_ma_card > 1 || _mc <= 0) {
-						here = diff(si, offset, _mc_arg, local_ax_count, m, &here_diff_stat);
-						adj_p = perturb;
 					} else {
-						here_diff_stat = old_here_diff_stat;
 						adj_p = perturb;
 					}
 
@@ -2513,20 +2519,22 @@ private:
 					 * Announce changes
 					 */
 
-					ui::get()->alignment_monte_carlo_parameter(_mc_arg);
+					ui::get()->alignment_monte_carlo_parameter(here.get_mc());
 					ui::get()->alignment_perturbation_level(perturb, lod);
 
 				}
 			}
 
-			ui::get()->set_match(here);
-			ui::get()->set_offset(offset);
+			ui::get()->set_match(here.get_error());
+			ui::get()->set_offset(here.get_offset());
 		}
 
-		offset.set_current_index(0);
+		here.set_current_index(0);
+
+		offset = here.get_offset();
 
 		if (lod > 0) {
-			offset.rescale(pow(2, lod));
+			here.rescale(pow(2, lod), scale_clusters[0]);
 			element->default_initial_alignment.rescale(pow(2, lod));
 		}
 
@@ -2544,12 +2552,10 @@ private:
 		 */
 
 		ui::get()->postmatching();
-		diff_stat_t *new_diff_stat = new diff_stat_t();
 		offset.use_full_support();
-		here = diff(scale_clusters[0], offset, _mc_arg, local_ax_count, m, new_diff_stat);
+		here.diff(scale_clusters[0], offset, local_ax_count, m);
 		offset.use_restricted_support();
-		delete new_diff_stat;
-		ui::get()->set_match(here);
+		ui::get()->set_match(here.get_error());
 
 		/*
 		 * Free the level-of-detail structures
@@ -2561,7 +2567,7 @@ private:
 		 * Ensure that the match meets the threshold.
 		 */
 
-		if ((1 - here) * 100 > match_threshold) {
+		if ((1 - here.get_error()) * 100 > match_threshold) {
 			/*
 			 * Update alignment variables
 			 */
@@ -2580,19 +2586,18 @@ private:
 			 * since variables like old_initial_value have been overwritten.
 			 */
 
-			ale_accum nested_result = _align(m, -1, element);
+			diff_stat_t nested_result = _align(m, -1, element);
 
-			if ((1 - nested_result) * 100 > match_threshold) {
+			if ((1 - nested_result.get_error()) * 100 > match_threshold) {
 				return nested_result;
 			} else if (nested_result < here) {
 				here = nested_result;
-				offset = latest_t;
 			}
 
 			if (is_fail_default)
 				offset = element->default_initial_alignment;
 
-			ui::get()->set_match(here);
+			ui::get()->set_match(here.get_error());
 			ui::get()->alignment_no_match();
 		
 		} else if (local_gs == -1) {
@@ -2635,7 +2640,7 @@ private:
 		 * Update match statistics.
 		 */
 
-		match_sum += (1 - here) * 100;
+		match_sum += (1 - here.get_error()) * 100;
 		match_count++;
 		latest = m;
 

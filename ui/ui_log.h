@@ -47,6 +47,7 @@ private:
 
 public:
 	ui_log() {
+		ui_stream = stdout;
 	}
 
 	void exp_multiplier(double m0, double m1, double m2) {
