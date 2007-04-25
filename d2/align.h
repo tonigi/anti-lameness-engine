@@ -1038,7 +1038,7 @@ private:
 				weight[0] = result[1];
 			}
 
-			{
+			if (u.defined()) {
 				pixel result[2];
 				c.input->get_bl(u, result);
 				p[1] = result[0];
@@ -1081,7 +1081,7 @@ private:
 			 * Determine alignment type.
 			 */
 
-			for (int m = 0; m < 2; m++)
+			for (int m = 0; m < u.defined() ? 2 : 1; m++)
 			if (channel_alignment_type == 0) {
 				/*
 				 * Align based on all channels.
@@ -1124,15 +1124,17 @@ private:
 				this_divisor[m] = wsum * pow(asum > bsum ? asum : bsum, metric_exponent);
 			}
 
-			ale_accum de = fabs(this_result[0] / this_divisor[0]
-					  - this_result[1] / this_divisor[1]);
+			if (u.defined()) {
+				ale_accum de = fabs(this_result[0] / this_divisor[0]
+						  - this_result[1] / this_divisor[1]);
 
-			de_centroid[0] += de * i;
-			de_centroid[1] += de * j;
+				de_centroid[0] += de * i;
+				de_centroid[1] += de * j;
 
-			de_centroid_v += de * t.lengthto(u);
+				de_centroid_v += de * t.lengthto(u);
 
-			de_sum += de;
+				de_sum += de;
+			}
 
 			result += (this_result[0]);
 			divisor += (this_divisor[0]);

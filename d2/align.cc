@@ -255,22 +255,30 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 		 * (e.g. when we're not increasing image extents).
 		 */
 
-		if (input_excluded(ti, tj, c.ax_parameters, ax_count)
-		 || input_excluded(r[0], r[1], c.ax_parameters, ax_count))
+		if (input_excluded(ti, tj, c.ax_parameters, ax_count))
 			continue;
 
-		if (ti >= 0
-		 && ti <= c.input->height() - 1
-		 && tj >= 0
-		 && tj <= c.input->width() - 1
-		 && r[0] >= 0
-		 && r[0] <= c.input->height() - 1
-		 && r[1] >= 0
-		 && r[1] <= c.input->width() - 1
-		 && c.defined->get_pixel(i, j)[0] != 0)
+		if (input_excluded(r[0], r[1], c.ax_parameters, ax_count))
+			r = point::undefined();
 
-			sargs->diff_stat->sample(f, c, i, j, q, r);
+		/*
+		 * Check the boundaries of the input frame
+		 */
 
+		if (!(ti >= 0
+		   && ti <= c.input->height() - 1
+		   && tj >= 0
+		   && tj <= c.input->width() - 1
+		   && c.defined->get_pixel(i, j)[0] != 0))
+			continue;
+
+		if (!(r[0] >= 0
+		   && r[0] <= c.input->height() - 1
+		   && r[1] >= 0
+		   && r[1] <= c.input->width() - 1))
+			r = point::undefined();
+
+		sargs->diff_stat->sample(f, c, i, j, q, r);
 	}
 
 	return NULL;
