@@ -1999,6 +1999,25 @@ private:
 		}
 	}
 
+	static void get_translational_set(std::vector<transformation> *set,
+			transformation t, ale_pos adj_p) {
+
+		ale_pos adj_s;
+
+		transformation offset = t;
+		transformation test_t;
+
+		for (int i = 0; i < 2; i++)
+		for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+
+			test_t = offset;
+
+			test_t.translate(i, adj_s);
+
+			set->push_back(test_t);
+		}
+	}
+
 	/*
 	 * Get the set of transformations produced by a given perturbation
 	 */
@@ -2442,10 +2461,47 @@ private:
 		}
 
 		/*
-		 * Perturbation adjustment loop.  
+		 * Announce perturbation size
 		 */
 
 		ui::get()->aligning(perturb, lod);
+
+		/*
+		 * Run initial tests to get perturbation multipliers and error
+		 * centroids.
+		 */
+
+		std::vector<transformation> t_set;
+		point error_centroid;
+
+		get_translational_set(&t_set, here.get_offset(), adj_p);
+
+		for (unsigned int i = 0; i < t_set.size(); i++) {
+			diff_stat_t test = here;
+
+			test.diff(si, t_set[i], local_ax_count, m);
+
+			error_centroid += test.get_error_centroid();
+		}
+
+		error_centroid /= t_set.size();
+
+		get_perturb_set(&t_set, here.get_offset(), adj_p,
+				adj_o, error_centroid);
+
+		std::vector<ale_pos> perturb_multiplier;
+
+		for (unsigned int i = 0; i < t_set.size(); i++) {
+			diff_stat_t test = here;
+
+			test.diff(si, t_set[i], local_ax_count, m);
+
+			perturb_multiplier.push_back(adj_p / test.error_perturb());
+		}
+
+		/*
+		 * Perturbation adjustment loop.  
+		 */
 
 		while (perturb >= local_lower) {
 
@@ -2470,7 +2526,6 @@ private:
 
 			ale_pos adj_b = perturb * bda_mult;
 
-			diff_stat_t test = here;
 			diff_stat_t old_here = here;
 
 			point sample_centroid = old_here.get_centroid() 
@@ -2479,21 +2534,30 @@ private:
 			std::vector<transformation> t_set;
 
 			get_perturb_set(&t_set, here.get_offset(), 
-					adj_p, adj_o, sample_centroid);
+					adj_p, adj_o, error_centroid);
 
 			int found_unreliable = 1;
 			std::vector<int> tested(t_set.size(), 0);
 
 			while (found_unreliable) {
 
+				diff_stat_t best = here;
+
 				found_unreliable = 0;
+
+				error_centroid = point(0, 0);
 
 				for (unsigned int i = 0; i < t_set.size(); i++) {
 
 					if (tested[i])
 						continue;
 
+					diff_stat_t test(here);
+
 					test.diff(si, t_set[i], local_ax_count, m);
+
+					error_centroid += test.get_error_centroid();
+					perturb_multiplier[i] *= adj_p / test.error_perturb();
 
 					if (!test.reliable(here)) {
 						found_unreliable = 1;
@@ -2502,14 +2566,17 @@ private:
 
 					tested[i] = 1;
 
-					if (test < here) {
-						here = test;
-						break;
-					}
+					if (test < here 
+					 && test.get_error() < best.get_error())
+						best = test;
 				}
 
-				if (here.get_offset() != old_here.get_offset())
+				error_centroid /= t_set.size();
+
+				if (best.get_offset() != here.get_offset()) {
+					here = best;
 					goto done;
+				}
 
 				if (found_unreliable) {
 					here.mcd_increase();
