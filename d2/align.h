@@ -1081,7 +1081,7 @@ private:
 			 * Determine alignment type.
 			 */
 
-			for (int m = 0; m < u.defined() ? 2 : 1; m++)
+			for (int m = 0; m < (u.defined() ? 2 : 1); m++)
 			if (channel_alignment_type == 0) {
 				/*
 				 * Align based on all channels.
