@@ -549,7 +549,7 @@ private:
 
 		struct subdomain_args {
 			struct scale_cluster c;
-			transformation t;
+			transformation t, u;
 			ale_pos _mc_arg;
 			int ax_count;
 			int f;
@@ -628,12 +628,14 @@ private:
 		ale_accum divisor;
 
 		transformation offset;
+		transformation comparison_offset;
 		struct scale_cluster si;
 		int ax_count;
 		int frame;
 
 		point max, min;
 		ale_accum centroid[2], centroid_divisor;
+		ale_accum de_centroid[2], de_centroid_v, de_sum;
 
 		typedef unsigned int hist_bin;
 
@@ -718,6 +720,7 @@ public:
 			clear();
 
 			si = c;
+			comparison_offset = offset;
 			offset = t;
 			ax_count = _ax_count;
 			frame = f;
@@ -746,11 +749,12 @@ public:
 
 			for (int ti = 0; ti < N; ti++) {
 				args[ti].c = c;
-				args[ti].t = t;
+				args[ti].t = offset;
+				args[ti].u = comparison_offset;
 				args[ti]._mc_arg = _mc_arg;
 				args[ti].ax_count = ax_count;
 				args[ti].f = f;
-				args[ti].diff_stat = new diff_stat_t(_mc_arg);
+				args[ti].diff_stat = new diff_stat_t(_mc_arg, comparison_offset);
 				args[ti].i_min = (c.accum->height() * ti) / N;
 				args[ti].i_max = (c.accum->height() * (ti + 1)) / N;
 				args[ti].j_min = 0;
@@ -823,6 +827,13 @@ public:
 			centroid[0] = 0;
 			centroid[1] = 0;
 			centroid_divisor = 0;
+
+			de_centroid[0] = 0;
+			de_centroid[1] = 0;
+
+			de_centroid_v = 0;
+
+			de_sum = 0;
 		}
 
 		/*
@@ -1008,32 +1019,46 @@ private:
 			     || (!finite(origin.get_error()) && finite(get_error())));
 		}
 
-		void sample(int f, scale_cluster c, int i, int j, ale_pos ti, ale_pos tj) {
-			pixel pa = c.accum->get_pixel(i, j);
-			pixel pb;
-			pixel weight;
-			ale_accum this_result = 0;
-			ale_accum this_divisor = 0;
+		void sample(int f, scale_cluster c, int i, int j, point t, point u) {
 
+			pixel pa = c.accum->get_pixel(i, j);
+
+			pixel p[2];
+			pixel weight[2];
+			ale_accum this_result[2] = { 0, 0 };
+			ale_accum this_divisor[2] = { 0, 0 };
 
 			if (interpolant != NULL)
-				interpolant->filtered(i, j, &pb, &weight, 1, f);
+				interpolant->filtered(i, j, &p[0], &weight[0], 1, f);
 			else {
 				pixel result[2];
-				c.input->get_bl(point(ti, tj), result);
-				pb = result[0];
-				weight = result[1];
+
+				c.input->get_bl(t, result);
+				p[0] = result[0];
+				weight[0] = result[1];
 			}
+
+			{
+				pixel result[2];
+				c.input->get_bl(u, result);
+				p[1] = result[0];
+				weight[1] = result[1];
+			}
+
 
 			/*
 			 * Handle certainty.
 			 */
 
-			if (certainty_weights == 0)
-				weight = pixel(1, 1, 1);
+			if (certainty_weights == 0) {
+				weight[0] = pixel(1, 1, 1);
+				weight[1] = pixel(1, 1, 1);
+			}
 
-			if (c.aweight != NULL)
-				weight *= c.aweight->get_pixel(i, j);
+			if (c.aweight != NULL) {
+				weight[0] *= c.aweight->get_pixel(i, j);
+				weight[1] *= c.aweight->get_pixel(i, j);
+			}
 
 			/*
 			 * Update sampling area statistics
@@ -1048,14 +1073,15 @@ private:
 			if (max[1] < j)
 				max[1] = j;
 
-			centroid[0] += (weight[0] + weight[1] + weight[2]) * i;
-			centroid[1] += (weight[0] + weight[1] + weight[2]) * j;
-			centroid_divisor += (weight[0] + weight[1] + weight[2]);
+			centroid[0] += (weight[0][0] + weight[0][1] + weight[0][2]) * i;
+			centroid[1] += (weight[0][0] + weight[0][1] + weight[0][2]) * j;
+			centroid_divisor += (weight[0][0] + weight[0][1] + weight[0][2]);
 
 			/*
 			 * Determine alignment type.
 			 */
 
+			for (int m = 0; m < 2; m++)
 			if (channel_alignment_type == 0) {
 				/*
 				 * Align based on all channels.
@@ -1064,10 +1090,10 @@ private:
 
 				for (int k = 0; k < 3; k++) {
 					ale_real achan = pa[k];
-					ale_real bchan = pb[k];
+					ale_real bchan = p[m][k];
 
-					this_result += weight[k] * pow(fabs(achan - bchan), metric_exponent);
-					this_divisor += weight[k] * pow(achan > bchan ? achan : bchan, metric_exponent);
+					this_result[m] += weight[m][k] * pow(fabs(achan - bchan), metric_exponent);
+					this_divisor[m] += weight[m][k] * pow(achan > bchan ? achan : bchan, metric_exponent);
 				}
 			} else if (channel_alignment_type == 1) {
 				/*
@@ -1075,10 +1101,10 @@ private:
 				 */
 
 				ale_real achan = pa[1];
-				ale_real bchan = pb[1];
+				ale_real bchan = p[m][1];
 
-				this_result = weight[1] * pow(fabs(achan - bchan), metric_exponent);
-				this_divisor = weight[1] * pow(achan > bchan ? achan : bchan, metric_exponent);
+				this_result[m] = weight[m][1] * pow(fabs(achan - bchan), metric_exponent);
+				this_divisor[m] = weight[m][1] * pow(achan > bchan ? achan : bchan, metric_exponent);
 			} else if (channel_alignment_type == 2) {
 				/*
 				 * Align based on the sum of all channels.
@@ -1090,18 +1116,28 @@ private:
 
 				for (int k = 0; k < 3; k++) {
 					asum += pa[k];
-					bsum += pb[k];
-					wsum += weight[k] / 3;
+					bsum += p[m][k];
+					wsum += weight[m][k] / 3;
 				}
 
-				this_result = wsum * pow(fabs(asum - bsum), metric_exponent);
-				this_divisor = wsum * pow(asum > bsum ? asum : bsum, metric_exponent);
+				this_result[m] = wsum * pow(fabs(asum - bsum), metric_exponent);
+				this_divisor[m] = wsum * pow(asum > bsum ? asum : bsum, metric_exponent);
 			}
 
-			result += this_result;
-			divisor += this_divisor;
+			ale_accum de = fabs(this_result[0] / this_divisor[0]
+					  - this_result[1] / this_divisor[1]);
 
-			add_hist(this_result, this_divisor);
+			de_centroid[0] += de * i;
+			de_centroid[1] += de * j;
+
+			de_centroid_v += de * t.lengthto(u);
+
+			de_sum += de;
+
+			result += (this_result[0]);
+			divisor += (this_divisor[0]);
+
+			add_hist(this_result[0], this_divisor[0]);
 		}
 
 		void print_hist() {
@@ -1131,13 +1167,16 @@ private:
 		}
 
 	public:
-		diff_stat_t(ale_pos _mc_arg) {
+		diff_stat_t(ale_pos _mc_arg, transformation _comparison_offset) {
 			result = 0;
 			divisor = 0;
 			hist_min_r = INT_MIN;
 			hist_min_d = INT_MIN;
 			hist_dim = 20;
 			hist_total = 0;
+			comparison_offset = _comparison_offset;
+			offset = _comparison_offset;
+
 			histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
 
 			min = point::posinf();
@@ -1146,6 +1185,13 @@ private:
 			centroid[0] = 0;
 			centroid[1] = 0;
 			centroid_divisor = 0;
+
+			de_centroid[0] = 0;
+			de_centroid[1] = 0;
+
+			de_centroid_v = 0;
+
+			de_sum = 0;
 
 			mc_array.resize(_ma_card);
 
@@ -1207,9 +1253,12 @@ private:
 				if (max[d] < ds->max[d])
 					max[d] = ds->max[d];
 				centroid[d] += ds->centroid[d];
+				de_centroid[d] += ds->de_centroid[d];
 			}
 
 			centroid_divisor += ds->centroid_divisor;
+			de_centroid_v += ds->de_centroid_v;
+			de_sum += ds->de_sum;
 		}
 
 		diff_stat_t(const diff_stat_t &dst) {
@@ -1231,11 +1280,19 @@ private:
 			centroid[1] = 0;
 			centroid_divisor = 0;
 
+			de_centroid[0] = 0;
+			de_centroid[1] = 0;
+
+			de_centroid_v = 0;
+
+			de_sum = 0;
+
 			/*
 			 * Copy diff variables
 			 */
 			mc_array = dst.mc_array;
 			offset = dst.offset;
+			comparison_offset = dst.comparison_offset;
 			si = dst.si;
 			ax_count = dst.ax_count;
 			frame = dst.frame;
@@ -1258,9 +1315,12 @@ private:
 				if (max[d] < dst.max[d])
 					max[d] = dst.max[d];
 				centroid[d] += dst.centroid[d];
+				de_centroid[d] += dst.de_centroid[d];
 			}
 
 			centroid_divisor += dst.centroid_divisor;
+			de_centroid_v += dst.de_centroid_v;
+			de_sum += dst.de_sum;
 		}
 
 		diff_stat_t &operator=(const diff_stat_t &dst) {
@@ -1285,12 +1345,20 @@ private:
 			centroid[1] = 0;
 			centroid_divisor = 0;
 
+			de_centroid[0] = 0;
+			de_centroid[1] = 0;
+
+			de_centroid_v = 0;
+
+			de_sum = 0;
+
 			/*
 			 * Copy diff variables
 			 */
 
 			mc_array = dst.mc_array;
 			offset = dst.offset;
+			comparison_offset = dst.comparison_offset;
 			si = dst.si;
 			ax_count = dst.ax_count;
 			frame = dst.frame;
@@ -1312,9 +1380,12 @@ private:
 				if (max[d] < dst.max[d])
 					max[d] = dst.max[d];
 				centroid[d] += dst.centroid[d];
+				de_centroid[d] += dst.de_centroid[d];
 			}
 
 			centroid_divisor += dst.centroid_divisor;
+			de_centroid_v += dst.de_centroid_v;
+			de_sum += dst.de_sum;
 
 			return *this;
 		}
@@ -2204,7 +2275,7 @@ private:
 		 * Alignment statistics.
 		 */
 
-		diff_stat_t here(_mc_arg);
+		diff_stat_t here(_mc_arg, offset);
 
 		/*
 		 * Current difference (error) value
@@ -2409,7 +2480,7 @@ private:
 					adj_p, adj_o, sample_centroid);
 
 			int found_unreliable = 1;
-			std::vector<int> tested(t_set.size());
+			std::vector<int> tested(t_set.size(), 0);
 
 			while (found_unreliable) {
 
@@ -2429,8 +2500,10 @@ private:
 
 					tested[i] = 1;
 
-					if (test < here)
+					if (test < here) {
 						here = test;
+						break;
+					}
 				}
 
 				if (here.get_offset() != old_here.get_offset())

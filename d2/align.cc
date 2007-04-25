@@ -111,6 +111,7 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 
 	struct scale_cluster c = sargs->c;
 	transformation t = sargs->t;
+	transformation u = sargs->u;
 	ale_pos _mc_arg = sargs->_mc_arg;
 	int ax_count = sargs->ax_count;
 	int f = sargs->f;
@@ -169,10 +170,10 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 	 * amount to the integer value ceil(2 * SKIP/USE) + 1.
 	 */
 
-	ale_pos u = (1 - _mc_arg) / _mc_arg;
+	ale_pos use = (1 - _mc_arg) / _mc_arg;
 
-	ale_pos mc_max = (floor(2*u) * (1 + floor(2*u)) + 2*u)
-		      / (2 + 2 * floor(2*u) - 2*u);
+	ale_pos mc_max = (floor(2*use) * (1 + floor(2*use)) + 2*use)
+		      / (2 + 2 * floor(2*use) - 2*use);
 
 	/*
 	 * Reseed the random number generator;  we want the
@@ -226,13 +227,19 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 		 * Transform
 		 */
 
-		struct point q;
+		struct point q, r;
 
 		q = (c.input_scale < 1.0 && interpolant == NULL)
 		  ? t.scaled_inverse_transform(
 			point(i + offset[0], j + offset[1]))
 		  : t.unscaled_inverse_transform(
 			point(i + offset[0], j + offset[1]));
+
+		r = (c.input_scale < 1.0)
+		  ? t.scaled_inverse_transform(
+		  	point(i + offset[0], j + offset[1]))
+		  : t.unscaled_inverse_transform(
+		  	point(i + offset[0], j + offset[1]));
 
 		ale_pos ti = q[0];
 		ale_pos tj = q[1];
@@ -248,16 +255,21 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 		 * (e.g. when we're not increasing image extents).
 		 */
 
-		if (input_excluded(ti, tj, c.ax_parameters, ax_count))
+		if (input_excluded(ti, tj, c.ax_parameters, ax_count)
+		 || input_excluded(r[0], r[1], c.ax_parameters, ax_count))
 			continue;
 
 		if (ti >= 0
 		 && ti <= c.input->height() - 1
 		 && tj >= 0
 		 && tj <= c.input->width() - 1
+		 && r[0] >= 0
+		 && r[0] <= c.input->height() - 1
+		 && r[1] >= 0
+		 && r[1] <= c.input->width() - 1
 		 && c.defined->get_pixel(i, j)[0] != 0)
 
-			sargs->diff_stat->sample(f, c, i, j, ti, tj);
+			sargs->diff_stat->sample(f, c, i, j, q, r);
 
 	}
 
