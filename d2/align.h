@@ -745,6 +745,8 @@ public:
 			N = 1;
 #endif
 
+			offset.unscaled_inverse_transform(point(0, 0));
+
 			subdomain_args *args = new subdomain_args[N];
 
 			for (int ti = 0; ti < N; ti++) {
@@ -761,6 +763,7 @@ public:
 				args[ti].j_max = c.accum->width();
 				args[ti].subdomain = ti;
 
+				args[ti].t.unscaled_inverse_transform(point(0, 0));
 #ifdef USE_PTHREAD
 				pthread_attr_init(&thread_attr[ti]);
 				pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
@@ -1128,10 +1131,17 @@ private:
 				ale_accum de = fabs(this_result[0] / this_divisor[0]
 						  - this_result[1] / this_divisor[1]);
 
+				fprintf(stderr, "[de=%g]\n", de);
+
 				de_centroid[0] += de * i;
 				de_centroid[1] += de * j;
 
+				fprintf(stderr, "[de_centroid=%g %g]\n", de_centroid[0], 
+						de_centroid[1]);
+
 				de_centroid_v += de * t.lengthto(u);
+
+				fprintf(stderr, "[de_centroid_v=%g]\n", de_centroid_v);
 
 				de_sum += de;
 			}
@@ -2051,6 +2061,7 @@ private:
 			for (unsigned int s = 0; s < 2; s++) {
 
 				assert(multipliers.size() > i * 2 + s);
+				assert(finite(multipliers[i * 2 + s]));
 
 				test_t = offset;
 
@@ -2064,6 +2075,7 @@ private:
 			for (unsigned int s = 0; s < 2; s++) {
 
 				assert(multipliers.size() > 4 + s);
+				assert(finite(multipliers[4 + s]));
 
 				ale_pos adj_s = (s ? -1 : 1) * adj_o * multipliers[4 + s];
 
@@ -2089,6 +2101,7 @@ private:
 			for (unsigned int s = 0; s < 2; s++) {
 
 				assert(multipliers.size() > 4 * i + 2 * j + s);
+				assert(finite(multipliers[4 * i + 2 * j + s]));
 
 				ale_pos adj_s = (s ? -1 : 1) * adj_p 
 					      * multipliers [4 * i + 2 * j + s];
@@ -2369,6 +2382,8 @@ private:
 
 			for (unsigned int i = 0; i < t_set.size(); i++) {
 
+				fprintf(stderr, "global.t_set[%d]\n", i);
+
 				transformation t = t_set[i];
 
 				diff_stat_t test(here);
@@ -2518,6 +2533,8 @@ private:
 		for (unsigned int i = 0; i < t_set.size(); i++) {
 			diff_stat_t test = here;
 
+			fprintf(stderr, "translational.t_set[%d]\n", i);
+
 			test.diff(si, t_set[i], local_ax_count, m);
 
 			error_centroid += test.get_error_centroid();
@@ -2533,7 +2550,12 @@ private:
 		for (unsigned int i = 0; i < t_set.size(); i++) {
 			diff_stat_t test = here;
 
+			fprintf(stderr, "init_perturb.t_set[%d]\n", i);
+
 			test.diff(si, t_set[i], local_ax_count, m);
+
+			fprintf(stderr, "perturb_multiplier[%d] = %g / %g\n", i, adj_p,
+					test.get_error_perturb());
 
 			perturb_multiplier.push_back(adj_p / test.get_error_perturb());
 		}
@@ -2590,6 +2612,11 @@ private:
 						continue;
 
 					diff_stat_t test(here);
+
+					fprintf(stderr, "main_perturb.multiplier[%d]=%g\n", 
+							i, perturb_multiplier[i]);
+
+					fprintf(stderr, "main_perturb.t_set[%d]\n", i);
 
 					test.diff(si, t_set[i], local_ax_count, m);
 

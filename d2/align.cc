@@ -236,9 +236,9 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 			point(i + offset[0], j + offset[1]));
 
 		r = (c.input_scale < 1.0)
-		  ? t.scaled_inverse_transform(
+		  ? u.scaled_inverse_transform(
 		  	point(i + offset[0], j + offset[1]))
-		  : t.unscaled_inverse_transform(
+		  : u.unscaled_inverse_transform(
 		  	point(i + offset[0], j + offset[1]));
 
 		ale_pos ti = q[0];
