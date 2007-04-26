@@ -501,7 +501,7 @@ private:
 	 * alignment admitting a non-empty element region.
 	 */
 	static void make_element_nontrivial(transformation *t, scale_cluster si, 
-			int local_ax_count, ale_pos adj_p, ale_pos adj_o, point sample_centroid) {
+			int local_ax_count, ale_pos adj_p, ale_pos adj_o, point centroid) {
 
 		if (t->is_nontrivial())
 			return;
@@ -512,7 +512,7 @@ private:
 			return;
 
 		std::vector<transformation> t_set;
-		get_perturb_set(&t_set, *t, adj_p, adj_o, sample_centroid);
+		get_perturb_set(&t_set, *t, adj_p, adj_o, centroid);
 
 		for (unsigned int i = 0; i < t_set.size(); i++) {
 
@@ -1427,6 +1427,18 @@ private:
 			return result;
 		}
 
+		point get_error_centroid() {
+			point result = point(de_centroid[0] / de_sum, de_centroid[1] / de_sum);
+
+			return result;
+		}
+
+		ale_pos get_error_perturb() {
+			ale_pos result = de_centroid_v / de_sum;
+
+			return result;
+		}
+
 		ale_accum get_error() const {
 			return pow(result / divisor, 1/metric_exponent);
 		}
@@ -2012,7 +2024,7 @@ private:
 
 			test_t = offset;
 
-			test_t.translate(i, adj_s);
+			test_t.translate(i ? point(adj_s, 0) : point(0, adj_s));
 
 			set->push_back(test_t);
 		}
@@ -2023,9 +2035,8 @@ private:
 	 */
 	static void get_perturb_set(std::vector<transformation> *set, 
 			transformation t, ale_pos adj_p, 
-			ale_pos adj_o, point sample_centroid) {
-
-		ale_pos adj_s;
+			ale_pos adj_o, point centroid, 
+			std::vector<ale_pos> multipliers = std::vector<ale_pos>(16, 1)) {
 
 		transformation offset = t;
 		transformation test_t;
@@ -2036,24 +2047,30 @@ private:
 			 * Translational or euclidean transformation
 			 */
 
-			for (int i = 0; i < 2; i++)
-			for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+			for (unsigned int i = 0; i < 2; i++)
+			for (unsigned int s = 0; s < 2; s++) {
+
+				assert(multipliers.size() > i * 2 + s);
 
 				test_t = offset;
 
-				test_t.eu_modify(i, adj_s);
+				test_t.eu_modify(i, (s ? -adj_p : adj_p) * multipliers[i * 2 + s]);
 
 				set->push_back(test_t);
 
 			}
 
 			if (alignment_class == 1 && adj_o < rot_max)
-			for (adj_s = -adj_o; adj_s <= adj_o; adj_s += 2 * adj_o) {
+			for (unsigned int s = 0; s < 2; s++) {
+
+				assert(multipliers.size() > 4 + s);
+
+				ale_pos adj_s = (s ? -1 : 1) * adj_o * multipliers[4 + s];
 
 				test_t = offset;
 
-				if (sample_centroid.defined()) {
-					test_t.eu_rotate_about_scaled(sample_centroid, adj_s);
+				if (centroid.finite()) {
+					test_t.eu_rotate_about_scaled(centroid, adj_s);
 				} else {
 					test_t.eu_modify(2, adj_s);
 				}
@@ -2067,9 +2084,14 @@ private:
 			 * Projective transformation
 			 */
 
-			for (int i = 0; i < 4; i++)
-			for (int j = 0; j < 2; j++)
-			for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
+			for (unsigned int i = 0; i < 4; i++)
+			for (unsigned int j = 0; j < 2; j++)
+			for (unsigned int s = 0; s < 2; s++) {
+
+				assert(multipliers.size() > 4 * i + 2 * j + s);
+
+				ale_pos adj_s = (s ? -1 : 1) * adj_p 
+					      * multipliers [4 * i + 2 * j + s];
 
 				test_t = offset;
 
@@ -2276,6 +2298,23 @@ private:
 		ale_pos adj_p = (perturb >= pow(2, lod_diff))
 			     ? pow(2, lod_diff) : (double) perturb;
 
+		/*
+		 * Orientational adjustment value in degrees.
+		 *
+		 * Since rotational perturbation is now specified as an
+		 * arclength, we have to convert.
+		 */
+
+		ale_pos adj_o = 2 * perturb 
+				  / sqrt(pow(scale_clusters[0].input->height(), 2)
+				       + pow(scale_clusters[0].input->width(),  2))
+				  * 180
+				  / M_PI;
+
+		/*
+		 * Global search overlap requirements.
+		 */
+
 		local_gs_mo /= pow(pow(2, lod), 2);
 
 		ui::get()->gs_mo(local_gs_mo);
@@ -2472,7 +2511,7 @@ private:
 		 */
 
 		std::vector<transformation> t_set;
-		point error_centroid;
+		point error_centroid(0, 0);
 
 		get_translational_set(&t_set, here.get_offset(), adj_p);
 
@@ -2484,7 +2523,7 @@ private:
 			error_centroid += test.get_error_centroid();
 		}
 
-		error_centroid /= t_set.size();
+		error_centroid = error_centroid / t_set.size();
 
 		get_perturb_set(&t_set, here.get_offset(), adj_p,
 				adj_o, error_centroid);
@@ -2496,7 +2535,7 @@ private:
 
 			test.diff(si, t_set[i], local_ax_count, m);
 
-			perturb_multiplier.push_back(adj_p / test.error_perturb());
+			perturb_multiplier.push_back(adj_p / test.get_error_perturb());
 		}
 
 		/*
@@ -2528,13 +2567,11 @@ private:
 
 			diff_stat_t old_here = here;
 
-			point sample_centroid = old_here.get_centroid() 
-				              + si.accum->offset();
-
 			std::vector<transformation> t_set;
 
 			get_perturb_set(&t_set, here.get_offset(), 
-					adj_p, adj_o, error_centroid);
+					adj_p, adj_o, error_centroid, 
+					perturb_multiplier);
 
 			int found_unreliable = 1;
 			std::vector<int> tested(t_set.size(), 0);
@@ -2557,7 +2594,7 @@ private:
 					test.diff(si, t_set[i], local_ax_count, m);
 
 					error_centroid += test.get_error_centroid();
-					perturb_multiplier[i] *= adj_p / test.error_perturb();
+					perturb_multiplier[i] *= adj_p / test.get_error_perturb();
 
 					if (!test.reliable(here)) {
 						found_unreliable = 1;
@@ -2571,7 +2608,7 @@ private:
 						best = test;
 				}
 
-				error_centroid /= t_set.size();
+				error_centroid = error_centroid / t_set.size();
 
 				if (best.get_offset() != here.get_offset()) {
 					here = best;
@@ -2580,7 +2617,6 @@ private:
 
 				if (found_unreliable) {
 					here.mcd_increase();
-					test.mcd_increase();
 				}
 			}
 
@@ -2594,6 +2630,8 @@ private:
 
 				for (unsigned int d = 0; d < offset.bd_count(); d++)
 				for (adj_s = -adj_b; adj_s <= adj_b; adj_s += 2 * adj_b) {
+
+					diff_stat_t test(here);
 
 					unsigned int rd = (d + d_rotation) % offset.bd_count();
 					d_rotation = (d_rotation + 1) % offset.bd_count();
@@ -2652,6 +2690,7 @@ private:
 
 						here.rescale(2, si);
 						element->default_initial_alignment.rescale(2);
+						error_centroid = error_centroid * 2;
 
 					} else {
 						adj_p = perturb;
