@@ -170,10 +170,10 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 	 * amount to the integer value ceil(2 * SKIP/USE) + 1.
 	 */
 
-	ale_pos use = (1 - _mc_arg) / _mc_arg;
+	ale_pos su = (1 - _mc_arg) / _mc_arg;
 
-	ale_pos mc_max = (floor(2*use) * (1 + floor(2*use)) + 2*use)
-		      / (2 + 2 * floor(2*use) - 2*use);
+	ale_pos mc_max = (floor(2*su) * (1 + floor(2*su)) + 2*su)
+		      / (2 + 2 * floor(2*su) - 2*su);
 
 	/*
 	 * Reseed the random number generator;  we want the

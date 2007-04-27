@@ -1131,17 +1131,10 @@ private:
 				ale_accum de = fabs(this_result[0] / this_divisor[0]
 						  - this_result[1] / this_divisor[1]);
 
-				fprintf(stderr, "[de=%g]\n", de);
-
 				de_centroid[0] += de * i;
 				de_centroid[1] += de * j;
 
-				fprintf(stderr, "[de_centroid=%g %g]\n", de_centroid[0], 
-						de_centroid[1]);
-
 				de_centroid_v += de * t.lengthto(u);
-
-				fprintf(stderr, "[de_centroid_v=%g]\n", de_centroid_v);
 
 				de_sum += de;
 			}
@@ -2382,8 +2375,6 @@ private:
 
 			for (unsigned int i = 0; i < t_set.size(); i++) {
 
-				fprintf(stderr, "global.t_set[%d]\n", i);
-
 				transformation t = t_set[i];
 
 				diff_stat_t test(here);
@@ -2533,8 +2524,6 @@ private:
 		for (unsigned int i = 0; i < t_set.size(); i++) {
 			diff_stat_t test = here;
 
-			fprintf(stderr, "translational.t_set[%d]\n", i);
-
 			test.diff(si, t_set[i], local_ax_count, m);
 
 			error_centroid += test.get_error_centroid();
@@ -2550,12 +2539,7 @@ private:
 		for (unsigned int i = 0; i < t_set.size(); i++) {
 			diff_stat_t test = here;
 
-			fprintf(stderr, "init_perturb.t_set[%d]\n", i);
-
 			test.diff(si, t_set[i], local_ax_count, m);
-
-			fprintf(stderr, "perturb_multiplier[%d] = %g / %g\n", i, adj_p,
-					test.get_error_perturb());
 
 			perturb_multiplier.push_back(adj_p / test.get_error_perturb());
 		}
@@ -2612,11 +2596,6 @@ private:
 						continue;
 
 					diff_stat_t test(here);
-
-					fprintf(stderr, "main_perturb.multiplier[%d]=%g\n", 
-							i, perturb_multiplier[i]);
-
-					fprintf(stderr, "main_perturb.t_set[%d]\n", i);
 
 					test.diff(si, t_set[i], local_ax_count, m);
 

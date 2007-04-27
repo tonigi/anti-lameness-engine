@@ -48,14 +48,6 @@ public:
 		current_element = tm.current_element;
 	}
 
-	trans_multi &operator=(const trans_multi &tm) {
-		trans_stack = tm.trans_stack;
-		full_support = tm.full_support;
-		current_element = tm.current_element;
-
-		return *this;
-	}
-
 	trans_single get_element(unsigned int index) {
 		assert (index < trans_stack.size());
 
