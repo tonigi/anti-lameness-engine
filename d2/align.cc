@@ -110,8 +110,7 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 	subdomain_args *sargs = (subdomain_args *) args;
 
 	struct scale_cluster c = sargs->c;
-	transformation t = sargs->t;
-	transformation u = sargs->u;
+	std::vector<run> runs = sargs->runs;
 	ale_pos _mc_arg = sargs->_mc_arg;
 	int ax_count = sargs->ax_count;
 	int f = sargs->f;
@@ -220,26 +219,28 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 		 * Check transformation support.
 		 */
 
-		if (!t.supported((int) (i + offset[0]), (int) (j + offset[1])))
+		if (!runs.back().offset.supported((int) (i + offset[0]), (int) (j + offset[1])))
 			continue;
 
 		/*
 		 * Transform
 		 */
 
-		struct point q, r;
+		struct point q, r = point::undefined();
 
 		q = (c.input_scale < 1.0 && interpolant == NULL)
-		  ? t.scaled_inverse_transform(
+		  ? runs.back().offset.scaled_inverse_transform(
 			point(i + offset[0], j + offset[1]))
-		  : t.unscaled_inverse_transform(
+		  : runs.back().offset.unscaled_inverse_transform(
 			point(i + offset[0], j + offset[1]));
 
-		r = (c.input_scale < 1.0)
-		  ? u.scaled_inverse_transform(
-		  	point(i + offset[0], j + offset[1]))
-		  : u.unscaled_inverse_transform(
-		  	point(i + offset[0], j + offset[1]));
+		if (runs.size() == 2) {
+			r = (c.input_scale < 1.0)
+			  ? runs.front().offset.scaled_inverse_transform(
+				point(i + offset[0], j + offset[1]))
+			  : runs.front().offset.unscaled_inverse_transform(
+				point(i + offset[0], j + offset[1]));
+		}
 
 		ale_pos ti = q[0];
 		ale_pos tj = q[1];
@@ -278,28 +279,25 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 		   && r[1] <= c.input->width() - 1))
 			r = point::undefined();
 
-		sargs->diff_stat->sample(f, c, i, j, q, r);
+		sargs->runs.back().sample(f, c, i, j, q, r);
 	}
 
 	return NULL;
 }
 
-void d2::align::diff_stat_t::try_decrease(d2::align::diff_stat_t &with) {
+void d2::align::diff_stat_t::try_decrease() {
 
 	assert (_mc <= 0);
-	assert (get_mc() == with.get_mc());
 	
-	diff_stat_t here_half(*this);
-	diff_stat_t there_half(with);
+	diff_stat_t half(*this);
 
-	here_half.mcd_decrease();
-	there_half.mcd_decrease();
+	half.mcd_decrease();
 
-	if (!here_half.reliable(there_half))
+	if (!half.reliable())
 		return;
 
-	*this = here_half;
-	with = there_half;
+	*this = half;
+
 	ui::get()->alignment_monte_carlo_parameter(get_mc());
 }
 
