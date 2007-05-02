@@ -536,9 +536,7 @@ private:
 			hist_bin hist_total;
 			int hist_dim;
 
-			void init(transformation _offset) {
-
-				offset = _offset;
+			void init() {
 
 				result = 0;
 				divisor = 0;
@@ -563,6 +561,18 @@ private:
 				de_centroid_v = 0;
 
 				de_sum = 0;
+			}
+
+			void init(transformation _offset) {
+				offset = _offset;
+				init();
+			}
+
+			/*
+			 * Required for STL sanity.
+			 */
+			run() {
+				init();
 			}
 
 			run(transformation _offset) {
@@ -963,7 +973,6 @@ private:
 
 			point get_error_centroid() {
 				point result = point(de_centroid[0] / de_sum, de_centroid[1] / de_sum);
-
 				return result;
 			}
 
@@ -976,7 +985,20 @@ private:
 
 		};
 
+		/*
+		 * When non-empty, runs.front() is best, runs.back() is
+		 * testing.
+		 */
+
 		std::vector<run> runs;
+
+		/*
+		 * old_runs stores the latest available perturbation set for
+		 * each multi-alignment element.
+		 */
+
+		typedef std::pair<unsigned int, unsigned int> old_run_index;
+		std::map<old_run_index, run> old_runs;
 
 		static void *diff_subdomain(void *args);
 
@@ -1357,16 +1379,6 @@ public:
 			return !(operator!=(param));
 		}
 
-		point get_centroid() {
-			assert(runs.size() == 1);
-			return runs[0].get_centroid();
-		}
-
-		point get_error_centroid() {
-			assert (runs.size() == 1);
-			return runs[0].get_error_centroid();
-		}
-
 		ale_pos get_error_perturb() {
 			assert(runs.size() == 1);
 			return runs[0].get_error_perturb();
@@ -1377,13 +1389,17 @@ public:
 			return runs[0].get_error();
 		}
 
+		old_run_index get_run_index(unsigned int perturb_index) {
+			return old_run_index(get_current_index(), perturb_index);
+		}
+
 		/*
 		 * Get the set of transformations produced by a given perturbation
 		 */
 		void get_perturb_set(std::vector<transformation> *set, 
 				ale_pos adj_p, ale_pos adj_o, ale_pos adj_b, 
-				ale_pos *current_bd, ale_pos *modified_bd, point centroid, 
-				std::vector<ale_pos> multipliers = std::vector<ale_pos>(100, 1)) {
+				ale_pos *current_bd, ale_pos *modified_bd,
+				std::vector<ale_pos> multipliers = std::vector<ale_pos>()) {
 
 			assert(runs.size() == 1);
 
@@ -1398,7 +1414,9 @@ public:
 				for (unsigned int i = 0; i < 2; i++)
 				for (unsigned int s = 0; s < 2; s++) {
 
-					assert(multipliers.size());
+					if (!multipliers.size())
+						multipliers.push_back(1);
+
 					assert(finite(multipliers[0]));
 
 					test_t = get_offset();
@@ -1410,18 +1428,39 @@ public:
 
 				}
 
-				if (alignment_class == 1 && adj_o < rot_max)
+				if (alignment_class == 1)
 				for (unsigned int s = 0; s < 2; s++) {
+
+					if (!multipliers.size())
+						multipliers.push_back(1);
 
 					assert(multipliers.size());
 					assert(finite(multipliers[0]));
+
+					if (!(adj_o * multipliers[0] > rot_max))
+						return;
 
 					ale_pos adj_s = (s ? -1 : 1) * adj_o * multipliers[0];
 
 					test_t = get_offset();
 
+					old_run_index ori = get_run_index(set->size());
+					point centroid = point::undefined();
+
+					if (!old_runs.count(ori))
+						ori = get_run_index(0);
+
+					if (!centroid.finite() && old_runs.count(ori)) {
+						centroid = old_runs[ori].get_error_centroid();
+
+						if (!centroid.finite())
+							centroid = old_runs[ori].get_centroid();
+					}
+
 					if (centroid.finite()) {
-						test_t.eu_rotate_about_scaled(centroid, adj_s);
+						test_t.eu_rotate_about_scaled(
+								centroid + si.accum->offset(), 
+								adj_s);
 					} else {
 						test_t.eu_modify(2, adj_s);
 					}
@@ -1439,6 +1478,9 @@ public:
 				for (unsigned int i = 0; i < 4; i++)
 				for (unsigned int j = 0; j < 2; j++)
 				for (unsigned int s = 0; s < 2; s++) {
+
+					if (!multipliers.size())
+						multipliers.push_back(1);
 
 					assert(multipliers.size());
 					assert(finite(multipliers[0]));
@@ -1469,6 +1511,9 @@ public:
 				for (unsigned int d = 0; d < get_offset().bd_count(); d++)
 				for (unsigned int s = 0; s < 2; s++) {
 
+					if (!multipliers.size())
+						multipliers.push_back(1);
+
 					assert (multipliers.size());
 					assert (finite(multipliers[0]));
 
@@ -1498,15 +1543,14 @@ public:
 		}
 
 		void perturb_test(ale_pos adj_p, ale_pos adj_o, ale_pos adj_b, 
-				point error_centroid, ale_pos *current_bd, ale_pos *modified_bd,
+				ale_pos *current_bd, ale_pos *modified_bd,
 				std::vector<ale_pos> &perturb_multiplier) {
 
 			assert(runs.size() == 1);
 
 			std::vector<transformation> t_set;
 
-			get_perturb_set(&t_set, adj_p, adj_o, adj_b, current_bd, modified_bd, 
-					error_centroid, 
+			get_perturb_set(&t_set, adj_p, adj_o, adj_b, current_bd, modified_bd,
 					perturb_multiplier);
 
 			int found_unreliable = 1;
@@ -1518,8 +1562,6 @@ public:
 
 				found_unreliable = 0;
 
-				error_centroid = point(0, 0);
-
 				for (unsigned int i = 0; i < t_set.size(); i++) {
 
 					if (tested[i])
@@ -1527,8 +1569,25 @@ public:
 
 					diff(si, t_set[i], ax_count, frame);
 
-					error_centroid += runs[1].get_error_centroid();
+					if (!(i < perturb_multiplier.size())) {
+
+						perturb_multiplier.resize(i + 1);
+
+						perturb_multiplier[i] = 
+							adj_p / runs[1].get_error_perturb();
+
+						assert(finite(perturb_multiplier[i]));
+
+						found_unreliable = 1;
+
+						continue;
+					}
+
+					old_runs[get_run_index(i)] = runs[1];
+
 					perturb_multiplier[i] *= adj_p / runs[1].get_error_perturb();
+
+					assert(finite(perturb_multiplier[i]));
 
 					if (!reliable()) {
 						found_unreliable = 1;
@@ -1543,8 +1602,6 @@ public:
 				}
 
 				runs.pop_back();
-
-				error_centroid = error_centroid / t_set.size();
 
 				if (best.offset != runs[0].offset) {
 					runs[0] = best;
@@ -1565,7 +1622,6 @@ public:
 		void make_element_nontrivial(ale_pos adj_p, ale_pos adj_o) {
 			assert(runs.size() == 1);
 
-			point centroid = get_centroid() + si.accum->offset();
 			transformation *t = &runs[0].offset;
 
 			if (t->is_nontrivial())
@@ -1577,7 +1633,7 @@ public:
 				return;
 
 			std::vector<transformation> t_set;
-			get_perturb_set(&t_set, adj_p, adj_o, 0, NULL, NULL, centroid);
+			get_perturb_set(&t_set, adj_p, adj_o, 0, NULL, NULL);
 
 			for (unsigned int i = 0; i < t_set.size(); i++) {
 
@@ -2586,25 +2642,8 @@ public:
 		 */
 
 		std::vector<transformation> t_set;
-		point error_centroid(0, 0);
-		point old_error_centroid(0, 0);
 
-		get_translational_set(&t_set, here.get_offset(), adj_p);
-
-		for (unsigned int i = 0; i < t_set.size(); i++) {
-			diff_stat_t test = here;
-
-			test.diff(si, t_set[i], local_ax_count, m);
-
-			test.confirm();
-
-			error_centroid += test.get_error_centroid();
-		}
-
-		error_centroid = error_centroid / t_set.size();
-
-		here.get_perturb_set(&t_set, adj_p,
-				adj_o, adj_b, current_bd, modified_bd, error_centroid);
+		here.get_perturb_set(&t_set, adj_p, adj_o, adj_b, current_bd, modified_bd);
 
 		std::vector<ale_pos> perturb_multiplier;
 
@@ -2647,7 +2686,7 @@ public:
 
 			diff_stat_t old_here = here;
 
-			here.perturb_test(adj_p, adj_o, adj_b, error_centroid, current_bd,
+			here.perturb_test(adj_p, adj_o, adj_b, current_bd,
 					modified_bd, perturb_multiplier);
 
 			if (here.get_offset() == old_here.get_offset())
@@ -2692,7 +2731,6 @@ public:
 
 						here.rescale(2, si);
 						element->default_initial_alignment.rescale(2);
-						error_centroid = error_centroid * 2;
 
 					} else {
 						adj_p = perturb;
