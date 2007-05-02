@@ -504,7 +504,6 @@ public:
 			resultant_inverse_memo = 0;
 		} else {
 			assert(center.defined());
-			fprintf(stderr, "[center=%g %g]\n", center[0], center[1]);
 			point fixpoint = scaled_inverse_transform(center);
 			eu_modify(2, degrees);
 			point offset = center - transform_scaled(fixpoint);

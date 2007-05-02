@@ -1458,9 +1458,6 @@ public:
 						centroid = old_runs[ori].get_centroid();
 				}
 
-				fprintf(stderr, "\n\n[centroid=%g %g adj_s=%g]\n\n",
-						centroid[0], centroid[1], adj_s);
-
 				if (!centroid.finite() && !test_t.is_projective()) {
 					test_t.eu_modify(2, adj_s);
 				} else if (!centroid.finite()) {
@@ -1578,16 +1575,16 @@ public:
 
 					diff(si, t_set[i], ax_count, frame);
 
-					if (!(i < perturb_multiplier.size())) {
+					if (!(i < perturb_multiplier.size())
+					 || !finite(perturb_multiplier[i])) {
 
 						perturb_multiplier.resize(i + 1);
 
 						perturb_multiplier[i] = 
 							adj_p / runs[1].get_error_perturb();
 
-						assert(finite(perturb_multiplier[i]));
-
-						found_unreliable = 1;
+						if (finite(perturb_multiplier[i]))
+							found_unreliable = 1;
 
 						continue;
 					}
