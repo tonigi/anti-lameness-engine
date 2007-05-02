@@ -1405,71 +1405,80 @@ public:
 
 			transformation test_t;
 
-			if (alignment_class < 2 && alignment_class >= 0) {
+			/* 
+			 * Translational or euclidean transformation
+			 */
 
-				/* 
-				 * Translational or euclidean transformation
-				 */
+			for (unsigned int i = 0; i < 2; i++)
+			for (unsigned int s = 0; s < 2; s++) {
 
-				for (unsigned int i = 0; i < 2; i++)
-				for (unsigned int s = 0; s < 2; s++) {
+				if (!multipliers.size())
+					multipliers.push_back(1);
 
-					if (!multipliers.size())
-						multipliers.push_back(1);
+				assert(finite(multipliers[0]));
 
-					assert(finite(multipliers[0]));
+				test_t = get_offset();
 
-					test_t = get_offset();
+				// test_t.eu_modify(i, (s ? -adj_p : adj_p) * multipliers[0]);
+				test_t.translate((i ? point(1, 0) : point(0, 1))
+				               * (s ? -adj_p : adj_p)
+					       * multipliers[0]);
 
-					test_t.eu_modify(i, (s ? -adj_p : adj_p) * multipliers[0]);
+				set->push_back(test_t);
+				multipliers.erase(multipliers.begin());
 
-					set->push_back(test_t);
-					multipliers.erase(multipliers.begin());
+			}
 
+			if (alignment_class > 0)
+			for (unsigned int s = 0; s < 2; s++) {
+
+				if (!multipliers.size())
+					multipliers.push_back(1);
+
+				assert(multipliers.size());
+				assert(finite(multipliers[0]));
+
+				if (!(adj_o * multipliers[0] < rot_max))
+					return;
+
+				ale_pos adj_s = (s ? 1 : -1) * adj_o * multipliers[0];
+
+				test_t = get_offset();
+
+				old_run_index ori = get_run_index(set->size());
+				point centroid = point::undefined();
+
+				if (!old_runs.count(ori))
+					ori = get_run_index(0);
+
+				if (!centroid.finite() && old_runs.count(ori)) {
+					centroid = old_runs[ori].get_error_centroid();
+
+					if (!centroid.finite())
+						centroid = old_runs[ori].get_centroid();
 				}
 
-				if (alignment_class == 1)
-				for (unsigned int s = 0; s < 2; s++) {
+				fprintf(stderr, "\n\n[centroid=%g %g adj_s=%g]\n\n",
+						centroid[0], centroid[1], adj_s);
 
-					if (!multipliers.size())
-						multipliers.push_back(1);
+				if (!centroid.finite() && !test_t.is_projective()) {
+					test_t.eu_modify(2, adj_s);
+				} else if (!centroid.finite()) {
+					centroid = point(si.input->height() / 2, 
+					                 si.input->width() / 2);
 
-					assert(multipliers.size());
-					assert(finite(multipliers[0]));
-
-					if (!(adj_o * multipliers[0] > rot_max))
-						return;
-
-					ale_pos adj_s = (s ? -1 : 1) * adj_o * multipliers[0];
-
-					test_t = get_offset();
-
-					old_run_index ori = get_run_index(set->size());
-					point centroid = point::undefined();
-
-					if (!old_runs.count(ori))
-						ori = get_run_index(0);
-
-					if (!centroid.finite() && old_runs.count(ori)) {
-						centroid = old_runs[ori].get_error_centroid();
-
-						if (!centroid.finite())
-							centroid = old_runs[ori].get_centroid();
-					}
-
-					if (centroid.finite()) {
-						test_t.eu_rotate_about_scaled(
-								centroid + si.accum->offset(), 
-								adj_s);
-					} else {
-						test_t.eu_modify(2, adj_s);
-					}
-
-					set->push_back(test_t);
-					multipliers.erase(multipliers.begin());
+					test_t.rotate(centroid + si.accum->offset(),
+							adj_s);
+				} else {
+					test_t.rotate(centroid + si.accum->offset(), 
+							adj_s);
 				}
 
-			} else if (alignment_class == 2) {
+				set->push_back(test_t);
+				multipliers.erase(multipliers.begin());
+			}
+
+			if (alignment_class == 2) {
 
 				/*
 				 * Projective transformation
@@ -1500,7 +1509,7 @@ public:
 					multipliers.erase(multipliers.begin());
 				}
 
-			} else assert(0);
+			}
 
 			/*
 			 * Barrel distortion
@@ -2559,6 +2568,9 @@ public:
 				while (is_improved) {
 					is_improved = 0;
 					transformation test_t = o;
+					/*
+					 * XXX: is this right?
+					 */
 					test_t.rotate(current * o.scale(), srot);
 					ale_pos test_v = cp_rms_error(m, test_t);
 

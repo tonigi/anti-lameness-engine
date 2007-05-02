@@ -489,31 +489,29 @@ public:
 	/*
 	 * Rotate by a given amount about a given point.
 	 */
-	void rotate(point p, ale_pos degrees) {
-
-		ale_pos radians = degrees * M_PI / (double) 180;
-
+	void rotate(point center, ale_pos degrees) {
 		if (_is_projective)
 		for (int i = 0; i <= 4; i++) {
-			x[i] -= p;
+			ale_pos radians = degrees * M_PI / (double) 180;
+
+			x[i] -= center;
 			x[i] = point(
 				x[i][0] * cos(radians) + x[i][1] * sin(radians),
 				x[i][1] * cos(radians) - x[i][0] * sin(radians));
-			x[i] += p;
-		} else {
-			point usi = unscaled_inverse_transform(p);
+			x[i] += center;
 
-			eu[2] += degrees;
 			resultant_memo = 0;
-			
-			point p_rot = transform_unscaled(usi);
+			resultant_inverse_memo = 0;
+		} else {
+			assert(center.defined());
+			fprintf(stderr, "[center=%g %g]\n", center[0], center[1]);
+			point fixpoint = scaled_inverse_transform(center);
+			eu_modify(2, degrees);
+			point offset = center - transform_scaled(fixpoint);
 
-			eu[0] -= (p_rot[0] - p[0]) / scale_factor;
-			eu[1] -= (p_rot[1] - p[1]) / scale_factor;
+			eu_modify(0, offset[0]);
+			eu_modify(1, offset[1]);
 		}
-
-		resultant_memo = 0;
-		resultant_inverse_memo = 0;
 	}
 
 	void reset_memos() {
