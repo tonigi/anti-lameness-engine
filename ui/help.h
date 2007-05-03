@@ -156,8 +156,8 @@ public:
 			BETWEEN_SECTIONS
 			"Bit depth options:\n"
 			HEADER_SPACE
-			"--8bpc            Write 8 bit per channel output [default]\n"
-			"--16bpc           Write 16 bit per channel output\n"
+			"--8bpc            Write 8 bit per channel output\n"
+			"--16bpc           Write 16 bit per channel output [default]\n"
 			BETWEEN_SECTIONS
 			"Output format options:\n"
 			HEADER_SPACE
