@@ -2719,7 +2719,7 @@ public:
 			else
 				stable_count = 0;
 
-			if (stable_count == 3) {
+			if (stable_count == 5) {
 
 				stable_count = 0;
 
