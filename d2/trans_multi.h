@@ -230,6 +230,10 @@ public:
 		trans_stack[current_element].gpt_set(x1, x2, x3, x4);
 	}
 
+	void snap(ale_pos interval) {
+		trans_stack[current_element].snap(interval);
+	}
+
 	/*
 	 * Get the specified projective parameter
 	 */

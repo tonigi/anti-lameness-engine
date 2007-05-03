@@ -291,6 +291,12 @@ public:
 	virtual void gpt_set(point x1, point x2, point x3, point x4) = 0;
 
 	/*
+	 * Snap positional parameters to the specified resolution.
+	 */
+
+	virtual void snap(ale_pos interval) = 0;
+
+	/*
 	 * Get the specified projective parameter
 	 */
 	virtual point gpt_get(int point) const = 0;

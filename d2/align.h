@@ -1089,6 +1089,8 @@ private:
 
 		std::vector<ale_accum> mc_array;
 
+		std::vector<ale_pos> perturb_multipliers;
+
 		ale_pos get_mc() const {
 			return mc_array[get_current_index()];
 		}
@@ -1347,6 +1349,7 @@ public:
 			si = dst.si;
 			ax_count = dst.ax_count;
 			frame = dst.frame;
+			perturb_multipliers = dst.perturb_multipliers;
 
 			return *this;
 		}
@@ -1423,6 +1426,8 @@ public:
 				test_t.translate((i ? point(1, 0) : point(0, 1))
 				               * (s ? -adj_p : adj_p)
 					       * multipliers[0]);
+				
+				test_t.snap(adj_p / 2);
 
 				set->push_back(test_t);
 				multipliers.erase(multipliers.begin());
@@ -1456,6 +1461,9 @@ public:
 
 					if (!centroid.finite())
 						centroid = old_runs[ori].get_centroid();
+
+					centroid *= test_t.scale() 
+					          / old_runs[ori].offset.scale();
 				}
 
 				if (!centroid.finite() && !test_t.is_projective()) {
@@ -1470,6 +1478,8 @@ public:
 					test_t.rotate(centroid + si.accum->offset(), 
 							adj_s);
 				}
+
+				test_t.snap(adj_p / 2);
 
 				set->push_back(test_t);
 				multipliers.erase(multipliers.begin());
@@ -1501,6 +1511,8 @@ public:
 						test_t.gr_modify(j, i, adj_s);
 					else
 						assert(0);
+
+					test_t.snap(adj_p / 2);
 
 					set->push_back(test_t);
 					multipliers.erase(multipliers.begin());
@@ -1549,15 +1561,31 @@ public:
 		}
 
 		void perturb_test(ale_pos adj_p, ale_pos adj_o, ale_pos adj_b, 
-				ale_pos *current_bd, ale_pos *modified_bd,
-				std::vector<ale_pos> &perturb_multiplier) {
+				ale_pos *current_bd, ale_pos *modified_bd) {
 
 			assert(runs.size() == 1);
 
 			std::vector<transformation> t_set;
 
+			if (perturb_multipliers.size() == 0) {
+				get_perturb_set(&t_set, adj_p, adj_o, adj_b, 
+						current_bd, modified_bd);
+
+				for (unsigned int i = 0; i < t_set.size(); i++) {
+					diff_stat_t test = *this;
+
+					test.diff(si, t_set[i], ax_count, frame);
+
+					test.confirm();
+
+					perturb_multipliers.push_back(adj_p / test.get_error_perturb());
+				}
+
+				t_set.clear();
+			}
+
 			get_perturb_set(&t_set, adj_p, adj_o, adj_b, current_bd, modified_bd,
-					perturb_multiplier);
+					perturb_multipliers);
 
 			int found_unreliable = 1;
 			std::vector<int> tested(t_set.size(), 0);
@@ -1575,15 +1603,15 @@ public:
 
 					diff(si, t_set[i], ax_count, frame);
 
-					if (!(i < perturb_multiplier.size())
-					 || !finite(perturb_multiplier[i])) {
+					if (!(i < perturb_multipliers.size())
+					 || !finite(perturb_multipliers[i])) {
 
-						perturb_multiplier.resize(i + 1);
+						perturb_multipliers.resize(i + 1);
 
-						perturb_multiplier[i] = 
+						perturb_multipliers[i] = 
 							adj_p / runs[1].get_error_perturb();
 
-						if (finite(perturb_multiplier[i]))
+						if (finite(perturb_multipliers[i]))
 							found_unreliable = 1;
 
 						continue;
@@ -1591,9 +1619,10 @@ public:
 
 					old_runs[get_run_index(i)] = runs[1];
 
-					perturb_multiplier[i] *= adj_p / runs[1].get_error_perturb();
+					perturb_multipliers[i] *= adj_p / runs[1].get_error_perturb();
 
-					assert(finite(perturb_multiplier[i]));
+					if (!finite(perturb_multipliers[i]))
+						perturb_multipliers[i] = 1;
 
 					if (!reliable()) {
 						found_unreliable = 1;
@@ -2654,18 +2683,6 @@ public:
 
 		here.get_perturb_set(&t_set, adj_p, adj_o, adj_b, current_bd, modified_bd);
 
-		std::vector<ale_pos> perturb_multiplier;
-
-		for (unsigned int i = 0; i < t_set.size(); i++) {
-			diff_stat_t test = here;
-
-			test.diff(si, t_set[i], local_ax_count, m);
-
-			test.confirm();
-
-			perturb_multiplier.push_back(adj_p / test.get_error_perturb());
-		}
-
 		/*
 		 * Perturbation adjustment loop.  
 		 */
@@ -2695,8 +2712,7 @@ public:
 
 			diff_stat_t old_here = here;
 
-			here.perturb_test(adj_p, adj_o, adj_b, current_bd,
-					modified_bd, perturb_multiplier);
+			here.perturb_test(adj_p, adj_o, adj_b, current_bd, modified_bd);
 
 			if (here.get_offset() == old_here.get_offset())
 				stable_count++;

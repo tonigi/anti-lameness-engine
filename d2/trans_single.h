@@ -447,6 +447,18 @@ public:
 		gpt_set(x);
 	}
 
+	void snap(ale_pos interval) {
+		for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 2; j++)
+			x[i][j] = round(x[i][j] / interval) * interval;
+
+		for (int i = 0; i < 2; i++)
+			eu[i] = round(eu[i] / (interval / scale())) * (interval / scale());
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+	}
+
 	/*
 	 * Get the specified projective parameter
 	 */
