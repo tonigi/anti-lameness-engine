@@ -178,6 +178,11 @@ public:
 	void alignment_no_match() {
 		printf("Alignment failed to match.\n");
 	}
+
+	void cache(unsigned int usage, unsigned int max) {
+		printf("Cache usage is %u/%u.\n", usage, max);
+	}
+
 };
 
 #endif

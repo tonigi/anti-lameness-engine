@@ -739,6 +739,9 @@ public:
 		exit(1);
 	}
 
+	virtual void cache(unsigned int usage, unsigned int max) {
+	}
+
 	virtual ~ui() {
 	}
 };

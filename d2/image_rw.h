@@ -609,6 +609,8 @@ public:
 			if (image_size + cache_size < cache_size_max) {
 				cache_size += image_size;
 				cache_count++;
+				ui::get()->cache((unsigned int) cache_size, 
+				                 (unsigned int) cache_size_max);
 				return;
 			}
 		}
