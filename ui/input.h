@@ -2119,6 +2119,11 @@ public:
 				cx_parameter = env->get_int_arg(i->first, 0) ? env->get_double_arg(i->first, 1) : 0;
 			} else if (!strcmp(option_name, "ip")) {
 				unsupported::discontinued("--ip <r> <i>", "--lpsf box=<r> --ips <i>");
+			} else if (!strcmp(option_name, "cache")) {
+				double cache = env->get_double_arg(i->first, 1);
+
+				d2::image_rw::set_cache(cache);
+
 			} else if (!strcmp(option_name, "bayer")) {
 
 				/*

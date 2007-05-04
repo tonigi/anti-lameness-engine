@@ -36,7 +36,10 @@ const image **image_rw::images = NULL;
 int *image_rw::files_open;
 
 int image_rw::latest_close_num = -1;
-const image *image_rw::latest_close = NULL;
+
+double image_rw::cache_size = 0;
+double image_rw::cache_size_max = 100;
+unsigned int image_rw::cache_count = 0;
 
 double image_rw::nn_defined_radius = 0;
 

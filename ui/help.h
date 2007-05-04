@@ -154,6 +154,10 @@ public:
 		banner("File");
 		fprintf(help_stream,
 			BETWEEN_SECTIONS
+			"Cache options:\n"
+			HEADER_SPACE
+			"--cache <size>    Cache up to <size>*2^20 bytes of image data.  (100 is default)\n"
+			BETWEEN_SECTIONS
 			"Bit depth options:\n"
 			HEADER_SPACE
 			"--8bpc            Write 8 bit per channel output\n"

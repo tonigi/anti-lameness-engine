@@ -95,9 +95,20 @@ class image_rw {
 	static int latest_close_num;
 
 	/*
-	 * A cache of the data associated with the most recently closed image.
+	 * Maximum cache size, in megabytes (2^20 * bytes), for images not most
+	 * recently closed.
 	 */
-	static const image *latest_close;
+	static double cache_size_max;
+
+	/*
+	 * Actual cache size.
+	 */
+	static double cache_size;
+
+	/*
+	 * Number of cached files.
+	 */
+	static unsigned int cache_count;
 
 	/*
 	 * Private methods to init and shut down the file reader.
@@ -284,6 +295,10 @@ public:
 	static void depth8() {
 		num_bits = 8;
 		mcv = 255;
+	}
+
+	static void set_cache(double size) {
+		cache_size_max = size;
 	}
 
 	static void destroy() {
@@ -540,18 +555,21 @@ public:
 		assert (n <  file_count);
 		assert (!files_open[n]);
 
+		files_open[n] = 1;
+
 		if (latest_close_num >= 0 && n == (unsigned int) latest_close_num) {
-			images[n] = latest_close;
 			latest_close_num = -1;
-			files_open[n] = 1;
-		} else {
+			return images[n];
+		} 
+		
+		if (n < cache_count)
+			return images[n];
 
-			ui::get()->loading_file();
-			image *i = read_image(filenames[n], input_exposure[n], "file", bayer(n), (n == 0));
+		ui::get()->loading_file();
+		image *i = read_image(filenames[n], input_exposure[n], "file", bayer(n), (n == 0));
 
-			images[n] = i;
-			files_open[n] = 1;
-		}
+		images[n] = i;
+
 		return images[n];
 	}
 
@@ -580,12 +598,25 @@ public:
 		assert (image <  file_count);
 		assert (files_open[image]);
 
-		if (latest_close_num >= 0)
-			delete latest_close;
-		latest_close = images[image];
-		latest_close_num = image;
-
 		files_open[image] = 0;
+
+		if (image < cache_count)
+			return;
+
+		if (image == cache_count) {
+			ale_pos image_size = ((double) images[image]->storage_size()) / pow(2, 20);
+
+			if (image_size + cache_size < cache_size_max) {
+				cache_size += image_size;
+				cache_count++;
+				return;
+			}
+		}
+
+		if (latest_close_num >= 0)
+			delete images[latest_close_num];
+
+		latest_close_num = image;
 	}
 
 	static void close_all() {

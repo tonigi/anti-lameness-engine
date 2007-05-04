@@ -116,6 +116,8 @@ input::simple_option input::simple_option_table[] = {
 	{ "mc", "mc", "2", 1 },
 	{ "mcd-removal", NULL, NULL, 1 },
 
+	{ "cache", NULL, NULL, 1 },
+
 	{ "ev", NULL, NULL, 1 },
 	{ "black", NULL, NULL, 1 },
 

@@ -159,6 +159,13 @@ public:
 		return bayer;
 	}
 
+	double storage_size() const {
+		if (bayer != IMAGE_BAYER_NONE)
+			return _dimx * _dimy * sizeof(ale_real);
+
+		return 3 * _dimx * _dimy * sizeof(ale_real);
+	}
+
 	exposure &exp() const {
 		return *_exp;
 	}
