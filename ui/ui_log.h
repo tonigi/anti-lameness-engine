@@ -179,8 +179,12 @@ public:
 		printf("Alignment failed to match.\n");
 	}
 
-	void cache(unsigned int usage, unsigned int max) {
-		printf("Cache usage is %u/%u.\n", usage, max);
+	void cache(double usage, double max) {
+		printf("Cache usage is %.1f%% of %.0fMB.\n", 100 * usage / max, max);
+	}
+
+	void cache_status(unsigned int i) {
+		printf("Cache is full.\n");
 	}
 
 	void log_message(const char *message) {

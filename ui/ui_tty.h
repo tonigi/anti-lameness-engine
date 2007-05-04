@@ -167,7 +167,9 @@ private:
 
 		switch (status.code) {
 			case status_type::LOAD_FILE:
-				status_printf(3, "Loading Image", "Loading", "load");
+				status_printf(4, "Loading Image (%s)", 
+						"Loading Image", "Loading", "load",
+						status.cache ? "caching" : "cache is full");
 				break;
 			case status_type::EXPOSURE_PASS_1:
 				status_printf(3, "Registering exposure (first pass)", "Registering exposure", "regexp1");

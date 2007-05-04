@@ -174,10 +174,12 @@ protected:
 		double cp_min_perturb;
 		double cp_cur_perturb;
 		double cp_cur_error;
+		int cache;
 
 		status_type() {
 			code = UNDEFINED;
 			steps_completed = 0;
+			cache = 1;
 
 			for (int k = 0; k < 3; k++)
 				exp_multiplier[k] = 1;
@@ -329,6 +331,10 @@ public:
 	virtual void set_offset(d2::transformation offset);
 
 	virtual void gs_mo(ale_pos gs_mo) {
+	}
+
+	virtual void cache_status(unsigned int c) {
+		status.cache = c;
 	}
 
 	virtual void loading_file() {
@@ -739,7 +745,7 @@ public:
 		exit(1);
 	}
 
-	virtual void cache(unsigned int usage, unsigned int max) {
+	virtual void cache(double usage, double max) {
 	}
 
 	virtual void log_message(const char *message) {
