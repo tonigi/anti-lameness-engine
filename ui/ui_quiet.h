@@ -29,7 +29,7 @@
 
 class ui_quiet : public ui_wo {
 protected:
-	void printf(char *format, ...) {
+	void printf(const char *format, ...) {
 
 		/*
 		 * Reject messages that aren't loud.

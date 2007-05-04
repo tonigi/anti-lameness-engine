@@ -206,7 +206,7 @@ protected:
 	 * Print function
 	 */
 
-	virtual void printf(char *format, ...) = 0;
+	virtual void printf(const char *format, ...) = 0;
 
 	/*
 	 * UI update function
@@ -740,6 +740,9 @@ public:
 	}
 
 	virtual void cache(unsigned int usage, unsigned int max) {
+	}
+
+	virtual void log_message(const char *message) {
 	}
 
 	virtual ~ui() {

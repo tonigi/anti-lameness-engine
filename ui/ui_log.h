@@ -29,7 +29,7 @@
 
 class ui_log : public ui {
 private:
-	void printf(char *format, ...) {
+	void printf(const char *format, ...) {
 
 		fprintf(ui_stream, "ale: %u: ", (unsigned int) time(NULL));
 
@@ -181,6 +181,10 @@ public:
 
 	void cache(unsigned int usage, unsigned int max) {
 		printf("Cache usage is %u/%u.\n", usage, max);
+	}
+
+	void log_message(const char *message) {
+		printf(message);
 	}
 
 };

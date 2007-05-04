@@ -276,7 +276,7 @@ private:
 	}
 
 
-	void printf(char *format, ...) {
+	void printf(const char *format, ...) {
 #ifdef USE_PTHREAD
 		pthread_mutex_lock(&lock);
 #endif

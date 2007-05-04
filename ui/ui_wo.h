@@ -29,7 +29,7 @@
 
 class ui_wo : public ui {
 private:
-	void printf(char *format, ...) {
+	void printf(const char *format, ...) {
 		va_list ap;
 		va_start(ap, format);
 		vfprintf(ui_stream, format, ap);
