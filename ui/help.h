@@ -156,7 +156,7 @@ public:
 			BETWEEN_SECTIONS
 			"Cache options:\n"
 			HEADER_SPACE
-			"--cache <size>    Cache up to <size>*2^20 bytes of image data.  (100 is default)\n"
+			"--cache <size>    Cache up to <size> megabytes of image data.   (100 is default)\n"
 			BETWEEN_SECTIONS
 			"Bit depth options:\n"
 			HEADER_SPACE
