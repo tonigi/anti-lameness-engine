@@ -136,6 +136,7 @@ protected:
 		const raster *nlresponse;
 		const exposure *exp;
 		int i_min, i_max, j_min, j_max;
+		point extents[2];
 #ifdef USE_PTHREAD
 		pthread_mutex_t *lock;
 #endif
@@ -155,6 +156,7 @@ protected:
 		unsigned int i_max = sargs->i_max;
 		unsigned int j_min = sargs->j_min;
 		unsigned int j_max = sargs->j_max;
+		point *extents = sargs->extents;
 #ifdef USE_PTHREAD
 		pthread_mutex_t *lock = sargs->lock;
 #endif
@@ -215,6 +217,15 @@ protected:
 				 || jj >= (int) lsimulated->width())
 					continue;
 
+				if (ii < extents[0][0])
+					extents[0][0] = ii;
+				if (jj < extents[0][1])
+					extents[0][1] = jj;
+				if (ii > extents[1][0])
+					extents[1][0] = ii;
+				if (jj > extents[1][1])
+					extents[1][1] = jj;
+
 				class rasterizer::psf_result r =
 					(*lresponse)(top - ii, bot - ii,
 						    lef - jj, rig - jj,
@@ -250,6 +261,7 @@ protected:
 		unsigned int i_max = sargs->i_max;
 		unsigned int j_min = sargs->j_min;
 		unsigned int j_max = sargs->j_max;
+		point *extents = sargs->extents;
 #ifdef USE_PTHREAD
 		pthread_mutex_t *lock = sargs->lock;
 #endif
@@ -288,6 +300,15 @@ protected:
 				 || jj >= (int) nlsimulated->width())
 					continue;
 
+				if (ii < extents[0][0])
+					extents[0][0] = ii;
+				if (jj < extents[0][1])
+					extents[0][1] = jj;
+				if (ii > extents[1][0])
+					extents[1][0] = ii;
+				if (jj > extents[1][1])
+					extents[1][1] = jj;
+
 				class rasterizer::psf_result r =
 					(*nlresponse)(top - ii, bot - ii,
 						    lef - jj, rig - jj,
@@ -312,7 +333,8 @@ protected:
 	void _ip_frame_simulate(int frame_num, image *approximation, 
 			image *lsimulated, image *nlsimulated, 
 			transformation t, const raster *lresponse, 
-			const raster *nlresponse, const exposure &exp) {
+			const raster *nlresponse, const exposure &exp,
+			point *extents) {
 
 		/*
 		 * Threading initializations
@@ -358,6 +380,8 @@ protected:
 			args[ti].i_max = (approximation->height() * (ti + 1)) / N;
 			args[ti].j_min = 0;
 			args[ti].j_max = approximation->width();
+			args[ti].extents[0] = point::posinf();
+			args[ti].extents[1] = point::neginf();
 
 #ifdef USE_PTHREAD
 			args[ti].lock = &lock;
@@ -392,6 +416,18 @@ protected:
 			else
 				lsimulated->pix(ii, jj)
 					/= 0;  /* Generate a non-finite value */
+		}
+
+		/*
+		 * Determine extents
+		 */
+
+		for (int n = 0; n < N; n++) 
+		for (int d = 0; d < 2; d++) {
+			if (args[n].extents[0][d] < extents[0][d])
+				extents[0][d] = args[n].extents[0][d];
+			if (args[n].extents[1][d] > extents[1][d])
+				extents[1][d] = args[n].extents[1][d];
 		}
 
 		/*
@@ -457,6 +493,18 @@ protected:
 			else
 				nlsimulated->pix(ii, jj)
 					/= 0;  /* Generate a non-finite value */
+		}
+
+		/*
+		 * Determine extents
+		 */
+
+		for (int n = 0; n < N; n++) 
+		for (int d = 0; d < 2; d++) {
+			if (args[n].extents[0][d] < extents[0][d])
+				extents[0][d] = args[n].extents[0][d];
+			if (args[n].extents[1][d] > extents[1][d])
+				extents[1][d] = args[n].extents[1][d];
 		}
 
 		/*
@@ -898,7 +946,7 @@ protected:
 			correction_t *cu, const image *real, image *lsimulated, 
 			image *nlsimulated, transformation t, 
 			const backprojector *lresponse, 
-			const backprojector *nlresponse) {
+			const backprojector *nlresponse, point *extents) {
 
 		/*
 		 * Threading initializations
@@ -989,6 +1037,7 @@ protected:
 
 			for (unsigned int i = 0; i < lreal->height(); i++)
 			for (unsigned int j = 0; j < lreal->width(); j++) {
+
 				pixel s = lsimulated->get_pixel(i, j);
 				pixel r = lreal->get_pixel(i, j);
 				pixel confidence = real->exp().confidence(r);
@@ -1008,8 +1057,13 @@ protected:
 #else
 			pixel_accum ssum, rsum;
 
-			for (unsigned int i = 0; i < lreal->height(); i++)
-			for (unsigned int j = 0; j < lreal->width(); j++) {
+//			for (unsigned int i = 0; i < lreal->height(); i++)
+//			for (unsigned int j = 0; j < lreal->width(); j++) {
+			for (unsigned int i = (unsigned int) floor(extents[0][0]); 
+			                  i < (unsigned int)  ceil(extents[1][0]); i++)
+			for (unsigned int j = (unsigned int) floor(extents[0][1]); 
+			                  j < (unsigned int)  ceil(extents[1][1]); j++) {
+
 				pixel s = lsimulated->get_pixel(i, j);
 				pixel r = lreal->get_pixel(i, j);
 
@@ -1098,14 +1152,17 @@ protected:
 		 */
 
 		ui::get()->ip_frame_simulate_start();
-		_ip_frame_simulate(frame_num, approximation, lsimulated, nlsimulated, t, f, nlf, real->exp());
+
+		point extents[2] = { point::posinf(), point::neginf() };
+
+		_ip_frame_simulate(frame_num, approximation, lsimulated, nlsimulated, t, f, nlf, real->exp(), extents);
 
 		/*
 		 * Update the correction array using backprojection.
 		 */
 
 		ui::get()->ip_frame_correct_start();
-		_ip_frame_correct(frame_num, approximation, cu, real, lsimulated, nlsimulated, t, b, nlb);
+		_ip_frame_correct(frame_num, approximation, cu, real, lsimulated, nlsimulated, t, b, nlb, extents);
 
 		/*
 		 * Finalize data structures.
