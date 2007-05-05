@@ -221,6 +221,34 @@ private:
 	}
 
 public:	
+	
+	trans_single &operator=(const trans_single &ta) {
+
+		this->trans_abstract::operator=(*((trans_abstract *) &ta));
+
+		for (int i = 0; i < 4; i++) {
+			x[i] = ta.x[i];
+		}
+
+		for (int i = 0; i < 3; i++) {
+			eu[i] = ta.eu[i];
+		}
+
+		_is_projective = ta._is_projective;
+
+		resultant_memo = 0;
+		resultant_inverse_memo = 0;
+
+		return *this;
+	}
+
+	trans_single(const trans_single &ta) {
+		operator=(ta);
+	}
+
+	trans_single() {
+	}
+
 
 	/*
 	 * Returns non-zero if the transformation might be non-Euclidean.

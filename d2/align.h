@@ -571,11 +571,11 @@ private:
 			/*
 			 * Required for STL sanity.
 			 */
-			run() {
+			run() : offset() {
 				init();
 			}
 
-			run(transformation _offset) {
+			run(transformation _offset) : offset() {
 				init(_offset);
 			}
 
@@ -664,7 +664,7 @@ private:
 				de_sum += _run.de_sum;
 			}
 
-			run(const run &_run) {
+			run(const run &_run) : offset() {
 
 				/*
 				 * Initialize
@@ -1276,7 +1276,7 @@ public:
 			     || (!finite(runs[0].get_error()) && finite(runs[1].get_error())));
 		}
 
-		diff_stat_t(ale_pos _mc_arg) {
+		diff_stat_t(ale_pos _mc_arg) : runs(), old_runs() {
 
 			mc_array.resize(_ma_card);
 
@@ -1341,6 +1341,7 @@ public:
 			 * Copy run information.
 			 */
 			runs = dst.runs;
+			old_runs = dst.old_runs;
 
 			/*
 			 * Copy diff variables
@@ -1354,7 +1355,7 @@ public:
 			return *this;
 		}
 
-		diff_stat_t(const diff_stat_t &dst) {
+		diff_stat_t(const diff_stat_t &dst) : runs(), old_runs() {
 			operator=(dst);
 		}
 
@@ -1578,7 +1579,11 @@ public:
 
 					test.confirm();
 
-					perturb_multipliers.push_back(adj_p / test.get_error_perturb());
+					if (finite(adj_p / test.get_error_perturb()))
+						perturb_multipliers.push_back(adj_p / test.get_error_perturb());
+					else
+						perturb_multipliers.push_back(1);
+
 				}
 
 				t_set.clear();
@@ -1617,7 +1622,7 @@ public:
 						continue;
 					}
 
-					old_runs[get_run_index(i)] = runs[1];
+					old_runs.insert(std::pair<old_run_index, run>(get_run_index(i), runs[1]));
 
 					perturb_multipliers[i] *= adj_p / runs[1].get_error_perturb();
 
@@ -1634,6 +1639,7 @@ public:
 					if (better()
 					 && runs[1].get_error() < runs[0].get_error())
 						best = runs[1];
+
 				}
 
 				runs.pop_back();

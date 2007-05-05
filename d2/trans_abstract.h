@@ -64,7 +64,7 @@ public:
 		bdcnum = 0;
 	}
 
-	trans_abstract (const trans_abstract &ta) {
+	trans_abstract &operator=(const trans_abstract &ta) {
 		scale_factor = ta.scale_factor;
 		input_width = ta.input_width;
 		input_height = ta.input_height;
@@ -75,6 +75,12 @@ public:
 
 		for (unsigned int d = 0; d < bdcnum; d++)
 			bdc[d] = ta.bdc[d];
+
+		return *this;
+	}
+
+	trans_abstract (const trans_abstract &ta) {
+		operator=(ta);
 	}
 
 	/*
@@ -310,6 +316,8 @@ public:
 	 * Check equality of transformation parameters.
 	 */
 	virtual int operator==(const trans_abstract &t) const {
+		ale_pos zero_tolerance = 0.000000000001;
+
 		if (scale() != t.scale())
 			return 0;
 
@@ -324,7 +332,7 @@ public:
 		} else {
 			assert (!t.is_projective());
 			for (int i = 0; i < 3; i++) 
-				if (eu_get(i) != t.eu_get(i))
+				if (fabs(eu_get(i) - t.eu_get(i)) > zero_tolerance)
 					return 0;
 		}
 

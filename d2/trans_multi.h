@@ -42,10 +42,18 @@ public:
 		current_element = 0;
 	}
 
-	trans_multi(const trans_multi &tm) : trans_abstract(*(trans_abstract *) &tm) {
+	trans_multi &operator=(const trans_multi &tm) {
+		this->trans_abstract::operator=(*((trans_abstract *) &tm));
+
 		trans_stack = tm.trans_stack;
 		full_support = tm.full_support;
 		current_element = tm.current_element;
+
+		return *this;
+	}
+
+	trans_multi(const trans_multi &tm) : trans_stack() {
+		operator=(tm);
 	}
 
 	trans_single get_element(unsigned int index) {
