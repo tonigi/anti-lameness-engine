@@ -1276,7 +1276,8 @@ public:
 			     || (!finite(runs[0].get_error()) && finite(runs[1].get_error())));
 		}
 
-		diff_stat_t(ale_pos _mc_arg) : runs(), old_runs() {
+		diff_stat_t(ale_pos _mc_arg) : runs(), old_runs(), mc_array(), 
+		                               perturb_multipliers() {
 
 			mc_array.resize(_ma_card);
 
@@ -1355,7 +1356,8 @@ public:
 			return *this;
 		}
 
-		diff_stat_t(const diff_stat_t &dst) : runs(), old_runs() {
+		diff_stat_t(const diff_stat_t &dst) : runs(), old_runs(), mc_array(),
+		                                      perturb_multipliers() {
 			operator=(dst);
 		}
 

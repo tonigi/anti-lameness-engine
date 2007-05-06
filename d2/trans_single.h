@@ -480,8 +480,16 @@ public:
 		for (int j = 0; j < 2; j++)
 			x[i][j] = round(x[i][j] / interval) * interval;
 
+		interval /= scale();
+
 		for (int i = 0; i < 2; i++)
-			eu[i] = round(eu[i] / (interval / scale())) * (interval / scale());
+			eu[i] = round(eu[i] / interval) * interval;
+
+		interval *= 2 * 180 / M_PI
+		          / sqrt(pow(unscaled_height(), 2) 
+			       + pow(unscaled_width(),  2));
+
+		eu[2] = round(eu[2] / interval) * interval;
 
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
