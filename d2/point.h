@@ -204,15 +204,4 @@ inline point operator*(double d, const point &p) {
 inline point operator*(float d, const point &p) {
 	return p.mult(d);
 }
-inline bool operator!=(const point &p, const point &q) {
-	ale_pos zero_tolerance = 0.000000000001;
-	for (int d = 0; d < 2; d++) {
-		if (fabs(p[0] - q[0]) > zero_tolerance)
-			return 1;
-		if (fabs(p[1] - q[1]) > zero_tolerance)
-			return 1;
-	}
-
-	return 0;
-}
 #endif

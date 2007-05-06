@@ -316,7 +316,11 @@ public:
 	 * Check equality of transformation parameters.
 	 */
 	virtual int operator==(const trans_abstract &t) const {
-		ale_pos zero_tolerance = 0.000000000001;
+		/*
+		 * Small tolerances (< 10^-6?) can cause odd errors,
+		 * possibly due to float<->double conversion issues.
+		 */
+		double zero_tolerance = 0.01;
 
 		if (scale() != t.scale())
 			return 0;
@@ -327,13 +331,20 @@ public:
 		if (is_projective()) {
 			assert (t.is_projective());
 			for (int i = 0; i < 4; i++)
-				if (gpt_get(i) != t.gpt_get(i))
+			for (int d = 0; d < 2; d++) {
+				double abs_difference = fabs(gpt_get(i)[d] - t.gpt_get(i)[d]);
+
+				if (abs_difference > zero_tolerance)
 					return 0;
+			}
 		} else {
 			assert (!t.is_projective());
-			for (int i = 0; i < 3; i++) 
-				if (fabs(eu_get(i) - t.eu_get(i)) > zero_tolerance)
+			for (int i = 0; i < 3; i++) {
+				double abs_difference = fabs(eu_get(i) - t.eu_get(i));
+
+				if (abs_difference > zero_tolerance)
 					return 0;
+			}
 		}
 
 		return 1;
