@@ -2440,13 +2440,24 @@ public:
 
 		offset.set_current_index(0);
 
-		transformation new_offset = follow(element, offset, lod);
+		if (perturb > 0) {
 
-		new_offset.set_current_index(0);
-		
-		element->old_initial_alignment = offset;
-		element->old_lod = lod;
-		offset = new_offset;
+			/*
+			 * Apply following logic
+			 */
+
+			transformation new_offset = follow(element, offset, lod);
+
+			new_offset.set_current_index(0);
+			
+			element->old_initial_alignment = offset;
+			element->old_lod = lod;
+			offset = new_offset;
+
+		} else {
+			element->old_initial_alignment = offset;
+			element->old_lod = lod;
+		}
 
 		struct scale_cluster si = scale_clusters[lod];
 		ale_pos _mc_arg = (_mc > 0) ? (_mc * pow(2, 2 * lod))
