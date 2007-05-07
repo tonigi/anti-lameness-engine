@@ -71,8 +71,8 @@ public:
 
 
 		// determine the final value by simple sampling:
-		for (float i = top; i <= bot; i += vert_step)
-		for (float j = lef; j <= rig; j += horiz_step) {
+		for (float i = top; i < bot + vert_step / 2; i += vert_step)
+		for (float j = lef; j < rig + horiz_step / 2; j += horiz_step) {
 
 			// calculate radius for given sample
 			ale_pos r = sqrt( i*i + j*j );

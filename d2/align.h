@@ -2597,7 +2597,7 @@ public:
 
 			if  (alignment_class > 0)
 			for (ale_pos rot = 30; rot > rot_lower; rot /= 2) 
-			for (ale_pos srot = -rot; srot <= rot; srot += rot * 2) {
+			for (ale_pos srot = -rot; srot < rot * 1.5; srot += rot * 2) {
 				int is_improved = 1;
 				while (is_improved) {
 					is_improved = 0;
