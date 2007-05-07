@@ -2530,7 +2530,7 @@ public:
 
 		if (perturb >= local_lower && local_gs != 0 && local_gs != 5) {
 			
-			ui::get()->aligning(perturb, lod);
+			ui::get()->global_alignment(perturb, lod);
 
 			std::vector<transformation> t_set;
 

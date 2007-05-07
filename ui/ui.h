@@ -134,7 +134,7 @@ protected:
 			 */
 			
 			LOAD_FILE, EXPOSURE_PASS_1,
-			LODCLUSTER_CREATE, PREMATCH, ALIGN, POSTMATCH,
+			LODCLUSTER_CREATE, PREMATCH, ALIGN, GLOBAL_ALIGN, POSTMATCH,
 			EXPOSURE_PASS_2, RENDERA, RENDERD, RENDERO, WRITED,
 			WRITEO, FRAME_DONE, SET_DONE, 
 			
@@ -365,6 +365,13 @@ public:
 	virtual void constructing_lod_clusters(ale_pos lod) {
 		status.code = status.LODCLUSTER_CREATE;
 		status.align_lod = lod;
+		update();
+	}
+
+	virtual void global_alignment(ale_pos perturb, ale_pos lod) {
+		status.perturb_size = perturb;
+		status.align_lod = lod;
+		status.code = status.GLOBAL_ALIGN;
 		update();
 	}
 

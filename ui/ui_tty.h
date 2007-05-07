@@ -156,7 +156,8 @@ private:
 			return;
 		}
 
-		if (status.code == status.ALIGN
+		if (status.code == status.GLOBAL_ALIGN
+		 || status.code == status.ALIGN
 		 || status.code == status.POSTMATCH
 		 || status.code == status.EXPOSURE_PASS_2) {
 			pad_align_status();
@@ -181,13 +182,17 @@ private:
 			case status_type::PREMATCH:
 				status_printf(3, "Calculating pre-alignment match", "Calculating match", "prematch");
 				break;
+			case status_type::GLOBAL_ALIGN:
 			case status_type::ALIGN:
-				status_printf(6, "Aligning [mc=%6.3g] [perturb=%6.3g] [lod=%6.3g] [exp_mult=%6.3g %6.3g %6.3g]", 
-						 "Aligning [mc=%6.3g] [perturb=%6.3g] [lod=%6.3g]", 
-						 "Aligning [mc=%6.3g] [perturb=%6.3g]", 
-						 "Aligning [mc=%6.3g]", 
-						 "Aligning...", 
+				status_printf(6, "%s [mc=%6.3g] [perturb=%6.3g] [lod=%6.3g] [exp_mult=%6.3g %6.3g %6.3g]", 
+						 "%s [mc=%6.3g] [perturb=%6.3g] [lod=%6.3g]", 
+						 "%s [mc=%6.3g] [perturb=%6.3g]", 
+						 "%s [mc=%6.3g]", 
+						 "%s...", 
 						 "align",
+						 (status.code == status_type::GLOBAL_ALIGN) 
+						 	? "Global alignment"
+						        : "Aligning",
 						 status.mc,
 						 status.perturb_size,
 						 pow(2, -status.align_lod),

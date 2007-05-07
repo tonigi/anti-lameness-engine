@@ -97,6 +97,11 @@ public:
 		printf("Constructing LOD cluster (%f)\n", lod);
 	}
 
+	void global_alignment(ale_pos perturb, ale_pos lod) {
+		status.perturb_size = perturb;
+		printf("Global alignment (perturb=%f, lod=%f).\n", perturb, lod);
+	}
+
 	void aligning(ale_pos perturb, ale_pos lod) {
 		perturb_timers[perturb].start();
 		status.perturb_size = perturb;
