@@ -2440,7 +2440,7 @@ public:
 
 		offset.set_current_index(0);
 
-		if (perturb > 0) {
+		if (perturb > 0 || element->is_default) {
 
 			/*
 			 * Apply following logic
