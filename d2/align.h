@@ -2104,6 +2104,8 @@ public:
 			 * alignment.
 			 */
 
+			ui::get()->following();
+
 			element->old_final_alignment.rescale (1 / pow(2, lod));
 			element->old_initial_alignment.rescale(1 / pow(2, lod - element->old_lod));
 
@@ -2167,6 +2169,8 @@ public:
 					new_offset.gpt_set(p);
 				}
 			}
+
+			ui::get()->set_offset(offset);
 		}
 
 		return new_offset;
@@ -2442,13 +2446,12 @@ public:
 
 		ui::get()->set_offset(offset);
 
-		if (perturb > 0 || element->is_default) {
+		if (perturb > 0) {
 
 			/*
 			 * Apply following logic
 			 */
 
-			ui::get()->following();
 			transformation new_offset = follow(element, offset, lod);
 
 			new_offset.set_current_index(0);
@@ -2457,7 +2460,6 @@ public:
 			element->old_lod = lod;
 			offset = new_offset;
 
-			ui::get()->set_offset(offset);
 		} else {
 			element->old_initial_alignment = offset;
 			element->old_lod = lod;

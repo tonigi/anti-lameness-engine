@@ -109,7 +109,7 @@ public:
 	}
 
 	void following() {
-		printf("Applying following logic.\n");
+		printf("Applying initial-final following logic.\n");
 	}
 
 	void set_orender_current(int num) {
