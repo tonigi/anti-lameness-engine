@@ -383,6 +383,9 @@ public:
 		update();
 	}
 
+	virtual void following() {
+	}
+
 	virtual void set_orender_current(int num) {
 		status.onum = num;
 		if (num == 0)

@@ -2438,6 +2438,8 @@ public:
 
 		}
 
+		ui::get()->set_offset(offset);
+
 		offset.set_current_index(0);
 
 		if (perturb > 0 || element->is_default) {
@@ -2446,6 +2448,7 @@ public:
 			 * Apply following logic
 			 */
 
+			ui::get()->following();
 			transformation new_offset = follow(element, offset, lod);
 
 			new_offset.set_current_index(0);
@@ -2454,6 +2457,7 @@ public:
 			element->old_lod = lod;
 			offset = new_offset;
 
+			ui::get()->set_offset(offset);
 		} else {
 			element->old_initial_alignment = offset;
 			element->old_lod = lod;
@@ -2524,7 +2528,6 @@ public:
 		ui::get()->prematching();
 		here.diff(si, offset, local_ax_count, m);
 		ui::get()->set_match(here.get_error());
-		ui::get()->set_offset(here.get_offset());
 
 		/*
 		 * Current and modified barrel distortion parameters

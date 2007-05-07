@@ -108,6 +108,10 @@ public:
 		printf("Aligning (perturb=%f, lod=%f).\n", perturb, lod);
 	}
 
+	void following() {
+		printf("Applying following logic.\n");
+	}
+
 	void set_orender_current(int num) {
 		printf("Preparing to render output (index %d)\n", num);
 	}
