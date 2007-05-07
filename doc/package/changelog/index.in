@@ -1,5 +1,7 @@
 V	0.8.8 prerelease
 
+o	Disable --follow when perturbation size is zero.
+
 o	Modify alignment procedure to select the best error from the
 	perturbation set instead of the first better error.
 
