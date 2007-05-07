@@ -2438,9 +2438,9 @@ public:
 
 		}
 
-		ui::get()->set_offset(offset);
-
 		offset.set_current_index(0);
+
+		ui::get()->set_offset(offset);
 
 		if (perturb > 0 || element->is_default) {
 
