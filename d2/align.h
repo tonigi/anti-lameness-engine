@@ -2176,11 +2176,32 @@ public:
 		return new_offset;
 	}
 
+	static void test_global(diff_stat_t *here, scale_cluster si, transformation t, 
+			int local_ax_count, int m, ale_pos local_gs_mo) {
+
+		diff_stat_t test(*here);
+
+		test.diff(si, t, local_ax_count, m);
+
+		unsigned int ovl = overlap(si, t, local_ax_count);
+
+		if (ovl >= local_gs_mo && test.better()) {
+			test.confirm();
+			*here = test;
+			ui::get()->set_match(here->get_error());
+			ui::get()->set_offset(here->get_offset());
+		} else {
+			test.discard();
+		}
+
+	}
+
 	/*
 	 * Get the set of global transformations for a given density
 	 */
-	static void get_global_set(std::vector<transformation> *set, 
-			scale_cluster si, transformation t, int local_gs, ale_pos adj_p) {
+	static void test_globals(diff_stat_t *here, 
+			scale_cluster si, transformation t, int local_gs, ale_pos adj_p,
+			int local_ax_count, int m, ale_pos local_gs_mo) {
 
 		transformation offset = t;
 
@@ -2219,7 +2240,7 @@ public:
 			for (ale_pos j = inner_min_t[1]; j <= inner_max_t[1]; j += adj_p) {
 				transformation test_t = offset;
 				test_t.translate(point(i, j));
-				set->push_back(test_t);
+				test_global(here, si, test_t, local_ax_count, m, local_gs_mo);
 			}
 		} 
 		
@@ -2233,25 +2254,25 @@ public:
 			for (ale_pos j = outer_min_t[1]; j <  inner_min_t[1]; j += adj_p) {
 				transformation test_t = offset;
 				test_t.translate(point(i, j));
-				set->push_back(test_t);
+				test_global(here, si, test_t, local_ax_count, m, local_gs_mo);
 			}
 			for (ale_pos i = outer_min_t[0]; i <= outer_max_t[0]; i += adj_p)
 			for (ale_pos j = outer_max_t[1]; j >  inner_max_t[1]; j -= adj_p) {
 				transformation test_t = offset;
 				test_t.translate(point(i, j));
-				set->push_back(test_t);
+				test_global(here, si, test_t, local_ax_count, m, local_gs_mo);
 			}
 			for (ale_pos i = outer_min_t[0]; i <  inner_min_t[0]; i += adj_p)
 			for (ale_pos j = outer_min_t[1]; j <= outer_max_t[1]; j += adj_p) {
 				transformation test_t = offset;
 				test_t.translate(point(i, j));
-				set->push_back(test_t);
+				test_global(here, si, test_t, local_ax_count, m, local_gs_mo);
 			}
 			for (ale_pos i = outer_max_t[0]; i >  inner_max_t[0]; i -= adj_p)
 			for (ale_pos j = outer_min_t[1]; j <= outer_max_t[1]; j += adj_p) {
 				transformation test_t = offset;
 				test_t.translate(point(i, j));
-				set->push_back(test_t);
+				test_global(here, si, test_t, local_ax_count, m, local_gs_mo);
 			}
 		}
 	}
@@ -2548,27 +2569,8 @@ public:
 			ui::get()->global_alignment(perturb, lod);
 			ui::get()->gs_mo(local_gs_mo);
 
-			std::vector<transformation> t_set;
-
-			get_global_set(&t_set, si, here.get_offset(), local_gs, adj_p);
-
-			for (unsigned int i = 0; i < t_set.size(); i++) {
-
-				transformation t = t_set[i];
-
-				diff_stat_t test(here);
-
-				test.diff(si, t, local_ax_count, m);
-
-				unsigned int ovl = overlap(si, t, local_ax_count);
-
-				if (ovl >= local_gs_mo && test.better()) {
-					test.confirm();
-					here = test;
-				} else {
-					test.discard();
-				}
-			}
+			test_globals(&here, si, here.get_offset(), local_gs, adj_p,
+					local_ax_count, m, local_gs_mo);
 
 			ui::get()->set_match(here.get_error());
 			ui::get()->set_offset(here.get_offset());
