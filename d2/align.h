@@ -2503,8 +2503,6 @@ public:
 
 		local_gs_mo /= pow(pow(2, lod), 2);
 
-		ui::get()->gs_mo(local_gs_mo);
-
 		/*
 		 * Pre-alignment exposure adjustment
 		 */
@@ -2544,9 +2542,11 @@ public:
 		 * Translational global search step
 		 */
 
-		if (perturb >= local_lower && local_gs != 0 && local_gs != 5) {
+		if (perturb >= local_lower && local_gs != 0 && local_gs != 5
+		 && (local_gs != 6 || element->is_default)) {
 			
 			ui::get()->global_alignment(perturb, lod);
+			ui::get()->gs_mo(local_gs_mo);
 
 			std::vector<transformation> t_set;
 
@@ -3559,6 +3559,8 @@ public:
 			_gs = 3;
 		} else if (!strcmp(type, "central")) {
 			_gs = 4;
+		} else if (!strcmp(type, "defaults")) {
+			_gs = 6;
 		} else if (!strcmp(type, "points")) {
 			_gs = 5;
 			keep();

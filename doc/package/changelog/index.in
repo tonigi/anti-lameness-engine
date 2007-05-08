@@ -7,7 +7,7 @@ o	Modify alignment procedure to select the best error from the
 
 o	Make --no-inc default.
 
-o	Enable global searches by default.
+o	Add 'defaults' global search option, and make this option default.
 
 o	Modify --gs-mo to allow specification as a percentage, and make 67%
 	default.

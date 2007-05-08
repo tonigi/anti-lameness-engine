@@ -90,7 +90,7 @@ int align::match_count = 0;
 ale_pos align::_mc = 0;
 int align::_mcd_limit = 1;
 int align::certainty_weights = 0;
-int align::_gs = 3;
+int align::_gs = 6;
 unsigned int align::_ma_card = 1;
 double align::_ma_cont = 100;
 
