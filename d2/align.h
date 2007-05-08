@@ -2209,7 +2209,7 @@ public:
 		point outer_min_t = -max + point(adj_p - 1, adj_p - 1);
 		point outer_max_t = point(si.accum->height(), si.accum->width()) - point(adj_p, adj_p);
 
-		if (local_gs == 1 || local_gs == 3 || local_gs == 4) {
+		if (local_gs == 1 || local_gs == 3 || local_gs == 4 || local_gs == 6) {
 
 			/*
 			 * Inner
@@ -2223,7 +2223,7 @@ public:
 			}
 		} 
 		
-		if (local_gs == 2 || local_gs == 3 || local_gs == -1) {
+		if (local_gs == 2 || local_gs == 3 || local_gs == -1 || local_gs == 6) {
 
 			/*
 			 * Outer
