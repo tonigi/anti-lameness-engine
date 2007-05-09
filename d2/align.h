@@ -295,7 +295,7 @@ private:
 	 */
 
 	static ale_pos _mc;
-	static int _mcd_limit;
+	static unsigned int _mcd_limit;
 
 	/*
 	 * Certainty weight flag
@@ -515,6 +515,12 @@ private:
 	 */
 
 	class diff_stat_t {
+	
+		struct removal_pair {
+			ale_pos error[2];
+			ale_pos divisor[2];
+			ale_pos zero_favorability_gradient;
+		};
 
 		struct run {
 
@@ -526,6 +532,8 @@ private:
 			point max, min;
 			ale_accum centroid[2], centroid_divisor;
 			ale_accum de_centroid[2], de_centroid_v, de_sum;
+
+			std::vector<removal_pair> errors_favoring[2];
 
 			typedef unsigned int hist_bin;
 
@@ -540,6 +548,10 @@ private:
 
 				result = 0;
 				divisor = 0;
+
+				errors_favoring[0].clear();
+				errors_favoring[1].clear();
+
 				hist_min_r = INT_MIN;
 
 				hist_min_d = INT_MIN;
@@ -577,6 +589,28 @@ private:
 
 			run(transformation _offset) : offset() {
 				init(_offset);
+			}
+
+			void add_removal(const removal_pair &rp) {
+				for (int r = 0; r < 2; r++) {
+					for (int i = errors_favoring[r].size();; i--) {
+
+						if (i == 0
+						 || (r && rp.zero_favorability_gradient
+						       >= errors_favoring[r][i - 1].zero_favorability_gradient)
+						 || (!r && rp.zero_favorability_gradient
+						 	<= errors_favoring[r][i - 1].zero_favorability_gradient)) {
+							std::vector<removal_pair>::iterator ii = errors_favoring[r].begin();
+							ii += i;
+
+							errors_favoring[r].insert(ii, rp);
+							break;
+						}
+					}
+
+					if (errors_favoring[r].size() > _mcd_limit)
+						errors_favoring[r].pop_back();
+				}
 			}
 
 			void add_hist(int r, int d, int count) {
@@ -644,6 +678,10 @@ private:
 			void add(const run &_run) {
 				result += _run.result;
 				divisor += _run.divisor;
+
+				for (int r = 0; r < 2; r++)
+					for (unsigned int i = 0; i < _run.errors_favoring[r].size(); i++)
+						add_removal(_run.errors_favoring[r][i]);
 
 				for (int r = 0; r < _run.hist_dim; r++)
 				for (int d = 0; d < _run.hist_dim; d++)
@@ -744,7 +782,7 @@ private:
 				for (int i = 0; i < with->hist_dim * with->hist_dim; i++)
 					whist[i] = with->histogram[i];
 
-				for (int r = 0; r < _mcd_limit; r++) {
+				for (unsigned int r = 0; r < _mcd_limit; r++) {
 					int max_gradient_bin = -1;
 					int max_gradient_hist = -1;
 					ale_accum max_gradient = 0;
