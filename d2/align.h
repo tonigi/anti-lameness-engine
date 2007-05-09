@@ -749,14 +749,48 @@ private:
 				return pow(result / divisor, 1/metric_exponent);
 			}
 
+			int check_synchronized_removal(const run *with) const {
+
+				if (hist_total < 100 || with->hist_total < 100)
+					return 0;
+
+				int sense = 0;
+
+				if (get_error() > with->get_error())
+					sense = 1;
+
+				if ((sense == 0 && !(get_error() < with->get_error()))
+				 || (sense == 1 && !(get_error() > with->get_error())))
+					return 0;
+
+				ale_accum error[2] = { with->result, this->result };
+				ale_accum divisor[2] = { with->divisor, this->divisor };
+
+				for (unsigned int i = 0; i < errors_favoring[sense].size(); i++)
+				for (unsigned int d = 0; d < 2; d++) {
+					error[d] -= errors_favoring[sense][i].error[d];
+					divisor[d] -= errors_favoring[sense][i].divisor[d];
+				}
+
+				for (int d = 0; d < 2; d++)
+					if (!(error[d] >= 0)
+					 || !(divisor[d] >= 0))
+					 	return 0;
+
+				if ((sense == 0 && !(error[0] / divisor[0] > error[1] / divisor[1]))
+				 || (sense == 1 && !(error[0] / divisor[0] < error[1] / divisor[1])))
+				 	return 0;
+
+				return 1;
+			}
+
 			/*
 			 * XXX: A better removal technique would probably match
-			 * removals between compared transformations, but this would
-			 * probably require traversing the actual images rather than
-			 * traversing histograms.  We use this simpler approach for
-			 * now, which is likely to under-estimate reliability for any
-			 * given removal count, due to its less constrained method of
-			 * performing removals.
+			 * removals between compared transformations (see
+			 * check_synchronized_removal).  This simpler approach
+			 * is likely to under-estimate reliability for any
+			 * given removal count, due to its less constrained
+			 * method of performing removals.
 			 */
 			int check_removal(const run *with) const {
 
@@ -1247,7 +1281,7 @@ public:
 			if (get_mc() >= 1)
 				return 1;
 
-			if (!runs[1].check_removal(&runs[0]))
+			if (!runs[1].check_synchronized_removal(&runs[0]))
 				return 0;
 
 			memo_entry me(frame, runs[1].offset, runs[0].offset, get_mc());
