@@ -593,13 +593,17 @@ private:
 
 			void add_removal(const removal_pair &rp) {
 				for (int r = 0; r < 2; r++) {
-					for (int i = errors_favoring[r].size();; i--) {
+					for (unsigned int i = errors_favoring[r].size();; i--) {
 
 						if (i == 0
 						 || (r && rp.zero_favorability_gradient
 						       >= errors_favoring[r][i - 1].zero_favorability_gradient)
 						 || (!r && rp.zero_favorability_gradient
 						 	<= errors_favoring[r][i - 1].zero_favorability_gradient)) {
+
+							if (i == _mcd_limit)
+								break;
+
 							std::vector<removal_pair>::iterator ii = errors_favoring[r].begin();
 							ii += i;
 
@@ -610,6 +614,8 @@ private:
 
 					if (errors_favoring[r].size() > _mcd_limit)
 						errors_favoring[r].pop_back();
+
+					assert(errors_favoring[r].size() <= _mcd_limit);
 				}
 			}
 
