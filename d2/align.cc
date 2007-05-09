@@ -279,7 +279,7 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 		   && r[1] <= c.input->width() - 1))
 			r = point::undefined();
 
-		sargs->runs.back().sample(f, c, i, j, q, r);
+		sargs->runs.back().sample(f, c, i, j, q, r, runs.front());
 	}
 
 	return NULL;

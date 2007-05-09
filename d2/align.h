@@ -852,7 +852,8 @@ private:
 				return 0;
 			}
 
-			void sample(int f, scale_cluster c, int i, int j, point t, point u) {
+			void sample(int f, scale_cluster c, int i, int j, point t, point u,
+					const run &comparison) {
 
 				pixel pa = c.accum->get_pixel(i, j);
 
@@ -967,6 +968,24 @@ private:
 					de_centroid_v += de * t.lengthto(u);
 
 					de_sum += de;
+
+					removal_pair rp;
+
+					rp.error[0] = this_result[0];
+					rp.error[1] = this_result[1];
+					rp.divisor[0] = this_divisor[0];
+					rp.divisor[1] = this_divisor[1];
+
+					ale_accum result_approx = comparison.result;
+					ale_accum divisor_approx = comparison.divisor;
+
+					rp.zero_favorability_gradient = 
+						(result_approx - rp.error[1])
+					      / (divisor_approx - rp.error[1])
+					      - (result_approx - rp.error[0])
+					      / (divisor_approx - rp.error[0]);
+
+					add_removal(rp);
 				}
 
 				result += (this_result[0]);
