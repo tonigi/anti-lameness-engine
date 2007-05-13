@@ -1,9 +1,23 @@
 V	0.8.8 prerelease
 
-o	Disable --follow when perturbation size is zero.
+o	Make --16bpc default.
 
-o	Modify alignment procedure to select the best error from the
-	perturbation set instead of the first better error.
+o	Add extents calculation to d2::render::ipc to limit the area examined during 
+	exposure re-estimation.
+
+o	Provide a new cache of fixed size for input images, defaulting to 256MB, 
+	adjustable via the --cache option.
+
+o	Add error statistics for calculating center of rotation and perturbation size
+	for alignment.
+
+o	Add loop avoidance for dynamic monte carlo alignment.
+
+o	Reduce --mcd-removal default to 10.
+
+o	Use synchronized instead of unsynchronized dynamic monte carlo removal checks.
+
+o	Disable --follow in the non-default case when perturbation size is zero.
 
 o	Make --no-inc default.
 
