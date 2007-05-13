@@ -104,6 +104,7 @@ const point **align::cp_array = NULL;
 unsigned int align::cp_count = 0;
 
 std::vector<align::diff_stat_t::memo_entry> align::diff_stat_t::memos;
+rng_t align::diff_stat_t::loop_handling_randomness;
 
 void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 

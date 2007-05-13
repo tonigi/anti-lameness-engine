@@ -525,6 +525,7 @@ private:
 		struct run {
 
 			transformation offset;
+			ale_pos perturb;
 
 			ale_accum result;
 			ale_accum divisor;
@@ -587,8 +588,9 @@ private:
 				init();
 			}
 
-			run(transformation _offset) : offset() {
+			run(transformation _offset, ale_pos perturb) : offset() {
 				init(_offset);
+				this->perturb = perturb;
 			}
 
 			void add_removal(const removal_pair &rp) {
@@ -1112,19 +1114,24 @@ private:
 		class memo_entry {
 		public:
 			int frame;
+			ale_pos perturb;
 			transformation offset[2];
 			ale_pos mc;
 
-			memo_entry(int _frame, transformation better, transformation worse, ale_pos _mc) {
+			memo_entry(int _frame, ale_pos _perturb, transformation dest, transformation origin, ale_pos _mc) {
 				frame = _frame;
-				offset[0] = better;
-				offset[1] = worse;
+				perturb = _perturb;
+				offset[0] = dest;
+				offset[1] = origin;
 				mc = _mc;
 			}
 
 			int subequals(const memo_entry &m, int o, int u) const {
 
 				if (frame != m.frame)
+					return 0;
+
+				if (perturb != m.perturb)
 					return 0;
 
 				if (offset[o] != m.offset[u])
@@ -1138,7 +1145,7 @@ private:
 			}
 
 			int conflicts(const memo_entry &m) const {
-				memo_entry mr(m.frame, m.offset[1], m.offset[0], mc);
+				memo_entry mr(m.frame, m.perturb, m.offset[1], m.offset[0], mc);
 
 				return equals(mr);
 			}
@@ -1146,7 +1153,10 @@ private:
 
 		static std::vector<memo_entry> memos;
 
+		static rng_t loop_handling_randomness;
+
 		static int is_loop(std::vector<memo_entry> mf) {
+#if 0
 			assert (mf.size() > 0);
 
 			/*
@@ -1173,6 +1183,12 @@ private:
 			}
 
 			return 0;
+#else
+			if (loop_handling_randomness.get() % 10 == 0)
+				return 1;
+
+			return 0;
+#endif
 		}
 
 		int get_current_index() const {
@@ -1193,12 +1209,17 @@ private:
 		}
 
 public:
-		void diff(struct scale_cluster c, transformation t, int _ax_count, int f) {
+		static void clear_memos() {
+			memos.clear();
+		}
+
+		void diff(struct scale_cluster c, ale_pos perturb, transformation t, 
+				int _ax_count, int f) {
 
 			if (runs.size() == 2)
-				runs[1] = run(t);
+				runs[1] = run(t, perturb);
 			else
-				runs.push_back(run(t));
+				runs.push_back(run(t, perturb));
 
 			si = c;
 			ax_count = _ax_count;
@@ -1262,14 +1283,17 @@ public:
 	private:
 		void rediff() {
 			std::vector<transformation> t_array;
+			std::vector<ale_pos> p_array;
 
-			for (unsigned int r = 0; r < runs.size(); r++)
+			for (unsigned int r = 0; r < runs.size(); r++) {
 				t_array.push_back(runs[r].offset);
+				p_array.push_back(runs[r].perturb);
+			}
 
 			runs.clear();
 
 			for (unsigned int r = 0; r < t_array.size(); r++)
-				diff(si, t_array[r], ax_count, frame);
+				diff(si, p_array[r], t_array[r], ax_count, frame);
 		}
 
 		int reliable() const {
@@ -1284,7 +1308,8 @@ public:
 			if (!runs[1].check_synchronized_removal(&runs[0]))
 				return 0;
 
-			memo_entry me(frame, runs[1].offset, runs[0].offset, get_mc());
+			memo_entry me(frame, runs[1].perturb, runs[1].offset,
+					runs[0].offset, get_mc());
 
 			int better = 1;
 
@@ -1296,21 +1321,15 @@ public:
 
 			for (unsigned int i = 0; i < memos.size(); i++) {
 
-				if (me.equals(memos[i])) {
+				if (better && me.subequals(memos[i], 1, 1)) {
 					if (me.mc > memos[i].mc) {
 						memos[i] = me;
 						return 1;
 					}
 
-					std::vector<memo_entry> mf;
-					mf.push_back(me);
-
-					if (is_loop(mf))
-						return 0;
-
-					return 1;
+					return 0;
 				}
-				if (me.conflicts(memos[i])) {
+				if (0 && me.conflicts(memos[i])) {
 					if (me.mc > memos[i].mc) {
 						memos[i] = me;
 						return 1;
@@ -1320,8 +1339,10 @@ public:
 				}
 			}
 
+#if 0
 			if (better)
 				memos.push_back(me);
+#endif
 
 			return 1;
 		}
@@ -1660,7 +1681,7 @@ public:
 			runs.pop_back();
 		}
 
-		void perturb_test(ale_pos adj_p, ale_pos adj_o, ale_pos adj_b, 
+		void perturb_test(ale_pos perturb, ale_pos adj_p, ale_pos adj_o, ale_pos adj_b, 
 				ale_pos *current_bd, ale_pos *modified_bd) {
 
 			assert(runs.size() == 1);
@@ -1674,7 +1695,7 @@ public:
 				for (unsigned int i = 0; i < t_set.size(); i++) {
 					diff_stat_t test = *this;
 
-					test.diff(si, t_set[i], ax_count, frame);
+					test.diff(si, perturb, t_set[i], ax_count, frame);
 
 					test.confirm();
 
@@ -1705,7 +1726,7 @@ public:
 					if (tested[i])
 						continue;
 
-					diff(si, t_set[i], ax_count, frame);
+					diff(si, perturb, t_set[i], ax_count, frame);
 
 					if (!(i < perturb_multipliers.size())
 					 || !finite(perturb_multipliers[i])) {
@@ -1736,8 +1757,11 @@ public:
 					tested[i] = 1;
 
 					if (better()
-					 && runs[1].get_error() < runs[0].get_error())
+					 && runs[1].get_error() < runs[0].get_error()) {
+						memos.push_back(memo_entry(frame, runs[1].perturb,
+							runs[1].offset, runs[0].offset, get_mc()));
 						best = runs[1];
+					}
 
 				}
 
@@ -2274,11 +2298,11 @@ public:
 	}
 
 	static void test_global(diff_stat_t *here, scale_cluster si, transformation t, 
-			int local_ax_count, int m, ale_pos local_gs_mo) {
+			int local_ax_count, int m, ale_pos local_gs_mo, ale_pos perturb) {
 
 		diff_stat_t test(*here);
 
-		test.diff(si, t, local_ax_count, m);
+		test.diff(si, perturb, t, local_ax_count, m);
 
 		unsigned int ovl = overlap(si, t, local_ax_count);
 
@@ -2298,7 +2322,7 @@ public:
 	 */
 	static void test_globals(diff_stat_t *here, 
 			scale_cluster si, transformation t, int local_gs, ale_pos adj_p,
-			int local_ax_count, int m, ale_pos local_gs_mo) {
+			int local_ax_count, int m, ale_pos local_gs_mo, ale_pos perturb) {
 
 		transformation offset = t;
 
@@ -2337,7 +2361,7 @@ public:
 			for (ale_pos j = inner_min_t[1]; j <= inner_max_t[1]; j += adj_p) {
 				transformation test_t = offset;
 				test_t.translate(point(i, j));
-				test_global(here, si, test_t, local_ax_count, m, local_gs_mo);
+				test_global(here, si, test_t, local_ax_count, m, local_gs_mo, perturb);
 			}
 		} 
 		
@@ -2351,25 +2375,25 @@ public:
 			for (ale_pos j = outer_min_t[1]; j <  inner_min_t[1]; j += adj_p) {
 				transformation test_t = offset;
 				test_t.translate(point(i, j));
-				test_global(here, si, test_t, local_ax_count, m, local_gs_mo);
+				test_global(here, si, test_t, local_ax_count, m, local_gs_mo, perturb);
 			}
 			for (ale_pos i = outer_min_t[0]; i <= outer_max_t[0]; i += adj_p)
 			for (ale_pos j = outer_max_t[1]; j >  inner_max_t[1]; j -= adj_p) {
 				transformation test_t = offset;
 				test_t.translate(point(i, j));
-				test_global(here, si, test_t, local_ax_count, m, local_gs_mo);
+				test_global(here, si, test_t, local_ax_count, m, local_gs_mo, perturb);
 			}
 			for (ale_pos i = outer_min_t[0]; i <  inner_min_t[0]; i += adj_p)
 			for (ale_pos j = outer_min_t[1]; j <= outer_max_t[1]; j += adj_p) {
 				transformation test_t = offset;
 				test_t.translate(point(i, j));
-				test_global(here, si, test_t, local_ax_count, m, local_gs_mo);
+				test_global(here, si, test_t, local_ax_count, m, local_gs_mo, perturb);
 			}
 			for (ale_pos i = outer_max_t[0]; i >  inner_max_t[0]; i -= adj_p)
 			for (ale_pos j = outer_min_t[1]; j <= outer_max_t[1]; j += adj_p) {
 				transformation test_t = offset;
 				test_t.translate(point(i, j));
-				test_global(here, si, test_t, local_ax_count, m, local_gs_mo);
+				test_global(here, si, test_t, local_ax_count, m, local_gs_mo, perturb);
 			}
 		}
 	}
@@ -2644,7 +2668,7 @@ public:
 		 */
 
 		ui::get()->prematching();
-		here.diff(si, offset, local_ax_count, m);
+		here.diff(si, perturb, offset, local_ax_count, m);
 		ui::get()->set_match(here.get_error());
 
 		/*
@@ -2667,7 +2691,7 @@ public:
 			ui::get()->gs_mo(local_gs_mo);
 
 			test_globals(&here, si, here.get_offset(), local_gs, adj_p,
-					local_ax_count, m, local_gs_mo);
+					local_ax_count, m, local_gs_mo, perturb);
 
 			ui::get()->set_match(here.get_error());
 			ui::get()->set_offset(here.get_offset());
@@ -2785,7 +2809,7 @@ public:
 			for (int k = lod; k > 0; k--)
 				o.rescale(0.5);
 
-			here.diff(si, o, local_ax_count, m);
+			here.diff(si, perturb, o, local_ax_count, m);
 			here.confirm();
 			ui::get()->set_match(here.get_error());
 			ui::get()->set_offset(here.get_offset());
@@ -2835,17 +2859,18 @@ public:
 
 			diff_stat_t old_here = here;
 
-			here.perturb_test(adj_p, adj_o, adj_b, current_bd, modified_bd);
+			here.perturb_test(perturb, adj_p, adj_o, adj_b, current_bd, modified_bd);
 
 			if (here.get_offset() == old_here.get_offset())
 				stable_count++;
 			else
 				stable_count = 0;
 
-			if (stable_count == 5) {
+			if (stable_count == 5 || offset.is_projective() && stable_count > 0) {
 
 				stable_count = 0;
 
+				here.clear_memos();
 				here.calculate_element_region();
 
 				if (here.get_current_index() + 1 < _ma_card) {
@@ -2921,7 +2946,7 @@ public:
 
 		ui::get()->postmatching();
 		offset.use_full_support();
-		here.diff(scale_clusters[0], offset, local_ax_count, m);
+		here.diff(scale_clusters[0], perturb, offset, local_ax_count, m);
 		here.confirm();
 		offset.use_restricted_support();
 		ui::get()->set_match(here.get_error());
