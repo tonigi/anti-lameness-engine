@@ -1715,8 +1715,6 @@ public:
 			int found_unreliable = 1;
 			std::vector<int> tested(t_set.size(), 0);
 
-			run best = runs[0];
-
 			while (found_unreliable) {
 
 				found_unreliable = 0;
@@ -1770,18 +1768,15 @@ public:
 					 && runs[1].get_error() < runs[0].get_error()) {
 						memos.push_back(memo_entry(frame, runs[1].perturb,
 							runs[1].offset, runs[0].offset, get_mc()));
-						best = runs[1];
+						runs[0] = runs[1];
+						runs.pop_back();
+						return;
 					}
 
 				}
 
 				if (runs.size() > 1)
 					runs.pop_back();
-
-				if (best.offset != runs[0].offset) {
-					runs[0] = best;
-					return;
-				}
 
 				if (!found_unreliable)
 					return;
@@ -2878,7 +2873,7 @@ public:
 			else
 				stable_count = 0;
 
-			if (stable_count == 5 || offset.is_projective() && stable_count > 0) {
+			if (stable_count == 20) {
 
 				stable_count = 0;
 
