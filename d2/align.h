@@ -1682,7 +1682,7 @@ public:
 		}
 
 		void perturb_test(ale_pos perturb, ale_pos adj_p, ale_pos adj_o, ale_pos adj_b, 
-				ale_pos *current_bd, ale_pos *modified_bd) {
+				ale_pos *current_bd, ale_pos *modified_bd, int stable) {
 
 			assert(runs.size() == 1);
 
@@ -1722,6 +1722,16 @@ public:
 				found_unreliable = 0;
 
 				for (unsigned int i = 0; i < t_set.size(); i++) {
+
+					/*
+					 * Check for stability
+					 */
+
+					old_run_index ori = get_run_index(i);
+					if (stable
+					 && old_runs.count(ori)
+					 && old_runs[ori].offset == t_set[i])
+					 	tested[i] = 1;
 
 					if (tested[i])
 						continue;
@@ -1765,7 +1775,8 @@ public:
 
 				}
 
-				runs.pop_back();
+				if (runs.size() > 1)
+					runs.pop_back();
 
 				if (best.offset != runs[0].offset) {
 					runs[0] = best;
@@ -2859,7 +2870,8 @@ public:
 
 			diff_stat_t old_here = here;
 
-			here.perturb_test(perturb, adj_p, adj_o, adj_b, current_bd, modified_bd);
+			here.perturb_test(perturb, adj_p, adj_o, adj_b, current_bd, modified_bd,
+				stable_count);
 
 			if (here.get_offset() == old_here.get_offset())
 				stable_count++;
