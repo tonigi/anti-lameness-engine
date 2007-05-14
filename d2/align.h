@@ -526,6 +526,7 @@ private:
 
 			transformation offset;
 			ale_pos perturb;
+			ale_pos mc;
 
 			ale_accum result;
 			ale_accum divisor;
@@ -576,8 +577,10 @@ private:
 				de_sum = 0;
 			}
 
-			void init(transformation _offset) {
+			void init(transformation _offset, ale_pos _perturb, ale_pos _mc) {
 				offset = _offset;
+				perturb = _perturb;
+				mc = _mc;
 				init();
 			}
 
@@ -588,9 +591,8 @@ private:
 				init();
 			}
 
-			run(transformation _offset, ale_pos perturb) : offset() {
-				init(_offset);
-				this->perturb = perturb;
+			run(transformation _offset, ale_pos _perturb, ale_pos _mc) : offset() {
+				init(_offset, _perturb, _mc);
 			}
 
 			void add_removal(const removal_pair &rp) {
@@ -715,7 +717,7 @@ private:
 				/*
 				 * Initialize
 				 */
-				init(_run.offset);
+				init(_run.offset, _run.perturb, _run.mc);
 
 				/*
 				 * Add
@@ -733,7 +735,7 @@ private:
 				/*
 				 * Initialize
 				 */
-				init(_run.offset);
+				init(_run.offset, _run.perturb, _run.mc);
 
 				/*
 				 * Add
@@ -1096,8 +1098,9 @@ private:
 		 * each multi-alignment element.
 		 */
 
-		typedef std::pair<unsigned int, unsigned int> old_run_index;
-		std::map<old_run_index, run> old_runs;
+		typedef std::pair<unsigned int, unsigned int> run_index;
+		std::map<run_index, run> old_runs;
+		std::map<run_index, ale_pos> current_mc;
 
 		static void *diff_subdomain(void *args);
 
@@ -1200,32 +1203,37 @@ private:
 		int ax_count;
 		int frame;
 
-		std::vector<ale_accum> mc_array;
+		ale_accum mc_default;
 
 		std::vector<ale_pos> perturb_multipliers;
 
+public:
 		ale_pos get_mc() const {
-			return mc_array[get_current_index()];
+			assert(runs.size() >= 1);
+			return runs[0].mc;
 		}
 
-public:
 		static void clear_memos() {
 			memos.clear();
 		}
 
-		void diff(struct scale_cluster c, ale_pos perturb, transformation t, 
+		void diff(struct scale_cluster c, ale_pos _mc_arg, ale_pos perturb, 
+				transformation t, 
 				int _ax_count, int f) {
 
 			if (runs.size() == 2)
-				runs[1] = run(t, perturb);
-			else
-				runs.push_back(run(t, perturb));
+				runs.pop_back();
+
+			if (runs.size() > 0 && runs[0].mc != _mc_arg) {
+				runs[0].mc = _mc_arg;
+				rediff();
+			}
+
+			runs.push_back(run(t, perturb, _mc_arg));
 
 			si = c;
 			ax_count = _ax_count;
 			frame = f;
-
-			ale_pos _mc_arg = get_mc();
 
 			assert (_mc_arg > 0);
 
@@ -1284,16 +1292,18 @@ public:
 		void rediff() {
 			std::vector<transformation> t_array;
 			std::vector<ale_pos> p_array;
+			std::vector<ale_pos> mc_array;
 
 			for (unsigned int r = 0; r < runs.size(); r++) {
 				t_array.push_back(runs[r].offset);
 				p_array.push_back(runs[r].perturb);
+				mc_array.push_back(runs[r].mc);
 			}
 
 			runs.clear();
 
 			for (unsigned int r = 0; r < t_array.size(); r++)
-				diff(si, p_array[r], t_array[r], ax_count, frame);
+				diff(si, mc_array[r], p_array[r], t_array[r], ax_count, frame);
 		}
 
 		int reliable() const {
@@ -1348,32 +1358,6 @@ public:
 		}
 
 	public:
-		void mcd_increase() {
-			assert (_mc <= 0);
-
-			mc_array[get_current_index()] *= 2;
-
-			ui::get()->alignment_monte_carlo_parameter(
-					mc_array[get_current_index()]);
-
-			rediff();
-		}
-
-		void mcd_decrease() {
-			assert (_mc <= 0);
-
-			mc_array[get_current_index()] /= 2;
-
-			ui::get()->alignment_monte_carlo_parameter(get_mc());
-
-			rediff();
-		}
-
-	private:
-
-		void try_decrease();
-
-	public:
 		int better() {
 			assert(runs.size() >= 2);
 			assert(runs[0].offset.scale() == runs[1].offset.scale());
@@ -1394,15 +1378,23 @@ public:
 			     || (!finite(runs[0].get_error()) && finite(runs[1].get_error())));
 		}
 
-		diff_stat_t(ale_pos _mc_arg) : runs(), old_runs(), mc_array(), 
+		diff_stat_t(ale_pos _mc_arg) : runs(), old_runs(), current_mc(),
 		                               perturb_multipliers() {
 
-			mc_array.resize(_ma_card);
+			mc_default = _mc_arg;
 
-			for (unsigned int ma_index = 0; ma_index < _ma_card; ma_index++)
-				mc_array[ma_index] = _mc_arg;
+			// ui::get()->alignment_monte_carlo_parameter(_mc_arg);
+		}
 
-			ui::get()->alignment_monte_carlo_parameter(_mc_arg);
+		run_index get_run_index(unsigned int perturb_index) {
+			return run_index(get_current_index(), perturb_index);
+		}
+
+		run &get_run(unsigned int perturb_index) {
+			run_index index = get_run_index(perturb_index);
+
+			assert(old_runs.count(index));
+			return old_runs[index];
 		}
 
 		void rescale(ale_pos scale, scale_cluster _si) {
@@ -1413,11 +1405,36 @@ public:
 			runs[0].rescale(scale);
 			
 			if (_mc > 0) {
-				for (unsigned int ma_index = 0;
-				     ma_index < _ma_card;
-				     ma_index++)
-					mc_array[ma_index] /= pow(scale, 2);
+				for (unsigned int i = 0;
+				     current_mc.count(run_index(i, 0)); i++)
+				for (unsigned int j = 0; 
+				     current_mc.count(run_index(i, j)); j++)
+					current_mc[run_index(i, j)] /= pow(scale, 2);
+
+				runs[0].mc /= pow(scale, 2);
+
+				mc_default /= pow(scale, 2);
+
 			}
+
+			ui::get()->alignment_monte_carlo_parameter(get_mc());
+
+			rediff();
+		}
+
+		void reperturb() {
+			assert(runs.size() == 1);
+
+			if (_mc > 0)
+				return;
+
+			for (unsigned int i = 0;
+			     current_mc.count(run_index(i, 0)); i++)
+			for (unsigned int j = 0; 
+			     current_mc.count(run_index(i, j)); j++)
+				current_mc[run_index(i, j)] /= 2;
+
+			runs[0].mc /= 2;
 
 			ui::get()->alignment_monte_carlo_parameter(get_mc());
 
@@ -1461,11 +1478,12 @@ public:
 			 */
 			runs = dst.runs;
 			old_runs = dst.old_runs;
+			current_mc = dst.current_mc;
 
 			/*
 			 * Copy diff variables
 			 */
-			mc_array = dst.mc_array;
+			mc_default = dst.mc_default;
 			si = dst.si;
 			ax_count = dst.ax_count;
 			frame = dst.frame;
@@ -1474,7 +1492,7 @@ public:
 			return *this;
 		}
 
-		diff_stat_t(const diff_stat_t &dst) : runs(), old_runs(), mc_array(),
+		diff_stat_t(const diff_stat_t &dst) : runs(), old_runs(),
 		                                      perturb_multipliers() {
 			operator=(dst);
 		}
@@ -1513,10 +1531,35 @@ public:
 			return runs[0].get_error();
 		}
 
-		old_run_index get_run_index(unsigned int perturb_index) {
-			return old_run_index(get_current_index(), perturb_index);
+	private:
+
+		void mcd_increase() {
+			assert (_mc <= 0);
+			assert (runs.size() > 0);
+
+			for (unsigned int r = 0; r < runs.size(); r++)
+				runs[r].mc *= 2;
+
+		// 	ui::get()->alignment_monte_carlo_parameter(get_mc());
+
+			rediff();
 		}
 
+		void mcd_decrease() {
+			assert (_mc <= 0);
+			assert (runs.size() > 0);
+
+			for (unsigned int r = 0; r < runs.size(); r++)
+				runs[r].mc /= 2;
+
+		//	ui::get()->alignment_monte_carlo_parameter(get_mc());
+
+			rediff();
+		}
+
+		void try_decrease();
+
+	public:
 		/*
 		 * Get the set of transformations produced by a given perturbation
 		 */
@@ -1571,7 +1614,7 @@ public:
 
 				test_t = get_offset();
 
-				old_run_index ori = get_run_index(set->size());
+				run_index ori = get_run_index(set->size());
 				point centroid = point::undefined();
 
 				if (!old_runs.count(ori))
@@ -1695,7 +1738,7 @@ public:
 				for (unsigned int i = 0; i < t_set.size(); i++) {
 					diff_stat_t test = *this;
 
-					test.diff(si, perturb, t_set[i], ax_count, frame);
+					test.diff(si, mc_default, perturb, t_set[i], ax_count, frame);
 
 					test.confirm();
 
@@ -1715,26 +1758,42 @@ public:
 			int found_unreliable = 1;
 			std::vector<int> tested(t_set.size(), 0);
 
+			ale_pos current_mc_arg = mc_default;
+
+			for (unsigned int i = 0; i < t_set.size(); i++) {
+				run_index ori = get_run_index(i);
+
+				/*
+				 * Check for stability
+				 */
+				if (stable
+				 && old_runs.count(ori)
+				 && old_runs[ori].offset == t_set[i])
+					tested[i] = 1;
+
+				/*
+				 * Update starting mc arg.
+				 */
+				if (current_mc.count(ori) && current_mc[ori] < current_mc_arg)
+					current_mc_arg = current_mc[ori];
+
+				ui::get()->set_offset(t_set[i]);
+			}
+
+			std::vector<ale_pos> perturb_multipliers_original = perturb_multipliers;
+
 			while (found_unreliable) {
+
+				ui::get()->alignment_monte_carlo_parameter(current_mc_arg);
 
 				found_unreliable = 0;
 
 				for (unsigned int i = 0; i < t_set.size(); i++) {
 
-					/*
-					 * Check for stability
-					 */
-
-					old_run_index ori = get_run_index(i);
-					if (stable
-					 && old_runs.count(ori)
-					 && old_runs[ori].offset == t_set[i])
-					 	tested[i] = 1;
-
 					if (tested[i])
 						continue;
 
-					diff(si, perturb, t_set[i], ax_count, frame);
+					diff(si, current_mc_arg, perturb, t_set[i], ax_count, frame);
 
 					if (!(i < perturb_multipliers.size())
 					 || !finite(perturb_multipliers[i])) {
@@ -1750,22 +1809,37 @@ public:
 						continue;
 					}
 
-					old_runs.insert(std::pair<old_run_index, run>(get_run_index(i), runs[1]));
+					run_index ori = get_run_index(i);
 
-					perturb_multipliers[i] *= adj_p / runs[1].get_error_perturb();
+					if (old_runs.count(ori) == 0)
+						old_runs.insert(std::pair<run_index, run>(ori, runs[1]));
+					else 
+						old_runs[ori] = runs[1];
+
+					perturb_multipliers[i] = perturb_multipliers_original[i]
+						* adj_p / runs[1].get_error_perturb();
 
 					if (!finite(perturb_multipliers[i]))
 						perturb_multipliers[i] = 1;
 
-					if (!reliable()) {
+					if ((!current_mc.count(ori)
+					  && current_mc_arg < 1)
+					 || (current_mc.count(ori)
+					  && current_mc[ori] > current_mc_arg
+					  && current_mc_arg < 1)
+					 || !reliable()) {
 						found_unreliable = 1;
 						continue;
 					}
 
+					current_mc[ori] = runs[1].mc;
 					tested[i] = 1;
 
 					if (better()
-					 && runs[1].get_error() < runs[0].get_error()) {
+					 && runs[1].get_error() < runs[0].get_error()
+					 && perturb_multipliers[i] 
+					  / perturb_multipliers_original[i] < 2) {
+						current_mc[ori] = runs[1].mc;
 						memos.push_back(memo_entry(frame, runs[1].perturb,
 							runs[1].offset, runs[0].offset, get_mc()));
 						runs[0] = runs[1];
@@ -1781,7 +1855,7 @@ public:
 				if (!found_unreliable)
 					return;
 
-				mcd_increase();
+				current_mc_arg *= 2;
 			}
 		}
 
@@ -2308,7 +2382,7 @@ public:
 
 		diff_stat_t test(*here);
 
-		test.diff(si, perturb, t, local_ax_count, m);
+		test.diff(si, test.get_mc(), perturb, t, local_ax_count, m);
 
 		unsigned int ovl = overlap(si, t, local_ax_count);
 
@@ -2674,7 +2748,7 @@ public:
 		 */
 
 		ui::get()->prematching();
-		here.diff(si, perturb, offset, local_ax_count, m);
+		here.diff(si, _mc_arg, perturb, offset, local_ax_count, m);
 		ui::get()->set_match(here.get_error());
 
 		/*
@@ -2815,7 +2889,7 @@ public:
 			for (int k = lod; k > 0; k--)
 				o.rescale(0.5);
 
-			here.diff(si, perturb, o, local_ax_count, m);
+			here.diff(si, here.get_mc(), perturb, o, local_ax_count, m);
 			here.confirm();
 			ui::get()->set_match(here.get_error());
 			ui::get()->set_offset(here.get_offset());
@@ -2892,9 +2966,7 @@ public:
 
 					perturb *= 0.5;
 
-					if (_mc <= 0) {
-						here.mcd_decrease();
-					}
+					here.reperturb();
 
 					if (lod > 0) {
 
@@ -2953,7 +3025,7 @@ public:
 
 		ui::get()->postmatching();
 		offset.use_full_support();
-		here.diff(scale_clusters[0], perturb, offset, local_ax_count, m);
+		here.diff(scale_clusters[0], here.get_mc(), perturb, offset, local_ax_count, m);
 		here.confirm();
 		offset.use_restricted_support();
 		ui::get()->set_match(here.get_error());
