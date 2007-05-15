@@ -997,8 +997,9 @@ private:
 				}
 
 				if (u.defined()) {
-					ale_accum de = fabs(this_result[0] / this_divisor[0]
-							  - this_result[1] / this_divisor[1]);
+//					ale_accum de = fabs(this_result[0] / this_divisor[0]
+//							  - this_result[1] / this_divisor[1]);
+					ale_accum de = fabs(this_result[0] - this_result[1]);
 
 					de_centroid[0] += de * i;
 					de_centroid[1] += de * j;
@@ -1776,8 +1777,6 @@ public:
 				 */
 				if (current_mc.count(ori) && current_mc[ori] < current_mc_arg)
 					current_mc_arg = current_mc[ori];
-
-				ui::get()->set_offset(t_set[i]);
 			}
 
 			std::vector<ale_pos> perturb_multipliers_original = perturb_multipliers;
@@ -2947,7 +2946,7 @@ public:
 			else
 				stable_count = 0;
 
-			if (stable_count == 20) {
+			if (stable_count == 3) {
 
 				stable_count = 0;
 
