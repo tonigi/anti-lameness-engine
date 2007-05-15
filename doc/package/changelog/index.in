@@ -1,5 +1,7 @@
 V	0.8.8 prerelease
 
+o	Include an incomplete implementation for multiple alignment region handling.
+
 o	Make --16bpc default.
 
 o	Add extents calculation to d2::render::ipc to limit the area examined during 
