@@ -289,7 +289,7 @@ public:
 			"--gs-mo <x>       Set <x> pixel min. overlap for global search.   (67%% default)\n"
 			"                     ('x%%' uses a fraction of the total pixel count.)\n"
 			BETWEEN_SECTIONS
-			"Multi-alignment:\n"
+			"Multi-alignment [algorithms are not fully implemented]:\n"
 			HEADER_SPACE
 			"--ma-card <x>     Maximum number of multi-alignment elements.  (1 is default)\n"
 			"--ma-cont <x>     Minimum contiguous area of each MA region.  (100 is default)\n"
