@@ -20,10 +20,17 @@
 
 <news>
 
+<release version="0.8.8" date="2007-May-15">
+
+<p>This release revises robustness checking for dynamic Monte Carlo alignment,
+adds quiet and logging UI options, and includes a Gaussian PSF.</p>
+
+</release>
+
 <release version="0.8.7" date="2007-Mar-04">
 
-This release adds new weight limiting options to Irani-Peleg and incremental
-renderers, and fixes bugs that may cause alignment failure.
+<p>This release adds new weight limiting options to Irani-Peleg and incremental
+renderers, and fixes bugs that may cause alignment failure.</p>
 
 </release>
 
