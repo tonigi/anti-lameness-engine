@@ -1,5 +1,6 @@
 V	0.8.8.1 2007-May-18
 
+/build
 o	Disable d2::gauss::cutoff definition after a build failure reported by
 	Marius Schamschula on an Intel Mac running 10.4.9 (gcc 4.0.0?).
 
