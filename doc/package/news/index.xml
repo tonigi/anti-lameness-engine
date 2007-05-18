@@ -20,6 +20,13 @@
 
 <news>
 
+<release version="0.8.8.1" date="2007-May-18">
+
+<p>This release removes a violation of the C++ standard that may cause some builds
+to fail.</p>
+
+</release>
+
 <release version="0.8.8" date="2007-May-15">
 
 <p>This release revises robustness checking for dynamic Monte Carlo alignment,
