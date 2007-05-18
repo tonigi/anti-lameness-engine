@@ -30,9 +30,21 @@
  *  it can't correct for poor focus at the edges.
  */
 
+#define D2_GAUSS_CUTOFF ((ale_pos) 2.0)
+
 class gauss : public psf {
 	ale_pos sigma;		  // radius, in pixels per standard deviation
-	static const ale_pos cutoff = 2;	// standard deviations before we cut off
+
+	/*
+	 * Disabled the following definition because some compilers may not be
+	 * able to handle static const definitions within a class (and because
+	 * the C++ specification may disallow such for non-integral types,
+	 * anyway).
+	 *
+	 * -- dhilvert@auricle.dyndns.org  18-May-2007
+	 */
+
+//	static const ale_pos cutoff = 2;	// standard deviations before we cut off
 
 	// helper variables
 	ale_pos radius;
@@ -104,9 +116,12 @@ public:
 		sigma = sig;
 
 		// fill in our helper variables
-		radius = sigma * cutoff;
+		radius = sigma * D2_GAUSS_CUTOFF;
 		sigma_premult = 1 / (sigma * sigma);
 		}
 };
 
+#undef D2_GAUSS_CUTOFF
+
 #endif
+

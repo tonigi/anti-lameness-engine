@@ -1,3 +1,8 @@
+V	0.8.8.1 2007-May-18
+
+o	Disable d2::gauss::cutoff definition after a build failure reported by
+	Marius Schamschula on an Intel Mac running 10.4.9 (gcc 4.0.0?).
+
 V	0.8.8 2007-May-15
 
 o	Include an incomplete implementation for multiple alignment region handling.
