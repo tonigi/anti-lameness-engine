@@ -2622,19 +2622,6 @@ public:
 		}
 
 		/*
-		 * Write comment information about original frame and
-		 * target image to the transformation save file, if we
-		 * have one.
-		 */
-
-		const d2::image *im = d2::image_rw::open(0);
-		// tsave_orig(tsave, argv[i], im->avg_channel_magnitude());
-		// tsave_target(tsave, argv[argc - 1]);
-		tsave_orig(tsave, files[0].first, im->avg_channel_magnitude());
-		tsave_target(tsave, files[files.size() - 1].first);
-		d2::image_rw::close(0);
-
-		/*
 		 * Initialize alignment interpolant.
 		 */
 
@@ -2808,6 +2795,20 @@ public:
 
 
 			if (j == 0) {
+
+				/*
+				 * Write comment information about original frame and
+				 * target image to the transformation save file, if we
+				 * have one.
+				 */
+
+				const d2::image *im = d2::image_rw::open(0);
+				// tsave_orig(tsave, argv[i], im->avg_channel_magnitude());
+				// tsave_target(tsave, argv[argc - 1]);
+				tsave_orig(tsave, files[0].first, im->avg_channel_magnitude());
+				tsave_target(tsave, files[files.size() - 1].first);
+				d2::image_rw::close(0);
+
 				/*
 				 * Handle the original frame.
 				 */
