@@ -199,6 +199,7 @@ public:
 					      ((ale_real) p->blue)  / ((ale_real) MaxRGB) );
 
 				pixel linear_input = (exp->linearize(input) - black_level)
+						   * exp->get_multiplier()
 					           / (exp->get_multiplier() - black_level);
 				
 				im->set_pixel(i, j, linear_input);

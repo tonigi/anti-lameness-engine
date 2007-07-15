@@ -277,8 +277,8 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 
 		}
 
-		pixel p_linear =     (e->linearize(p) - pixel::one() * extended.black_level)
-			       / (e->get_multiplier() - pixel::one() * extended.black_level);
+		pixel p_linear = (e->linearize(p) - e->get_multiplier() * extended.black_level)
+			       / (1 - extended.black_level);
 
 		im->set_pixel(i, j, p_linear);
 	}
