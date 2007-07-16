@@ -1268,6 +1268,9 @@ protected:
 					if (!finite(cpix[k]))
 						continue;
 
+					if (!finite(apix[k]))
+						continue;
+
 					ale_real new_value = cpix[k] + apix[k];
 
 					assert (finite(apix[k]));
