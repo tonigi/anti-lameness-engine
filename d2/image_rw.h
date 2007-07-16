@@ -164,7 +164,7 @@ public:
 
 		unsigned int i, j;
 
-		pixel black_level = exp->get_black_level() * exp->get_multiplier();
+		ale_real black_level = exp->get_black_level();
 
 		GetExceptionInfo(&exception);
 		image_info = CloneImageInfo((ImageInfo *) NULL);
@@ -198,9 +198,8 @@ public:
 					      ((ale_real) p->green) / ((ale_real) MaxRGB),
 					      ((ale_real) p->blue)  / ((ale_real) MaxRGB) );
 
-				pixel linear_input = (exp->linearize(input) - black_level)
-						   * exp->get_multiplier()
-					           / (exp->get_multiplier() - black_level);
+				pixel linear_input = (exp->linearize(input) - exp->get_multiplier() * black_level)
+					           / (1 - black_level);
 				
 				im->set_pixel(i, j, linear_input);
 
