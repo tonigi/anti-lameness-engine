@@ -406,16 +406,16 @@ protected:
 		for (unsigned int ii = 0; ii < lsimulated->height(); ii++)
 		for (unsigned int jj = 0; jj < lsimulated->width(); jj++) {
 			pixel weight = lsim_weights->get_pixel(ii, jj);
-			const ale_real weight_floor = 0.00001;
+			const ale_real weight_floor = 1e-10;
+			ale_accum zero = 0;
 
-			if (weight[0] > weight_floor
-			 && weight[1] > weight_floor
-			 && weight[2] > weight_floor)
-				lsimulated->pix(ii, jj)
-					/= weight;
-			else
-				lsimulated->pix(ii, jj)
-					/= 0;  /* Generate a non-finite value */
+			for (int k = 0; k < 3; k++)
+				if (!(weight[k] > weight_floor))
+					lsimulated->pix(ii, jj)[k]
+						/= zero;  /* Generate a non-finite value */
+
+			lsimulated->pix(ii, jj)
+				/= weight;
 		}
 
 		/*
@@ -483,16 +483,16 @@ protected:
 		for (unsigned int ii = 0; ii < nlsimulated->height(); ii++)
 		for (unsigned int jj = 0; jj < nlsimulated->width(); jj++) {
 			pixel weight = nlsim_weights->get_pixel(ii, jj);
-			ale_real weight_floor = 0.00001;
+			ale_real weight_floor = 1e-10;
+			ale_accum zero = 0;
 
-			if (weight[0] > weight_floor
-			 && weight[1] > weight_floor
-			 && weight[2] > weight_floor)
-				nlsimulated->pix(ii, jj)
-					/= weight;
-			else
-				nlsimulated->pix(ii, jj)
-					/= 0;  /* Generate a non-finite value */
+			for (int k = 0; k < 3; k++)
+				if (!(weight[k] > weight_floor))
+					nlsimulated->pix(ii, jj)[k]
+						/= zero;  /* Generate a non-finite value */
+
+			nlsimulated->pix(ii, jj)
+				/= weight;
 		}
 
 		/*
@@ -1260,7 +1260,7 @@ protected:
 
 				for (unsigned int k = 0; k < 3; k++) {
 
-					const ale_real cc_floor = 0.0000001;
+					const ale_real cc_floor = 1e-20;
 
 					if (ccpix[k] < cc_floor)
 						continue;
