@@ -1074,8 +1074,14 @@ protected:
 				 || !confidence.finite())
 					continue;
 
-				ssum += confidence * s;
-				rsum += confidence * r;
+				if (real->get_bayer() != IMAGE_BAYER_NONE) {
+					int color = ((image_bayer_ale_real *)real)->bayer_color(i, j);
+					ssum[color] += confidence[color] * s[color];
+					rsum[color] += confidence[color] * r[color];
+				} else {
+					ssum += confidence * s;
+					rsum += confidence * r;
+				}
 
 			}
 
