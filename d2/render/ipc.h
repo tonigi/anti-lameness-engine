@@ -901,10 +901,10 @@ protected:
 				      // conf = real->exp().one_sided_confidence(comp_real, bpv);
 				      
 				// Estimate-based certainty
-				pixel conf = real->exp().confidence(comp_simu);
+				// pixel conf = real->exp().confidence(comp_simu);
 					
 				// One-sided estimate-based certainty
-				// pixel conf = real->exp().one_sided_confidence(comp_simu, bpv);
+				pixel conf = real->exp().one_sided_confidence(comp_simu, bpv);
 
 				// One-sided approximation-based certainty
 				// pixel conf = real->exp().one_sided_confidence(approximation->pix(i, j), bpv);
