@@ -2496,6 +2496,15 @@ public:
 		}
 	}
 
+	static int threshold_ok(ale_accum error) {
+		if ((1 - error) * 100 >= match_threshold)
+			return 1;
+
+		if (!(match_threshold >= 0))
+			return 1;
+
+		return 0;
+	}
 
 	/*
 	 * Align frame m against the reference.
@@ -3039,7 +3048,7 @@ public:
 		 * Ensure that the match meets the threshold.
 		 */
 
-		if ((1 - here.get_error()) * 100 > match_threshold) {
+		if (threshold_ok(here.get_error()) {
 			/*
 			 * Update alignment variables
 			 */
@@ -3060,7 +3069,7 @@ public:
 
 			diff_stat_t nested_result = _align(m, -1, element);
 
-			if ((1 - nested_result.get_error()) * 100 > match_threshold) {
+			if (threshold_ok(nested_result.get_error())) {
 				return nested_result;
 			} else if (nested_result.get_error() < here.get_error()) {
 				here = nested_result;
