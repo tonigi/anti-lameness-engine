@@ -3048,7 +3048,7 @@ public:
 		 * Ensure that the match meets the threshold.
 		 */
 
-		if (threshold_ok(here.get_error()) {
+		if (threshold_ok(here.get_error())) {
 			/*
 			 * Update alignment variables
 			 */
