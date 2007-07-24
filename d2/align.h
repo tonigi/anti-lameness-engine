@@ -2053,8 +2053,7 @@ public:
 				      : input_scale;
 
 			for (int n = 0; n < 6; n++) {
-				ax_parameters[i].x[n] = (int) floor(ax_parameters[i].x[n]
-						                  * scale);
+				ax_parameters[i].x[n] = ax_parameters[i].x[n] * scale;
 			}
 		}
 	}
