@@ -114,6 +114,12 @@ autoreconf --install
 # automake --foreign
 
 #
+# Make wrapper script executable
+#
+
+chmod a+x ./ale
+
+#
 # Indicate that we're done.
 # 
 
