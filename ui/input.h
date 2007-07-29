@@ -2192,9 +2192,9 @@ public:
 				else
 					d3::align::vo_noadjust();
 			} else if (!strcmp(option_name, "ip-statistic")) {
-				if (!strcmp(env->get_string_arg(i->first, 1), "mean"))
+				if (!strcmp(env->get_string_arg(i->first, 0), "mean"))
 					ip_use_median = 0;
-				else if (!strcmp(env->get_string_arg(i->first, 1), "median"))
+				else if (!strcmp(env->get_string_arg(i->first, 0), "median"))
 					ip_use_median = 1;
 			} else if (!strcmp(option_name, "ips")) {
 				ip_iterations = env->get_int_arg(i->first, 1);
