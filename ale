@@ -17,5 +17,86 @@
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+%defaults = (
+	"ALE_BIN" => "ale-bin",
+	"DCRAW" => "dcraw",
+	"EXIF_UTILITY" => "exiftool",
+}
+
+%devices = (
+	"Canon EOS 5D" => "canon_300d",
+	"Canon EOS DIGITAL REBEL" => "canon_300d",
+);
+
+for $default (keys %defaults) {
+	if (!defined $ENV{$default}) {
+		$ENV{$default} = $defaults{$default};
+	}
+}
+
+#
+# Perform metadata extraction and conversion
+# 
+
+$announced_conversion = 0;
+for ($i = 0; $i < @ARGV; $i++) {
+	$arg = $ARGV[$i];
+
+	$i += 10 if $arg =~ /^-?-3dvp$/;
+	$i += 10 if $arg =~ /^-?-3dpp$/;
+	$i += 2  if $arg =~ /^-?-3dp$/;
+	$i += 2  if $arg =~ /^-?-3dv$/;
+	$i += 2  if $arg =~ /^-?-ochain$/;
+	$i += 3  if $arg =~ /^-?-wm$/;
+	$i += 3  if $arg =~ /^-?-wmx$/;
+
+	next if (!-e $arg); 
+
+	if (defined $ENV{"EXIF_UTILITY"} && `which $ENV{"EXIF_UTILITY"}`) {
+		if (`$ENV{"EXIF_UTILITY"} $arg | grep '^EV'` =~ /([0-9\.]+)/) {
+			$ev = $1;
+			if (`$ENV{"EXIF_UTILITY"} $arg | grep '^ISO'` =~ /([0-9\.]+)/) {
+				$ev = $ev - log($1 / 100) / log(2);
+			}
+			@ARGV = (@ARGV[0..$i - 1], "--ev", "$ev", @ARGV[$i..$#ARGV]);
+			$i += 2;
+		}
+	}
+
+	if (defined $ENV{"DCRAW"} && `which $ENV{"DCRAW"}`) {
+		$device_info = `$ENV{"DCRAW"} -i $arg 2> /dev/null`;
+
+		next if ($?);
+
+		if (!$announced_conversion) {
+			print "Extracting frame data";
+			$announced_conversion = 1;
+		}
+
+		#
+		# Get device information
+		#
+
+		undef $device;
+		foreach $device_string (keys %devices) {
+			if ($device_info =~ /$device_string/) {
+				$device = $devices{$device_string};
+				last;
+			}
+		}
+		if (!defined $device) {
+			$device = "canon_300d";
+		}
+		@ARGV = (@ARGV[0..$i - 1], "--device", "$device", @ARGV[$i..$#ARGV]);
+		$i += 2;
+
+		print ".";
+	}
+}
+
+if ($announced_conversion) {
+	print "\n";
+}
+
 @ARGV = ($0, @ARGV);
-system { 'ale-bin' } @ARGV;
+system { $ENV{"ALE_BIN"} } @ARGV;
