@@ -21,7 +21,7 @@
 	"ALE_BIN" => "ale-bin",
 	"DCRAW" => "dcraw",
 	"EXIF_UTILITY" => "exiftool",
-}
+);
 
 %devices = (
 	"Canon EOS 5D" => "canon_300d",
