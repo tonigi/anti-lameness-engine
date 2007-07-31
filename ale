@@ -38,7 +38,8 @@ for $default (keys %defaults) {
 # Perform metadata extraction and conversion
 # 
 
-$announced_conversion = 0;
+$started_conversion = 0;
+undef $global_device;
 for ($i = 0; $i < @ARGV; $i++) {
 	$arg = $ARGV[$i];
 
@@ -68,9 +69,19 @@ for ($i = 0; $i < @ARGV; $i++) {
 
 		next if ($?);
 
-		if (!$announced_conversion) {
+		if (!$started_conversion) {
 			print "Extracting frame data";
-			$announced_conversion = 1;
+			$started_conversion = 1;
+
+			#
+			# Make a temporary directory for conversion
+			#
+
+			use File::Temp qw/ tempdir /;
+			
+			$tempdir = tempdir("ale.XXXXXXXXX",
+			                   CLEANUP => 1,
+					   DIR => File::Spec->tmpdir());
 		}
 
 		#
@@ -87,14 +98,59 @@ for ($i = 0; $i < @ARGV; $i++) {
 		if (!defined $device) {
 			$device = "canon_300d";
 		}
-		@ARGV = (@ARGV[0..$i - 1], "--device", "$device", @ARGV[$i..$#ARGV]);
+
+		#
+		# Currently, devices must be global.
+		#
+
+		if (defined $global_device && $global_device ne $device) {
+			die "Multiple device types not yet supported.\n";
+		} else {
+			$global_device = $device;
+		}
+
+		# @ARGV = (@ARGV[0..$i - 1], "--device", "$device", @ARGV[$i..$#ARGV]);
+		@ARGV = ("--device", "$device", @ARGV);
+
 		$i += 2;
+
+		#
+		# Convert
+		#
+
+		$converted_frame = $arg;
+		$converted_frame =~ s/(?:\.[^.]*)?$/.pgm/;
+		$converted_frame =~ s/.*\///;
+		$converted_frame = $tempdir . "/" . $converted_frame;
+
+		`$ENV{"DCRAW"} -t 0 -d -4 -k 0 -r 1 1 1 1 -c $arg > $converted_frame`;
+
+		#
+		# Try to get black level information
+		#
+
+		# XXX: The following approach is not obviously correct.
+
+		if (`$ENV{"DCRAW"} -d -v -c $arg 2>&1 1>/dev/null` =~ /black=(\d+)/) {
+			$black_unscaled = $1;
+			`$ENV{"DCRAW"} -D -4 -c $arg | pgmhist | tail -1` =~ /(\d+)/;
+			$maxval_unscaled = $1;
+			`pgmhist $converted_frame | tail -1` =~ /(\d+)/;
+			$maxval_scaled = $1;
+			
+			$black_scaled = $black_unscaled
+			              * ($maxval_scaled / $maxval_unscaled)
+				      / 65535;
+			
+			@ARGV = (@ARGV[0..$i - 1], "--black", "$black_scaled", @ARGV[$i..$#ARGV]);
+			$i += 2;
+		}
 
 		print ".";
 	}
 }
 
-if ($announced_conversion) {
+if ($started_conversion) {
 	print "\n";
 }
 
