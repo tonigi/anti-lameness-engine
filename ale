@@ -125,6 +125,8 @@ for ($i = 0; $i < @ARGV; $i++) {
 
 		`$ENV{"DCRAW"} -t 0 -d -4 -k 0 -r 1 1 1 1 -c $arg > $converted_frame`;
 
+		$ARGV[$i] = $converted_frame;
+
 		#
 		# Try to get black level information
 		#
