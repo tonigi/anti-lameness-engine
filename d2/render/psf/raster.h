@@ -122,12 +122,19 @@ private:
 		 * casting, and much faster than floor(0.5 + ...).  Casting
 		 * from round() seems to be an acceptable alternative to
 		 * lrintf().
+		 *
+		 * Early calculation of common floating-point constants in the
+		 * following code is based on an initial implementation by HJ
+		 * Hornbeck.
 		 */
 
-		int il = (int) lrintf((top - min_i()) / (max_i() - min_i()) * _filter_dim_i);
-		int ih = (int) lrintf((bot - min_i()) / (max_i() - min_i()) * (_filter_dim_i - 0.001));
-		int jl = (int) lrintf((lef - min_j()) / (max_j() - min_j()) * _filter_dim_j);
-		int jh = (int) lrintf((rig - min_j()) / (max_j() - min_j()) * (_filter_dim_j - 0.001));
+		ale_real i_element_scale = (ale_real) _filter_dim_i / (max_i() - min_i());
+		ale_real j_element_scale = (ale_real) _filter_dim_j / (max_j() - min_j());
+
+		int il = (int) lrintf(i_element_scale * (top - min_i()));
+		int ih = (int) lrintf(i_element_scale * (bot - min_i()));
+		int jl = (int) lrintf(j_element_scale * (lef - min_j()));
+		int jh = (int) lrintf(j_element_scale * (rig - min_j()));
 
 		/*
 		 * Bounds clamping may be faster when performed in integer 
