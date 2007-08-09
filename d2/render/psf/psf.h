@@ -161,6 +161,12 @@ public:
 	virtual psf_result operator()(float top, float bot, float lef, float
 			rig, unsigned int variety) const = 0;
 
+	virtual psf_result operator()(float top, float bot, float lef, float
+			rig, unsigned int variety, char channels) const {
+		return operator()(top, bot, lef, rig, variety);
+	}
+
+
 #if 0
 	/*
 	 * Get the average pixel response.  This function should be overloaded

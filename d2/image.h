@@ -159,6 +159,10 @@ public:
 		return bayer;
 	}
 
+	virtual char get_channels(int i, int j) const {
+		return 0x7;
+	}
+
 	double storage_size() const {
 		if (bayer != IMAGE_BAYER_NONE)
 			return _dimx * _dimy * sizeof(ale_real);

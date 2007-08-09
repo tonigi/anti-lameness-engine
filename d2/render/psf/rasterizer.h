@@ -95,7 +95,7 @@ public:
 			}
 		}
 
-		ale_real resolution_multiplier = 3;  /* Arbitrary */
+		ale_real resolution_multiplier = 20;  /* Arbitrary */
 
 		_filter_dim_i = (int) ceil(2 * _height * resolution_multiplier / min_diff[0]);
 		_filter_dim_j = (int) ceil(2 * _width * resolution_multiplier / min_diff[1]);

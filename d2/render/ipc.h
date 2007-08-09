@@ -229,15 +229,24 @@ protected:
 				class rasterizer::psf_result r =
 					(*lresponse)(top - ii, bot - ii,
 						    lef - jj, rig - jj,
-						    lresponse->select(ii, jj));
+						    lresponse->select(ii, jj),
+						    lsimulated->get_channels(ii, jj));
 
 #ifdef USE_PTHREAD
 				pthread_mutex_lock(lock);
 #endif
-				lsimulated->pix(ii, jj) +=
-					r(approximation->get_pixel(i, j));
-				lsim_weights->pix(ii, jj) +=
-					r.weight();
+				if (lsimulated->get_bayer() == IMAGE_BAYER_NONE) {
+					lsimulated->pix(ii, jj) +=
+						r(approximation->get_pixel(i, j));
+					lsim_weights->pix(ii, jj) +=
+						r.weight();
+				} else {
+					int k = ((image_bayer_ale_real *)lsimulated)->bayer_color(ii, jj);
+					lsimulated->chan(ii, jj, k) +=
+						r(approximation->get_pixel(i, j))[k];
+					lsim_weights->chan(ii, jj, k) +=
+						r.weight()[k];
+				}
 #ifdef USE_PTHREAD
 				pthread_mutex_unlock(lock);
 #endif
@@ -360,11 +369,21 @@ protected:
 		 * Initializations for linear filtering
 		 */
 
-		image_ale_real *lsim_weights = new image_ale_real(
+		image *lsim_weights = NULL;
+
+		if (lsimulated->get_bayer() == IMAGE_BAYER_NONE) {
+			lsim_weights = new image_ale_real(
 				lsimulated->height(),
 				lsimulated->width(),
 				lsimulated->depth());
-
+		} else {
+			lsim_weights = new image_bayer_ale_real(
+				lsimulated->height(),
+				lsimulated->width(),
+				lsimulated->depth(), 
+				lsimulated->get_bayer());
+		}
+		assert (lsim_weights);
 
 		for (int ti = 0; ti < N; ti++) {
 			args[ti].frame_num = frame_num;
@@ -405,17 +424,21 @@ protected:
 
 		for (unsigned int ii = 0; ii < lsimulated->height(); ii++)
 		for (unsigned int jj = 0; jj < lsimulated->width(); jj++) {
-			pixel weight = lsim_weights->get_pixel(ii, jj);
 			const ale_real weight_floor = 1e-10;
 			ale_accum zero = 0;
 
-			for (int k = 0; k < 3; k++)
-				if (!(weight[k] > weight_floor))
-					lsimulated->pix(ii, jj)[k]
+			for (int k = 0; k < 3; k++) {
+				if ((lsimulated->get_channels(ii, jj) & (1 << k)) == 0)
+					continue;
+
+				ale_real weight = lsim_weights->chan(ii, jj, k);
+
+				if (!(weight > weight_floor))
+					lsimulated->chan(ii, jj, k)
 						/= zero;  /* Generate a non-finite value */
 
-			lsimulated->pix(ii, jj)
-				/= weight;
+				lsimulated->chan(ii, jj, k) /= weight;
+			}
 		}
 
 		/*
@@ -851,7 +874,8 @@ protected:
 				class backprojector::psf_result r =
 					(*lresponse)(top - ii, bot - ii,
 						    lef - jj, rig - jj,
-						    selection);
+						    selection, 
+						    lreal->get_channels(ii, jj));
 
 
 				/*
@@ -1140,10 +1164,20 @@ protected:
 		 * Initialize simulated data structures
 		 */
 
-                image *lsimulated = new image_ale_real(
+                image *lsimulated;
+		
+		if (real->get_bayer() == IMAGE_BAYER_NONE) {
+			lsimulated = new image_ale_real(
 				real->height(),
 				real->width(), 
 				real->depth());
+		} else {
+			lsimulated = new image_bayer_ale_real(
+				real->height(),
+				real->width(),
+				real->depth(),
+				real->get_bayer());
+		}
 
                 image *nlsimulated = NULL;
 
@@ -1163,6 +1197,7 @@ protected:
 
 		_ip_frame_simulate(frame_num, approximation, lsimulated, nlsimulated, t, f, nlf, real->exp(), extents);
 
+		image_rw::write_image("lsimulated.png", lsimulated);
 		/*
 		 * Update the correction array using backprojection.
 		 */

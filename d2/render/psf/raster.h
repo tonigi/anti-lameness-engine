@@ -36,6 +36,7 @@ protected:
 	unsigned int _filter_dim_j;
 	unsigned int num_arrays;
 	ale_real **response_arrays;
+	ale_real **response_partials;
 #if 0
 	ale_real *avg_response;
 #endif
@@ -103,48 +104,66 @@ public:
 	 * specified, then the average response is returned.
 	 */
 private:
-	psf_result generic_response(ale_real *response_array, float top, float
-			bot, float lef, float rig) const {
+	psf_result generic_response(ale_real *response_partial, float top, float
+			bot, float lef, float rig, char channels) const {
 
-		assert (response_array != NULL);
+		assert (response_partial != NULL);
 
 		psf_result result;
 
-		if (top < min_i())
-			top = min_i();
-		if (bot > max_i())
-			bot = max_i();
-		if (lef < min_j())
-			lef = min_j();
-		if (rig > max_j())
-			rig = max_j();
+		/*
+		 * lrintf() can be more efficient than floor() or float-to-int
+		 * casts.  For more details, see Erik de Castro Lopo, "Faster
+		 * Floating Point to Integer Conversions":
+		 *
+		 * 	http://mega-nerd.com/FPcast/
+		 *
+		 * In this case, lrintf() seems to be a bit faster than plain
+		 * casting, and much faster than floor(0.5 + ...).  Casting
+		 * from round() seems to be an acceptable alternative to
+		 * lrintf().
+		 */
 
-		int il = (int) floor((top - min_i()) / (max_i() - min_i()) * _filter_dim_i);
-		int ih = (int) floor((bot - min_i()) / (max_i() - min_i()) * (_filter_dim_i - 0.001));
-		int jl = (int) floor((lef - min_j()) / (max_j() - min_j()) * _filter_dim_j);
-		int jh = (int) floor((rig - min_j()) / (max_j() - min_j()) * (_filter_dim_j - 0.001));
+		int il = (int) lrintf((top - min_i()) / (max_i() - min_i()) * _filter_dim_i);
+		int ih = (int) lrintf((bot - min_i()) / (max_i() - min_i()) * (_filter_dim_i - 0.001));
+		int jl = (int) lrintf((lef - min_j()) / (max_j() - min_j()) * _filter_dim_j);
+		int jh = (int) lrintf((rig - min_j()) / (max_j() - min_j()) * (_filter_dim_j - 0.001));
 
-		for (int ii = il; ii <= ih; ii++)
-		for (int jj = jl; jj <= jh; jj++) {
+		/*
+		 * Bounds clamping may be faster when performed in integer 
+		 * arithmetic than in floating-point, so we do this after 
+		 * float-to-int conversion is complete.
+		 */
 
-			float ltop = ((float) ii) / _filter_dim_i * (max_i() - min_i()) + min_i();
-			float lbot = ((float) ii + 1) / _filter_dim_i * (max_i() - min_i()) + min_i();
-			float llef = ((float) jj) / _filter_dim_j * (max_j() - min_j()) + min_j();
-			float lrig = ((float) jj + 1) / _filter_dim_j * (max_j() - min_j()) + min_j();
+		if (il < 0)
+			il = 0;
+		if (jl < 0)
+			jl = 0;
+		if (ih > (int) _filter_dim_i)
+			ih = (int) _filter_dim_i;
+		if (jh > (int) _filter_dim_j)
+			jh = (int) _filter_dim_j;
 
-			if (ltop < top)
-				ltop = top;
-			if (lbot > bot)
-				lbot = bot;
-			if (llef < lef)
-				llef = lef;
-			if (lrig > rig)
-				lrig = rig;
+		if (!(il < ih) || !(jl < jh))
+			return result;
 
-			for (int k = 0; k < 3; k++) {
-				result.matrix(k, k) += (ale_real) ((lbot - ltop) * (lrig - llef)
-					      * response_array[3 * _filter_dim_j * ii + 3 * jj + k]);
-			}
+		for (int k = 0; k < 3; k++) {
+			if (!((1 << k) & channels))
+				continue;
+			assert (ih > 0 && jh > 0);
+			assert (ih <= (int) _filter_dim_i);
+			assert (jh <= (int) _filter_dim_j);
+
+			ale_real result_k = 0;
+
+			if (il > 0 && jl > 0) 
+				result_k += response_partial[k + 3 * (jl - 1) + 3 * _filter_dim_j * (il - 1)];
+			if (il > 0) 
+				result_k -= response_partial[k + 3 * (jh - 1) + 3 * _filter_dim_j * (il - 1)];
+			if (jl > 0)
+				result_k -= response_partial[k + 3 * (jl - 1) + 3 * _filter_dim_j * (ih - 1)];
+			result_k += response_partial[k + 3 * (jh - 1) + 3 * _filter_dim_j * (ih - 1)];
+			result.set_matrix(k, k, result_k);
 		}
 
 		return result;
@@ -158,13 +177,19 @@ public:
 	/*
 	 * Get a specific pixel response.
 	 */
-	psf_result operator()(float top, float bot, float lef, float rig, unsigned int variety) const {
+	psf_result operator()(float top, float bot, float lef, float rig, unsigned int variety, 
+			char channels) const {
 		assert (variety < num_arrays);
 
-		ale_real *response_array = response_arrays[variety];
-		assert (response_array != NULL);
+		ale_real *response_partial = response_partials[variety];
+		assert (response_partial != NULL);
 
-		return generic_response(response_array, top, bot, lef, rig);
+		return generic_response(response_partial, top, bot, lef, rig, channels);
+	}
+
+	psf_result operator()(float top, float bot, float lef, float rig, 
+			unsigned int variety) const {
+		return operator()(top, bot, lef, rig, variety, 0x7);
 	}
 
 #if 0
@@ -195,6 +220,24 @@ protected:
 		return result;
 	}
 
+	void partial_integrate(ale_real *target, ale_real *source) {
+		ale_real element_area = (max_i() - min_i())
+		                      * (max_j() - min_j())
+				      / (ale_real) (_filter_dim_i)
+				      / (ale_real) (_filter_dim_j);
+
+		for (unsigned int i = 0; i < _filter_dim_i; i++)
+		for (unsigned int j = 0; j < _filter_dim_j; j++)
+		for (unsigned int k = 0; k < 3            ; k++) {
+			unsigned int index = i * _filter_dim_j * 3 + j * 3 + k;
+			target[index] = source[index] * element_area
+			              + ((j > 0) ? target[index - 3] : 0)
+				      + ((i > 0) ? target[index - _filter_dim_j * 3] : 0)
+				      - ((i > 0 
+				       && j > 0) ? target[index - _filter_dim_j * 3 - 3] : 0);
+		}
+	}
+
 	/*
 	 * Compute integrals.
 	 */
@@ -207,6 +250,16 @@ protected:
 #if 0
 		avg_integral = integrate(avg_response);
 #endif
+
+		response_partials = (ale_real **) malloc(sizeof(ale_real *) * num_arrays);
+		assert(response_partials);
+		for (unsigned int n = 0; n < num_arrays; n++) {
+			response_partials[n] = (ale_real *) malloc(sizeof(ale_real) * _filter_dim_i 
+										    * _filter_dim_j
+										    * 3);
+			assert(response_partials[n]);
+			partial_integrate(response_partials[n], response_arrays[n]);
+		}
 	}
 
 public:

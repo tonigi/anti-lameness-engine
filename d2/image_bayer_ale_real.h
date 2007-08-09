@@ -57,6 +57,10 @@ public:
 		return (i + r_y_offset()) % 2 + (j + r_x_offset()) % 2;
 	}
 
+	char get_channels(int i, int j) const {
+		return (1 << bayer_color(i, j));
+	}
+
 private:
 	void trigger(pixel multiplier) {
 		for (unsigned int i = 0; i < _dimy; i++)
@@ -81,6 +85,10 @@ public:
 		if (!_p) {
 			fprintf(stderr, "Could not allocate memory for image data.\n");
 			exit(1);
+		}
+
+		for (unsigned int i = 0; i < dimx * dimy; i++) {
+			_p[i] = 0;
 		}
 	}
 
