@@ -51,17 +51,13 @@ public:
 //		x[2] = _x[2];
 //	}
 
-	const ale_real &operator[](int i) const {
-		assert (i >= 0);
+	const ale_real &operator[](unsigned int i) const {
 		assert (i < 3);
-
 		return x[i];
 	}
 
-	ale_real &operator[](int i) {
-		assert (i >= 0);
+	ale_real &operator[](unsigned int i) {
 		assert (i < 3);
-
 		return x[i];
 	}
 
