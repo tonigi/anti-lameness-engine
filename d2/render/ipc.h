@@ -871,11 +871,12 @@ protected:
 
 				unsigned int selection = lresponse->select(ii, jj);
 
+				char channels = lreal->get_channels(ii, jj);
+
 				class backprojector::psf_result r =
 					(*lresponse)(top - ii, bot - ii,
 						    lef - jj, rig - jj,
-						    selection, 
-						    lreal->get_channels(ii, jj));
+						    selection, channels);
 
 
 				/*
@@ -897,6 +898,27 @@ protected:
 				pixel comp_simu =
 					lsimulated->get_raw_pixel(ii, jj);
 
+#if 1
+
+				/*
+				 * Under the assumption that finite() testing
+				 * may be expensive, limit such tests to active
+				 * channels.
+				 */
+				int found_nonfinite = 0;
+				for (int k = 0; k < 3; k++) {
+					if (((1 << k) & channels)
+					 && (!finite(comp_simu[k])
+					  || !finite(comp_lreal[k]))) {
+						found_nonfinite = 1;
+						break;
+					}
+				}
+
+				if (found_nonfinite)
+					continue;
+#else 
+
 				if (!finite(comp_simu[0])
 				 || !finite(comp_simu[1])
 				 || !finite(comp_simu[2])
@@ -904,6 +926,7 @@ protected:
 				 || !finite(comp_lreal[1])
 				 || !finite(comp_lreal[2]))
 					continue;
+#endif
 
 				/*
 				 * Backprojection value unadjusted 
