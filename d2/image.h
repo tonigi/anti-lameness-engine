@@ -215,6 +215,10 @@ public:
 		return ((const image *)this)->pix(y, x);
 	}
 
+	virtual pixel get_raw_pixel(unsigned int y, unsigned int x) const {
+		return ((const image *)this)->get_pixel(y, x);
+	}
+
 	ale_real maxval() const {
 		ale_real result = get_pixel(0, 0)[0];
 

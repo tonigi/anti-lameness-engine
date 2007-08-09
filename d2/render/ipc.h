@@ -889,13 +889,13 @@ protected:
 				r *= (1 / (bot - top) / (rig - lef));
 
 				pixel comp_lreal =
-					lreal->get_pixel(ii, jj);
+					lreal->get_raw_pixel(ii, jj);
 
 				// pixel comp_real = 
 				//	real->get_pixel(ii, jj);
 
 				pixel comp_simu =
-					lsimulated->get_pixel(ii, jj);
+					lsimulated->get_raw_pixel(ii, jj);
 
 				if (!finite(comp_simu[0])
 				 || !finite(comp_simu[1])

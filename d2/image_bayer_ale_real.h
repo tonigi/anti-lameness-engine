@@ -210,6 +210,15 @@ public:
 		return result;
 	}
 
+	pixel get_raw_pixel(unsigned int y, unsigned int x) const {
+		pixel result;
+		int k = bayer_color(y, x);
+
+		result[k] = chan(y, x, k);
+
+		return result;
+	}
+
 	/*
 	 * Make a new image suitable for receiving scaled values.
 	 */
