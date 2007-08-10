@@ -372,8 +372,16 @@ public:
 		/*
 		 * Dynamic invariants are not incrementally updated.
 		 */
-		if (inv->ssfe()->get_scaled_filter()->is_dynamic())
+		if (inv->ssfe()->get_scaled_filter()->is_dynamic()) {
+			/*
+			 * Create a trivial image for the case where there is
+			 * no chain suffix.
+			 */
+			if (accum_image == NULL)
+				accum_image = new image_weighted_simple(1, 1, 3, inv);
+
 			return;
+		}
 
 		assert (get_step() >= -1);
 		if (get_step() == 0) {
