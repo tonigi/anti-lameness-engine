@@ -231,7 +231,7 @@ public:
 	 * Current rendering result.
 	 */
 
-	virtual const image *get_image() = 0;
+	virtual const image *get_image() const = 0;
 
 	/*
 	 * Result of rendering at the given frame.
@@ -277,7 +277,7 @@ public:
 	 * the image is defined.
 	 */
 
-	virtual const image *get_defined() = 0;
+	virtual const image *get_defined() const = 0;
 
 	/*
 	 * Sync.

@@ -1389,14 +1389,14 @@ public:
 		this->weight_limit = ipwl;
         }
 
-        const image *get_image() {
+        const image *get_image() const {
                 if (done)
                         return approximation;
                 else
                         return input->get_image();
         }
 
-        const image *get_defined() {
+        const image *get_defined() const {
                 return input->get_defined();
         }
 

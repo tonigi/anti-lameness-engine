@@ -28,6 +28,8 @@
 #include "../transformation.h"
 #include "../image.h"
 #include "../point.h"
+#include "incremental.h"
+#include "../filter/filter.h"
 
 /*
  * Combine two renderings. 
@@ -41,24 +43,24 @@ class combine : public render {
 private:
 	render *_default;
 	render *partial;
-	image *output_image;
-	image *defined_image;
+	mutable image *output_image;
+	mutable image *defined_image;
 
-	const image *get_image_dynamic() {
+	const image *get_image_dynamic() const {
 		assert(typeid(partial) == typeid(incremental));
 
 		if (typeid(_default) != typeid(combine)) {
 			/*
 			 * Degenerate case.
 			 */
-			output_image = _default->get_image()->clone();
+			output_image = _default->get_image()->clone("degenerate dynamic filter");
 			return output_image;
 		}
 
 		combine *c = (combine *)partial;
-		render *fine = c->get_partial();
-		render *coarse = c->get_default();
-		const filter *f = ((incremental *)partial)->get_invariant()->ssfe()->
+		const render *fine = c->get_partial();
+		const render *coarse = c->get_default();
+		const filter::filter *f = ((incremental *)partial)->get_invariant()->ssfe()->
 				get_scaled_filter()->get_filter();
 		const image *fine_weight = fine->get_defined();
 		const image *fine_image = fine->get_image();
@@ -96,7 +98,8 @@ private:
 					 || jj + j >= fine_weight->width())
 					 	continue;
 
-					ale_real w = f->response(ii / filter_scale)
+					ale_real w = f->response(point(ii / filter_scale, 
+					                               jj / filter_scale))
 					           * fine_weight->chan(i + ii, j + jj, k);
 
 					filtered_weight += w;
@@ -108,7 +111,7 @@ private:
 
 			} while (filtered_weight < render::get_wt()
 			    && filter_scale < coarse_defined->width() 
-			                    + coarse_defined->height())
+			                    + coarse_defined->height());
 
 			output_image->chan(i, j, k) = filtered_value / filtered_weight;
 		}
@@ -138,7 +141,7 @@ public:
 	 * Result of rendering.
 	 */
 
-	virtual const image *get_image() {
+	virtual const image *get_image() const {
 
 		if (output_image)
 			return output_image;
@@ -179,7 +182,7 @@ public:
 	 * the image is defined.
 	 */
 
-	virtual const image *get_defined() {
+	virtual const image *get_defined() const {
 		unsigned int i, j, k;
 
 		if (defined_image)

@@ -349,7 +349,7 @@ public:
 	 * Result of rendering.
 	 */
 
-	virtual const image *get_image() {
+	virtual const image *get_image() const {
 		assert (accum_image != NULL);
 		return accum_image;
 	}
@@ -359,7 +359,7 @@ public:
 	 * the image is defined.
 	 */
 
-	virtual const image *get_defined() {
+	virtual const image *get_defined() const {
 		assert (accum_image != NULL);
 		return accum_image->get_weights();
 	}
