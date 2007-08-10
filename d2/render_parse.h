@@ -116,6 +116,8 @@ public:
 			return new filter::scaled_filter(get_SF(type + strlen("coarse:")), 1);
 		} else if (!strpfix("fine:", type)) {
 			return new filter::scaled_filter(get_SF(type + strlen("fine:")), 0);
+		} else if (!strpfix("auto:", type)) {
+			return new filter::scaled_filter(get_SF(type + strlen("auto:")), 2);
 		} else {
 			return new filter::scaled_filter(get_SF(type), 1);
 		}

@@ -49,6 +49,9 @@ private:
 	 *
 	 *    1: indicates the safer limit (minimum of input and output
 	 *       frequencies)
+	 *
+	 *    2: indicates a limit dynamically derived from subsequent chain
+	 *       elements.
 	 */
 	int frequency_limit;
 	filter *f;
@@ -328,6 +331,10 @@ public:
 
 	int is_fine() const {
 		return frequency_limit == 0;
+	}
+
+	int is_dynamic() const {
+		return frequency_limit == 2;
 	}
 
 	/*
