@@ -1,5 +1,5 @@
-// Copyright 2002 David Hilvert <dhilvert@auricle.dyndns.org>,
-//                              <dhilvert@ugcs.caltech.edu>
+// Copyright 2002, 2007 David Hilvert <dhilvert@auricle.dyndns.org>,
+//                                    <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
 
@@ -43,6 +43,78 @@ private:
 	render *partial;
 	image *output_image;
 	image *defined_image;
+
+	const image *get_image_dynamic() {
+		assert(typeid(partial) == typeid(incremental));
+
+		if (typeid(_default) != typeid(combine)) {
+			/*
+			 * Degenerate case.
+			 */
+			output_image = _default->get_image()->clone();
+			return output_image;
+		}
+
+		combine *c = (combine *)partial;
+		render *fine = c->get_partial();
+		render *coarse = c->get_default();
+		const filter *f = ((incremental *)partial)->get_invariant()->ssfe()->
+				get_scaled_filter()->get_filter();
+		const image *fine_weight = fine->get_defined();
+		const image *fine_image = fine->get_image();
+		const image *coarse_defined = coarse->get_defined();
+
+		output_image = new image_ale_real(coarse_defined->height(),
+				coarse_defined->width(), 3, NULL);
+
+		assert (coarse_defined->width()  == fine_image->width());
+		assert (coarse_defined->height() == fine_image->height());
+		assert (coarse_defined->width()  == fine_weight->width());
+		assert (coarse_defined->height() == fine_weight->height());
+
+		for (unsigned int i = 0; i < coarse_defined->height(); i++)
+		for (unsigned int j = 0; j < coarse_defined->width();  j++) 
+		for (unsigned int k = 0; k < 3;                        k++){
+
+			ale_real filter_scale = 1;
+			ale_real filtered_weight;
+			ale_real filtered_value;
+
+			do {
+
+				filtered_weight = 0;
+				filtered_value = 0;
+
+				for (int ii = (int) floor(-f->support() * filter_scale); 
+				         ii < (int)  ceil( f->support() * filter_scale); ii++)
+				for (int jj = (int) floor(-f->support() * filter_scale);
+				         jj < (int)  ceil( f->support() * filter_scale); jj++) {
+
+					if (ii + i < 0
+					 || jj + j < 0
+					 || ii + i >= fine_weight->height()
+					 || jj + j >= fine_weight->width())
+					 	continue;
+
+					ale_real w = f->response(ii / filter_scale)
+					           * fine_weight->chan(i + ii, j + jj, k);
+
+					filtered_weight += w;
+					filtered_value  += w * fine_image->chan(i + ii, j + jj, k);
+				}
+
+				if (filtered_weight < render::get_wt())
+					filter_scale += 1;
+
+			} while (filtered_weight < render::get_wt()
+			    && filter_scale < coarse_defined->width() 
+			                    + coarse_defined->height())
+
+			output_image->chan(i, j, k) = filtered_value / filtered_weight;
+		}
+
+		return output_image;
+	}
 public:
 
 	/*
@@ -67,21 +139,30 @@ public:
 	 */
 
 	virtual const image *get_image() {
-		const image *default_image = _default->get_image();
-		const image *partial_image = partial->get_image();
-
-		assert (default_image->width()  == partial_image->width());
-		assert (default_image->height() == partial_image->height());
 
 		if (output_image)
 			return output_image;
+
+		/*
+		 * Dynamic filtering is handled separately.
+		 */
+		if (typeid(partial) == typeid(incremental)
+		 && (((incremental *)partial)->get_invariant()->
+		 		ssfe()->get_scaled_filter()->is_dynamic()))
+			return get_image_dynamic();
+
+		const image *default_image = _default->get_image();
 
 		output_image = new image_ale_real(default_image->height(),
 				default_image->width(), 3, NULL);
 
 		output_image->set_offset(default_image->offset());
 
+		const image *partial_image = partial->get_image();
 		const image *partial_weight = partial->get_defined();
+
+		assert (default_image->width()  == partial_image->width());
+		assert (default_image->height() == partial_image->height());
 
 		for (unsigned int i = 0; i < default_image->height(); i++)
 		for (unsigned int j = 0; j < default_image->width();  j++)

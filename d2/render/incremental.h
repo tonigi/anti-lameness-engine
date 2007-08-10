@@ -1,5 +1,5 @@
-// Copyright 2002, 2004 David Hilvert <dhilvert@auricle.dyndns.org>,
-//                                    <dhilvert@ugcs.caltech.edu>
+// Copyright 2002, 2004, 2007 David Hilvert <dhilvert@auricle.dyndns.org>,
+//                                          <dhilvert@ugcs.caltech.edu>
 
 /*  This file is part of the Anti-Lamenessing Engine.
 
@@ -368,6 +368,13 @@ public:
 	 * Perform the current rendering step.
 	 */
 	virtual void step() {
+
+		/*
+		 * Dynamic invariants are not incrementally updated.
+		 */
+		if (inv->ssfe()->get_scaled_filter()->is_dynamic())
+			return;
+
 		assert (get_step() >= -1);
 		if (get_step() == 0) {
 			transformation t = align::of(0);
