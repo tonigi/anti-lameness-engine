@@ -47,9 +47,9 @@ private:
 	mutable image *defined_image;
 
 	const image *get_image_dynamic() const {
-		assert(typeid(partial) == typeid(incremental));
+		assert(typeid(*partial) == typeid(incremental));
 
-		if (typeid(_default) != typeid(combine)) {
+		if (typeid(*_default) != typeid(combine)) {
 			/*
 			 * Degenerate case.
 			 */
@@ -57,7 +57,9 @@ private:
 			return output_image;
 		}
 
-		combine *c = (combine *)partial;
+		fprintf(stderr, "non-degenerate\n");
+
+		combine *c = (combine *)_default;
 		const render *fine = c->get_partial();
 		const render *coarse = c->get_default();
 		const filter::filter *f = ((incremental *)partial)->get_invariant()->ssfe()->
@@ -100,10 +102,15 @@ private:
 
 					ale_real w = f->response(point(ii / filter_scale, 
 					                               jj / filter_scale))
-					           * fine_weight->chan(i + ii, j + jj, k);
+					           * fine_weight->get_pixel(i + ii, j + jj)[k];
+				
+					ale_real v = fine_image->get_pixel(i + ii, j + jj)[k];
+					
+					if (!finite(w) || !finite(v))
+						continue;
 
 					filtered_weight += w;
-					filtered_value  += w * fine_image->chan(i + ii, j + jj, k);
+					filtered_value  += w * v;
 				}
 
 				if (filtered_weight < render::get_wt())
@@ -146,10 +153,12 @@ public:
 		if (output_image)
 			return output_image;
 
+		assert(typeid(*partial) != typeid(combine));
+
 		/*
 		 * Dynamic filtering is handled separately.
 		 */
-		if (typeid(partial) == typeid(incremental)
+		if (typeid(*partial) == typeid(incremental)
 		 && (((incremental *)partial)->get_invariant()->
 		 		ssfe()->get_scaled_filter()->is_dynamic()))
 			return get_image_dynamic();
