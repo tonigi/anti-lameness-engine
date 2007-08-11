@@ -98,9 +98,13 @@ private:
 					 || jj + j >= fine_weight->width())
 					 	continue;
 
-					ale_real w = f->response(point(ii / filter_scale, 
-					                               jj / filter_scale))
-					           * fine_weight->get_pixel(i + ii, j + jj)[k];
+					ale_real pw = fine_weight->get_pixel(i + ii, j + jj)[k];
+
+					if (!(pw > 0))
+						continue;
+
+					ale_real w = pw * f->response(point(ii / filter_scale, 
+					                                    jj / filter_scale));
 				
 					ale_real v = fine_image->get_pixel(i + ii, j + jj)[k];
 					
