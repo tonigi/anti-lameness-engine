@@ -57,8 +57,6 @@ private:
 			return output_image;
 		}
 
-		fprintf(stderr, "non-degenerate\n");
-
 		combine *c = (combine *)_default;
 		const render *fine = c->get_partial();
 		const render *coarse = c->get_default();
