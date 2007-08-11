@@ -87,10 +87,10 @@ private:
 				filtered_weight = 0;
 				filtered_value = 0;
 
-				for (int ii = (int) floor(-f->support() * filter_scale); 
-				         ii < (int)  ceil( f->support() * filter_scale); ii++)
-				for (int jj = (int) floor(-f->support() * filter_scale);
-				         jj < (int)  ceil( f->support() * filter_scale); jj++) {
+				for (int ii = (int) lrintf(-f->support() * filter_scale); 
+				         ii < (int) lrintf( f->support() * filter_scale); ii++)
+				for (int jj = (int) lrintf(-f->support() * filter_scale);
+				         jj < (int) lrintf( f->support() * filter_scale); jj++) {
 
 					if (ii + i < 0
 					 || jj + j < 0
