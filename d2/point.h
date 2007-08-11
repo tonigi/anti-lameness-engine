@@ -38,15 +38,13 @@ public:
 		x[1] = x1;
 	}
 
-	const ale_pos &operator[](int i) const {
-		assert (i >= 0);
+	const ale_pos &operator[](unsigned int i) const {
 		assert (i < 2);
 
 		return x[i];
 	}
 
-	ale_pos &operator[](int i) {
-		assert (i >= 0);
+	ale_pos &operator[](unsigned int i) {
 		assert (i < 2);
 
 		return x[i];
