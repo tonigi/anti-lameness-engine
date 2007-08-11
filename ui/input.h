@@ -1419,50 +1419,16 @@ public:
 		 * Handle default settings
 		 */
 
-		if (arg_prefix_count(argc, argv, "--q") > 1)
-			ui::get()->error("more than one default setting option --q* was specified");
+		if (arg_prefix_count(argc, argv, "--q") > 0)
+			ui::get()->error("Default settings --q* are no longer recognized.");
 
-		const char *defaults[] = {
-   			"--dchain fine:triangle:2,triangle:2 "
+		const char *defaults = 
+   			"--dchain auto:triangle:2,fine:triangle:2,triangle:2 "
 			"--achain triangle:2 "
-			"--ips 0 "
-			"--3d-chain fine:triangle:2,triangle:2 ",
+			"--ips 1 "
+			"--3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2 ";
 
-			"--dchain sinc*lanc:6 "
-			"--achain sinc*lanc:6 "
-			"--ips 0 "
-			"--3d-chain sinc*lanc:6 ",
-   
-			"--dchain fine:triangle:2,fine:gauss:0.75,triangle:2 "
-			"--achain triangle:2 "
-			"--ips 0 "
-			"--3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2 ",
-
-			"--dchain triangle:2 "
-			"--achain triangle:2 "
-			"--ips 4 "
-			"--3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2 ",
-		};
-
-		int default_index;
-		if (arg_count(argc, argv, "--q0")) {
-			default_index = 0;
-		} else if (arg_count(argc, argv, "--qn")) {
-			default_index = 1;
-		} else if (arg_count(argc, argv, "--q1")) {
-			default_index = 2;
-		} else if (arg_count(argc, argv, "--q2")) {
-			default_index = 3;
-		} else if (arg_count(argc, argv, "--qr")) {
-			default_index = 4;
-		} else {
-			/*
-			 * Same as --q2
-			 */
-			default_index = 3;
-		}
-
-		token_reader *default_reader = new cstring_token_reader(defaults[default_index]);
+		token_reader *default_reader = new cstring_token_reader(defaults);
 
 		evaluate_stream(default_reader, NULL);
 

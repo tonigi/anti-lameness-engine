@@ -87,7 +87,6 @@ public:
 			"Help options:\n"
 			HEADER_SPACE
 			"--hu              Usage (this message).\n"
-			"--hq              Default settings.\n"
 			"--hf              Image files.\n"
 			"--he              Exclusion regions.\n"
 			"--ha              Alignment (not exposure-related).\n"
@@ -114,38 +113,7 @@ public:
 			BETWEEN_SECTIONS
 			"Default settings:\n"
 			HEADER_SPACE
-			"--q0              Low quality, high speed.\n"
-			"--q1              Moderate quality and speed.\n"
-			"--q2              High quality, low speed. [default]\n"
-			"--qn              Low noise, moderate speed.\n"
-			BETWEEN_SECTIONS
-			"q0 defaults:\n"
-			HEADER_SPACE
-			"   --dchain fine:triangle:2,triangle:2\n"
-			"   --achain triangle:2\n"
-			"   --ips 0\n"
-			"   --3d-chain fine:triangle:2,triangle:2\n"
-			BETWEEN_SECTIONS
-			"q1 defaults:\n"
-			HEADER_SPACE
-			"   --dchain fine:triangle:2,fine:gauss:0.75,triangle:2\n"
-			"   --achain triangle:2\n"
-			"   --ips 0\n"
-			"   --3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2\n"
-			BETWEEN_SECTIONS
-			"q2 defaults:\n"
-			HEADER_SPACE
-			"   --dchain triangle:2\n"
-			"   --achain triangle:2\n"
-			"   --ips 4\n"
-			"   --3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2\n"
-			BETWEEN_SECTIONS
-			"Low noise defaults:\n"
-			HEADER_SPACE
-			"   --dchain sinc*lanc:6\n"
-			"   --achain sinc*lanc:6\n"
-			"   --ips 0\n"
-			"   --3d-chain sinc*lanc:6\n"
+			"--q* options are no longer recognized.\n"
 			"\n"
 		       );
 	}
@@ -316,9 +284,9 @@ public:
 			"--scale=x         Scale images by the factor x, where x > 0.     (1 is default)\n"
 			"--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)\n"
 			BETWEEN_SECTIONS
-			"Irani-Peleg iterative solver (see --hq for --ips defaults):\n"
+			"Irani-Peleg iterative solver:\n"
 			HEADER_SPACE
-			"--ips <i>         Run <i> iterations.  (see also --hx, --hl and --hd)\n"
+			"--ips <i>         Run <i> iterations.                            (1 is default)\n"
 			"--ip-mean         Use the mean correction [default]\n"
 			"--ip-median       Use the median correction\n"
 			"--ip-wl <x>       Use weight limit <x>\n"
@@ -414,8 +382,9 @@ public:
 			"                     zero           Zero function.\n"
 			"                     <f>*<f>        Pointwise multiplication (windowing).\n"
 			"                  Defaults:\n"
-			"                     dchain         (see --hq)\n"
-			"                     achain         (see --hq)\n"
+			"                     dchain         auto:triangle:2,fine:triangle:2,triangle:2\n"
+			"                     3d-chain       fine:triangle:2,fine:gauss:0.75,triangle:2\n"
+			"                     achain         triangle:2\n"
 			"                     afilter        internal (approximates triangle:2)\n"
 			"\n"
 			);

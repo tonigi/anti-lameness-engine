@@ -76,11 +76,6 @@ const char *input::focus_prefixes[] = {
  */
 
 input::simple_option input::simple_option_table[] = {
-	{ "q0", "default" }, 
-	{ "q1", "default" }, 
-	{ "q2", "default" },
-	{ "qn", "default" },
-	{ "qr", "default" },
 
 	{ "8bpc", "bpc" }, 
 	{ "16bpc", "bpc" }, 
