@@ -207,12 +207,15 @@ private:
 				max[1] = im->width() - 1;
 			/*
 			 * Iterate over the source pixels.
+			 * 
+			 * lrintf() may be faster than ceil/floor() on some architectures.
+			 * See render/psf/raster.h for more details.
 			 */
 
-			for (int i = (int) ceil (min[0]); 
-				 i<= (int) floor(max[0]); i++)
-			for (int j = (int) ceil (min[1]); 
-				 j<= (int) floor(max[1]); j++) {
+			for (int i = (int) lrintf(min[0]); 
+				 i<= (int) lrintf(max[0]); i++)
+			for (int j = (int) lrintf(min[1]); 
+				 j<= (int) lrintf(max[1]); j++) {
 
 				if (honor_exclusion && render::is_excluded_f(i, j, frame))
 					continue;
@@ -267,12 +270,15 @@ private:
 
 			/*
 			 * Iterate over the source pixels.
+			 * 
+			 * lrintf() may be faster than ceil/floor() on some architectures.
+			 * See render/psf/raster.h for more details.
 			 */
 
-			for (int i = (int) ceil (min[0]); 
-				 i<= (int) floor(max[0]); i++)
-			for (int j = (int) ceil (min[1]); 
-				 j<= (int) floor(max[1]); j++) {
+			for (int i = (int) lrintf(min[0]); 
+				 i<= (int) lrintf(max[0]); i++)
+			for (int j = (int) lrintf(min[1]); 
+				 j<= (int) lrintf(max[1]); j++) {
 
 				if (honor_exclusion && render::is_excluded_f(i, j, frame))
 					continue;

@@ -87,6 +87,11 @@ private:
 				filtered_weight = 0;
 				filtered_value = 0;
 
+				/* 
+				 * lrintf() may be faster than ceil/floor() on some architectures.
+				 * See render/psf/raster.h for more details.
+				 */
+
 				for (int ii = (int) lrintf(-f->support() * filter_scale); 
 				         ii < (int) lrintf( f->support() * filter_scale); ii++)
 				for (int jj = (int) lrintf(-f->support() * filter_scale);
