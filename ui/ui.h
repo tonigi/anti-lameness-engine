@@ -496,6 +496,10 @@ public:
 		printf("Iterating Irani-Peleg");
 	}
 
+	virtual void refilter_start() {
+		printf("Refiltering");
+	}
+
 	virtual void ip_frame_start(unsigned int num) {
 		status.code = status.IP_RENDER;
 		status.frame_num = num;
@@ -532,6 +536,10 @@ public:
 
 	virtual void ip_done() {
 		printf("\n");
+	}
+
+	virtual void refilter_done() {
+		printf(".\n");
 	}
 
 	virtual void original_frame_start(const char *name) {

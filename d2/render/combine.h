@@ -45,11 +45,13 @@ private:
 	render *partial;
 	mutable image *output_image;
 	mutable image *defined_image;
+	int incremental_done;
 
 	const image *get_image_dynamic() const {
 		assert(typeid(*partial) == typeid(incremental));
 
-		if (typeid(*_default) != typeid(combine)) {
+		if (typeid(*_default) != typeid(combine)
+		 || !incremental_done) {
 			/*
 			 * Degenerate case.
 			 */
@@ -74,6 +76,8 @@ private:
 		assert (coarse_defined->width()  == fine_weight->width());
 		assert (coarse_defined->height() == fine_weight->height());
 
+		ui::get()->refilter_start();
+		
 		for (unsigned int i = 0; i < coarse_defined->height(); i++)
 		for (unsigned int j = 0; j < coarse_defined->width();  j++) 
 		for (unsigned int k = 0; k < 3;                        k++){
@@ -130,6 +134,8 @@ private:
 			output_image->chan(i, j, k) = filtered_value / filtered_weight;
 		}
 
+		ui::get()->refilter_done();
+
 		return output_image;
 	}
 public:
@@ -142,6 +148,7 @@ public:
 		this->partial = partial;
 		this->output_image = NULL;
 		this->defined_image = NULL;
+		this->incremental_done = 0;
 	}
 
 	virtual ~combine() {
@@ -245,6 +252,22 @@ public:
 	}
 
 	virtual void step() {
+	}
+
+	virtual int sync() {
+		if (output_image) {
+			delete output_image;
+			output_image = NULL;
+		}
+		if (defined_image) {
+			delete defined_image;
+			defined_image = NULL;
+		}
+		_default->sync();
+		partial->sync();
+		incremental_done = 1;
+
+		return 1;
 	}
 
 	virtual void init_point_renderer(unsigned int h, unsigned int w, unsigned int d) {

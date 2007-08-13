@@ -2838,8 +2838,8 @@ public:
 		/*
 		 * Do any post-processing and output final image
 		 *
-		 * XXX: note that non-incremental renderers currently
-		 * return zero for ochain[0]->sync(), since they write
+		 * XXX: note that the Irani-Peleg renderer currently
+		 * returns zero for ochain[0]->sync(), since it writes
 		 * output internally when inc != 0.
 		 */
 

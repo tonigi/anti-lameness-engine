@@ -1411,11 +1411,15 @@ public:
 
         virtual int sync() {
 		input->sync();
-		ui::get()->ip_start();
                 done = 1;
                 approximation = optimizations::get_ip_working_image(input->get_image());
+		ui::get()->ip_start();
                 _ip();
 		ui::get()->ip_done();
+
+		/*
+		 * Since we write output internally, no update is necessary.
+		 */
 
                 return 0;
         }
