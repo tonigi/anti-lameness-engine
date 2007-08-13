@@ -144,8 +144,8 @@ public:
 			BETWEEN_SECTIONS
 			"Incremental output:\n"
 			HEADER_SPACE
-			"--inc             Produce incremental output.\n"
-			"--no-inc          Don't produce incremental output.  [default]\n"
+			"--inc             Produce rough incremental output.\n"
+			"--no-inc          Don't produce any incremental output.  [default]\n"
 
 			BETWEEN_SECTIONS
 			"Undefined values:\n"
@@ -336,7 +336,7 @@ public:
 			"                     Default lpsf is either 'box=1.0' or device-specific.\n"
 			"                     Default nlpsf is either disabled or device-specific.\n"
 			BETWEEN_SECTIONS
-			"Incremental rendering chains:\n"
+			"Rendering chains:\n"
 			HEADER_SPACE
 			"--wt <w>          Set weight threshold for defined pixels (default is 0.0001).\n"
 			"--dchain <g>      Use chain <g> to render the default output.\n"
@@ -532,7 +532,7 @@ public:
 			"--visp <args>     Process a video sequence.\n"
 			"                     <args> are:\n"
 			"                         <chain> <stabilization-type> <prefix> <suffix>\n"
-			"                     <chain> is an incremental rendering chain.  (see --hl)\n"
+			"                     <chain> is a rendering chain.  (see --hl)\n"
 			"                     <stabilization-type> is one of:\n"
 			"                         ma:<x>     Moving average over 2*<x> + 1 frames\n"
 			"                         sf:<x>     Stabilize to single frame number <x>\n"
