@@ -108,7 +108,7 @@
 
 class ipc : public render {
 protected:
-        int done;
+        int synced;
 	int inc;
         image *approximation;
         render *input;
@@ -1379,7 +1379,7 @@ public:
 			psf *nlresponse, int exposure_register,
 			int use_weighted_median, double ipwl) {
                 this->input = input;
-                done = 0;
+                synced = 0;
 		inc = _inc;
                 this->iterations = iterations;
 		this->lresponse = lresponse;
@@ -1390,7 +1390,7 @@ public:
         }
 
         const image *get_image() const {
-                if (done)
+                if (synced)
                         return approximation;
                 else
                         return input->get_image();
@@ -1411,7 +1411,7 @@ public:
 
         virtual int sync() {
 		input->sync();
-                done = 1;
+                synced = 1;
                 approximation = optimizations::get_ip_working_image(input->get_image());
 		ui::get()->ip_start();
                 _ip();

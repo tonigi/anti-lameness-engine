@@ -45,13 +45,12 @@ private:
 	render *partial;
 	mutable image *output_image;
 	mutable image *defined_image;
-	int incremental_done;
+	int synced;
 
 	const image *get_image_dynamic() const {
 		assert(typeid(*partial) == typeid(incremental));
 
-		if (typeid(*_default) != typeid(combine)
-		 || !incremental_done) {
+		if (typeid(*_default) != typeid(combine) || !synced) {
 			/*
 			 * Degenerate case.
 			 */
@@ -148,7 +147,7 @@ public:
 		this->partial = partial;
 		this->output_image = NULL;
 		this->defined_image = NULL;
-		this->incremental_done = 0;
+		this->synced = 0;
 	}
 
 	virtual ~combine() {
@@ -265,7 +264,7 @@ public:
 		}
 		_default->sync();
 		partial->sync();
-		incremental_done = 1;
+		synced = 1;
 
 		return 1;
 	}
