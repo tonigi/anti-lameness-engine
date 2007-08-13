@@ -1418,7 +1418,8 @@ public:
 		ui::get()->ip_done();
 
 		/*
-		 * Since we write output internally, no update is necessary.
+		 * Since we write output internally for --inc, no external
+		 * update is necessary in this case.
 		 */
 
                 return 0;
