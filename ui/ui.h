@@ -497,7 +497,7 @@ public:
 	}
 
 	virtual void refilter_start() {
-		printf("Refiltering");
+		printf("Re-filtering incremental results");
 	}
 
 	virtual void ip_frame_start(unsigned int num) {
