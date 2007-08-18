@@ -109,6 +109,111 @@ public:
 		assert (_count > 0);
 		return _count;
 	}
+
+	class lock_t {
+#ifdef USE_PTHREAD
+		pthread_mutex_t _lock;
+#endif
+	public:
+		lock_t() {
+#ifdef USE_PTHREAD
+			_lock = PTHREAD_MUTEX_INITIALIZER;
+#endif
+		}
+
+		lock() {
+#ifdef USE_PTHREAD
+			pthread_mutex_lock(_lock);
+#endif
+		}
+
+		unlock() {
+#ifdef USE_PTHREAD
+			pthread_mutex_unlock(_lock);
+#endif
+		}
+	};
+
+	class decompose_domain {
+		lock_t _lock;
+		int ilg, ihg, jlg, jhg;
+
+	protected:
+		void lock() {
+			_lock->lock();
+		}
+
+		void unlock() {
+			_lock->unlock();
+		}
+
+		virtual void prepare_subdomains(unsigned int threads) {
+		}
+		virtual void subdomain_algorithm(unsigned int thread, 
+				int il, int ih, int jl, int jh) {
+		}
+		virtual void finish_subdomains(unsigned int threads) {
+		}
+		
+	private:
+		struct thread_data_t {
+			decompose_domain *this_ptr;
+			unsigned int thread_index;
+			int il, ih, jl, jh;
+		};
+
+		static void run_thread(void *thread_data) {
+			thread_data_t *td = (thread_data_t *) thread_data;
+			td->this_ptr->subdomain_algorithm(td->thread_index,
+				td->il, td->ih, td->jl, td->jh);
+		}
+
+	public:
+		decompose_domain(int ilg, int ihg, int jlg, int jhg) {
+			this->ilg = ilg;
+			this->ihg = ihg;
+			this->jlg = jlg;
+			this->jhg = jhg;
+		}
+
+		void run() {
+#ifdef USE_PTHREAD
+			N = thread::count();
+
+			pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * N);
+			pthread_attr_t *thread_attr = (pthread_attr_t *) 
+					malloc(sizeof(pthread_attr_t) * N);
+#else
+			N = 1;
+#endif
+
+			prepare_subdomains(N);
+
+			thread_data_t *td = new thread_data_t[N];
+
+			for (int ti = 0; ti < N; ti++) {
+				td[ti].this_ptr = this;
+				td[ti].thread_index = ti;
+				td[ti].il = ilg + ((ihg - ilg) * ti) / N;
+				td[ti].ih = ilg + ((ihg - ilg) * (ti + 1)) / N;
+				td[ti].jl = jlg;
+				td[ti].jh = jhg;
+#ifdef USE_PTHREAD
+				pthread_attr_init(&thread_attr[ti]);
+				pthread_attr_setdetachstate(&thread_attr[ti], 
+						PTHREAD_CREATE_JOINABLE);
+				pthread_create(&threads[ti], &thread_attr[ti], 
+						run_thread, &td[ti]);
+#else
+				run_thread(&td[ti]);
+#endif
+			}
+
+			delete[] td;
+
+			finish_subdomains(N);
+		}
+	};
 };
 
 #endif
