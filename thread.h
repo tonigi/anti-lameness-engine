@@ -31,6 +31,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef USE_PTHREAD
+#include <pthread.h>
+#endif
+
 #define THREAD_PER_CPU_DEFAULT 1
 #define THREAD_COUNT_DEFAULT 4
 
@@ -117,19 +121,20 @@ public:
 	public:
 		lock_t() {
 #ifdef USE_PTHREAD
-			_lock = PTHREAD_MUTEX_INITIALIZER;
+			/* _lock = PTHREAD_MUTEX_INITIALIZER; */
+			pthread_mutex_init(&_lock, NULL);
 #endif
 		}
 
-		lock() {
+		void lock() {
 #ifdef USE_PTHREAD
-			pthread_mutex_lock(_lock);
+			pthread_mutex_lock(&_lock);
 #endif
 		}
 
-		unlock() {
+		void unlock() {
 #ifdef USE_PTHREAD
-			pthread_mutex_unlock(_lock);
+			pthread_mutex_unlock(&_lock);
 #endif
 		}
 	};
@@ -140,11 +145,11 @@ public:
 
 	protected:
 		void lock() {
-			_lock->lock();
+			_lock.lock();
 		}
 
 		void unlock() {
-			_lock->unlock();
+			_lock.unlock();
 		}
 
 		virtual void prepare_subdomains(unsigned int threads) {
@@ -162,10 +167,11 @@ public:
 			int il, ih, jl, jh;
 		};
 
-		static void run_thread(void *thread_data) {
+		static void *run_thread(void *thread_data) {
 			thread_data_t *td = (thread_data_t *) thread_data;
 			td->this_ptr->subdomain_algorithm(td->thread_index,
 				td->il, td->ih, td->jl, td->jh);
+			return NULL;
 		}
 
 	public:
@@ -177,6 +183,7 @@ public:
 		}
 
 		void run() {
+			int N;
 #ifdef USE_PTHREAD
 			N = thread::count();
 
@@ -212,6 +219,9 @@ public:
 			delete[] td;
 
 			finish_subdomains(N);
+		}
+
+		virtual ~decompose_domain() {
 		}
 	};
 };
