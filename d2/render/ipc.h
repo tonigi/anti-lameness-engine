@@ -124,7 +124,7 @@ protected:
 	 * pixels.  
 	 */
 
-	struct sim_subdomain_args {
+	struct sim_args {
 		int frame_num;
 		image *approximation;
 		image *lsimulated;
@@ -135,209 +135,259 @@ protected:
 		const raster *lresponse;
 		const raster *nlresponse;
 		const exposure *exp;
-		int i_min, i_max, j_min, j_max;
-		point extents[2];
-#ifdef USE_PTHREAD
-		pthread_mutex_t *lock;
-#endif
+		point *extents;
 	};
 
-	static void *_ip_frame_simulate_subdomain_linear(void *args) {
+	class simulate_subdomain_linear : public thread::decompose_domain, 
+	                                  private sim_args {
+		point *subdomain_extents;
 
-		sim_subdomain_args *sargs = (sim_subdomain_args *) args;
+	protected:
+		void prepare_subdomains(unsigned int N) {
+			subdomain_extents = new point[N * 2];
 
-		int frame_num = sargs->frame_num;
-		image *approximation = sargs->approximation;
-		image *lsimulated = sargs->lsimulated;
-		image *lsim_weights = sargs->lsim_weights;
-		transformation t = sargs->t;
-		const raster *lresponse = sargs->lresponse;
-		unsigned int i_min = sargs->i_min;
-		unsigned int i_max = sargs->i_max;
-		unsigned int j_min = sargs->j_min;
-		unsigned int j_max = sargs->j_max;
-		point *extents = sargs->extents;
-#ifdef USE_PTHREAD
-		pthread_mutex_t *lock = sargs->lock;
-#endif
+			for (int n = 0; n < N; n++) {
+				point *se = subdomain_extents + 2 * n;
 
-		/*
-		 * Linear filtering, iterating over approximation pixels
-		 */
-
-                for (unsigned int i = i_min; i < i_max; i++)
-                for (unsigned int j = j_min; j < j_max; j++) {
-
-			if (is_excluded_r(approximation->offset(), i, j, frame_num))
-				continue;
-
-			/*
-			 * Obtain the position Q and dimensions D of
-			 * image approximation pixel (i, j) in the coordinate
-			 * system of the simulated frame.
-			 */
-
-                        point p = point(i + approximation->offset()[0], j + approximation->offset()[1]);
-			point q;
-			ale_pos d[2];
-
-			/*
-			 * XXX: This appears to calculate the wrong thing.
-			 */
-
-			if (is_excluded_f(p, frame_num))
-				continue;
-
-			t.unscaled_map_area_inverse(p, &q, d);
-			
-			/*
-			 * Convenient variables for expressing the boundaries
-			 * of the mapped area.
-			 */
-			
-			ale_pos top = q[0] - d[0];
-			ale_pos bot = q[0] + d[0];
-			ale_pos lef = q[1] - d[1];
-			ale_pos rig = q[1] + d[1];
-
-			/*
-			 * Iterate over all simulated frame pixels influenced
-			 * by the scene pixel (i, j), as determined by the 
-			 * response function.
-			 */
-
-                        for (int ii = (int) floor(top + lresponse->min_i());
-                                ii <= ceil(bot + lresponse->max_i()); ii++)
-                        for (int jj = (int) floor(lef + lresponse->min_j());
-                                jj <= ceil(rig + lresponse->max_j()); jj++) {
-
-				if (ii < (int) 0
-				 || ii >= (int) lsimulated->height()
-				 || jj < (int) 0
-				 || jj >= (int) lsimulated->width())
-					continue;
-
-				if (ii < extents[0][0])
-					extents[0][0] = ii;
-				if (jj < extents[0][1])
-					extents[0][1] = jj;
-				if (ii > extents[1][0])
-					extents[1][0] = ii;
-				if (jj > extents[1][1])
-					extents[1][1] = jj;
-
-				class rasterizer::psf_result r =
-					(*lresponse)(top - ii, bot - ii,
-						    lef - jj, rig - jj,
-						    lresponse->select(ii, jj),
-						    lsimulated->get_channels(ii, jj));
-
-#ifdef USE_PTHREAD
-				pthread_mutex_lock(lock);
-#endif
-				if (lsimulated->get_bayer() == IMAGE_BAYER_NONE) {
-					lsimulated->pix(ii, jj) +=
-						r(approximation->get_pixel(i, j));
-					lsim_weights->pix(ii, jj) +=
-						r.weight();
-				} else {
-					int k = ((image_bayer_ale_real *)lsimulated)->bayer_color(ii, jj);
-					lsimulated->chan(ii, jj, k) +=
-						r(approximation->get_pixel(i, j))[k];
-					lsim_weights->chan(ii, jj, k) +=
-						r.weight()[k];
+				for (int d = 0; d < 2; d++) {
+					se[0][d] = extents[0][d];
+					se[1][d] = extents[1][d];
 				}
-#ifdef USE_PTHREAD
-				pthread_mutex_unlock(lock);
-#endif
-                        }
-                }
+			}
+		}
 
-		return NULL;
-	}
+		void subdomain_algorithm(unsigned int thread,
+				int i_min, int i_max, int j_min, int j_max) {
 
-	static void *_ip_frame_simulate_subdomain_nonlinear(void *args) {
-
-		sim_subdomain_args *sargs = (sim_subdomain_args *) args;
-
-		image *lsimulated = sargs->lsimulated;
-		image *nlsimulated = sargs->nlsimulated;
-		image *nlsim_weights = sargs->nlsim_weights;
-		transformation t = sargs->t;
-		const raster *nlresponse = sargs->nlresponse;
-		const exposure *exp = sargs->exp;
-		unsigned int i_min = sargs->i_min;
-		unsigned int i_max = sargs->i_max;
-		unsigned int j_min = sargs->j_min;
-		unsigned int j_max = sargs->j_max;
-		point *extents = sargs->extents;
-#ifdef USE_PTHREAD
-		pthread_mutex_t *lock = sargs->lock;
-#endif
-
-		/*
-		 * Iterate non-linear
-		 */
-
-                for (unsigned int i = i_min; i < i_max; i++)
-                for (unsigned int j = j_min; j < j_max; j++) {
+			point *extents = subdomain_extents + thread * 2;
 
 			/*
-			 * Convenient variables for expressing the boundaries
-			 * of the mapped area.
-			 */
-			
-			ale_pos top = i - 0.5;
-			ale_pos bot = i + 0.5;
-			ale_pos lef = j - 0.5;
-			ale_pos rig = j + 0.5;
-
-			/*
-			 * Iterate over all simulated frame pixels influenced
-			 * by the scene pixel (i, j), as determined by the 
-			 * response function.
+			 * Linear filtering, iterating over approximation pixels
 			 */
 
-                        for (int ii = (int) floor(top + nlresponse->min_i());
-                                ii <= ceil(bot + nlresponse->max_i()); ii++)
-                        for (int jj = (int) floor(lef + nlresponse->min_j());
-                                jj <= ceil(rig + nlresponse->max_j()); jj++) {
+			for (unsigned int i = i_min; i < i_max; i++)
+			for (unsigned int j = j_min; j < j_max; j++) {
 
-				if (ii < (int) 0
-				 || ii >= (int) nlsimulated->height()
-				 || jj < (int) 0
-				 || jj >= (int) nlsimulated->width())
+				if (is_excluded_r(approximation->offset(), i, j, frame_num))
 					continue;
 
-				if (ii < extents[0][0])
-					extents[0][0] = ii;
-				if (jj < extents[0][1])
-					extents[0][1] = jj;
-				if (ii > extents[1][0])
-					extents[1][0] = ii;
-				if (jj > extents[1][1])
-					extents[1][1] = jj;
+				/*
+				 * Obtain the position Q and dimensions D of
+				 * image approximation pixel (i, j) in the coordinate
+				 * system of the simulated frame.
+				 */
 
-				class rasterizer::psf_result r =
-					(*nlresponse)(top - ii, bot - ii,
-						    lef - jj, rig - jj,
-						    nlresponse->select(ii, jj));
+				point p = point(i + approximation->offset()[0], j + approximation->offset()[1]);
+				point q;
+				ale_pos d[2];
 
-#ifdef USE_PTHREAD
-				pthread_mutex_lock(lock);
-#endif
-				nlsimulated->pix(ii, jj) +=
-					r(exp->unlinearize(lsimulated->get_pixel(i, j)));
-				nlsim_weights->pix(ii, jj) +=
-					r.weight();
-#ifdef USE_PTHREAD
-				pthread_mutex_unlock(lock);
-#endif
-                        }
-                }
+				/*
+				 * XXX: This appears to calculate the wrong thing.
+				 */
 
-		return NULL;
-	}
+				if (is_excluded_f(p, frame_num))
+					continue;
+
+				t.unscaled_map_area_inverse(p, &q, d);
+				
+				/*
+				 * Convenient variables for expressing the boundaries
+				 * of the mapped area.
+				 */
+				
+				ale_pos top = q[0] - d[0];
+				ale_pos bot = q[0] + d[0];
+				ale_pos lef = q[1] - d[1];
+				ale_pos rig = q[1] + d[1];
+
+				/*
+				 * Iterate over all simulated frame pixels influenced
+				 * by the scene pixel (i, j), as determined by the 
+				 * response function.
+				 */
+
+				for (int ii = (int) floor(top + lresponse->min_i());
+					ii <= ceil(bot + lresponse->max_i()); ii++)
+				for (int jj = (int) floor(lef + lresponse->min_j());
+					jj <= ceil(rig + lresponse->max_j()); jj++) {
+
+					if (ii < (int) 0
+					 || ii >= (int) lsimulated->height()
+					 || jj < (int) 0
+					 || jj >= (int) lsimulated->width())
+						continue;
+
+					if (ii < extents[0][0])
+						extents[0][0] = ii;
+					if (jj < extents[0][1])
+						extents[0][1] = jj;
+					if (ii > extents[1][0])
+						extents[1][0] = ii;
+					if (jj > extents[1][1])
+						extents[1][1] = jj;
+
+					class rasterizer::psf_result r =
+						(*lresponse)(top - ii, bot - ii,
+							    lef - jj, rig - jj,
+							    lresponse->select(ii, jj),
+							    lsimulated->get_channels(ii, jj));
+
+					lock();
+
+					if (lsimulated->get_bayer() == IMAGE_BAYER_NONE) {
+						lsimulated->pix(ii, jj) +=
+							r(approximation->get_pixel(i, j));
+						lsim_weights->pix(ii, jj) +=
+							r.weight();
+					} else {
+						int k = ((image_bayer_ale_real *)lsimulated)->bayer_color(ii, jj);
+						lsimulated->chan(ii, jj, k) +=
+							r(approximation->get_pixel(i, j))[k];
+						lsim_weights->chan(ii, jj, k) +=
+							r.weight()[k];
+					}
+
+					unlock()
+				}
+			}
+		}
+
+		void finish_subdomains(unsigned int N) {
+			/*
+			 * Determine extents
+			 */
+
+			for (int n = 0; n < N; n++) {
+				point *se = subdomain_extents + 2 * n;
+
+				for (int d = 0; d < 2; d++) {
+					if (se[0][d] < extents[0][d])
+						extents[0][d] = se[0][d];
+					if (se[1][d] > extents[1][d])
+						extents[1][d] = se[1][d];
+				}
+			}
+
+			delete[] subdomain_extents;
+		}
+	public:
+
+		simulate_subdomain_linear(int i_min, int i_max, int j_min, int j_max, sim_args s) 
+				: decompose_domain(i_min, i_max, j_min, j_max), sim_args(s) {
+		}
+	};
+
+
+	class simulate_subdomain_nonlinear : public thread::decompose_domain, 
+	                                     private sim_args {
+		point *subdomain_extents;
+
+	protected:
+		void prepare_subdomains(unsigned int N) {
+			subdomain_extents = new point[N * 2];
+
+			for (int n = 0; n < N; n++) {
+				point *se = subdomain_extents + 2 * n;
+
+				for (int d = 0; d < 2; d++) {
+					se[0][d] = extents[0][d];
+					se[1][d] = extents[1][d];
+				}
+			}
+		}
+
+		void subdomain_algorithm(unsigned int thread,
+				int i_min, int i_max, int j_min, int j_max) {
+
+			point *extents = subdomain_extents + thread * 2;
+
+			/*
+			 * Iterate non-linear
+			 */
+
+			for (unsigned int i = i_min; i < i_max; i++)
+			for (unsigned int j = j_min; j < j_max; j++) {
+
+				/*
+				 * Convenient variables for expressing the boundaries
+				 * of the mapped area.
+				 */
+				
+				ale_pos top = i - 0.5;
+				ale_pos bot = i + 0.5;
+				ale_pos lef = j - 0.5;
+				ale_pos rig = j + 0.5;
+
+				/*
+				 * Iterate over all simulated frame pixels influenced
+				 * by the scene pixel (i, j), as determined by the 
+				 * response function.
+				 */
+
+				for (int ii = (int) floor(top + nlresponse->min_i());
+					ii <= ceil(bot + nlresponse->max_i()); ii++)
+				for (int jj = (int) floor(lef + nlresponse->min_j());
+					jj <= ceil(rig + nlresponse->max_j()); jj++) {
+
+					if (ii < (int) 0
+					 || ii >= (int) nlsimulated->height()
+					 || jj < (int) 0
+					 || jj >= (int) nlsimulated->width())
+						continue;
+
+					if (ii < extents[0][0])
+						extents[0][0] = ii;
+					if (jj < extents[0][1])
+						extents[0][1] = jj;
+					if (ii > extents[1][0])
+						extents[1][0] = ii;
+					if (jj > extents[1][1])
+						extents[1][1] = jj;
+
+					class rasterizer::psf_result r =
+						(*nlresponse)(top - ii, bot - ii,
+							    lef - jj, rig - jj,
+							    nlresponse->select(ii, jj));
+
+					lock();
+
+					nlsimulated->pix(ii, jj) +=
+						r(exp->unlinearize(lsimulated->get_pixel(i, j)));
+					nlsim_weights->pix(ii, jj) +=
+						r.weight();
+
+					unlock();
+				}
+			}
+
+			return NULL;
+		}
+
+		void finish_subdomains(unsigned int N) {
+			/*
+			 * Determine extents
+			 */
+
+			for (int n = 0; n < N; n++) {
+				point *se = subdomain_extents + 2 * n;
+
+				for (int d = 0; d < 2; d++) {
+					if (se[0][d] < extents[0][d])
+						extents[0][d] = se[0][d];
+					if (se[1][d] > extents[1][d])
+						extents[1][d] = se[1][d];
+				}
+			}
+
+			delete[] subdomain_extents;
+		}
+	public:
+
+		simulate_subdomain_nonlinear(int i_min, int i_max, int j_min, int j_max, sim_args s) 
+				: decompose_domain(i_min, i_max, j_min, j_max),
+				  sim_args(s) {
+		}
+	};
 
 	void _ip_frame_simulate(int frame_num, image *approximation, 
 			image *lsimulated, image *nlsimulated, 
@@ -345,25 +395,7 @@ protected:
 			const raster *nlresponse, const exposure &exp,
 			point *extents) {
 
-		/*
-		 * Threading initializations
-		 */
-
-		int N;
-
-#ifdef USE_PTHREAD
-		N = thread::count();
-
-		pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * N);
-		pthread_attr_t *thread_attr = (pthread_attr_t *) malloc(sizeof(pthread_attr_t) * N);
-		pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-
-#else
-		N = 1;
-#endif
-
-		sim_subdomain_args *args = new sim_subdomain_args[N];
-
+		sim_args args;
 
 		/*
 		 * Initializations for linear filtering
@@ -385,38 +417,22 @@ protected:
 		}
 		assert (lsim_weights);
 
-		for (int ti = 0; ti < N; ti++) {
-			args[ti].frame_num = frame_num;
-			args[ti].approximation = approximation;
-			args[ti].lsimulated = lsimulated;
-			args[ti].nlsimulated = nlsimulated;
-			args[ti].lsim_weights = lsim_weights;
-			args[ti].t = t;
-			args[ti].lresponse = lresponse;
-			args[ti].nlresponse = nlresponse;
-			args[ti].exp = &exp;
-			args[ti].i_min = (approximation->height() * ti) / N;
-			args[ti].i_max = (approximation->height() * (ti + 1)) / N;
-			args[ti].j_min = 0;
-			args[ti].j_max = approximation->width();
-			args[ti].extents[0] = point::posinf();
-			args[ti].extents[1] = point::neginf();
+		args.frame_num = frame_num;
+		args.approximation = approximation;
+		args.lsimulated = lsimulated;
+		args.nlsimulated = nlsimulated;
+		args.lsim_weights = lsim_weights;
+		args.t = t;
+		args.lresponse = lresponse;
+		args.nlresponse = nlresponse;
+		args.exp = &exp;
+		args.extents = extents;
 
-#ifdef USE_PTHREAD
-			args[ti].lock = &lock;
-			pthread_attr_init(&thread_attr[ti]);
-			pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
-			pthread_create(&threads[ti], &thread_attr[ti], _ip_frame_simulate_subdomain_linear, &args[ti]);
-#else
-			_ip_frame_simulate_subdomain_linear(&args[ti]);
-#endif
-		}
+		simulate_subdomain_linear ssl(0, approximation->height(),
+					      0, approximation->width(),
+					      args);
 
-#ifdef USE_PTHREAD
-		for (int ti = 0; ti < N; ti++) {
-			pthread_join(threads[ti], NULL);
-		}
-#endif
+		ssl.run();
 
 		/*
 		 * Normalize linear
@@ -439,18 +455,6 @@ protected:
 
 				lsimulated->chan(ii, jj, k) /= weight;
 			}
-		}
-
-		/*
-		 * Determine extents
-		 */
-
-		for (int n = 0; n < N; n++) 
-		for (int d = 0; d < 2; d++) {
-			if (args[n].extents[0][d] < extents[0][d])
-				extents[0][d] = args[n].extents[0][d];
-			if (args[n].extents[1][d] > extents[1][d])
-				extents[1][d] = args[n].extents[1][d];
 		}
 
 		/*
@@ -477,27 +481,13 @@ protected:
 				nlsimulated->width(),
 				nlsimulated->depth());
 
-		for (int ti = 0; ti < N; ti++) {
-			args[ti].nlsim_weights = nlsim_weights;
-			args[ti].i_min = (lsimulated->height() * ti) / N;
-			args[ti].i_max = (lsimulated->height() * (ti + 1)) / N;
-			args[ti].j_min = 0;
-			args[ti].j_max = lsimulated->width();
+		args.nlsim_weights = nlsim_weights;
 
-#ifdef USE_PTHREAD
-			pthread_attr_init(&thread_attr[ti]);
-			pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
-			pthread_create(&threads[ti], &thread_attr[ti], _ip_frame_simulate_subdomain_nonlinear, &args[ti]);
-#else
-			_ip_frame_simulate_subdomain_nonlinear(&args[ti]);
-#endif
-		}
+		simulate_subdomain_nonlinear ssnl(0, approximation->height(),
+					          0, approximation->width(),
+					          args);
 
-#ifdef USE_PTHREAD
-		for (int ti = 0; ti < N; ti++) {
-			pthread_join(threads[ti], NULL);
-		}
-#endif
+		ssnl.run();
 
 		/*
 		 * Normalize non-linear
@@ -516,18 +506,6 @@ protected:
 
 			nlsimulated->pix(ii, jj)
 				/= weight;
-		}
-
-		/*
-		 * Determine extents
-		 */
-
-		for (int n = 0; n < N; n++) 
-		for (int d = 0; d < 2; d++) {
-			if (args[n].extents[0][d] < extents[0][d])
-				extents[0][d] = args[n].extents[0][d];
-			if (args[n].extents[1][d] > extents[1][d])
-				extents[1][d] = args[n].extents[1][d];
 		}
 
 		/*

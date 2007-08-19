@@ -216,6 +216,17 @@ public:
 #endif
 			}
 
+
+#ifdef USE_PTHREAD
+			for (int ti = 0; ti < N; ti++) {
+				pthread_join(threads[ti], NULL);
+			}
+			
+			free(threads);
+			free(thread_attr);
+#endif
+
+
 			delete[] td;
 
 			finish_subdomains(N);
