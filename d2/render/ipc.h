@@ -146,7 +146,7 @@ protected:
 		void prepare_subdomains(unsigned int N) {
 			subdomain_extents = new point[N * 2];
 
-			for (int n = 0; n < N; n++) {
+			for (unsigned int n = 0; n < N; n++) {
 				point *se = subdomain_extents + 2 * n;
 
 				for (int d = 0; d < 2; d++) {
@@ -165,8 +165,8 @@ protected:
 			 * Linear filtering, iterating over approximation pixels
 			 */
 
-			for (unsigned int i = i_min; i < i_max; i++)
-			for (unsigned int j = j_min; j < j_max; j++) {
+			for (int i = i_min; i < i_max; i++)
+			for (int j = j_min; j < j_max; j++) {
 
 				if (is_excluded_r(approximation->offset(), i, j, frame_num))
 					continue;
@@ -247,7 +247,7 @@ protected:
 							r.weight()[k];
 					}
 
-					unlock()
+					unlock();
 				}
 			}
 		}
@@ -257,7 +257,7 @@ protected:
 			 * Determine extents
 			 */
 
-			for (int n = 0; n < N; n++) {
+			for (unsigned int n = 0; n < N; n++) {
 				point *se = subdomain_extents + 2 * n;
 
 				for (int d = 0; d < 2; d++) {
@@ -286,7 +286,7 @@ protected:
 		void prepare_subdomains(unsigned int N) {
 			subdomain_extents = new point[N * 2];
 
-			for (int n = 0; n < N; n++) {
+			for (unsigned int n = 0; n < N; n++) {
 				point *se = subdomain_extents + 2 * n;
 
 				for (int d = 0; d < 2; d++) {
@@ -305,8 +305,8 @@ protected:
 			 * Iterate non-linear
 			 */
 
-			for (unsigned int i = i_min; i < i_max; i++)
-			for (unsigned int j = j_min; j < j_max; j++) {
+			for (int i = i_min; i < i_max; i++)
+			for (int j = j_min; j < j_max; j++) {
 
 				/*
 				 * Convenient variables for expressing the boundaries
@@ -359,8 +359,6 @@ protected:
 					unlock();
 				}
 			}
-
-			return NULL;
 		}
 
 		void finish_subdomains(unsigned int N) {
@@ -368,7 +366,7 @@ protected:
 			 * Determine extents
 			 */
 
-			for (int n = 0; n < N; n++) {
+			for (unsigned int n = 0; n < N; n++) {
 				point *se = subdomain_extents + 2 * n;
 
 				for (int d = 0; d < 2; d++) {
@@ -468,7 +466,6 @@ protected:
 		 */
 
 		if (nlsimulated == NULL) {
-			delete[] args;
 			return;
 		}
 
@@ -513,8 +510,6 @@ protected:
 		 */
 
 		delete nlsim_weights;
-
-		delete[] args;
 	}
 
 	struct correction_t {
