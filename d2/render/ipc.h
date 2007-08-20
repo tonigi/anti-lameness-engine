@@ -646,7 +646,7 @@ protected:
 	 * densities.
 	 */
 
-	struct correct_subdomain_args {
+	struct correct_args {
 		int frame_num;
 		image *approximation;
 		correction_t *cu;
@@ -657,313 +657,303 @@ protected:
 		transformation t;
 		const backprojector *lresponse;
 		const backprojector *nlresponse;
-		unsigned int i_min, i_max, j_min, j_max;
 		double weight_limit;
 	};
 
-	static void *_ip_frame_correct_subdomain_nonlinear(void *args) {
+	class correct_nonlinear : public thread::decompose_domain, 
+	                          private correct_args {
 
-		correct_subdomain_args *sargs = (correct_subdomain_args *) args;
-
-		int frame_num = sargs->frame_num;
-		image *approximation = sargs->approximation;
-		const image *real = sargs->real;
-		image *lreal = sargs->lreal;
-		image *lsimulated = sargs->lsimulated;
-		const image *nlsimulated = sargs->nlsimulated;
-		transformation t = sargs->t;
-		const backprojector *nlresponse = sargs->nlresponse;
-		unsigned int i_min = sargs->i_min;
-		unsigned int i_max = sargs->i_max;
-		unsigned int j_min = sargs->j_min;
-		unsigned int j_max = sargs->j_max;
-
-		/*
-		 * Unlinearize values from lsimulated.
-		 */
-
-		for (unsigned int i = i_min; i < i_max; i++)
-		for (unsigned int j = j_min; j < j_max; j++)
-			lreal->set_pixel(i, j, real->exp().unlinearize(
-						lsimulated->get_pixel(i, j)));
-
-
-		/*
-		 * Backproject from real to lreal, iterating over all pixels
-		 * in lreal.
-		 */
-
-		for (unsigned int i = i_min; i < i_max; i++)
-		for (unsigned int j = j_min; j < j_max; j++) {
+	protected:
+		void subdomain_algorithm(unsigned int thread,
+				int i_min, int i_max, int j_min, int j_max) {
 
 			/*
-			 * XXX: Is this right?
+			 * Unlinearize values from lsimulated.
 			 */
 
-			if (is_excluded_r(approximation->offset(), i, j, frame_num))
-				continue;
+			for (int i = i_min; i < i_max; i++)
+			for (int j = j_min; j < j_max; j++)
+				lreal->set_pixel(i, j, real->exp().unlinearize(
+							lsimulated->get_pixel(i, j)));
+
 
 			/*
-			 * Convenient variables for expressing the boundaries
-			 * of the mapped area.
-			 */
-			
-			ale_pos top = i - 0.5;
-			ale_pos bot = i + 0.5;
-			ale_pos lef = j - 0.5;
-			ale_pos rig = j + 0.5;
-
-			/*
-			 * Iterate over non-linear pixels influenced by linear
-			 * pixels.
+			 * Backproject from real to lreal, iterating over all pixels
+			 * in lreal.
 			 */
 
-			for (int ii = (int) floor(top + nlresponse->min_i());
-				ii <= ceil(bot + nlresponse->max_i()); ii++)
-			for (int jj = (int) floor(lef + nlresponse->min_j());
-				jj <= ceil(rig + nlresponse->max_j()); jj++) {
+			for (int i = i_min; i < i_max; i++)
+			for (int j = j_min; j < j_max; j++) {
 
-				if (ii < (int) 0
-				 || ii >= (int) nlsimulated->height()
-				 || jj < (int) 0
-				 || jj >= (int) nlsimulated->width())
-					continue;
+				/*
+				 * XXX: Is this right?
+				 */
 
-				class backprojector::psf_result r =
-					(*nlresponse)(top - ii, bot - ii,
-						    lef - jj, rig - jj,
-						    nlresponse->select(ii, jj));
-
-
-				pixel comp_real =
-					real->exp().unlinearize(real->get_pixel(ii, jj));
-
-				pixel comp_simu =
-					nlsimulated->get_pixel(ii, jj);
-
-				if (!finite(comp_simu[0])
-				 || !finite(comp_simu[1])
-				 || !finite(comp_simu[2]))
+				if (is_excluded_r(approximation->offset(), i, j, frame_num))
 					continue;
 
 				/*
-				 * Backprojection value.
+				 * Convenient variables for expressing the boundaries
+				 * of the mapped area.
 				 */
-
-				pixel bpv = r(comp_real - comp_simu);
+				
+				ale_pos top = i - 0.5;
+				ale_pos bot = i + 0.5;
+				ale_pos lef = j - 0.5;
+				ale_pos rig = j + 0.5;
 
 				/*
-				 * Error calculation
+				 * Iterate over non-linear pixels influenced by linear
+				 * pixels.
 				 */
 
-				lreal->pix(i, j) += bpv;
+				for (int ii = (int) floor(top + nlresponse->min_i());
+					ii <= ceil(bot + nlresponse->max_i()); ii++)
+				for (int jj = (int) floor(lef + nlresponse->min_j());
+					jj <= ceil(rig + nlresponse->max_j()); jj++) {
+
+					if (ii < (int) 0
+					 || ii >= (int) nlsimulated->height()
+					 || jj < (int) 0
+					 || jj >= (int) nlsimulated->width())
+						continue;
+
+					class backprojector::psf_result r =
+						(*nlresponse)(top - ii, bot - ii,
+							    lef - jj, rig - jj,
+							    nlresponse->select(ii, jj));
+
+
+					pixel comp_real =
+						real->exp().unlinearize(real->get_pixel(ii, jj));
+
+					pixel comp_simu =
+						nlsimulated->get_pixel(ii, jj);
+
+					if (!finite(comp_simu[0])
+					 || !finite(comp_simu[1])
+					 || !finite(comp_simu[2]))
+						continue;
+
+					/*
+					 * Backprojection value.
+					 */
+
+					pixel bpv = r(comp_real - comp_simu);
+
+					/*
+					 * Error calculation
+					 */
+
+					lreal->pix(i, j) += bpv;
+				}
 			}
+
+			/*
+			 * Linearize lreal.
+			 */
+
+			for (int i = i_min; i < i_max; i++)
+			for (int j = j_min; j < j_max; j++)
+				lreal->set_pixel(i, j, real->exp().linearize(
+							lreal->get_pixel(i, j)));
 		}
 
-		/*
-		 * Linearize lreal.
-		 */
+	public:
 
-		for (unsigned int i = i_min; i < i_max; i++)
-		for (unsigned int j = j_min; j < j_max; j++)
-			lreal->set_pixel(i, j, real->exp().linearize(
-						lreal->get_pixel(i, j)));
+		correct_nonlinear(correct_args c) : decompose_domain(0, c.lreal->height(),
+				                                     0, c.lreal->width()),
+					            correct_args(c) {
+		}
+	};
 
+	class correct_linear : public thread::decompose_domain, 
+	                       private correct_args {
 
-		return NULL;
-	}
-
-	static void *_ip_frame_correct_subdomain_linear(void *args) {
-
-		correct_subdomain_args *sargs = (correct_subdomain_args *) args;
-
-		int frame_num = sargs->frame_num;
-		image *approximation = sargs->approximation;
-		correction_t *cu = sargs->cu;
-		const image *real = sargs->real;
-		const image *lreal = sargs->lreal;
-		const image *lsimulated = sargs->lsimulated;
-		transformation t = sargs->t;
-		const backprojector *lresponse = sargs->lresponse;
-		unsigned int i_min = sargs->i_min;
-		unsigned int i_max = sargs->i_max;
-		unsigned int j_min = sargs->j_min;
-		unsigned int j_max = sargs->j_max;
-
-		/*
-		 * Iterate over all pixels in the approximation.
-		 */
-
-                for (unsigned int i = i_min; i < i_max; i++)
-                for (unsigned int j = j_min; j < j_max; j++) {
+	protected:
+		void subdomain_algorithm(unsigned int thread,
+				int i_min, int i_max, int j_min, int j_max) {
 
 			/*
-			 * Check correction count against any weight limit.
+			 * Iterate over all pixels in the approximation.
 			 */
 
-			if (cu->weight_limited(i, j))
-				continue;
-
-			/*
-			 * Obtain the position Q and dimensions D of image
-			 * approximation pixel (i, j) in the coordinate system
-			 * of the simulated (and real) frame.
-			 */
-
-                        point p = point(i + approximation->offset()[0], j + approximation->offset()[1]);
-			point q;
-			ale_pos d[2];
-
-			t.unscaled_map_area_inverse(p, &q, d);
-			
-			/*
-			 * Convenient variables for expressing the boundaries
-			 * of the mapped area.
-			 */
-			
-			ale_pos top = q[0] - d[0];
-			ale_pos bot = q[0] + d[0];
-			ale_pos lef = q[1] - d[1];
-			ale_pos rig = q[1] + d[1];
-
-			/*
-			 * Iterate over frame pixels influenced by the scene
-			 * pixel.
-			 */
-
-                        for (int ii = (int) floor(top + lresponse->min_i());
-                                ii <= ceil(bot + lresponse->max_i()); ii++)
-                        for (int jj = (int) floor(lef + lresponse->min_j());
-                                jj <= ceil(rig + lresponse->max_j()); jj++) {
-
-				if (ii < (int) 0
-				 || ii >= (int) lreal->height()
-				 || jj < (int) 0
-				 || jj >= (int) lreal->width())
-					continue;
-
-				if (is_excluded_f(ii, jj, frame_num))
-					continue;
-
-				unsigned int selection = lresponse->select(ii, jj);
-
-				char channels = lreal->get_channels(ii, jj);
-
-				class backprojector::psf_result r =
-					(*lresponse)(top - ii, bot - ii,
-						    lef - jj, rig - jj,
-						    selection, channels);
-
+			for (int i = i_min; i < i_max; i++)
+			for (int j = j_min; j < j_max; j++) {
 
 				/*
-				 * R is the result of integration in the
-				 * coordinate system of the simulated frame.
-				 * We must rescale to get the result of
-				 * integration in the coordinate system of the
-				 * approximation image.
+				 * Check correction count against any weight limit.
 				 */
 
-				r *= (1 / (bot - top) / (rig - lef));
+				if (cu->weight_limited(i, j))
+					continue;
 
-				pixel comp_lreal =
-					lreal->get_raw_pixel(ii, jj);
+				/*
+				 * Obtain the position Q and dimensions D of image
+				 * approximation pixel (i, j) in the coordinate system
+				 * of the simulated (and real) frame.
+				 */
 
-				// pixel comp_real = 
-				//	real->get_pixel(ii, jj);
+				point p = point(i + approximation->offset()[0], j + approximation->offset()[1]);
+				point q;
+				ale_pos d[2];
 
-				pixel comp_simu =
-					lsimulated->get_raw_pixel(ii, jj);
+				t.unscaled_map_area_inverse(p, &q, d);
+				
+				/*
+				 * Convenient variables for expressing the boundaries
+				 * of the mapped area.
+				 */
+				
+				ale_pos top = q[0] - d[0];
+				ale_pos bot = q[0] + d[0];
+				ale_pos lef = q[1] - d[1];
+				ale_pos rig = q[1] + d[1];
+
+				/*
+				 * Iterate over frame pixels influenced by the scene
+				 * pixel.
+				 */
+
+				for (int ii = (int) floor(top + lresponse->min_i());
+					ii <= ceil(bot + lresponse->max_i()); ii++)
+				for (int jj = (int) floor(lef + lresponse->min_j());
+					jj <= ceil(rig + lresponse->max_j()); jj++) {
+
+					if (ii < (int) 0
+					 || ii >= (int) lreal->height()
+					 || jj < (int) 0
+					 || jj >= (int) lreal->width())
+						continue;
+
+					if (is_excluded_f(ii, jj, frame_num))
+						continue;
+
+					unsigned int selection = lresponse->select(ii, jj);
+
+					char channels = lreal->get_channels(ii, jj);
+
+					class backprojector::psf_result r =
+						(*lresponse)(top - ii, bot - ii,
+							    lef - jj, rig - jj,
+							    selection, channels);
+
+
+					/*
+					 * R is the result of integration in the
+					 * coordinate system of the simulated frame.
+					 * We must rescale to get the result of
+					 * integration in the coordinate system of the
+					 * approximation image.
+					 */
+
+					r *= (1 / (bot - top) / (rig - lef));
+
+					pixel comp_lreal =
+						lreal->get_raw_pixel(ii, jj);
+
+					// pixel comp_real = 
+					//	real->get_pixel(ii, jj);
+
+					pixel comp_simu =
+						lsimulated->get_raw_pixel(ii, jj);
 
 #if 1
 
-				/*
-				 * Under the assumption that finite() testing
-				 * may be expensive, limit such tests to active
-				 * channels.
-				 */
-				int found_nonfinite = 0;
-				for (int k = 0; k < 3; k++) {
-					if (((1 << k) & channels)
-					 && (!finite(comp_simu[k])
-					  || !finite(comp_lreal[k]))) {
-						found_nonfinite = 1;
-						break;
+					/*
+					 * Under the assumption that finite() testing
+					 * may be expensive, limit such tests to active
+					 * channels.
+					 */
+					int found_nonfinite = 0;
+					for (int k = 0; k < 3; k++) {
+						if (((1 << k) & channels)
+						 && (!finite(comp_simu[k])
+						  || !finite(comp_lreal[k]))) {
+							found_nonfinite = 1;
+							break;
+						}
 					}
-				}
 
-				if (found_nonfinite)
-					continue;
+					if (found_nonfinite)
+						continue;
 #else 
 
-				if (!finite(comp_simu[0])
-				 || !finite(comp_simu[1])
-				 || !finite(comp_simu[2])
-				 || !finite(comp_lreal[0])
-				 || !finite(comp_lreal[1])
-				 || !finite(comp_lreal[2]))
-					continue;
+					if (!finite(comp_simu[0])
+					 || !finite(comp_simu[1])
+					 || !finite(comp_simu[2])
+					 || !finite(comp_lreal[0])
+					 || !finite(comp_lreal[1])
+					 || !finite(comp_lreal[2]))
+						continue;
 #endif
 
-				/*
-				 * Backprojection value unadjusted 
-				 * for confidence.
-				 */
+					/*
+					 * Backprojection value unadjusted 
+					 * for confidence.
+					 */
 
-				pixel bpv = r(comp_lreal - comp_simu);
+					pixel bpv = r(comp_lreal - comp_simu);
 
-				/*
-				 * Confidence [equal to (1, 1, 1) when
-				 * confidence is uniform].
-				 */
+					/*
+					 * Confidence [equal to (1, 1, 1) when
+					 * confidence is uniform].
+					 */
 
-				// Ordinary certainty
-				// pixel conf = real->exp().confidence(comp_lreal);
+					// Ordinary certainty
+					// pixel conf = real->exp().confidence(comp_lreal);
 
-				// One-sided certainty
-				// pixel conf = real->exp().one_sided_confidence(comp_lreal, bpv);
-				      // conf = real->exp().one_sided_confidence(comp_real, bpv);
-				      
-				// Estimate-based certainty
-				// pixel conf = real->exp().confidence(comp_simu);
-					
-				// One-sided estimate-based certainty
-				pixel conf = real->exp().one_sided_confidence(comp_simu, bpv);
+					// One-sided certainty
+					// pixel conf = real->exp().one_sided_confidence(comp_lreal, bpv);
+					      // conf = real->exp().one_sided_confidence(comp_real, bpv);
+					      
+					// Estimate-based certainty
+					// pixel conf = real->exp().confidence(comp_simu);
+						
+					// One-sided estimate-based certainty
+					pixel conf = real->exp().one_sided_confidence(comp_simu, bpv);
 
-				// One-sided approximation-based certainty
-				// pixel conf = real->exp().one_sided_confidence(approximation->pix(i, j), bpv);
-					
-				/*
-				 * If a color is bayer-interpolated, then we have no confidence in its
-				 * value.
-				 */
+					// One-sided approximation-based certainty
+					// pixel conf = real->exp().one_sided_confidence(approximation->pix(i, j), bpv);
+						
+					/*
+					 * If a color is bayer-interpolated, then we have no confidence in its
+					 * value.
+					 */
 
-				if (real->get_bayer() != IMAGE_BAYER_NONE) {
-					int color = ((image_bayer_ale_real *)real)->bayer_color(ii, jj);
-					conf[(color + 1) % 3] = 0;
-					conf[(color + 2) % 3] = 0;
+					if (real->get_bayer() != IMAGE_BAYER_NONE) {
+						int color = ((image_bayer_ale_real *)real)->bayer_color(ii, jj);
+						conf[(color + 1) % 3] = 0;
+						conf[(color + 2) % 3] = 0;
+					}
+
+					/*
+					 * Error calculation
+					 */
+
+					// c->pix(i, j) += bpv * conf;
+
+					/*
+					 * Increment the backprojection weight.  When
+					 * confidence is uniform, this should weight
+					 * each frame's correction equally.
+					 */
+
+					// cc->pix(i, j) += conf * r.weight() 
+					//	       / lresponse->integral(selection);
+
+					cu->update(i, j, bpv * conf, conf * r.weight() / lresponse->integral(selection));
 				}
-
-				/*
-				 * Error calculation
-				 */
-
-				// c->pix(i, j) += bpv * conf;
-
-				/*
-				 * Increment the backprojection weight.  When
-				 * confidence is uniform, this should weight
-				 * each frame's correction equally.
-				 */
-
-				// cc->pix(i, j) += conf * r.weight() 
-				//	       / lresponse->integral(selection);
-
-				cu->update(i, j, bpv * conf, conf * r.weight() / lresponse->integral(selection));
 			}
-                }
+		}
 
-		return NULL;
-	}
+	public:
+
+		correct_linear(correct_args c) : decompose_domain(0, c.approximation->height(),
+				                                  0, c.approximation->width()),
+					         correct_args(c) {
+		}
+	};
 
 	void _ip_frame_correct(int frame_num, image *approximation,
 			correction_t *cu, const image *real, image *lsimulated, 
@@ -971,35 +961,17 @@ protected:
 			const backprojector *lresponse, 
 			const backprojector *nlresponse, point *extents) {
 
-		/*
-		 * Threading initializations
-		 */
+		correct_args args;
 
-		int N;
-
-#ifdef USE_PTHREAD
-		N = thread::count();
-
-		pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * N);
-		pthread_attr_t *thread_attr = (pthread_attr_t *) malloc(sizeof(pthread_attr_t) * N);
-
-#else
-		N = 1;
-#endif
-
-		correct_subdomain_args *args = new correct_subdomain_args[N];
-
-		for (int ti = 0; ti < N; ti++) {
-			args[ti].frame_num = frame_num;
-			args[ti].approximation = approximation;
-			args[ti].cu = cu;
-			args[ti].real = real;
-			args[ti].lsimulated = lsimulated;
-			args[ti].nlsimulated = nlsimulated;
-			args[ti].t = t;
-			args[ti].lresponse = lresponse;
-			args[ti].nlresponse = nlresponse;
-		}
+		args.frame_num = frame_num;
+		args.approximation = approximation;
+		args.cu = cu;
+		args.real = real;
+		args.lsimulated = lsimulated;
+		args.nlsimulated = nlsimulated;
+		args.t = t;
+		args.lresponse = lresponse;
+		args.nlresponse = nlresponse;
 
 		/*
 		 * Generate the image to compare lsimulated with.
@@ -1018,27 +990,10 @@ protected:
 					"IPC lreal", 
 					&real->exp());
 
-			for (int ti = 0; ti < N; ti++) {
-				args[ti].lreal = new_lreal;
-				args[ti].i_min = (new_lreal->height() * ti) / N;
-				args[ti].i_max = (new_lreal->height() * (ti + 1)) / N;
-				args[ti].j_min = 0;
-				args[ti].j_max = new_lreal->width();
+			args.lreal = new_lreal;
 
-#ifdef USE_PTHREAD
-				pthread_attr_init(&thread_attr[ti]);
-				pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
-				pthread_create(&threads[ti], &thread_attr[ti], _ip_frame_correct_subdomain_nonlinear, &args[ti]);
-#else
-				_ip_frame_correct_subdomain_nonlinear(&args[ti]);
-#endif
-			}
-
-#ifdef USE_PTHREAD
-			for (int ti = 0; ti < N; ti++) {
-				pthread_join(threads[ti], NULL);
-			}
-#endif
+			correct_nonlinear cn(args);
+			cn.run();
 
 			lreal = new_lreal;
 		}
@@ -1119,32 +1074,14 @@ protected:
 				real->exp().set_multiplier(
 					real->exp().get_multiplier() * ec);
 		}
-		for (int ti = 0; ti < N; ti++) {
-			args[ti].lreal = (d2::image *) lreal;
-			args[ti].i_min = (approximation->height() * ti) / N;
-			args[ti].i_max = (approximation->height() * (ti + 1)) / N;
-			args[ti].j_min = 0;
-			args[ti].j_max = approximation->width();
 
-#ifdef USE_PTHREAD
-			pthread_attr_init(&thread_attr[ti]);
-			pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
-			pthread_create(&threads[ti], &thread_attr[ti], _ip_frame_correct_subdomain_linear, &args[ti]);
-#else
-			_ip_frame_correct_subdomain_linear(&args[ti]);
-#endif
-		}
+		args.lreal = (d2::image *) lreal;
 
-#ifdef USE_PTHREAD
-		for (int ti = 0; ti < N; ti++) {
-			pthread_join(threads[ti], NULL);
-		}
-#endif
+		correct_linear cl(args);
+		cl.run();
 
 		if (nlsimulated)
 			delete lreal;
-
-		delete[] args;
 	}
 
 	/* 
