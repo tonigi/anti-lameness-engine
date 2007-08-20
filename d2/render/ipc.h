@@ -138,8 +138,8 @@ protected:
 		point *extents;
 	};
 
-	class simulate_subdomain_linear : public thread::decompose_domain, 
-	                                  private sim_args {
+	class simulate_linear : public thread::decompose_domain, 
+	                        private sim_args {
 		point *subdomain_extents;
 
 	protected:
@@ -272,14 +272,15 @@ protected:
 		}
 	public:
 
-		simulate_subdomain_linear(int i_min, int i_max, int j_min, int j_max, sim_args s) 
-				: decompose_domain(i_min, i_max, j_min, j_max), sim_args(s) {
+		simulate_linear(sim_args s) : decompose_domain(0, s.approximation->height(),
+				                               0, s.approximation->width()),
+					      sim_args(s) {
 		}
 	};
 
 
-	class simulate_subdomain_nonlinear : public thread::decompose_domain, 
-	                                     private sim_args {
+	class simulate_nonlinear : public thread::decompose_domain, 
+	                           private sim_args {
 		point *subdomain_extents;
 
 	protected:
@@ -381,9 +382,9 @@ protected:
 		}
 	public:
 
-		simulate_subdomain_nonlinear(int i_min, int i_max, int j_min, int j_max, sim_args s) 
-				: decompose_domain(i_min, i_max, j_min, j_max),
-				  sim_args(s) {
+		simulate_nonlinear(sim_args s) : decompose_domain(0, s.lsimulated->height(),
+						                  0, s.lsimulated->width()),
+					         sim_args(s) {
 		}
 	};
 
@@ -426,11 +427,12 @@ protected:
 		args.exp = &exp;
 		args.extents = extents;
 
-		simulate_subdomain_linear ssl(0, approximation->height(),
-					      0, approximation->width(),
-					      args);
+		/*
+		 * Simulate linear
+		 */
 
-		ssl.run();
+		simulate_linear sl(args);
+		sl.run();
 
 		/*
 		 * Normalize linear
@@ -480,11 +482,12 @@ protected:
 
 		args.nlsim_weights = nlsim_weights;
 
-		simulate_subdomain_nonlinear ssnl(0, approximation->height(),
-					          0, approximation->width(),
-					          args);
+		/*
+		 * Simulate non-linear
+		 */
 
-		ssnl.run();
+		simulate_nonlinear snl(args);
+		snl.run();
 
 		/*
 		 * Normalize non-linear
