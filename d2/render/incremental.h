@@ -202,73 +202,72 @@ protected:
 	 * the specified transformation.
 	 */
 
-	struct subdomain_args {
+	class merge : public thread::decompose_domain {
 		incremental *instance;
 		int frame;
 		const image *delta;
 		transformation t;
-		unsigned int i_min, i_max, j_min, j_max;
-	};
+		invariant *inv;
+		image_weighted_avg *accum_image;
+	protected:
+		void subdomain_algorithm(unsigned int thread,
+				int i_min, int i_max, int j_min, int j_max) {
 
-	void _merge_subdomain(void *args) {
-		subdomain_args *sargs = (subdomain_args *) args;
+			point offset = accum_image->offset();
 
-		int frame = sargs->frame;
-		const image *delta = sargs->delta;
-		transformation t = sargs->t;
-		unsigned int i_min = sargs->i_min;
-		unsigned int i_max = sargs->i_max;
-		unsigned int j_min = sargs->j_min;
-		unsigned int j_max = sargs->j_max;
+			assert (accum_image != NULL);
+			assert (delta != NULL);
 
-		point offset = accum_image->offset();
+			const filter::ssfe *_ssfe = inv->ssfe();
 
-		assert (accum_image != NULL);
-		assert (delta != NULL);
-
-		const filter::ssfe *_ssfe = inv->ssfe();
-
-		for (unsigned int i = i_min; i < i_max; i++)
-		for (unsigned int j = j_min; j < j_max; j++) {
+			for (int i = i_min; i < i_max; i++)
+			for (int j = j_min; j < j_max; j++) {
 
 #if 0
-			/*
-			 * This is untested, but it should work, and is less
-			 * verbose than what follows.
-			 */
+				/*
+				 * This is untested, but it should work, and is less
+				 * verbose than what follows.
+				 */
 
-			_merge_pixel(frame, delta, t, i, j, _ssfe);
+				instance->_merge_pixel(frame, delta, t, i, j, _ssfe);
 #else
 
-			if (_ssfe->ex_is_honored() && is_excluded_r(i, j, frame))
-				continue;
+				if (_ssfe->ex_is_honored() && instance->is_excluded_r(i, j, frame))
+					continue;
 
-			if (accum_image->accumulate_norender(i, j))
-				continue;
-			
-			/*
-			 * Pixel value to be merged, and the associated
-			 * confidence
-			 */
+				if (accum_image->accumulate_norender(i, j))
+					continue;
+				
+				/*
+				 * Pixel value to be merged, and the associated
+				 * confidence
+				 */
 
-			pixel value, confidence;
+				pixel value, confidence;
 
-			_ssfe->filtered(i, j, frame, &value, &confidence, accum_image->get_pixel(i, j), accum_image->get_weights()->get_pixel(i, j));
+				_ssfe->filtered(i, j, frame, &value, &confidence, accum_image->get_pixel(i, j), accum_image->get_weights()->get_pixel(i, j));
 
-			accum_image->accumulate(i, j, frame, value, confidence);
+				accum_image->accumulate(i, j, frame, value, confidence);
 #endif
+			}
 		}
-	}
 
-	static void *_merge_run_subdomain(void *args) {
-		subdomain_args *sargs = (subdomain_args *) args;
-		sargs->instance->_merge_subdomain(args);
-#ifdef USE_PTHREAD
-		pthread_exit(0);
-#else
-		return NULL;
-#endif
-	}
+	public:
+		merge(incremental *_instance,
+		      int _frame,
+		      const image *_delta,
+		      transformation _t) : decompose_domain(0, _instance->accum_image->height(),
+		                                            0, _instance->accum_image->width()) {
+
+			instance = _instance;
+			frame = _frame;
+			delta = _delta;
+			t = _t;
+
+			inv = instance->inv;
+			accum_image = instance->accum_image;
+		}
+	};
 
 	void
 	_merge(int frame, const image *delta, transformation t) {
@@ -284,46 +283,8 @@ protected:
 
 		_ssfe->set_parameters(t, delta, offset);
 
-		int N;
-
-#ifdef USE_PTHREAD
-		N = thread::count();
-
-		pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * N);
-		pthread_attr_t *thread_attr = (pthread_attr_t *) malloc(sizeof(pthread_attr_t) * N);
-
-#else
-		N = 1;
-#endif
-
-		subdomain_args *args = new subdomain_args[N];
-
-		for (int ti = 0; ti < N; ti++) {
-			args[ti].instance = this;
-			args[ti].frame = frame;
-			args[ti].delta = delta;
-			args[ti].t = t;
-			args[ti].i_min = (accum_image->height() * ti) / N;
-			args[ti].i_max = (accum_image->height() * (ti + 1)) / N;
-			args[ti].j_min = 0;
-			args[ti].j_max = accum_image->width();
-
-#ifdef USE_PTHREAD
-			pthread_attr_init(&thread_attr[ti]);
-			pthread_attr_setdetachstate(&thread_attr[ti], PTHREAD_CREATE_JOINABLE);
-			pthread_create(&threads[ti], &thread_attr[ti], _merge_run_subdomain, &args[ti]);
-#else
-			_merge_subdomain(&args[ti]);
-#endif
-		}
-
-#ifdef USE_PTHREAD
-		for (int ti = 0; ti < N; ti++) {
-			pthread_join(threads[ti], NULL);
-		}
-#endif
-
-		delete[] args;
+		merge m(this, frame, delta, t);
+		m.run();
 
 		ui::get()->d2_incremental_stop();
 	}
