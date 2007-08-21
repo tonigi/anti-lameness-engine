@@ -65,6 +65,9 @@ private:
 			for (int j = j_min; j < j_max; j++) 
 			for (unsigned int k = 0; k < 3; k++){
 
+				if (!(coarse_defined->chan(i, j, k) > 0))
+					continue;
+
 				ale_real filter_scale = 1;
 				ale_real filtered_weight;
 				ale_real filtered_value;
@@ -162,6 +165,8 @@ private:
 
 		output_image = new image_ale_real(coarse_defined->height(),
 				coarse_defined->width(), 3, NULL);
+
+		output_image->set_offset(coarse_defined->offset());
 
 		assert (coarse_defined->width()  == fine_image->width());
 		assert (coarse_defined->height() == fine_image->height());
