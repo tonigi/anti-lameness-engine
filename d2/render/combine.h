@@ -47,6 +47,99 @@ private:
 	mutable image *defined_image;
 	int synced;
 
+	class refilter : public thread::decompose_domain {
+		combine *c;
+		const render *fine;
+		const render *coarse;
+		const filter::filter *f;
+		const image *fine_weight;
+		const image *fine_image;
+		const image *coarse_defined;
+		image *output_image;
+
+	protected:
+		void subdomain_algorithm(unsigned int thread,
+				int i_min, int i_max, int j_min, int j_max) {
+
+			for (int i = i_min; i < i_max; i++)
+			for (int j = j_min; j < j_max; j++) 
+			for (unsigned int k = 0; k < 3; k++){
+
+				ale_real filter_scale = 1;
+				ale_real filtered_weight;
+				ale_real filtered_value;
+
+				do {
+
+					filtered_weight = 0;
+					filtered_value = 0;
+
+					/* 
+					 * lrintf() may be faster than ceil/floor() on some architectures.
+					 * See render/psf/raster.h for more details.
+					 */
+
+					for (int ii = (int) lrintf(-f->support() * filter_scale); 
+						 ii < (int) lrintf( f->support() * filter_scale); ii++)
+					for (int jj = (int) lrintf(-f->support() * filter_scale);
+						 jj < (int) lrintf( f->support() * filter_scale); jj++) {
+
+						if (ii + i < 0
+						 || jj + j < 0
+						 || ii + i >= (int) fine_weight->height()
+						 || jj + j >= (int) fine_weight->width())
+							continue;
+
+						ale_real pw = fine_weight->get_pixel(i + ii, j + jj)[k];
+
+						if (!(pw > 0))
+							continue;
+
+						ale_real w = pw * f->response(point(ii / filter_scale, 
+										    jj / filter_scale));
+					
+						ale_real v = fine_image->get_pixel(i + ii, j + jj)[k];
+						
+						if (!finite(w) || !finite(v))
+							continue;
+
+						filtered_weight += w;
+						filtered_value  += w * v;
+					}
+
+					if (filtered_weight < render::get_wt())
+						/* filter_scale += 1; */
+						filter_scale *= 2;
+
+				} while (filtered_weight < render::get_wt()
+				    && filter_scale < coarse_defined->width() 
+						    + coarse_defined->height());
+
+				output_image->chan(i, j, k) = filtered_value / filtered_weight;
+			}
+		}
+	public:
+		refilter(combine *_c,
+		         const render *_fine,
+			 const render *_coarse,
+			 const filter::filter *_f,
+			 const image *_fine_weight,
+			 const image *_fine_image,
+			 const image *_coarse_defined,
+			 image *_output_image) : decompose_domain(0, _coarse_defined->height(),
+			                                          0, _coarse_defined->width()) {
+
+			c = _c;
+			fine = _fine;
+			coarse = _coarse;
+			f = _f;
+			fine_weight = _fine_weight;
+			fine_image = _fine_image;
+			coarse_defined = _coarse_defined;
+			output_image = _output_image;
+		}
+	};
+
 	const image *get_image_dynamic() const {
 		assert(typeid(*partial) == typeid(incremental));
 
@@ -76,63 +169,11 @@ private:
 		assert (coarse_defined->height() == fine_weight->height());
 
 		ui::get()->refilter_start();
+
+		refilter r(c, fine, coarse, f, fine_weight, fine_image, 
+		           coarse_defined, output_image);
+		r.run();
 		
-		for (unsigned int i = 0; i < coarse_defined->height(); i++)
-		for (unsigned int j = 0; j < coarse_defined->width();  j++) 
-		for (unsigned int k = 0; k < 3;                        k++){
-
-			ale_real filter_scale = 1;
-			ale_real filtered_weight;
-			ale_real filtered_value;
-
-			do {
-
-				filtered_weight = 0;
-				filtered_value = 0;
-
-				/* 
-				 * lrintf() may be faster than ceil/floor() on some architectures.
-				 * See render/psf/raster.h for more details.
-				 */
-
-				for (int ii = (int) lrintf(-f->support() * filter_scale); 
-				         ii < (int) lrintf( f->support() * filter_scale); ii++)
-				for (int jj = (int) lrintf(-f->support() * filter_scale);
-				         jj < (int) lrintf( f->support() * filter_scale); jj++) {
-
-					if (ii + i < 0
-					 || jj + j < 0
-					 || ii + i >= fine_weight->height()
-					 || jj + j >= fine_weight->width())
-					 	continue;
-
-					ale_real pw = fine_weight->get_pixel(i + ii, j + jj)[k];
-
-					if (!(pw > 0))
-						continue;
-
-					ale_real w = pw * f->response(point(ii / filter_scale, 
-					                                    jj / filter_scale));
-				
-					ale_real v = fine_image->get_pixel(i + ii, j + jj)[k];
-					
-					if (!finite(w) || !finite(v))
-						continue;
-
-					filtered_weight += w;
-					filtered_value  += w * v;
-				}
-
-				if (filtered_weight < render::get_wt())
-					filter_scale += 1;
-
-			} while (filtered_weight < render::get_wt()
-			    && filter_scale < coarse_defined->width() 
-			                    + coarse_defined->height());
-
-			output_image->chan(i, j, k) = filtered_value / filtered_weight;
-		}
-
 		ui::get()->refilter_done();
 
 		return output_image;
