@@ -1,3 +1,27 @@
+V	0.8.9 2007-Aug-24
+
+o	Set new defaults for --ips, --dchain, and --3d-dchain, and remove --q*
+
+o	Add rendering chain scaled sampling filter type auto:, implementing
+	rough automatic filter size determination.
+
+o	Add an abstract domain decomposition threading class.
+
+o	Revise Irani-Peleg code for reduced memory and cpu use.
+
+o	Exclusion region handling fix; other issues may remain.
+
+o	Fix handling of --ip-{mean,median}, resolving a bug noted by Gregory
+	Maxwell.
+
+o	Add wrapper script 'ale' for handling raw files and extracting Exif metadata.
+
+o	Allow any match when the threshold specified is neither positive nor zero.
+
+o	Update license to GPLv3.
+
+o	Various rendering bugfixes.
+
 V	0.8.8.1 2007-May-18
 
 /build
