@@ -57,6 +57,74 @@ private:
 		const image *coarse_defined;
 		image *output_image;
 
+		ale_pos find_nearest_nonzero_weight(int *out_coords, int i, int j, int k, 
+				int start_radius) {
+
+			assert (i >= 0);
+			assert (j >= 0);
+			assert (i < (int) coarse_defined->height());
+			assert (j < (int) coarse_defined->width());
+
+			assert (coarse_defined->get_pixel(i, j)[k] > 0);
+
+			if (start_radius == 0 
+			 && fine_weight->get_pixel(i, j)[k] > 0) {
+			 	if (out_coords) {
+					out_coords[0] = i;
+					out_coords[1] = j;
+				}
+				return 0;
+			} else if (start_radius == 0) {
+				start_radius = 1;
+			}
+
+			ale_pos zero = +0.0;
+			ale_pos one = +1.0;
+
+			ale_pos nearest = one / zero;
+
+			assert (isinf(nearest) && nearest > 0);
+
+			int radius = start_radius;
+			int in_bounds = 1;
+
+			while (radius < nearest && in_bounds) {
+				in_bounds = 0;
+
+				for (int ii = i - radius; ii <= i + radius; ii++)
+				for (int jj = j - radius; jj <= j + radius; 
+						jj += ((abs(i - ii) == radius)
+						     ? 1
+						     : radius * 2)) {
+					if (ii < 0
+					 || jj < 0
+					 || ii >= (int) coarse_defined->height()
+					 || jj >= (int) coarse_defined->width()
+					 || !(coarse_defined->get_pixel(ii, jj)[k] > 0))
+						continue;
+
+					in_bounds = 1;
+
+					if (!(fine_weight->get_pixel(ii, jj)[k] > 0))
+						continue;
+
+					ale_pos distance = sqrt(pow(i - ii, 2) + pow(j - jj, 2));
+
+					if (distance < nearest) {
+						nearest = distance;
+						if (out_coords) {
+							out_coords[0] = ii;
+							out_coords[1] = jj;
+						}
+					}
+				}
+
+				radius++;
+			}
+
+			return nearest;
+		}
+
 	protected:
 		void subdomain_algorithm(unsigned int thread,
 				int i_min, int i_max, int j_min, int j_max) {
@@ -71,6 +139,30 @@ private:
 				ale_real filter_scale = 1;
 				ale_real filtered_weight;
 				ale_real filtered_value;
+
+				/*
+				 * Attempt to set an initial filter scale based
+				 * on the proximity of the nearest k-defined
+				 * pixel to its nearest neighbor.  This rough
+				 * estimate of filter scale seems to improve
+				 * performance on single-image tests, without
+				 * obviously degrading tests with large image
+				 * counts.  (XXX: Note that multiple-image tests 
+				 * with small numbers of images still fare
+				 * relatively poorly, however.)
+				 */
+
+				int nc[2] = {i, j};
+				ale_real n1 = find_nearest_nonzero_weight(nc, i, j, k, 0);
+
+				if (!finite(n1))
+					continue;
+
+				ale_real n2 = find_nearest_nonzero_weight(NULL, nc[0], nc[1], k, 1);
+
+				if (finite(n2)) {
+					filter_scale = n2;
+				}
 
 				do {
 
