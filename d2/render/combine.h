@@ -190,6 +190,16 @@ private:
 						if (!(pw > 0))
 							continue;
 
+						/*
+						 * XXX: Set the weight to one
+						 * for now, to prevent
+						 * interference from certainty
+						 * values calculated under
+						 * different assumptions.
+						 */
+
+						pw = 1;
+
 						ale_real w = pw * f->response(point(ii / filter_scale, 
 										    jj / filter_scale));
 					
