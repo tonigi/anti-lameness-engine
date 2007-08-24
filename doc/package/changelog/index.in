@@ -3,13 +3,14 @@ V	0.8.9 2007-Aug-24
 o	Set new defaults for --ips, --dchain, and --3d-dchain, and remove --q*
 
 o	Add rendering chain scaled sampling filter type auto:, implementing
-	rough automatic filter size determination.
+	re-filtering, with rough automatic filter size determination.
 
 o	Add an abstract domain decomposition threading class.
 
 o	Revise Irani-Peleg code for reduced memory and cpu use.
 
-o	Exclusion region handling fix; other issues may remain.
+o	Attempt to fix exclusion region handling after a bug report by 
+	Gregory Maxwell; other issues may remain.
 
 o	Fix handling of --ip-{mean,median}, resolving a bug noted by Gregory
 	Maxwell.
