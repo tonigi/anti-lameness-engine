@@ -20,6 +20,14 @@
 
 <news>
 
+<release version="0.8.9" date="2007-Aug-25">
+
+<p>This release adds a re-filtering renderer, fixes certain rendering bugs, and
+provides a wrapper script for extracting exposure information and decoding raw
+files.  </p>
+
+</release>
+
 <release version="0.8.8.1" date="2007-May-18">
 
 <p>This release removes a violation of the C++ standard that may cause some builds
