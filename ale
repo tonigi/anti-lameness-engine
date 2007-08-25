@@ -17,8 +17,10 @@
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+chomp ($ale_exec_dir = `dirname $0`);
+
 %defaults = (
-	"ALE_BIN" => "ale-bin",
+	"ALE_BIN" => "$ale_exec_dir/ale-bin",
 	"DCRAW" => "dcraw",
 	"EXIF_UTILITY" => "exiftool",
 );
