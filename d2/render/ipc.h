@@ -1133,7 +1133,6 @@ protected:
 
 		_ip_frame_simulate(frame_num, approximation, lsimulated, nlsimulated, t, f, nlf, real->exp(), extents);
 
-		image_rw::write_image("lsimulated.png", lsimulated);
 		/*
 		 * Update the correction array using backprojection.
 		 */
