@@ -20,6 +20,14 @@
 
 <news>
 
+<release version="0.8.9.1" date="2007-Aug-31">
+
+<p>This release resolves certain build failures occurring under unthreaded
+configurations, removes certain debugging output, and adds support for
+platforms missing certain floating point macros.</p>
+
+</release>
+
 <release version="0.8.9" date="2007-Aug-25">
 
 <p>This release adds a re-filtering renderer, fixes certain rendering bugs, and
