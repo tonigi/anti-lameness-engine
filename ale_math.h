@@ -18,6 +18,9 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef __ale_math_h__
+#define __ale_math_h__
+
 /*
  * Certain versions of Mac OSX may disable math.h definitions of is*() macros
  * when iostream is included, so we include the latter here.
@@ -36,8 +39,6 @@
 
 #ifndef isnan
 # define isnan(x) ale_isnan(x)
-static inline int ale_isnan(ale_pos     x) { return x != x; }
-static inline int ale_isnan(ale_real    x) { return x != x; }
 static inline int ale_isnan(float       x) { return x != x; }
 static inline int ale_isnan(double      x) { return x != x; }
 static inline int ale_isnan(long double x) { return x != x; }
@@ -45,10 +46,9 @@ static inline int ale_isnan(long double x) { return x != x; }
 
 #ifndef isinf
 # define isinf(x) ale_isinf(x)
-static inline int ale_isinf(ale_pos     x) { return isnan (x - x); }
-static inline int ale_isinf(ale_real    x) { return isnan (x - x); }
 static inline int ale_isinf(float       x) { return isnan (x - x); }
 static inline int ale_isinf(double      x) { return isnan (x - x); }
 static inline int ale_isinf(long double x) { return isnan (x - x); }
 #endif
 
+#endif
