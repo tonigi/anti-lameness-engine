@@ -1,3 +1,16 @@
+V	0.8.9.1 2007-Aug-31
+
+o	Attempt to resolve certain 'always true' warnings reported by
+	Marius Schamschula on Mac OS 10.3.9 (PPC).
+
+o	Add macros for isinf() and isnan() in an attempt to resolve build 
+	failures reported by Marius Schamschula on Mac OS 10.3.9 (PPC).
+
+o	Resolve certain build errors occuring when configuring
+	--disable-threads, or when threads are unavailable.
+
+o	Remove instrumentation writing to 'lsimulated.png'.
+
 V	0.8.9 2007-Aug-25
 
 o	Set new defaults for --ips, --dchain, and --3d-dchain, and remove --q*
