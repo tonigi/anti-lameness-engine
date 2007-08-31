@@ -183,7 +183,6 @@ class scene {
 		 * Get an image.
 		 */
 		const d2::image *get_image(unsigned int i) {
-			assert(i >= 0);
 			assert(i < entries);
 			return im[i];
 		}
@@ -2583,8 +2582,8 @@ public:
 				unsigned int height = (int) floor(_pt.scaled_height());
 				unsigned int width  = (int) floor(_pt.scaled_width());
 
-				if (i < 0 || i >= height
-				 || j < 0 || j >= width) {
+				if (i >= height
+				 || j >= width) {
 					return NULL;
 				}
 
@@ -2630,8 +2629,8 @@ public:
 
 				assert (median_depth && median_diff);
 
-				if (i < 0 || i >= median_depth->height()
-				 || j < 0 || j >= median_depth->width()) {
+				if (i >= median_depth->height()
+				 || j >= median_depth->width()) {
 					*t = d2::pixel::undefined();
 					*f = d2::pixel::undefined();
 				} else {

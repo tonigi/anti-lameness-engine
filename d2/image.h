@@ -254,8 +254,6 @@ public:
 	 */
 
 	pixel get_max_diff(unsigned int i, unsigned int j) const {
-		assert(i >= 0);
-		assert(j >= 0);
 		assert(i <= _dimy - 1);
 		assert(j <= _dimx - 1);
 
