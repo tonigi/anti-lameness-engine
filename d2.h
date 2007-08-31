@@ -36,15 +36,16 @@
 #include <stack>
 #include <algorithm>
 
+#include <iostream>
+#include <ostream>
+#include <typeinfo>
+
+#include "ale_math.h"
 #include "ale_real.h"
 #include "ale_accum.h"
 #include "ale_pos.h"
 #include "ui/ui.h"
 
-
-#include <iostream>
-#include <ostream>
-#include <typeinfo>
 
 #ifdef USE_MAGICK
 #include <magick/api.h>
