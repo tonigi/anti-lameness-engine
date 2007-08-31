@@ -30,7 +30,9 @@
 #include <iostream>
 
 /*
- * isnan() and isinf() code logic are based on 
+ * isnan() and isinf() code logic are based on those noted in the GNU Autoconf
+ * manual, by the Free Software Foundation:
+ *
  * http://www.gnu.org/software/autoconf/manual/html_node/Function-Portability.html
  * 
  * As C++ is available here, we use C++ overloading instead of sizeof()
