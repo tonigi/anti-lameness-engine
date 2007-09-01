@@ -1,3 +1,8 @@
+V	0.8.10 prerelease
+
+/build
+o	Replace references to math.h with references to ale_math.h.
+
 V	0.8.9.1 2007-Aug-31
 
 o	Attempt to resolve certain 'always true' warnings reported by

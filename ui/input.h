@@ -30,9 +30,11 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <time.h>
-#include <math.h>
+// #include <math.h>
 #include <stack>
 #include <map>
+
+#include "../ale_math.h"
 
 /*
  * Interface files
