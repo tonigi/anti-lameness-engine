@@ -504,12 +504,6 @@ private:
 
 	class diff_stat_t {
 	
-		struct removal_pair {
-			ale_pos error[2];
-			ale_pos divisor[2];
-			ale_pos zero_favorability_gradient;
-		};
-
 		struct run {
 
 			transformation offset;
@@ -522,32 +516,10 @@ private:
 			ale_accum centroid[2], centroid_divisor;
 			ale_accum de_centroid[2], de_centroid_v, de_sum;
 
-			std::vector<removal_pair> errors_favoring[2];
-
-			typedef unsigned int hist_bin;
-
-			int hist_min_r;
-			int hist_min_d;
-
-			hist_bin *histogram;
-			hist_bin hist_total;
-			int hist_dim;
-
 			void init() {
 
 				result = 0;
 				divisor = 0;
-
-				errors_favoring[0].clear();
-				errors_favoring[1].clear();
-
-				hist_min_r = INT_MIN;
-
-				hist_min_d = INT_MIN;
-				hist_total = 0;
-				hist_dim = 20;
-				histogram = (hist_bin *) calloc(hist_dim * hist_dim, sizeof(hist_bin));
-				assert(histogram);
 
 				min = point::posinf();
 				max = point::neginf();
@@ -581,76 +553,9 @@ private:
 				init(_offset, _perturb);
 			}
 
-			void add_hist(int r, int d, int count) {
-
-				hist_total += count;
-
-				int r_shift = 0, d_shift = 0;
-
-				if (r - hist_min_r >= hist_dim) {
-					r_shift = (r - hist_min_r) - hist_dim + 1;
-					hist_min_r += r_shift;
-				}
-
-				if (d - hist_min_d >= hist_dim) {
-					d_shift = (d - hist_min_d) - hist_dim + 1;
-					hist_min_d += d_shift;
-				}
-
-				assert (r_shift >= 0);
-				assert (d_shift >= 0);
-
-				if (r_shift || d_shift) {
-					for (int rr = 0; rr < hist_dim; rr++)
-					for (int dd = 0; dd < hist_dim; dd++) {
-
-						hist_bin value = histogram[rr * hist_dim + dd];
-
-						histogram[rr * hist_dim + dd] = 0;
-
-						int rrr = rr - r_shift;
-						int ddd = dd - d_shift;
-
-						if (rrr < 0)
-							rrr = 0;
-						if (ddd < 0)
-							ddd = 0;
-
-						histogram[rrr * hist_dim + ddd] += value;
-					}
-				}
-
-				r -= hist_min_r;
-				d -= hist_min_d;
-
-				if (r < 0)
-					r = 0;
-				if (d < 0)
-					d = 0;
-
-				histogram[r * hist_dim + d] += count;
-			}
-
-			void add_hist(ale_accum result, ale_accum divisor) {
-				ale_accum rbin = log(result) / log(2);
-				ale_accum dbin = log(divisor) / log(2);
-
-				if (!(rbin > INT_MIN))
-					rbin = INT_MIN;
-				if (!(dbin > INT_MIN))
-					dbin = INT_MIN;
-
-				add_hist((int) floor(rbin), (int) floor(dbin), 1);
-			}
-
 			void add(const run &_run) {
 				result += _run.result;
 				divisor += _run.divisor;
-
-				for (int r = 0; r < _run.hist_dim; r++)
-				for (int d = 0; d < _run.hist_dim; d++)
-					add_hist(r + _run.hist_min_r, d + _run.hist_min_d, 
-							_run.histogram[r * hist_dim + d]);
 
 				for (int d = 0; d < 2; d++) {
 					if (min[d] > _run.min[d])
@@ -682,11 +587,6 @@ private:
 			run &operator=(const run &_run) {
 
 				/*
-				 * Free old structures
-				 */
-				free(histogram);
-
-				/*
 				 * Initialize
 				 */
 				init(_run.offset, _run.perturb);
@@ -700,46 +600,10 @@ private:
 			}
 
 			~run() {
-				free(histogram);
 			}
 
 			ale_accum get_error() const {
 				return pow(result / divisor, 1/metric_exponent);
-			}
-
-			int check_synchronized_removal(const run *with) const {
-
-				if (hist_total < 100 || with->hist_total < 100)
-					return 0;
-
-				int sense = 0;
-
-				if (get_error() > with->get_error())
-					sense = 1;
-
-				if ((sense == 0 && !(get_error() < with->get_error()))
-				 || (sense == 1 && !(get_error() > with->get_error())))
-					return 0;
-
-				ale_accum error[2] = { with->result, this->result };
-				ale_accum divisor[2] = { with->divisor, this->divisor };
-
-				for (unsigned int i = 0; i < errors_favoring[sense].size(); i++)
-				for (unsigned int d = 0; d < 2; d++) {
-					error[d] -= errors_favoring[sense][i].error[d];
-					divisor[d] -= errors_favoring[sense][i].divisor[d];
-				}
-
-				for (int d = 0; d < 2; d++)
-					if (!(error[d] >= 0)
-					 || !(divisor[d] >= 0))
-					 	return 0;
-
-				if ((sense == 0 && !(error[0] / divisor[0] > error[1] / divisor[1]))
-				 || (sense == 1 && !(error[0] / divisor[0] < error[1] / divisor[1])))
-				 	return 0;
-
-				return 1;
 			}
 
 			void sample(int f, scale_cluster c, int i, int j, point t, point u,
@@ -859,50 +723,10 @@ private:
 					de_centroid_v += de * t.lengthto(u);
 
 					de_sum += de;
-
-					removal_pair rp;
-
-					rp.error[0] = this_result[0];
-					rp.error[1] = this_result[1];
-					rp.divisor[0] = this_divisor[0];
-					rp.divisor[1] = this_divisor[1];
-
-					ale_accum result_approx = comparison.result;
-					ale_accum divisor_approx = comparison.divisor;
-
-					rp.zero_favorability_gradient = 
-						(result_approx - rp.error[1])
-					      / (divisor_approx - rp.error[1])
-					      - (result_approx - rp.error[0])
-					      / (divisor_approx - rp.error[0]);
 				}
 
 				result += (this_result[0]);
 				divisor += (this_divisor[0]);
-
-				add_hist(this_result[0], this_divisor[0]);
-			}
-
-			void print_hist() {
-				fprintf(stderr, "\n");
-				fprintf(stderr, "hist_min_r = %d\n", hist_min_r);
-				fprintf(stderr, "hist_min_d = %d\n", hist_min_d);
-				fprintf(stderr, "hist_dim = %d\n", hist_dim);
-				fprintf(stderr, "hist_total = %d\n", hist_total);
-				fprintf(stderr, "\n");
-
-				hist_bin recalc_total = 0;
-
-				for (int r = 0; r < hist_dim; r++) {
-					for (int d = 0; d < hist_dim; d++) {
-						recalc_total += histogram[r * hist_dim + d];
-						fprintf(stderr, "\t%d", histogram[r * hist_dim + d]);
-					}
-					fprintf(stderr, "\n");
-				}
-
-				fprintf(stderr, "\n");
-				fprintf(stderr, "recalc_total = %d\n", recalc_total);
 			}
 
 			void rescale(ale_pos scale) {
