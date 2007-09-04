@@ -787,84 +787,6 @@ private:
 			int subdomain;
 		};
 
-		class memo_entry {
-		public:
-			int frame;
-			ale_pos perturb;
-			transformation offset[2];
-
-			memo_entry(int _frame, ale_pos _perturb, transformation dest, transformation origin) {
-				frame = _frame;
-				perturb = _perturb;
-				offset[0] = dest;
-				offset[1] = origin;
-			}
-
-			int subequals(const memo_entry &m, int o, int u) const {
-
-				if (frame != m.frame)
-					return 0;
-
-				if (perturb != m.perturb)
-					return 0;
-
-				if (offset[o] != m.offset[u])
-					return 0;
-
-				return 1;
-			}
-
-			int equals(const memo_entry &m) const {
-				return subequals(m, 0, 0) && subequals(m, 1, 1);
-			}
-
-			int conflicts(const memo_entry &m) const {
-				memo_entry mr(m.frame, m.perturb, m.offset[1], m.offset[0]);
-
-				return equals(mr);
-			}
-		};
-
-		static std::vector<memo_entry> memos;
-
-		static rng_t loop_handling_randomness;
-
-		static int is_loop(std::vector<memo_entry> mf) {
-#if 0
-			assert (mf.size() > 0);
-
-			/*
-			 * Loop containing me
-			 */
-			if (mf.back().subequals(mf.front(), 1, 0))
-				return 1;
-
-			/*
-			 * Loop not containing me
-			 */
-			for (unsigned int i = 1; i < mf.size(); i++) {
-				if (mf.back().subequals(mf[i], 1, 0))
-					return 0;
-			}
-
-			for (unsigned int i = 0; i < memos.size(); i++) {
-				if (memos[i].subequals(mf.back(), 0, 1)) {
-					mf.push_back(memos[i]);
-					if (is_loop(mf))
-						return 1;
-					mf.pop_back();
-				}
-			}
-
-			return 0;
-#else
-			if (loop_handling_randomness.get() % 10 == 0)
-				return 1;
-
-			return 0;
-#endif
-		}
-
 		int get_current_index() const {
 			assert(runs.size());
 			return runs[0].offset.get_current_index();
@@ -877,10 +799,6 @@ private:
 		std::vector<ale_pos> perturb_multipliers;
 
 public:
-		static void clear_memos() {
-			memos.clear();
-		}
-
 		void diff(struct scale_cluster c, ale_pos perturb, 
 				transformation t, 
 				int _ax_count, int f) {
@@ -960,37 +878,6 @@ public:
 				diff(si, p_array[r], t_array[r], ax_count, frame);
 		}
 
-		int reliable() const {
-			assert(runs.size() >= 2);
-
-			memo_entry me(frame, runs[1].perturb, runs[1].offset,
-					runs[0].offset);
-
-			int better = 1;
-
-			if (runs[1].get_error() > runs[0].get_error()) {
-				better = 0;
-				me.offset[0] = runs[0].offset;
-				me.offset[1] = runs[1].offset;
-			}
-
-			for (unsigned int i = 0; i < memos.size(); i++) {
-
-				if (better && me.subequals(memos[i], 1, 1)) {
-					return 0;
-				}
-				if (0 && me.conflicts(memos[i])) {
-					return 0;
-				}
-			}
-
-#if 0
-			if (better)
-				memos.push_back(me);
-#endif
-
-			return 1;
-		}
 
 	public:
 		int better() {
@@ -1369,8 +1256,6 @@ public:
 					 && runs[1].get_error() < runs[0].get_error()
 					 && perturb_multipliers[i] 
 					  / perturb_multipliers_original[i] < 2) {
-						memos.push_back(memo_entry(frame, runs[1].perturb,
-							runs[1].offset, runs[0].offset));
 						runs[0] = runs[1];
 						runs.pop_back();
 						return;
@@ -2482,7 +2367,6 @@ public:
 
 				stable_count = 0;
 
-				here.clear_memos();
 				here.calculate_element_region();
 
 				if (here.get_current_index() + 1 < _ma_card) {
