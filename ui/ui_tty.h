@@ -184,16 +184,14 @@ private:
 				break;
 			case status_type::GLOBAL_ALIGN:
 			case status_type::ALIGN:
-				status_printf(6, "%s [mc=%6.3g] [perturb=%6.3g] [lod=%6.3g] [exp_mult=%6.3g %6.3g %6.3g]", 
-						 "%s [mc=%6.3g] [perturb=%6.3g] [lod=%6.3g]", 
-						 "%s [mc=%6.3g] [perturb=%6.3g]", 
-						 "%s [mc=%6.3g]", 
+				status_printf(5, "%s [perturb=%6.3g] [lod=%6.3g] [exp_mult=%6.3g %6.3g %6.3g]", 
+						 "%s [perturb=%6.3g] [lod=%6.3g]", 
+						 "%s [perturb=%6.3g]", 
 						 "%s...", 
 						 "align",
 						 (status.code == status_type::GLOBAL_ALIGN) 
 						 	? "Global alignment"
 						        : "Aligning",
-						 status.mc,
 						 status.perturb_size,
 						 pow(2, -status.align_lod),
 						 status.exp_multiplier[0],

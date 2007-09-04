@@ -87,8 +87,6 @@ ale_pos align::bda_rate = 8;
 ale_accum align::match_sum = 0;
 int align::match_count = 0;
 
-ale_pos align::_mc = 0;
-unsigned int align::_mcd_limit = 10;
 int align::certainty_weights = 0;
 int align::_gs = 6;
 unsigned int align::_ma_card = 1;
@@ -112,7 +110,6 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 
 	struct scale_cluster c = sargs->c;
 	std::vector<run> runs = sargs->runs;
-	ale_pos _mc_arg = sargs->_mc_arg;
 	int ax_count = sargs->ax_count;
 	int f = sargs->f;
 	int i_min = sargs->i_min;
@@ -127,54 +124,10 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 
 	int i, j;
 
-	/*
-	 * We always use the same code for exhaustive and Monte Carlo
-	 * pixel sampling, setting _mc_arg = 1 when all pixels are to
-	 * be sampled.
-	 */
-
-	if (_mc_arg <= 0 || _mc_arg >= 1)
-		_mc_arg = 1;
-
 	int index;
 
 	int index_max = (i_max - i_min) * (j_max - j_min);
 	
-	/*
-	 * We use a random process for which the expected
-	 * number of sampled pixels is +/- .000003 from mc_arg
-	 * in the range [.005,.995] for an image with 100,000
-	 * pixels.  (The actual number may still deviate from
-	 * the expected number by more than this amount,
-	 * however.)  The method is as follows:
-	 *
-	 * We have mc_arg == USE/ALL, or (expected # pixels to
-	 * use)/(# total pixels).  We derive from this
-	 * SKIP/USE.
-	 *
-	 * SKIP/USE == (SKIP/ALL)/(USE/ALL) == (1 - (USE/ALL))/(USE/ALL)
-	 *
-	 * Once we have SKIP/USE, we know the expected number
-	 * of pixels to skip in each iteration.  We use a random
-	 * selection process that provides SKIP/USE close to
-	 * this calculated value.
-	 *
-	 * If we can draw uniformly to select the number of
-	 * pixels to skip, we do.  In this case, the maximum
-	 * number of pixels to skip is twice the expected
-	 * number.
-	 *
-	 * If we cannot draw uniformly, we still assign equal
-	 * probability to each of the integer values in the
-	 * interval [0, 2 * (SKIP/USE)], but assign an unequal
-	 * amount to the integer value ceil(2 * SKIP/USE) + 1.
-	 */
-
-	ale_pos su = (1 - _mc_arg) / _mc_arg;
-
-	ale_pos mc_max = (floor(2*su) * (1 + floor(2*su)) + 2*su)
-		      / (2 + 2 * floor(2*su) - 2*su);
-
 	/*
 	 * Reseed the random number generator;  we want the
 	 * same set of pixels to be used when comparing two
@@ -198,13 +151,7 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 
 	rng.seed(1 + subdomain);
 
-	for(index = -1 + (int) ceil((mc_max+1) 
-				  * ( (1 + ((ale_pos) (rng.get())) ) 
-				    / (1 + ((ale_pos) RAND_MAX)) ));
-	    index < index_max;
-	    index += (int) ceil((mc_max+1) 
-			      * ( (1 + ((ale_pos) (rng.get())) ) 
-				/ (1 + ((ale_pos) RAND_MAX)) ))){
+	for(index = 0; index < index_max; index += 1) {
 
 		i = index / (j_max - j_min) + i_min;
 		j = index % (j_max - j_min) + j_min;
@@ -284,21 +231,5 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 	}
 
 	return NULL;
-}
-
-void d2::align::diff_stat_t::try_decrease() {
-
-	assert (_mc <= 0);
-	
-	diff_stat_t half(*this);
-
-	half.mcd_decrease();
-
-	if (!half.reliable())
-		return;
-
-	*this = half;
-
-	ui::get()->alignment_monte_carlo_parameter(get_mc());
 }
 

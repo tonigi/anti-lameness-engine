@@ -169,10 +169,6 @@ public:
 		printf("Supplemental frame done.\n");
 	}
 
-	void alignment_monte_carlo_parameter(ale_pos mc) {
-		printf("Monte carlo parameter is %g\n", mc);
-	}
-
 	void alignment_perturbation_level(ale_pos perturb, ale_pos lod) {
 		perturb_timers[status.perturb_size].stop();
 		status.perturb_size = perturb;

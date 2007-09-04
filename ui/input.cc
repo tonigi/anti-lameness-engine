@@ -35,8 +35,6 @@ input::environment *input::genv = NULL;
  */
 
 const char *input::supported_nonglobal_option_table[] = {
-	"mc",
-	"mcd-removal",
 	"threads",
 	"per-cpu",
 	"perturb-upper",
@@ -105,11 +103,6 @@ input::simple_option input::simple_option_table[] = {
 
 	{ "extend" },
 	{ "no-extend", "extend", "0" },
-
-	{ "mcd", "mc", "0" },
-	{ "no-mc", "mc", "1" },
-	{ "mc", "mc", "2", 1 },
-	{ "mcd-removal", NULL, NULL, 1 },
 
 	{ "cache", NULL, NULL, 1 },
 

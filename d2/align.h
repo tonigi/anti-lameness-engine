@@ -286,18 +286,6 @@ private:
 	static int match_count;
 
 	/*
-	 * Monte Carlo parameter
-	 *
-	 * 0.  Don't use monte carlo alignment sampling.
-	 *
-	 * (0,1].  Select, on average, a number of pixels which is the
-	 * specified fraction of the number of pixels in the accumulated image.
-	 */
-
-	static ale_pos _mc;
-	static unsigned int _mcd_limit;
-
-	/*
 	 * Certainty weight flag
 	 *
 	 * 0. Don't use certainty weights for alignment.
@@ -526,7 +514,6 @@ private:
 
 			transformation offset;
 			ale_pos perturb;
-			ale_pos mc;
 
 			ale_accum result;
 			ale_accum divisor;
@@ -577,10 +564,9 @@ private:
 				de_sum = 0;
 			}
 
-			void init(transformation _offset, ale_pos _perturb, ale_pos _mc) {
+			void init(transformation _offset, ale_pos _perturb) {
 				offset = _offset;
 				perturb = _perturb;
-				mc = _mc;
 				init();
 			}
 
@@ -591,36 +577,8 @@ private:
 				init();
 			}
 
-			run(transformation _offset, ale_pos _perturb, ale_pos _mc) : offset() {
-				init(_offset, _perturb, _mc);
-			}
-
-			void add_removal(const removal_pair &rp) {
-				for (int r = 0; r < 2; r++) {
-					for (unsigned int i = errors_favoring[r].size();; i--) {
-
-						if (i == 0
-						 || (r && rp.zero_favorability_gradient
-						       >= errors_favoring[r][i - 1].zero_favorability_gradient)
-						 || (!r && rp.zero_favorability_gradient
-						 	<= errors_favoring[r][i - 1].zero_favorability_gradient)) {
-
-							if (i == _mcd_limit)
-								break;
-
-							std::vector<removal_pair>::iterator ii = errors_favoring[r].begin();
-							ii += i;
-
-							errors_favoring[r].insert(ii, rp);
-							break;
-						}
-					}
-
-					if (errors_favoring[r].size() > _mcd_limit)
-						errors_favoring[r].pop_back();
-
-					assert(errors_favoring[r].size() <= _mcd_limit);
-				}
+			run(transformation _offset, ale_pos _perturb) : offset() {
+				init(_offset, _perturb);
 			}
 
 			void add_hist(int r, int d, int count) {
@@ -689,10 +647,6 @@ private:
 				result += _run.result;
 				divisor += _run.divisor;
 
-				for (int r = 0; r < 2; r++)
-					for (unsigned int i = 0; i < _run.errors_favoring[r].size(); i++)
-						add_removal(_run.errors_favoring[r][i]);
-
 				for (int r = 0; r < _run.hist_dim; r++)
 				for (int d = 0; d < _run.hist_dim; d++)
 					add_hist(r + _run.hist_min_r, d + _run.hist_min_d, 
@@ -717,7 +671,7 @@ private:
 				/*
 				 * Initialize
 				 */
-				init(_run.offset, _run.perturb, _run.mc);
+				init(_run.offset, _run.perturb);
 
 				/*
 				 * Add
@@ -735,7 +689,7 @@ private:
 				/*
 				 * Initialize
 				 */
-				init(_run.offset, _run.perturb, _run.mc);
+				init(_run.offset, _run.perturb);
 
 				/*
 				 * Add
@@ -786,108 +740,6 @@ private:
 				 	return 0;
 
 				return 1;
-			}
-
-			/*
-			 * XXX: A better removal technique would probably match
-			 * removals between compared transformations (see
-			 * check_synchronized_removal).  This simpler approach
-			 * is likely to under-estimate reliability for any
-			 * given removal count, due to its less constrained
-			 * method of performing removals.
-			 */
-			int check_removal(const run *with) const {
-
-				if (hist_total < 100 || with->hist_total < 100)
-					return 0;
-
-				if (get_error() > with->get_error())
-					return with->check_removal(this);
-
-				if (!(get_error() < with->get_error()))
-					return 0;
-
-				ale_accum bresult, bdivisor, wresult, wdivisor;
-				hist_bin *bhist, *whist;
-
-				ui::get()->d2_align_sim_start();
-
-				bhist = (hist_bin *)malloc(sizeof(hist_bin) * hist_dim * hist_dim);
-				whist = (hist_bin *)malloc(sizeof(hist_bin) * with->hist_dim * with->hist_dim);
-
-				bresult = result;
-				bdivisor = divisor;
-				wresult = with->result;
-				wdivisor = with->divisor;
-
-				for (int i = 0; i < hist_dim * hist_dim; i++)
-					bhist[i] = histogram[i];
-
-				for (int i = 0; i < with->hist_dim * with->hist_dim; i++)
-					whist[i] = with->histogram[i];
-
-				for (unsigned int r = 0; r < _mcd_limit; r++) {
-					int max_gradient_bin = -1;
-					int max_gradient_hist = -1;
-					ale_accum max_gradient = 0;
-
-					for (int i = 0; i < hist_dim * hist_dim; i++) {
-						if (bhist[i] <= 0)
-							continue;
-
-						ale_accum br = pow(2, hist_min_r + i / hist_dim);
-						ale_accum bd = pow(2, hist_min_d + i % hist_dim);
-						ale_accum b_test_gradient = 
-							(bresult - br) / (bdivisor - bd) - bresult / bdivisor;
-						
-						if (!(b_test_gradient < max_gradient)) {
-							max_gradient_bin = i;
-							max_gradient_hist = 0;
-							max_gradient = b_test_gradient;
-						}
-					}
-
-					for (int i = 0; i < with->hist_dim * with->hist_dim; i++) {
-						if (whist[i] <= 0)
-							continue;
-
-						ale_accum wr = pow(2, with->hist_min_r + i / with->hist_dim);
-						ale_accum wd = pow(2, with->hist_min_d + i % with->hist_dim);
-						ale_accum w_test_gradient = 
-							wresult / wdivisor - (wresult - wr) / (wdivisor - wd);
-						
-						if (!(w_test_gradient < max_gradient)) {
-							max_gradient_bin = i;
-							max_gradient_hist = 1;
-							max_gradient = w_test_gradient;
-						}
-					}
-
-					if (max_gradient_hist == -1)
-						break;
-
-					if (max_gradient_hist == 0) {
-						bhist[max_gradient_bin]--;
-						bresult -= pow(2, hist_min_r + max_gradient_bin / hist_dim);
-						bdivisor -= pow(2, hist_min_d + max_gradient_bin % hist_dim);
-					} else if (max_gradient_hist == 1) {
-						whist[max_gradient_bin]--;
-						wresult -= pow(2, with->hist_min_r + max_gradient_bin / with->hist_dim);
-						wdivisor -= pow(2, with->hist_min_d + max_gradient_bin % with->hist_dim);
-					}
-				}
-
-				free(bhist);
-				free(whist);
-
-				ui::get()->d2_align_sim_stop();
-
-				if (finite(bresult / bdivisor)
-				 && finite(wresult / wdivisor)
-				 && bresult / bdivisor < wresult / wdivisor)
-					return 1;
-				
-				return 0;
 			}
 
 			void sample(int f, scale_cluster c, int i, int j, point t, point u,
@@ -1023,8 +875,6 @@ private:
 					      / (divisor_approx - rp.error[1])
 					      - (result_approx - rp.error[0])
 					      / (divisor_approx - rp.error[0]);
-
-					add_removal(rp);
 				}
 
 				result += (this_result[0]);
@@ -1101,14 +951,12 @@ private:
 
 		typedef std::pair<unsigned int, unsigned int> run_index;
 		std::map<run_index, run> old_runs;
-		std::map<run_index, ale_pos> current_mc;
 
 		static void *diff_subdomain(void *args);
 
 		struct subdomain_args {
 			struct scale_cluster c;
 			std::vector<run> runs;
-			ale_pos _mc_arg;
 			int ax_count;
 			int f;
 			int i_min, i_max, j_min, j_max;
@@ -1120,14 +968,12 @@ private:
 			int frame;
 			ale_pos perturb;
 			transformation offset[2];
-			ale_pos mc;
 
-			memo_entry(int _frame, ale_pos _perturb, transformation dest, transformation origin, ale_pos _mc) {
+			memo_entry(int _frame, ale_pos _perturb, transformation dest, transformation origin) {
 				frame = _frame;
 				perturb = _perturb;
 				offset[0] = dest;
 				offset[1] = origin;
-				mc = _mc;
 			}
 
 			int subequals(const memo_entry &m, int o, int u) const {
@@ -1149,7 +995,7 @@ private:
 			}
 
 			int conflicts(const memo_entry &m) const {
-				memo_entry mr(m.frame, m.perturb, m.offset[1], m.offset[0], mc);
+				memo_entry mr(m.frame, m.perturb, m.offset[1], m.offset[0]);
 
 				return equals(mr);
 			}
@@ -1204,39 +1050,25 @@ private:
 		int ax_count;
 		int frame;
 
-		ale_accum mc_default;
-
 		std::vector<ale_pos> perturb_multipliers;
 
 public:
-		ale_pos get_mc() const {
-			assert(runs.size() >= 1);
-			return runs[0].mc;
-		}
-
 		static void clear_memos() {
 			memos.clear();
 		}
 
-		void diff(struct scale_cluster c, ale_pos _mc_arg, ale_pos perturb, 
+		void diff(struct scale_cluster c, ale_pos perturb, 
 				transformation t, 
 				int _ax_count, int f) {
 
 			if (runs.size() == 2)
 				runs.pop_back();
 
-			if (runs.size() > 0 && runs[0].mc != _mc_arg) {
-				runs[0].mc = _mc_arg;
-				rediff();
-			}
-
-			runs.push_back(run(t, perturb, _mc_arg));
+			runs.push_back(run(t, perturb));
 
 			si = c;
 			ax_count = _ax_count;
 			frame = f;
-
-			assert (_mc_arg > 0);
 
 			ui::get()->d2_align_sample_start();
 
@@ -1259,7 +1091,6 @@ public:
 			for (int ti = 0; ti < N; ti++) {
 				args[ti].c = c;
 				args[ti].runs = runs;
-				args[ti]._mc_arg = _mc_arg;
 				args[ti].ax_count = ax_count;
 				args[ti].f = f;
 				args[ti].i_min = (c.accum->height() * ti) / N;
@@ -1293,34 +1124,23 @@ public:
 		void rediff() {
 			std::vector<transformation> t_array;
 			std::vector<ale_pos> p_array;
-			std::vector<ale_pos> mc_array;
 
 			for (unsigned int r = 0; r < runs.size(); r++) {
 				t_array.push_back(runs[r].offset);
 				p_array.push_back(runs[r].perturb);
-				mc_array.push_back(runs[r].mc);
 			}
 
 			runs.clear();
 
 			for (unsigned int r = 0; r < t_array.size(); r++)
-				diff(si, mc_array[r], p_array[r], t_array[r], ax_count, frame);
+				diff(si, p_array[r], t_array[r], ax_count, frame);
 		}
 
 		int reliable() const {
 			assert(runs.size() >= 2);
 
-			if (_mc > 0)
-				return 1;
-
-			if (get_mc() >= 1)
-				return 1;
-
-			if (!runs[1].check_synchronized_removal(&runs[0]))
-				return 0;
-
 			memo_entry me(frame, runs[1].perturb, runs[1].offset,
-					runs[0].offset, get_mc());
+					runs[0].offset);
 
 			int better = 1;
 
@@ -1333,19 +1153,9 @@ public:
 			for (unsigned int i = 0; i < memos.size(); i++) {
 
 				if (better && me.subequals(memos[i], 1, 1)) {
-					if (me.mc > memos[i].mc) {
-						memos[i] = me;
-						return 1;
-					}
-
 					return 0;
 				}
 				if (0 && me.conflicts(memos[i])) {
-					if (me.mc > memos[i].mc) {
-						memos[i] = me;
-						return 1;
-					}
-
 					return 0;
 				}
 			}
@@ -1363,28 +1173,11 @@ public:
 			assert(runs.size() >= 2);
 			assert(runs[0].offset.scale() == runs[1].offset.scale());
 
-			int unbounded = 1;
-
-			while (!reliable()) {
-				unbounded = 0;
-				mcd_increase();
-			}
-
-			if (unbounded) {
-				if (_mc <= 0)
-					try_decrease();
-			}
-
 			return (runs[1].get_error() < runs[0].get_error() 
 			     || (!finite(runs[0].get_error()) && finite(runs[1].get_error())));
 		}
 
-		diff_stat_t(ale_pos _mc_arg) : runs(), old_runs(), current_mc(),
-		                               perturb_multipliers() {
-
-			mc_default = _mc_arg;
-
-			// ui::get()->alignment_monte_carlo_parameter(_mc_arg);
+		diff_stat_t() : runs(), old_runs(), perturb_multipliers() {
 		}
 
 		run_index get_run_index(unsigned int perturb_index) {
@@ -1405,40 +1198,6 @@ public:
 
 			runs[0].rescale(scale);
 			
-			if (_mc > 0) {
-				for (unsigned int i = 0;
-				     current_mc.count(run_index(i, 0)); i++)
-				for (unsigned int j = 0; 
-				     current_mc.count(run_index(i, j)); j++)
-					current_mc[run_index(i, j)] /= pow(scale, 2);
-
-				runs[0].mc /= pow(scale, 2);
-
-				mc_default /= pow(scale, 2);
-
-			}
-
-			ui::get()->alignment_monte_carlo_parameter(get_mc());
-
-			rediff();
-		}
-
-		void reperturb() {
-			assert(runs.size() == 1);
-
-			if (_mc > 0)
-				return;
-
-			for (unsigned int i = 0;
-			     current_mc.count(run_index(i, 0)); i++)
-			for (unsigned int j = 0; 
-			     current_mc.count(run_index(i, j)); j++)
-				current_mc[run_index(i, j)] /= 2;
-
-			runs[0].mc /= 2;
-
-			ui::get()->alignment_monte_carlo_parameter(get_mc());
-
 			rediff();
 		}
 
@@ -1479,12 +1238,10 @@ public:
 			 */
 			runs = dst.runs;
 			old_runs = dst.old_runs;
-			current_mc = dst.current_mc;
 
 			/*
 			 * Copy diff variables
 			 */
-			mc_default = dst.mc_default;
 			si = dst.si;
 			ax_count = dst.ax_count;
 			frame = dst.frame;
@@ -1514,8 +1271,7 @@ public:
 		}
 
 		int operator!=(diff_stat_t &param) {
-			return (get_mc() != param.get_mc()
-			     || get_error() != param.get_error());
+			return (get_error() != param.get_error());
 		}
 
 		int operator==(diff_stat_t &param) {
@@ -1531,34 +1287,6 @@ public:
 			assert(runs.size() == 1);
 			return runs[0].get_error();
 		}
-
-	private:
-
-		void mcd_increase() {
-			assert (_mc <= 0);
-			assert (runs.size() > 0);
-
-			for (unsigned int r = 0; r < runs.size(); r++)
-				runs[r].mc *= 2;
-
-		// 	ui::get()->alignment_monte_carlo_parameter(get_mc());
-
-			rediff();
-		}
-
-		void mcd_decrease() {
-			assert (_mc <= 0);
-			assert (runs.size() > 0);
-
-			for (unsigned int r = 0; r < runs.size(); r++)
-				runs[r].mc /= 2;
-
-		//	ui::get()->alignment_monte_carlo_parameter(get_mc());
-
-			rediff();
-		}
-
-		void try_decrease();
 
 	public:
 		/*
@@ -1739,7 +1467,7 @@ public:
 				for (unsigned int i = 0; i < t_set.size(); i++) {
 					diff_stat_t test = *this;
 
-					test.diff(si, mc_default, perturb, t_set[i], ax_count, frame);
+					test.diff(si, perturb, t_set[i], ax_count, frame);
 
 					test.confirm();
 
@@ -1759,8 +1487,6 @@ public:
 			int found_unreliable = 1;
 			std::vector<int> tested(t_set.size(), 0);
 
-			ale_pos current_mc_arg = mc_default;
-
 			for (unsigned int i = 0; i < t_set.size(); i++) {
 				run_index ori = get_run_index(i);
 
@@ -1771,19 +1497,11 @@ public:
 				 && old_runs.count(ori)
 				 && old_runs[ori].offset == t_set[i])
 					tested[i] = 1;
-
-				/*
-				 * Update starting mc arg.
-				 */
-				if (current_mc.count(ori) && current_mc[ori] < current_mc_arg)
-					current_mc_arg = current_mc[ori];
 			}
 
 			std::vector<ale_pos> perturb_multipliers_original = perturb_multipliers;
 
 			while (found_unreliable) {
-
-				ui::get()->alignment_monte_carlo_parameter(current_mc_arg);
 
 				found_unreliable = 0;
 
@@ -1792,7 +1510,7 @@ public:
 					if (tested[i])
 						continue;
 
-					diff(si, current_mc_arg, perturb, t_set[i], ax_count, frame);
+					diff(si, perturb, t_set[i], ax_count, frame);
 
 					if (!(i < perturb_multipliers.size())
 					 || !finite(perturb_multipliers[i])) {
@@ -1821,26 +1539,14 @@ public:
 					if (!finite(perturb_multipliers[i]))
 						perturb_multipliers[i] = 1;
 
-					if ((!current_mc.count(ori)
-					  && current_mc_arg < 1)
-					 || (current_mc.count(ori)
-					  && current_mc[ori] > current_mc_arg
-					  && current_mc_arg < 1)
-					 || !reliable()) {
-						found_unreliable = 1;
-						continue;
-					}
-
-					current_mc[ori] = runs[1].mc;
 					tested[i] = 1;
 
 					if (better()
 					 && runs[1].get_error() < runs[0].get_error()
 					 && perturb_multipliers[i] 
 					  / perturb_multipliers_original[i] < 2) {
-						current_mc[ori] = runs[1].mc;
 						memos.push_back(memo_entry(frame, runs[1].perturb,
-							runs[1].offset, runs[0].offset, get_mc()));
+							runs[1].offset, runs[0].offset));
 						runs[0] = runs[1];
 						runs.pop_back();
 						return;
@@ -1853,8 +1559,6 @@ public:
 
 				if (!found_unreliable)
 					return;
-
-				current_mc_arg *= 2;
 			}
 		}
 
@@ -2380,7 +2084,7 @@ public:
 
 		diff_stat_t test(*here);
 
-		test.diff(si, test.get_mc(), perturb, t, local_ax_count, m);
+		test.diff(si, perturb, t, local_ax_count, m);
 
 		unsigned int ovl = overlap(si, t, local_ax_count);
 
@@ -2695,10 +2399,6 @@ public:
 		}
 
 		struct scale_cluster si = scale_clusters[lod];
-		ale_pos _mc_arg = (_mc > 0) ? (_mc * pow(2, 2 * lod))
-			                    : 1;
-
-		ui::get()->alignment_monte_carlo_parameter(_mc_arg);
 
 		/*
 		 * Projective adjustment value
@@ -2748,14 +2448,14 @@ public:
 		 * Alignment statistics.
 		 */
 
-		diff_stat_t here(_mc_arg);
+		diff_stat_t here;
 
 		/*
 		 * Current difference (error) value
 		 */
 
 		ui::get()->prematching();
-		here.diff(si, _mc_arg, perturb, offset, local_ax_count, m);
+		here.diff(si, perturb, offset, local_ax_count, m);
 		ui::get()->set_match(here.get_error());
 
 		/*
@@ -2896,7 +2596,7 @@ public:
 			for (int k = lod; k > 0; k--)
 				o.rescale(0.5);
 
-			here.diff(si, here.get_mc(), perturb, o, local_ax_count, m);
+			here.diff(si, perturb, o, local_ax_count, m);
 			here.confirm();
 			ui::get()->set_match(here.get_error());
 			ui::get()->set_offset(here.get_offset());
@@ -2973,8 +2673,6 @@ public:
 
 					perturb *= 0.5;
 
-					here.reperturb();
-
 					if (lod > 0) {
 
 						/*
@@ -3032,7 +2730,7 @@ public:
 
 		ui::get()->postmatching();
 		offset.use_full_support();
-		here.diff(scale_clusters[0], here.get_mc(), perturb, offset, local_ax_count, m);
+		here.diff(scale_clusters[0], perturb, offset, local_ax_count, m);
 		here.confirm();
 		offset.use_restricted_support();
 		ui::get()->set_match(here.get_error());
@@ -3738,17 +3436,6 @@ public:
 	}
 
 	/*
-	 * Use Monte Carlo alignment sampling with argument N.
-	 */
-	static void mc(ale_pos n) {
-		_mc = n;
-	}
-
-	static void mcd_limit(int n) {
-		_mcd_limit = n;
-	}
-
-	/*
 	 * Set the certainty-weighted flag.
 	 */
 	static void certainty_weighted(int flag) {
@@ -3800,13 +3487,6 @@ public:
 	static void gs_mo(ale_pos value, int _gs_mo_percent) {
 		_gs_mo = value;
 		gs_mo_percent = _gs_mo_percent;
-	}
-
-	/*
-	 * Don't use Monte Carlo alignment sampling.
-	 */
-	static void no_mc() {
-		_mc = 0;
 	}
 
 	/*

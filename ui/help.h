@@ -186,13 +186,6 @@ public:
 			"--trans-load <x>  Load initial transformation settings from file <x>\n"
 			"--trans-save <x>  Save final transformation data in file <x>\n"
 			BETWEEN_SECTIONS
-			"Monte Carlo alignment:\n"
-			HEADER_SPACE
-			"--mc <x>          Statically sample ~x%% of available pixels       (0 < x < 100)\n"
-                        "--no-mc           Statically sample all pixels.\n"
-			"--mcd             Dynamically sample with robustness checks.          [default]\n"
-			"--mcd-removal <x> Check robustness against removing x pixels.   (10 is default)\n"
-			BETWEEN_SECTIONS
 			"Tunable parameters:\n"
 			HEADER_SPACE
 			"--metric=x        Set the alignment error metric exponent.       (2 is default)\n"
@@ -672,8 +665,6 @@ public:
 			BETWEEN_SECTIONS
 			"List of arguments admitting scoping:\n"
 			HEADER_SPACE
-			"--mc              (see --ha for more details)\n"
-			"--mcd-removal     (see --ha for more details)\n"
 			"--gs              (see --ha for more details)\n"
 			"--gs-mo           (see --ha for more details)\n"
 			"--threads         (see --hp for more details)\n"
@@ -687,9 +678,9 @@ public:
 			"arg1 file1 arg2   <arg2> applies only to files later than <file1>.\n"
 			"                    Example:\n"
 			"\n"
-			"                         --mc 10 file1 --mc 20 file2\n"
+			"                         --ev 10 file1 --ev 20 file2\n"
 			"\n"
-			"                    (file1 has monte-carlo argument 10; file2 has --mc 20.)\n"
+			"                    (file1 has EV 10; file2 has EV 20.)\n"
 			"\n"
 			BETWEEN_SECTIONS
 			"Hidden scope (implementation may be buggy):\n"
@@ -697,9 +688,9 @@ public:
 			"[ args ]          Hide the effects of <args> options within [ ... ] scope\n"
 			"                    Example:\n"
 			"\n"
-			"                         file1 [ --mc 20 file2 ] file3\n"
+			"                         file1 [ --ev 20 file2 ] file3\n"
 			"\n"
-			"                    (The monte-carlo argument is limited to file2.)\n"
+			"                    (The EV argument is limited to file2.)\n"
 			"\n"
 			BETWEEN_SECTIONS
 			"Exposed scope (implementation may be buggy):\n"

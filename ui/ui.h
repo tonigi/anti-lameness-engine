@@ -161,7 +161,6 @@ protected:
 		double exp_multiplier[3];
 		double perturb_size;
 		double align_lod;
-		double mc;
 		unsigned int frame_num;
 		unsigned int irani_peleg_stage;
 		unsigned int secondary_frame_num;
@@ -568,11 +567,6 @@ public:
 
 	virtual void supplemental_frame_done() {
 		status.code = status.FRAME_DONE;
-		update();
-	}
-
-	virtual void alignment_monte_carlo_parameter(ale_pos mc) {
-		status.mc = (mc > 1) ? 1 : mc;
 		update();
 	}
 

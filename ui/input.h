@@ -2695,11 +2695,7 @@ public:
 
 				const char *option_name = env->get_option_name(i->first);
 
-				if (!strcmp(option_name, "mc")) {
-					int type = env->get_int_arg(i->first, 0);
-					d2::align::mc((type == 2) ? env->get_double_arg(i->first, 1) / 100 
-							          : (double) type);
-				} else if (!strcmp(option_name, "ma-card")) {
+				if (!strcmp(option_name, "ma-card")) {
 					int card = env->get_int_arg(i->first, 1);
 					if (card < 1)
 						ui::get()->error("--ma-card requires a positive integer");
@@ -2731,8 +2727,6 @@ public:
 				} else if (!strcmp(option_name, "black")) {
 					double black = env->get_double_arg(i->first, 1);
 					input_exposure[j]->set_black_level(black);
-				} else if (!strcmp(option_name, "mcd-removal")) {
-					d2::align::mcd_limit(env->get_int_arg(i->first, 1));
 				} else if (!strcmp(option_name, "perturb-upper")) {
 					const char *option = env->get_string_arg(i->first, 1);
 					double perturb_upper;
