@@ -1522,8 +1522,12 @@ public:
 	}
 
 	/*
-	 * Initialize the scale cluster data structure.
+	 * Initialize scale cluster data structures.
 	 */
+
+	static void init_nl_cluster(struct scale_cluster *sc) {
+	}
+
 	static struct scale_cluster *init_clusters(int frame, ale_real scale_factor,
 			const image *input_frame, unsigned int steps,
 			int *local_ax_count) {
@@ -1561,6 +1565,8 @@ public:
 		scale_ax_parameters(*local_ax_count, scale_clusters[0].ax_parameters, scale_factor, 
 				(scale_factor < 1.0 && interpolant == NULL) ? scale_factor : 1);
 
+		init_nl_cluster(&(scale_clusters[0]));
+
 		/*
 		 * Prepare reduced-detail images and exclusion
 		 * regions.
@@ -1587,6 +1593,8 @@ public:
 				scale_clusters[step].input = scale_clusters[step - 1].input->scale(0.5, "alignment");
 				scale_ax_parameters(*local_ax_count, scale_clusters[step].ax_parameters, 0.5, 0.5);
 			}
+
+			init_nl_cluster(&(scale_clusters[step]));
 		}
 
 		return scale_clusters;
