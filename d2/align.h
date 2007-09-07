@@ -360,6 +360,8 @@ private:
 
 		ale_pos input_scale;
 		const image *input;
+
+		nl_scale_cluster *nl_scale_clusters;
 	};
 
 	/*
