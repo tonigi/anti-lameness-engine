@@ -335,8 +335,22 @@ private:
 	static int ax_count;
 
 	/*
-	 * Type for scale cluster.
+	 * Types for scale clusters.
 	 */
+
+	struct nl_scale_cluster {
+		const image *accum_max;
+		const image *accum_min;
+		const image *defined_max;
+		const image *defined_min;
+		const image *aweight_max;
+		const image *aweight_min;
+		exclusion *ax_parameters;
+
+		ale_pos input_scale;
+		const image *input_max;
+		const image *input_min;
+	};
 
 	struct scale_cluster {
 		const image *accum;
@@ -615,6 +629,11 @@ private:
 				pixel weight[2];
 				ale_accum this_result[2] = { 0, 0 };
 				ale_accum this_divisor[2] = { 0, 0 };
+
+				/*
+				 * XXX: It's not clear that certainty is being
+				 * handled sanely here.
+				 */
 
 				if (interpolant != NULL)
 					interpolant->filtered(i, j, &p[0], &weight[0], 1, f);
