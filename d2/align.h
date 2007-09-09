@@ -2038,9 +2038,12 @@ public:
 		 * Determine how many levels of detail should be prepared.
 		 */
 
-		unsigned int steps = (perturb > pow(2, lod_max)) 
-			           ? (unsigned int) (log(perturb) / log(2)) - lod_max + 1 : 1;
+		/*
+		 * Plain (unsigned int) casting seems to be broken in some cases.
+		 */
 
+		unsigned int steps = (perturb > pow(2, lod_max)) 
+			           ? (unsigned int) lrint(log(perturb) / log(2)) - lod_max + 1 : 1;
 
 		/*
 		 * Prepare multiple levels of detail.
