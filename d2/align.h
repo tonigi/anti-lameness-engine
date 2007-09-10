@@ -1331,13 +1331,15 @@ public:
 	 *
 	 * Expects full-LOD images.
 	 *
-	 * This function is a bit of a mess, as it reflects rather ad-hoc rules
-	 * regarding what seems to work w.r.t. certainty.  Using certainty in the
-	 * first pass seems to result in worse alignment, while not using certainty
-	 * in the second pass results in incorrect determination of exposure.
-	 *
-	 * [Note that this may have been due to a bug in certainty determination
-	 * within this function.]
+	 * Note: This method does not use any weighting, by certainty or
+	 * otherwise, in the first exposure registration pass, as any bias of
+	 * weighting according to color may also bias the exposure registration
+	 * result; it does use weighting, including weighting by certainty
+	 * (even if certainty weighting is not specified), in the second pass,
+	 * under the assumption that weighting by certainty improves handling
+	 * of out-of-range highlights, and that bias of exposure measurements
+	 * according to color may generally be less harmful after spatial
+	 * registration has been performed.
 	 */
 	static void set_exposure_ratio(unsigned int m, struct scale_cluster c,
 			transformation t, int ax_count, int pass_number) {
