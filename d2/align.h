@@ -1504,7 +1504,8 @@ public:
 	 * Prepare the next level of detail for definition maps.
 	 */
 	static const image *prepare_lod_def(const image *current) {
-		assert(current);
+		if (current == NULL)
+			return NULL;
 
 		return current->defined_scale_by_half("prepare_lod_def"); 
 	}
