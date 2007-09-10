@@ -1401,8 +1401,7 @@ public:
 
 				c.input->get_bl(q, b);
 
-#if 1
-				pixel weight = (c.aweight
+				pixel weight = ((c.aweight && pass_number)
 					      ? c.aweight->get_pixel(i, j)
 					      : pixel(1, 1, 1))
 					     * ((!certainty_weights && pass_number)
@@ -1411,9 +1410,6 @@ public:
 					     * (pass_number
 					      ? b[1]
 					      : pixel(1, 1, 1));
-#else
-				pixel weight = pixel(1, 1, 1);
-#endif
 
 				asum += a    * weight;
 				bsum += b[0] * weight;
