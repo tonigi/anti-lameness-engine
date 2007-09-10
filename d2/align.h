@@ -1501,16 +1501,6 @@ public:
 	}
 
 	/*
-	 * Prepare the next level of detail for weighted images.
-	 */
-	static const image *prepare_lod(const image *current, const image *weights) {
-		if (current == NULL)
-			return NULL;
-
-		return current->scale_by_half(weights, "prepare_lod");
-	}
-
-	/*
 	 * Prepare the next level of detail for definition maps.
 	 */
 	static const image *prepare_lod_def(const image *current) {
@@ -1572,9 +1562,9 @@ public:
 
 		for (unsigned int step = 1; step < steps; step++) {
 			ui::get()->constructing_lod_clusters(step);
-			scale_clusters[step].accum = prepare_lod(scale_clusters[step - 1].accum, scale_clusters[step - 1].aweight);
+			scale_clusters[step].accum = prepare_lod(scale_clusters[step - 1].accum);
 			scale_clusters[step].certainty = prepare_lod_def(scale_clusters[step - 1].certainty);
-			scale_clusters[step].aweight = prepare_lod(scale_clusters[step - 1].aweight);
+			scale_clusters[step].aweight = prepare_lod_def(scale_clusters[step - 1].aweight);
 			scale_clusters[step].ax_parameters 
 				= copy_ax_parameters(*local_ax_count, scale_clusters[step - 1].ax_parameters);
 

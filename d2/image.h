@@ -815,7 +815,8 @@ public:
 	 *
 	 * Whereas scaling of image weight arrays is not generally obvious in
 	 * either purpose or method, ALE requires that image definition arrays
-	 * be scalable.
+	 * be scalable.  (Note that in the special case where weight is treated
+	 * as certainty, using a geometric mean is probably correct.)
 	 *
 	 * We currently use a geometric mean to implement scaling of
 	 * definition arrays.
