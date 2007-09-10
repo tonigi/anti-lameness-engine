@@ -215,7 +215,7 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 		   && ti <= c.input->height() - 1
 		   && tj >= 0
 		   && tj <= c.input->width() - 1
-		   && c.defined->get_pixel(i, j)[0] != 0))
+		   && c.certainty->get_pixel(i, j)[0] != 0))
 			continue;
 
 		if (!(r[0] >= 0

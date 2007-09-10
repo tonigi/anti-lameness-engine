@@ -341,8 +341,8 @@ private:
 	struct nl_scale_cluster {
 		const image *accum_max;
 		const image *accum_min;
-		const image *defined_max;
-		const image *defined_min;
+		const image *certainty_max;
+		const image *certainty_min;
 		const image *aweight_max;
 		const image *aweight_min;
 		exclusion *ax_parameters;
@@ -354,7 +354,7 @@ private:
 
 	struct scale_cluster {
 		const image *accum;
-		const image *defined;
+		const image *certainty;
 		const image *aweight;
 		exclusion *ax_parameters;
 
@@ -446,7 +446,7 @@ private:
 			 && ti <= c.input->height() - 1
 			 && tj >= 0
 			 && tj <= c.input->width() - 1
-			 && c.defined->get_pixel(i, j)[0] != 0)
+			 && c.certainty->get_pixel(i, j)[0] != 0)
 				result++;
 		}
 
@@ -490,7 +490,7 @@ private:
 				 && ti <= si.input->height() - 1
 				 && tj >= 0
 				 && tj <= si.input->width() - 1
-				 && si.defined->get_pixel(i, j)[0] != 0) {
+				 && si.certainty->get_pixel(i, j)[0] != 0) {
 
 					assert(0);
 				}
@@ -1393,7 +1393,7 @@ public:
 			 && q[0] <= c.input->height() - 1
 			 && q[1] >= 0
 			 && q[1] <= c.input->width() - 1
-			 && c.defined->get_pixel(i, j).minabs_norm() != 0) { 
+			 && c.certainty->get_pixel(i, j).minabs_norm() != 0) { 
 				pixel a = c.accum->get_pixel(i, j);
 				pixel b[2];
 
@@ -1404,7 +1404,7 @@ public:
 					      ? c.aweight->get_pixel(i, j)
 					      : pixel(1, 1, 1))
 					     * ((!certainty_weights && pass_number)
-					      ? c.defined->get_pixel(i, j)
+					      ? c.certainty->get_pixel(i, j)
 					      : pixel(1, 1, 1))
 					     * (pass_number
 					      ? b[1]
@@ -1558,7 +1558,7 @@ public:
 		else
 			scale_clusters[0].input = input_frame;
 
-		scale_clusters[0].defined = reference_defined;
+		scale_clusters[0].certainty = reference_defined;
 		scale_clusters[0].aweight = alignment_weights_const;
 		scale_clusters[0].ax_parameters = filter_ax_parameters(frame, local_ax_count);
 
@@ -1575,7 +1575,7 @@ public:
 		for (unsigned int step = 1; step < steps; step++) {
 			ui::get()->constructing_lod_clusters(step);
 			scale_clusters[step].accum = prepare_lod(scale_clusters[step - 1].accum, scale_clusters[step - 1].aweight);
-			scale_clusters[step].defined = prepare_lod_def(scale_clusters[step - 1].defined);
+			scale_clusters[step].certainty = prepare_lod_def(scale_clusters[step - 1].certainty);
 			scale_clusters[step].aweight = prepare_lod(scale_clusters[step - 1].aweight);
 			scale_clusters[step].ax_parameters 
 				= copy_ax_parameters(*local_ax_count, scale_clusters[step - 1].ax_parameters);
@@ -1613,7 +1613,7 @@ public:
 
 		for (unsigned int step = 1; step < steps; step++) {
 			delete scale_clusters[step].accum;
-			delete scale_clusters[step].defined;
+			delete scale_clusters[step].certainty;
 			delete scale_clusters[step].aweight;
 
 			if (scale_clusters[step].input_scale < 1.0)
