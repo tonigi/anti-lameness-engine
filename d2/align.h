@@ -626,10 +626,10 @@ private:
 				ale_accum this_result[2] = { 0, 0 };
 				ale_accum this_divisor[2] = { 0, 0 };
 
-				if (interpolant != NULL)
+				if (interpolant != NULL) {
 					pixel ignored_weight;
 					interpolant->filtered(i, j, &p[0], &ignored_weight, 1, f);
-				else {
+				} else {
 					p[0] = c.input->get_bl(t);
 				}
 
@@ -1537,10 +1537,11 @@ public:
 		/*
 		 * Incorporate input frame certainty.
 		 */
-		for (int i = 0; i < scale_clusters[0].certainty->height(); i++)
-		for (int j = 0; j < scale_clusters[0].certainty->width(); j++) {
-			scale_clusters[0].certainty->pix(i, j) *= 
-				scale_clusters[0].exp().confidence(scale_clusters[0].accum->pix(i, j));
+		for (unsigned int i = 0; i < scale_clusters[0].certainty->height(); i++)
+		for (unsigned int j = 0; j < scale_clusters[0].certainty->width(); j++) {
+			((image *) scale_clusters[0].certainty)->pix(i, j) *= 
+				scale_clusters[0].input->
+					exp().confidence(scale_clusters[0].accum->pix(i, j));
 		}
 
 		scale_ax_parameters(*local_ax_count, scale_clusters[0].ax_parameters, scale_factor, 

@@ -41,7 +41,6 @@ const image *align::reference_image = NULL;
 const image *align::reference_defined = NULL;
 const image *align::weight_map = NULL;
 image *align::alignment_weights = NULL;
-const image *align::alignment_weights_const = NULL;
 const char *align::wmx_file = NULL;
 const char *align::wmx_exec = NULL;
 const char *align::wmx_defs = NULL;
