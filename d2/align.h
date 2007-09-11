@@ -1542,6 +1542,9 @@ public:
 			((image *) scale_clusters[0].certainty)->pix(i, j) *= 
 				scale_clusters[0].input->
 					exp().confidence(scale_clusters[0].accum->get_pixel(i, j));
+
+			((image *) scale_clusters[0].certainty->pix(i, j)) =
+				ppow(scale_clusters[0].certainty->get_pixel(i, j), 0.5);
 		}
 
 		scale_ax_parameters(*local_ax_count, scale_clusters[0].ax_parameters, scale_factor, 
