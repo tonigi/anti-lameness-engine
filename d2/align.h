@@ -101,16 +101,10 @@ private:
 	static const char *wmx_defs;
 
 	/*
-	 * Consolidated alignment weights
-	 *
-	 * The final value of alignment_weights_const is the canonical weight
-	 * set.  If alignment_weights_const is set but alignment_weights is
-	 * not, then the memory is not ours, and the object should not be
-	 * modified or deleted.
+	 * Non-certainty alignment weights
 	 */
 
 	static image *alignment_weights;
-	static const image *alignment_weights_const;
 
 	/*
 	 * Latest transformation.
@@ -632,26 +626,15 @@ private:
 				ale_accum this_result[2] = { 0, 0 };
 				ale_accum this_divisor[2] = { 0, 0 };
 
-				/*
-				 * XXX: It's not clear that certainty is being
-				 * handled sanely here.
-				 */
-
 				if (interpolant != NULL)
-					interpolant->filtered(i, j, &p[0], &weight[0], 1, f);
+					pixel ignored_weight;
+					interpolant->filtered(i, j, &p[0], &ignored_weight, 1, f);
 				else {
-					pixel result[2];
-
-					c.input->get_bl(t, result);
-					p[0] = result[0];
-					weight[0] = result[1];
+					p[0] = c.input->get_bl(t);
 				}
 
 				if (u.defined()) {
-					pixel result[2];
-					c.input->get_bl(u, result);
-					p[1] = result[0];
-					weight[1] = result[1];
+					p[1] = c.input->get_bl(u);
 				}
 
 
@@ -662,6 +645,9 @@ private:
 				if (certainty_weights == 0) {
 					weight[0] = pixel(1, 1, 1);
 					weight[1] = pixel(1, 1, 1);
+				} else {
+					weight[0] = c.certainty->get_pixel(i, j);
+					weight[1] = c.certainty->get_pixel(i, j);
 				}
 
 				if (c.aweight != NULL) {
@@ -1397,22 +1383,19 @@ public:
 			 && q[1] <= c.input->width() - 1
 			 && c.certainty->get_pixel(i, j).minabs_norm() != 0) { 
 				pixel a = c.accum->get_pixel(i, j);
-				pixel b[2];
+				pixel b;
 
-				c.input->get_bl(q, b);
+				b = c.input->get_bl(q);
 
 				pixel weight = ((c.aweight && pass_number)
 					      ? c.aweight->get_pixel(i, j)
 					      : pixel(1, 1, 1))
-					     * ((!certainty_weights && pass_number)
-					      ? c.certainty->get_pixel(i, j)
-					      : pixel(1, 1, 1))
 					     * (pass_number
-					      ? b[1]
+					      ? c.certainty->get_pixel(i, j)
 					      : pixel(1, 1, 1));
 
-				asum += a    * weight;
-				bsum += b[0] * weight;
+				asum += a * weight;
+				bsum += b * weight;
 			}
 		}
 
@@ -1547,9 +1530,18 @@ public:
 		else
 			scale_clusters[0].input = input_frame;
 
-		scale_clusters[0].certainty = reference_defined;
-		scale_clusters[0].aweight = alignment_weights_const;
+		scale_clusters[0].certainty = reference_defined->clone("certainty");
+		scale_clusters[0].aweight = alignment_weights;
 		scale_clusters[0].ax_parameters = filter_ax_parameters(frame, local_ax_count);
+
+		/*
+		 * Incorporate input frame certainty.
+		 */
+		for (int i = 0; i < scale_clusters[0].certainty->height(); i++)
+		for (int j = 0; j < scale_clusters[0].certainty->width(); j++) {
+			scale_clusters[0].certainty->pix(i, j) *= 
+				scale_clusters[0].exp().confidence(scale_clusters[0].accum->pix(i, j));
+		}
 
 		scale_ax_parameters(*local_ax_count, scale_clusters[0].ax_parameters, scale_factor, 
 				(scale_factor < 1.0 && interpolant == NULL) ? scale_factor : 1);
@@ -1599,6 +1591,8 @@ public:
 			delete scale_clusters[0].input;
 
 		free((void *)scale_clusters[0].ax_parameters);
+
+		delete scale_clusters[0].certainty;
 
 		for (unsigned int step = 1; step < steps; step++) {
 			delete scale_clusters[step].accum;
@@ -2580,9 +2574,6 @@ public:
 	 * Reset alignment weights
 	 */
 	static void reset_weights() {
-
-		alignment_weights_const = NULL;
-
 		if (alignment_weights != NULL)
 			delete alignment_weights;
 
@@ -2633,28 +2624,6 @@ public:
 			 && map_weight_position[0] <= weight_map->height() - 1
 			 && map_weight_position[1] <= weight_map->width() - 1)
 				alignment_weights->pix(i, j) *= weight_map->get_bl(map_weight_position);
-		}
-	}
-
-	/*
-	 * Update alignment weights with an internal weight map, reflecting a
-	 * summation of certainty values.  Use existing memory structures if
-	 * possible.  This function updates alignment_weights_const; hence, it
-	 * should not be called prior to any functions that modify the
-	 * alignment_weights structure.
-	 */
-	static void imap_update() {
-		if (alignment_weights == NULL) {
-			alignment_weights_const = reference_defined;
-		} else {
-			int rows = reference_image->height();
-			int cols = reference_image->width();
-
-			for (int i = 0; i < rows; i++)
-			for (int j = 0; j < cols; j++)
-				alignment_weights->pix(i, j) *= reference_defined->get_pixel(i, j);
-
-			alignment_weights_const = alignment_weights;
 		}
 	}
 
@@ -2838,9 +2807,6 @@ public:
 			fw_update();
 			wmx_update();
 			map_update();
-
-			if (certainty_weights)
-				imap_update();  /* Must be called after all other _updates */
 
 			assert (reference_image != NULL);
 			assert (reference_defined != NULL);
