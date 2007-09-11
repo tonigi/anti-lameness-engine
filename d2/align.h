@@ -1541,7 +1541,7 @@ public:
 		for (unsigned int j = 0; j < scale_clusters[0].certainty->width(); j++) {
 			((image *) scale_clusters[0].certainty)->pix(i, j) *= 
 				scale_clusters[0].input->
-					exp().confidence(scale_clusters[0].accum->pix(i, j));
+					exp().confidence(scale_clusters[0].accum->get_pixel(i, j));
 		}
 
 		scale_ax_parameters(*local_ax_count, scale_clusters[0].ax_parameters, scale_factor, 
