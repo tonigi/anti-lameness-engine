@@ -1543,7 +1543,7 @@ public:
 				scale_clusters[0].input->
 					exp().confidence(scale_clusters[0].accum->get_pixel(i, j));
 
-			((image *) scale_clusters[0].certainty->pix(i, j)) =
+			((image *) scale_clusters[0].certainty)->pix(i, j) =
 				ppow(scale_clusters[0].certainty->get_pixel(i, j), 0.5);
 		}
 
