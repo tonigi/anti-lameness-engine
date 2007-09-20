@@ -1585,6 +1585,8 @@ public:
 					extend = 1;
 				else
 					extend = 0;
+			} else if (!strcmp(option_name, "precise")) {
+				d2::align::set_precise(env->get_int_arg(i->first, 0));
 			} else if (!strcmp(option_name, "oc")) {
 				if (env->get_int_arg(i->first, 0))
 					d3::scene::oc();

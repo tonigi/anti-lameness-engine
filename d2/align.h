@@ -280,6 +280,16 @@ private:
 	static int match_count;
 
 	/*
+	 * Exposure registration and final match precision flag
+	 *
+	 * 0. Do not require precise calculation.
+	 *
+	 * 1. Require precise exposure registration and final match.
+	 */
+
+	static int precise_calculation;
+
+	/*
 	 * Certainty weight flag
 	 *
 	 * 0. Don't use certainty weights for alignment.
@@ -3132,6 +3142,13 @@ public:
 			assert(0);
 			exit(1);
 		}
+	}
+
+	/*
+	 * Set calculation precision
+	 */
+	static void set_precise(int p) {
+		precise_calculation = p;
 	}
 
 	/*

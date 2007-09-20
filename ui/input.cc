@@ -104,6 +104,9 @@ input::simple_option input::simple_option_table[] = {
 	{ "extend" },
 	{ "no-extend", "extend", "0" },
 
+	{ "precise" },
+	{ "no-precise", "precise", "0" },
+
 	{ "cache", NULL, NULL, 1 },
 
 	{ "ev", NULL, NULL, 1 },
