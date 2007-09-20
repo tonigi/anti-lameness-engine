@@ -569,7 +569,8 @@ private:
 
 		rng_t rng;
 
-		mc_iterate(int _i_min, int _i_max, int _j_min, int _j_max, unsigned int subdomain) {
+		mc_iterate(int _i_min, int _i_max, int _j_min, int _j_max, unsigned int subdomain) 
+				: rng() {
 
 			ale_pos coverage;
 
@@ -580,7 +581,7 @@ private:
 
 			index_max = (i_max - i_min) * (j_max - j_min);
 
-			if (index_max < 500)
+			if (index_max < 500 || precise_calculation)
 				coverage = 1;
 			else
 				coverage = D2_ALIGN_IMPRECISE_COVERAGE;
