@@ -33,6 +33,8 @@
 #include "tfile.h"
 #include "image_rw.h"
 
+#define D2_ALIGN_IMPRECISE_COVERAGE 0.3
+
 class align {
 private:
 
@@ -503,6 +505,116 @@ private:
 
 		t->end_calculate_region();
 	}
+
+	/*
+	 * Monte carlo iteration class.
+	 *
+	 * Monte Carlo alignment has been used for statistical comparisons in
+	 * spatial registration, and is now used for tonal registration
+	 * and final match calculation.
+	 */
+
+	/*
+	 * We use a random process for which the expected number of sampled
+	 * pixels is +/- .000003 from the coverage in the range [.005,.995] for
+	 * an image with 100,000 pixels.  (The actual number may still deviate
+	 * from the expected number by more than this amount, however.)  The
+	 * method is as follows:
+	 *
+	 * We have coverage == USE/ALL, or (expected # pixels to use)/(# total
+	 * pixels).  We derive from this SKIP/USE.
+	 *
+	 * SKIP/USE == (SKIP/ALL)/(USE/ALL) == (1 - (USE/ALL))/(USE/ALL)
+	 *
+	 * Once we have SKIP/USE, we know the expected number of pixels to skip
+	 * in each iteration.  We use a random selection process that provides
+	 * SKIP/USE close to this calculated value.
+	 *
+	 * If we can draw uniformly to select the number of pixels to skip, we
+	 * do.  In this case, the maximum number of pixels to skip is twice the
+	 * expected number.
+	 *
+	 * If we cannot draw uniformly, we still assign equal probability to
+	 * each of the integer values in the interval [0, 2 * (SKIP/USE)], but
+	 * assign an unequal amount to the integer value ceil(2 * SKIP/USE) +
+	 * 1.
+	 */
+
+	/*
+	 * When reseeding the random number generator, we want the same set of
+	 * pixels to be used in cases where two alignment options are compared.
+	 * If we wanted to avoid bias from repeatedly utilizing the same seed,
+	 * we could seed with the number of the frame most recently aligned:
+	 *
+	 * 	srand(latest);
+	 *
+	 * However, in cursory tests, it seems okay to just use the default
+	 * seed of 1, and so we do this, since it is simpler; both of these
+	 * approaches to reseeding achieve better results than not reseeding.
+	 * (1 is the default seed according to the GNU Manual Page for
+	 * rand(3).)
+	 * 
+	 * For subdomain calculations, we vary the seed by adding the subdomain
+	 * index.
+	 */
+
+	class mc_iterate {
+		ale_pos mc_max;
+		unsigned int index;
+		unsigned int index_max;
+		int i_min;
+		int i_max;
+		int j_min;
+		int j_max;
+
+		rng_t rng;
+
+		mc_iterate(int _i_min, int _i_max, int _j_min, int _j_max, unsigned int subdomain) {
+
+			ale_pos coverage;
+
+			i_min = _i_min;
+			i_max = _i_max;
+			j_min = _j_min;
+			j_max = _j_max;
+
+			index_max = (i_max - i_min) * (j_max - j_min);
+
+			if (index_max < 500)
+				coverage = 1;
+			else
+				coverage = D2_ALIGN_IMPRECISE_COVERAGE;
+
+			ale_pos su = (1 - coverage) / coverage;
+
+			mc_max = (floor(2*su) * (1 + floor(2*su)) + 2*su)
+			       / (2 + 2 * floor(2*su) - 2*su);
+
+			rng.seed(1 + subdomain);
+
+			index = -1 + (int) ceil((mc_max+1) 
+				   * ( (1 + ((ale_pos) (rng.get())) ) 
+				     / (1 + ((ale_pos) RAND_MAX)) ));
+		}
+
+		int get_i() {
+			return index / (j_max - j_min) + i_min;
+		}
+
+		int get_j() {
+			return index % (j_max - j_min) + j_min;
+		}
+
+		void operator++ () {
+			index += (int) ceil((mc_max+1) 
+			       * ( (1 + ((ale_pos) (rng.get())) ) 
+			 	 / (1 + ((ale_pos) RAND_MAX)) ));
+		}
+
+		int done() {
+			return (index >= index_max);
+		}
+	};
 
 	/*
 	 * Not-quite-symmetric difference function.  Determines the difference in areas
