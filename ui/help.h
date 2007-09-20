@@ -250,10 +250,10 @@ public:
 			"--gs-mo <x>       Set <x> pixel min. overlap for global search.   (67%% default)\n"
 			"                     ('x%%' uses a fraction of the total pixel count.)\n"
 			BETWEEN_SECTIONS
-			"Precise final alignment display:\n"
+			"Precision of exposure registration and final match:\n"
 			HEADER_SPACE
-			"--precise         Display precise final alignment.\n"
-			"--no-precise      Do not display precise final alignment.  [default]\n"
+			"--precise         Require precise exposure registration and final match.\n"
+			"--no-precise      Do not require precise calculation.  [default]\n"
 			BETWEEN_SECTIONS
 			"Multi-alignment [algorithms are not fully implemented]:\n"
 			HEADER_SPACE
