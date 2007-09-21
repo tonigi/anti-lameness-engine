@@ -1451,6 +1451,104 @@ public:
 	 * according to color may generally be less harmful after spatial
 	 * registration has been performed.
 	 */
+	class exposure_ratio_iterate : public thread::decompose_domain {
+		pixel_accum *asums;
+		pixel_accum *bsums;
+		pixel_accum *asum;
+		pixel_accum *bsum;
+		struct scale_cluster c;
+		transformation t;
+		int ax_count;
+		int pass_number;
+	protected:
+		void prepare_subdomains(unsigned int N) {
+			asums = new pixel_accum[N];
+			bsums = new pixel_accum[N];
+		}
+		void subdomain_algorithm(unsigned int thread,
+				int i_min, int i_max, int j_min, int j_max) {
+
+			point offset = c.accum->offset();
+
+			for (mc_iterate m(i_min, i_max, j_min, j_max, thread); !m.done(); m++) {
+				
+				unsigned int i = (unsigned int) m.get_i();
+				unsigned int j = (unsigned int) m.get_j();
+
+				if (ref_excluded(i, j, offset, c.ax_parameters, ax_count))
+					continue;
+
+				/*
+				 * Transform
+				 */
+
+				struct point q;
+
+				q = (c.input_scale < 1.0 && interpolant == NULL)
+				  ? t.scaled_inverse_transform(
+					point(i + offset[0], j + offset[1]))
+				  : t.unscaled_inverse_transform(
+					point(i + offset[0], j + offset[1]));
+
+				/*
+				 * Check that the transformed coordinates are within
+				 * the boundaries of array c.input, that they are not
+				 * subject to exclusion, and that the weight value in
+				 * the accumulated array is nonzero.
+				 */
+
+				if (input_excluded(q[0], q[1], c.ax_parameters, ax_count))
+					continue;
+
+				if (q[0] >= 0
+				 && q[0] <= c.input->height() - 1
+				 && q[1] >= 0
+				 && q[1] <= c.input->width() - 1
+				 && c.certainty->get_pixel(i, j).minabs_norm() != 0) { 
+					pixel a = c.accum->get_pixel(i, j);
+					pixel b;
+
+					b = c.input->get_bl(q);
+
+					pixel weight = ((c.aweight && pass_number)
+						      ? c.aweight->get_pixel(i, j)
+						      : pixel(1, 1, 1))
+						     * (pass_number
+						      ? c.certainty->get_pixel(i, j)
+						      : pixel(1, 1, 1));
+
+					asums[thread] += a * weight;
+					bsums[thread] += b * weight;
+				}
+			}
+		}
+
+		void finish_subdomains(unsigned int N) {
+			for (unsigned int n = 0; n < N; n++) {
+				*asum += asums[n];
+				*bsum += bsums[n];
+			}
+			delete asums;
+			delete bsums;
+		}
+	public:
+		exposure_ratio_iterate(pixel_accum *_asum,
+				       pixel_accum *_bsum,
+				       struct scale_cluster _c,
+				       transformation _t,
+				       int _ax_count,
+				       int _pass_number) : decompose_domain(0, _c.accum->height(), 
+				                                            0, _c.accum->width()){
+
+			asum = _asum;
+			bsum = _bsum;
+			c = _c;
+			t = _t;
+			ax_count = _ax_count;
+			pass_number = _pass_number;
+		}
+	};
+
 	static void set_exposure_ratio(unsigned int m, struct scale_cluster c,
 			transformation t, int ax_count, int pass_number) {
 
@@ -1469,59 +1567,10 @@ public:
 			return;
 		}
 
-		pixel_accum asum, bsum;
+		pixel_accum asum(0, 0, 0), bsum(0, 0, 0);
 
-		point offset = c.accum->offset();
-
-		for (unsigned int i = 0; i < c.accum->height(); i++)
-		for (unsigned int j = 0; j < c.accum->width(); j++) {
-
-			if (ref_excluded(i, j, offset, c.ax_parameters, ax_count))
-				continue;
-
-			/*
-			 * Transform
-			 */
-
-			struct point q;
-
-			q = (c.input_scale < 1.0 && interpolant == NULL)
-			  ? t.scaled_inverse_transform(
-				point(i + offset[0], j + offset[1]))
-			  : t.unscaled_inverse_transform(
-				point(i + offset[0], j + offset[1]));
-
-			/*
-			 * Check that the transformed coordinates are within
-			 * the boundaries of array c.input, that they are not
-			 * subject to exclusion, and that the weight value in
-			 * the accumulated array is nonzero.
-			 */
-
-			if (input_excluded(q[0], q[1], c.ax_parameters, ax_count))
-				continue;
-
-			if (q[0] >= 0
-			 && q[0] <= c.input->height() - 1
-			 && q[1] >= 0
-			 && q[1] <= c.input->width() - 1
-			 && c.certainty->get_pixel(i, j).minabs_norm() != 0) { 
-				pixel a = c.accum->get_pixel(i, j);
-				pixel b;
-
-				b = c.input->get_bl(q);
-
-				pixel weight = ((c.aweight && pass_number)
-					      ? c.aweight->get_pixel(i, j)
-					      : pixel(1, 1, 1))
-					     * (pass_number
-					      ? c.certainty->get_pixel(i, j)
-					      : pixel(1, 1, 1));
-
-				asum += a * weight;
-				bsum += b * weight;
-			}
-		}
+		exposure_ratio_iterate eri(&asum, &bsum, c, t, ax_count, pass_number);
+		eri.run();
 
 		// std::cerr << (asum / bsum) << " ";
 		
