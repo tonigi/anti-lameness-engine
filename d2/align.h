@@ -569,6 +569,7 @@ private:
 
 		rng_t rng;
 
+	public:
 		mc_iterate(int _i_min, int _i_max, int _j_min, int _j_max, unsigned int subdomain) 
 				: rng() {
 
@@ -606,7 +607,7 @@ private:
 			return index % (j_max - j_min) + j_min;
 		}
 
-		void operator++ () {
+		void operator++(int whats_this_for) {
 			index += (int) ceil((mc_max+1) 
 			       * ( (1 + ((ale_pos) (rng.get())) ) 
 			 	 / (1 + ((ale_pos) RAND_MAX)) ));

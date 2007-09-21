@@ -119,39 +119,10 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 
 	point offset = c.accum->offset();
 
-	int i, j;
+	for (mc_iterate m(i_min, i_max, j_min, j_max, subdomain); !m.done(); m++) {
 
-	int index;
-
-	int index_max = (i_max - i_min) * (j_max - j_min);
-	
-	/*
-	 * Reseed the random number generator;  we want the
-	 * same set of pixels to be used when comparing two
-	 * alignment options.  If we wanted to avoid bias from
-	 * repeatedly utilizing the same seed, we could seed
-	 * with the number of the frame most recently aligned:
-	 *
-	 * 	srand(latest);
-	 *
-	 * However, in cursory tests, it seems okay to just use
-	 * the default seed of 1, and so we do this, since it
-	 * is simpler; both of these approaches to reseeding
-	 * achieve better results than not reseeding.  (1 is
-	 * the default seed according to the GNU Manual Page
-	 * for rand(3).)
-	 * 
-	 * For subdomain calculations, we vary the seed by subdomain.
-	 */
-
-	rng_t rng;
-
-	rng.seed(1 + subdomain);
-
-	for(index = 0; index < index_max; index += 1) {
-
-		i = index / (j_max - j_min) + i_min;
-		j = index % (j_max - j_min) + j_min;
+		int i = m.get_i();
+		int j = m.get_j();
 
 		/*
 		 * Check for exclusion in render coordinates.
