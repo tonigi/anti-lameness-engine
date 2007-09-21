@@ -772,9 +772,15 @@ private:
 				 */
 
 				if (certainty_weights == 1) {
-					weight[0] *= c.input_certainty->get_bl(t, 1);
+
+					/*
+					 * For speed, use arithmetic interpolation (get_bl(.))
+					 * instead of geometric (get_bl(., 1))
+					 */
+
+					weight[0] *= c.input_certainty->get_bl(t);
 					if (u.defined())
-						weight[1] *= c.input_certainty->get_bl(u, 1);
+						weight[1] *= c.input_certainty->get_bl(u);
 					weight[0] *= c.certainty->get_pixel(i, j);
 					weight[1] *= c.certainty->get_pixel(i, j);
 				}
