@@ -773,7 +773,8 @@ private:
 
 				if (certainty_weights == 1) {
 					weight[0] *= c.input_certainty->get_bl(t, 1);
-					weight[1] *= c.input_certainty->get_bl(u, 1);
+					if (u.defined())
+						weight[1] *= c.input_certainty->get_bl(u, 1);
 					weight[0] *= c.certainty->get_pixel(i, j);
 					weight[1] *= c.certainty->get_pixel(i, j);
 				}
