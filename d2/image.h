@@ -298,14 +298,24 @@ public:
 		return get_max_diff(i, j);
 	}
 
+	int in_bounds(point x) const {
+		if (x[0] < 0
+		 || x[1] < 0
+		 || x[0] > height() - 1
+		 || x[1] > width() - 1)
+			return 0;
+		if (!x.defined())
+			return 0;
+		return 1;
+	}
+
 	/*
 	 * Get a color value at a given position using bilinear interpolation between the
-	 * four nearest pixels.  Result values:
-	 *
-	 * result[0] == pixel value
-	 * result[1] == pixel confidence
+	 * four nearest pixels.
 	 */
-	void get_bl(point x, pixel result[2], int defined = 0) const {
+	pixel get_bl(point x, int defined = 0) const {
+
+		pixel result;
 
 		assert (x[0] >= 0);
 		assert (x[1] >= 0);
@@ -335,50 +345,21 @@ public:
 		 */
 
 		if (defined == 0) {
-			result[0] = pixel(0, 0, 0);
+			result = pixel(0, 0, 0);
 
 			for (int n = 0; n < 4; n++)
-				result[0] += factor[n] * neighbor[n];
+				result += factor[n] * neighbor[n];
 		} else {
-			result[0] = pixel(1, 1, 1);
+			result = pixel(1, 1, 1);
 
 			for (int n = 0; n < 4; n++)
-				result[0] *= ppow(_exp->confidence(neighbor[n]), factor[n]);
+				result *= ppow(_exp->confidence(neighbor[n]), factor[n]);
 		}
 
-		/*
-		 * Use a geometric interpolation for certainty
-		 */
-
-		if  (_exp) {
-			result[1] = pixel(1, 1, 1);
-			for (int n = 0; n < 4; n++)
-				result[1] *= ppow(_exp->confidence(neighbor[n]), factor[n]);
-		} else {
-			result[1] = pixel(1, 1, 1);
-		}
+		return result;
 	}
 
-	int in_bounds(point x) const {
-		if (x[0] < 0
-		 || x[1] < 0
-		 || x[0] > height() - 1
-		 || x[1] > width() - 1)
-			return 0;
-		if (!x.defined())
-			return 0;
-		return 1;
-	}
-
-	pixel get_bl(point x, int defined = 0) const {
-		pixel result[2];
-
-		get_bl(x, result, defined);
-
-		return result[0];
-	}
-
-	void get_scaled_bl(point x, ale_pos f, pixel result[2], int defined = 0) const {
+	pixel get_scaled_bl(point x, ale_pos f, int defined = 0) const {
 		point scaled(
 				x[0]/f <= height() - 1
 			               ? (x[0]/f)
@@ -387,15 +368,7 @@ public:
 				       ? (x[1]/f)
 				       : (width() - 1));
 
-		get_bl(scaled, result, defined);
-	}
-
-	pixel get_scaled_bl(point x, ale_pos f, int defined = 0) const {
-		pixel result[2];
-
-		get_scaled_bl(x, f, result, defined);
-
-		return result[0];
+		return get_bl(scaled, defined);
 	}
 
 		
