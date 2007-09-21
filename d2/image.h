@@ -353,7 +353,7 @@ public:
 			result = pixel(1, 1, 1);
 
 			for (int n = 0; n < 4; n++)
-				result *= ppow(_exp->confidence(neighbor[n]), factor[n]);
+				result *= ppow(neighbor[n], factor[n]);
 		}
 
 		return result;
