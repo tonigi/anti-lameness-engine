@@ -748,21 +748,22 @@ private:
 
 				pixel pa = c.accum->get_pixel(i, j);
 
-				pixel p[2];
-				pixel weight[2];
 				ale_accum this_result[2] = { 0, 0 };
 				ale_accum this_divisor[2] = { 0, 0 };
+
+				pixel p[2];
+				pixel weight[2];
+				weight[0] = pixel(1, 1, 1);
+				weight[1] = pixel(1, 1, 1);
 
 				if (interpolant != NULL) {
 					interpolant->filtered(i, j, &p[0], &weight[1], 1, f);
 				} else {
                                         p[0] = c.input->get_bl(t);
-					weight[0] = c.input_certainty->get_bl(t, 1);
 				}
 
 				if (u.defined()) {
 					p[1] = c.input->get_bl(u);
-					weight[1] = c.input_certainty->get_bl(u, 1);
 				}
 
 
@@ -770,10 +771,9 @@ private:
 				 * Handle certainty.
 				 */
 
-				if (certainty_weights == 0) {
-					weight[0] = pixel(1, 1, 1);
-					weight[1] = pixel(1, 1, 1);
-				} else {
+				if (certainty_weights == 1) {
+					weight[0] *= c.input_certainty->get_bl(t, 1);
+					weight[1] *= c.input_certainty->get_bl(u, 1);
 					weight[0] *= c.certainty->get_pixel(i, j);
 					weight[1] *= c.certainty->get_pixel(i, j);
 				}
