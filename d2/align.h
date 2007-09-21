@@ -354,6 +354,8 @@ private:
 		exclusion *ax_parameters;
 
 		ale_pos input_scale;
+		const image *input_certainty_max;
+		const image *input_certainty_min;
 		const image *input_max;
 		const image *input_min;
 	};
@@ -365,6 +367,7 @@ private:
 		exclusion *ax_parameters;
 
 		ale_pos input_scale;
+		const image *input_certainty;
 		const image *input;
 
 		nl_scale_cluster *nl_scale_clusters;
@@ -751,14 +754,15 @@ private:
 				ale_accum this_divisor[2] = { 0, 0 };
 
 				if (interpolant != NULL) {
-					pixel ignored_weight;
-					interpolant->filtered(i, j, &p[0], &ignored_weight, 1, f);
+					interpolant->filtered(i, j, &p[0], &weight[1], 1, f);
 				} else {
-					p[0] = c.input->get_bl(t);
+                                        p[0] = c.input->get_bl(t);
+					weight[0] = c.input_certainty->get_bl(t, 1);
 				}
 
 				if (u.defined()) {
 					p[1] = c.input->get_bl(u);
+					weight[1] = c.input_certainty->get_bl(u, 1);
 				}
 
 
@@ -770,8 +774,8 @@ private:
 					weight[0] = pixel(1, 1, 1);
 					weight[1] = pixel(1, 1, 1);
 				} else {
-					weight[0] = c.certainty->get_pixel(i, j);
-					weight[1] = c.certainty->get_pixel(i, j);
+					weight[0] *= c.certainty->get_pixel(i, j);
+					weight[1] *= c.certainty->get_pixel(i, j);
 				}
 
 				if (c.aweight != NULL) {
@@ -1514,7 +1518,8 @@ public:
 						      ? c.aweight->get_pixel(i, j)
 						      : pixel(1, 1, 1))
 						     * (pass_number
-						      ? c.certainty->get_pixel(i, j)
+						      ? ppow(c.certainty->get_pixel(i, j)
+						           * c.input_certainty->get_bl(q, 1), 0.5)
 						      : pixel(1, 1, 1));
 
 					asums[thread] += a * weight;
@@ -1708,17 +1713,26 @@ public:
 		scale_clusters[0].ax_parameters = filter_ax_parameters(frame, local_ax_count);
 
 		/*
-		 * Incorporate input frame certainty.
+		 * Allocate and determine input frame certainty.
 		 */
-		for (unsigned int i = 0; i < scale_clusters[0].certainty->height(); i++)
-		for (unsigned int j = 0; j < scale_clusters[0].certainty->width(); j++) {
-			((image *) scale_clusters[0].certainty)->pix(i, j) *= 
-				scale_clusters[0].input->
-					exp().confidence(scale_clusters[0].accum->get_pixel(i, j));
 
-			((image *) scale_clusters[0].certainty)->pix(i, j) =
-				ppow(scale_clusters[0].certainty->get_pixel(i, j), 0.5);
+		if (scale_clusters[0].input->get_bayer() != IMAGE_BAYER_NONE) {
+			scale_clusters[0].input_certainty = new image_bayer_ale_real(
+					scale_clusters[0].input->height(),
+					scale_clusters[0].input->width(),
+					scale_clusters[0].input->depth(),
+					scale_clusters[0].input->get_bayer());
+		} else {
+			scale_clusters[0].input_certainty = scale_clusters[0].input->clone("certainty");
 		}
+
+		for (unsigned int i = 0; i < scale_clusters[0].input_certainty->height(); i++)
+		for (unsigned int j = 0; j < scale_clusters[0].input_certainty->width(); j++)
+		for (unsigned int k = 0; k < 3; k++)
+		if (scale_clusters[0].input->get_channels(i, j) & k)
+			((image *) scale_clusters[0].input_certainty)->chan(i, j, k) =
+				scale_clusters[0].input->
+					exp().confidence(scale_clusters[0].input->get_pixel(i, j))[k];
 
 		scale_ax_parameters(*local_ax_count, scale_clusters[0].ax_parameters, scale_factor, 
 				(scale_factor < 1.0 && interpolant == NULL) ? scale_factor : 1);
@@ -1743,12 +1757,15 @@ public:
 
 			if (sf >= 1.0 || interpolant != NULL) {
 				scale_clusters[step].input = scale_clusters[step - 1].input;
+				scale_clusters[step].input_certainty = scale_clusters[step - 1].input_certainty;
 				scale_ax_parameters(*local_ax_count, scale_clusters[step].ax_parameters, 0.5, 1);
 			} else if (sf > 0.5) {
 				scale_clusters[step].input = scale_clusters[step - 1].input->scale(sf, "alignment");
+				scale_clusters[step].input_certainty = scale_clusters[step - 1].input->scale(sf, "alignment", 1);
 				scale_ax_parameters(*local_ax_count, scale_clusters[step].ax_parameters, 0.5, sf);
 			} else {
 				scale_clusters[step].input = scale_clusters[step - 1].input->scale(0.5, "alignment");
+				scale_clusters[step].input_certainty = scale_clusters[step - 1].input_certainty->scale(0.5, "alignment", 1);
 				scale_ax_parameters(*local_ax_count, scale_clusters[step].ax_parameters, 0.5, 0.5);
 			}
 

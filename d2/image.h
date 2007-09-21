@@ -305,7 +305,7 @@ public:
 	 * result[0] == pixel value
 	 * result[1] == pixel confidence
 	 */
-	void get_bl(point x, pixel result[2]) const {
+	void get_bl(point x, pixel result[2], int defined = 0) const {
 
 		assert (x[0] >= 0);
 		assert (x[1] >= 0);
@@ -331,47 +331,32 @@ public:
 		factor[3] = (x[1] - lx) * (hy - x[0]);
 
 		/*
-		 * Use bilinear interpolation for pixel value
+		 * Use bilinear and/or geometric interpolation
 		 */
 
-		result[0] = pixel(0, 0, 0);
+		if (defined == 0) {
+			result[0] = pixel(0, 0, 0);
 
-		for (int n = 0; n < 4; n++)
-			result[0] += factor[n] * neighbor[n];
-
-#if 0
-		/*
-		 * Take the minimum confidence
-		 */
-
-		if (_exp) {
-			result[1] = _exp->confidence(neighbor[0]);
-
-			for (int n = 1; n < 4; n++)
-				if (factor[n] > 0) {
-					pixel confidence 
-						= _exp->confidence(neighbor[n]);
-
-					for (int k = 0; k < 3; k++)
-						if (confidence[k] < result[1][k])
-							result[1][k] = confidence[k];
-				}
+			for (int n = 0; n < 4; n++)
+				result[0] += factor[n] * neighbor[n];
 		} else {
-			result[1] = pixel(1, 1, 1);
+			result[0] = pixel(1, 1, 1);
+
+			for (int n = 0; n < 4; n++)
+				result[0] *= ppow(_exp->confidence(neighbor[n]), factor[n]);
 		}
-#else
+
 		/*
-		 * Use bilinear interpolation for confidence
+		 * Use a geometric interpolation for certainty
 		 */
 
 		if  (_exp) {
-			result[1] = pixel(0, 0, 0);
+			result[1] = pixel(1, 1, 1);
 			for (int n = 0; n < 4; n++)
-				result[1] += factor[n] * _exp->confidence(neighbor[n]);
+				result[1] *= ppow(_exp->confidence(neighbor[n]), factor[n]);
 		} else {
 			result[1] = pixel(1, 1, 1);
 		}
-#endif
 	}
 
 	int in_bounds(point x) const {
@@ -385,15 +370,15 @@ public:
 		return 1;
 	}
 
-	pixel get_bl(point x) const {
+	pixel get_bl(point x, int defined = 0) const {
 		pixel result[2];
 
-		get_bl(x, result);
+		get_bl(x, result, defined);
 
 		return result[0];
 	}
 
-	void get_scaled_bl(point x, ale_pos f, pixel result[2]) const {
+	void get_scaled_bl(point x, ale_pos f, pixel result[2], int defined = 0) const {
 		point scaled(
 				x[0]/f <= height() - 1
 			               ? (x[0]/f)
@@ -402,13 +387,13 @@ public:
 				       ? (x[1]/f)
 				       : (width() - 1));
 
-		get_bl(scaled, result);
+		get_bl(scaled, result, defined);
 	}
 
-	pixel get_scaled_bl(point x, ale_pos f) const {
+	pixel get_scaled_bl(point x, ale_pos f, int defined = 0) const {
 		pixel result[2];
 
-		get_scaled_bl(x, f, result);
+		get_scaled_bl(x, f, result, defined);
 
 		return result[0];
 	}
@@ -766,7 +751,7 @@ public:
 	 * Return an image scaled by some factor != 1.0, using bilinear
 	 * interpolation.
 	 */
-	image *scale(ale_pos f, char *name) const {
+	image *scale(ale_pos f, char *name, int defined = 0) const {
 
 		/*
 		 * We probably don't want to scale images by a factor of 1.0,
@@ -787,7 +772,7 @@ public:
 			for (j = 0; j < is->width(); j++) 
 			for (k = 0; k < is->depth(); k++)
 				is->set_pixel(i, j,
-					get_scaled_bl(point(i, j), f));
+					get_scaled_bl(point(i, j), f, defined));
 
 			is->_offset = point(_offset[0] * f, _offset[1] * f);
 
