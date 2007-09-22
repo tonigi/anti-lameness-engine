@@ -1736,7 +1736,7 @@ public:
 		for (unsigned int i = 0; i < scale_clusters[0].input_certainty->height(); i++)
 		for (unsigned int j = 0; j < scale_clusters[0].input_certainty->width(); j++)
 		for (unsigned int k = 0; k < 3; k++)
-		if (scale_clusters[0].input->get_channels(i, j) & k)
+		if (scale_clusters[0].input->get_channels(i, j) & (1 << k))
 			((image *) scale_clusters[0].input_certainty)->chan(i, j, k) =
 				scale_clusters[0].input->
 					exp().confidence(scale_clusters[0].input->get_pixel(i, j))[k];
