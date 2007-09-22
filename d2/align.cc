@@ -70,15 +70,12 @@ ale_pos align::perturb_upper = 14;
 int align::perturb_upper_percent = 1;
 
 /*
- * XXX: These empirical observations may have been based on buggy code.
- * 
- * Empirically, it's okay to use a level-of-detail equal to twice the
- * resolution of the perturbation, so we set the default lod_max to 1, as
- * 2^1==2.  lod_max of zero seems okay also, but lower values seem to cause
- * problems.
+ * Empirically, setting lod_max to 0 seems to produce acceptable results; given
+ * that lod_max=0 does not obviously perform better than lod_max=1 in all
+ * cases, however, we do not use a lower value (e.g., -1, etc.) by default.
  */
 
-int align::lod_max = 1;
+int align::lod_max = 0;
 
 ale_pos align::rot_max = 32.0;
 ale_pos align::bda_mult = 2;
