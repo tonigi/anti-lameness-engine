@@ -1425,7 +1425,7 @@ public:
 			ui::get()->error("Default settings --q* are no longer recognized.");
 
 		const char *defaults = 
-   			"--dchain auto:triangle:2,fine:triangle:2,triangle:2 "
+   			"--dchain auto:triangle:2,fine:box:1,triangle:2 "
 			"--achain triangle:2 "
 			"--ips 1 "
 			"--3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2 ";

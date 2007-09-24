@@ -380,7 +380,7 @@ public:
 			"                     zero           Zero function.\n"
 			"                     <f>*<f>        Pointwise multiplication (windowing).\n"
 			"                  Defaults:\n"
-			"                     dchain         auto:triangle:2,fine:triangle:2,triangle:2\n"
+			"                     dchain         auto:triangle:2,fine:box:1,triangle:2\n"
 			"                     3d-chain       fine:triangle:2,fine:gauss:0.75,triangle:2\n"
 			"                     achain         triangle:2\n"
 			"                     afilter        internal (approximates triangle:2)\n"
