@@ -54,11 +54,17 @@ private:
 		const filter::filter *f;
 		const image *fine_weight;
 		const image *fine_image;
+		const image *coarse_image;
 		const image *coarse_defined;
 		image *output_image;
 
-		ale_pos find_nearest_nonzero_weight(int *out_coords, int i, int j, int k, 
-				int start_radius) {
+		/*
+		 * Attempt to determine a distance by finding two nearby defined
+		 * pixels, such that each pixel is in a 90-degree axis-aligned
+		 * cone opposite the other.
+		 */
+
+		ale_pos find_nonzero_weight_distance(int i, int j, int k) {
 
 			assert (i >= 0);
 			assert (j >= 0);
@@ -67,17 +73,6 @@ private:
 
 			assert (coarse_defined->get_pixel(i, j)[k] > 0);
 
-			if (start_radius == 0 
-			 && fine_weight->get_pixel(i, j)[k] > 0) {
-			 	if (out_coords) {
-					out_coords[0] = i;
-					out_coords[1] = j;
-				}
-				return 0;
-			} else if (start_radius == 0) {
-				start_radius = 1;
-			}
-
 			ale_pos zero = +0.0;
 			ale_pos one = +1.0;
 
@@ -85,8 +80,10 @@ private:
 
 			assert (isinf(nearest) && nearest > 0);
 
-			int radius = start_radius;
+			int radius = 0;
 			int in_bounds = 1;
+
+			int coords[2];
 
 			while (radius < nearest && in_bounds) {
 				in_bounds = 0;
@@ -112,11 +109,68 @@ private:
 
 					if (distance < nearest) {
 						nearest = distance;
-						if (out_coords) {
-							out_coords[0] = ii;
-							out_coords[1] = jj;
-						}
+						coords[0] = ii;
+						coords[1] = jj;
 					}
+				}
+
+				radius++;
+			}
+
+			if (isinf(nearest))
+				return nearest;
+
+			int cone_axis = 0;
+			int cone_dir = 1;
+
+			if (abs(coords[0] - i) < abs(coords[1] - j))
+				cone_axis = 1;
+
+			int orig_coords[2] = {i, j};
+
+			if (coords[cone_axis] - orig_coords[cone_axis] > 0)
+				cone_dir = -1;
+
+			nearest = one / zero;
+
+			assert (isinf(nearest) && nearest > 0);
+
+			radius = 1;
+			in_bounds = 1;
+
+			int coords2[2];
+
+			i = coords[0];
+			j = coords[1];
+
+			while (radius < nearest && in_bounds) {
+				in_bounds = 0;
+
+				coords2[cone_axis] = orig_coords[cone_axis] + radius * cone_dir;
+
+				for (coords2[1 - cone_axis] = orig_coords[1 - cone_axis] - radius;
+				     coords2[1 - cone_axis] < orig_coords[1 - cone_axis] + radius; 
+				     coords2[1 - cone_axis]++) {
+
+				     	int ii = coords2[0];
+					int jj = coords2[1];
+
+					if (ii < 0
+					 || jj < 0
+					 || ii >= (int) coarse_defined->height()
+					 || jj >= (int) coarse_defined->width()
+					 || !(coarse_defined->get_pixel(ii, jj)[k] > 0))
+						continue;
+
+					in_bounds = 1;
+
+					if (!(fine_weight->get_pixel(ii, jj)[k] > 0))
+						continue;
+
+					ale_pos distance = sqrt(pow(i - ii, 2) + pow(j - jj, 2));
+
+					if (distance < nearest)
+						nearest = distance;
 				}
 
 				radius++;
@@ -142,27 +196,18 @@ private:
 
 				/*
 				 * Attempt to set an initial filter scale based
-				 * on the proximity of the nearest k-defined
-				 * pixel to its nearest neighbor.  This rough
-				 * estimate of filter scale seems to improve
-				 * performance on single-image tests, without
-				 * obviously degrading tests with large image
-				 * counts.  (XXX: Note that multiple-image tests 
-				 * with small numbers of images still fare
-				 * relatively poorly, however.)
+				 * on the proximity of two nearby k-defined
+				 * pixels.
 				 */
 
-				int nc[2] = {i, j};
-				ale_real n1 = find_nearest_nonzero_weight(nc, i, j, k, 0);
+				ale_real n1 = find_nonzero_weight_distance(i, j, k);
 
-				if (!finite(n1))
+				if (!finite(n1)) {
+					output_image->chan(i, j, k) = coarse_image->get_pixel(i, j)[k];
 					continue;
-
-				ale_real n2 = find_nearest_nonzero_weight(NULL, nc[0], nc[1], k, 1);
-
-				if (finite(n2)) {
-					filter_scale = n2;
 				}
+
+				filter_scale = n1;
 
 				do {
 
@@ -230,6 +275,7 @@ private:
 			 const filter::filter *_f,
 			 const image *_fine_weight,
 			 const image *_fine_image,
+			 const image *_coarse_image,
 			 const image *_coarse_defined,
 			 image *_output_image) : decompose_domain(0, _coarse_defined->height(),
 			                                          0, _coarse_defined->width()) {
@@ -240,6 +286,7 @@ private:
 			f = _f;
 			fine_weight = _fine_weight;
 			fine_image = _fine_image;
+			coarse_image = _coarse_image;
 			coarse_defined = _coarse_defined;
 			output_image = _output_image;
 		}
@@ -263,6 +310,7 @@ private:
 				get_scaled_filter()->get_filter();
 		const image *fine_weight = fine->get_defined();
 		const image *fine_image = fine->get_image();
+		const image *coarse_image = coarse->get_image();
 		const image *coarse_defined = coarse->get_defined();
 
 		output_image = new image_ale_real(coarse_defined->height(),
@@ -277,7 +325,7 @@ private:
 
 		ui::get()->refilter_start();
 
-		refilter r(c, fine, coarse, f, fine_weight, fine_image, 
+		refilter r(c, fine, coarse, f, fine_weight, fine_image, coarse_image,
 		           coarse_defined, output_image);
 		r.run();
 		
