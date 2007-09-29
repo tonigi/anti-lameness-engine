@@ -197,7 +197,7 @@ public:
 			"--rot-upper=x     Rotation-specific upper bound in degrees    (32.0 is default)\n"
 			"--bda-mult=x      Barrel distortion adjustment multiplier      (2.0 is default)\n"
 			"--bda-rate=x      Barrel distortion rate of change maximum     (8.0 is default)\n"   
-			"--lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (0 is def.)\n"
+			"--lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (-4 is def)\n"
 			BETWEEN_SECTIONS
 			"Certainty-weighted alignment:\n"
 			HEADER_SPACE

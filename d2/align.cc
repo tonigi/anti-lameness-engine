@@ -69,13 +69,7 @@ int align::perturb_lower_percent = 0;
 ale_pos align::perturb_upper = 14;
 int align::perturb_upper_percent = 1;
 
-/*
- * Empirically, setting lod_max to 0 seems to produce acceptable results; given
- * that lod_max=0 does not obviously perform better than lod_max=1 in all
- * cases, however, we do not use a lower value (e.g., -1, etc.) by default.
- */
-
-int align::lod_max = 0;
+int align::lod_max = -4;
 
 ale_pos align::rot_max = 32.0;
 ale_pos align::bda_mult = 2;
