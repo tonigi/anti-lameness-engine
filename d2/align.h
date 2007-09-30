@@ -2632,12 +2632,12 @@ public:
 
 		here.set_current_index(0);
 
-		offset = here.get_offset();
-
 		if (lod > 0) {
 			here.rescale(pow(2, lod), scale_clusters[0]);
 			element->default_initial_alignment.rescale(pow(2, lod));
 		}
+
+		offset = here.get_offset();
 
 		/*
 		 * Post-alignment exposure adjustment
