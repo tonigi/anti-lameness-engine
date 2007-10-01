@@ -1585,8 +1585,6 @@ public:
 					extend = 1;
 				else
 					extend = 0;
-			} else if (!strcmp(option_name, "precise")) {
-				d2::align::set_precise(env->get_int_arg(i->first, 0));
 			} else if (!strcmp(option_name, "oc")) {
 				if (env->get_int_arg(i->first, 0))
 					d3::scene::oc();
@@ -2697,7 +2695,9 @@ public:
 
 				const char *option_name = env->get_option_name(i->first);
 
-				if (!strcmp(option_name, "ma-card")) {
+				if (!strcmp(option_name, "mc")) {
+					d2::align::mc(env->get_double_arg(i->first, 1));
+				} else if (!strcmp(option_name, "ma-card")) {
 					int card = env->get_int_arg(i->first, 1);
 					if (card < 1)
 						ui::get()->error("--ma-card requires a positive integer");

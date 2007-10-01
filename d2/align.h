@@ -33,8 +33,6 @@
 #include "tfile.h"
 #include "image_rw.h"
 
-#define D2_ALIGN_IMPRECISE_COVERAGE 0.3
-
 class align {
 private:
 
@@ -282,14 +280,10 @@ private:
 	static int match_count;
 
 	/*
-	 * Exposure registration and final match precision flag
-	 *
-	 * 0. Do not require precise calculation.
-	 *
-	 * 1. Require precise exposure registration and final match.
+	 * Monte Carlo parameter
 	 */
 
-	static int precise_calculation;
+	static ale_pos _mc;
 
 	/*
 	 * Certainty weight flag
@@ -585,10 +579,10 @@ private:
 
 			index_max = (i_max - i_min) * (j_max - j_min);
 
-			if (index_max < 500 || precise_calculation)
+			if (index_max < 500 || _mc > 100 || _mc <= 0)
 				coverage = 1;
 			else
-				coverage = D2_ALIGN_IMPRECISE_COVERAGE;
+				coverage = _mc / 100;
 
 			ale_pos su = (1 - coverage) / coverage;
 
@@ -3332,10 +3326,10 @@ public:
 	}
 
 	/*
-	 * Set calculation precision
+	 * Use Monte Carlo alignment sampling with argument N.
 	 */
-	static void set_precise(int p) {
-		precise_calculation = p;
+	static void mc(ale_pos n) {
+		_mc = n;
 	}
 
 	/*

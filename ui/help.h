@@ -198,6 +198,7 @@ public:
 			"--bda-mult=x      Barrel distortion adjustment multiplier      (2.0 is default)\n"
 			"--bda-rate=x      Barrel distortion rate of change maximum     (8.0 is default)\n"   
 			"--lod-max=x       LOD scale factor is max(1, (2^floor(x))/perturb)  (-4 is def)\n"
+			"--mc <x>          Statically sample ~x%% of available pixels     (30 is default)\n"
 			BETWEEN_SECTIONS
 			"Certainty-weighted alignment:\n"
 			HEADER_SPACE
@@ -249,11 +250,6 @@ public:
 			"                     points    Align by control points.  Ignores gs-mo.\n"
 			"--gs-mo <x>       Set <x> pixel min. overlap for global search.   (67%% default)\n"
 			"                     ('x%%' uses a fraction of the total pixel count.)\n"
-			BETWEEN_SECTIONS
-			"Precision of exposure registration and final match:\n"
-			HEADER_SPACE
-			"--precise         Require precise exposure registration and final match.\n"
-			"--no-precise      Do not require precise calculation.  [default]\n"
 			BETWEEN_SECTIONS
 			"Multi-alignment [algorithms are not fully implemented]:\n"
 			HEADER_SPACE

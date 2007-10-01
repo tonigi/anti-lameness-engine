@@ -77,8 +77,8 @@ ale_pos align::bda_rate = 8;
 ale_accum align::match_sum = 0;
 int align::match_count = 0;
 
+ale_pos align::_mc = 30;
 int align::certainty_weights = 0;
-int align::precise_calculation = 0;
 int align::_gs = 6;
 unsigned int align::_ma_card = 1;
 double align::_ma_cont = 100;
