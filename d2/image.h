@@ -525,6 +525,87 @@ public:
 	 * At the edges, these values are normalized so that the sum of the
 	 * weights of contributing pixels is 1.
 	 */
+	class scale_by_half_threaded : public thread::decompose_domain {
+		image *is;
+		const image *iu;
+	protected:
+		void subdomain_algorithm(unsigned int thread,
+				int i_min, int i_max, int j_min, int j_max) {
+
+			unsigned int ui_min = (unsigned int) i_min;
+			unsigned int ui_max = (unsigned int) i_max;
+			unsigned int uj_min = (unsigned int) j_min;
+			unsigned int uj_max = (unsigned int) j_max;
+
+			for (unsigned int i = ui_min; i < ui_max; i++)
+			for (unsigned int j = uj_min; j < uj_max; j++) {
+				is->set_pixel(i, j, 
+
+				      ( ( ((i > 0 && j > 0) 
+					    ? iu->get_pixel(2 * i - 1, 2 * j - 1) * (ale_real) 0.0625
+					    : pixel(0, 0, 0))
+					+ ((i > 0)
+					    ? iu->get_pixel(2 * i - 1, 2 * j) * 0.125
+					    : pixel(0, 0, 0))
+					+ ((i > 0 && j < is->width() - 1)
+					    ? iu->get_pixel(2 * i - 1, 2 * j + 1) * 0.0625
+					    : pixel(0, 0, 0))
+					+ ((j > 0)
+					    ? iu->get_pixel(2 * i, 2 * j - 1) * 0.125
+					    : pixel(0, 0, 0))
+					+ iu->get_pixel(2 * i, 2 * j) * 0.25
+					+ ((j < is->width() - 1)
+					    ? iu->get_pixel(2 * i, 2 * j + 1) * 0.125
+					    : pixel(0, 0, 0))
+					+ ((i < is->height() - 1 && j > 0)
+					    ? iu->get_pixel(2 * i + 1, 2 * j - 1) * 0.0625
+					    : pixel(0, 0, 0))
+					+ ((i < is->height() - 1)
+					    ? iu->get_pixel(2 * i + 1, 2 * j) * 0.125
+					    : pixel(0, 0, 0))
+					+ ((i < is->height() && j < is->width() - 1)
+					    ? iu->get_pixel(2 * i + 1, 2 * j + 1) * 0.0625 
+					    : pixel(0, 0, 0)))
+
+				     /
+
+					( ((i > 0 && j > 0) 
+					    ? 0.0625
+					    : 0)
+					+ ((i > 0)
+					    ? 0.125
+					    : 0)
+					+ ((i > 0 && j < is->width() - 1)
+					    ? 0.0625
+					    : 0)
+					+ ((j > 0)
+					    ? 0.125
+					    : 0)
+					+ 0.25
+					+ ((j < is->width() - 1)
+					    ? 0.125
+					    : 0)
+					+ ((i < is->height() - 1 && j > 0)
+					    ? 0.0625
+					    : 0)
+					+ ((i < is->height() - 1)
+					    ? 0.125
+					    : 0)
+					+ ((i < is->height() && j < is->width() - 1)
+					    ? 0.0625
+					    : 0) ) ) );
+			}
+		}
+
+	public:
+		scale_by_half_threaded(image *_is, const image *_iu) 
+					: decompose_domain(0, _is->height(),
+					                   0, _is->width()) {
+			is = _is;	
+			iu = _iu;
+		}
+	};
+
 	image *scale_by_half(char *name) const {
 		ale_pos f = 0.5;
 
@@ -534,64 +615,8 @@ public:
 
 		assert(is);
 
-		for (unsigned int i = 0; i < is->height(); i++)
-		for (unsigned int j = 0; j < is->width(); j++) 
-
-			is->set_pixel(i, j, 
-
-			      ( ( ((i > 0 && j > 0) 
-				    ? get_pixel(2 * i - 1, 2 * j - 1) * (ale_real) 0.0625
-				    : pixel(0, 0, 0))
-				+ ((i > 0)
-				    ? get_pixel(2 * i - 1, 2 * j) * 0.125
-				    : pixel(0, 0, 0))
-				+ ((i > 0 && j < is->width() - 1)
-				    ? get_pixel(2 * i - 1, 2 * j + 1) * 0.0625
-				    : pixel(0, 0, 0))
-				+ ((j > 0)
-				    ? get_pixel(2 * i, 2 * j - 1) * 0.125
-				    : pixel(0, 0, 0))
-				+ get_pixel(2 * i, 2 * j) * 0.25
-				+ ((j < is->width() - 1)
-				    ? get_pixel(2 * i, 2 * j + 1) * 0.125
-				    : pixel(0, 0, 0))
-				+ ((i < is->height() - 1 && j > 0)
-				    ? get_pixel(2 * i + 1, 2 * j - 1) * 0.0625
-				    : pixel(0, 0, 0))
-				+ ((i < is->height() - 1)
-				    ? get_pixel(2 * i + 1, 2 * j) * 0.125
-				    : pixel(0, 0, 0))
-				+ ((i < is->height() && j < is->width() - 1)
-				    ? get_pixel(2 * i + 1, 2 * j + 1) * 0.0625 
-				    : pixel(0, 0, 0)))
-
-			     /
-
-				( ((i > 0 && j > 0) 
-				    ? 0.0625
-				    : 0)
-				+ ((i > 0)
-				    ? 0.125
-				    : 0)
-				+ ((i > 0 && j < is->width() - 1)
-				    ? 0.0625
-				    : 0)
-				+ ((j > 0)
-				    ? 0.125
-				    : 0)
-				+ 0.25
-				+ ((j < is->width() - 1)
-				    ? 0.125
-				    : 0)
-				+ ((i < is->height() - 1 && j > 0)
-				    ? 0.0625
-				    : 0)
-				+ ((i < is->height() - 1)
-				    ? 0.125
-				    : 0)
-				+ ((i < is->height() && j < is->width() - 1)
-				    ? 0.0625
-				    : 0) ) ) );
+		scale_by_half_threaded sbht(is, this);
+		sbht.run();
 
 		is->_offset = point(_offset[0] * f, _offset[1] * f);
 
@@ -739,6 +764,67 @@ public:
 	 * definition arrays.
 	 */
 
+	class defined_scale_by_half_threaded : public thread::decompose_domain {
+		image *is;
+		const image *iu;
+	protected:
+		void subdomain_algorithm(unsigned int thread,
+				int i_min, int i_max, int j_min, int j_max) {
+
+			unsigned int ui_min = (unsigned int) i_min;
+			unsigned int ui_max = (unsigned int) i_max;
+			unsigned int uj_min = (unsigned int) j_min;
+			unsigned int uj_max = (unsigned int) j_max;
+
+			for (unsigned int i = ui_min; i < ui_max; i++)
+			for (unsigned int j = uj_min; j < uj_max; j++) {
+
+				pixel value = pixel
+
+				      ( ( ((i > 0 && j > 0) 
+					    ? ppow(iu->get_pixel(2 * i - 1, 2 * j - 1), 0.0625) 
+					    : pixel(0, 0, 0))
+					* ((i > 0)
+					    ? ppow(iu->get_pixel(2 * i - 1, 2 * j), 0.125)
+					    : pixel(0, 0, 0))
+					* ((i > 0 && j < is->width() - 1)
+					    ? ppow(iu->get_pixel(2 * i - 1, 2 * j + 1), 0.0625)
+					    : pixel(0, 0, 0))
+					* ((j > 0)
+					    ? ppow(iu->get_pixel(2 * i, 2 * j - 1), 0.125)
+					    : pixel(0, 0, 0))
+					* ppow(iu->get_pixel(2 * i, 2 * j), 0.25) 
+					* ((j < is->width() - 1)
+					    ? ppow(iu->get_pixel(2 * i, 2 * j + 1), 0.125)
+					    : pixel(0, 0, 0))
+					* ((i < is->height() - 1 && j > 0)
+					    ? ppow(iu->get_pixel(2 * i + 1, 2 * j - 1), 0.0625)
+					    : pixel(0, 0, 0))
+					* ((i < is->height() - 1)
+					    ? ppow(iu->get_pixel(2 * i + 1, 2 * j), 0.125)
+					    : pixel(0, 0, 0))
+					* ((i < is->height() && j < is->width() - 1)
+					    ? ppow(iu->get_pixel(2 * i + 1, 2 * j + 1), 0.0625)
+					    : pixel(0, 0, 0))));
+
+
+				for (int k = 0; k < 3; k++)
+					if (!finite(value[k]))
+						value[k] = 0;
+
+				is->set_pixel(i, j, value);
+			}
+		}
+
+	public:
+		defined_scale_by_half_threaded(image *_is, const image *_iu) 
+					: decompose_domain(0, _is->height(),
+					                   0, _is->width()) {
+			is = _is;	
+			iu = _iu;
+		}
+	};
+
 	image *defined_scale_by_half(char *name) const {
 		ale_pos f = 0.5;
 
@@ -748,44 +834,8 @@ public:
 
 		assert(is);
 
-		for (unsigned int i = 0; i < is->height(); i++)
-		for (unsigned int j = 0; j < is->width(); j++) {
-
-			pixel value = pixel
-
-			      ( ( ((i > 0 && j > 0) 
-				    ? ppow(get_pixel(2 * i - 1, 2 * j - 1), 0.0625) 
-				    : pixel(0, 0, 0))
-				* ((i > 0)
-				    ? ppow(get_pixel(2 * i - 1, 2 * j), 0.125)
-				    : pixel(0, 0, 0))
-				* ((i > 0 && j < is->width() - 1)
-				    ? ppow(get_pixel(2 * i - 1, 2 * j + 1), 0.0625)
-				    : pixel(0, 0, 0))
-				* ((j > 0)
-				    ? ppow(get_pixel(2 * i, 2 * j - 1), 0.125)
-				    : pixel(0, 0, 0))
-				* ppow(get_pixel(2 * i, 2 * j), 0.25) 
-				* ((j < is->width() - 1)
-				    ? ppow(get_pixel(2 * i, 2 * j + 1), 0.125)
-				    : pixel(0, 0, 0))
-				* ((i < is->height() - 1 && j > 0)
-				    ? ppow(get_pixel(2 * i + 1, 2 * j - 1), 0.0625)
-				    : pixel(0, 0, 0))
-				* ((i < is->height() - 1)
-				    ? ppow(get_pixel(2 * i + 1, 2 * j), 0.125)
-				    : pixel(0, 0, 0))
-				* ((i < is->height() && j < is->width() - 1)
-				    ? ppow(get_pixel(2 * i + 1, 2 * j + 1), 0.0625)
-				    : pixel(0, 0, 0))));
-
-
-			for (int k = 0; k < 3; k++)
-				if (!finite(value[k]))
-					value[k] = 0;
-
-			is->set_pixel(i, j, value);
-		}
+		defined_scale_by_half_threaded dsbht(is, this);
+		dsbht.run();
 
 		is->_offset = point(_offset[0] * f, _offset[1] * f);
 
