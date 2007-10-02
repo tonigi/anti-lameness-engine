@@ -20,6 +20,13 @@
 
 <news>
 
+<release version="0.8.10" date="2007-Oct-02">
+
+<p>This release updates alignment level-of-detail, Monte Carlo alignment, and
+the re-filtering renderer.</p>
+
+</release>
+
 <release version="0.8.9.1" date="2007-Aug-31">
 
 <p>This release resolves certain build failures occurring under unthreaded
