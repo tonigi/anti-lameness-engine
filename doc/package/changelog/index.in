@@ -1,4 +1,34 @@
-V	0.8.10 prerelease
+V	0.8.10 2007-Oct-02
+
+o	Add threading for d2::image::*scale_by_half() functions.
+
+o	Always rescale transformations for full detail after alignment is
+	complete.
+
+o	Make --lod-max=-4 default.
+
+o	Make default --dchain auto:triangle:2,fine:box:1,triangle:2, which
+	should produce better output during re-filtering than the previous
+	default.
+
+o	Revise re-filtering operation to use as a filter scale the distance
+	between nearest defined points in opposite axis-centered cones about
+	the point to be filtered.
+
+o	Update scale cluster structures and interpolation routines used in
+	alignment for calculating and storing certainty and weights; in 
+	particular, certainty of the input frame is now pre-calculated 
+	for multiple levels of detail.
+
+o	Add currently-unused skeletal code for non-linear level of detail
+	calculations.
+
+o	Revise Monte-carlo value to use a single static default, removing
+	dynamic behavior and certain associated support code, and applying the
+	sampling rate in a uniform manner to all levels of detail and all tonal
+	and spatial registration algorithms.
+
+o	Fix error in level-of-detail accounting in alignment code.
 
 /build
 o	Replace references to math.h with references to ale_math.h.
