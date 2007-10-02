@@ -30,7 +30,6 @@ o	Revise Monte-carlo value to use a single static default, removing
 
 o	Fix error in level-of-detail accounting in alignment code.
 
-/build
 o	Replace references to math.h with references to ale_math.h.
 
 V	0.8.9.1 2007-Aug-31
