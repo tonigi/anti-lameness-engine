@@ -1709,7 +1709,7 @@ public:
 		else
 			scale_clusters[0].input = input_frame;
 
-		scale_clusters[0].certainty = reference_defined->clone("certainty");
+		scale_clusters[0].certainty = reference_defined;
 		scale_clusters[0].aweight = alignment_weights;
 		scale_clusters[0].ax_parameters = filter_ax_parameters(frame, local_ax_count);
 
@@ -1782,20 +1782,22 @@ public:
 	static void final_clusters(struct scale_cluster *scale_clusters, ale_real scale_factor,
 			unsigned int steps) {
 
-		if (scale_clusters[0].input_scale < 1.0)
+		if (scale_clusters[0].input_scale < 1.0) {
 			delete scale_clusters[0].input;
+			delete scale_clusters[0].input_certainty;
+		}
 
 		free((void *)scale_clusters[0].ax_parameters);
-
-		delete scale_clusters[0].certainty;
 
 		for (unsigned int step = 1; step < steps; step++) {
 			delete scale_clusters[step].accum;
 			delete scale_clusters[step].certainty;
 			delete scale_clusters[step].aweight;
 
-			if (scale_clusters[step].input_scale < 1.0)
+			if (scale_clusters[step].input_scale < 1.0) {
 				delete scale_clusters[step].input;
+				delete scale_clusters[step].input_certainty;
+			}
 
 			free((void *)scale_clusters[step].ax_parameters);
 		}
