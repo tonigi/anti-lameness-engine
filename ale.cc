@@ -26,7 +26,7 @@
  * Configuration
  */
 
-#include <config.h>
+#include "config.h"
 
 /*
  * Types
@@ -39,11 +39,11 @@
  * Version Information
  */
 
-char *package_name = PACKAGE_NAME;
+const char *package_name = PACKAGE_NAME;
 
-char *short_version = VERSION;
+const char *short_version = VERSION;
 
-char *version = PACKAGE_NAME " Version:      " VERSION "\n"
+const char *version = PACKAGE_NAME " Version:      " VERSION "\n"
 #ifdef USE_MAGICK
 		"File handler:     ImageMagick\n"
 #else

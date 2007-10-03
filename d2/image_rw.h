@@ -141,7 +141,7 @@ public:
 	/*
 	 * Read an image from a file
 	 */
-	static image *read_image(const char *filename, exposure *exp, char *name = "file", 
+	static image *read_image(const char *filename, exposure *exp, const char *name = "file", 
 			unsigned int bayer = IMAGE_BAYER_DEFAULT, int init_reference_gain = 0) {
 		if (bayer == IMAGE_BAYER_DEFAULT)
 			bayer = bayer_default;
@@ -583,7 +583,7 @@ public:
 		return images[n];
 	}
 
-	static image *copy(unsigned int n, char *name) {
+	static image *copy(unsigned int n, const char *name) {
 		assert (n <  file_count);
 
 		if (files_open[n])

@@ -47,7 +47,7 @@ private:
 		exit(1);
 	}
 
-	static void syntax_error(char *explanation) {
+	static void syntax_error(const char *explanation) {
 		fprintf(stderr, "\n\n*** Error: PSF syntax: %s ***\n\n", explanation);
 		exit(1);
 	}

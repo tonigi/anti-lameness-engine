@@ -66,7 +66,7 @@ public:
 		friend class exposure;
 	private:
 		listener *next;
-		char *name;
+		const char *name;
 		const exposure *target;
 	public:
 		virtual void trigger(pixel multiplier) = 0;
@@ -87,7 +87,7 @@ private:
 	mutable listener *listener_head;
 public:
 
-	void add_listener(listener *l, char *name) const {
+	void add_listener(listener *l, const char *name) const {
 	
 		/*
 		 * This is a metafunction, so we consider it

@@ -2593,7 +2593,7 @@ public:
 		 * Initialize alignment interpolant.
 		 */
 
-		if (afilter_type != "internal")
+		if (strcmp(afilter_type, "internal"))
 			d2::align::set_interpolant(d2::render_parse::get_SSF(afilter_type));
 
 		/*

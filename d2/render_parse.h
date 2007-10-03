@@ -43,7 +43,7 @@ private:
 		exit(1);
 	}
 
-	static void syntax_error(char *explanation) {
+	static void syntax_error(const char *explanation) {
 		fprintf(stderr, "\n\n*** Error: Render syntax: %s ***\n\n", explanation);
 		exit(1);
 	}

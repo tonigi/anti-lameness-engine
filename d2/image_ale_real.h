@@ -41,7 +41,7 @@ private:
 
 public:
 	image_ale_real (unsigned int dimy, unsigned int dimx, unsigned int
-			depth, char *name = "anonymous", exposure *exp = NULL) 
+			depth, const char *name = "anonymous", exposure *exp = NULL) 
 			: image(dimy, dimx, depth, name, exp) {
 
 		_p = new spixel[dimx * dimy];
@@ -85,7 +85,7 @@ public:
 	/*
 	 * Make a new image suitable for receiving scaled values.
 	 */
-	virtual image *scale_generator(int height, int width, int depth, char *name) const {
+	virtual image *scale_generator(int height, int width, int depth, const char *name) const {
 		return new image_ale_real(height, width, depth, name, _exp);
 	}
 

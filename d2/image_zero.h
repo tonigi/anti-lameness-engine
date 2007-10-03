@@ -72,7 +72,7 @@ public:
 	/*
 	 * Make a new image suitable for receiving scaled values.
 	 */
-	virtual image *scale_generator(int height, int width, int depth, char *name) const {
+	virtual image *scale_generator(int height, int width, int depth, const char *name) const {
 
 		image *is = new image_zero(height, width, depth, name);
 
@@ -84,7 +84,7 @@ public:
 	/*
 	 * Return an image scaled by some factor >= 1.0
 	 */
-	image *scale(ale_pos f, char *name) const {
+	image *scale(ale_pos f, const char *name) const {
 
 		image *is = new image_zero(
 			(int) floor(height() * f), 
@@ -105,7 +105,7 @@ public:
 	 * At the edges, these values are normalized so that the sum of
 	 * contributing pixels is 1.
 	 */
-	image *scale_by_half(char *name) const {
+	image *scale_by_half(const char *name) const {
 		ale_pos f = 0.5;
 
 		image *result = new image_zero(
@@ -145,7 +145,7 @@ public:
 	 * in the code below to ': 1'.
 	 */
 
-	image *defined_scale_by_half(char *name) const {
+	image *defined_scale_by_half(const char *name) const {
 		ale_pos f = 0.5;
 
 		image *result = new image_zero(
@@ -171,7 +171,7 @@ public:
 	/*
 	 * Clone 
 	 */
-	image *clone(char *name) const {
+	image *clone(const char *name) const {
 		return new image_zero(_dimy, _dimx, _depth, name);
 	}
 
@@ -209,7 +209,7 @@ public:
 	}
 
 	image_zero(unsigned int dimy, unsigned int dimx, unsigned int depth,
-			char *name = "anonymous") : image_weighted_avg(dimy, dimx, depth, name) {
+			const char *name = "anonymous") : image_weighted_avg(dimy, dimx, depth, name) {
 	}
 
 	int accumulate_norender(int i, int j) {

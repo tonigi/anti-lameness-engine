@@ -219,13 +219,13 @@ protected:
 	 * Match format strings for textual UIs.
 	 */
 
-	char *format_string_ok() {
+	const char *format_string_ok() {
 		return " okay (%9.6f%% match)";
 	}
-	char *format_string_no_match() {
+	const char *format_string_no_match() {
 		return " no match (%9.6f%% match)";
 	}
-	char *format_string_working() {
+	const char *format_string_working() {
 		return "      (%9.6f%% match)";
 	}
 

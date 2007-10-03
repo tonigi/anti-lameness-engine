@@ -51,7 +51,7 @@ class image : protected exposure::listener {
 protected:
 	unsigned int _dimx, _dimy, _depth;
 	point _offset;
-	char *name;
+	const char *name;
 	mutable exposure *_exp;
 	unsigned int bayer;
 private:
@@ -135,7 +135,7 @@ protected:
 
 public:
 	image (unsigned int dimy, unsigned int dimx, unsigned int depth, 
-			char *name = "anonymous", exposure *_exp = NULL,
+			const char *name = "anonymous", exposure *_exp = NULL,
 			unsigned int bayer = IMAGE_BAYER_NONE) {
 
 		assert (depth == 3);
@@ -375,7 +375,7 @@ public:
 	/*
 	 * Make a new image suitable for receiving scaled values.
 	 */
-	virtual image *scale_generator(int height, int width, int depth, char *name) const = 0;
+	virtual image *scale_generator(int height, int width, int depth, const char *name) const = 0;
 
 	/*
 	 * Generate an image of medians within a given radius
@@ -606,7 +606,7 @@ public:
 		}
 	};
 
-	image *scale_by_half(char *name) const {
+	image *scale_by_half(const char *name) const {
 		ale_pos f = 0.5;
 
 		image *is = scale_generator(
@@ -634,7 +634,7 @@ public:
 	 * Values are normalized so that the sum of the weights of contributing
 	 * pixels is 1.
 	 */
-	image *scale_by_half(const image *weights, char *name) const {
+	image *scale_by_half(const image *weights, const char *name) const {
 
 		if (weights == NULL)
 			return scale_by_half(name);
@@ -825,7 +825,7 @@ public:
 		}
 	};
 
-	image *defined_scale_by_half(char *name) const {
+	image *defined_scale_by_half(const char *name) const {
 		ale_pos f = 0.5;
 
 		image *is = scale_generator(
@@ -846,7 +846,7 @@ public:
 	 * Return an image scaled by some factor != 1.0, using bilinear
 	 * interpolation.
 	 */
-	image *scale(ale_pos f, char *name, int defined = 0) const {
+	image *scale(ale_pos f, const char *name, int defined = 0) const {
 
 		/*
 		 * We probably don't want to scale images by a factor of 1.0,
@@ -896,7 +896,7 @@ public:
 	/*
 	 * Clone 
 	 */
-	image *clone(char *name) const {
+	image *clone(const char *name) const {
 		image *ic = scale_generator(
 			height(), width(), depth(), name);
 

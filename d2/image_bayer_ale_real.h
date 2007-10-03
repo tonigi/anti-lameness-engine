@@ -70,7 +70,7 @@ private:
 
 public:
 	image_bayer_ale_real (unsigned int dimy, unsigned int dimx, unsigned int depth,
-			unsigned int bayer, char *name = "anonymous", exposure *exp = NULL) 
+			unsigned int bayer, const char *name = "anonymous", exposure *exp = NULL) 
 			: image(dimy, dimx, depth, name, exp, bayer) {
 
 		assert (bayer == IMAGE_BAYER_BGRG
@@ -222,7 +222,7 @@ public:
 	/*
 	 * Make a new image suitable for receiving scaled values.
 	 */
-	virtual image *scale_generator(int height, int width, int depth, char *name) const {
+	virtual image *scale_generator(int height, int width, int depth, const char *name) const {
 		return new image_ale_real(height, width, depth, name, _exp);
 	}
 

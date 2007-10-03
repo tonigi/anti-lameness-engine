@@ -58,7 +58,7 @@ private:
 
 public:
 	image_weighted_median (unsigned int dimy, unsigned int dimx, unsigned int
-			depth, int capacity = -1, char *name = "anonymous") 
+			depth, int capacity = -1, const char *name = "anonymous") 
 			: image_weighted_avg(dimy, dimx, depth, name) {
 
 		if (capacity == -1) {

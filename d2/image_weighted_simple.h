@@ -37,7 +37,7 @@ private:
 	
 public:
 	image_weighted_simple (unsigned int dimy, unsigned int dimx, unsigned int
-			depth, invariant *inv, char *name = "anonymous") 
+			depth, invariant *inv, const char *name = "anonymous") 
 			: image_weighted_avg(dimy, dimx, depth, name) {
 		colors = new image_ale_real(dimy, dimx, depth);
 		weights = new image_ale_real(dimy, dimx, depth);
