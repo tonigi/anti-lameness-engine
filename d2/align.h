@@ -1369,6 +1369,8 @@ public:
 
 						if (finite(perturb_multipliers[i]))
 							found_unreliable = 1;
+						else
+							perturb_multipliers[i] = 1;
 
 						continue;
 					}
