@@ -26,7 +26,7 @@
  * Configuration
  */
 
-#include "config.h"
+#include <config.h>
 
 /*
  * Types
