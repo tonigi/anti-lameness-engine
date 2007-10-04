@@ -1,3 +1,9 @@
+V	0.8.10.1 2007-Oct-04
+
+o	Change 'char *' referencing string literals to 'const char *'.
+
+o	Set perturbation multipliers to 1 in cases of a non-finite value.
+
 V	0.8.10 2007-Oct-02
 
 o	Add threading for d2::image::*scale_by_half() functions.
