@@ -20,6 +20,10 @@
 
 <news>
 
+<release version="0.8.10.1" date="2007-Oct-04">
+
+<p>This release fixes an assertion failure occurring at large scale values.</p>
+
 <release version="0.8.10" date="2007-Oct-02">
 
 <p>This release updates alignment level-of-detail, Monte Carlo alignment, and
