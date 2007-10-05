@@ -40,7 +40,6 @@ const char *input::supported_nonglobal_option_table[] = {
 	"per-cpu",
 	"perturb-upper",
 	"ev",
-	"gs",
 	"gs-mo",
 	"black",
 	"ma-card",
