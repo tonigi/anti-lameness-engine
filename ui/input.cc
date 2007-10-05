@@ -281,7 +281,6 @@ input::simple_option input::simple_option_table[] = {
 
 	{ "lod-max", NULL, NULL, 1 },
 
-	{ "cpf-load", NULL, NULL, 1 },
 	{ "model-load", NULL, NULL, 1 },
 	{ "model-save", NULL, NULL, 1 },
 	{ "trans-load", NULL, NULL, 1 },
