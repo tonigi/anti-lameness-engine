@@ -2287,6 +2287,8 @@ public:
 					d3::cpf::set_cpp_lower(perturb_lower);
 			} else if (!strcmp(option_name, "hf-enhance")) {
 				unsupported::discontinued("--hf-enhance=<x>");
+			} else if (!strcmp(option_name, "gs")) {
+				d2::align::gs(env->get_string_arg(i->first, 1));
 			} else if (!strcmp(option_name, "rot-upper")) {
 				d2::align::set_rot_max((int) floor(env->get_double_arg(i->first, 1)));
 			} else if (!strcmp(option_name, "bda-mult")) {
@@ -2704,8 +2706,6 @@ public:
 					d2::align::ma_card(card);
 				} else if (!strcmp(option_name, "ma-cont")) {
 					d2::align::ma_cont(env->get_double_arg(i->first, 1));
-				} else if (!strcmp(option_name, "gs")) {
-					d2::align::gs(env->get_string_arg(i->first, 1));
 				} else if (!strcmp(option_name, "gs-mo")) {
 					const char *option = env->get_string_arg(i->first, 1);
 					double gs_mo;
