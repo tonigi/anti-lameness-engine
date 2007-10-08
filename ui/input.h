@@ -2699,13 +2699,8 @@ public:
 
 				if (!strcmp(option_name, "mc")) {
 					d2::align::mc(env->get_double_arg(i->first, 1));
-				} else if (!strcmp(option_name, "ma-card")) {
-					int card = env->get_int_arg(i->first, 1);
-					if (card < 1)
-						ui::get()->error("--ma-card requires a positive integer");
-					d2::align::ma_card(card);
-				} else if (!strcmp(option_name, "ma-cont")) {
-					d2::align::ma_cont(env->get_double_arg(i->first, 1));
+				} else if (!strcmp(option_name, "md")) {
+					d2::align::ma_decomp(env->get_int_arg(i->first, 1));
 				} else if (!strcmp(option_name, "gs-mo")) {
 					const char *option = env->get_string_arg(i->first, 1);
 					double gs_mo;

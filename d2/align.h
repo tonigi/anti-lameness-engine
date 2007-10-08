@@ -3375,6 +3375,13 @@ public:
 	}
 
 	/*
+	 * Multi-alignment subdivision limit
+	 */
+	static void ma_decomp(unsigned int value) {
+		assert(0);
+	}
+
+	/*
 	 * Multi-alignment cardinality
 	 */
 	static void ma_card(unsigned int value) {
