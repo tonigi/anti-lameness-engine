@@ -194,9 +194,11 @@ if test x$with_fftw3 = xyes \
 fi
 
 # Determine the precision of colors that should be used
-AC_ARG_WITH(colors, [  --with-colors=[TYPE]      use TYPE colors: single,double (default=single)])
-if test x$with_colors = xsingle \
+AC_ARG_WITH(colors, [  --with-colors=[TYPE]      use TYPE colors: fixed-16.16,single,double (default=fixed-16.16)])
+if test x$with_colors = xfixed-16.16 \
 || test x$with_colors = x; then
+	COLOR_CPPFLAGS="-DALE_COLORS=FIXED"
+elif test x$with_colors = xsingle; then
 	COLOR_CPPFLAGS="-DALE_COLORS=SINGLE"
 elif test x$with_colors = xdouble; then
 	COLOR_CPPFLAGS="-DALE_COLORS=DOUBLE"
@@ -205,9 +207,11 @@ else
 fi
 
 # Determine the precision of coordinates that should be used
-AC_ARG_WITH(coords, [  --with-coords=[TYPE]      use TYPE coords: single,double (default=single)])
-if test x$with_coords = xsingle \
+AC_ARG_WITH(coords, [  --with-coords=[TYPE]      use TYPE coords: fixed-16.16,single,double (default=fixed-16.16)])
+if test x$with_coords = xfixed-16.16 \
 || test x$with_coords = x; then
+	COORD_CPPFLAGS="-DALE_COORDINATES=FIXED"
+elif test x$with_coords = xsingle; then
 	COORD_CPPFLAGS="-DALE_COORDINATES=SINGLE"
 elif test x$with_coords = xdouble; then
 	COORD_CPPFLAGS="-DALE_COORDINATES=DOUBLE"
