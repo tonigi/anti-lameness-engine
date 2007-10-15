@@ -21,8 +21,11 @@
 #ifndef __ale_pos_h__
 #define __ale_pos_h__
 
+#include "ale_fixed.h"
+
 #define SINGLE 1
 #define DOUBLE 2
+#define FIXED 3
 
 /*
  * Real-valued type used to represent coordinates in an image domain.
@@ -40,6 +43,12 @@ typedef double ale_pos;
 
 #define ALE_POS_PRECISION_STRING "DOUBLE"
 
+#elif ALE_COORDINATES == FIXED
+
+typedef ale_fixed<14> ale_pos;
+
+#define ALE_POS_PRECISION_STRING "FIXED"
+
 #else
 
 #warning Unknown positional precision in ale_pos.h: Choosing PPRECISION=SINGLE.
@@ -50,8 +59,23 @@ typedef float ale_pos;
 
 #endif
 
+const ale_pos ale_pos_0 = (ale_pos) 0;
+
+#if ALE_COLORS == FIXED && ALE_COORDINATES == FIXED
+
+#define ale_pos_to_real(x) (convert_precision<14,14>(x))
+#define ale_real_to_pos(x) (convert_precision<14,14>(x))
+
+#else
+
+#define ale_pos_to_real(x) (x)
+#define ale_real_to_pos(x) (x)
+
+#endif
+
 #undef SINGLE
 #undef DOUBLE
 #undef HALF
+#undef FIXED
 
 #endif

@@ -201,10 +201,10 @@ public:
 		 * of differences.
 		 */
 
-		ale_pos margin_i1 = lresponse->min_i() + (nlresponse ? nlresponse->min_i() : 0);
-		ale_pos margin_i2 = lresponse->max_i() + (nlresponse ? nlresponse->max_i() : 0);
-		ale_pos margin_j1 = lresponse->min_j() + (nlresponse ? nlresponse->min_j() : 0);
-		ale_pos margin_j2 = lresponse->max_j() + (nlresponse ? nlresponse->max_j() : 0);
+		ale_real margin_i1 = lresponse->min_i() + (nlresponse ? nlresponse->min_i() : ale_real_0);
+		ale_real margin_i2 = lresponse->max_i() + (nlresponse ? nlresponse->max_i() : ale_real_0);
+		ale_real margin_j1 = lresponse->min_j() + (nlresponse ? nlresponse->min_j() : ale_real_0);
+		ale_real margin_j2 = lresponse->max_j() + (nlresponse ? nlresponse->max_j() : ale_real_0);
 
 		for (unsigned int i = 0; i < simulated->height(); i++)
 		for (unsigned int j = 0; j < simulated->width();  j++) {

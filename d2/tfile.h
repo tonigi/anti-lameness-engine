@@ -308,8 +308,8 @@ static inline transformation tload_first(struct tload_t *t, int is_p,
 
 					for (i = 0; i < count - 2; i++) {
 						ale_pos factor = (i % 2)
-							? (result.scaled_width() / width)
-							: (result.scaled_height() / height);
+							? ((double) result.scaled_width() / width)
+							: ((double) result.scaled_height() / height);
 							
 						x[i / 2][i % 2] *= factor;
 					}
@@ -343,8 +343,8 @@ static inline transformation tload_first(struct tload_t *t, int is_p,
 
 					for (i = 0; (i < count - 2) && (i < 2); i++) {
 						ale_pos factor = (i % 2)
-							? (result.scaled_width() / width)
-							: (result.scaled_height() / height);
+							? ((double) result.scaled_width() / width)
+							: ((double) result.scaled_height() / height);
 							
 						eu[i] *= factor;
 					}
@@ -528,8 +528,8 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 
 					for (i = 0; i < count - 2; i++) {
 						ale_pos factor = (i % 2)
-							? (result.scaled_width() / width)
-							: (result.scaled_height() / height);
+							? ((double) result.scaled_width() / width)
+							: ((double) result.scaled_height() / height);
 							
 						x[i / 2][i % 2] *= factor;
 					}
@@ -587,8 +587,8 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 
 					for (i = 0; (i < count - 2) && (i < 2); i++) {
 						ale_pos factor = (i % 2)
-							? (result.scaled_width() / width)
-							: (result.scaled_height() / height);
+							? ((double) result.scaled_width() / width)
+							: ((double) result.scaled_height() / height);
 							
 						eu[i] *= factor;
 					}
@@ -683,7 +683,7 @@ static inline void tsave_first(struct tsave_t *t, transformation offset, int is_
 
 	fprintf(t->file, "# Comment: Target output file is %s\n", t->target);
 	fprintf(t->file, "# Comment: Original frame is %s\n", t->orig);
-	fprintf(t->file, "# Comment: Avg magnitude [r=%f g=%f b=%f]\n", t->orig_apm[0], t->orig_apm[1], t->orig_apm[2]);
+	fprintf(t->file, "# Comment: Avg magnitude [r=%f g=%f b=%f]\n", (double) t->orig_apm[0], (double) t->orig_apm[1], (double) t->orig_apm[2]);
 
 	if (tfile_output_version < 3) {
 		fclose(t->file);
@@ -832,7 +832,7 @@ static inline void tsave_trm(struct tsave_t *t, ale_real r, ale_real g, ale_real
        if (t != NULL) {
                t->file = fopen(t->filename, "a");
 
-               fprintf(t->file, "# Comment: Exposure [r=%f g=%f b=%f]\n", r, g, b);
+               fprintf(t->file, "# Comment: Exposure [r=%f g=%f b=%f]\n", (double) r, (double) g, (double) b);
 
                fclose(t->file);
        }
@@ -847,7 +847,7 @@ static inline void tsave_apm(struct tsave_t *t, ale_real r, ale_real g, ale_real
        if (t != NULL) {
                t->file = fopen(t->filename, "a");
 
-               fprintf(t->file, "# Comment: Avg magnitude [r=%f g=%f b=%f]\n", r, g, b);
+               fprintf(t->file, "# Comment: Avg magnitude [r=%f g=%f b=%f]\n", (double) r, (double) g, (double) b);
 
                fclose(t->file);
        }

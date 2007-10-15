@@ -408,7 +408,7 @@ public:
 	}
 
 	static void set_va_upper(ale_pos vau_degrees) {
-		va_upper = vau_degrees * M_PI / 180;
+		va_upper = (double) vau_degrees * M_PI / 180;
 	}
 
 	static void init_loadfile(const char *filename) {
@@ -467,7 +467,7 @@ public:
 		while (perturbation >= min_perturbation) {
 
 			ale_accum previous_error;
-			ale_pos angular_p = perturbation / 180 * M_PI;
+			ale_pos angular_p = (double) perturbation / 180 * M_PI;
 
 //			fprintf(stderr, "P %f AP %f ", perturbation, angular_p);
 

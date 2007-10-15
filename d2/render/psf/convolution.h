@@ -46,10 +46,10 @@ public:
 	 * support may include everything up to and including the boundaries
 	 * specified here.
 	 */
-	float min_i() const { return _min_i; }
-	float max_i() const { return _max_i; }
-	float min_j() const { return _min_j; }
-	float max_j() const { return _max_j; }
+	ale_real min_i() const { return _min_i; }
+	ale_real max_i() const { return _max_i; }
+	ale_real min_j() const { return _min_j; }
+	ale_real max_j() const { return _max_j; }
 
 	/*
 	 * Get the number of varieties supported by this PSF.  These usually
@@ -88,10 +88,10 @@ public:
 		 * This code uses a rasterized approximation of the filters involved.
 		 */
 
-		float vertical_center = (top + bot) / 2;
-		float horizontal_center = (lef + rig) / 2;
-		float vertical_resolution = bot - top;
-		float horizontal_resolution = rig - lef;
+		ale_real vertical_center = (top + bot) / 2;
+		ale_real horizontal_center = (lef + rig) / 2;
+		ale_real vertical_resolution = bot - top;
+		ale_real horizontal_resolution = rig - lef;
 
 		if (!(vertical_resolution > 0
 		   && horizontal_resolution > 0))

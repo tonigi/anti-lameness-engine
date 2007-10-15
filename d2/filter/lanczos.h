@@ -32,7 +32,7 @@
 
 class lanczos : public filter {
 private:
-	double half_width;
+	ale_pos half_width;
 
 	/*
 	 * Lanczos function
@@ -56,7 +56,7 @@ public:
 	 * Size of filter support, in number of half-cycles to each side of the
 	 * filter center.
 	 */
-	ale_real support() const {
+	ale_pos support() const {
 		return half_width;
 	}
 

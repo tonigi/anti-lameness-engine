@@ -31,7 +31,7 @@
  */
 
 class circle : public psf {
-	ale_pos _radius;
+	ale_real _radius;
 public:
 
 	/*
@@ -39,10 +39,10 @@ public:
 	 * support may include everything up to and including the boundaries
 	 * specified here.
 	 */
-	float min_i() const { return -_radius; }
-	float max_i() const { return  _radius; }
-	float min_j() const { return -_radius; }
-	float max_j() const { return  _radius; }
+	ale_real min_i() const { return -_radius; }
+	ale_real max_i() const { return  _radius; }
+	ale_real min_j() const { return -_radius; }
+	ale_real max_j() const { return  _radius; }
 
 	/*
 	 * Response function
@@ -61,22 +61,22 @@ public:
 		for (int k = 0; k < 3; k++)
 			result.matrix(k, k) = 0;
 
-		ale_pos total = (bot - top) * (rig - lef) / (M_PI * _radius * _radius);
+		ale_real total = (bot - top) * (rig - lef) / (M_PI * _radius * _radius);
 
 		for (int i = 0; i < 10; i++)
 		for (int j = 0; j < 10; j++) {
-			ale_pos r = pow(top + (bot - top) * ((i + 0.5) / (double) 10), 2)
-				  + pow(lef + (rig - lef) * ((j + 0.5) / (double) 10), 2);
+			ale_real r = pow(top + (bot - top) * ((i + 0.5) / (double) 10), 2)
+				   + pow(lef + (rig - lef) * ((j + 0.5) / (double) 10), 2);
 			if (r < _radius * _radius)
 				for (int k = 0; k < 3; k++)
-					result.matrix(k, k) += (total / 100);
+					result.matrix(k, k) += (total / (ale_real) 100);
 		}
 
 
 		return result;
 	}
 
-	circle(ale_pos radius) {
+	circle(ale_real radius) {
 		_radius = radius;
 	}
 };

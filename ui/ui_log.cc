@@ -25,22 +25,22 @@
 void ui_log::set_offset(d2::transformation offset) {
 	if (offset.is_projective()) {
 		printf("Alignment [P %f %f %f %f %f %f %f %f %f %f]\n",
-				offset.scaled_width(),
-				offset.scaled_height(),
-				offset.gpt_get(0, 1),
-				offset.gpt_get(0, 0),
-				offset.gpt_get(1, 1),
-				offset.gpt_get(1, 0),
-				offset.gpt_get(2, 1),
-				offset.gpt_get(2, 0),
-				offset.gpt_get(3, 1),
-				offset.gpt_get(3, 0) );
+				(double) offset.scaled_width(),
+				(double) offset.scaled_height(),
+				(double) offset.gpt_get(0, 1),
+				(double) offset.gpt_get(0, 0),
+				(double) offset.gpt_get(1, 1),
+				(double) offset.gpt_get(1, 0),
+				(double) offset.gpt_get(2, 1),
+				(double) offset.gpt_get(2, 0),
+				(double) offset.gpt_get(3, 1),
+				(double) offset.gpt_get(3, 0) );
 	} else {
 		printf("Alignment [E %f %f %f %f %f]\n",
-				offset.scaled_width(),
-				offset.scaled_height(),
-				offset.eu_get(1),
-				offset.eu_get(0),
-				offset.eu_get(2) );
+				(double) offset.scaled_width(),
+				(double) offset.scaled_height(),
+				(double) offset.eu_get(1),
+				(double) offset.eu_get(0),
+				(double) offset.eu_get(2) );
 	}
 }

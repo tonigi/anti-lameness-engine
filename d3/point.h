@@ -161,7 +161,7 @@ public:
 		return point(x[0] / r, x[1] / r, x[2] / r);
 	}
 
-	point operator /=(ale_real r) {
+	point operator /=(ale_pos r) {
 		x[0] /= r;
 		x[1] /= r;
 		x[2] /= r;
@@ -169,7 +169,7 @@ public:
 		return *this;
 	}
 
-	point operator *=(ale_real r) {
+	point operator *=(ale_pos r) {
 		x[0] *= r;
 		x[1] *= r;
 		x[2] *= r;
@@ -199,7 +199,7 @@ public:
 		     || x[2] != p[2]);
 	}
 
-	point mult(ale_real d) const {
+	point mult(ale_pos d) const {
 		return point(x[0] * d, x[1] * d, x[2] * d);
 	}
 

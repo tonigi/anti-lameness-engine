@@ -99,8 +99,8 @@ protected:
 
 		extend_top = (int) ceil(extend_offset_i - floor(min[0]));
 		extend_left = (int) ceil(extend_offset_j - floor(min[1]));
-		extend_bottom = (int) ceil(ceil(max[0]) - (accum_image->height() - 1 + extend_offset_i));
-		extend_right = (int) ceil(ceil(max[1]) - (accum_image->width() - 1 + extend_offset_j));
+		extend_bottom = (int) ceil(ceil(max[0]) - (ale_pos) (accum_image->height() - 1 + extend_offset_i));
+		extend_right = (int) ceil(ceil(max[1]) - (ale_pos) (accum_image->width() - 1 + extend_offset_j));
 
 		accum_image->extend(extend_top, extend_bottom, 
 			extend_left, extend_right);
@@ -166,9 +166,9 @@ protected:
 		if (ceil(min[1]) < extend_offset_j)
 			extend_left = (int) ceil(extend_offset_j - floor(min[1]));
 		if (floor(max[0]) > accum_image->height() - 1 + extend_offset_i)
-			extend_bottom = (int) ceil(ceil(max[0]) - (accum_image->height() - 1 + extend_offset_i));
+			extend_bottom = (int) ceil(ceil(max[0]) - (ale_pos) (accum_image->height() - 1 + extend_offset_i));
 		if (floor(max[1]) > accum_image->width() - 1 + extend_offset_j)
-			extend_right = (int) ceil(ceil(max[1]) - (accum_image->width() - 1 + extend_offset_j));
+			extend_right = (int) ceil(ceil(max[1]) - (ale_pos) (accum_image->width() - 1 + extend_offset_j));
 
 		accum_image->extend(extend_top, extend_bottom, 
 			extend_left, extend_right);

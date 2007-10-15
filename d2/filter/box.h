@@ -27,7 +27,7 @@
 
 class box : public filter {
 private:
-	ale_real half_width;
+	ale_pos half_width;
 
 	/*
 	 * Box filter.
@@ -49,7 +49,7 @@ public:
 	 * Size of filter support, in number of half-cycles to each side of the
 	 * filter center.
 	 */
-	ale_real support() const {
+	ale_pos support() const {
 		return half_width;
 	}
 
@@ -66,7 +66,7 @@ public:
 		return 0;
 	}
 
-	box(ale_real half_width) {
+	box(ale_pos half_width) {
 		this->half_width = half_width;
 	}
 

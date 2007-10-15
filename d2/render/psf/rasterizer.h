@@ -81,14 +81,14 @@ public:
 			point delta2 = corner - t.scaled_inverse_transform(t.transform_scaled(corner) + point(0, 1));
 
 			for (int index = 0; index < 2; index++) {
-				ale_real d1 = fabs(delta1[index]);
-				ale_real d2 = fabs(delta2[index]);
+				ale_pos d1 = fabs(delta1[index]);
+				ale_pos d2 = fabs(delta2[index]);
 
 				/*
 				 * Take the largest change in each direction.
 				 */
 
-				ale_real delta = (d1 > d2) ? d1 : d2;
+				ale_pos delta = (d1 > d2) ? d1 : d2;
 
 				if ((i == 0 && j == 0) || delta < min_diff[index])
 					min_diff[index] = delta;
@@ -97,8 +97,8 @@ public:
 
 		ale_real resolution_multiplier = 20;  /* Arbitrary */
 
-		_filter_dim_i = (int) ceil(2 * _height * resolution_multiplier / min_diff[0]);
-		_filter_dim_j = (int) ceil(2 * _width * resolution_multiplier / min_diff[1]);
+		_filter_dim_i = (int) ceil((ale_real) 2 * _height * resolution_multiplier / ale_pos_to_real(min_diff[0]));
+		_filter_dim_j = (int) ceil((ale_real) 2 * _width * resolution_multiplier / ale_pos_to_real(min_diff[1]));
 
 		/*
 		 * Ensure that the array has an odd number of elements in each
@@ -144,10 +144,10 @@ public:
 			for (unsigned int i = 0; i < _filter_dim_i; i++)
 			for (unsigned int j = 0; j < _filter_dim_j; j++) {
 				psf_result r 
-					= (*input)(-_height + stepsize_i * i,
-						   -_height + stepsize_i * (i + 1),
-						   -_width  + stepsize_j * j,
-						   -_width  + stepsize_j * (j + 1), n);
+					= (*input)(-_height + stepsize_i * (ale_real) i,
+						   -_height + stepsize_i * (ale_real) (i + 1),
+						   -_width  + stepsize_j * (ale_real) j,
+						   -_width  + stepsize_j * (ale_real) (j + 1), n);
 
 				for (unsigned int k = 0; k < 3; k++) {
 					response_arrays[n][i * _filter_dim_j * 3 + j * 3 + k]

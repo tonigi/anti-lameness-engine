@@ -27,7 +27,7 @@
 
 class mult : public filter {
 private:
-	ale_real _support;
+	ale_pos _support;
 	filter *f1, *f2;
 public:
 
@@ -35,7 +35,7 @@ public:
 	 * Size of filter support, in number of half-cycles to each side of the
 	 * filter center.
 	 */
-	virtual ale_real support() const {
+	virtual ale_pos support() const {
 		return _support;
 	}
 

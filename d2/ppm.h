@@ -297,7 +297,7 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 			if (extended.gain == 0)
 				extended.gain = 1;
 
-			double combined_gain = (1 / pow(extended.aperture, 2))
+			ale_real combined_gain = (1 / pow(extended.aperture, 2))
 					     * extended.shutter
 					     * extended.gain;
 			
@@ -354,7 +354,7 @@ static inline void write_ppm(const char *filename, const image *im, exposure *e,
 	/* Automatic exposure adjustment information */
 
 	ale_real maxval = 1;
-	ale_real minval = (rezero ? im->minval() : 0);
+	ale_real minval = (rezero ? im->minval() : (ale_real) 0);
 	if (minval > 0)
 		minval = 0;
 	pixel minval_pixel(minval, minval, minval);

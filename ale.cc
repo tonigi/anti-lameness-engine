@@ -32,6 +32,7 @@
  * Types
  */
 
+#include "ale_fixed.h"
 #include "ale_pos.h"
 #include "ale_real.h"
 
@@ -88,6 +89,12 @@ const char *version = PACKAGE_NAME " Version:      " VERSION "\n"
  */
 
 int main(int argc, const char *argv[]){
+
+	/*
+	 * Runtime sanity checks.
+	 */
+
+	ale_fixed<0>::sanity_check();
 
 	/* 
 	 * Call UI routine to handle options and other interface input.

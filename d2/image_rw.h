@@ -339,7 +339,7 @@ public:
 			for (unsigned int i = 0; i < im->height(); i++)
 			for (unsigned int j = 0; j < im->width(); j++) {
 				pixel p = im->pix(i, j);
-				fprintf(stderr, "(%d, %d): [%f %f %f] ", i, j, p[0], p[1], p[2]);
+				fprintf(stderr, "(%d, %d): [%f %f %f] ", i, j, (double) p[0], (double) p[1], (double) p[2]);
 			}
 			fprintf(stderr, "\n");
 
@@ -405,7 +405,7 @@ public:
 		 * Automatic exposure adjustment (don't blow out highlights)
 		 */
 		ale_real maxval = 1;
-		ale_real minval = (rezero ? im->minval() : 0);
+		ale_real minval = (rezero ? im->minval() : (ale_real) 0);
 		if (minval > 0)
 			minval = 0;
 		pixel minval_pixel(minval, minval, minval);

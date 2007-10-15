@@ -74,7 +74,7 @@ public:
 		return *this;
 	}
 
-	point mult(ale_real d) const {
+	point mult(ale_pos d) const {
 		return point(x[0] * d, x[1] * d);
 	}
 
@@ -85,12 +85,12 @@ public:
 		return point(x[0] * p[0], x[1] * p[1]);
 	}
 	
-	point operator *=(ale_real d) {
+	point operator *=(ale_pos d) {
 		(*this) = mult(d);
 		return *this;
 	}
 
-	point operator/(ale_real d) const {
+	point operator/(ale_pos d) const {
 		return point(x[0] / d, x[1] / d);
 	}
 

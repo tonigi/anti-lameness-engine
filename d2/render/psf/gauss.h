@@ -30,10 +30,10 @@
  *  it can't correct for poor focus at the edges.
  */
 
-#define D2_GAUSS_CUTOFF ((ale_pos) 2.0)
+#define D2_GAUSS_CUTOFF ((ale_real) 2.0)
 
 class gauss : public psf {
-	ale_pos sigma;		  // radius, in pixels per standard deviation
+	ale_real sigma;		  // radius, in pixels per standard deviation
 
 	/*
 	 * Disabled the following definition because some compilers may not be
@@ -47,7 +47,7 @@ class gauss : public psf {
 //	static const ale_pos cutoff = 2;	// standard deviations before we cut off
 
 	// helper variables
-	ale_pos radius;
+	ale_real radius;
 	ale_pos sigma_premult;
 public:
 
@@ -56,10 +56,10 @@ public:
 	 * support may include everything up to and including the boundaries
 	 * specified here.
 	 */
-	inline float max_i() const { return radius; }
-	inline float min_i() const { return -max_i(); } // we're symmetrical, so it works!
-	inline float min_j() const { return -max_i(); }
-	inline float max_j() const { return max_i(); }
+	inline ale_real max_i() const { return radius; }
+	inline ale_real min_i() const { return -max_i(); } // we're symmetrical, so it works!
+	inline ale_real min_j() const { return -max_i(); }
+	inline ale_real max_j() const { return max_i(); }
 
 	/*
 	 * Response function
@@ -111,7 +111,7 @@ public:
 	/*
 	 * Our glorious constructor
 	 */
-	gauss(ale_pos sig) {
+	gauss(ale_real sig) {
 
 		sigma = sig;
 

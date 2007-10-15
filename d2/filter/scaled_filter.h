@@ -33,8 +33,8 @@
  * Useful constants.
  */
 
-static const double sqrt2          = 1.41421356237309504880;
-static const double one_over_sqrt2 = 0.70710678118654752440;
+static const ale_pos sqrt2          = (ale_pos) 1.41421356237309504880;
+static const ale_pos one_over_sqrt2 = (ale_pos) 0.70710678118654752440;
 
 /*
  * Scaled filter class.
@@ -120,7 +120,7 @@ private:
 		if (frequency_limit == 0)
 			return;
 
-		ale_real hnorm, wnorm;
+		ale_pos hnorm, wnorm;
 
 		point dh = transform_inverse(p + point(1, 0));
 		point dw = transform_inverse(p + point(0, 1));
@@ -186,8 +186,8 @@ private:
 
 			if (frequency_limit) {
 				fscale  = (bayer == IMAGE_BAYER_NONE)
-					? 1
-					: (k == 1) ? sqrt2 : 2;
+					? (ale_pos) 1
+					: (k == 1) ? sqrt2 : (ale_pos) 2;
 			} else {
 				fscale = 1;
 			}

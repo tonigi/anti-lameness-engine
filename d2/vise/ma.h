@@ -100,8 +100,8 @@ public:
 			transformation t = align::of(f);
 
 			for (unsigned int i = 0; i < 4; i++)
-				p[i] = p[i] + t.transform_scaled(point((i == 1 || i == 2) ? t.scaled_height() : 0,
-						      (i > 1)            ? t.scaled_width()  : 0));
+				p[i] = p[i] + t.transform_scaled(point((i == 1 || i == 2) ? t.scaled_height() : ale_pos_0,
+						      (i > 1)            ? t.scaled_width()  : ale_pos_0));
 
 			if (t.bd_count() < bd_count)
 				bd_count = t.bd_count();
@@ -111,7 +111,7 @@ public:
 		}
 
 		for (unsigned int i = 0; i < 4; i++)
-			p[i] = p[i] / (ale_real) frame_count;
+			p[i] = p[i] / (ale_pos) frame_count;
 
 		for (unsigned int i = 0; i < bd_count; i++)
 			bd[i] /= frame_count;

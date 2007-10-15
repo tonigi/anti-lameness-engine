@@ -31,7 +31,7 @@
  */
 
 class box : public psf {
-	ale_pos _radius;
+	ale_real _radius;
 public:
 
 	/*
@@ -39,10 +39,10 @@ public:
 	 * support may include everything up to and including the boundaries
 	 * specified here.
 	 */
-	float min_i() const { return -_radius; }
-	float max_i() const { return  _radius; }
-	float min_j() const { return -_radius; }
-	float max_j() const { return  _radius; }
+	ale_real min_i() const { return -_radius; }
+	ale_real max_i() const { return  _radius; }
+	ale_real min_j() const { return -_radius; }
+	ale_real max_j() const { return  _radius; }
 
 	/*
 	 * Response function
@@ -74,7 +74,7 @@ public:
 		return result;
 	}
 
-	box(ale_pos radius) {
+	box(ale_real radius) {
 		_radius = radius;
 	}
 };

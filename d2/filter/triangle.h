@@ -27,7 +27,7 @@
 
 class triangle : public filter {
 private:
-	ale_real half_width;
+	ale_pos half_width;
 
 	/*
 	 * Triangle filter.
@@ -49,7 +49,7 @@ public:
 	 * Size of filter support, in number of half-cycles to each side of the
 	 * filter center.
 	 */
-	virtual ale_real support() const {
+	virtual ale_pos support() const {
 		return half_width;
 	}
 
@@ -66,7 +66,7 @@ public:
 		return _triangle(p);
 	}
 
-	triangle(ale_real half_width) {
+	triangle(ale_pos half_width) {
 		this->half_width = half_width;
 	}
 

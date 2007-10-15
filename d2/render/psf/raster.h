@@ -51,10 +51,10 @@ public:
 	 * support may include everything up to and including the boundaries
 	 * specified here.
 	 */
-	float min_i() const { return -_height; }
-	float max_i() const { return  _height; }
-	float min_j() const { return -_width; }
-	float max_j() const { return  _width; }
+	ale_real min_i() const { return -_height; }
+	ale_real max_i() const { return  _height; }
+	ale_real min_j() const { return -_width; }
+	ale_real max_j() const { return  _width; }
 
 	/*
 	 * Element accessor methods.
@@ -104,8 +104,8 @@ public:
 	 * specified, then the average response is returned.
 	 */
 private:
-	psf_result generic_response(ale_real *response_partial, float top, float
-			bot, float lef, float rig, char channels) const {
+	psf_result generic_response(ale_real *response_partial, ale_real top, ale_real
+			bot, ale_real lef, ale_real rig, char channels) const {
 
 		assert (response_partial != NULL);
 
@@ -221,15 +221,15 @@ protected:
 			result[k] += response_array[i * _filter_dim_j * 3 + j * 3 + k];
 
 		for (unsigned int k = 0; k < 3; k++)
-			result[k] *= (4 * _height * _width)
-				/ (_filter_dim_i * _filter_dim_j);
+			result[k] *= (((ale_real) 4 * _height * _width)
+				/ (ale_real) (_filter_dim_i * _filter_dim_j));
 
 		return result;
 	}
 
 	void partial_integrate(ale_real *target, ale_real *source) {
-		ale_real element_area = (max_i() - min_i())
-		                      * (max_j() - min_j())
+		ale_real element_area = (ale_real) (max_i() - min_i())
+		                      * (ale_real) (max_j() - min_j())
 				      / (ale_real) (_filter_dim_i)
 				      / (ale_real) (_filter_dim_j);
 
@@ -238,10 +238,10 @@ protected:
 		for (unsigned int k = 0; k < 3            ; k++) {
 			unsigned int index = i * _filter_dim_j * 3 + j * 3 + k;
 			target[index] = source[index] * element_area
-			              + ((j > 0) ? target[index - 3] : 0)
-				      + ((i > 0) ? target[index - _filter_dim_j * 3] : 0)
+			              + ((j > 0) ? target[index - 3] : ale_real_0)
+				      + ((i > 0) ? target[index - _filter_dim_j * 3] : ale_real_0)
 				      - ((i > 0 
-				       && j > 0) ? target[index - _filter_dim_j * 3 - 3] : 0);
+				       && j > 0) ? target[index - _filter_dim_j * 3 - 3] : ale_real_0);
 		}
 	}
 

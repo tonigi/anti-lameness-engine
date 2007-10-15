@@ -540,12 +540,12 @@ public:
 	void rotate(point center, ale_pos degrees) {
 		if (_is_projective)
 		for (int i = 0; i <= 4; i++) {
-			ale_pos radians = degrees * M_PI / (double) 180;
+			ale_pos radians = (double) degrees * M_PI / (double) 180;
 
 			x[i] -= center;
 			x[i] = point(
-				x[i][0] * cos(radians) + x[i][1] * sin(radians),
-				x[i][1] * cos(radians) - x[i][0] * sin(radians));
+				(double) x[i][0] * cos(radians) + (double) x[i][1] * sin(radians),
+				(double) x[i][1] * cos(radians) - (double) x[i][0] * sin(radians));
 			x[i] += center;
 
 			resultant_memo = 0;
@@ -718,16 +718,16 @@ public:
 		 * Rotate
 		 */
 
-		ale_pos theta = eu[2] * M_PI / 180;
+		ale_pos theta = (double) eu[2] * M_PI / 180;
 
 		for (i = 0; i < 4; i++) {
 			ale_pos _x[2];
 
-			_x[0] = (x[i][0] - (input_width * scale_factor)/2)  * cos(theta)
-			      + (x[i][1] - (input_height * scale_factor)/2) * sin(theta)
+			_x[0] = ((double) x[i][0] - (input_width * scale_factor)/2)  * cos(theta)
+			      + ((double) x[i][1] - (input_height * scale_factor)/2) * sin(theta)
 			      +  (input_width * scale_factor)/2;
-			_x[1] = (x[i][1] - (input_height * scale_factor)/2) * cos(theta)
-			      - (x[i][0] - (input_width * scale_factor)/2)  * sin(theta)
+			_x[1] = ((double) x[i][1] - (input_height * scale_factor)/2) * cos(theta)
+			      - ((double) x[i][0] - (input_width * scale_factor)/2)  * sin(theta)
 			      +  (input_height * scale_factor)/2;
 			
 			x[i][0] = _x[0];
@@ -782,18 +782,20 @@ public:
 				"      a-f=[%f %f %f %f %f %f %f %f] _a-_f=[%f %f %f %f %f %f %f %f]\n"
 				"      bdcnm=%d ip=%d rm=%d rim=%d sf=%f]\n", 
 				input_height, input_width, 
-				x[0][0], x[0][1], 
-				x[1][0], x[1][1], 
-				x[2][0], x[2][1], 
-				x[3][0], x[3][1], 
-				eu[0], eu[1], eu[2],
-				a, b, c, d, e, f, g, h,
-				_a, _b, _c, _d, _e, _f, _g, _h,
+				(double) x[0][0], (double) x[0][1], 
+				(double) x[1][0], (double) x[1][1], 
+				(double) x[2][0], (double) x[2][1], 
+				(double) x[3][0], (double) x[3][1], 
+				(double) eu[0], (double) eu[1], (double) eu[2],
+				(double) a, (double) b, (double) c, (double) d, 
+				(double) e, (double) f, (double) g, (double) h,
+				(double) _a, (double) _b, (double) _c, (double) _d, 
+				(double) _e, (double) _f, (double) _g, (double) _h,
 				bd_count(),
 				_is_projective,
 				resultant_memo,
 				resultant_inverse_memo,
-				scale_factor);
+				(double) scale_factor);
 	}
 
 };

@@ -32,8 +32,8 @@
  */
 
 class psf_stdin_vg : public psf {
-	ale_pos _height;
-	ale_pos _width;
+	ale_real _height;
+	ale_real _width;
 	ale_pos gap_width;
 	int _filter_dim_i;
 	int _filter_dim_j;
@@ -44,10 +44,10 @@ public:
 	 * support may include everything up to and including the boundaries
 	 * specified here.
 	 */
-	float min_i() const { return -_height; }
-	float max_i() const { return  _height; }
-	float min_j() const { return -_width - fabs(gap_width); }
-	float max_j() const { return  _width + fabs(gap_width); }
+	ale_real min_i() const { return -_height; }
+	ale_real max_i() const { return  _height; }
+	ale_real min_j() const { return -_width - fabs(gap_width); }
+	ale_real max_j() const { return  _width + fabs(gap_width); }
 
 	/*
 	 * Get the number of varieties supported by this PSF.  These usually
@@ -109,10 +109,10 @@ public:
 		for (int ii = il; ii <= ih; ii++)
 		for (int jj = jl; jj <= jh; jj++) {
 
-			float ltop = ((float) ii) / _filter_dim_i * (max_i() - min_i()) + min_i();
-			float lbot = ((float) ii + 1) / _filter_dim_i * (max_i() - min_i()) + min_i();
-			float llef = ((float) jj) / _filter_dim_j * (_width * 2) - _width;
-			float lrig = ((float) jj + 1) / _filter_dim_j * (_width * 2) - _width;
+			ale_real ltop = ((ale_real) ii) / (ale_real) _filter_dim_i * (max_i() - min_i()) + min_i();
+			ale_real lbot = ((ale_real) ii + 1) / (ale_real) _filter_dim_i * (max_i() - min_i()) + min_i();
+			ale_real llef = ((ale_real) jj) / (ale_real) _filter_dim_j * ((ale_real) _width * (ale_real) 2) - _width;
+			ale_real lrig = ((ale_real) jj + 1) / (ale_real) _filter_dim_j * (_width * (ale_real) 2) - _width;
 
 			if (ltop < top)
 				ltop = top;

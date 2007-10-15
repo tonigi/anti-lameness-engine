@@ -434,7 +434,7 @@ static inline void tsave_first(struct tsave_t *t, pt offset) {
 	
 	const double rtod_multiplier = 180 / M_PI;
 
-	fprintf(t->file, "V %lf\n", offset.view_angle() * rtod_multiplier);
+	fprintf(t->file, "V %lf\n", (double) offset.view_angle() * rtod_multiplier);
 
 	fprintf(t->file, "E ");
 	fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
@@ -469,7 +469,7 @@ static inline void tsave_next(struct tsave_t *t, pt offset) {
 	
 	const double rtod_multiplier = 180 / M_PI;
 
-	fprintf(t->file, "V %lf\n", offset.view_angle() * rtod_multiplier);
+	fprintf(t->file, "V %lf\n", (double) offset.view_angle() * rtod_multiplier);
 
 	fprintf(t->file, "E ");
 	fprintf(t->file, "%f %f ", (double) offset.scaled_width(), (double) offset.scaled_height());
@@ -541,7 +541,7 @@ static inline void tsave_trm(struct tsave_t *t, ale_real r, ale_real g, ale_real
        if (t != NULL) {
                t->file = fopen(t->filename, "a");
 
-               fprintf(t->file, "# Comment: Exposure [r=%f g=%f b=%f]\n", r, g, b);
+               fprintf(t->file, "# Comment: Exposure [r=%f g=%f b=%f]\n", (double) r, (double) g, (double) b);
 
                fclose(t->file);
        }
@@ -556,7 +556,7 @@ static inline void tsave_apm(struct tsave_t *t, ale_real r, ale_real g, ale_real
        if (t != NULL) {
                t->file = fopen(t->filename, "a");
 
-               fprintf(t->file, "# Comment: Avg magnitude [r=%f g=%f b=%f]\n", r, g, b);
+               fprintf(t->file, "# Comment: Avg magnitude [r=%f g=%f b=%f]\n", (double) r, (double) g, (double) b);
 
                fclose(t->file);
        }

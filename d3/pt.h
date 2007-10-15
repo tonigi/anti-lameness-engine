@@ -43,7 +43,7 @@ struct pt {
 private:
 	d2::transformation t;
 	et euclidean;
-	ale_real _view_angle;		/* XXX: should be ale_pos */
+	ale_pos _view_angle;
 	ale_pos scale_factor;
 	mutable ale_pos diag_per_depth;
 
@@ -59,7 +59,7 @@ public:
 		diag_per_depth = 0;
 	}
 
-	pt(d2::transformation t, et e, ale_real va, ale_pos sf = 1) {
+	pt(d2::transformation t, et e, ale_pos va, ale_pos sf = 1) {
 		this->t = t;
 		euclidean = e;
 		_view_angle = va;
@@ -75,7 +75,7 @@ public:
 		t.debug_output();
 		euclidean.debug_output();
 		fprintf(stderr, "[pt.do va=%f sf=%f dpd=%f\n]",
-				_view_angle, scale_factor, diag_per_depth);
+				(double) _view_angle, (double) scale_factor, (double) diag_per_depth);
 	}
 
 	/*
@@ -346,7 +346,7 @@ public:
 		point max = st.get_max();
 		point avg = (min + max) / (ale_pos) 2;
 
-		ale_pos diagonal = min.lengthto(max) * sqrt(2) / sqrt(3);
+		ale_pos diagonal = min.lengthto(max) * (ale_pos) (sqrt(2) / sqrt(3));
 
 		return trilinear_coordinate(avg, diagonal);
 	}
@@ -369,7 +369,7 @@ public:
 	 */
 	ale_pos diagonal_distance_3d(ale_pos depth, ale_pos coordinate) const {
 		calculate_diag_per_depth();
-		return pow(2, coordinate) * fabs(depth) * diag_per_depth * sqrt(3) / sqrt(2);
+		return pow(2, coordinate) * fabs(depth) * diag_per_depth * (ale_pos) (sqrt(3) / sqrt(2));
 	}
 
 	/*
@@ -377,7 +377,7 @@ public:
 	 */
 	ale_pos distance_1d(ale_pos depth, ale_pos coordinate) const {
 		calculate_diag_per_depth();
-		return pow(2, coordinate) * fabs(depth) * diag_per_depth / sqrt(2);
+		return pow(2, coordinate) * fabs(depth) * diag_per_depth / (ale_pos) (sqrt(2));
 	}
 
 	ale_pos distance_1d(point iw, ale_pos coordinate) const {

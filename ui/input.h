@@ -2718,7 +2718,7 @@ public:
 						d2::exposure::set_gain_reference(gain_value);
 					else 
 						input_exposure[j]->set_gain_multiplier(
-								d2::exposure::get_gain_reference()
+								(double) d2::exposure::get_gain_reference()
 							      / gain_value);
 
 				} else if (!strcmp(option_name, "black")) {
@@ -2860,7 +2860,7 @@ public:
 
 			d3::align::init_angle(view_angle);
 
-			ui::get()->d3_init_view_angle(view_angle / M_PI * 180);
+			ui::get()->d3_init_view_angle((double) view_angle / M_PI * 180);
 
 			d3::align::init_from_d2();
 

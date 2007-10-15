@@ -21,9 +21,12 @@
 #ifndef __ale_real_h__
 #define __ale_real_h__
 
+#include "ale_fixed.h"
+
 #define SINGLE 1
 #define DOUBLE 2
 #define HALF 3
+#define FIXED 4
 
 /*
  * Real-valued type used to represent the range of an image (colors, weights,
@@ -211,6 +214,13 @@ public:
 
 #define ALE_REAL_PRECISION_STRING "HALF"
 
+#elif ALE_COLORS == FIXED
+
+typedef ale_fixed<14> ale_real;
+typedef ale_fixed<14> ale_sreal;
+
+#define ALE_REAL_PRECISION_STRING "FIXED"
+
 #else
 
 #warning Unknown precision in ale_real.h: Choosing PRECISION=SINGLE.
@@ -222,8 +232,11 @@ typedef float ale_sreal;
 
 #endif
 
+const ale_real ale_real_0 = (ale_real) 0;
+
 #undef SINGLE
 #undef DOUBLE
 #undef HALF
+#undef FIXED
 
 #endif

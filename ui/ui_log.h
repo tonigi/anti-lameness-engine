@@ -70,7 +70,7 @@ public:
 	void set_offset(d2::transformation);
 
 	void gs_mo(ale_pos gs_mo) {
-		printf("Global search minimum overlap is %f pixels\n", gs_mo);
+		printf("Global search minimum overlap is %f pixels\n", (double) gs_mo);
 	}
 
 	void loading_file() {
@@ -94,18 +94,18 @@ public:
 	}
 
 	void constructing_lod_clusters(ale_pos lod) {
-		printf("Constructing LOD cluster (%f)\n", lod);
+		printf("Constructing LOD cluster (%f)\n", (double) lod);
 	}
 
 	void global_alignment(ale_pos perturb, ale_pos lod) {
 		status.perturb_size = perturb;
-		printf("Global alignment (perturb=%f, lod=%f).\n", perturb, lod);
+		printf("Global alignment (perturb=%f, lod=%f).\n", (double) perturb, (double) lod);
 	}
 
 	void aligning(ale_pos perturb, ale_pos lod) {
 		perturb_timers[perturb].start();
 		status.perturb_size = perturb;
-		printf("Aligning (perturb=%f, lod=%f).\n", perturb, lod);
+		printf("Aligning (perturb=%f, lod=%f).\n", (double) perturb, (double) lod);
 	}
 
 	void following() {
@@ -173,7 +173,7 @@ public:
 		perturb_timers[status.perturb_size].stop();
 		status.perturb_size = perturb;
 		perturb_timers[perturb].start();
-		printf("Perturbation set to %g; LOD set to %g.\n", perturb, lod);
+		printf("Perturbation set to %g; LOD set to %g.\n", (double) perturb, (double) lod);
 	}
 
 	void alignment_match_ok() {

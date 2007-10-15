@@ -32,7 +32,7 @@ public:
 	 * Size of filter support, in number of half-cycles to each side of the
 	 * filter center.
 	 */
-	virtual ale_real support() const = 0;
+	virtual ale_pos support() const = 0;
 
 	/*
 	 * Response of filter at point p

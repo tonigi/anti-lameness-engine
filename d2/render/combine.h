@@ -190,7 +190,7 @@ private:
 				if (!(coarse_defined->chan(i, j, k) > 0))
 					continue;
 
-				ale_real filter_scale = 1;
+				ale_pos filter_scale = 1;
 				ale_real filtered_weight;
 				ale_real filtered_value;
 
@@ -200,7 +200,7 @@ private:
 				 * pixels.
 				 */
 
-				ale_real n1 = find_nonzero_weight_distance(i, j, k);
+				ale_pos n1 = find_nonzero_weight_distance(i, j, k);
 
 				if (!finite(n1)) {
 					output_image->chan(i, j, k) = coarse_image->get_pixel(i, j)[k];

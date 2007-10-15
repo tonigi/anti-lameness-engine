@@ -26,8 +26,8 @@
 
 class gauss : public filter {
 private:
-    ale_real sigma;
-    ale_real diameter;    /** measured in standard deviations **/
+    ale_pos sigma;
+    ale_pos diameter;    /** measured in standard deviations **/
 
     /*
      * The heavy-lifting function:
@@ -41,7 +41,11 @@ private:
                 outside its radius **/
 
         /** calculate the rest **/
-        return exp( -p*p / (sigma*sigma) );
+
+	ale_pos p2 = p * p;
+	ale_pos sigma2 = sigma * sigma;
+
+        return exp( -(p2/sigma2) );
 
     }
 
@@ -60,7 +64,7 @@ public:
      * Size of filter support, or how big a radius does this filter
      * touch?
      */
-    ale_real support() const {
+    ale_pos support() const {
         return sigma*diameter;
     }
 
@@ -79,7 +83,7 @@ public:
         return 0;
     }
 
-    gauss(ale_real sigma) {
+    gauss(ale_pos sigma) {
         this->sigma = sigma;
         this->diameter = 2;    /** fixed, standard for imaging **/
     }

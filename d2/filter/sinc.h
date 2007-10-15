@@ -58,12 +58,12 @@ public:
 	 * Size of filter support, in number of half-cycles to each side of the
 	 * filter center.
 	 */
-	virtual ale_real support() const {
+	virtual ale_pos support() const {
 		double zero = 0;
 		double infinity = 1 / zero;
 		assert (!isnan(infinity));
 		assert (1 < infinity);
-		return (ale_real) infinity;
+		return (ale_pos) infinity;
 	}
 
 	/*

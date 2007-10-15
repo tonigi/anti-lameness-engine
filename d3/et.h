@@ -366,16 +366,16 @@ public:
 				"       m=[[%f %f %f %f] [%f %f %f %f] [%f %f %f %f] [%f %f %f %f]]\n"
 				"       mi=[[%f %f %f %f] [%f %f %f %f] [%f %f %f %f] [%f %f %f %f]]\n"
 				"       rm=%d rim=%d]\n",
-			translation[0], translation[1], translation[2],
-			rotation[0], rotation[1], rotation[2],
-			matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3],
-			matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3],
-			matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3],
-			matrix[3][0], matrix[3][1], matrix[3][2], matrix[3][3],
-			matrix_inverse[0][0], matrix_inverse[0][1], matrix_inverse[0][2], matrix_inverse[0][3],
-			matrix_inverse[1][0], matrix_inverse[1][1], matrix_inverse[1][2], matrix_inverse[1][3],
-			matrix_inverse[2][0], matrix_inverse[2][1], matrix_inverse[2][2], matrix_inverse[2][3],
-			matrix_inverse[3][0], matrix_inverse[3][1], matrix_inverse[3][2], matrix_inverse[3][3],
+			(double) translation[0], (double) translation[1], (double) translation[2],
+			(double) rotation[0], (double) rotation[1], (double) rotation[2],
+			(double) matrix[0][0], (double) matrix[0][1], (double) matrix[0][2], (double) matrix[0][3],
+			(double) matrix[1][0], (double) matrix[1][1], (double) matrix[1][2], (double) matrix[1][3],
+			(double) matrix[2][0], (double) matrix[2][1], (double) matrix[2][2], (double) matrix[2][3],
+			(double) matrix[3][0], (double) matrix[3][1], (double) matrix[3][2], (double) matrix[3][3],
+			(double) matrix_inverse[0][0], (double) matrix_inverse[0][1], (double) matrix_inverse[0][2], (double) matrix_inverse[0][3],
+			(double) matrix_inverse[1][0], (double) matrix_inverse[1][1], (double) matrix_inverse[1][2], (double) matrix_inverse[1][3],
+			(double) matrix_inverse[2][0], (double) matrix_inverse[2][1], (double) matrix_inverse[2][2], (double) matrix_inverse[2][3],
+			(double) matrix_inverse[3][0], (double) matrix_inverse[3][1], (double) matrix_inverse[3][2], (double) matrix_inverse[3][3],
 			resultant_memo, resultant_inverse_memo);
 	}
 };

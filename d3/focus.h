@@ -94,7 +94,7 @@ public:
 
 	static result get(const d2::image *depth, int i, int j) {
 
-		ale_pos d = depth->get_pixel(i, j)[0];
+		ale_pos d = (double) depth->get_pixel(i, j)[0];
 
 		std::vector<entry> *l = &(focus_list[camera_index]);
 
@@ -133,7 +133,7 @@ public:
 					 * Distance at a given point.
 					 */
 					focus_origin = d2::point(e->py, e->px);
-					distance_at_focus_origin = depth->get_bl(d2::point(e->py, e->px))[0];
+					distance_at_focus_origin = (double) depth->get_bl(d2::point(e->py, e->px))[0];
 				} else {
 					fprintf(stderr, "Bad entry type.\n");
 					assert(0);
@@ -148,7 +148,7 @@ public:
 				 * Adjust according to focal_range.
 				 */
 
-				ale_pos rel_dist = d - r.focal_distance;
+				ale_pos rel_dist = (double) d - r.focal_distance;
 
 				if (fabs(rel_dist) < e->focal_range / 2) {
 					r.focal_distance = d;

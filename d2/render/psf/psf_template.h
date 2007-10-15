@@ -42,10 +42,10 @@ public:
 	 * support may include everything up to and including the boundaries
 	 * specified here.
 	 */
-	float min_i() const { return -height; }
-	float max_i() const { return  height; }
-	float min_j() const { return -width; }
-	float max_j() const { return  width; }
+	ale_real min_i() const { return -height; }
+	ale_real max_i() const { return  height; }
+	ale_real min_j() const { return -width; }
+	ale_real max_j() const { return  width; }
 
 	/*
 	 * Response function

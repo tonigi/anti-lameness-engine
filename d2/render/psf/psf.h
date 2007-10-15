@@ -130,10 +130,10 @@ public:
 	 * support may include everything up to and including the boundaries
 	 * specified here.
 	 */
-	virtual float min_i() const = 0;
-	virtual float max_i() const = 0;
-	virtual float min_j() const = 0;
-	virtual float max_j() const = 0;
+	virtual ale_real min_i() const = 0;
+	virtual ale_real max_i() const = 0;
+	virtual ale_real min_j() const = 0;
+	virtual ale_real max_j() const = 0;
 
 	/*
 	 * Get the number of varieties supported by this PSF.  These usually

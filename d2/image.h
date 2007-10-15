@@ -363,10 +363,10 @@ public:
 		point scaled(
 				x[0]/f <= height() - 1
 			               ? (x[0]/f)
-				       : (height() - 1),
+				       : (ale_pos) (height() - 1),
 				x[1]/f <= width() - 1
 				       ? (x[1]/f)
-				       : (width() - 1));
+				       : (ale_pos) (width() - 1));
 
 		return get_bl(scaled, defined);
 	}
@@ -610,8 +610,8 @@ public:
 		ale_pos f = 0.5;
 
 		image *is = scale_generator(
-			(int) floor(height() * f), 
-			(int) floor(width()  * f), depth(), name);
+			(int) floor(height() * (double) f), 
+			(int) floor(width()  * (double) f), depth(), name);
 
 		assert(is);
 
@@ -642,8 +642,8 @@ public:
 		ale_pos f = 0.5;
 
 		image *is = scale_generator(
-			(int) floor(height() * f), 
-			(int) floor(width()  * f), depth(), name);
+			(int) floor(height() * (double) f), 
+			(int) floor(width()  * (double) f), depth(), name);
 
 		assert(is);
 
@@ -829,8 +829,8 @@ public:
 		ale_pos f = 0.5;
 
 		image *is = scale_generator(
-			(int) floor(height() * f), 
-			(int) floor(width()  * f), depth(), name);
+			(int) floor(height() * (double) f), 
+			(int) floor(width()  * (double) f), depth(), name);
 
 		assert(is);
 
@@ -856,8 +856,8 @@ public:
 
 		if (f > 1.0) {
 			image *is = scale_generator(
-				(int) floor(height() * f), 
-				(int) floor(width()  * f), depth(), name);
+				(int) floor(height() * (double) f), 
+				(int) floor(width()  * (double) f), depth(), name);
 
 			assert(is);
 

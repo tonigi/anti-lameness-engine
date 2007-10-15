@@ -457,7 +457,7 @@ class scene {
 			if (tc == tc_low) {
 				if (im->pix(i, j)[0] != 0) {
 					fprintf(stderr, "failing assertion: im[%d]->pix(%d, %d)[0] == %g\n", tc, i, j, 
-							im->pix(i, j)[0]);
+							(double) im->pix(i, j)[0]);
 				}
 				assert(im->pix(i, j)[0] == 0);
 				return 0;
@@ -578,7 +578,7 @@ class scene {
 			if (!initialized) {
 				tc_low = tc_high = (int) tc;
 
-				ale_real sf = pow(2, -tc);
+				ale_pos sf = pow(2, -tc);
 
 				weights.push_back(make_image(sf));
 
@@ -598,7 +598,7 @@ class scene {
 			while (tc < tc_low) {
 				tc_low--;
 
-				ale_real sf = pow(2, -tc_low);
+				ale_pos sf = pow(2, -tc_low);
 
 				weights.insert(weights.begin(), make_image(sf));
 			}
@@ -606,7 +606,7 @@ class scene {
 			while (tc > tc_high) {
 				tc_high++;
 
-				ale_real sf = pow(2, -tc_high);
+				ale_pos sf = pow(2, -tc_high);
 
 				weights.push_back(make_image(sf, -1));
 			}
@@ -991,7 +991,7 @@ class scene {
 					total_tsteps++;
 				} else {
 					fprintf(stderr, "failed iw = (%f, %f, %f)\n", 
-							iw[0], iw[1], iw[2]);
+							(double) iw[0], (double) iw[1], (double) iw[2]);
 					assert(0);
 				}
 			}
@@ -1021,14 +1021,14 @@ class scene {
 		 * Point p is expected to be in local projective coordinates.
 		 */
 
-		void add_candidate(point p, int tc, ale_real score) {
+		void add_candidate(point p, int tc, ale_pos score) {
 			assert(tc <= primary_decimation_upper);
 			assert(tc >= input_decimation_lower);
 			assert(p[2] < 0);
 			assert(score >= 0);
 
-			int i = (unsigned int) floor(p[0] / pow(2, tc));
-			int j = (unsigned int) floor(p[1] / pow(2, tc));
+			int i = (unsigned int) floor(p[0] / (ale_pos) pow(2, tc));
+			int j = (unsigned int) floor(p[1] / (ale_pos) pow(2, tc));
 
 			int swidth  = (int) floor(width / pow(2, tc));
 
@@ -1043,7 +1043,7 @@ class scene {
 					continue;
 
 				if (i == 1 && j == 1 && tc == 4)
-					fprintf(stderr, "[ac p2=%f score=%f]\n", p[2], score);
+					fprintf(stderr, "[ac p2=%f score=%f]\n", (double) p[2], (double) score);
 
 				ale_pos tp = pk->first;
 				ale_real tr = pk->second;
@@ -1162,7 +1162,7 @@ class scene {
 		void print_info() {
 			fprintf(stderr, "[st %p sz %u el", this, size);
 			for (unsigned int i = 0; i < used; i++)
-				fprintf(stderr, " (%f, %f)", _d(i), _w(i));
+				fprintf(stderr, " (%f, %f)", (double) _d(i), (double) _w(i));
 			fprintf(stderr, "]\n");
 		}
 
@@ -2002,7 +2002,7 @@ public:
 					 * Weighted (transparent) occupancy display
 					 */
 
-					ale_pos contribution_value = occupancy;
+					ale_real contribution_value = occupancy;
 					weights->pix(i, j) += encounter;
 					im->pix(i, j)      += encounter * contribution_value;
 
@@ -2016,9 +2016,9 @@ public:
 					weights->pix(i, j)[0] += encounter[0];
 					if (weights->pix(i, j)[1] < encounter[0]) {
 						weights->pix(i, j)[1] = encounter[0];
-						im->pix(i, j)[0] = weights->pix(i, j)[1] * depth_value;
-						im->pix(i, j)[1] = max[0] - min[0];
-						im->pix(i, j)[2] = max[1] - min[1];
+						im->pix(i, j)[0] = weights->pix(i, j)[1] * ale_pos_to_real(depth_value);
+						im->pix(i, j)[1] = ale_pos_to_real(max[0] - min[0]);
+						im->pix(i, j)[2] = ale_pos_to_real(max[1] - min[1]);
 					}
 
 				} else if (type == 7) {
@@ -2030,8 +2030,8 @@ public:
 					weights->pix(i, j)[0] += encounter[0];
 					if (weights->pix(i, j)[1] < encounter[0]) {
 						weights->pix(i, j)[1] = encounter[0];
-						im->pix(i, j)[0] = i - min[0];
-						im->pix(i, j)[1] = j - min[1];
+						im->pix(i, j)[0] = ale_pos_to_real(i - min[0]);
+						im->pix(i, j)[1] = ale_pos_to_real(j - min[1]);
 						im->pix(i, j)[2] = 0;
 					}
 
@@ -2153,14 +2153,14 @@ public:
 
 			d2::point x;
 			d2::point blx;
-			d2::point res(im1->pix(i, j)[1], im1->pix(i, j)[2]);
+			d2::point res((double) im1->pix(i, j)[1], (double) im1->pix(i, j)[2]);
 
 			for (int d = 0; d < 2; d++) {
 
 				if (im2->pix(i, j)[d] < res[d] / 2)
-					x[d] = (ale_pos) (d?j:i) - res[d] / 2 - im2->pix(i, j)[d];
+					x[d] = (ale_pos) (d?j:i) - res[d] / 2 - ale_real_to_pos(im2->pix(i, j)[d]);
 				else
-					x[d] = (ale_pos) (d?j:i) + res[d] / 2 - im2->pix(i, j)[d];
+					x[d] = (ale_pos) (d?j:i) + res[d] / 2 - ale_real_to_pos(im2->pix(i, j)[d]);
 
 				blx[d] = 1 - ((d?j:i) - x[d]) / res[d];
 			}
@@ -2178,7 +2178,7 @@ public:
 					if (isnan(d))
 						continue;
 
-					ale_real w = ((ii ? (1 - blx[0]) : blx[0]) * (jj ? (1 - blx[1]) : blx[1]));
+					ale_real w = ale_pos_to_real((ii ? (1 - blx[0]) : blx[0]) * (jj ? (1 - blx[1]) : blx[1]));
 					depth_weight += w;
 					depth_val += w * d;
 				}
@@ -2297,7 +2297,7 @@ public:
 			 * Determine the probability of encounter.
 			 */
 
-			ale_pos encounter = (1 - (*weight)[0]) * occupancy;
+			ale_real encounter = (1 - (*weight)[0]) * occupancy;
 
 			/*
 			 * (*weight)[0] stores the cumulative weight; (*weight)[1] stores the maximum.
@@ -2427,7 +2427,7 @@ public:
 				 * Determine the probability of encounter.
 				 */
 
-				ale_pos encounter = (1 - weights->get_pixel(i, j)[0]) * occupancy;
+				ale_real encounter = (1 - weights->get_pixel(i, j)[0]) * occupancy;
 
 				/*
 				 * weights[0] stores the cumulative weight; weights[1] stores the maximum.
@@ -3134,9 +3134,9 @@ public:
 					continue;
 
 				point local_points[3] = { 
-					point(p[0],     p[1],     depth[0]),
-					point(p[0] + 1, p[1],     depth[0] + diff[0]),
-					point(p[0],     p[1] + 1, depth[0] + diff[1])
+					point(p[0],     p[1],     ale_real_to_pos(depth[0])),
+					point(p[0] + 1, p[1],     ale_real_to_pos(depth[0] + diff[0])),
+					point(p[0],     p[1] + 1, ale_real_to_pos(depth[0] + diff[1]))
 				};
 
 				/*
@@ -3325,9 +3325,9 @@ public:
 					continue;
 
 				point local_points[3] = { 
-					point(i,     j,     depth[0]),
-				        point(i + 1, j,     depth[0] + diff[0]),
-				        point(i    , j + 1, depth[0] + diff[1])
+					point(i,     j,     ale_real_to_pos(depth[0])),
+				        point(i + 1, j,     ale_real_to_pos(depth[0] + diff[0])),
+				        point(i    , j + 1, ale_real_to_pos(depth[0] + diff[1]))
 				};
 
 				/*
@@ -3582,7 +3582,7 @@ public:
 
 		ale_pos diameter = (local_max - local_min).norm();
 
-		return log(diameter / sqrt(2)) / log(2);
+		return log((double) diameter / sqrt(2)) / log(2);
 	}
 
 	/*
@@ -3624,8 +3624,8 @@ public:
 
 			if (doc)
 				fprintf(stderr, "\t[%f %f %f] --> [%f %f %f]\n", 
-						cell[i][0], cell[j][1], cell[k][2],
-						p[0], p[1], p[2]);
+						(double) cell[i][0], (double) cell[j][1], (double) cell[k][2],
+						(double) p[0], (double) p[1], (double) p[2]);
 
 			for (int d = 0; d < 3; d++)
 				if (p[d] >= 0)
@@ -3763,15 +3763,15 @@ public:
 
 		ale_pos score = 0;
 		ale_pos divisor = 0;
-		ale_pos l1_multiplier = 0.125;
+		ale_real l1_multiplier = 0.125;
 		lod_image *if1 = al->get(f1);
 		lod_image *if2 = al->get(f2);
 
 		if (if1->in_bounds(p[0].xy())
 		 && if2->in_bounds(p[1].xy())) {
-			divisor += 1 - l1_multiplier;
-			score += (1 - l1_multiplier)
-			       * (if1->get_tl(p[0].xy(), tc) - if2->get_tl(p[1].xy(), stc)).normsq();
+			divisor += ale_real_to_pos(1 - l1_multiplier);
+			score += ale_real_to_pos((1 - l1_multiplier)
+			       * (if1->get_tl(p[0].xy(), tc) - if2->get_tl(p[1].xy(), stc)).normsq());
 		}
 
 		for (int iii = -1; iii <= 1; iii++)
@@ -3782,9 +3782,9 @@ public:
 			 || !if2->in_bounds(p[1].xy() + t))
 				continue;
 
-			divisor += l1_multiplier;
-			score   += l1_multiplier
-				 * (if1->get_tl(p[0].xy() + t, tc) - if2->get_tl(p[1].xy() + t, tc)).normsq();
+			divisor += ale_real_to_pos(l1_multiplier);
+			score   += ale_real_to_pos(l1_multiplier
+				 * (if1->get_tl(p[0].xy() + t, tc) - if2->get_tl(p[1].xy() + t, tc)).normsq());
 				 
 		}
 
@@ -3922,7 +3922,7 @@ public:
 				fprintf(stderr, "+");
 			}
 			fprintf(stderr, "[fc n=%f %f %f x=%f %f %f]\n",
-					min[0], min[1], min[2], max[0], max[1], max[2]);
+					(double) min[0], (double) min[1], (double) min[2], (double) max[0], (double) max[1], (double) max[2]);
 		}
 
 		if (completely_clipped(min, max)) {
@@ -3947,8 +3947,8 @@ public:
 		if (exceeds_resolution_lower_bounds(f1, f2, min, max, pt_outputs)) {
 			if (!(rand() % 100000))
 				fprintf(stderr, "([%f %f %f], [%f %f %f]) at %d\n", 
-						min[0], min[1], min[2],
-						max[0], max[1], max[2],
+						(double) min[0], (double) min[1], (double) min[2],
+						(double) max[0], (double) max[1], (double) max[2],
 						__LINE__);
 
 			if (print)
@@ -3968,18 +3968,18 @@ public:
 
 		if (print) {
 			fprintf(stderr, "nc[0][0]=%f %f %f nc[0][1]=%f %f %f nc[1][0]=%f %f %f nc[1][1]=%f %f %f\n",
-					new_cells[0][0][0],
-					new_cells[0][0][1],
-					new_cells[0][0][2],
-					new_cells[0][1][0],
-					new_cells[0][1][1],
-					new_cells[0][1][2],
-					new_cells[1][0][0],
-					new_cells[1][0][1],
-					new_cells[1][0][2],
-					new_cells[1][1][0],
-					new_cells[1][1][1],
-					new_cells[1][1][2]);
+					(double) new_cells[0][0][0],
+					(double) new_cells[0][0][1],
+					(double) new_cells[0][0][2],
+					(double) new_cells[0][1][0],
+					(double) new_cells[0][1][1],
+					(double) new_cells[0][1][2],
+					(double) new_cells[1][0][0],
+					(double) new_cells[1][0][1],
+					(double) new_cells[1][0][2],
+					(double) new_cells[1][1][0],
+					(double) new_cells[1][1][1],
+					(double) new_cells[1][1][2]);
 		}
 
 		find_candidates(f1, f2, c, new_cells[0][0], new_cells[0][1], pt_outputs, depth + 1);
@@ -4490,7 +4490,7 @@ public:
 				total_tsteps++;
 			} else {
 				fprintf(stderr, "failed iw = (%f, %f, %f)\n", 
-						iw[0], iw[1], iw[2]);
+						(double) iw[0], (double) iw[1], (double) iw[2]);
 				assert(0);
 			}
 		}
@@ -4533,7 +4533,7 @@ public:
 	 */
 
 	static int calc_lod(ale_pos depth1, pt _pt, ale_pos target_dim) {
-		return (int) round(_pt.trilinear_coordinate(depth1, target_dim * sqrt(2)));
+		return (int) round(_pt.trilinear_coordinate(depth1, target_dim * (ale_pos) sqrt(2)));
 	}
 
 	/*

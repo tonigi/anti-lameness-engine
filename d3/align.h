@@ -123,8 +123,8 @@ class align {
 
 		ale_pos D = sqrt(h * h + w * w)
 			         / (2 * tan(_init_angle/2));
-		ale_pos desired_h_angle = 2 * atan(h / (2 * sqrt(D*D + w*w/4)));
-		ale_pos desired_w_angle = 2 * atan(w / (2 * sqrt(D*D + h*h/4)));
+		ale_pos desired_h_angle = (double) (2 * atan((double) ((double) h / (2 * sqrt((double) (D*D) + (double) (w*w)/4)))));
+		ale_pos desired_w_angle = (double) (2 * atan((double) ((double) w / (2 * sqrt((double) (D*D) + (double) (h*h)/4)))));
 
 		ale_pos estimate_h1_angle = estimate.anglebetw(a, b);
 		ale_pos estimate_h2_angle = estimate.anglebetw(c, d);
@@ -145,7 +145,7 @@ class align {
 		 * can be changed at each step.  
 		 */
 
-		double view_angle = _init_angle;
+		ale_pos view_angle = _init_angle;
 
 		for (ale_pos magnitude = estimate[2] / 2; 
 			magnitude >= 1;
@@ -200,8 +200,8 @@ class align {
 
 					ale_pos D = sqrt(h * h + w * w)
 							 / (2 * tan(view_angle/2));
-					ale_pos desired_h_angle = 2 * atan(h / (2 * sqrt(D*D + w*w/4)));
-					ale_pos desired_w_angle = 2 * atan(w / (2 * sqrt(D*D + h*h/4)));
+					ale_pos desired_h_angle = 2 * atan((double) h / (2 * sqrt((double) (D*D) + (double) (w*w)/4)));
+					ale_pos desired_w_angle = 2 * atan((double) w / (2 * sqrt((double) D*D + (double) h*h/4)));
 
 					estimate_h1_angle = estimate.anglebetw(a, b);
 					estimate_h2_angle = estimate.anglebetw(c, d);
@@ -557,9 +557,9 @@ public:
 //				alignment_array[i](estimate)[2]);
 
 			ale_pos e0 = atan(-e_translated[1] / e_translated[2]);
-			ale_pos e1 = atan(e_translated[0]
-					/ (e_translated[2] * cos(e0)
-					 - e_translated[1] * sin(e0)));
+			ale_pos e1 = atan((double) e_translated[0]
+					/ ((double) e_translated[2] * cos(e0)
+					 - (double) e_translated[1] * sin(e0)));
 
 			alignment_array[i].modify_rotation(0, e0);
 			alignment_array[i].modify_rotation(1, e1);

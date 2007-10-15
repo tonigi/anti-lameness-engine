@@ -584,7 +584,7 @@ private:
 			else
 				coverage = _mc / 100;
 
-			ale_pos su = (1 - coverage) / coverage;
+			double su = (1 - coverage) / coverage;
 
 			mc_max = (floor(2*su) * (1 + floor(2*su)) + 2*su)
 			       / (2 + 2 * floor(2*su) - 2*su);
@@ -1681,7 +1681,7 @@ public:
 	static void init_nl_cluster(struct scale_cluster *sc) {
 	}
 
-	static struct scale_cluster *init_clusters(int frame, ale_real scale_factor,
+	static struct scale_cluster *init_clusters(int frame, ale_pos scale_factor,
 			const image *input_frame, unsigned int steps,
 			int *local_ax_count) {
 
@@ -1738,7 +1738,7 @@ public:
 					exp().confidence(scale_clusters[0].input->get_pixel(i, j))[k];
 
 		scale_ax_parameters(*local_ax_count, scale_clusters[0].ax_parameters, scale_factor, 
-				(scale_factor < 1.0 && interpolant == NULL) ? scale_factor : 1);
+				(scale_factor < 1.0 && interpolant == NULL) ? scale_factor : (ale_pos) 1);
 
 		init_nl_cluster(&(scale_clusters[0]));
 
@@ -1781,7 +1781,7 @@ public:
 	/*
 	 * Destroy the first element in the scale cluster data structure.
 	 */
-	static void final_clusters(struct scale_cluster *scale_clusters, ale_real scale_factor,
+	static void final_clusters(struct scale_cluster *scale_clusters, ale_pos scale_factor,
 			unsigned int steps) {
 
 		if (scale_clusters[0].input_scale < 1.0) {
@@ -2162,7 +2162,7 @@ public:
 		if (perturb_lower_percent)
 			local_lower = perturb_lower
 				    * reference_size
-				    * 0.01
+				    * (ale_pos) 0.01
 				    * scale_factor;
 		else
 			local_lower = perturb_lower;
@@ -2170,7 +2170,7 @@ public:
 		if (perturb_upper_percent)
 			local_upper = perturb_upper
 				    * reference_size
-				    * 0.01
+				    * (ale_pos) 0.01
 				    * scale_factor;
 		else
 			local_upper = perturb_upper;
@@ -2180,7 +2180,7 @@ public:
 		if (gs_mo_percent)
 			local_gs_mo = _gs_mo
 				    * reference_area
-				    * 0.01
+				    * (ale_pos) 0.01
 				    * scale_factor;
 		else
 			local_gs_mo = _gs_mo;
@@ -2337,10 +2337,10 @@ public:
 		 * arclength, we have to convert.
 		 */
 
-		ale_pos adj_o = 2 * perturb 
-				  / sqrt(pow(scale_clusters[0].input->height(), 2)
-				       + pow(scale_clusters[0].input->width(),  2))
-				  * 180
+		ale_pos adj_o = (double) 2 * (double) perturb 
+				  / sqrt(pow((double) scale_clusters[0].input->height(), (double) 2)
+				       + pow((double) scale_clusters[0].input->width(),  (double) 2))
+				  * (double) 180
 				  / M_PI;
 
 		/*
@@ -2438,15 +2438,15 @@ public:
 
 			ale_accum lowest_error = cp_rms_error(m, o);
 
-			ale_pos rot_lower = 2 * local_lower
+			ale_pos rot_lower = 2 * (double) local_lower
 					  / sqrt(pow(scale_clusters[0].input->height(), 2)
 					       + pow(scale_clusters[0].input->width(),  2))
 					  * 180
 					  / M_PI;
 
 			if  (alignment_class > 0)
-			for (ale_pos rot = 30; rot > rot_lower; rot /= 2) 
-			for (ale_pos srot = -rot; srot < rot * 1.5; srot += rot * 2) {
+			for (double rot = 30; rot > rot_lower; rot /= 2) 
+			for (double srot = -rot; srot < rot * 1.5; srot += rot * 2) {
 				int is_improved = 1;
 				while (is_improved) {
 					is_improved = 0;
@@ -2555,7 +2555,7 @@ public:
 			 * arclength, we have to convert.
 			 */
 
-			ale_pos adj_o = 2 * perturb 
+			ale_pos adj_o = 2 * (double) perturb 
 				          / sqrt(pow(scale_clusters[0].input->height(), 2)
 					       + pow(scale_clusters[0].input->width(),  2))
 					  * 180
