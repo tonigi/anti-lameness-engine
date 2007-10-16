@@ -100,7 +100,7 @@ public:
 
 	ale_fixed(int d) {
 		assert(!casting_disabled);
-		assert(0);
+		bits = d << N;
 	}
 
 	ale_fixed(unsigned int d) {
