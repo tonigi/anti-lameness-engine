@@ -54,59 +54,7 @@ public:
 	/*
 	 * Sanity checks.
 	 */
-	static void sanity_check() {
-		/*
-		 * i32 should accept 32-bit integers.
-		 */
-
-		i32 test_value = ALE_FIXED_POSINF;
-
-		int count = 0;
-
-		while (test_value /= 2)
-			count++;
-
-		if (count != 30)
-			sanity_check_fail();
-
-		/*
-		 * i32 should be signed.
-		 */
-
-		test_value = 0;
-
-		test_value--;
-
-		if (!(test_value < 0))
-			sanity_check_fail();
-
-		/*
-		 * i64 should accept 64-bit integers.
-		 */
-
-		i64 test_value_2 = ALE_FIXED_POSINF;
-
-		test_value_2 *= test_value_2;
-
-		count = 0;
-
-		while (test_value_2 /= 2)
-			count++;
-
-		if (count != 61)
-			sanity_check_fail();
-
-		/*
-		 * i64 should be signed.
-		 */
-
-		test_value_2 = 0;
-
-		test_value_2--;
-
-		if (!(test_value_2 < 0))
-			sanity_check_fail();
-	}
+	static void sanity_check();
 
 	/*
 	 * Constructor.
@@ -303,6 +251,106 @@ ale_fixed<N> convert_precision(ale_fixed<M> m) {
 
 template<int N>
 int ale_fixed<N>::casting_disabled = 0;
+
+template<int N>
+void ale_fixed<N>::sanity_check() {
+
+	/*
+	 * i32 should accept 32-bit integers.
+	 */
+
+	i32 test_value = ALE_FIXED_POSINF;
+
+	int count = 0;
+
+	while (test_value /= 2)
+		count++;
+
+	if (count != 30)
+		sanity_check_fail();
+
+	/*
+	 * i32 should be signed.
+	 */
+
+	test_value = 0;
+
+	test_value--;
+
+	if (!(test_value < 0))
+		sanity_check_fail();
+
+	/*
+	 * i64 should accept 64-bit integers.
+	 */
+
+	i64 test_value_2 = ALE_FIXED_POSINF;
+
+	test_value_2 *= test_value_2;
+
+	count = 0;
+
+	while (test_value_2 /= 2)
+		count++;
+
+	if (count != 61)
+		sanity_check_fail();
+
+	/*
+	 * i64 should be signed.
+	 */
+
+	test_value_2 = 0;
+
+	test_value_2--;
+
+	if (!(test_value_2 < 0))
+		sanity_check_fail();
+
+	/*
+	 * Addition should work
+	 */
+
+	ale_fixed<N> a(10), b(2.5);
+	ale_fixed<N> c = a + b;
+
+	if ((double) c <= 12
+	 || (double) c >= 13)
+		sanity_check_fail();
+
+	/*
+	 * Multiplication should work
+	 */
+
+	a = 11; b = 2.5;
+	c = a * b;
+
+	if ((double) c <= 27
+	 || (double) c >= 28)
+		sanity_check_fail();
+
+	/*
+	 * Division should work.
+	 */
+
+	a = 11; b = 2;
+	c = a / b;
+
+	if ((double) c <= 5
+	 || (double) c >= 6)
+		sanity_check_fail();
+
+	/*
+	 * Subtraction should work.
+	 */
+
+	a = 11; b = 2.5;
+	c = a - b;
+
+	if ((double) c <= 8
+	 || (double) c >= 9)
+		sanity_check_fail();
+}
 
 
 #endif
