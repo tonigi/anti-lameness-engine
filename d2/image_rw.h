@@ -194,9 +194,9 @@ public:
 
 			for (j = 0; j < mi->columns; j++) {
 
-				pixel input ( ((ale_real) p->red)   / ((ale_real) MaxRGB),
-					      ((ale_real) p->green) / ((ale_real) MaxRGB),
-					      ((ale_real) p->blue)  / ((ale_real) MaxRGB) );
+				pixel input ( ((double) p->red)   / ((double) MaxRGB),
+					      ((double) p->green) / ((double) MaxRGB),
+					      ((double) p->blue)  / ((double) MaxRGB) );
 
 				pixel linear_input = (exp->linearize(input) - exp->get_multiplier() * black_level)
 					           / (1 - black_level);

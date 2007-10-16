@@ -140,8 +140,8 @@ public:
 	}
 
 	static point posinf() {
-		double a = +1;
-		double z = +0;
+		ale_pos a = +1;
+		ale_pos z = +0;
 
 		a = a / z;
 

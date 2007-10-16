@@ -54,8 +54,8 @@ protected:
 		int extend_left = 0;
 		int extend_right = 0;
 
-		double zero = 0;
-		double infinity = 1 / zero;
+		ale_pos zero = 0;
+		ale_pos infinity = 1 / zero;
 		
 		assert (!finite(infinity));
 		assert (!isnan(infinity));

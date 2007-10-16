@@ -170,7 +170,7 @@ private:
 			 * transformation.
 			 */ 
 			
-			ale_pos theta = eu[2] * M_PI / 180;
+			ale_pos theta = (double) eu[2] * M_PI / 180;
 
 			a = cos(theta) * scale_factor;
 			b = sin(theta) * scale_factor;
