@@ -324,7 +324,7 @@ private:
 	 * Minimum overlap for global searches
 	 */
 
-	static ale_pos _gs_mo;
+	static ale_accum _gs_mo;
 	static int gs_mo_percent;
 
 	/*
@@ -592,8 +592,8 @@ private:
 			rng.seed(1 + subdomain);
 
 			index = -1 + (int) ceil((mc_max+1) 
-				   * ( (1 + ((ale_pos) (rng.get())) ) 
-				     / (1 + ((ale_pos) RAND_MAX)) ));
+				   * ( (1 + ((ale_accum) (rng.get())) ) 
+				     / (1 + ((ale_accum) RAND_MAX)) ));
 		}
 
 		int get_i() {
@@ -606,8 +606,8 @@ private:
 
 		void operator++(int whats_this_for) {
 			index += (int) ceil((mc_max+1) 
-			       * ( (1 + ((ale_pos) (rng.get())) ) 
-			 	 / (1 + ((ale_pos) RAND_MAX)) ));
+			       * ( (1 + ((ale_accum) (rng.get())) ) 
+			 	 / (1 + ((ale_accum) RAND_MAX)) ));
 		}
 
 		int done() {
@@ -2000,7 +2000,7 @@ public:
 	}
 
 	static void test_global(diff_stat_t *here, scale_cluster si, transformation t, 
-			int local_ax_count, int m, ale_pos local_gs_mo, ale_pos perturb) {
+			int local_ax_count, int m, ale_accum local_gs_mo, ale_pos perturb) {
 
 		diff_stat_t test(*here);
 
@@ -2024,7 +2024,7 @@ public:
 	 */
 	static void test_globals(diff_stat_t *here, 
 			scale_cluster si, transformation t, int local_gs, ale_pos adj_p,
-			int local_ax_count, int m, ale_pos local_gs_mo, ale_pos perturb) {
+			int local_ax_count, int m, ale_accum local_gs_mo, ale_pos perturb) {
 
 		transformation offset = t;
 
@@ -2147,7 +2147,8 @@ public:
 		 * dimensions.
 		 */
 
-		ale_pos local_lower, local_upper, local_gs_mo;
+		ale_pos local_lower, local_upper;
+		ale_accum local_gs_mo;
 
 		/*
 		 * Select the minimum dimension as the reference.
@@ -2156,8 +2157,8 @@ public:
 		ale_pos reference_size = input_frame->height();
 		if (input_frame->width() < reference_size)
 			reference_size = input_frame->width();
-		ale_pos reference_area = input_frame->height()
-			               * input_frame->width();
+		ale_accum reference_area = input_frame->height()
+			                 * input_frame->width();
 
 		if (perturb_lower_percent)
 			local_lower = perturb_lower
@@ -2178,10 +2179,10 @@ public:
 		local_upper = pow(2, floor(log(local_upper) / log(2)));
 
 		if (gs_mo_percent)
-			local_gs_mo = _gs_mo
-				    * reference_area
-				    * (ale_pos) 0.01
-				    * scale_factor;
+			local_gs_mo = (double) _gs_mo
+				    * (double) reference_area
+				    * (double) 0.01
+				    * (double) scale_factor;
 		else
 			local_gs_mo = _gs_mo;
 

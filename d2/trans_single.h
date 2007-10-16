@@ -206,16 +206,16 @@ private:
 		 * matrix.
 		 */
 
-		ale_pos scale = a * e - b * d;
+		double scale = (double) a * (double) e - (double) b * (double) d;
 
-		_a = (e * 1 - f * h) / scale;
-		_b = (h * c - 1 * b) / scale;
-		_c = (b * f - c * e) / scale;
-		_d = (f * g - d * 1) / scale;
-		_e = (1 * a - g * c) / scale;
-		_f = (c * d - a * f) / scale;
-		_g = (d * h - e * g) / scale;
-		_h = (g * b - h * a) / scale;
+		_a = ((double) e * 1 - (double) f * (double) h) / scale;
+		_b = ((double) h * (double) c - 1 * (double) b) / scale;
+		_c = ((double) b * (double) f - (double) c * (double) e) / scale;
+		_d = ((double) f * (double) g - (double) d * 1) / scale;
+		_e = (1 * (double) a - (double) g * (double) c) / scale;
+		_f = ((double) c * (double) d - (double) a * (double) f) / scale;
+		_g = ((double) d * (double) h - (double) e * (double) g) / scale;
+		_h = ((double) g * (double) b - (double) h * (double) a) / scale;
 
 		resultant_inverse_memo = 1;
 	}
