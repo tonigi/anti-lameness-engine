@@ -1217,11 +1217,11 @@ class scene {
 				ale_accum data_sum = 0;
 				for (unsigned int i = 0; i < used; i++)
 					data_sum += _d(i);
-				return data_sum / used;
+				return data_sum / (ale_accum) used;
 			}
 					
 
-			ale_accum midpoint = weight_sum * (0.5 - 0.5 * attenuation);
+			ale_accum midpoint = weight_sum * (ale_accum) (0.5 - 0.5 * attenuation);
 
 			ale_accum weight_sum_2 = 0;
 

@@ -59,8 +59,8 @@ public:
 	 * case response is not uniform for all pixels (e.g. some sensor arrays
 	 * stagger red, green, and blue sensors).
 	 */
-	psf_result response_generic(ale_real *response_array, float top, float bot,
-			float lef, float rig) const {
+	psf_result response_generic(ale_real *response_array, ale_real top, ale_real bot,
+			ale_real lef, ale_real rig) const {
 
 		assert (response_array != NULL);
 
@@ -76,9 +76,9 @@ public:
 			rig = max_j();
 
 		int il = (int) floor((top - min_i()) / (max_i() - min_i()) * _filter_dim_i);
-		int ih = (int) floor((bot - min_i()) / (max_i() - min_i()) * (_filter_dim_i - 0.001));
+		int ih = (int) floor((bot - min_i()) / (max_i() - min_i()) * _filter_dim_i);
 		int jl = (int) floor((lef - min_j()) / (max_j() - min_j()) * _filter_dim_j);
-		int jh = (int) floor((rig - min_j()) / (max_j() - min_j()) * (_filter_dim_j - 0.001));
+		int jh = (int) floor((rig - min_j()) / (max_j() - min_j()) * _filter_dim_j);
 
 		// fprintf(stderr, "(il, ih, jl, jh) = (%d, %d, %d, %d)\n", il, ih, jl, jh);
 

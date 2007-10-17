@@ -133,8 +133,6 @@ public:
 	}
 
 	ale_fixed(int d) {
-		assert(!casting_disabled);
-
 		bits = d << N;
 		
 		assert((d >= 0 && bits >> N == d)
@@ -164,7 +162,7 @@ public:
 		ale_fixed result;
 
 		if (bits == ALE_FIXED_NAN || bits == 0)
-			return bits;
+			return *this;
 		else if (bits == ALE_FIXED_POSINF)
 			result.bits = ALE_FIXED_NEGINF;
 		else if (bits == ALE_FIXED_NEGINF)
@@ -306,6 +304,50 @@ public:
 		return *this;
 	}
 
+	int operator>(ale_fixed f) {
+		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN)
+			return 0;
+
+		if (bits > f.bits)
+			return 1;
+
+		return 0;
+	}
+
+	int operator<(ale_fixed f) {
+		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN)
+			return 0;
+
+		if (bits < f.bits)
+			return 1;
+
+		return 0;
+	}
+
+	int operator>(int d) {
+		return operator>((ale_fixed) d);
+	}
+
+	int operator<(int d) {
+		return operator<((ale_fixed) d);
+	}
+
+	int operator>(double d) {
+		return operator>((ale_fixed) d);
+	}
+
+	int operator<(double d) {
+		return operator<((ale_fixed) d);
+	}
+
+	int operator>(unsigned int d) {
+		return operator>((ale_fixed) d);
+	}
+
+	int operator<(unsigned int d) {
+		return operator<((ale_fixed) d);
+	}
+
 };
 
 #define ALE_FIXED_INCORPORATE_OPERATOR(op)			\
@@ -373,6 +415,21 @@ ale_fixed<N> floor(ale_fixed<N> f) {
 template<unsigned int N>
 ale_fixed<N> ceil(ale_fixed<N> f) {
 	return -floor(-f);
+}
+
+template<unsigned int N>
+int ale_isinf(ale_fixed<N> f) {
+	return (f.bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_POSINF);
+}
+
+template<unsigned int N>
+int ale_isnan(ale_fixed<N> f) {
+	return (f.bits == ALE_FIXED_NAN);
+}
+
+template<unsigned int N>
+int finite(ale_fixed<N> f) {
+	return (f.bits < ALE_FIXED_POSINF && f.bits > ALE_FIXED_NEGINF);
 }
 
 template<unsigned int N, int M>

@@ -986,7 +986,7 @@ public:
 			for (k = 0; k < _depth; k++) 
 				if (finite(value[k])) {
 					accumulator += value[k];
-					divisor++;
+					divisor += 1;
 				}
 		}
 

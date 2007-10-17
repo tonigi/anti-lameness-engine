@@ -39,6 +39,14 @@
  * switches to handle different types.
  */
 
+/*
+ * Since we need custom isnan and isinf for fixed-point values, we disable any
+ * provided ones.
+ */
+
+#undef isnan
+#undef isinf
+
 #ifndef isnan
 # define isnan(x) ale_isnan(x)
 static inline int ale_isnan(float       x) { return x != x; }

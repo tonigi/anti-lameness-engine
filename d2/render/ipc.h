@@ -1096,6 +1096,10 @@ protected:
 
 		ui::get()->d2_irani_peleg_start();
 
+		ale_accum_disable_casting();
+		ale_pos_disable_casting();
+		ale_real_disable_casting();
+
 		/*
 		 * Initialize simulated data structures
 		 */
@@ -1146,6 +1150,10 @@ protected:
 
                 delete lsimulated;
 		delete nlsimulated;
+
+		ale_accum_enable_casting();
+		ale_pos_enable_casting();
+		ale_real_enable_casting();
 
 		ui::get()->d2_irani_peleg_stop();
         }

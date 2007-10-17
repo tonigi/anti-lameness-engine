@@ -28,6 +28,9 @@
 #define HALF 3
 #define FIXED 4
 
+#define ale_real_enable_casting()
+#define ale_real_disable_casting()
+
 /*
  * Real-valued type used to represent the range of an image (colors, weights,
  * etc.).
@@ -216,8 +219,13 @@ public:
 
 #elif ALE_COLORS == FIXED
 
-typedef ale_fixed<14> ale_real;
-typedef ale_fixed<14> ale_sreal;
+typedef ale_fixed<15> ale_real;
+typedef ale_fixed<15> ale_sreal;
+
+#undef ale_real_enable_casting()
+#undef ale_real_disable_casting()
+#define ale_real_enable_casting() ale_real::enable_casting()
+#define ale_real_disable_casting() ale_real::disable_casting()
 
 #define ALE_REAL_PRECISION_STRING "FIXED"
 

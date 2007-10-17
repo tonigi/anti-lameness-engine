@@ -27,6 +27,9 @@
 #define DOUBLE 2
 #define FIXED 3
 
+#define ale_pos_disable_casting()
+#define ale_pos_enable_casting() 
+
 /*
  * Real-valued type used to represent coordinates in an image domain.
  */
@@ -45,9 +48,15 @@ typedef double ale_pos;
 
 #elif ALE_COORDINATES == FIXED
 
-typedef ale_fixed<14> ale_pos;
+typedef ale_fixed<15> ale_pos;
 
 #define ALE_POS_PRECISION_STRING "FIXED"
+
+#undef ale_pos_disable_casting()
+#define ale_pos_disable_casting() ale_pos::disable_casting()
+
+#undef ale_pos_enable_casting()
+#define ale_pos_enable_casting() ale_pos::enable_casting()
 
 #else
 
@@ -63,8 +72,8 @@ const ale_pos ale_pos_0 = (ale_pos) 0;
 
 #if ALE_COLORS == FIXED && ALE_COORDINATES == FIXED
 
-#define ale_pos_to_real(x) (convert_precision<14,14>(x))
-#define ale_real_to_pos(x) (convert_precision<14,14>(x))
+#define ale_pos_to_real(x) (convert_precision<15,15>(x))
+#define ale_real_to_pos(x) (convert_precision<15,15>(x))
 
 #else
 

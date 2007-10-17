@@ -38,7 +38,7 @@ public:
 		this->psf_match_args = psf_match_args;
 	}
 
-        void _ip_frame(ale_accum *diff, unsigned long *count, int m) {
+        void _ip_frame(ale_accum *diff, unsigned int *count, int m) {
 
 		/*
 		 * Get alignment information for frame m.
@@ -286,7 +286,7 @@ public:
 		 */
 
 		ale_accum diff = 0;
-		unsigned long channel_count = 0;
+		unsigned int channel_count = 0;
 
 		approximation = image_rw::copy(image_rw::count() - 1, "PSF_CALIBRATE reference");
 
@@ -313,7 +313,7 @@ public:
 			_ip_frame(&diff, &channel_count, m);
 		}
 
-		diff = pow(diff / channel_count, 0.5);
+		diff = pow(diff / (ale_accum) channel_count, 0.5);
 
 		fprintf(stderr, "\n\nPSF Error:: %e\n\n", (double) diff);
 

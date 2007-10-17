@@ -853,10 +853,10 @@ private:
 //							  - this_result[1] / this_divisor[1]);
 					ale_accum de = fabs(this_result[0] - this_result[1]);
 
-					de_centroid[0] += de * i;
-					de_centroid[1] += de * j;
+					de_centroid[0] += de * (ale_accum) i;
+					de_centroid[1] += de * (ale_accum) j;
 
-					de_centroid_v += de * t.lengthto(u);
+					de_centroid_v += de * (ale_accum) t.lengthto(u);
 
 					de_sum += de;
 				}
@@ -2120,7 +2120,7 @@ public:
 	}
 
 	static int threshold_ok(ale_accum error) {
-		if ((1 - error) * 100 >= match_threshold)
+		if ((1 - error) * (ale_accum) 100 >= match_threshold)
 			return 1;
 
 		if (!(match_threshold >= 0))
@@ -3410,7 +3410,7 @@ public:
 	 * Get match summary statistics.
 	 */
 	static ale_accum match_summary() {
-		return match_sum / match_count;
+		return match_sum / (ale_accum) match_count;
 	}
 };
 
