@@ -222,8 +222,8 @@ public:
 typedef ale_fixed<15> ale_real;
 typedef ale_fixed<15> ale_sreal;
 
-#undef ale_real_enable_casting()
-#undef ale_real_disable_casting()
+#undef ale_real_enable_casting
+#undef ale_real_disable_casting
 #define ale_real_enable_casting() ale_real::enable_casting()
 #define ale_real_disable_casting() ale_real::disable_casting()
 

@@ -1068,9 +1068,9 @@ protected:
 #endif
 
 			if (ec.finite() 
-			 && rsum[0] > 0.001
-			 && rsum[1] > 0.001
-			 && rsum[2] > 0.001)
+			 && rsum[0] > ale_accum::const_0_001
+			 && rsum[1] > ale_accum::const_0_001
+			 && rsum[2] > ale_accum::const_0_001)
 				real->exp().set_multiplier(
 					real->exp().get_multiplier() * ec);
 		}

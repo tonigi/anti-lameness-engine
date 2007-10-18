@@ -57,10 +57,14 @@ public:
 	static void sanity_check();
 
 	/*
-	 * Constructor.
+	 * Constructors.
 	 */
 	ale_fixed() {
 		bits = 0;
+	}
+
+	ale_fixed(const ale_fixed &f) {
+		bits = f.bits;
 	}
 
 	/*
@@ -77,6 +81,14 @@ public:
 
 	static void enable_casting() {
 		casting_disabled = 0;
+	}
+
+	/*
+	 * Casting status.
+	 */
+
+	static int casting_status() {
+		return !casting_disabled;
 	}
 
 	/*
@@ -143,8 +155,6 @@ public:
 	}
 
 	ale_fixed(unsigned int d) {
-		assert(!casting_disabled);
-
 		bits = d << N;
 
 		assert((unsigned int) (bits >> N) == d);
@@ -171,6 +181,40 @@ public:
 			result.bits = -bits;
 
 		return result;
+	}
+
+	ale_fixed operator+(ale_fixed f) const {
+		ale_fixed result;
+
+		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN
+		 || (bits == ALE_FIXED_POSINF && f.bits == ALE_FIXED_NEGINF)
+		 || (bits == ALE_FIXED_NEGINF && f.bits == ALE_FIXED_POSINF)) {
+			result.bits = ALE_FIXED_NAN;
+			return result;
+		}
+
+		i32 i32_result = bits + f.bits;
+
+		if (i32_result >= ALE_FIXED_POSINF
+		 || bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_POSINF
+		 || bits > 0 && f.bits > 0 && i32_result < 0)
+			result.bits = ALE_FIXED_POSINF;
+		else if (i32_result <= ALE_FIXED_NEGINF
+		      || bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_NEGINF
+		      || bits < 0 && f.bits < 0 && i32_result > 0)
+			result.bits = ALE_FIXED_NEGINF;
+		else
+			result.bits = i32_result;
+
+		return result;
+	}
+
+	ale_fixed operator+(int i) const {
+		return operator+(ale_fixed(i));
+	}
+
+	ale_fixed operator+(unsigned int i) const {
+		return operator+(ale_fixed(i));
 	}
 
 	ale_fixed operator-(ale_fixed f) const {
@@ -359,14 +403,15 @@ ale_fixed<N> operator op(double a, ale_fixed<N> &f) {		\
 								\
 template<unsigned int N>					\
 ale_fixed<N> operator op(int a, ale_fixed<N> &f) {		\
-	return (double) a op f;					\
+	return (ale_fixed<N>) a op f;					\
 }								\
 								\
 template<unsigned int N>					\
 ale_fixed<N> operator op(unsigned int a, ale_fixed<N> &f) {	\
-	return (double) a op f;					\
+	return (ale_fixed<N>) a op f;					\
 }								\
 
+ALE_FIXED_INCORPORATE_OPERATOR(+);
 ALE_FIXED_INCORPORATE_OPERATOR(-);
 ALE_FIXED_INCORPORATE_OPERATOR(*);
 ALE_FIXED_INCORPORATE_OPERATOR(/);

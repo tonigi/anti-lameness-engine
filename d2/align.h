@@ -1872,7 +1872,7 @@ public:
 	 * Calculate the RMS error of control points for frame m, with
 	 * transformation t, against control points for earlier frames.
 	 */
-	static ale_accum cp_rms_error(unsigned int m, transformation t) {
+	static ale_pos cp_rms_error(unsigned int m, transformation t) {
 		assert (_keep);
 
 		ale_accum err = 0;
@@ -1891,7 +1891,7 @@ public:
 			divisor += 1;
 		}
 
-		return sqrt(err / divisor);
+		return (ale_pos) sqrt(err / divisor);
 	}
 
 	/*
@@ -2437,7 +2437,7 @@ public:
 			 * Determine rotation for alignment classes other than translation.
 			 */
 
-			ale_accum lowest_error = cp_rms_error(m, o);
+			ale_pos lowest_error = cp_rms_error(m, o);
 
 			ale_pos rot_lower = 2 * (double) local_lower
 					  / sqrt(pow(scale_clusters[0].input->height(), 2)
@@ -2473,7 +2473,7 @@ public:
 			 */
 
 			if (alignment_class == 2) {
-				ale_accum adj_p = lowest_error;
+				ale_pos adj_p = lowest_error;
 
 				if (adj_p < local_lower)
 					adj_p = local_lower;
@@ -2481,8 +2481,8 @@ public:
 				while (adj_p >= local_lower) {
 					transformation test_t = o;
 					int is_improved = 1;
-					ale_accum test_v;
-					ale_accum adj_s;
+					ale_pos test_v;
+					ale_pos adj_s;
 
 					while (is_improved) {
 						is_improved = 0;
@@ -2735,15 +2735,14 @@ public:
 
 		offset.set_current_index(0);
 
-		latest_t = offset;
-
 		/*
 		 * Update match statistics.
 		 */
 
-		match_sum += (1 - here.get_error()) * 100;
+		match_sum += (1 - here.get_error()) * (ale_accum) 100;
 		match_count++;
 		latest = m;
+		latest_t = offset;
 
 		return here;
 	}

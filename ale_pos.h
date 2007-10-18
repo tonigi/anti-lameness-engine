@@ -29,6 +29,7 @@
 
 #define ale_pos_disable_casting()
 #define ale_pos_enable_casting() 
+#define ale_pos_casting_status() 
 
 /*
  * Real-valued type used to represent coordinates in an image domain.
@@ -52,11 +53,14 @@ typedef ale_fixed<15> ale_pos;
 
 #define ALE_POS_PRECISION_STRING "FIXED"
 
-#undef ale_pos_disable_casting()
+#undef ale_pos_disable_casting
 #define ale_pos_disable_casting() ale_pos::disable_casting()
 
-#undef ale_pos_enable_casting()
+#undef ale_pos_enable_casting
 #define ale_pos_enable_casting() ale_pos::enable_casting()
+
+#undef ale_pos_casting_status
+#define ale_pos_casting_status() ale_pos::casting_status()
 
 #else
 

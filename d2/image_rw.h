@@ -604,7 +604,7 @@ public:
 			return;
 
 		if (image == cache_count) {
-			ale_pos image_size = ((double) images[image]->storage_size()) / pow(2, 20);
+			double image_size = ((double) images[image]->storage_size()) / pow(2, 20);
 
 			if (image_size + cache_size < cache_size_max) {
 				cache_size += image_size;

@@ -49,11 +49,17 @@ public:
 
 	i64 bits;
 
+	static const ale_accum_fixed const_0_001;
+
 	/*
 	 * Constructor.
 	 */
 	ale_accum_fixed() {
 		bits = 0;
+	}
+
+	ale_accum_fixed(const ale_accum_fixed &f) {
+		bits = f.bits;
 	}
 
 	/*
@@ -223,6 +229,40 @@ public:
 	 * Operators.
 	 */
 
+	ale_accum_fixed operator+(ale_accum_fixed f) const {
+		ale_accum_fixed result;
+
+		if (bits == ALE_ACCUM_FIXED_NAN || f.bits == ALE_ACCUM_FIXED_NAN
+		 || (bits == ALE_ACCUM_FIXED_POSINF && f.bits == ALE_ACCUM_FIXED_NEGINF)
+		 || (bits == ALE_ACCUM_FIXED_NEGINF && f.bits == ALE_ACCUM_FIXED_POSINF)) {
+			result.bits = ALE_ACCUM_FIXED_NAN;
+			return result;
+		}
+
+		i64 i64_result = bits + f.bits;
+
+		if (i64_result >= ALE_ACCUM_FIXED_POSINF
+		 || bits == ALE_ACCUM_FIXED_POSINF || f.bits == ALE_ACCUM_FIXED_POSINF
+		 || bits > 0 && f.bits > 0 && i64_result < 0)
+			result.bits = ALE_ACCUM_FIXED_POSINF;
+		else if (i64_result <= ALE_ACCUM_FIXED_NEGINF
+		      || bits == ALE_ACCUM_FIXED_NEGINF || f.bits == ALE_ACCUM_FIXED_NEGINF
+		      || bits < 0 && f.bits < 0 && i64_result > 0)
+			result.bits = ALE_ACCUM_FIXED_NEGINF;
+		else
+			result.bits = i64_result;
+
+		return result;
+	}
+
+	ale_accum_fixed operator+(int i) const {
+		return operator+(ale_accum_fixed(i));
+	}
+
+	ale_accum_fixed operator+(unsigned int i) const {
+		return operator+(ale_accum_fixed(i));
+	}
+
 	ale_accum_fixed operator-() const {
 
 		ale_accum_fixed result;
@@ -370,38 +410,89 @@ public:
 		return *this;
 	}
 
+	int operator>(ale_accum_fixed f) {
+		if (bits == ALE_ACCUM_FIXED_NAN || f.bits == ALE_ACCUM_FIXED_NAN)
+			return 0;
+
+		if (bits > f.bits)
+			return 1;
+
+		return 0;
+	}
+
+	int operator<(ale_accum_fixed f) const {
+		if (bits == ALE_ACCUM_FIXED_NAN || f.bits == ALE_ACCUM_FIXED_NAN)
+			return 0;
+
+		if (bits < f.bits)
+			return 1;
+
+		return 0;
+	}
+
+	int operator>(int d) const {
+		return operator>((ale_accum_fixed) d);
+	}
+
+	int operator<(int d) const {
+		return operator<((ale_accum_fixed) d);
+	}
+
+	int operator>(double d) const {
+		return operator>((ale_accum_fixed) d);
+	}
+
+	int operator<(double d) const {
+		return operator<((ale_accum_fixed) d);
+	}
+
+	int operator>(unsigned int d) const {
+		return operator>((ale_accum_fixed) d);
+	}
+
+	int operator<(unsigned int d) const {
+		return operator<((ale_accum_fixed) d);
+	}
 };
 
-#define ALE_ACCUM_FIXED_INCORPORATE_OPERATOR(op)		\
+#define ALE_ACCUM_FIXED_INCORPORATE_OPERATOR(return_value, op)		\
 template<unsigned int N>					\
-ale_accum_fixed<N> operator op(double a, ale_accum_fixed<N> &f) {		\
+return_value operator op(double a, const ale_accum_fixed<N> &f) {		\
 	ale_accum_fixed<N> g(a);					\
 	return g.operator op(f);				\
 }								\
 								\
 template<unsigned int N>					\
-ale_accum_fixed<N> operator op(long long a, ale_accum_fixed<N> &f) {		\
+return_value operator op(long long a, const ale_accum_fixed<N> &f) {		\
 	return (double) a op f;					\
 }								\
 								\
 template<unsigned int N>					\
-ale_accum_fixed<N> operator op(unsigned long long a, ale_accum_fixed<N> &f) {	\
+return_value operator op(unsigned long long a, const ale_accum_fixed<N> &f) {	\
 	return (double) a op f;					\
 }								\
 								\
 template<unsigned int N>					\
-ale_accum_fixed<N> operator op(int a, ale_accum_fixed<N> &f) {		\
+return_value operator op(int a, const ale_accum_fixed<N> &f) {		\
 	return (double) a op f;					\
 }								\
 								\
 template<unsigned int N>					\
-ale_accum_fixed<N> operator op(unsigned int a, ale_accum_fixed<N> &f) {	\
+return_value operator op(unsigned int a, const ale_accum_fixed<N> &f) {	\
 	return (double) a op f;					\
 }								\
+								\
+template<unsigned int N, unsigned int M>					\
+return_value operator op(ale_fixed<M> ff, const ale_accum_fixed<N> &f) {	\
+	return (ale_accum_fixed<N>) ff op f;					\
+}								
 
-ALE_ACCUM_FIXED_INCORPORATE_OPERATOR(-);
-ALE_ACCUM_FIXED_INCORPORATE_OPERATOR(*);
-ALE_ACCUM_FIXED_INCORPORATE_OPERATOR(/);
+ALE_ACCUM_FIXED_INCORPORATE_OPERATOR(ale_accum_fixed<N>, +);
+ALE_ACCUM_FIXED_INCORPORATE_OPERATOR(ale_accum_fixed<N>, -);
+ALE_ACCUM_FIXED_INCORPORATE_OPERATOR(ale_accum_fixed<N>, *);
+ALE_ACCUM_FIXED_INCORPORATE_OPERATOR(ale_accum_fixed<N>, /);
+ALE_ACCUM_FIXED_INCORPORATE_OPERATOR(int, <);
+ALE_ACCUM_FIXED_INCORPORATE_OPERATOR(int, >);
 
 template<unsigned int N>
 ale_accum_fixed<N> fabs(ale_accum_fixed<N> f) {
@@ -452,10 +543,13 @@ ale_accum_fixed<N> ceil(ale_accum_fixed<N> f) {
 template<unsigned int N>
 int ale_accum_fixed<N>::casting_disabled = 0;
 
+template<unsigned int N>
+const ale_accum_fixed<N> ale_accum_fixed<N>::const_0_001 = 0.001;
+
 typedef ale_accum_fixed<15> ale_accum;
 
-#undef ale_accum_enable_casting()
-#undef ale_accum_disable_casting()
+#undef ale_accum_enable_casting
+#undef ale_accum_disable_casting
 
 #define ale_accum_enable_casting() ale_accum::enable_casting()
 #define ale_accum_disable_casting() ale_accum::disable_casting()

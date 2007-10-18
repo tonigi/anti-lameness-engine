@@ -239,8 +239,8 @@ public:
 		ale_pos to_p = lengthtosq(p);
 		ale_pos to_q = lengthtosq(q);
 
-		ale_pos cos_of = (to_p + to_q - p.lengthtosq(q))
-			       / (2 * sqrt(to_p) * sqrt(to_q));
+		ale_pos cos_of = (double) (to_p + to_q - p.lengthtosq(q))
+			       / (double) (2 * sqrt(to_p) * sqrt(to_q));
 
 		/*
 		 * XXX: is the fabs() required?

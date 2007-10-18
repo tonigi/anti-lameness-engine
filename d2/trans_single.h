@@ -96,6 +96,9 @@ private:
 		if (resultant_memo)
 			return;
 
+		int ale_pos_casting = ale_pos_casting_status();
+		ale_pos_enable_casting();
+
 		if (_is_projective) {
 
 			/*
@@ -177,12 +180,15 @@ private:
 			c = 0.5 * (input_height * (scale_factor - a) - input_width * b) + eu[0] * scale_factor;
 			d = -b;
 			e = a;
-			f = 0.5 * (input_height * b + input_width * (scale_factor - a)) + eu[1] * scale_factor;
+			f = 0.5 * (input_height * b + (ale_pos) input_width * (scale_factor - a)) + eu[1] * scale_factor;
 			g = 0;
 			h = 0;
 		} 
 
 		resultant_memo = 1;
+
+		if (!ale_pos_casting)
+			ale_pos_disable_casting();
 	}
 
 	/*
@@ -199,6 +205,9 @@ private:
 			return;
 
 		resultant();
+
+		int ale_pos_casting = ale_pos_casting_status();
+		ale_pos_enable_casting();
 
 		/*
 		 * For projective transformations, we calculate
@@ -218,6 +227,9 @@ private:
 		_h = ((double) g * (double) b - (double) h * (double) a) / scale;
 
 		resultant_inverse_memo = 1;
+
+		if (!ale_pos_casting)
+			ale_pos_disable_casting();
 	}
 
 public:	
