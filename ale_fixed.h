@@ -372,10 +372,17 @@ public:
 		 * applications, it can be a convenient way to detect and
 		 * manufacture non-finite values.
 		 */
-		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN
-		 || (bits == 0 && f.bits == 0)
+		if ((bits == 0 && f.bits == 0)
+#if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
+		 || bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN
 		 || ((bits == ALE_FIXED_NEGINF || bits == ALE_FIXED_POSINF)
-		  && (f.bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_POSINF))) {
+		  && (f.bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_POSINF))
+#endif
+		) {
 			result.bits = ALE_FIXED_NAN;
 			return result;
 		} else if (f.bits == 0 && bits > 0) {
@@ -384,19 +391,36 @@ public:
 		} else if (f.bits == 0 && bits < 0) {
 			result.bits = ALE_FIXED_NEGINF;
 			return result;
-		} else if (f.bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_NEGINF) {
+		} 
+		
+#if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
+		else if (f.bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_NEGINF) {
 			result.bits = 0;
 			return result;
 		} 
+#endif
 			
 		i64 i64_result = ((i64) bits << N) / f.bits;
 
-		if (i64_result > (i64) ALE_FIXED_POSINF)
+#if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
+		if (i64_result > (i64) ALE_FIXED_POSINF) {
 			result.bits = ALE_FIXED_POSINF;
-		else if (i64_result < (i64) ALE_FIXED_NEGINF)
+			return result;
+		} else if (i64_result < (i64) ALE_FIXED_NEGINF) {
 			result.bits = ALE_FIXED_NEGINF;
-		else
-			result.bits = (i32) i64_result;
+			return result;
+		}
+#endif
+
+		result.bits = (i32) i64_result;
 
 		return result;
 	}
