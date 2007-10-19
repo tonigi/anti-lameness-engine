@@ -212,10 +212,13 @@ private:
 			 * See render/psf/raster.h for more details.
 			 */
 
-			for (int i = (int) lrintf(min[0]); 
-				 i<= (int) lrintf(max[0]); i++)
-			for (int j = (int) lrintf(min[1]); 
-				 j<= (int) lrintf(max[1]); j++) {
+			int min_i = (int) lrintf(min[0]);
+			int max_i = (int) lrintf(max[0]);
+			int min_j = (int) lrintf(min[1]);
+			int max_j = (int) lrintf(max[1]);
+
+			for (int i = min_i; i<= max_i; i++)
+			for (int j = min_j; j<= max_j; j++) {
 
 				if (honor_exclusion && render::is_excluded_f(i, j, frame))
 					continue;
