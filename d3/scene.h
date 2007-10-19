@@ -165,7 +165,7 @@ class scene {
 				im.push_back(im.back()->scale_by_half("3D, reduced LOD"));
 				assert(im.back());
 
-				_pt.scale(1 / _pt.scale_2d() / pow(2, entries));
+				_pt.scale(1 / _pt.scale_2d() / pow((ale_pos) 2, entries));
 				transformation.push_back(_pt);
 
 				entries += 1;

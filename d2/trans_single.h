@@ -735,11 +735,11 @@ public:
 		for (i = 0; i < 4; i++) {
 			ale_pos _x[2];
 
-			_x[0] = ((double) x[i][0] - (input_width * scale_factor)/2)  * cos(theta)
-			      + ((double) x[i][1] - (input_height * scale_factor)/2) * sin(theta)
+			_x[0] = ((double) x[i][0] - (double) (input_width * scale_factor)/2)  * cos(theta)
+			      + ((double) x[i][1] - (double) (input_height * scale_factor)/2) * sin(theta)
 			      +  (input_width * scale_factor)/2;
-			_x[1] = ((double) x[i][1] - (input_height * scale_factor)/2) * cos(theta)
-			      - ((double) x[i][0] - (input_width * scale_factor)/2)  * sin(theta)
+			_x[1] = ((double) x[i][1] - (double) (input_height * scale_factor)/2) * cos(theta)
+			      - ((double) x[i][0] - (double) (input_width * scale_factor)/2)  * sin(theta)
 			      +  (input_height * scale_factor)/2;
 			
 			x[i][0] = _x[0];

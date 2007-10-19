@@ -184,7 +184,7 @@ public:
 	/*
 	 * Get a specific pixel response.
 	 */
-	psf_result operator()(float top, float bot, float lef, float rig, unsigned int variety, 
+	psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real rig, unsigned int variety, 
 			char channels) const {
 		assert (variety < num_arrays);
 
@@ -194,7 +194,7 @@ public:
 		return generic_response(response_partial, top, bot, lef, rig, channels);
 	}
 
-	psf_result operator()(float top, float bot, float lef, float rig, 
+	psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real rig, 
 			unsigned int variety) const {
 		return operator()(top, bot, lef, rig, variety, 0x7);
 	}

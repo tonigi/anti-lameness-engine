@@ -328,7 +328,7 @@ public:
 		int hy = (int) floor(x[0]) + 1;
 
 		pixel neighbor[4];
-		ale_pos factor[4];
+		ale_real factor[4];
 
 		neighbor[0] = get_pixel(ly, lx);
 		neighbor[1] = get_pixel(hy % _dimy, lx);

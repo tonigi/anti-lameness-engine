@@ -183,10 +183,10 @@ class align {
 					
 				old_error = error;
 
-				for (double c0 = -magnitude; c0 <= magnitude; c0 += magnitude)
-				for (double c1 = -magnitude; c1 <= magnitude; c1 += magnitude) 
-				for (double c2 = -magnitude; c2 <= magnitude; c2 += magnitude) 
-				for (double c3 = -magnitude; c3 <= magnitude; c3 += magnitude) {
+				for (ale_pos c0 = -magnitude; c0 <= magnitude; c0 += magnitude)
+				for (ale_pos c1 = -magnitude; c1 <= magnitude; c1 += magnitude) 
+				for (ale_pos c2 = -magnitude; c2 <= magnitude; c2 += magnitude) 
+				for (ale_pos c3 = -magnitude; c3 <= magnitude; c3 += magnitude) {
 
 					if (c3 > 10)
 						c3 = 10;

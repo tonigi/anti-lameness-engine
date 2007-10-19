@@ -191,24 +191,24 @@ private:
 				real1[i * cols + j] += response_array[((i * cols + jj +
 							     (rows * cols - 1)/2) * 3 + k)
 					                   % (rows * cols * 3)]
-						     * cos((-2 * M_PI * j * jj) / cols);
+						     * (ale_real) cos((-2 * M_PI * j * jj) / cols);
 				imag1[i * cols + j] += response_array[((i * cols + jj +
 							     (rows * cols - 1)/2) * 3 + k)
 					                   % (rows * cols * 3)]
-						     * sin((-2 * M_PI * j * jj) / cols);
+						     * (ale_real) sin((-2 * M_PI * j * jj) / cols);
 			}
 
 			for (int i = 0; i < rows; i++)
 			for (int j = 0; j < cols; j++)
 			for (int ii = 0; ii < rows; ii++) {
 				real2[i * cols + j] += real1[ii * cols + j]
-						     * cos((-2 * M_PI * i * ii) / rows)
+						     * (ale_real) cos((-2 * M_PI * i * ii) / rows)
 						     - imag1[ii * cols + j]
-						     * sin((-2 * M_PI * i * ii) / rows);
+						     * (ale_real) sin((-2 * M_PI * i * ii) / rows);
 				imag2[i * cols + j] += real1[ii * cols + j]
-						     * sin((-2 * M_PI * i * ii) / rows)
+						     * (ale_real) sin((-2 * M_PI * i * ii) / rows)
 						     + imag1[ii * cols + j]
-						     * cos((-2 * M_PI * i * ii) / rows);
+						     * (ale_real) cos((-2 * M_PI * i * ii) / rows);
 			}
 
 			/*

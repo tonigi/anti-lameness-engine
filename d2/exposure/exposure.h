@@ -166,14 +166,15 @@ public:
 	}
 
 	virtual ale_real confidence(unsigned int k, ale_real input, 
-			ale_real confidence_floor = 0.001) const {
+			ale_real confidence_floor = 1 / (ale_real) 1000) const {
 
 		if (confidence_exponent == 0)
 			return 1;
 
 		ale_real input_scaled = input / _multiplier[k];
 
-		ale_real unexponentiated = 4 * (0.25 - pow(0.5 - input_scaled, 2));
+		ale_real unexponentiated = 4 * ((1 / (ale_pos) 4) - pow((1 / (ale_pos) 2) 
+		                                                      - input_scaled, 2));
 		// ale_real unexponentiated = 4 * input_scaled * (0.25 - pow(0.5 - input_scaled, 2));
 
 		if (unexponentiated < 0) 
@@ -193,7 +194,7 @@ public:
 	 * extremes of camera response and maximal at the center.
 	 */
 	virtual pixel confidence(pixel input, 
-			ale_real confidence_floor = 0.001) const {
+			ale_real confidence_floor = 1 / (ale_real) 1000 ) const {
 
 		if (confidence_exponent) {
 			return pixel(confidence(0, input[0], confidence_floor),
@@ -216,7 +217,7 @@ public:
 		if (confidence_exponent) {
 			pixel result = confidence(input);
 			for (unsigned int k = 0; k < 3; k++) {
-				if (sign[k] > 0 && input[k] / _multiplier[k] > 0.5)
+				if (sign[k] > 0 && input[k] / _multiplier[k] > 1 / (ale_real) 2)
 					result[k] = 1;
 			}
 			return result;

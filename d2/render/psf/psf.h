@@ -158,10 +158,10 @@ public:
 	 * based on position (e.g. some sensor arrays stagger red, green, and
 	 * blue sensors).
 	 */
-	virtual psf_result operator()(float top, float bot, float lef, float
+	virtual psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real
 			rig, unsigned int variety) const = 0;
 
-	virtual psf_result operator()(float top, float bot, float lef, float
+	virtual psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real
 			rig, unsigned int variety, char channels) const {
 		return operator()(top, bot, lef, rig, variety);
 	}
@@ -172,7 +172,7 @@ public:
 	 * Get the average pixel response.  This function should be overloaded
 	 * for PSFs that support multiple varieties.
 	 */
-	virtual psf_result operator()(float top, float bot, float lef, float rig) const {
+	virtual psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real rig) const {
 		return operator()(top, bot, lef, rig, 0);
 	}
 #endif

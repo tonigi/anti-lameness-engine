@@ -120,6 +120,27 @@ public:
 			return (((double) bits) / (1 << N));
 	}
 
+	operator int() const {
+#if 0
+		assert (bits != ALE_FIXED_NAN);
+		assert (bits != ALE_FIXED_POSINF);
+		assert (bits != ALE_FIXED_NEGINF);
+#endif
+
+		return bits / (1 << N);
+	}
+
+	operator unsigned int() const {
+#if 0
+		assert (bits != ALE_FIXED_NAN);
+		assert (bits != ALE_FIXED_POSINF);
+		assert (bits != ALE_FIXED_NEGINF);
+		assert (bits >= 0);
+#endif
+
+		return (unsigned int) operator int();
+	}
+
 	/*
 	 * Cast from ordinary numbers
 	 */
@@ -146,12 +167,13 @@ public:
 
 	ale_fixed(int d) {
 		bits = d << N;
-		
+#if 0		
 		assert((d >= 0 && bits >> N == d)
 		    || (d < 0 && (-bits) >> N == -d));
 
 		assert (bits < ALE_FIXED_POSINF);
 		assert (bits > ALE_FIXED_NEGINF);
+#endif
 	}
 
 	ale_fixed(unsigned int d) {
@@ -186,25 +208,32 @@ public:
 	ale_fixed operator+(ale_fixed f) const {
 		ale_fixed result;
 
+#if 0
 		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN
 		 || (bits == ALE_FIXED_POSINF && f.bits == ALE_FIXED_NEGINF)
 		 || (bits == ALE_FIXED_NEGINF && f.bits == ALE_FIXED_POSINF)) {
 			result.bits = ALE_FIXED_NAN;
 			return result;
 		}
+#endif
 
 		i32 i32_result = bits + f.bits;
 
+#if 0
 		if (i32_result >= ALE_FIXED_POSINF
 		 || bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_POSINF
-		 || bits > 0 && f.bits > 0 && i32_result < 0)
+		 || bits > 0 && f.bits > 0 && i32_result < 0) {
 			result.bits = ALE_FIXED_POSINF;
-		else if (i32_result <= ALE_FIXED_NEGINF
+			return result;
+		} else if (i32_result <= ALE_FIXED_NEGINF
 		      || bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_NEGINF
-		      || bits < 0 && f.bits < 0 && i32_result > 0)
+		      || bits < 0 && f.bits < 0 && i32_result > 0) {
 			result.bits = ALE_FIXED_NEGINF;
-		else
-			result.bits = i32_result;
+			return result;
+		}
+#endif
+
+		result.bits = i32_result;
 
 		return result;
 	}
@@ -220,25 +249,32 @@ public:
 	ale_fixed operator-(ale_fixed f) const {
 		ale_fixed result;
 
+#if 0
 		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN
 		 || (bits == ALE_FIXED_POSINF && f.bits == ALE_FIXED_POSINF)
 		 || (bits == ALE_FIXED_NEGINF && f.bits == ALE_FIXED_NEGINF)) {
 			result.bits = ALE_FIXED_NAN;
 			return result;
 		}
+#endif
 
 		i32 i32_result = bits - f.bits;
 
+#if 0
 		if (i32_result >= ALE_FIXED_POSINF
 		 || bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_NEGINF
-		 || bits > 0 && f.bits < 0 && i32_result < 0)
+		 || bits > 0 && f.bits < 0 && i32_result < 0) {
 			result.bits = ALE_FIXED_POSINF;
-		else if (i32_result <= ALE_FIXED_NEGINF
+			return result;
+		} else if (i32_result <= ALE_FIXED_NEGINF
 		      || bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_POSINF
-		      || bits < 0 && f.bits > 0 && i32_result > 0)
+		      || bits < 0 && f.bits > 0 && i32_result > 0) {
 			result.bits = ALE_FIXED_NEGINF;
-		else
-			result.bits = i32_result;
+			return result;
+		}
+#endif
+
+		result.bits = i32_result;
 
 		return result;
 	}
@@ -254,13 +290,16 @@ public:
 	ale_fixed operator*(ale_fixed f) const {
 		ale_fixed result;
 
+#if 0
 		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN) {
 			result.bits = ALE_FIXED_NAN;
 			return result;
 		}
+#endif 
 			
 		i64 i64_result = ((i64) bits * (i64) f.bits) / (1 << N);
 
+#if 0
 		if (i64_result > (i64) ALE_FIXED_POSINF 
 		 || i64_result < (i64) ALE_FIXED_NEGINF
 		 || bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_POSINF
@@ -273,10 +312,11 @@ public:
 				result.bits = ALE_FIXED_NAN;
 			else
 				assert(0);
-				
-		} else {
-			result.bits = i64_result;
+			return result;
 		}
+#endif
+
+		result.bits = i64_result;
 		return result;
 	}
 
@@ -297,7 +337,9 @@ public:
 		 * manufacture non-finite values.
 		 */
 		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN
-		 || (bits == 0 && f.bits == 0)) {
+		 || (bits == 0 && f.bits == 0)
+		 || ((bits == ALE_FIXED_NEGINF || bits == ALE_FIXED_POSINF)
+		  && (f.bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_POSINF))) {
 			result.bits = ALE_FIXED_NAN;
 			return result;
 		} else if (f.bits == 0 && bits > 0) {
@@ -306,7 +348,10 @@ public:
 		} else if (f.bits == 0 && bits < 0) {
 			result.bits = ALE_FIXED_NEGINF;
 			return result;
-		}
+		} else if (f.bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_NEGINF) {
+			result.bits = 0;
+			return result;
+		} 
 			
 		i64 i64_result = ((i64) bits << N) / f.bits;
 
@@ -348,7 +393,41 @@ public:
 		return *this;
 	}
 
-	int operator>(ale_fixed f) {
+	int operator!=(ale_fixed f) const {
+		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN)
+			return 1;
+
+		if (bits == f.bits)
+			return 0;
+
+		return 1;
+	}
+
+	int operator==(ale_fixed f) const {
+		return !(operator!=(f));
+	}
+
+	int operator<=(ale_fixed f) const {
+		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN)
+			return 0;
+
+		if (bits <= f.bits)
+			return 1;
+
+		return 0;
+	}
+
+	int operator>=(ale_fixed f) const {
+		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN)
+			return 0;
+
+		if (bits >= f.bits)
+			return 1;
+
+		return 0;
+	}
+
+	int operator>(ale_fixed f) const {
 		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN)
 			return 0;
 
@@ -358,7 +437,7 @@ public:
 		return 0;
 	}
 
-	int operator<(ale_fixed f) {
+	int operator<(ale_fixed f) const {
 		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN)
 			return 0;
 
@@ -368,53 +447,107 @@ public:
 		return 0;
 	}
 
-	int operator>(int d) {
+	int operator>=(int d) const {
+		return operator>=((ale_fixed) d);
+	}
+
+	int operator<=(int d) const {
+		return operator<=((ale_fixed) d);
+	}
+
+	int operator==(int d) const {
+		return operator==((ale_fixed) d);
+	}
+
+	int operator!=(int d) const {
+		return operator!=((ale_fixed) d);
+	}
+
+	int operator>(int d) const {
 		return operator>((ale_fixed) d);
 	}
 
-	int operator<(int d) {
+	int operator<(int d) const {
 		return operator<((ale_fixed) d);
 	}
 
-	int operator>(double d) {
+	int operator>=(double d) const {
+		return operator>=((ale_fixed) d);
+	}
+
+	int operator<=(double d) const {
+		return operator<=((ale_fixed) d);
+	}
+
+	int operator==(double d) const {
+		return operator==((ale_fixed) d);
+	}
+
+	int operator!=(double d) const {
+		return operator!=((ale_fixed) d);
+	}
+
+	int operator>(double d) const {
 		return operator>((ale_fixed) d);
 	}
 
-	int operator<(double d) {
+	int operator<(double d) const {
 		return operator<((ale_fixed) d);
 	}
 
-	int operator>(unsigned int d) {
+	int operator>=(unsigned int d) const {
+		return operator>=((ale_fixed) d);
+	}
+
+	int operator<=(unsigned int d) const {
+		return operator<=((ale_fixed) d);
+	}
+
+	int operator==(unsigned int d) const {
+		return operator==((ale_fixed) d);
+	}
+
+	int operator!=(unsigned int d) const {
+		return operator!=((ale_fixed) d);
+	}
+
+	int operator>(unsigned int d) const {
 		return operator>((ale_fixed) d);
 	}
 
-	int operator<(unsigned int d) {
+	int operator<(unsigned int d) const {
 		return operator<((ale_fixed) d);
 	}
 
 };
 
-#define ALE_FIXED_INCORPORATE_OPERATOR(op)			\
+#define ALE_FIXED_INCORPORATE_OPERATOR(return_value, op)			\
 template<unsigned int N>					\
-ale_fixed<N> operator op(double a, ale_fixed<N> &f) {		\
+return_value operator op(double a, const ale_fixed<N> &f) {		\
 	ale_fixed<N> g(a);					\
 	return g.operator op(f);				\
 }								\
 								\
 template<unsigned int N>					\
-ale_fixed<N> operator op(int a, ale_fixed<N> &f) {		\
+return_value operator op(int a, const ale_fixed<N> &f) {		\
 	return (ale_fixed<N>) a op f;					\
 }								\
 								\
 template<unsigned int N>					\
-ale_fixed<N> operator op(unsigned int a, ale_fixed<N> &f) {	\
+return_value operator op(unsigned int a, const ale_fixed<N> &f) {	\
 	return (ale_fixed<N>) a op f;					\
 }								\
 
-ALE_FIXED_INCORPORATE_OPERATOR(+);
-ALE_FIXED_INCORPORATE_OPERATOR(-);
-ALE_FIXED_INCORPORATE_OPERATOR(*);
-ALE_FIXED_INCORPORATE_OPERATOR(/);
+ALE_FIXED_INCORPORATE_OPERATOR(ale_fixed<N>, +);
+ALE_FIXED_INCORPORATE_OPERATOR(ale_fixed<N>, -);
+ALE_FIXED_INCORPORATE_OPERATOR(ale_fixed<N>, *);
+ALE_FIXED_INCORPORATE_OPERATOR(ale_fixed<N>, /);
+ALE_FIXED_INCORPORATE_OPERATOR(int, <=);
+ALE_FIXED_INCORPORATE_OPERATOR(int, >=);
+ALE_FIXED_INCORPORATE_OPERATOR(int, <);
+ALE_FIXED_INCORPORATE_OPERATOR(int, >);
+ALE_FIXED_INCORPORATE_OPERATOR(int, !=);
+ALE_FIXED_INCORPORATE_OPERATOR(int, ==);
 
 template<unsigned int N>
 ale_fixed<N> fabs(ale_fixed<N> f) {
@@ -440,19 +573,42 @@ ale_fixed<N> pow(ale_fixed<N> f, double d) {
 template<unsigned int N>
 ale_fixed<N> floor(ale_fixed<N> f) {
 
+#if 0
 	if (N == 0
 	 || f.bits == ALE_FIXED_POSINF
 	 || f.bits == ALE_FIXED_NEGINF
 	 || f.bits == ALE_FIXED_NAN)
 		return f;
+#endif
 
 	ale_fixed<N> result;
 
-	if (f.bits < 0) {
-		result.bits = ((f.bits / (1 << N)) - 1) << N;
-	} else {
-		result.bits = (f.bits / (1 << N)) << N;
-	}
+	result.bits = (f.bits & ~((1 << N) - 1));
+
+	/*
+	 * XXX: This isn't exactly right.
+	 */
+	if (f.bits < 0)
+		result.bits -= 1;
+
+	return result;
+}
+
+template<unsigned int N>
+ale_fixed<N> lrintf(ale_fixed<N> f) {
+
+#if 0
+	if (N == 0
+	 || f.bits == ALE_FIXED_POSINF
+	 || f.bits == ALE_FIXED_NEGINF
+	 || f.bits == ALE_FIXED_NAN)
+		return f;
+#endif
+
+	ale_fixed<N> result = floor(f);
+
+	if (f.bits - result.bits >= (1 << N - 1))
+		result.bits += (1 << N);
 
 	return result;
 }
@@ -608,7 +764,7 @@ void ale_fixed<N>::sanity_check() {
 	a = +1; b = 0;
 	c = a / b;
 
-	if (!c > 0 && c > a && c > b && b < c && a < c) {
+	if (!(c > 0 && c > a && c > b && b < c && a < c)) {
 		assert(0);
 		sanity_check_fail();
 	}

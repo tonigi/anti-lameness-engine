@@ -57,7 +57,7 @@ public:
 	 * (e.g. some sensor arrays stagger red, green, and blue
 	 * sensors).
 	 */
-	psf_result operator()(float top, float bot, float lef, float rig, 
+	psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real rig, 
 			unsigned int variety) const {
 		psf_result result;
 
@@ -71,17 +71,17 @@ public:
 			rig = max_j();
 
 		int il = (int) floor((top - min_i()) / (max_i() - min_i()) * rows);
-		int ih = (int) floor((bot - min_i()) / (max_i() - min_i()) * (rows - 0.001));
+		int ih = (int) floor((bot - min_i()) / (max_i() - min_i()) * rows);
 		int jl = (int) floor((lef - min_j()) / (max_j() - min_j()) * cols);
-		int jh = (int) floor((rig - min_j()) / (max_j() - min_j()) * (cols - 0.001));
+		int jh = (int) floor((rig - min_j()) / (max_j() - min_j()) * cols);
 
 		for (int ii = il; ii <= ih; ii++)
 		for (int jj = jl; jj <= jh; jj++) {
 
-			float ltop = ((float) ii) / rows * (max_i() - min_i()) + min_i();
-			float lbot = ((float) ii + 1) / rows * (max_i() - min_i()) + min_i();
-			float llef = ((float) jj) / cols * (max_j() - min_j()) + min_j();
-			float lrig = ((float) jj + 1) / cols * (max_j() - min_j()) + min_j();
+			ale_real ltop = ((ale_real) ii) / rows * (max_i() - min_i()) + min_i();
+			ale_real lbot = ((ale_real) ii + 1) / rows * (max_i() - min_i()) + min_i();
+			ale_real llef = ((ale_real) jj) / cols * (max_j() - min_j()) + min_j();
+			ale_real lrig = ((ale_real) jj + 1) / cols * (max_j() - min_j()) + min_j();
 
 			if (ltop < top)
 				ltop = top;

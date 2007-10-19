@@ -53,7 +53,7 @@ public:
 	 * case response is not uniform for all pixels (e.g. some sensor arrays
 	 * stagger red, green, and blue sensors).
 	 */
-	psf_result operator()(float top, float bot, float lef, float rig, 
+	psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real rig, 
 			unsigned int variety) const {
 
 		psf_result result;

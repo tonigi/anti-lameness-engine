@@ -70,21 +70,21 @@ public:
 	 * case response is not uniform for all pixels (e.g. some sensor arrays
 	 * stagger red, green, and blue sensors).
 	 */
-	psf_result operator()(float top, float bot, float lef, float rig,
+	psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real rig,
 			unsigned int variety) const {
 
 		psf_result result;
 
 		// calculate some needed values
 		ale_pos area_premult = (bot - top) * (rig - lef) / 25;
-		float vert_step = (bot - top) / 4;
-		float horiz_step = (rig - lef) / 4;
-		float total = 0;
+		ale_real vert_step = (bot - top) / 4;
+		ale_real horiz_step = (rig - lef) / 4;
+		ale_real total = 0;
 
 
 		// determine the final value by simple sampling:
-		for (float i = top; i < bot + vert_step / 2; i += vert_step)
-		for (float j = lef; j < rig + horiz_step / 2; j += horiz_step) {
+		for (ale_real i = top; i < bot + vert_step / 2; i += vert_step)
+		for (ale_real j = lef; j < rig + horiz_step / 2; j += horiz_step) {
 
 			// calculate radius for given sample
 			ale_pos r = sqrt( i*i + j*j );

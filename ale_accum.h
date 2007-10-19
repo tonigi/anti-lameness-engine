@@ -186,8 +186,6 @@ public:
 	ale_accum_fixed(int i) {
 		i64 d = i;
 
-		assert(!casting_disabled);
-
 		bits = d << N;
 		
 		assert((d >= 0 && bits >> N == d)
@@ -199,8 +197,6 @@ public:
 		
 	ale_accum_fixed(unsigned int u) {
 		ui64 d = u;
-
-		assert(!casting_disabled);
 
 		bits = d << N;
 

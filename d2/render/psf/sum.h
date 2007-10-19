@@ -34,7 +34,7 @@
 class sum : public psf {
 	ale_pos _radius;
 	psf *f1, *f2;
-	float _min_i, _max_i, _min_j, _max_j;
+	ale_real _min_i, _max_i, _min_j, _max_j;
 
 public:
 	/*
@@ -72,7 +72,7 @@ public:
 	 * case response is not uniform for all pixels (e.g. some sensor arrays
 	 * stagger red, green, and blue sensors).
 	 */
-	psf_result operator()(float top, float bot, float lef, float rig, 
+	psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real rig, 
 			unsigned int variety) const {
 		psf_result result;
 		psf_result r1, r2;
@@ -92,7 +92,7 @@ public:
 	/*
 	 * Get the average pixel response.
 	 */
-	psf_result operator()(float top, float bot, float lef, float rig) {
+	psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real rig) {
 		psf_result result;
 		psf_result r1, r2;
 

@@ -209,7 +209,10 @@ public:
 	}
 };
 
-inline pixel operator*(const pixel &p, float d) {
+inline pixel operator*(ale_real d, const pixel &p) {
+	return p.mult(d);
+}
+inline pixel operator*(const pixel &p, ale_real d) {
 	return p.mult(d);
 }
 inline pixel operator*(const pixel &p, double d) {
@@ -218,23 +221,20 @@ inline pixel operator*(const pixel &p, double d) {
 inline pixel operator*(double d, const pixel &p) {
 	return p.mult(d);
 }
-inline pixel operator*(float d, const pixel &p) {
-	return p.mult(d);
-}
 
 inline std::ostream &operator<<(std::ostream &o, const pixel &p) {
-	o << "[" << p[0] << " " << p[1] << " " << p[2] << "]";
+	o << "[" << (double) p[0] << " " << (double) p[1] << " " << (double) p[2] << "]";
 	return o;
 }
 
-inline pixel ppow(pixel p, double d) {
+inline pixel ppow(pixel p, ale_real d) {
 	return pixel(
-			pow((double) p[0], d),
-			pow((double) p[1], d),
-			pow((double) p[2], d));
+			pow(p[0], d),
+			pow(p[1], d),
+			pow(p[2], d));
 }
 
-inline pixel ppow(pixel p, float d) {
+inline pixel ppow(pixel p, double d) {
 	return pixel(
 			pow((double) p[0], d),
 			pow((double) p[1], d),

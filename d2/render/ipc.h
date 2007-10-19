@@ -440,7 +440,7 @@ protected:
 
 		for (unsigned int ii = 0; ii < lsimulated->height(); ii++)
 		for (unsigned int jj = 0; jj < lsimulated->width(); jj++) {
-			const ale_real weight_floor = 1e-10;
+			const ale_real weight_floor = 1 / (ale_real) 50000;
 			ale_accum zero = 0;
 
 			for (int k = 0; k < 3; k++) {
@@ -1068,9 +1068,9 @@ protected:
 #endif
 
 			if (ec.finite() 
-			 && rsum[0] > ale_accum::const_0_001
-			 && rsum[1] > ale_accum::const_0_001
-			 && rsum[2] > ale_accum::const_0_001)
+			 && (ale_accum) 1000 * rsum[0] > (ale_accum) 1
+			 && (ale_accum) 1000 * rsum[1] > (ale_accum) 1
+			 && (ale_accum) 1000 * rsum[2] > (ale_accum) 1)
 				real->exp().set_multiplier(
 					real->exp().get_multiplier() * ec);
 		}

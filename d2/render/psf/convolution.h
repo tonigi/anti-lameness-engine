@@ -38,7 +38,7 @@
 class convolution : public psf {
 	ale_pos _radius;
 	psf *f1, *f2;
-	float _min_i, _max_i, _min_j, _max_j;
+	ale_real _min_i, _max_i, _min_j, _max_j;
 
 public:
 	/*
@@ -76,7 +76,7 @@ public:
 	 * case response is not uniform for all pixels (e.g. some sensor arrays
 	 * stagger red, green, and blue sensors).
 	 */
-	psf_result operator()(float top, float bot, float lef, float rig, 
+	psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real rig, 
 			unsigned int variety) const {
 		psf_result result;
 		psf_result r1, r2;
@@ -97,19 +97,19 @@ public:
 		   && horizontal_resolution > 0))
 			return result;  /* zero */
 
-		for (float i = f1->min_i() + (vertical_resolution / 2); 
+		for (ale_real i = f1->min_i() + (vertical_resolution / 2); 
 			   i < f1->max_i() - (vertical_resolution / 2);
 			   i += vertical_resolution)
-		for (float j = f1->min_j() + (horizontal_resolution / 2);
+		for (ale_real j = f1->min_j() + (horizontal_resolution / 2);
 		           j < f1->max_j() - (horizontal_resolution / 2);
 			   j += horizontal_resolution) {
 
-			float t = i - (vertical_resolution / 2);
-			float b = i + (vertical_resolution / 2);
-			float l = j - (horizontal_resolution / 2);
-			float r = j + (horizontal_resolution / 2);
-			float vc = vertical_center;
-			float hc = horizontal_center;
+			ale_real t = i - (vertical_resolution / 2);
+			ale_real b = i + (vertical_resolution / 2);
+			ale_real l = j - (horizontal_resolution / 2);
+			ale_real r = j + (horizontal_resolution / 2);
+			ale_real vc = vertical_center;
+			ale_real hc = horizontal_center;
 
 			r1 = (*f1)(t, b, l, r, v1);
 			r2 = (*f2)(vc - b, vc - t, hc - r, hc - l, v2);

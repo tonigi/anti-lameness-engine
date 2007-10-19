@@ -132,13 +132,13 @@ public:
 		return result;
 	}
 
-	psf_result operator()(float top, float bot, float lef, float
+	psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real
 			rig, unsigned int variety) const {
 		return response_generic(response_array, top, bot, lef, rig, variety);
 	}
 
 #if 0
-	psf_result operator()(float top, float bot, float lef, float rig) const {
+	psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real rig) const {
 		return response_generic(response_array, top, bot, lef, rig, 4);
 	}
 #endif

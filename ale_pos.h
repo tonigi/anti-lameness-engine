@@ -29,7 +29,7 @@
 
 #define ale_pos_disable_casting()
 #define ale_pos_enable_casting() 
-#define ale_pos_casting_status() 
+#define ale_pos_casting_status() 1
 
 /*
  * Real-valued type used to represent coordinates in an image domain.

@@ -53,7 +53,7 @@ public:
 	 * case response is not uniform for all pixels (e.g. some sensor arrays
 	 * stagger red, green, and blue sensors).
 	 */
-	psf_result operator()(float top, float bot, float lef, float rig, 
+	psf_result operator()(ale_real top, ale_real bot, ale_real lef, ale_real rig, 
 			unsigned int variety) const {
 
 		psf_result result;
@@ -65,8 +65,9 @@ public:
 
 		for (int i = 0; i < 10; i++)
 		for (int j = 0; j < 10; j++) {
-			ale_real r = pow(top + (bot - top) * ((i + 0.5) / (double) 10), 2)
-				   + pow(lef + (rig - lef) * ((j + 0.5) / (double) 10), 2);
+			ale_real one_half = 1 / (ale_real) 2;
+			ale_real r = pow(top + (bot - top) * ((i + one_half) / (ale_real) 10), 2)
+				   + pow(lef + (rig - lef) * ((j + one_half) / (ale_real) 10), 2);
 			if (r < _radius * _radius)
 				for (int k = 0; k < 3; k++)
 					result.matrix(k, k) += (total / (ale_real) 100);
