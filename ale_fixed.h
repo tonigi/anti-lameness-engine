@@ -122,6 +122,10 @@ public:
 
 	operator int() const {
 #if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
 		assert (bits != ALE_FIXED_NAN);
 		assert (bits != ALE_FIXED_POSINF);
 		assert (bits != ALE_FIXED_NEGINF);
@@ -132,6 +136,10 @@ public:
 
 	operator unsigned int() const {
 #if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
 		assert (bits != ALE_FIXED_NAN);
 		assert (bits != ALE_FIXED_POSINF);
 		assert (bits != ALE_FIXED_NEGINF);
@@ -168,6 +176,10 @@ public:
 	ale_fixed(int d) {
 		bits = d << N;
 #if 0		
+		/*
+		 * Removed for performance reasons.
+		 */
+
 		assert((d >= 0 && bits >> N == d)
 		    || (d < 0 && (-bits) >> N == -d));
 
@@ -209,6 +221,10 @@ public:
 		ale_fixed result;
 
 #if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
 		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN
 		 || (bits == ALE_FIXED_POSINF && f.bits == ALE_FIXED_NEGINF)
 		 || (bits == ALE_FIXED_NEGINF && f.bits == ALE_FIXED_POSINF)) {
@@ -220,6 +236,10 @@ public:
 		i32 i32_result = bits + f.bits;
 
 #if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
 		if (i32_result >= ALE_FIXED_POSINF
 		 || bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_POSINF
 		 || bits > 0 && f.bits > 0 && i32_result < 0) {
@@ -250,6 +270,10 @@ public:
 		ale_fixed result;
 
 #if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
 		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN
 		 || (bits == ALE_FIXED_POSINF && f.bits == ALE_FIXED_POSINF)
 		 || (bits == ALE_FIXED_NEGINF && f.bits == ALE_FIXED_NEGINF)) {
@@ -261,6 +285,10 @@ public:
 		i32 i32_result = bits - f.bits;
 
 #if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
 		if (i32_result >= ALE_FIXED_POSINF
 		 || bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_NEGINF
 		 || bits > 0 && f.bits < 0 && i32_result < 0) {
@@ -291,6 +319,10 @@ public:
 		ale_fixed result;
 
 #if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
 		if (bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN) {
 			result.bits = ALE_FIXED_NAN;
 			return result;
@@ -300,6 +332,10 @@ public:
 		i64 i64_result = ((i64) bits * (i64) f.bits) / (1 << N);
 
 #if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
 		if (i64_result > (i64) ALE_FIXED_POSINF 
 		 || i64_result < (i64) ALE_FIXED_NEGINF
 		 || bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_POSINF
@@ -574,6 +610,10 @@ template<unsigned int N>
 ale_fixed<N> floor(ale_fixed<N> f) {
 
 #if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
 	if (N == 0
 	 || f.bits == ALE_FIXED_POSINF
 	 || f.bits == ALE_FIXED_NEGINF
@@ -598,6 +638,10 @@ template<unsigned int N>
 ale_fixed<N> lrintf(ale_fixed<N> f) {
 
 #if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
 	if (N == 0
 	 || f.bits == ALE_FIXED_POSINF
 	 || f.bits == ALE_FIXED_NEGINF
