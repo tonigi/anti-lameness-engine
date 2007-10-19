@@ -27,6 +27,8 @@
 
 #include "ale_math.h"
 
+#define FIXED 4
+
 /*
  * Define a fixed point data type.
  */
@@ -373,12 +375,12 @@ public:
 		 * manufacture non-finite values.
 		 */
 		if ((bits == 0 && f.bits == 0)
+		 || bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN
 #if 0
 		/*
 		 * Removed for performance reasons.
 		 */
 
-		 || bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN
 		 || ((bits == ALE_FIXED_NEGINF || bits == ALE_FIXED_POSINF)
 		  && (f.bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_POSINF))
 #endif
@@ -686,6 +688,8 @@ ale_fixed<N> ceil(ale_fixed<N> f) {
 	return -floor(-f);
 }
 
+#if ALE_COLORS == FIXED || ALE_COORDINATES == FIXED
+
 template<unsigned int N>
 int ale_isinf(ale_fixed<N> f) {
 	return (f.bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_POSINF);
@@ -695,6 +699,8 @@ template<unsigned int N>
 int ale_isnan(ale_fixed<N> f) {
 	return (f.bits == ALE_FIXED_NAN);
 }
+
+#endif
 
 template<unsigned int N>
 int finite(ale_fixed<N> f) {
@@ -838,5 +844,6 @@ void ale_fixed<N>::sanity_check() {
 	}
 }
 
+#undef FIXED
 
 #endif
