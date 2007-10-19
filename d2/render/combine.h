@@ -219,10 +219,13 @@ private:
 					 * See render/psf/raster.h for more details.
 					 */
 
-					for (int ii = (int) lrintf(-f->support() * filter_scale); 
-						 ii < (int) lrintf( f->support() * filter_scale); ii++)
-					for (int jj = (int) lrintf(-f->support() * filter_scale);
-						 jj < (int) lrintf( f->support() * filter_scale); jj++) {
+					int support_extreme = (int) lrintf(f->support() * filter_scale);
+					assert (support_extreme > 0);
+
+					for (int ii = -support_extreme; 
+						 ii <  support_extreme; ii++)
+					for (int jj = -support_extreme;
+						 jj <  support_extreme; jj++) {
 
 						if (ii + i < 0
 						 || jj + j < 0
