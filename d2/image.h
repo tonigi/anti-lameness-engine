@@ -532,6 +532,11 @@ public:
 		void subdomain_algorithm(unsigned int thread,
 				int i_min, int i_max, int j_min, int j_max) {
 
+			ale_real _0625 = (ale_real) 0.0625;
+			ale_real _125  = (ale_real) 0.125;
+			ale_real _25   = (ale_real) 0.25;
+			ale_real _0    = (ale_real) 0;
+
 			unsigned int ui_min = (unsigned int) i_min;
 			unsigned int ui_max = (unsigned int) i_max;
 			unsigned int uj_min = (unsigned int) j_min;
@@ -542,58 +547,58 @@ public:
 				is->set_pixel(i, j, 
 
 				      ( ( ((i > 0 && j > 0) 
-					    ? iu->get_pixel(2 * i - 1, 2 * j - 1) * (ale_real) 0.0625
+					    ? iu->get_pixel(2 * i - 1, 2 * j - 1) * _0625
 					    : pixel(0, 0, 0))
 					+ ((i > 0)
-					    ? iu->get_pixel(2 * i - 1, 2 * j) * 0.125
+					    ? iu->get_pixel(2 * i - 1, 2 * j) * _125
 					    : pixel(0, 0, 0))
 					+ ((i > 0 && j < is->width() - 1)
-					    ? iu->get_pixel(2 * i - 1, 2 * j + 1) * 0.0625
+					    ? iu->get_pixel(2 * i - 1, 2 * j + 1) * _0625
 					    : pixel(0, 0, 0))
 					+ ((j > 0)
-					    ? iu->get_pixel(2 * i, 2 * j - 1) * 0.125
+					    ? iu->get_pixel(2 * i, 2 * j - 1) * _125
 					    : pixel(0, 0, 0))
-					+ iu->get_pixel(2 * i, 2 * j) * 0.25
+					+ iu->get_pixel(2 * i, 2 * j) * _25
 					+ ((j < is->width() - 1)
-					    ? iu->get_pixel(2 * i, 2 * j + 1) * 0.125
+					    ? iu->get_pixel(2 * i, 2 * j + 1) * _125
 					    : pixel(0, 0, 0))
 					+ ((i < is->height() - 1 && j > 0)
-					    ? iu->get_pixel(2 * i + 1, 2 * j - 1) * 0.0625
+					    ? iu->get_pixel(2 * i + 1, 2 * j - 1) * _0625
 					    : pixel(0, 0, 0))
 					+ ((i < is->height() - 1)
-					    ? iu->get_pixel(2 * i + 1, 2 * j) * 0.125
+					    ? iu->get_pixel(2 * i + 1, 2 * j) * _125
 					    : pixel(0, 0, 0))
 					+ ((i < is->height() && j < is->width() - 1)
-					    ? iu->get_pixel(2 * i + 1, 2 * j + 1) * 0.0625 
+					    ? iu->get_pixel(2 * i + 1, 2 * j + 1) * _0625 
 					    : pixel(0, 0, 0)))
 
 				     /
 
 					( ((i > 0 && j > 0) 
-					    ? 0.0625
-					    : 0)
+					    ? _0625
+					    : _0)
 					+ ((i > 0)
-					    ? 0.125
-					    : 0)
+					    ? _125
+					    : _0)
 					+ ((i > 0 && j < is->width() - 1)
-					    ? 0.0625
-					    : 0)
+					    ? _0625
+					    : _0)
 					+ ((j > 0)
-					    ? 0.125
-					    : 0)
-					+ 0.25
+					    ? _125
+					    : _0)
+					+ _25
 					+ ((j < is->width() - 1)
-					    ? 0.125
-					    : 0)
+					    ? _125
+					    : _0)
 					+ ((i < is->height() - 1 && j > 0)
-					    ? 0.0625
-					    : 0)
+					    ? _0625
+					    : _0)
 					+ ((i < is->height() - 1)
-					    ? 0.125
-					    : 0)
+					    ? _125
+					    : _0)
 					+ ((i < is->height() && j < is->width() - 1)
-					    ? 0.0625
-					    : 0) ) ) );
+					    ? _0625
+					    : _0) ) ) );
 			}
 		}
 
@@ -771,6 +776,10 @@ public:
 		void subdomain_algorithm(unsigned int thread,
 				int i_min, int i_max, int j_min, int j_max) {
 
+			ale_real _0625 = (ale_real) 0.0625;
+			ale_real _125  = (ale_real) 0.125;
+			ale_real _25   = (ale_real) 0.25;
+
 			unsigned int ui_min = (unsigned int) i_min;
 			unsigned int ui_max = (unsigned int) i_max;
 			unsigned int uj_min = (unsigned int) j_min;
@@ -782,29 +791,29 @@ public:
 				pixel value = pixel
 
 				      ( ( ((i > 0 && j > 0) 
-					    ? ppow(iu->get_pixel(2 * i - 1, 2 * j - 1), 0.0625) 
+					    ? ppow(iu->get_pixel(2 * i - 1, 2 * j - 1), _0625) 
 					    : pixel(0, 0, 0))
 					* ((i > 0)
-					    ? ppow(iu->get_pixel(2 * i - 1, 2 * j), 0.125)
+					    ? ppow(iu->get_pixel(2 * i - 1, 2 * j), _125)
 					    : pixel(0, 0, 0))
 					* ((i > 0 && j < is->width() - 1)
-					    ? ppow(iu->get_pixel(2 * i - 1, 2 * j + 1), 0.0625)
+					    ? ppow(iu->get_pixel(2 * i - 1, 2 * j + 1), _0625)
 					    : pixel(0, 0, 0))
 					* ((j > 0)
-					    ? ppow(iu->get_pixel(2 * i, 2 * j - 1), 0.125)
+					    ? ppow(iu->get_pixel(2 * i, 2 * j - 1), _125)
 					    : pixel(0, 0, 0))
-					* ppow(iu->get_pixel(2 * i, 2 * j), 0.25) 
+					* ppow(iu->get_pixel(2 * i, 2 * j), _25) 
 					* ((j < is->width() - 1)
-					    ? ppow(iu->get_pixel(2 * i, 2 * j + 1), 0.125)
+					    ? ppow(iu->get_pixel(2 * i, 2 * j + 1), _125)
 					    : pixel(0, 0, 0))
 					* ((i < is->height() - 1 && j > 0)
-					    ? ppow(iu->get_pixel(2 * i + 1, 2 * j - 1), 0.0625)
+					    ? ppow(iu->get_pixel(2 * i + 1, 2 * j - 1), _0625)
 					    : pixel(0, 0, 0))
 					* ((i < is->height() - 1)
-					    ? ppow(iu->get_pixel(2 * i + 1, 2 * j), 0.125)
+					    ? ppow(iu->get_pixel(2 * i + 1, 2 * j), _125)
 					    : pixel(0, 0, 0))
 					* ((i < is->height() && j < is->width() - 1)
-					    ? ppow(iu->get_pixel(2 * i + 1, 2 * j + 1), 0.0625)
+					    ? ppow(iu->get_pixel(2 * i + 1, 2 * j + 1), _0625)
 					    : pixel(0, 0, 0))));
 
 

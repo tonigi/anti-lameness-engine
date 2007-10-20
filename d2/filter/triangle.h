@@ -32,14 +32,14 @@ private:
 	/*
 	 * Triangle filter.
 	 */
-	double _triangle(ale_pos p) const {
+	ale_real _triangle(ale_pos p) const {
 		if (fabs(p) >= half_width)
 			return 0;
 
 		return (1 - fabs(p) / half_width);
 	}
 
-	double _triangle(point p) const {
+	ale_real _triangle(point p) const {
 		return _triangle(p[0]) * _triangle(p[1]);
 	}
 
