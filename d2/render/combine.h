@@ -105,7 +105,8 @@ private:
 					if (!(fine_weight->get_pixel(ii, jj)[k] > 0))
 						continue;
 
-					ale_pos distance = sqrt(pow(i - ii, 2) + pow(j - jj, 2));
+					ale_pos distance = sqrt( (ale_pos) ((i - ii) * (i - ii)
+					                                  + (j - jj) * (j - jj)));
 
 					if (distance < nearest) {
 						nearest = distance;
@@ -167,7 +168,8 @@ private:
 					if (!(fine_weight->get_pixel(ii, jj)[k] > 0))
 						continue;
 
-					ale_pos distance = sqrt(pow(i - ii, 2) + pow(j - jj, 2));
+					ale_pos distance = sqrt( (ale_pos) ((i - ii) * (i - ii)
+					                                  + (j - jj) * (j - jj)));
 
 					if (distance < nearest)
 						nearest = distance;
@@ -220,7 +222,7 @@ private:
 					 */
 
 					int support_extreme = (int) lrintf(f->support() * filter_scale);
-					assert (support_extreme > 0);
+					assert (support_extreme >= 0);
 
 					for (int ii = -support_extreme; 
 						 ii <  support_extreme; ii++)

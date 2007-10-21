@@ -452,8 +452,8 @@ protected:
 				if (!(weight > weight_floor))
 					lsimulated->chan(ii, jj, k)
 						/= zero;  /* Generate a non-finite value */
-
-				lsimulated->chan(ii, jj, k) /= weight;
+				else
+					lsimulated->chan(ii, jj, k) /= weight;
 			}
 		}
 
@@ -810,6 +810,8 @@ protected:
 				ale_pos lef = q[1] - d[1];
 				ale_pos rig = q[1] + d[1];
 
+				ale_pos integral_divisor = 1 / ((bot - top) * (rig - lef));
+
 				/*
 				 * Iterate over frame pixels influenced by the scene
 				 * pixel.
@@ -847,7 +849,7 @@ protected:
 					 * approximation image.
 					 */
 
-					r *= (1 / (bot - top) / (rig - lef));
+					r *= integral_divisor;
 
 					pixel comp_lreal =
 						lreal->get_raw_pixel(ii, jj);
@@ -1042,21 +1044,29 @@ protected:
 			for (unsigned int j = (unsigned int) floor(extents[0][1]); 
 			                  j < (unsigned int)  ceil(extents[1][1]); j++) {
 
-				pixel s = lsimulated->get_pixel(i, j);
-				pixel r = lreal->get_pixel(i, j);
-
-				pixel confidence = real->exp().confidence(s);
-
-				if (!s.finite()
-				 || !r.finite()
-				 || !confidence.finite())
-					continue;
-
 				if (real->get_bayer() != IMAGE_BAYER_NONE) {
 					int color = ((image_bayer_ale_real *)real)->bayer_color(i, j);
-					ssum[color] += confidence[color] * s[color];
-					rsum[color] += confidence[color] * r[color];
+					ale_real s = lsimulated->chan(i, j, color);
+					ale_real r = lreal->chan(i, j, color);
+
+					if (!finite(s)
+					 || !finite(r))
+						continue;
+
+					ale_real confidence = real->exp().confidence(color, s);
+
+					ssum[color] += confidence * s;
+					rsum[color] += confidence * r;
 				} else {
+					pixel s = lsimulated->get_pixel(i, j);
+					pixel r = lreal->get_pixel(i, j);
+
+					if (!s.finite()
+					 || !r.finite())
+						continue;
+
+					pixel confidence = real->exp().confidence(s);
+
 					ssum += confidence * s;
 					rsum += confidence * r;
 				}

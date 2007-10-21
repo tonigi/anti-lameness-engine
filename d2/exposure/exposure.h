@@ -36,7 +36,7 @@
 
 class exposure {
 private:
-	static float confidence_exponent;
+	static ale_real confidence_exponent;
 	pixel _multiplier;
 	ale_real _gain_multiplier;
 	static ale_real _gain_reference;
@@ -47,14 +47,14 @@ public:
 	/*
 	 * confidence/uniform static mutators
 	 */
-	static void set_confidence(float exponent) {
+	static void set_confidence(ale_real exponent) {
 		confidence_exponent = exponent;
 	}
 
 	/*
 	 * confidence accessor
 	 */
-	static float get_confidence() {
+	static ale_real get_confidence() {
 		return confidence_exponent;
 	}
 
@@ -168,20 +168,24 @@ public:
 	virtual ale_real confidence(unsigned int k, ale_real input, 
 			ale_real confidence_floor = 1 / (ale_real) 1000) const {
 
-		if (confidence_exponent == 0)
+		ale_real _0 = (ale_real) 0;
+		ale_real _4 = (ale_real) 4;
+		ale_real _2 = (ale_real) 2;
+		ale_real _1 = (ale_real) 1;
+
+		if (confidence_exponent == _0)
 			return 1;
 
 		ale_real input_scaled = input / _multiplier[k];
 
-		ale_real unexponentiated = 4 * ((1 / (ale_pos) 4) - pow((1 / (ale_pos) 2) 
-		                                                      - input_scaled, 2));
+		ale_real unexponentiated = _4 * ((_1 / _4) - (ale_real) pow((_1 / _2) 
+		                                                      - input_scaled, _2));
 		// ale_real unexponentiated = 4 * input_scaled * (0.25 - pow(0.5 - input_scaled, 2));
 
-		if (unexponentiated < 0) 
+		if (unexponentiated < _0) 
 			return confidence_floor;
 
-		ale_real exponentiated =  pow(unexponentiated, 
-				              confidence_exponent);
+		ale_real exponentiated = pow(unexponentiated, confidence_exponent);
 
 		if (exponentiated < confidence_floor || !finite(exponentiated))
 			return confidence_floor;
@@ -196,7 +200,7 @@ public:
 	virtual pixel confidence(pixel input, 
 			ale_real confidence_floor = 1 / (ale_real) 1000 ) const {
 
-		if (confidence_exponent) {
+		if (confidence_exponent != 0) {
 			return pixel(confidence(0, input[0], confidence_floor),
 				     confidence(1, input[1], confidence_floor),
 				     confidence(2, input[2], confidence_floor));
@@ -214,7 +218,7 @@ public:
 	 * 'upper_one_sided_confidence' instead?
 	 */
 	virtual pixel one_sided_confidence(pixel input, pixel sign) const {
-		if (confidence_exponent) {
+		if (confidence_exponent != 0) {
 			pixel result = confidence(input);
 			for (unsigned int k = 0; k < 3; k++) {
 				if (sign[k] > 0 && input[k] / _multiplier[k] > 1 / (ale_real) 2)

@@ -134,7 +134,8 @@ public:
 		 * Scale x and y
 		 */
 
-		ale_pos scaling_factor = sqrt(w*w + h*h) / (2 * tan(_view_angle / 2));
+		ale_pos scaling_factor = (ale_pos) sqrt(w*w + h*h) 
+		                       / (ale_pos) (2 * tan(_view_angle / 2));
 		p[0] *= scaling_factor;
 		p[1] *= scaling_factor;
 
@@ -224,7 +225,8 @@ public:
 		 * Scale x and y
 		 */
 
-		ale_pos scaling_factor = sqrt(w*w + h*h) / (2 * tan(_view_angle / 2));
+		ale_pos scaling_factor = (ale_pos) sqrt(w*w + h*h) 
+		                       / (ale_pos) (2 * tan(_view_angle / 2));
 		p[0] /= scaling_factor;
 		p[1] /= scaling_factor;
 

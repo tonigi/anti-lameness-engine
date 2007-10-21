@@ -30,5 +30,5 @@ int render::rx_show;
 render *render::directory[ACTIVE_RENDERER_COUNT];
 int render::directory_length;
 int render::extend;
-double render::scale_factor;
-double render::wt = 0.0001;
+ale_pos render::scale_factor;
+ale_real render::wt = 0.0001;

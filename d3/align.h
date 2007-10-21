@@ -121,8 +121,8 @@ class align {
 		 * 	desired_w_angle = 2 * arctan(w / (2 * sqrt(D*D + h*h/4)))
 		 */
 
-		ale_pos D = sqrt(h * h + w * w)
-			         / (2 * tan(_init_angle/2));
+		ale_pos D = (ale_pos) sqrt(h * h + w * w)
+			         / (ale_pos) (2 * tan(_init_angle/2));
 		ale_pos desired_h_angle = (double) (2 * atan((double) ((double) h / (2 * sqrt((double) (D*D) + (double) (w*w)/4)))));
 		ale_pos desired_w_angle = (double) (2 * atan((double) ((double) w / (2 * sqrt((double) (D*D) + (double) (h*h)/4)))));
 
@@ -198,8 +198,8 @@ class align {
 					estimate[2] += c2;
 					// view_angle += c3 / 30;
 
-					ale_pos D = sqrt(h * h + w * w)
-							 / (2 * tan(view_angle/2));
+					ale_pos D = (ale_pos) sqrt(h * h + w * w)
+							 / (ale_pos) (2 * tan(view_angle/2));
 					ale_pos desired_h_angle = 2 * atan((double) h / (2 * sqrt((double) (D*D) + (double) (w*w)/4)));
 					ale_pos desired_w_angle = 2 * atan((double) w / (2 * sqrt((double) D*D + (double) h*h/4)));
 

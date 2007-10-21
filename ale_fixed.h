@@ -39,9 +39,6 @@
 
 template <unsigned int N>
 class ale_fixed {
-	typedef int i32;
-	typedef long long i64;
-
 	static int casting_disabled;
 
 	static void sanity_check_fail() {
@@ -51,6 +48,9 @@ class ale_fixed {
 	}
 
 public:
+	typedef int i32;
+	typedef long long i64;
+
 	i32 bits;
 
 	/*
@@ -98,6 +98,11 @@ public:
 	 */
 
 	operator double() const {
+#if 0
+		/*
+		 * Removed for performance reasons.
+		 */
+
 		assert(!casting_disabled);
 		if (bits == ALE_FIXED_NAN) {
 			double zero = 0;
@@ -118,8 +123,10 @@ public:
 			assert (isinf(posinf));
 			assert (posinf > 0);
 			return posinf;
-		} else 
-			return (((double) bits) / (1 << N));
+		}
+#endif
+
+		return (((double) bits) / (1 << N));
 	}
 
 	operator int() const {
@@ -167,11 +174,17 @@ public:
 		} else {
 			bits = (int) lrint(d * (1 << N));
 
+#if 0
+			/*
+			 * Removed for performance reasons.
+			 */
+
 			assert((double) *this > (d - (double) 1 / (1 << N)));
 			assert((double) *this < (d + (double) 1 / (1 << N)));
 
 			assert(bits < ALE_FIXED_POSINF);
 			assert(bits > ALE_FIXED_NEGINF);
+#endif
 		}
 	}
 
@@ -375,12 +388,12 @@ public:
 		 * manufacture non-finite values.
 		 */
 		if ((bits == 0 && f.bits == 0)
-		 || bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN
 #if 0
 		/*
 		 * Removed for performance reasons.
 		 */
 
+		 || bits == ALE_FIXED_NAN || f.bits == ALE_FIXED_NAN
 		 || ((bits == ALE_FIXED_NEGINF || bits == ALE_FIXED_POSINF)
 		  && (f.bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_POSINF))
 #endif
@@ -620,6 +633,33 @@ ale_fixed<N> fabs(ale_fixed<N> f) {
 
 template<unsigned int N>
 ale_fixed<N> pow(ale_fixed<N> f, double d) {
+	return pow((double) f, (double) d);
+}
+
+/*
+ * sqrt() via the Babylonian method.
+ *
+ * http://en.wikipedia.org/wiki/Methods_of_computing_square_roots
+ */
+
+template<unsigned int N>
+ale_fixed<N> sqrt(ale_fixed<N> f) {
+	ale_fixed<N> guess = f;
+
+	if (f <= 0)
+		return 0;
+
+	for (int i = 0; i < 5; i++) {
+		guess.bits >>= 1;
+		long long sf = f.bits << (N - 2);
+		guess.bits = guess.bits + sf / guess.bits;
+	}
+
+	return guess;
+}
+
+template<unsigned int N>
+ale_fixed<N> pow(ale_fixed<N> f, ale_fixed<N> d) {
 	if (d == 2) 
 		return f * f;
 
@@ -629,7 +669,41 @@ ale_fixed<N> pow(ale_fixed<N> f, double d) {
 	if (d == 0)
 		return ale_fixed<N>(1);
 
-	return pow((double) f, d);
+	return pow((double) f, (double) d);
+}
+
+template<unsigned int N>
+ale_fixed<N> pow(ale_fixed<N> f, int d) {
+	if (d == 2)
+		return f * f;
+
+	if (d == 1) 
+		return f;
+
+	if (d == 0)
+		return ale_fixed<N>(1);
+
+	if (d > 1)
+		return pow(f, d / 2) * pow(f, d - d / 2);
+
+	if (d < 0)
+		return 1 / pow(f, -d);
+
+	assert(0);
+}
+
+template<unsigned int N>
+ale_fixed<N> pow(ale_fixed<N> f, unsigned int d) {
+	if (d == 2)
+		return f * f;
+
+	if (d == 1) 
+		return f;
+
+	if (d == 0)
+		return ale_fixed<N>(1);
+
+	return pow(f, d / 2) * pow(f, d - d / 2);
 }
 
 template<unsigned int N>

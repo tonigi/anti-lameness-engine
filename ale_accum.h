@@ -188,11 +188,13 @@ public:
 
 		bits = d << N;
 		
+#if 0
 		assert((d >= 0 && bits >> N == d)
 		    || (d < 0 && (-bits) >> N == -d));
 
 		assert (bits < ALE_ACCUM_FIXED_POSINF);
 		assert (bits > ALE_ACCUM_FIXED_NEGINF);
+#endif
 	}
 		
 	ale_accum_fixed(unsigned int u) {

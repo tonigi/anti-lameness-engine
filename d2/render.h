@@ -46,8 +46,8 @@ private:
 	static render *directory[ACTIVE_RENDERER_COUNT];
 	static int directory_length;
 	static int extend;
-	static double scale_factor;
-	static double wt;
+	static ale_pos scale_factor;
+	static ale_real wt;
 
 	image **queue;
 	unsigned int queue_size;
@@ -88,7 +88,7 @@ protected:
 	/*
 	 * Get the scale factor
 	 */
-	double get_scale_factor() {
+	ale_pos get_scale_factor() {
 		return scale_factor;
 	}
 
@@ -185,7 +185,7 @@ public:
 	}
 
 	static void render_init(unsigned int _rx_count, exclusion *_rx_parameters, 
-			int _rx_show, int _extend, double _scale_factor) {
+			int _rx_show, int _extend, ale_pos _scale_factor) {
 		rx_count = _rx_count;
 		rx_show = _rx_show;
 		extend = _extend;
@@ -207,11 +207,11 @@ public:
 		}
 	}
 
-	static void set_wt(double _wt) {
+	static void set_wt(ale_real _wt) {
 		wt = _wt;
 	}
 
-	static double get_wt() {
+	static ale_real get_wt() {
 		return wt;
 	}
 

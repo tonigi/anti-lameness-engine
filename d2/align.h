@@ -226,7 +226,7 @@ private:
 	 * Error metric exponent
 	 */
 
-	static float metric_exponent;
+	static ale_real metric_exponent;
 
 	/*
 	 * Match threshold
@@ -742,8 +742,8 @@ private:
 
 				pixel pa = c.accum->get_pixel(i, j);
 
-				ale_accum this_result[2] = { 0, 0 };
-				ale_accum this_divisor[2] = { 0, 0 };
+				ale_real this_result[2] = { 0, 0 };
+				ale_real this_divisor[2] = { 0, 0 };
 
 				pixel p[2];
 				pixel weight[2];
@@ -849,14 +849,14 @@ private:
 				}
 
 				if (u.defined()) {
-//					ale_accum de = fabs(this_result[0] / this_divisor[0]
-//							  - this_result[1] / this_divisor[1]);
-					ale_accum de = fabs(this_result[0] - this_result[1]);
+//					ale_real de = fabs(this_result[0] / this_divisor[0]
+//						         - this_result[1] / this_divisor[1]);
+					ale_real de = fabs(this_result[0] - this_result[1]);
 
-					de_centroid[0] += de * (ale_accum) i;
-					de_centroid[1] += de * (ale_accum) j;
+					de_centroid[0] += de * (ale_real) i;
+					de_centroid[1] += de * (ale_real) j;
 
-					de_centroid_v += de * (ale_accum) t.lengthto(u);
+					de_centroid_v += de * (ale_real) t.lengthto(u);
 
 					de_sum += de;
 				}
@@ -1318,7 +1318,7 @@ public:
 
 					test.confirm();
 
-					if (finite(adj_p / test.get_error_perturb()))
+					if (finite(test.get_error_perturb()))
 						perturb_multipliers.push_back(adj_p / test.get_error_perturb());
 					else
 						perturb_multipliers.push_back(1);
@@ -1364,12 +1364,14 @@ public:
 
 						perturb_multipliers.resize(i + 1);
 
-						perturb_multipliers[i] = 
-							adj_p / runs[1].get_error_perturb();
+						if (finite(perturb_multipliers[i])
+						 && finite(adj_p)
+						 && finite(adj_p / runs[1].get_error_perturb())) {
+							perturb_multipliers[i] = 
+								adj_p / runs[1].get_error_perturb();
 
-						if (finite(perturb_multipliers[i]))
 							found_unreliable = 1;
-						else
+						} else
 							perturb_multipliers[i] = 1;
 
 						continue;
@@ -1382,10 +1384,13 @@ public:
 					else 
 						old_runs[ori] = runs[1];
 
-					perturb_multipliers[i] = perturb_multipliers_original[i]
-						* adj_p / runs[1].get_error_perturb();
-
-					if (!finite(perturb_multipliers[i]))
+					if (finite(perturb_multipliers_original[i])
+					 && finite(runs[1].get_error_perturb())
+					 && finite(adj_p)
+					 && finite(perturb_multipliers_original[i] * adj_p / runs[1].get_error_perturb()))
+						perturb_multipliers[i] = perturb_multipliers_original[i]
+							* adj_p / runs[1].get_error_perturb();
+					else
 						perturb_multipliers[i] = 1;
 
 					tested[i] = 1;

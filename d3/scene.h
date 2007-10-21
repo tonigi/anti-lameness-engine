@@ -84,7 +84,7 @@ class scene {
 	 * Falloff exponent
 	 */
 
-	static double falloff_exponent;
+	static ale_real falloff_exponent;
 
 	/*
 	 * Third-camera error multiplier

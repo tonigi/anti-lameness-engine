@@ -84,8 +84,11 @@ AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([floor memset pow select sqrt strchr strcspn strdup strndup strspn strtol nrand48 rand_r gettimeofday nanosleep])
 
-# Check for POSIX threads.
-ACX_PTHREAD()
+if test x$enable_threads != xno; then
+
+	# Check for POSIX threads.
+	ACX_PTHREAD()
+fi
 
 # Determine whether multithreading should be used.
 AC_ARG_ENABLE(threads,    [  --enable-threads        enable multithreading: auto, no, yes (default=auto)])
@@ -117,7 +120,7 @@ fi
 
 if test x$enable_threads = xyes \
 && test x$acx_pthread_ok = xno; then
-	AC_MSG_ERROR([Multithreaded build requested (--enable-threads=yes), but usable library was found.])
+	AC_MSG_ERROR([Multithreaded build requested (--enable-threads=yes), but no usable library was found.])
 fi
 		
 

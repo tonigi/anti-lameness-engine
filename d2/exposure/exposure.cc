@@ -20,5 +20,5 @@
 
 #include "exposure.h"
 
-float exposure::confidence_exponent = 0.0;
+ale_real exposure::confidence_exponent = (ale_real) 1.0;
 ale_real exposure::_gain_reference = 1;
