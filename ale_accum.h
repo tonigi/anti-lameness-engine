@@ -121,9 +121,9 @@ public:
 		else {
 
 			if (bits >= 0 || M >= N)
-				i64_result = bits << (i64) (M - N);
+				i64_result = bits << (i64) ((int) M - (int) N);
 			else
-				i64_result = -((-bits) >> (i64) (N - M));
+				i64_result = -((-bits) >> (i64) ((int) N - (int) M));
 
 			if (i64_result > ALE_FIXED_POSINF)
 				result.bits = ALE_FIXED_POSINF;
@@ -218,9 +218,9 @@ public:
 		else if (d.bits == ALE_FIXED_NAN)
 			bits = ALE_ACCUM_FIXED_NAN;
 		else if (d.bits >= 0 || N >= M)
-			bits = ((i64) d.bits) << (i64) (N - M);
+			bits = ((i64) d.bits) << (i64) ((int) N - (int) M);
 		else
-			bits = -((-(i64) d.bits) >> (i64) (M - N));
+			bits = -((-(i64) d.bits) >> (i64) ((int) M - (int) N));
 	}
 
 	/*

@@ -116,6 +116,14 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 		int j = m.get_j();
 
 		/*
+		 * Check reference frame definition.
+		 */
+
+		if (!c.accum->get_pixel(i, j).finite()
+		 || !(c.certainty->get_pixel(i, j).minabs_norm() > 0))
+			continue;
+
+		/*
 		 * Check for exclusion in render coordinates.
 		 */
 
@@ -176,8 +184,7 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 		if (!(ti >= 0
 		   && ti <= c.input->height() - 1
 		   && tj >= 0
-		   && tj <= c.input->width() - 1
-		   && c.certainty->get_pixel(i, j)[0] != 0))
+		   && tj <= c.input->width() - 1))
 			continue;
 
 		if (!(r[0] >= 0

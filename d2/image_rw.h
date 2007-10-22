@@ -338,7 +338,7 @@ public:
 			fprintf(stderr, "Image dump: ");
 			for (unsigned int i = 0; i < im->height(); i++)
 			for (unsigned int j = 0; j < im->width(); j++) {
-				pixel p = im->pix(i, j);
+				pixel p = im->get_pixel(i, j);
 				fprintf(stderr, "(%d, %d): [%f %f %f] ", i, j, (double) p[0], (double) p[1], (double) p[2]);
 			}
 			fprintf(stderr, "\n");

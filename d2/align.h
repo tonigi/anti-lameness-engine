@@ -2281,7 +2281,18 @@ public:
 		 * Scale default initial transform for lod
 		 */
 
-		element->default_initial_alignment.rescale(1 / pow(2, lod));
+		for (int lod_ = 0; lod_ < lod; lod_++) {
+			transformation t = element->default_initial_alignment;
+
+			t.rescale(1 / (double) 2);
+
+			if (t.scaled_height() < 1 || t.scaled_width() < 1) {
+				perturb /= pow(2, lod - lod_);
+				lod = lod_;
+			} else {
+				element->default_initial_alignment = t;
+			}
+		}
 
 		/*
 		 * Set the default transformation.

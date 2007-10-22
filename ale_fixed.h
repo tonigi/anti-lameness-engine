@@ -344,6 +344,7 @@ public:
 		}
 #endif 
 			
+
 		i64 i64_result = ((i64) bits * (i64) f.bits) / (1 << N);
 
 #if 0
@@ -436,7 +437,6 @@ public:
 #endif
 
 		result.bits = (i32) i64_result;
-
 		return result;
 	}
 
@@ -646,11 +646,12 @@ template<unsigned int N>
 ale_fixed<N> sqrt(ale_fixed<N> f) {
 	ale_fixed<N> guess = f;
 
-	if (f <= 0)
-		return 0;
-
 	for (int i = 0; i < 5; i++) {
 		guess.bits >>= 1;
+
+		if (guess.bits <= 0)
+			return 0;
+
 		long long sf = f.bits << (N - 2);
 		guess.bits = guess.bits + sf / guess.bits;
 	}
