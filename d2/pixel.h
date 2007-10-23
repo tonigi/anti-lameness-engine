@@ -42,6 +42,21 @@ public:
 		x[2] = x2;
 	}
 
+	pixel(const pixel &p) {
+		x[0] = p[0];
+		x[1] = p[1];
+		x[2] = p[2];
+	}
+
+	pixel &operator=(const pixel &p) {
+		x[0] = p[0];
+		x[1] = p[1];
+		x[2] = p[2];
+
+		return (*this);
+	}
+
+
 //	Due to automatic typecasts and automatic int <==> ale_real *
 //	conversions, this can cause some really weird bugs.
 //

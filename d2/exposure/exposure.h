@@ -128,8 +128,19 @@ public:
 	void set_multiplier(pixel _multiplier) {
 		listener *cl = listener_head;
 
+		fprintf(stderr, "_m=%f %f %f t->_m=%f %f %f\n",
+			(double) _multiplier[0],
+			(double) _multiplier[1],
+			(double) _multiplier[2],
+			(double) this->_multiplier[0],
+			(double) this->_multiplier[1],
+			(double) this->_multiplier[2]);
+
 		while(cl != NULL) {
-			// fprintf(stderr, "Triggering '%s'.\n", cl->name);
+			fprintf(stderr, "Triggering '%s' with %f %f %f.\n", cl->name, 
+					(double) (_multiplier[0] / this->_multiplier[0]),
+					(double) (_multiplier[1] / this->_multiplier[1]),
+					(double) (_multiplier[2] / this->_multiplier[2]));
 			cl->trigger(_multiplier / this->_multiplier);
 			cl = cl->next;
 		}
@@ -166,7 +177,7 @@ public:
 	}
 
 	virtual ale_real confidence(unsigned int k, ale_real input, 
-			ale_real confidence_floor = 1 / (ale_real) 1000) const {
+			ale_real confidence_floor = ale_real_confidence_floor) const {
 
 		ale_real _0 = (ale_real) 0;
 		ale_real _4 = (ale_real) 4;
@@ -198,7 +209,7 @@ public:
 	 * extremes of camera response and maximal at the center.
 	 */
 	virtual pixel confidence(pixel input, 
-			ale_real confidence_floor = 1 / (ale_real) 1000 ) const {
+			ale_real confidence_floor = ale_real_confidence_floor) const {
 
 		if (confidence_exponent != 0) {
 			return pixel(confidence(0, input[0], confidence_floor),

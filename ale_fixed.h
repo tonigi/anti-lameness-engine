@@ -69,6 +69,12 @@ public:
 		bits = f.bits;
 	}
 
+	ale_fixed& operator=(const ale_fixed &f) {
+		bits = f.bits;
+		
+		return (*this);
+	}
+
 	/*
 	 * Disable casting
 	 */
@@ -98,7 +104,7 @@ public:
 	 */
 
 	operator double() const {
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -130,7 +136,7 @@ public:
 	}
 
 	operator int() const {
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -144,7 +150,7 @@ public:
 	}
 
 	operator unsigned int() const {
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -174,7 +180,7 @@ public:
 		} else {
 			bits = (int) lrint(d * (1 << N));
 
-#if 0
+#if 1
 			/*
 			 * Removed for performance reasons.
 			 */
@@ -190,7 +196,7 @@ public:
 
 	ale_fixed(int d) {
 		bits = d << N;
-#if 0		
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -235,7 +241,7 @@ public:
 	ale_fixed operator+(ale_fixed f) const {
 		ale_fixed result;
 
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -250,7 +256,7 @@ public:
 
 		i32 i32_result = bits + f.bits;
 
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -284,7 +290,7 @@ public:
 	ale_fixed operator-(ale_fixed f) const {
 		ale_fixed result;
 
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -299,7 +305,7 @@ public:
 
 		i32 i32_result = bits - f.bits;
 
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -333,7 +339,7 @@ public:
 	ale_fixed operator*(ale_fixed f) const {
 		ale_fixed result;
 
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -347,7 +353,7 @@ public:
 
 		i64 i64_result = ((i64) bits * (i64) f.bits) / (1 << N);
 
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -389,7 +395,7 @@ public:
 		 * manufacture non-finite values.
 		 */
 		if ((bits == 0 && f.bits == 0)
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -409,7 +415,7 @@ public:
 			return result;
 		} 
 		
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -422,7 +428,7 @@ public:
 			
 		i64 i64_result = ((i64) bits << N) / f.bits;
 
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -710,7 +716,7 @@ ale_fixed<N> pow(ale_fixed<N> f, unsigned int d) {
 template<unsigned int N>
 ale_fixed<N> floor(ale_fixed<N> f) {
 
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -738,7 +744,7 @@ ale_fixed<N> floor(ale_fixed<N> f) {
 template<unsigned int N>
 ale_fixed<N> lrintf(ale_fixed<N> f) {
 
-#if 0
+#if 1
 		/*
 		 * Removed for performance reasons.
 		 */

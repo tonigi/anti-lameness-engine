@@ -842,10 +842,18 @@ private:
 						asum += pa[k];
 						bsum += p[m][k];
 						wsum += weight[m][k] / 3;
+
+//						fprintf(stderr, "a=%f b=%f w=%f\n",
+//								(double) pa[k], 
+//								(double) p[m][k],
+//								(double) (weight[m][k] / (ale_real) 3));
 					}
 
 					this_result[m] = wsum * pow(fabs(asum - bsum), metric_exponent);
 					this_divisor[m] = wsum * pow(asum > bsum ? asum : bsum, metric_exponent);
+//					fprintf(stderr, "asum=%f bsum=%f wsum=%f\n",
+//							(double) asum, (double) bsum,
+//							(double) wsum);
 				}
 
 				if (u.defined()) {
@@ -863,6 +871,10 @@ private:
 
 				result += (this_result[0]);
 				divisor += (this_divisor[0]);
+
+//				fprintf(stderr, "r=%f d=%f tr=%f td=%f\n",
+//						(double) result, (double) divisor,
+//						(double) this_result[0], (double) this_divisor[0]);
 			}
 
 			void rescale(ale_pos scale) {
@@ -1541,8 +1553,8 @@ public:
 				*asum += asums[n];
 				*bsum += bsums[n];
 			}
-			delete asums;
-			delete bsums;
+			delete[] asums;
+			delete[] bsums;
 		}
 	public:
 		exposure_ratio_iterate(pixel_accum *_asum,
@@ -1561,6 +1573,13 @@ public:
 			pass_number = _pass_number;
 		}
 	};
+
+	static void foo(pixel p) {
+		fprintf(stderr, "p=%f %f %f\n",
+			(double) p[0],
+			(double) p[1],
+			(double) p[2]);
+	}
 
 	static void set_exposure_ratio(unsigned int m, struct scale_cluster c,
 			transformation t, int ax_count, int pass_number) {
@@ -1591,9 +1610,15 @@ public:
 
 		new_multiplier = asum / bsum * image_rw::exp(m).get_multiplier();
 
+		fprintf(stderr, "n_m=%f %f %f\n",
+			(double) new_multiplier[0],
+			(double) new_multiplier[1],
+			(double) new_multiplier[2]);
+
 		if (finite(new_multiplier[0])
 		 && finite(new_multiplier[1])
 		 && finite(new_multiplier[2])) {
+			foo(new_multiplier);
 			image_rw::exp(m).set_multiplier(new_multiplier);
 			ui::get()->exp_multiplier(new_multiplier[0],
 					          new_multiplier[1],
@@ -2282,11 +2307,13 @@ public:
 		 */
 
 		for (int lod_ = 0; lod_ < lod; lod_++) {
+			transformation s = element->default_initial_alignment;
 			transformation t = element->default_initial_alignment;
 
 			t.rescale(1 / (double) 2);
 
-			if (t.scaled_height() < 1 || t.scaled_width() < 1) {
+			if (!(t.scaled_height() > 0 && t.scaled_height() < s.scaled_height())
+			 || !(t.scaled_width() > 0  && t.scaled_width() < s.scaled_width())) {
 				perturb /= pow(2, lod - lod_);
 				lod = lod_;
 			} else {

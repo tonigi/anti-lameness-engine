@@ -314,6 +314,7 @@ public:
 	 * four nearest pixels.
 	 */
 	pixel get_bl(point x, int defined = 0) const {
+//		fprintf(stderr, "get_bl x=%f %f\n", (double) x[0], (double) x[1]);
 
 		pixel result;
 
@@ -327,6 +328,8 @@ public:
 		int ly = (int) floor(x[0]);
 		int hy = (int) floor(x[0]) + 1;
 
+//		fprintf(stderr, "get_bl l=%d %d h=%d %d\n", ly, lx, hy, hx);
+
 		pixel neighbor[4];
 		ale_real factor[4];
 
@@ -335,10 +338,20 @@ public:
 		neighbor[2] = get_pixel(hy % _dimy, hx % _dimx);
 		neighbor[3] = get_pixel(ly, hx % _dimx);
 
+//		for (int d = 0; d < 4; d++)
+//			fprintf(stderr, "neighbor_%d=%f %f %f\n", d,
+//					(double) neighbor[d][0],
+//					(double) neighbor[d][1],
+//					(double) neighbor[d][2]);
+
 		factor[0] = (hx - x[1]) * (hy - x[0]);
 		factor[1] = (hx - x[1]) * (x[0] - ly);
 		factor[2] = (x[1] - lx) * (x[0] - ly);
 		factor[3] = (x[1] - lx) * (hy - x[0]);
+
+//		for (int d = 0; d < 4; d++)
+//			fprintf(stderr, "factor_%d=%f\n", d,
+//					(double) factor[d]);
 
 		/*
 		 * Use bilinear and/or geometric interpolation
@@ -355,6 +368,11 @@ public:
 			for (int n = 0; n < 4; n++)
 				result *= ppow(neighbor[n], factor[n]);
 		}
+
+//		fprintf(stderr, "result=%f %f %f\n", 
+//				(double) result[0],
+//				(double) result[1],
+//				(double) result[2]);
 
 		return result;
 	}
