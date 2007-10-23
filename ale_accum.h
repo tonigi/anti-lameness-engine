@@ -123,7 +123,7 @@ public:
 			if (M >= N)
 				i64_result = bits << (i64) ((int) M - (int) N);
 			else
-				i64_result = bits / (1 << (i64) ((int) N - (int) M));
+				i64_result = bits / ((i64) 1 << (i64) ((int) N - (int) M));
 
 			if (i64_result > ALE_FIXED_POSINF)
 				result.bits = ALE_FIXED_POSINF;

@@ -440,7 +440,7 @@ protected:
 
 		for (unsigned int ii = 0; ii < lsimulated->height(); ii++)
 		for (unsigned int jj = 0; jj < lsimulated->width(); jj++) {
-			const ale_real weight_floor = 1 / (ale_real) 50000;
+			const ale_real weight_floor = ale_real_ip_weight_floor;
 			ale_accum zero = 0;
 
 			for (int k = 0; k < 3; k++) {
@@ -496,7 +496,7 @@ protected:
 		for (unsigned int ii = 0; ii < nlsimulated->height(); ii++)
 		for (unsigned int jj = 0; jj < nlsimulated->width(); jj++) {
 			pixel weight = nlsim_weights->get_pixel(ii, jj);
-			ale_real weight_floor = 1e-10;
+			ale_real weight_floor = ale_real_ip_weight_floor;
 			ale_accum zero = 0;
 
 			for (int k = 0; k < 3; k++)

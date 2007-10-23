@@ -128,19 +128,7 @@ public:
 	void set_multiplier(pixel _multiplier) {
 		listener *cl = listener_head;
 
-		fprintf(stderr, "_m=%f %f %f t->_m=%f %f %f\n",
-			(double) _multiplier[0],
-			(double) _multiplier[1],
-			(double) _multiplier[2],
-			(double) this->_multiplier[0],
-			(double) this->_multiplier[1],
-			(double) this->_multiplier[2]);
-
 		while(cl != NULL) {
-			fprintf(stderr, "Triggering '%s' with %f %f %f.\n", cl->name, 
-					(double) (_multiplier[0] / this->_multiplier[0]),
-					(double) (_multiplier[1] / this->_multiplier[1]),
-					(double) (_multiplier[2] / this->_multiplier[2]));
 			cl->trigger(_multiplier / this->_multiplier);
 			cl = cl->next;
 		}

@@ -468,9 +468,9 @@ public:
 
 				unlinearized = unlinearized.clamp();
 
-				p->red = (Quantum) round(unlinearized[0] * MaxRGB);
-				p->green = (Quantum) round(unlinearized[1] * MaxRGB);
-				p->blue = (Quantum) round(unlinearized[2] * MaxRGB);
+				p->red = (Quantum) round((float) unlinearized[0] * MaxRGB);
+				p->green = (Quantum) round((float) unlinearized[1] * MaxRGB);
+				p->blue = (Quantum) round((float) unlinearized[2] * MaxRGB);
 				p++;
 			}
 

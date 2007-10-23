@@ -1574,13 +1574,6 @@ public:
 		}
 	};
 
-	static void foo(pixel p) {
-		fprintf(stderr, "p=%f %f %f\n",
-			(double) p[0],
-			(double) p[1],
-			(double) p[2]);
-	}
-
 	static void set_exposure_ratio(unsigned int m, struct scale_cluster c,
 			transformation t, int ax_count, int pass_number) {
 
@@ -1610,15 +1603,9 @@ public:
 
 		new_multiplier = asum / bsum * image_rw::exp(m).get_multiplier();
 
-		fprintf(stderr, "n_m=%f %f %f\n",
-			(double) new_multiplier[0],
-			(double) new_multiplier[1],
-			(double) new_multiplier[2]);
-
 		if (finite(new_multiplier[0])
 		 && finite(new_multiplier[1])
 		 && finite(new_multiplier[2])) {
-			foo(new_multiplier);
 			image_rw::exp(m).set_multiplier(new_multiplier);
 			ui::get()->exp_multiplier(new_multiplier[0],
 					          new_multiplier[1],

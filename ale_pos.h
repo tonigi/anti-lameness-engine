@@ -49,7 +49,7 @@ typedef double ale_pos;
 
 #elif ALE_COORDINATES == FIXED
 
-typedef ale_fixed<8> ale_pos;
+typedef ale_fixed<16> ale_pos;
 
 #define ALE_POS_PRECISION_STRING "FIXED"
 
@@ -76,8 +76,8 @@ const ale_pos ale_pos_0 = (ale_pos) 0;
 
 #if ALE_COLORS == FIXED && ALE_COORDINATES == FIXED
 
-#define ale_pos_to_real(x) (convert_precision<8,8>(x))
-#define ale_real_to_pos(x) (convert_precision<8,8>(x))
+#define ale_pos_to_real(x) (convert_precision<16,16>(x))
+#define ale_real_to_pos(x) (convert_precision<16,16>(x))
 
 #else
 

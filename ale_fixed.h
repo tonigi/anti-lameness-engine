@@ -135,6 +135,38 @@ public:
 		return (((double) bits) / (1 << N));
 	}
 
+	operator float() const {
+#if 1
+		/*
+		 * Removed for performance reasons.
+		 */
+
+		assert(!casting_disabled);
+		if (bits == ALE_FIXED_NAN) {
+			float zero = 0;
+			float nan = zero / zero;
+			assert (isnan(nan));
+			return nan;
+		} else if (bits == ALE_FIXED_NEGINF) {
+			float zero = 0;
+			float negone = -1;
+			float neginf = negone / zero;
+			assert (isinf(neginf));
+			assert (neginf < 0);
+			return neginf;
+		} else if (bits == ALE_FIXED_POSINF) {
+			float zero = 0;
+			float posone = +1;
+			float posinf = posone / zero;
+			assert (isinf(posinf));
+			assert (posinf > 0);
+			return posinf;
+		}
+#endif
+
+		return (((float) bits) / (1 << N));
+	}
+
 	operator int() const {
 #if 1
 		/*
@@ -658,7 +690,7 @@ ale_fixed<N> sqrt(ale_fixed<N> f) {
 		if (guess.bits <= 0)
 			return 0;
 
-		long long sf = f.bits << (N - 2);
+		long long sf = (long long) f.bits << (N - 2);
 		guess.bits = guess.bits + sf / guess.bits;
 	}
 

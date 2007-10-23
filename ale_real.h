@@ -44,6 +44,7 @@
 typedef float ale_real;
 typedef float ale_sreal;
 
+#define ale_real_ip_weight_floor 1e-10
 #define ale_real_confidence_floor 0.001
 
 #define ALE_REAL_PRECISION_STRING "SINGLE"
@@ -53,6 +54,7 @@ typedef float ale_sreal;
 typedef double ale_real;
 typedef double ale_sreal;
 
+#define ale_real_ip_weight_floor 1e-10
 #define ale_real_confidence_floor 0.000001
 
 #define ALE_REAL_PRECISION_STRING "DOUBLE"
@@ -223,14 +225,15 @@ public:
 
 #elif ALE_COLORS == FIXED
 
-typedef ale_fixed<8> ale_real;
-typedef ale_fixed<8> ale_sreal;
+typedef ale_fixed<16> ale_real;
+typedef ale_fixed<16> ale_sreal;
 
 #undef ale_real_enable_casting
 #undef ale_real_disable_casting
 #define ale_real_enable_casting() ale_real::enable_casting()
 #define ale_real_disable_casting() ale_real::disable_casting()
 
+#define ale_real_ip_weight_floor (1 / (ale_real) 100)
 #define ale_real_confidence_floor (1 / (ale_real) 10)
 
 #define ALE_REAL_PRECISION_STRING "FIXED"
@@ -242,6 +245,7 @@ typedef ale_fixed<8> ale_sreal;
 typedef float ale_real;
 typedef float ale_sreal;
 
+#define ale_real_ip_weight_floor 1e-10
 #define ale_real_confidence_floor 0.001
 
 #define ALE_REAL_PRECISION_STRING "SINGLE"

@@ -113,6 +113,7 @@ private:
 						coords[0] = ii;
 						coords[1] = jj;
 					}
+
 				}
 
 				radius++;
