@@ -1707,7 +1707,7 @@ public:
 			sn->accumulate_color_1(f, pcolor, encounter);
 			d2::pixel channel_occ = pexp(-colordiff * colordiff);
 
-			ale_accum occ = channel_occ[0];
+			ale_real occ = channel_occ[0];
 
 			for (int k = 1; k < 3; k++)
 				if (channel_occ[k] < occ)

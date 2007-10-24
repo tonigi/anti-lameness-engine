@@ -218,7 +218,7 @@ class cpf {
 	/*
 	 * Measure the error between a projected system and a solved coordinate.
 	 */
-	static ale_accum measure_projected_error(point solved, const d2::point coords[], int n) {
+	static ale_real measure_projected_error(point solved, const d2::point coords[], int n) {
 		ale_accum error = 0;
 		ale_accum divisor = 0;
 

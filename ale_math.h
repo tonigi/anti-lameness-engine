@@ -39,9 +39,12 @@
  * switches to handle different types.
  */
 
-#define FIXED 4
+#define FIXED16 4
+#define FIXED32 5
 
-#if ALE_COLORS == FIXED || ALE_COORDINATES == FIXED
+
+#if ALE_COLORS == FIXED16 || ALE_COLORS == FIXED32 \
+ || ALE_COORDINATES == FIXED16 || ALE_COORDINATES == FIXED32
 
 /*
  * Since we need custom isnan and isinf for fixed-point values, we disable any
@@ -53,7 +56,8 @@
 
 #endif
 
-#undef FIXED
+#undef FIXED16
+#undef FIXED32
 
 #ifndef isnan
 # define isnan(x) ale_isnan(x)

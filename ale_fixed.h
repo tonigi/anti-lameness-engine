@@ -27,36 +27,103 @@
 
 #include "ale_math.h"
 
-#define FIXED 4
+#define FIXED16 4
+#define FIXED32 5
 
 /*
  * Define a fixed point data type.
  */
 
-#define ALE_FIXED_POSINF 2147483647
-#define ALE_FIXED_NEGINF -2147483646
-#define ALE_FIXED_NAN -2147483647
+class ale_fixed_16 {
+public:
+	typedef short bits_t;
+	typedef int mulbits_t;
+	static bits_t posinf() {
+		return 32767;
+	}
+	static bits_t neginf() {
+		return -32766;
+	}
+	static bits_t nan() {
+		return -32767;
+	}
+	static bits_t rint(double d) {
+		return (bits_t) lrint(d);
+	}
+};
 
-template <unsigned int N>
+class ale_fixed_16_accum {
+public:
+	typedef int bits_t;
+	typedef int mulbits_t;
+	static bits_t posinf() {
+		return 2147483647;
+	}
+	static bits_t neginf() {
+		return -2147483646;
+	}
+	static bits_t nan() {
+		return -2147483647;
+	}
+	static bits_t rint(double d) {
+		return (bits_t) lrint(d);
+	}
+};
+
+#if ALE_COLORS == FIXED32 || ALE_COORDINATES == FIXED32
+class ale_fixed_32 {
+public:
+	typedef int bits_t;
+	typedef long long mulbits_t;
+	static bits_t posinf() {
+		return 2147483647;
+	}
+	static bits_t neginf() {
+		return -2147483646;
+	}
+	static bits_t nan() {
+		return -2147483647;
+	}
+	static bits_t rint(double d) {
+		return (bits_t) lrint(d);
+	}
+};
+#endif
+
+#if ALE_COLORS == FIXED32
+class ale_fixed_32_accum {
+public:
+	typedef long long bits_t;
+	typedef long long mulbits_t;
+	static bits_t posinf() {
+		return 9223372036854775807LL;
+	}
+	static bits_t neginf() {
+		return -9223372036854775806LL;
+	}
+	static bits_t nan() {
+		return -9223372036854775807LL;
+	}
+	static bits_t rint(double d) {
+		return (bits_t) llrint(d);
+	}
+};
+#endif
+
+#define ALE_FIXED_NAN (fixed_type::nan())
+#define ALE_FIXED_POSINF (fixed_type::posinf())
+#define ALE_FIXED_NEGINF (fixed_type::neginf())
+
+template<class fixed_type, unsigned int N>
 class ale_fixed {
 	static int casting_disabled;
 
-	static void sanity_check_fail() {
-		assert(0);
-		fprintf(stderr, "\n\nFailed fixed-point sanity test.\n\n");
-		exit(1);
-	}
-
 public:
-	typedef int i32;
-	typedef long long i64;
 
-	i32 bits;
-
-	/*
-	 * Sanity checks.
-	 */
-	static void sanity_check();
+	typedef typename fixed_type::bits_t bits_t;
+	typedef typename fixed_type::mulbits_t mulbits_t;
+	
+	bits_t bits;
 
 	/*
 	 * Constructors.
@@ -196,9 +263,108 @@ public:
 		return (unsigned int) operator int();
 	}
 
+	template<class fixed_type_2, unsigned int M>
+	operator ale_fixed<fixed_type_2, M>() const {
+		ale_fixed<fixed_type_2, M> result;
+
+		if (bits == ALE_FIXED_NAN) {
+			result.bits = fixed_type_2::nan();
+			return result;
+		}
+
+		if (bits == ALE_FIXED_POSINF) {
+			result.bits = fixed_type_2::posinf();
+			return result;
+		}
+
+		if (bits == ALE_FIXED_NEGINF) {
+			result.bits = fixed_type_2::neginf();
+			return result;
+		}
+
+		if (sizeof(ale_fixed<fixed_type_2,M>) > sizeof(ale_fixed<fixed_type,N>)) {
+			typedef typename fixed_type_2::bits_t bits_t_calc;
+
+			bits_t_calc type_result;
+
+			if (M >= N)
+				type_result = bits << (bits_t_calc) ((int) M - (int) N);
+			else
+				type_result = bits / ((bits_t_calc) 1 << (bits_t_calc) ((int) N - (int) M));
+
+			result.bits = type_result;
+
+		} else {
+			typedef bits_t bits_t_calc;
+
+			bits_t_calc type_result;
+
+			if (M >= N)
+				type_result = bits << (bits_t_calc) ((int) M - (int) N);
+			else
+				type_result = bits / ((bits_t_calc) 1 << (bits_t_calc) ((int) N - (int) M));
+
+			if (type_result > fixed_type_2::posinf())
+				result.bits = fixed_type_2::posinf();
+			else if (type_result < fixed_type_2::neginf())
+				result.bits = fixed_type_2::neginf();
+			else
+				result.bits = type_result;
+		}
+
+		return result;
+	}
 	/*
 	 * Cast from ordinary numbers
 	 */
+
+	template<class fixed_type_2, unsigned int M>
+	ale_fixed(const ale_fixed<fixed_type_2,M> &d) {
+
+		/*
+		 * XXX: this shouldn't be necessary.
+		 */
+
+		bits = 0;
+
+		if (d.bits == fixed_type_2::nan()) {
+			bits = ALE_FIXED_NAN;
+			return;
+		}
+
+		if (bits == fixed_type_2::posinf()) {
+			bits = ALE_FIXED_POSINF;
+			return;
+		}
+
+		if (bits == fixed_type_2::neginf()) {
+			bits = ALE_FIXED_NEGINF;
+			return;
+		}
+
+		if (sizeof(ale_fixed<fixed_type,N>) > sizeof(ale_fixed<fixed_type_2,M>)) {
+			if (N >= M)
+				bits = d.bits << (bits_t) ((int) N - (int) M);
+			else
+				bits = d.bits / ((bits_t) 1 << (bits_t) ((int) M - (int) N));
+		} else {
+			typedef typename ale_fixed<fixed_type_2,M>::bits_t bits_t_calc;
+
+			bits_t_calc type_result;
+
+			if (N >= M)
+				type_result = d.bits << (bits_t_calc) ((int) N - (int) M);
+			else
+				type_result = d.bits / ((bits_t_calc) 1 << (bits_t_calc) ((int) M - (int) N));
+
+			if (type_result > ALE_FIXED_POSINF)
+				bits = ALE_FIXED_POSINF;
+			else if (type_result < ALE_FIXED_NEGINF)
+				bits = ALE_FIXED_NEGINF;
+			else
+				bits = type_result;
+		}
+	}
 
 	ale_fixed(double d) {
 		assert(!casting_disabled);
@@ -210,7 +376,7 @@ public:
 		} else if (isinf(d) && d < 0) {
 			bits = ALE_FIXED_NEGINF;
 		} else {
-			bits = (int) lrint(d * (1 << N));
+			bits = (bits_t) fixed_type::rint(d * (1 << N));
 
 #if 1
 			/*
@@ -227,7 +393,7 @@ public:
 	}
 
 	ale_fixed(int d) {
-		bits = d << N;
+		bits = (bits_t) d << N;
 #if 1
 		/*
 		 * Removed for performance reasons.
@@ -242,7 +408,7 @@ public:
 	}
 
 	ale_fixed(unsigned int d) {
-		bits = d << N;
+		bits = (bits_t) d << N;
 
 		assert((unsigned int) (bits >> N) == d);
 
@@ -286,27 +452,27 @@ public:
 		}
 #endif
 
-		i32 i32_result = bits + f.bits;
+		bits_t bits_result = bits + f.bits;
 
 #if 1
 		/*
 		 * Removed for performance reasons.
 		 */
 
-		if (i32_result >= ALE_FIXED_POSINF
+		if (bits_result >= ALE_FIXED_POSINF
 		 || bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_POSINF
-		 || bits > 0 && f.bits > 0 && i32_result < 0) {
+		 || bits > 0 && f.bits > 0 && bits_result < 0) {
 			result.bits = ALE_FIXED_POSINF;
 			return result;
-		} else if (i32_result <= ALE_FIXED_NEGINF
+		} else if (bits_result <= ALE_FIXED_NEGINF
 		      || bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_NEGINF
-		      || bits < 0 && f.bits < 0 && i32_result > 0) {
+		      || bits < 0 && f.bits < 0 && bits_result > 0) {
 			result.bits = ALE_FIXED_NEGINF;
 			return result;
 		}
 #endif
 
-		result.bits = i32_result;
+		result.bits = bits_result;
 
 		return result;
 	}
@@ -335,27 +501,27 @@ public:
 		}
 #endif
 
-		i32 i32_result = bits - f.bits;
+		bits_t bits_result = bits - f.bits;
 
 #if 1
 		/*
 		 * Removed for performance reasons.
 		 */
 
-		if (i32_result >= ALE_FIXED_POSINF
+		if (bits_result >= ALE_FIXED_POSINF
 		 || bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_NEGINF
-		 || bits > 0 && f.bits < 0 && i32_result < 0) {
+		 || bits > 0 && f.bits < 0 && bits_result < 0) {
 			result.bits = ALE_FIXED_POSINF;
 			return result;
-		} else if (i32_result <= ALE_FIXED_NEGINF
+		} else if (bits_result <= ALE_FIXED_NEGINF
 		      || bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_POSINF
-		      || bits < 0 && f.bits > 0 && i32_result > 0) {
+		      || bits < 0 && f.bits > 0 && bits_result > 0) {
 			result.bits = ALE_FIXED_NEGINF;
 			return result;
 		}
 #endif
 
-		result.bits = i32_result;
+		result.bits = bits_result;
 
 		return result;
 	}
@@ -383,22 +549,22 @@ public:
 #endif 
 			
 
-		i64 i64_result = ((i64) bits * (i64) f.bits) / (1 << N);
+		mulbits_t mul_result = ((mulbits_t) bits * (mulbits_t) f.bits) / (1 << N);
 
 #if 1
 		/*
 		 * Removed for performance reasons.
 		 */
 
-		if (i64_result > (i64) ALE_FIXED_POSINF 
-		 || i64_result < (i64) ALE_FIXED_NEGINF
+		if (mul_result > (mulbits_t) ALE_FIXED_POSINF 
+		 || mul_result < (mulbits_t) ALE_FIXED_NEGINF
 		 || bits == ALE_FIXED_POSINF || f.bits == ALE_FIXED_POSINF
 		 || bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_NEGINF) {
-			if (i64_result > 0)
+			if (mul_result > 0)
 				result.bits = ALE_FIXED_POSINF;
-			else if (i64_result < 0)
+			else if (mul_result < 0)
 				result.bits = ALE_FIXED_NEGINF;
-			else if (i64_result == 0)
+			else if (mul_result == 0)
 				result.bits = ALE_FIXED_NAN;
 			else
 				assert(0);
@@ -406,7 +572,7 @@ public:
 		}
 #endif
 
-		result.bits = i64_result;
+		result.bits = mul_result;
 		return result;
 	}
 
@@ -418,7 +584,7 @@ public:
 		return operator*(ale_fixed(i));
 	}
 
-	ale_fixed operator/(ale_fixed<N> f) const {
+	ale_fixed operator/(ale_fixed f) const {
 		ale_fixed result;
 
 		/*
@@ -458,23 +624,23 @@ public:
 		} 
 #endif
 			
-		i64 i64_result = ((i64) bits << N) / f.bits;
+		mulbits_t div_result = ((mulbits_t) bits << N) / f.bits;
 
 #if 1
 		/*
 		 * Removed for performance reasons.
 		 */
 
-		if (i64_result > (i64) ALE_FIXED_POSINF) {
+		if (div_result > (mulbits_t) ALE_FIXED_POSINF) {
 			result.bits = ALE_FIXED_POSINF;
 			return result;
-		} else if (i64_result < (i64) ALE_FIXED_NEGINF) {
+		} else if (div_result < (mulbits_t) ALE_FIXED_NEGINF) {
 			result.bits = ALE_FIXED_NEGINF;
 			return result;
 		}
 #endif
 
-		result.bits = (i32) i64_result;
+		result.bits = (bits_t) div_result;
 		return result;
 	}
 
@@ -588,6 +754,10 @@ public:
 		return operator>=((ale_fixed) d);
 	}
 
+	int operator>=(float d) const {
+		return operator>=((ale_fixed) d);
+	}
+
 	int operator<=(double d) const {
 		return operator<=((ale_fixed) d);
 	}
@@ -635,26 +805,28 @@ public:
 };
 
 #define ALE_FIXED_INCORPORATE_OPERATOR(return_value, op)			\
-template<unsigned int N>					\
-return_value operator op(double a, const ale_fixed<N> &f) {		\
-	ale_fixed<N> g(a);					\
+template<class fixed_type, unsigned int N>					\
+return_value operator op(double a, const ale_fixed<fixed_type, N> &f) {		\
+	ale_fixed<fixed_type, N> g(a);					\
 	return g.operator op(f);				\
 }								\
 								\
-template<unsigned int N>					\
-return_value operator op(int a, const ale_fixed<N> &f) {		\
-	return (ale_fixed<N>) a op f;					\
+template<class fixed_type, unsigned int N>					\
+return_value operator op(int a, const ale_fixed<fixed_type, N> &f) {		\
+	return (ale_fixed<fixed_type, N>) a op f;					\
 }								\
 								\
-template<unsigned int N>					\
-return_value operator op(unsigned int a, const ale_fixed<N> &f) {	\
-	return (ale_fixed<N>) a op f;					\
+template<class fixed_type, unsigned int N>					\
+return_value operator op(unsigned int a, const ale_fixed<fixed_type, N> &f) {	\
+	return (ale_fixed<fixed_type, N>) a op f;					\
 }								\
 
-ALE_FIXED_INCORPORATE_OPERATOR(ale_fixed<N>, +);
-ALE_FIXED_INCORPORATE_OPERATOR(ale_fixed<N>, -);
-ALE_FIXED_INCORPORATE_OPERATOR(ale_fixed<N>, *);
-ALE_FIXED_INCORPORATE_OPERATOR(ale_fixed<N>, /);
+#define STDARGS ale_fixed<fixed_type,N>
+
+ALE_FIXED_INCORPORATE_OPERATOR(STDARGS, +);
+ALE_FIXED_INCORPORATE_OPERATOR(STDARGS, -);
+ALE_FIXED_INCORPORATE_OPERATOR(STDARGS, *);
+ALE_FIXED_INCORPORATE_OPERATOR(STDARGS, /);
 ALE_FIXED_INCORPORATE_OPERATOR(int, <=);
 ALE_FIXED_INCORPORATE_OPERATOR(int, >=);
 ALE_FIXED_INCORPORATE_OPERATOR(int, <);
@@ -662,15 +834,15 @@ ALE_FIXED_INCORPORATE_OPERATOR(int, >);
 ALE_FIXED_INCORPORATE_OPERATOR(int, !=);
 ALE_FIXED_INCORPORATE_OPERATOR(int, ==);
 
-template<unsigned int N>
-ale_fixed<N> fabs(ale_fixed<N> f) {
-	if (f < ale_fixed<N>())
+template<class fixed_type, unsigned int N>
+ale_fixed<fixed_type, N> fabs(ale_fixed<fixed_type, N> f) {
+	if (f < ale_fixed<fixed_type, N>())
 		return -f;
 	return f;
 }
 
-template<unsigned int N>
-ale_fixed<N> pow(ale_fixed<N> f, double d) {
+template<class fixed_type, unsigned int N>
+ale_fixed<fixed_type, N> pow(ale_fixed<fixed_type, N> f, double d) {
 	return pow((double) f, (double) d);
 }
 
@@ -680,9 +852,9 @@ ale_fixed<N> pow(ale_fixed<N> f, double d) {
  * http://en.wikipedia.org/wiki/Methods_of_computing_square_roots
  */
 
-template<unsigned int N>
-ale_fixed<N> sqrt(ale_fixed<N> f) {
-	ale_fixed<N> guess = f;
+template<class fixed_type, unsigned int N>
+ale_fixed<fixed_type, N> sqrt(ale_fixed<fixed_type, N> f) {
+	ale_fixed<fixed_type, N> guess = f;
 
 	for (int i = 0; i < 5; i++) {
 		guess.bits >>= 1;
@@ -697,8 +869,8 @@ ale_fixed<N> sqrt(ale_fixed<N> f) {
 	return guess;
 }
 
-template<unsigned int N>
-ale_fixed<N> pow(ale_fixed<N> f, ale_fixed<N> d) {
+template<class fixed_type, unsigned int N>
+ale_fixed<fixed_type, N> pow(ale_fixed<fixed_type, N> f, ale_fixed<fixed_type, N> d) {
 	if (d == 2) 
 		return f * f;
 
@@ -706,13 +878,13 @@ ale_fixed<N> pow(ale_fixed<N> f, ale_fixed<N> d) {
 		return f;
 
 	if (d == 0)
-		return ale_fixed<N>(1);
+		return ale_fixed<fixed_type,N>(1);
 
 	return pow((double) f, (double) d);
 }
 
-template<unsigned int N>
-ale_fixed<N> pow(ale_fixed<N> f, int d) {
+template<class fixed_type, unsigned int N>
+ale_fixed<fixed_type, N> pow(ale_fixed<fixed_type, N> f, int d) {
 	if (d == 2)
 		return f * f;
 
@@ -720,7 +892,7 @@ ale_fixed<N> pow(ale_fixed<N> f, int d) {
 		return f;
 
 	if (d == 0)
-		return ale_fixed<N>(1);
+		return ale_fixed<fixed_type, N>(1);
 
 	if (d > 1)
 		return pow(f, d / 2) * pow(f, d - d / 2);
@@ -731,8 +903,8 @@ ale_fixed<N> pow(ale_fixed<N> f, int d) {
 	assert(0);
 }
 
-template<unsigned int N>
-ale_fixed<N> pow(ale_fixed<N> f, unsigned int d) {
+template<class fixed_type, unsigned int N>
+ale_fixed<fixed_type, N> pow(ale_fixed<fixed_type, N> f, unsigned int d) {
 	if (d == 2)
 		return f * f;
 
@@ -740,13 +912,13 @@ ale_fixed<N> pow(ale_fixed<N> f, unsigned int d) {
 		return f;
 
 	if (d == 0)
-		return ale_fixed<N>(1);
+		return ale_fixed<fixed_type, N>(1);
 
 	return pow(f, d / 2) * pow(f, d - d / 2);
 }
 
-template<unsigned int N>
-ale_fixed<N> floor(ale_fixed<N> f) {
+template<class fixed_type, unsigned int N>
+ale_fixed<fixed_type, N> floor(ale_fixed<fixed_type, N> f) {
 
 #if 1
 		/*
@@ -760,7 +932,7 @@ ale_fixed<N> floor(ale_fixed<N> f) {
 		return f;
 #endif
 
-	ale_fixed<N> result;
+	ale_fixed<fixed_type, N> result;
 
 	result.bits = (f.bits & ~((1 << N) - 1));
 
@@ -773,8 +945,8 @@ ale_fixed<N> floor(ale_fixed<N> f) {
 	return result;
 }
 
-template<unsigned int N>
-ale_fixed<N> lrintf(ale_fixed<N> f) {
+template<class fixed_type, unsigned int N>
+ale_fixed<fixed_type, N> lrintf(ale_fixed<fixed_type, N> f) {
 
 #if 1
 		/*
@@ -788,7 +960,7 @@ ale_fixed<N> lrintf(ale_fixed<N> f) {
 		return f;
 #endif
 
-	ale_fixed<N> result = floor(f);
+	ale_fixed<fixed_type, N> result = floor(f);
 
 	if (f.bits - result.bits >= (1 << N - 1))
 		result.bits += (1 << N);
@@ -796,32 +968,28 @@ ale_fixed<N> lrintf(ale_fixed<N> f) {
 	return result;
 }
 
-template<unsigned int N>
-ale_fixed<N> ceil(ale_fixed<N> f) {
+template<class fixed_type, unsigned int N>
+ale_fixed<fixed_type, N> ceil(ale_fixed<fixed_type, N> f) {
 	return -floor(-f);
 }
 
-#if ALE_COLORS == FIXED || ALE_COORDINATES == FIXED
-
-template<unsigned int N>
-int ale_isinf(ale_fixed<N> f) {
+template<class fixed_type, unsigned int N>
+int ale_isinf(ale_fixed<fixed_type, N> f) {
 	return (f.bits == ALE_FIXED_NEGINF || f.bits == ALE_FIXED_POSINF);
 }
 
-template<unsigned int N>
-int ale_isnan(ale_fixed<N> f) {
+template<class fixed_type, unsigned int N>
+int ale_isnan(ale_fixed<fixed_type, N> f) {
 	return (f.bits == ALE_FIXED_NAN);
 }
 
-#endif
-
-template<unsigned int N>
-int finite(ale_fixed<N> f) {
+template<class fixed_type, unsigned int N>
+int finite(ale_fixed<fixed_type, N> f) {
 	return (f.bits < ALE_FIXED_POSINF && f.bits > ALE_FIXED_NEGINF);
 }
 
-template<unsigned int N, int M>
-ale_fixed<N> convert_precision(ale_fixed<M> m) {
+template<class fixed_type, unsigned int N, unsigned int M>
+ale_fixed<fixed_type, N> convert_precision(ale_fixed<fixed_type, M> m) {
 
 	/*
 	 * XXX: Checks should be added that precision is not
@@ -831,132 +999,17 @@ ale_fixed<N> convert_precision(ale_fixed<M> m) {
 	if (N != M) 
 		assert (0);
 	
-	ale_fixed<N> n;
+	ale_fixed<fixed_type, N> n;
 
 	n.bits = m.bits << (N - M);
 
 	return n;
 }
 
-template<unsigned int N>
-int ale_fixed<N>::casting_disabled = 0;
+template<class fixed_type, unsigned int N>
+int ale_fixed<fixed_type, N>::casting_disabled = 0;
 
-template<unsigned int N>
-void ale_fixed<N>::sanity_check() {
-
-	/*
-	 * i32 should accept 32-bit integers.
-	 */
-
-	i32 test_value = ALE_FIXED_POSINF;
-
-	int count = 0;
-
-	while (test_value /= 2)
-		count++;
-
-	assert (count == 30);
-	if (count != 30)
-		sanity_check_fail();
-
-	/*
-	 * i32 should be signed.
-	 */
-
-	test_value = 0;
-
-	test_value--;
-
-	assert (test_value < 0);
-	if (!(test_value < 0))
-		sanity_check_fail();
-
-	/*
-	 * i64 should accept 64-bit integers.
-	 */
-
-	i64 test_value_2 = ALE_FIXED_POSINF;
-
-	test_value_2 *= test_value_2;
-
-	count = 0;
-
-	while (test_value_2 /= 2)
-		count++;
-
-	assert (count == 61);
-	if (count != 61)
-		sanity_check_fail();
-
-	/*
-	 * i64 should be signed.
-	 */
-
-	test_value_2 = 0;
-
-	test_value_2--;
-
-	assert (test_value_2 < 0);
-	if (!(test_value_2 < 0))
-		sanity_check_fail();
-
-	/*
-	 * Addition should work
-	 */
-
-	ale_fixed<N> a(10), b(2.5);
-	ale_fixed<N> c = a + b;
-
-	assert ((double) c > 12 && (double) c < 13);
-	if (!((double) c > 12 && (double) c < 13))
-		sanity_check_fail();
-
-	/*
-	 * Multiplication should work
-	 */
-
-	a = 11; b = 2.5;
-	c = a * b;
-
-	assert ((double) c > 27 && (double) c < 28);
-	if (!((double) c > 27 && (double) c < 28))
-		sanity_check_fail();
-
-	/*
-	 * Division should work.
-	 */
-
-	a = 11; b = 2;
-	c = a / b;
-
-	assert ((double) c > 5 && (double) c < 6);
-	if (!((double) c > 5 && (double) c < 6))
-		sanity_check_fail();
-
-	/*
-	 * Subtraction should work.
-	 */
-
-	a = 11; b = 2.5;
-	c = a - b;
-
-	assert ((double) c > 8 && (double) c < 9);
-	if (!((double) c > 8 && (double) c < 9))
-		sanity_check_fail();
-
-	/*
-	 * Infinite values should work.
-	 */
-
-	a = +1; b = 0;
-	c = a / b;
-
-	if (!(c > 0 && c > a && c > b && b < c && a < c)) {
-		assert(0);
-		sanity_check_fail();
-	}
-}
-
-#undef FIXED
+#undef FIXED16
+#undef FIXED32
 
 #endif

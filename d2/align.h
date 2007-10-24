@@ -591,7 +591,7 @@ private:
 
 			rng.seed(1 + subdomain);
 
-			index = -1 + (int) ceil((mc_max+1) 
+			index = -1 + (int) ceil(((ale_accum) mc_max+1) 
 				   * ( (1 + ((ale_accum) (rng.get())) ) 
 				     / (1 + ((ale_accum) RAND_MAX)) ));
 		}
@@ -605,7 +605,7 @@ private:
 		}
 
 		void operator++(int whats_this_for) {
-			index += (int) ceil((mc_max+1) 
+			index += (int) ceil((ale_accum) (mc_max+1) 
 			       * ( (1 + ((ale_accum) (rng.get())) ) 
 			 	 / (1 + ((ale_accum) RAND_MAX)) ));
 		}
@@ -734,7 +734,7 @@ private:
 			}
 
 			ale_accum get_error() const {
-				return pow(result / divisor, 1/metric_exponent);
+				return pow(result / divisor, 1/(ale_accum) metric_exponent);
 			}
 
 			void sample(int f, scale_cluster c, int i, int j, point t, point u,

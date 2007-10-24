@@ -26,7 +26,8 @@
 #define SINGLE 1
 #define DOUBLE 2
 #define HALF 3
-#define FIXED 4
+#define FIXED32 4
+#define FIXED16 5
 
 #define ale_real_enable_casting()
 #define ale_real_disable_casting()
@@ -223,10 +224,10 @@ public:
 
 #define ALE_REAL_PRECISION_STRING "HALF"
 
-#elif ALE_COLORS == FIXED
+#elif ALE_COLORS == FIXED32
 
-typedef ale_fixed<16> ale_real;
-typedef ale_fixed<16> ale_sreal;
+typedef ale_fixed<ale_fixed_32,16> ale_real;
+typedef ale_fixed<ale_fixed_32,16> ale_sreal;
 
 #undef ale_real_enable_casting
 #undef ale_real_disable_casting
@@ -236,7 +237,22 @@ typedef ale_fixed<16> ale_sreal;
 #define ale_real_ip_weight_floor (1 / (ale_real) 100)
 #define ale_real_confidence_floor (1 / (ale_real) 10)
 
-#define ALE_REAL_PRECISION_STRING "FIXED"
+#define ALE_REAL_PRECISION_STRING "FIXED32"
+
+#elif ALE_COLORS == FIXED16
+
+typedef ale_fixed<ale_fixed_16,8> ale_real;
+typedef ale_fixed<ale_fixed_16,8> ale_sreal;
+
+#undef ale_real_enable_casting
+#undef ale_real_disable_casting
+#define ale_real_enable_casting() ale_real::enable_casting()
+#define ale_real_disable_casting() ale_real::disable_casting()
+
+#define ale_real_ip_weight_floor (1 / (ale_real) 100)
+#define ale_real_confidence_floor (1 / (ale_real) 10)
+
+#define ALE_REAL_PRECISION_STRING "FIXED16"
 
 #else
 
@@ -257,6 +273,7 @@ const ale_real ale_real_0 = (ale_real) 0;
 #undef SINGLE
 #undef DOUBLE
 #undef HALF
-#undef FIXED
+#undef FIXED16
+#undef FIXED32
 
 #endif

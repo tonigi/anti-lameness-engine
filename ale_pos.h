@@ -25,11 +25,8 @@
 
 #define SINGLE 1
 #define DOUBLE 2
-#define FIXED 3
-
-#define ale_pos_disable_casting()
-#define ale_pos_enable_casting() 
-#define ale_pos_casting_status() 1
+#define FIXED16 3
+#define FIXED32 4
 
 /*
  * Real-valued type used to represent coordinates in an image domain.
@@ -41,25 +38,38 @@ typedef float ale_pos;
 
 #define ALE_POS_PRECISION_STRING "SINGLE"
 
+#define ale_pos_disable_casting()
+#define ale_pos_enable_casting() 
+#define ale_pos_casting_status() 1
+
 #elif ALE_COORDINATES == DOUBLE
 
 typedef double ale_pos;
 
 #define ALE_POS_PRECISION_STRING "DOUBLE"
 
-#elif ALE_COORDINATES == FIXED
+#define ale_pos_disable_casting()
+#define ale_pos_enable_casting() 
+#define ale_pos_casting_status() 1
 
-typedef ale_fixed<16> ale_pos;
+#elif ALE_COORDINATES == FIXED32
 
-#define ALE_POS_PRECISION_STRING "FIXED"
+typedef ale_fixed<ale_fixed_32,16> ale_pos;
 
-#undef ale_pos_disable_casting
+#define ALE_POS_PRECISION_STRING "FIXED32"
+
 #define ale_pos_disable_casting() ale_pos::disable_casting()
-
-#undef ale_pos_enable_casting
 #define ale_pos_enable_casting() ale_pos::enable_casting()
+#define ale_pos_casting_status() ale_pos::casting_status()
 
-#undef ale_pos_casting_status
+#elif ALE_COORDINATES == FIXED32
+
+typedef ale_fixed<ale_fixed_16,8> ale_pos;
+
+#define ALE_POS_PRECISION_STRING "FIXED16"
+
+#define ale_pos_disable_casting() ale_pos::disable_casting()
+#define ale_pos_enable_casting() ale_pos::enable_casting()
 #define ale_pos_casting_status() ale_pos::casting_status()
 
 #else
@@ -70,14 +80,18 @@ typedef float ale_pos;
 
 #define ALE_POS_PRECISION_STRING "SINGLE"
 
+#define ale_pos_disable_casting()
+#define ale_pos_enable_casting() 
+#define ale_pos_casting_status() 1
+
 #endif
 
 const ale_pos ale_pos_0 = (ale_pos) 0;
 
 #if ALE_COLORS == FIXED && ALE_COORDINATES == FIXED
 
-#define ale_pos_to_real(x) (convert_precision<16,16>(x))
-#define ale_real_to_pos(x) (convert_precision<16,16>(x))
+#define ale_pos_to_real(x) (x)
+#define ale_real_to_pos(x) (x)
 
 #else
 
@@ -89,6 +103,7 @@ const ale_pos ale_pos_0 = (ale_pos) 0;
 #undef SINGLE
 #undef DOUBLE
 #undef HALF
-#undef FIXED
+#undef FIXED16
+#undef FIXED32
 
 #endif

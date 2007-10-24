@@ -137,7 +137,7 @@ inline pixel_accum operator*(double d, const pixel_accum &p) {
 }
 
 inline std::ostream &operator<<(std::ostream &o, const pixel_accum &p) {
-	o << "[" << p[0] << " " << p[1] << " " << p[2] << "]";
+	o << "[" << (double) p[0] << " " << (double) p[1] << " " << (double) p[2] << "]";
 	return o;
 }
 
