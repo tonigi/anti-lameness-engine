@@ -37,6 +37,8 @@ typedef ale_fixed<ale_fixed_16_accum,8> ale_accum;
 #define ale_accum_enable_casting() ale_fixed<ale_fixed_16_accum,8>::enable_casting()
 #define ale_accum_disable_casting() ale_fixed<ale_fixed_16_accum,8>::disable_casting()
 
+#define RANDOM_MASK 0xffff
+
 #elif ALE_COLORS == FIXED32
 
 typedef ale_fixed<ale_fixed_32_accum,15> ale_accum;
@@ -44,12 +46,16 @@ typedef ale_fixed<ale_fixed_32_accum,15> ale_accum;
 #define ale_accum_enable_casting() ale_fixed<ale_fixed_32_accum,15>::enable_casting()
 #define ale_accum_disable_casting() ale_fixed<ale_fixed_32_accum,15>::disable_casting()
 
+#define RANDOM_MASK 0xffffffff
+
 #else
 
 typedef double ale_accum;
 
 #define ale_accum_disable_casting()
 #define ale_accum_enable_casting()
+
+#define RANDOM_MASK 0xffffffff
 
 #endif
 

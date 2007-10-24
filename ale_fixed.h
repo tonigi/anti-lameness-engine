@@ -263,6 +263,7 @@ public:
 		return (unsigned int) operator int();
 	}
 
+#if 0
 	template<class fixed_type_2, unsigned int M>
 	operator ale_fixed<fixed_type_2, M>() const {
 		ale_fixed<fixed_type_2, M> result;
@@ -314,6 +315,8 @@ public:
 
 		return result;
 	}
+#endif
+
 	/*
 	 * Cast from ordinary numbers
 	 */

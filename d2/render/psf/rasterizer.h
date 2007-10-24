@@ -97,8 +97,8 @@ public:
 
 		ale_real resolution_multiplier = 20;  /* Arbitrary */
 
-		_filter_dim_i = (int) ceil((ale_real) 2 * _height * resolution_multiplier / ale_pos_to_real(min_diff[0]));
-		_filter_dim_j = (int) ceil((ale_real) 2 * _width * resolution_multiplier / ale_pos_to_real(min_diff[1]));
+		_filter_dim_i = (int) ceil((ale_real) 2 * _height * resolution_multiplier / (ale_real) min_diff[0]);
+		_filter_dim_j = (int) ceil((ale_real) 2 * _width * resolution_multiplier / (ale_real) min_diff[1]);
 
 		/*
 		 * Ensure that the array has an odd number of elements in each

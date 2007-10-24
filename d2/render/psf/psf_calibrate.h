@@ -90,10 +90,10 @@ public:
 			 * response function.
 			 */
 
-                        for (int ii = (int) floor(q[0] - d[0] + lresponse->min_i());
-                                ii <= ceil(q[0] + d[0] + lresponse->max_i()); ii++)
-                        for (int jj = (int) floor(q[1] - d[1] + lresponse->min_j());
-                                jj <= ceil(q[1] + d[1] + lresponse->max_j()); jj++) {
+                        for (int ii = (int) floor(q[0] - d[0] + (ale_pos) lresponse->min_i());
+                                ii <= ceil(q[0] + d[0] + (ale_pos) lresponse->max_i()); ii++)
+                        for (int jj = (int) floor(q[1] - d[1] + (ale_pos) lresponse->min_j());
+                                jj <= ceil(q[1] + d[1] + (ale_pos) lresponse->max_j()); jj++) {
 
                                 ale_pos top = q[0] - d[0];
                                 ale_pos bot = q[0] + d[0];

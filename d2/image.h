@@ -344,10 +344,10 @@ public:
 //					(double) neighbor[d][1],
 //					(double) neighbor[d][2]);
 
-		factor[0] = (hx - x[1]) * (hy - x[0]);
-		factor[1] = (hx - x[1]) * (x[0] - ly);
-		factor[2] = (x[1] - lx) * (x[0] - ly);
-		factor[3] = (x[1] - lx) * (hy - x[0]);
+		factor[0] = (ale_real) (hx - x[1]) * (ale_real) (hy - x[0]);
+		factor[1] = (ale_real) (hx - x[1]) * (ale_real) (x[0] - ly);
+		factor[2] = (ale_real) (x[1] - lx) * (ale_real) (x[0] - ly);
+		factor[3] = (ale_real) (x[1] - lx) * (ale_real) (hy - x[0]);
 
 //		for (int d = 0; d < 4; d++)
 //			fprintf(stderr, "factor_%d=%f\n", d,

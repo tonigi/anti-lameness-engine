@@ -206,10 +206,10 @@ protected:
 				 * response function.
 				 */
 
-				for (int ii = (int) floor(top + lresponse->min_i());
-					ii <= ceil(bot + lresponse->max_i()); ii++)
-				for (int jj = (int) floor(lef + lresponse->min_j());
-					jj <= ceil(rig + lresponse->max_j()); jj++) {
+				for (int ii = (int) floor(top + (ale_pos) lresponse->min_i());
+					ii <= ceil(bot + (ale_pos) lresponse->max_i()); ii++)
+				for (int jj = (int) floor(lef + (ale_pos) lresponse->min_j());
+					jj <= ceil(rig + (ale_pos) lresponse->max_j()); jj++) {
 
 					if (ii < (int) 0
 					 || ii >= (int) lsimulated->height()
@@ -325,10 +325,10 @@ protected:
 				 * response function.
 				 */
 
-				for (int ii = (int) floor(top + nlresponse->min_i());
-					ii <= ceil(bot + nlresponse->max_i()); ii++)
-				for (int jj = (int) floor(lef + nlresponse->min_j());
-					jj <= ceil(rig + nlresponse->max_j()); jj++) {
+				for (int ii = (int) floor(top + (ale_pos) nlresponse->min_i());
+					ii <= ceil(bot + (ale_pos) nlresponse->max_i()); ii++)
+				for (int jj = (int) floor(lef + (ale_pos) nlresponse->min_j());
+					jj <= ceil(rig + (ale_pos) nlresponse->max_j()); jj++) {
 
 					if (ii < (int) 0
 					 || ii >= (int) nlsimulated->height()
@@ -707,10 +707,10 @@ protected:
 				 * pixels.
 				 */
 
-				for (int ii = (int) floor(top + nlresponse->min_i());
-					ii <= ceil(bot + nlresponse->max_i()); ii++)
-				for (int jj = (int) floor(lef + nlresponse->min_j());
-					jj <= ceil(rig + nlresponse->max_j()); jj++) {
+				for (int ii = (int) floor(top + (ale_pos) nlresponse->min_i());
+					ii <= ceil(bot + (ale_pos) nlresponse->max_i()); ii++)
+				for (int jj = (int) floor(lef + (ale_pos) nlresponse->min_j());
+					jj <= ceil(rig + (ale_pos) nlresponse->max_j()); jj++) {
 
 					if (ii < (int) 0
 					 || ii >= (int) nlsimulated->height()
@@ -817,10 +817,10 @@ protected:
 				 * pixel.
 				 */
 
-				for (int ii = (int) floor(top + lresponse->min_i());
-					ii <= ceil(bot + lresponse->max_i()); ii++)
-				for (int jj = (int) floor(lef + lresponse->min_j());
-					jj <= ceil(rig + lresponse->max_j()); jj++) {
+				for (int ii = (int) floor(top + (ale_pos) lresponse->min_i());
+					ii <= ceil(bot + (ale_pos) lresponse->max_i()); ii++)
+				for (int jj = (int) floor(lef + (ale_pos) lresponse->min_j());
+					jj <= ceil(rig + (ale_pos) lresponse->max_j()); jj++) {
 
 					if (ii < (int) 0
 					 || ii >= (int) lreal->height()

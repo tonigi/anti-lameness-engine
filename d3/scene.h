@@ -1039,7 +1039,7 @@ class scene {
 				std::pair<ale_pos, ale_real> *pk =
 					&(levels[tc - input_decimation_lower][i * swidth * pairwise_ambiguity + j * pairwise_ambiguity + k]);
 
-				if (pk->first != 0 && score >= pk->second)
+				if (pk->first != 0 && score >= (ale_pos) pk->second)
 					continue;
 
 				if (i == 1 && j == 1 && tc == 4)
@@ -1956,7 +1956,7 @@ public:
 
 					ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
 					weights->pix(i, j) += encounter;
-					im->pix(i, j)      += encounter * depth_value;
+					im->pix(i, j)      += encounter * (ale_real) depth_value;
 
 				} else if (type == 2) {
 
@@ -1976,9 +1976,11 @@ public:
 					ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
 					if (weights->pix(i, j)[0] == 0) {
 						weights->pix(i, j) = d2::pixel(1, 1, 1);
-						im->pix(i, j) = d2::pixel(1, 1, 1) * depth_value;
-					} else if (im->pix(i, j)[2] < depth_value) {
-						im->pix(i, j) = d2::pixel(1, 1, 1) * depth_value;
+						im->pix(i, j) = d2::pixel(1, 1, 1) 
+						              * (ale_real) depth_value;
+					} else if (im->pix(i, j)[2] < (ale_real) depth_value) {
+						im->pix(i, j) = d2::pixel(1, 1, 1) 
+						              * (ale_real) depth_value;
 					} else {
 						continue;
 					}
@@ -1991,7 +1993,7 @@ public:
 
 					ale_pos contribution_value = sn.get_pocc_density() /* + sn.get_socc_density() */;
 					weights->pix(i, j) += encounter;
-					im->pix(i, j)      += encounter * contribution_value;
+					im->pix(i, j)      += encounter * (ale_real) contribution_value;
 
 					assert (finite(encounter[0]));
 					assert (finite(contribution_value));
@@ -2016,7 +2018,7 @@ public:
 					weights->pix(i, j)[0] += encounter[0];
 					if (weights->pix(i, j)[1] < encounter[0]) {
 						weights->pix(i, j)[1] = encounter[0];
-						im->pix(i, j)[0] = weights->pix(i, j)[1] * ale_pos_to_real(depth_value);
+						im->pix(i, j)[0] = weights->pix(i, j)[1] * (ale_real) depth_value;
 						im->pix(i, j)[1] = ale_pos_to_real(max[0] - min[0]);
 						im->pix(i, j)[2] = ale_pos_to_real(max[1] - min[1]);
 					}
@@ -2157,10 +2159,10 @@ public:
 
 			for (int d = 0; d < 2; d++) {
 
-				if (im2->pix(i, j)[d] < res[d] / 2)
-					x[d] = (ale_pos) (d?j:i) - res[d] / 2 - ale_real_to_pos(im2->pix(i, j)[d]);
+				if (im2->pix(i, j)[d] < (ale_real) res[d] / 2)
+					x[d] = (ale_pos) (d?j:i) - res[d] / 2 - (ale_pos) im2->pix(i, j)[d];
 				else
-					x[d] = (ale_pos) (d?j:i) + res[d] / 2 - ale_real_to_pos(im2->pix(i, j)[d]);
+					x[d] = (ale_pos) (d?j:i) + res[d] / 2 - (ale_pos) im2->pix(i, j)[d];
 
 				blx[d] = 1 - ((d?j:i) - x[d]) / res[d];
 			}
@@ -4299,7 +4301,7 @@ public:
 			 && !d2::render::is_excluded_f(is.xy() * pdu_scale, f2)) {
 				divisor += 1 - l1_multiplier;
 				score += (1 - l1_multiplier)
-				       * (if1->get_bl(ip.xy()) - if2->get_bl(is.xy())).normsq();
+				       * (ale_pos) ((if1->get_bl(ip.xy()) - if2->get_bl(is.xy())).normsq());
 			}
 
 
@@ -4317,7 +4319,7 @@ public:
 
 				divisor += l1_multiplier;
 				score   += l1_multiplier
-					 * (if1->get_bl(ip.xy() + t) - if2->get_bl(is.xy() + t)).normsq();
+					 * (ale_pos) ((if1->get_bl(ip.xy() + t) - if2->get_bl(is.xy() + t)).normsq());
 					 
 			}
 

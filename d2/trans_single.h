@@ -175,12 +175,17 @@ private:
 			
 			ale_pos theta = (double) eu[2] * M_PI / 180;
 
-			a = cos(theta) * scale_factor;
-			b = sin(theta) * scale_factor;
-			c = 0.5 * (input_height * (scale_factor - a) - input_width * b) + eu[0] * scale_factor;
+			a = (double) cos(theta) * (double) scale_factor;
+			b = (double) sin(theta) * (double) scale_factor;
+			c = 0.5 * ((double) input_height * ((double) scale_factor - (double) a) 
+			  - (double) input_width * (double) b) + (double) eu[0] 
+			  * (double) scale_factor;
 			d = -b;
 			e = a;
-			f = 0.5 * (input_height * b + (ale_pos) input_width * (scale_factor - a)) + eu[1] * scale_factor;
+			f = 0.5 * ((double) input_height * (double) b 
+			         + (double) input_width * ((double) scale_factor 
+				                         - (double) a)) 
+				 + (double) eu[1] * (double) scale_factor;
 			g = 0;
 			h = 0;
 		} 

@@ -34,7 +34,7 @@
 class psf_stdin_vg : public psf {
 	ale_real _height;
 	ale_real _width;
-	ale_pos gap_width;
+	ale_real gap_width;
 	int _filter_dim_i;
 	int _filter_dim_j;
 	ale_real *response_array;

@@ -157,10 +157,10 @@ public:
 					shading *= 0.5;
 
 				if (rx_parameters[param].type == exclusion::FRAME
-				 && i >= rx_parameters[param].x[0] * scale_factor
-				 && i <= rx_parameters[param].x[1] * scale_factor
-				 && j >= rx_parameters[param].x[2] * scale_factor
-				 && j <= rx_parameters[param].x[3] * scale_factor
+				 && i >= rx_parameters[param].x[0] * (ale_pos) scale_factor
+				 && i <= rx_parameters[param].x[1] * (ale_pos) scale_factor
+				 && j >= rx_parameters[param].x[2] * (ale_pos) scale_factor
+				 && j <= rx_parameters[param].x[3] * (ale_pos) scale_factor
 				 && frame_number >= (unsigned) rx_parameters[param].x[4]
 				 && frame_number <= (unsigned) rx_parameters[param].x[5])
 					shading *= 0.5;

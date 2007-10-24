@@ -34,7 +34,7 @@
  * This filter (50-1.4-1.4-1) can produce haloing.
  */
 
-static const ale_real canon_300d_raw_linear_50mm_1_4_1_4_lpsf_calibrated_response[LPSF_ROWS][LPSF_COLS][3] = {
+static const double canon_300d_raw_linear_50mm_1_4_1_4_lpsf_calibrated_response[LPSF_ROWS][LPSF_COLS][3] = {
 	{
 		{ 41.6, 32, 118.4, },
 		{ 6.4, -3.2, 32, },
@@ -129,19 +129,45 @@ static const ale_real canon_300d_raw_linear_50mm_1_4_1_4_lpsf_calibrated_respons
 };
 
 class canon_300d_raw_linear_50mm_1_4_1_4 : public canon_300d_raw_linear_50mm_1_4 {
-public:
 
+	/*
+	 * Calculate lpsf array values for ale_real types not able
+	 * to store the entire double range.
+	 */
+	class lpsf_calculator {
+	protected:
+		ale_real lpsf_array[LPSF_ROWS][LPSF_COLS][3];
+		lpsf_calculator() {
+			const double *origin = (const double *) 
+				canon_300d_raw_linear_50mm_1_4_1_4_lpsf_calibrated_response;
+			double maxval = 255;
+			double array_maxval = origin[0];
+
+			for (int i = 0; i < LPSF_ROWS * LPSF_COLS * 3; i++) {
+				if (origin[i] > array_maxval)
+					array_maxval = origin[i];
+			}
+
+			for (int i = 0; i < LPSF_ROWS; i++)
+			for (int j = 0; j < LPSF_COLS; j++)
+			for (int k = 0; k < 3;         k++)
+				lpsf_array[i][j][k] =
+					origin[i * LPSF_COLS * 3 + j * 3 + k]
+				      * (maxval / array_maxval);
+		}
+	};
+
+public:
 	/*
 	 * Linear colorspace PSF
 	 */
 
-	class lpsf : public d2::psf_template<LPSF_ROWS, LPSF_COLS> {
+	class lpsf : lpsf_calculator, public d2::psf_template<LPSF_ROWS, LPSF_COLS> {
 	public:
-		lpsf() : d2::psf_template<LPSF_ROWS, LPSF_COLS> (3, 3, 
-				canon_300d_raw_linear_50mm_1_4_1_4_lpsf_calibrated_response) {
+		lpsf() : lpsf_calculator(), 
+		         d2::psf_template<LPSF_ROWS, LPSF_COLS> (3, 3, lpsf_array) {
 		}
 	};
-
 };
 
 #undef LPSF_ROWS

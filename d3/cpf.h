@@ -582,7 +582,7 @@ public:
 		if (!systems_solved)
 			solve_3d();
 
-		if (stereo_threshold < measure_projected_error(cp_array[index].d3,
+		if (stereo_threshold < (ale_pos) measure_projected_error(cp_array[index].d3,
 				 	                       cp_array[index].d2,
 							       d2::image_rw::count()))
 			return point::undefined();

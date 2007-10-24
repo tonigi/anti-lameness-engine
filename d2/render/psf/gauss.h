@@ -48,7 +48,7 @@ class gauss : public psf {
 
 	// helper variables
 	ale_real radius;
-	ale_pos sigma_premult;
+	ale_real sigma_premult;
 public:
 
 	/*
@@ -87,7 +87,7 @@ public:
 		for (ale_real j = lef; j < rig + horiz_step / 2; j += horiz_step) {
 
 			// calculate radius for given sample
-			ale_pos r = sqrt( i*i + j*j );
+			ale_real r = sqrt( i*i + j*j );
 
 			if ( r < radius ) // calculate gaussian falloff
 				total += exp( -r * r * sigma_premult ) ;

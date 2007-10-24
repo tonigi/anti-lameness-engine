@@ -592,8 +592,10 @@ private:
 			rng.seed(1 + subdomain);
 
 			index = -1 + (int) ceil(((ale_accum) mc_max+1) 
-				   * ( (1 + ((ale_accum) (rng.get())) ) 
-				     / (1 + ((ale_accum) RAND_MAX)) ));
+				   * ( (1 + ((ale_accum) (rng.get() & RANDOM_MASK)) ) 
+				     / (1 + ((ale_accum) (RAND_MAX < RANDOM_MASK
+				                                   ? RAND_MAX
+								   : RANDOM_MASK)) )));
 		}
 
 		int get_i() {
@@ -606,8 +608,10 @@ private:
 
 		void operator++(int whats_this_for) {
 			index += (int) ceil((ale_accum) (mc_max+1) 
-			       * ( (1 + ((ale_accum) (rng.get())) ) 
-			 	 / (1 + ((ale_accum) RAND_MAX)) ));
+			       * ( (1 + ((ale_accum) (rng.get() & RANDOM_MASK)) ) 
+			 	 / (1 + ((ale_accum) (RAND_MAX < RANDOM_MASK
+				                               ? RAND_MAX
+							       : RANDOM_MASK))) ));
 		}
 
 		int done() {

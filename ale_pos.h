@@ -64,7 +64,7 @@ typedef ale_fixed<ale_fixed_32,16> ale_pos;
 
 #elif ALE_COORDINATES == FIXED16
 
-typedef ale_fixed<ale_fixed_16,8> ale_pos;
+typedef ale_fixed<ale_fixed_16,4> ale_pos;
 
 #define ALE_POS_PRECISION_STRING "FIXED16"
 
