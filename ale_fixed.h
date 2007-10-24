@@ -30,6 +30,8 @@
 #define FIXED16 4
 #define FIXED32 5
 
+#define DEBUG_FIXED_POINT 1
+
 /*
  * Define a fixed point data type.
  */
@@ -52,10 +54,28 @@ public:
 	}
 };
 
-class ale_fixed_16_accum {
+class ale_fixed_16_calc {
 public:
 	typedef int bits_t;
 	typedef int mulbits_t;
+	static bits_t posinf() {
+		return 2147483647;
+	}
+	static bits_t neginf() {
+		return -2147483646;
+	}
+	static bits_t nan() {
+		return -2147483647;
+	}
+	static bits_t rint(double d) {
+		return (bits_t) lrint(d);
+	}
+};
+
+class ale_fixed_16_accum {
+public:
+	typedef int bits_t;
+	typedef long long mulbits_t;
 	static bits_t posinf() {
 		return 2147483647;
 	}
@@ -171,7 +191,7 @@ public:
 	 */
 
 	operator double() const {
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -203,7 +223,7 @@ public:
 	}
 
 	operator float() const {
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -235,7 +255,7 @@ public:
 	}
 
 	operator int() const {
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -249,7 +269,7 @@ public:
 	}
 
 	operator unsigned int() const {
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -381,7 +401,7 @@ public:
 		} else {
 			bits = (bits_t) fixed_type::rint(d * (1 << N));
 
-#if 1
+#if DEBUG_FIXED_POINT
 			/*
 			 * Removed for performance reasons.
 			 */
@@ -397,7 +417,7 @@ public:
 
 	ale_fixed(int d) {
 		bits = (bits_t) d << N;
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -442,7 +462,7 @@ public:
 	ale_fixed operator+(ale_fixed f) const {
 		ale_fixed result;
 
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -457,7 +477,7 @@ public:
 
 		bits_t bits_result = bits + f.bits;
 
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -491,7 +511,7 @@ public:
 	ale_fixed operator-(ale_fixed f) const {
 		ale_fixed result;
 
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -506,7 +526,7 @@ public:
 
 		bits_t bits_result = bits - f.bits;
 
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -540,7 +560,7 @@ public:
 	ale_fixed operator*(ale_fixed f) const {
 		ale_fixed result;
 
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -554,7 +574,7 @@ public:
 
 		mulbits_t mul_result = ((mulbits_t) bits * (mulbits_t) f.bits) / (1 << N);
 
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -596,7 +616,7 @@ public:
 		 * manufacture non-finite values.
 		 */
 		if ((bits == 0 && f.bits == 0)
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -616,7 +636,7 @@ public:
 			return result;
 		} 
 		
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -629,7 +649,7 @@ public:
 			
 		mulbits_t div_result = ((mulbits_t) bits << N) / f.bits;
 
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -923,7 +943,7 @@ ale_fixed<fixed_type, N> pow(ale_fixed<fixed_type, N> f, unsigned int d) {
 template<class fixed_type, unsigned int N>
 ale_fixed<fixed_type, N> floor(ale_fixed<fixed_type, N> f) {
 
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */
@@ -951,7 +971,7 @@ ale_fixed<fixed_type, N> floor(ale_fixed<fixed_type, N> f) {
 template<class fixed_type, unsigned int N>
 ale_fixed<fixed_type, N> lrintf(ale_fixed<fixed_type, N> f) {
 
-#if 1
+#if DEBUG_FIXED_POINT
 		/*
 		 * Removed for performance reasons.
 		 */

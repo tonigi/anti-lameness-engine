@@ -241,8 +241,8 @@ typedef ale_fixed<ale_fixed_32,16> ale_sreal;
 
 #elif ALE_COLORS == FIXED16
 
-typedef ale_fixed<ale_fixed_16,8> ale_real;
-typedef ale_fixed<ale_fixed_16,8> ale_sreal;
+typedef ale_fixed<ale_fixed_16_calc,14> ale_real;
+typedef ale_fixed<ale_fixed_16,12> ale_sreal;
 
 #undef ale_real_enable_casting
 #undef ale_real_disable_casting

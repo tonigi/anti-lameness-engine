@@ -159,14 +159,14 @@ public:
 						weights[fff]->pix(i, j)[k] += new_weight[k];
 					break;
 				}
-				if (colors[ff]->pix(i, j)[k] == new_value[k]) {
+				if (colors[ff]->pix(i, j)[k] == (ale_sreal) new_value[k]) {
 					for (unsigned int fff = ff; fff < capacity; fff++)
 						weights[fff]->pix(i, j)[k] += new_weight[k];
 					break;
 				}
-				if (colors[ff]->pix(i, j)[k] > new_value[k]) {
+				if (colors[ff]->pix(i, j)[k] > (ale_sreal) new_value[k]) {
 					for (unsigned int fff = capacity - 1; fff > ff; fff--) {
-						weights[fff]->pix(i, j)[k] = weights[fff - 1]->pix(i, j)[k] + new_weight[k];
+						weights[fff]->pix(i, j)[k] = weights[fff - 1]->get_pixel(i, j)[k] + new_weight[k];
 						colors[fff]->pix(i, j)[k]  = colors[fff - 1]->pix(i, j)[k];
 					}
 					colors[ff]->pix(i, j)[k] = new_value[k];
@@ -201,18 +201,18 @@ public:
 			unsigned int m = h / 2;
 
 			while (h > l + 1) {
-				if (weights[m]->chan(y, x, k) < midpoint)
+				if ((ale_real) weights[m]->chan(y, x, k) < midpoint)
 					l = m;
 				else
 					h = m;
 				m = (h + l) / 2;
 			}
 
-			if (weights[l]->chan(y, x, k) < midpoint)
+			if ((ale_real) weights[l]->chan(y, x, k) < midpoint)
 				l = h;
-			if (weights[l]->chan(y, x, k) > midpoint)
+			if ((ale_real) weights[l]->chan(y, x, k) > midpoint)
 				result[k] = colors[l]->chan(y, x, k);
-			else if (weights[l]->chan(y, x, k) == midpoint)
+			else if ((ale_real) weights[l]->chan(y, x, k) == midpoint)
 				result[k] = (colors[l]->chan(y, x, k)
 					   + colors[l + 1]->chan(y, x, k)) / 2;
 			else

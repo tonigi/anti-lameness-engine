@@ -203,9 +203,9 @@ public:
 
 	virtual const spixel &pix(unsigned int y, unsigned int x) const = 0;
 
-	virtual ale_real &chan(unsigned int y, unsigned int x, unsigned int k) = 0;
+	virtual ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) = 0;
 
-	virtual const ale_real &chan(unsigned int y, unsigned int x, unsigned int k) const = 0;
+	virtual const ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) const = 0;
 
 	virtual void set_pixel(unsigned int y, unsigned int x, spixel p) {
 		pix(y, x) = p;

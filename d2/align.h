@@ -591,11 +591,9 @@ private:
 
 			rng.seed(1 + subdomain);
 
-			index = -1 + (int) ceil(((ale_accum) mc_max+1) 
-				   * ( (1 + ((ale_accum) (rng.get() & RANDOM_MASK)) ) 
-				     / (1 + ((ale_accum) (RAND_MAX < RANDOM_MASK
-				                                   ? RAND_MAX
-								   : RANDOM_MASK)) )));
+			index = -1 + (int) ceil(((ale_pos) mc_max+1) 
+				   / (ale_pos) ( (1 + 0xffffff)
+				                 / (1 + (rng.get() & 0xffffff))));
 		}
 
 		int get_i() {
@@ -607,11 +605,9 @@ private:
 		}
 
 		void operator++(int whats_this_for) {
-			index += (int) ceil((ale_accum) (mc_max+1) 
-			       * ( (1 + ((ale_accum) (rng.get() & RANDOM_MASK)) ) 
-			 	 / (1 + ((ale_accum) (RAND_MAX < RANDOM_MASK
-				                               ? RAND_MAX
-							       : RANDOM_MASK))) ));
+			index += (int) ceil(((ale_pos) mc_max+1) 
+				   / (ale_pos) ( (1 + 0xffffff)
+				                 / (1 + (rng.get() & 0xffffff))));
 		}
 
 		int done() {
@@ -846,18 +842,10 @@ private:
 						asum += pa[k];
 						bsum += p[m][k];
 						wsum += weight[m][k] / 3;
-
-//						fprintf(stderr, "a=%f b=%f w=%f\n",
-//								(double) pa[k], 
-//								(double) p[m][k],
-//								(double) (weight[m][k] / (ale_real) 3));
 					}
 
 					this_result[m] = wsum * pow(fabs(asum - bsum), metric_exponent);
 					this_divisor[m] = wsum * pow(asum > bsum ? asum : bsum, metric_exponent);
-//					fprintf(stderr, "asum=%f bsum=%f wsum=%f\n",
-//							(double) asum, (double) bsum,
-//							(double) wsum);
 				}
 
 				if (u.defined()) {
@@ -875,10 +863,6 @@ private:
 
 				result += (this_result[0]);
 				divisor += (this_divisor[0]);
-
-//				fprintf(stderr, "r=%f d=%f tr=%f td=%f\n",
-//						(double) result, (double) divisor,
-//						(double) this_result[0], (double) this_divisor[0]);
 			}
 
 			void rescale(ale_pos scale) {
@@ -2182,18 +2166,18 @@ public:
 			                 * input_frame->width();
 
 		if (perturb_lower_percent)
-			local_lower = perturb_lower
-				    * reference_size
-				    * (ale_pos) 0.01
-				    * scale_factor;
+			local_lower = (double) perturb_lower
+				    * (double) reference_size
+				    * (double) 0.01
+				    * (double) scale_factor;
 		else
 			local_lower = perturb_lower;
 
 		if (perturb_upper_percent)
-			local_upper = perturb_upper
-				    * reference_size
-				    * (ale_pos) 0.01
-				    * scale_factor;
+			local_upper = (double) perturb_upper
+				    * (double) reference_size
+				    * (double) 0.01
+				    * (double) scale_factor;
 		else
 			local_upper = perturb_upper;
 
@@ -2388,7 +2372,7 @@ public:
 		 * Global search overlap requirements.
 		 */
 
-		local_gs_mo /= pow(pow(2, lod), 2);
+		local_gs_mo = (double) local_gs_mo / pow(pow(2, lod), 2);
 
 		/*
 		 * Pre-alignment exposure adjustment

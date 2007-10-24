@@ -32,7 +32,7 @@
 
 class image_bayer_ale_real : public image {
 private:
-	ale_real *_p;
+	ale_sreal *_p;
 
 private:
 	/*
@@ -78,7 +78,7 @@ public:
 		     || bayer == IMAGE_BAYER_GRGB
 		     || bayer == IMAGE_BAYER_RGBG);
 
-		_p = new ale_real[dimx * dimy];
+		_p = new ale_sreal[dimx * dimy];
 
 		assert (_p);
 
@@ -96,12 +96,12 @@ public:
 		delete[] _p;
 	}
 
-	ale_real &chan(unsigned int y, unsigned int x, unsigned int k) {
+	ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) {
 		assert (k == bayer_color(y, x));
 		return _p[y * _dimx + x];
 	}
 
-	const ale_real &chan(unsigned int y, unsigned int x, unsigned int k) const {
+	const ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) const {
 		assert (k == bayer_color(y, x));
 		return _p[y * _dimx + x];
 	}

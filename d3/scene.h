@@ -445,8 +445,8 @@ class scene {
 			 */
 
 			if (im->pix(i, j)[0] > 0) {
-				if (st && st->node_value == im->pix(i, j)[0])
-					im->pix(i, j)[0] += weight * (1 - im->pix(i, j)[0]);
+				if (st && st->node_value == im->get_pixel(i, j)[0])
+					im->pix(i, j)[0] += weight * (1 - im->get_pixel(i, j)[0]);
 				return 1;
 			}
 
@@ -1978,7 +1978,7 @@ public:
 						weights->pix(i, j) = d2::pixel(1, 1, 1);
 						im->pix(i, j) = d2::pixel(1, 1, 1) 
 						              * (ale_real) depth_value;
-					} else if (im->pix(i, j)[2] < (ale_real) depth_value) {
+					} else if (im->pix(i, j)[2] < (ale_sreal) depth_value) {
 						im->pix(i, j) = d2::pixel(1, 1, 1) 
 						              * (ale_real) depth_value;
 					} else {
@@ -2016,9 +2016,9 @@ public:
 
 					ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
 					weights->pix(i, j)[0] += encounter[0];
-					if (weights->pix(i, j)[1] < encounter[0]) {
+					if (weights->get_pixel(i, j)[1] < encounter[0]) {
 						weights->pix(i, j)[1] = encounter[0];
-						im->pix(i, j)[0] = weights->pix(i, j)[1] * (ale_real) depth_value;
+						im->pix(i, j)[0] = weights->get_pixel(i, j)[1] * (ale_real) depth_value;
 						im->pix(i, j)[1] = ale_pos_to_real(max[0] - min[0]);
 						im->pix(i, j)[2] = ale_pos_to_real(max[1] - min[1]);
 					}
@@ -2030,7 +2030,7 @@ public:
 					 */
 
 					weights->pix(i, j)[0] += encounter[0];
-					if (weights->pix(i, j)[1] < encounter[0]) {
+					if (weights->pix(i, j)[1] < (ale_sreal) encounter[0]) {
 						weights->pix(i, j)[1] = encounter[0];
 						im->pix(i, j)[0] = ale_pos_to_real(i - min[0]);
 						im->pix(i, j)[1] = ale_pos_to_real(j - min[1]);
@@ -2159,7 +2159,7 @@ public:
 
 			for (int d = 0; d < 2; d++) {
 
-				if (im2->pix(i, j)[d] < (ale_real) res[d] / 2)
+				if (im2->pix(i, j)[d] < (ale_sreal) res[d] / 2)
 					x[d] = (ale_pos) (d?j:i) - res[d] / 2 - (ale_pos) im2->pix(i, j)[d];
 				else
 					x[d] = (ale_pos) (d?j:i) + res[d] / 2 - (ale_pos) im2->pix(i, j)[d];
@@ -2998,7 +2998,7 @@ public:
 
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
-			if (weights->pix(i, j).min_norm() < encounter_threshold
+			if (weights->get_pixel(i, j).min_norm() < encounter_threshold
 			 || (d3px_count > 0 && isnan(depths->pix(i, j)[0]))) {
 				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
 				weights->pix(i, j) = d2::pixel::zero();

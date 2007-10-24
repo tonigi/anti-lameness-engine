@@ -25,14 +25,6 @@
  * Structure to describe a pixel to be used in storage.
  */
 
-#define HALF 3
-
-#if ALE_COLORS != HALF
-
-typedef pixel spixel;
-
-#else 
-
 class spixel {
 private:	
 	ale_sreal x[3];
@@ -100,9 +92,5 @@ public:
 		return spixel(x[0] /= d, x[1] /= d, x[2] /= d);
 	}
 };
-
-#endif
-
-#undef HALF
 
 #endif

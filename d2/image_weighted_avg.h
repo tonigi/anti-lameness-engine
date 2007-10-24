@@ -57,15 +57,15 @@ public:
 		return foo;
 	}
 
-	ale_real &chan(unsigned int y, unsigned int x, unsigned int k) {
+	ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) {
 		assert(0);
-		static ale_real foo;
+		static ale_sreal foo;
 		return foo;
 	}
 
-	const ale_real &chan(unsigned int y, unsigned int x, unsigned int k) const {
+	const ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) const {
 		assert(0);
-		static ale_real foo;
+		static ale_sreal foo;
 		return foo;
 	}
 
