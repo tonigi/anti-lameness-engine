@@ -62,7 +62,7 @@ typedef ale_fixed<ale_fixed_32,16> ale_pos;
 #define ale_pos_enable_casting() ale_pos::enable_casting()
 #define ale_pos_casting_status() ale_pos::casting_status()
 
-#elif ALE_COORDINATES == FIXED32
+#elif ALE_COORDINATES == FIXED16
 
 typedef ale_fixed<ale_fixed_16,8> ale_pos;
 
