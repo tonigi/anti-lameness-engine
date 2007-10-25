@@ -286,12 +286,12 @@ private:
 
 				if (imin[0] < 0)
 					imin[0] = 0;
-				if (imax[0] > im->height() - 1)
-					imax[0] = im->height() - 1;
+				if (imax[0] > (int) im->height() - 1)
+					imax[0] = (int) im->height() - 1;
 				if (imin[1] < 0)
 					imin[1] = 0;
-				if (imax[1] > im->width() - 1)
-					imax[1] = im->width() - 1;
+				if (imax[1] > (int) im->width() - 1)
+					imax[1] = (int) im->width() - 1;
 			}
 
 			/*
