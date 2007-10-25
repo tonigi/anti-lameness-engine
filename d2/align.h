@@ -591,9 +591,21 @@ private:
 
 			rng.seed(1 + subdomain);
 
+#define FIXED16 3
+#if ALE_COORDINATES == FIXED16
+			/*
+			 * XXX: This calculation might not yield the correct
+			 * expected value.
+			 */
 			index = -1 + (int) ceil(((ale_pos) mc_max+1) 
 				   / (ale_pos) ( (1 + 0xffffff)
 				                 / (1 + (rng.get() & 0xffffff))));
+#else
+                        index = -1 + (int) ceil((mc_max+1) 
+                                   * ( (1 + ((ale_accum) (rng.get())) ) 
+                                     / (1 + ((ale_accum) RAND_MAX)) ));
+#endif
+#undef FIXED16
 		}
 
 		int get_i() {
@@ -605,9 +617,17 @@ private:
 		}
 
 		void operator++(int whats_this_for) {
+#define FIXED16 3
+#if ALE_COORDINATES == FIXED16
 			index += (int) ceil(((ale_pos) mc_max+1) 
 				   / (ale_pos) ( (1 + 0xffffff)
 				                 / (1 + (rng.get() & 0xffffff))));
+#else
+                        index += (int) ceil((mc_max+1) 
+                               * ( (1 + ((ale_accum) (rng.get())) ) 
+                                 / (1 + ((ale_accum) RAND_MAX)) ));
+#endif
+#undef FIXED16
 		}
 
 		int done() {
