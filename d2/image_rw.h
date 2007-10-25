@@ -194,9 +194,9 @@ public:
 
 			for (j = 0; j < mi->columns; j++) {
 
-				pixel input ( ((double) p->red)   / ((double) MaxRGB),
-					      ((double) p->green) / ((double) MaxRGB),
-					      ((double) p->blue)  / ((double) MaxRGB) );
+				pixel input ( ale_real_from_int(p->red, MaxRGB),
+					      ale_real_from_int(p->green, MaxRGB),
+					      ale_real_from_int(p->blue, MaxRGB) );
 
 				pixel linear_input = (exp->linearize(input) - exp->get_multiplier() * black_level)
 					           / (1 - black_level);
@@ -468,9 +468,9 @@ public:
 
 				unlinearized = unlinearized.clamp();
 
-				p->red = (Quantum) round((float) unlinearized[0] * MaxRGB);
-				p->green = (Quantum) round((float) unlinearized[1] * MaxRGB);
-				p->blue = (Quantum) round((float) unlinearized[2] * MaxRGB);
+				p->red =   (Quantum) ale_real_to_int(unlinearized[0], MaxRGB);
+				p->green = (Quantum) ale_real_to_int(unlinearized[1], MaxRGB);
+				p->blue =  (Quantum) ale_real_to_int(unlinearized[2], MaxRGB);
 				p++;
 			}
 

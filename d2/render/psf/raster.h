@@ -51,9 +51,9 @@ public:
 	 * support may include everything up to and including the boundaries
 	 * specified here.
 	 */
-	ale_real min_i() const { return -_height; }
+	ale_real min_i() const { return ale_real_unexceptional_negation(_height); }
 	ale_real max_i() const { return  _height; }
-	ale_real min_j() const { return -_width; }
+	ale_real min_j() const { return ale_real_unexceptional_negation(_width); }
 	ale_real max_j() const { return  _width; }
 
 	/*

@@ -148,6 +148,21 @@ public:
 	bits_t bits;
 
 	/*
+	 * Bit-conversion facilities.
+	 */
+
+	static ale_fixed bits_to_fixed(bits_t b) {
+		ale_fixed result;
+		result.bits = b;
+		return result;
+	}
+
+	static bits_t fixed_to_bits(ale_fixed f) {
+		return f.bits;
+	}
+
+
+	/*
 	 * Constructors.
 	 */
 	ale_fixed() {
@@ -457,6 +472,14 @@ public:
 			result.bits = ALE_FIXED_POSINF;
 		else
 			result.bits = -bits;
+
+		return result;
+	}
+
+	ale_fixed unexceptional_negation() const {
+		ale_fixed result;
+
+		result.bits = -bits;
 
 		return result;
 	}

@@ -273,7 +273,7 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 					error_ppm(filename);
 			}
 
-			p[k] = ((float) ival) / ((float) mcv);
+			p[k] = ale_real_from_int(ival, mcv);
 
 		}
 
@@ -406,7 +406,7 @@ static inline void write_ppm(const char *filename, const image *im, exposure *e,
 
 		for (k = 0; k < im->depth();  k++) {
 
-			uint16_t output_value = (uint16_t) round((float) unlinearized[k] * mcv);
+			uint16_t output_value = (uint16_t) ale_real_to_int(unlinearized[k], mcv);
 
 			if (plain) {
 				fprintf(f, "%d ", output_value);
