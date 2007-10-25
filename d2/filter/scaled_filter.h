@@ -192,33 +192,46 @@ private:
 				fscale = 1;
 			}
 			
+			int min_i, max_i, min_j, max_j;
+
 			ale_pos support = f->support() * fscale;
 
-			point min = mapped_p - point(support, support);
-			point max = mapped_p + point(support, support);
+			if (1 / support == 0) {
+				min_i = 0;
+				max_i = im->height() - 1;
+				min_j = 0;
+				max_j = im->width() - 1;
+			} else {
 
-			if (min[0] < 0 || 1 / support == 0)
-				min[0] = 0;
-			if (max[0] > im->height() - 1 || 1 / support == 0)
-				max[0] = im->height() - 1;
-			if (min[1] < 0 || 1 / support == 0)
-				min[1] = 0;
-			if (max[1] > im->width() - 1 || 1 / support == 0)
-				max[1] = im->width() - 1;
+				point min = mapped_p - point(support, support);
+				point max = mapped_p + point(support, support);
+
+				/*
+				 * lrintf() may be faster than ceil/floor() on some architectures.
+				 * See render/psf/raster.h for more details.
+				 */
+
+				min_i = (int) lrintf(min[0]);
+				max_i = (int) lrintf(max[0]);
+				min_j = (int) lrintf(min[1]);
+				max_j = (int) lrintf(max[1]);
+
+				if (min_i < 0)
+					min_i = 0;
+				if (max_i > (int) im->height() - 1)
+					max_i = (int) im->height() - 1;
+				if (min_j < 0)
+					min_j = 0;
+				if (max_j > (int) im->width() - 1)
+					max_j = (int) im->width() - 1;
+			}
+
 			/*
 			 * Iterate over the source pixels.
-			 * 
-			 * lrintf() may be faster than ceil/floor() on some architectures.
-			 * See render/psf/raster.h for more details.
 			 */
 
-			int min_i = (int) lrintf(min[0]);
-			int max_i = (int) lrintf(max[0]);
-			int min_j = (int) lrintf(min[1]);
-			int max_j = (int) lrintf(max[1]);
-
-			for (int i = min_i; i<= max_i; i++)
-			for (int j = min_j; j<= max_j; j++) {
+			for (int i = min_i; i <= max_i; i++)
+			for (int j = min_j; j <= max_j; j++) {
 
 				if (honor_exclusion && render::is_excluded_f(i, j, frame))
 					continue;
