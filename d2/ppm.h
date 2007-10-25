@@ -273,7 +273,7 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 					error_ppm(filename);
 			}
 
-			p[k] = ((ale_real) ival) / ((ale_real) mcv);
+			p[k] = ((float) ival) / ((float) mcv);
 
 		}
 
@@ -404,11 +404,9 @@ static inline void write_ppm(const char *filename, const image *im, exposure *e,
 			              / (maxval - minval);
 		pixel unlinearized = (e->unlinearize(exposure_adjust)).clamp();
 
-		pixel rescaled = unlinearized * (ale_real) mcv;
-
 		for (k = 0; k < im->depth();  k++) {
 
-			uint16_t output_value = (uint16_t) round(rescaled[k]);
+			uint16_t output_value = (uint16_t) round((float) unlinearized[k] * mcv);
 
 			if (plain) {
 				fprintf(f, "%d ", output_value);
