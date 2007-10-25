@@ -30,7 +30,7 @@
 #define FIXED16 4
 #define FIXED32 5
 
-#define DEBUG_FIXED_POINT 1
+#define DEBUG_FIXED_POINT 0
 
 /*
  * Define a fixed point data type.
