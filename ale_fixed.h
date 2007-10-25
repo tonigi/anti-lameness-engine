@@ -72,6 +72,7 @@ public:
 	}
 };
 
+#if ALE_COLORS == FIXED16
 class ale_fixed_16_accum {
 public:
 	typedef int bits_t;
@@ -89,6 +90,7 @@ public:
 		return (bits_t) lrint(d);
 	}
 };
+#endif
 
 #if ALE_COLORS == FIXED32 || ALE_COORDINATES == FIXED32
 class ale_fixed_32 {
@@ -879,13 +881,15 @@ template<class fixed_type, unsigned int N>
 ale_fixed<fixed_type, N> sqrt(ale_fixed<fixed_type, N> f) {
 	ale_fixed<fixed_type, N> guess = f;
 
+	typedef typename ale_fixed<fixed_type, N>::mulbits_t mulbits_t;
+
 	for (int i = 0; i < 5; i++) {
 		guess.bits >>= 1;
 
 		if (guess.bits <= 0)
 			return 0;
 
-		long long sf = (long long) f.bits << (N - 2);
+		mulbits_t sf = (mulbits_t) f.bits << (N - 2);
 		guess.bits = guess.bits + sf / guess.bits;
 	}
 
