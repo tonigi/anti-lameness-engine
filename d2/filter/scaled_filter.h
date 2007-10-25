@@ -246,42 +246,60 @@ private:
 			point min = mapped_p;
 			point max = mapped_p;
 
-			for (int ii = 0; ii < 2; ii++)
-			for (int jj = 0; jj < 2; jj++) {
+			int imin[2];
+			int imax[2];
 
-				point b = transform_inverse(point((f->support() / hscale) * (ii ? -1 : 1),
-									     (f->support() / wscale) * (jj ? -1 : 1))
-								     + p);
+			ale_pos sup = f->support();
 
-				for (int d = 0; d < 2; d++) {
-					if (b[d] < min[d])
-						min[d] = b[d];
-					if (b[d] > max[d])
-						max[d] = b[d];
+			if (1 / sup == 0) {
+				imin[0] = 0;
+				imax[0] = im->height() - 1;
+				imin[1] = 0;
+				imax[1] = im->width() - 1;
+			} else {
+
+				ale_pos hsup = sup / hscale;
+				ale_pos wsup = sup / wscale;
+
+				for (int ii = -1; ii <= +1; ii+=2)
+				for (int jj = -1; jj <= +1; jj+=2) {
+
+					point b = transform_inverse(point(hsup * ii, wsup * jj) + p);
+					for (int d = 0; d < 2; d++) {
+						if (b[d] < min[d])
+							min[d] = b[d];
+						if (b[d] > max[d])
+							max[d] = b[d];
+					}
+
 				}
 
-			}
+				/*
+				 * lrintf() may be faster than ceil/floor() on some architectures.
+				 * See render/psf/raster.h for more details.
+				 */
 
-			if (min[0] < 0 || 1 / f->support() == 0)
-				min[0] = 0;
-			if (max[0] > im->height() - 1 || 1 / f->support() == 0)
-				max[0] = im->height() - 1;
-			if (min[1] < 0 || 1 / f->support() == 0)
-				min[1] = 0;
-			if (max[1] > im->width() - 1 || 1 / f->support() == 0)
-				max[1] = im->width() - 1;
+				imin[0] = lrintf(min[0]);
+				imax[0] = lrintf(max[0]);
+				imin[1] = lrintf(min[1]);
+				imax[1] = lrintf(max[1]);
+
+				if (imin[0] < 0)
+					imin[0] = 0;
+				if (imax[0] > im->height() - 1)
+					imax[0] = im->height() - 1;
+				if (imin[1] < 0)
+					imin[1] = 0;
+				if (imax[1] > im->width() - 1)
+					imax[1] = im->width() - 1;
+			}
 
 			/*
 			 * Iterate over the source pixels.
-			 * 
-			 * lrintf() may be faster than ceil/floor() on some architectures.
-			 * See render/psf/raster.h for more details.
 			 */
 
-			for (int i = (int) lrintf(min[0]); 
-				 i<= (int) lrintf(max[0]); i++)
-			for (int j = (int) lrintf(min[1]); 
-				 j<= (int) lrintf(max[1]); j++) {
+			for (int i = imin[0]; i <= imax[0]; i++)
+			for (int j = imin[1]; j <= imax[1]; j++) {
 
 				if (honor_exclusion && render::is_excluded_f(i, j, frame))
 					continue;
