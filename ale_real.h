@@ -245,16 +245,16 @@ typedef ale_fixed<ale_fixed_32,16> ale_sreal;
 
 #undef ale_real_to_int
 #undef ale_real_from_int
-#define ale_real_to_int(REAL_VALUE, MAXVAL) (  (MAXVAL == 255) 
-                                             ? (int) ale_fixed<ale_fixed_16_calc,8>::fixed_to_bits(REAL_VALUE)
-					     : ( (MAXVAL == 65535)
-					       ? (int) ale_fixed<ale_fixed_16_calc,16>::fixed_to_bits(REAL_VALUE) 
+#define ale_real_to_int(REAL_VALUE, MAXVAL) (  (MAXVAL == 255) \
+                                             ? (int) ale_fixed<ale_fixed_16_calc,8>::fixed_to_bits(REAL_VALUE) \
+					     : ( (MAXVAL == 65535) \
+					       ? (int) ale_fixed<ale_fixed_16_calc,16>::fixed_to_bits(REAL_VALUE)  \
 					       : (int) round((float) (REAL_VALUE) * (MAXVAL)) ) )
 
-#define ale_real_from_int(INT_VALUE, MAXVAL) (  (MAXVAL == 255)
-                                               ? (ale_real) ale_fixed<ale_fixed_16_calc,8>::bits_to_fixed(INT_VALUE)
-					       : ( (MAXVAL == 65535)
-					         ? (ale_real) ale_fixed<ale_fixed_16_calc,16>::bits_to_fixed(INT_VALUE)
+#define ale_real_from_int(INT_VALUE, MAXVAL) (  (MAXVAL == 255) \
+                                               ? (ale_real) ale_fixed<ale_fixed_16_calc,8>::bits_to_fixed(INT_VALUE) \
+					       : ( (MAXVAL == 65535) \
+					         ? (ale_real) ale_fixed<ale_fixed_16_calc,16>::bits_to_fixed(INT_VALUE) \
 						 : (ale_real) (((float) (INT_VALUE)) / ((float) (MAXVAL))) ) )
 
 #define ale_real_ip_weight_floor (1 / (ale_real) 100)

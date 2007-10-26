@@ -153,8 +153,8 @@ public:
 				 * Cases in which the old pixel value can be ignored
 				 */
 
-				if (new_value[k] * weights->chan(i, j, k)
-				  > colors->chan(i, j, k) * new_weight[k]) {
+				if (new_value[k] * (ale_real) weights->chan(i, j, k)
+				  > (ale_real) colors->chan(i, j, k) * new_weight[k]) {
 					weights->chan(i, j, k) = new_weight[k];
 					colors-> chan(i, j, k) = new_value[k];
 				}
@@ -166,8 +166,8 @@ public:
 				 * Cases in which the old pixel value can be ignored
 				 */
 
-				if (new_value[k] * weights->chan(i, j, k)
-				  < colors->chan(i, j, k) * new_weight[k]) {
+				if (new_value[k] * (ale_real) weights->chan(i, j, k)
+				  < (ale_real) colors->chan(i, j, k) * new_weight[k]) {
 					weights->chan(i, j, k) = new_weight[k];
 					colors-> chan(i, j, k) = new_value[k];
 				}

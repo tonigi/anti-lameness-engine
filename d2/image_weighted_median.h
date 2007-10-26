@@ -134,7 +134,7 @@ public:
 		for (unsigned int k = 0; k < 3; k++) {
 
 			if (fabs(new_weight[k]) > ale_real_weight_floor)
-				new_value[k] /= new_weight[k]
+				new_value[k] /= new_weight[k];
 			else
 				continue;
 

@@ -601,7 +601,7 @@ private:
 				   / (ale_pos) ( (1 + 0xffffff)
 				                 / (1 + (rng.get() & 0xffffff))));
 #else
-                        index = -1 + (int) ceil((mc_max+1) 
+                        index = -1 + (int) ceil((ale_accum) (mc_max+1) 
                                    * ( (1 + ((ale_accum) (rng.get())) ) 
                                      / (1 + ((ale_accum) RAND_MAX)) ));
 #endif
@@ -623,7 +623,7 @@ private:
 				   / (ale_pos) ( (1 + 0xffffff)
 				                 / (1 + (rng.get() & 0xffffff))));
 #else
-                        index += (int) ceil((mc_max+1) 
+                        index += (int) ceil((ale_accum) (mc_max+1) 
                                * ( (1 + ((ale_accum) (rng.get())) ) 
                                  / (1 + ((ale_accum) RAND_MAX)) ));
 #endif

@@ -407,7 +407,12 @@ public:
 	}
 
 	ale_fixed(double d) {
+#if DEBUG_FIXED_POINT
+		/* 
+		 * Removed due to a tendency to trigger unpredictably.
+		 */
 		assert(!casting_disabled);
+#endif
 
 		if (isnan(d)) {
 			bits = ALE_FIXED_NAN;

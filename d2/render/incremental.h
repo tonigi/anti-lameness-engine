@@ -214,6 +214,11 @@ protected:
 		invariant *inv;
 		image_weighted_avg *accum_image;
 	protected:
+		void prepare_subdomains(unsigned int N) {
+			ale_pos_disable_casting();
+			ale_real_disable_casting();
+			ale_accum_disable_casting();
+		}
 		void subdomain_algorithm(unsigned int thread,
 				int i_min, int i_max, int j_min, int j_max) {
 
@@ -260,6 +265,11 @@ protected:
 				accum_image->accumulate(i, j, frame, value, confidence);
 #endif
 			}
+		}
+		void finish_subdomains(unsigned int N) {
+			ale_pos_enable_casting();
+			ale_real_enable_casting();
+			ale_accum_enable_casting();
 		}
 
 	public:

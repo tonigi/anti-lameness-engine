@@ -31,4 +31,4 @@ render *render::directory[ACTIVE_RENDERER_COUNT];
 int render::directory_length;
 int render::extend;
 ale_pos render::scale_factor;
-ale_real render::wt = 0.0001;
+ale_real render::wt = 1 / (ale_real) 10000;

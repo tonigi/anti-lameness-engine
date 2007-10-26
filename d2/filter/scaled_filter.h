@@ -33,8 +33,11 @@
  * Useful constants.
  */
 
-static const ale_pos sqrt2          = (ale_pos) 1.41421356237309504880;
-static const ale_pos one_over_sqrt2 = (ale_pos) 0.70710678118654752440;
+// static const ale_pos sqrt2          = (ale_pos) 1.41421356237309504880;
+// static const ale_pos one_over_sqrt2 = (ale_pos) 0.70710678118654752440;
+
+static const ale_pos sqrt2          = sqrt((ale_pos) 2);
+static const ale_pos one_over_sqrt2 = 1 / sqrt2;
 
 /*
  * Scaled filter class.
