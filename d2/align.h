@@ -773,7 +773,7 @@ private:
 				if (interpolant != NULL) {
 					interpolant->filtered(i, j, &p[0], &weight[0], 1, f);
 
-					if (weight[0] > ale_real_weight_floor) {
+					if (weight[0].min_norm() > ale_real_weight_floor) {
 						p[0] /= weight[0];
 					} else {
 						return;
