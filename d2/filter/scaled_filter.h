@@ -334,7 +334,9 @@ private:
 			}
 		}
 
-		if (!(prev_weight > 0) && temp_weight > 0) {
+		if (!(prev_weight > 0) 
+		 && d2::exposure::get_confidence() != 0
+		 && temp_weight > 0) {
 
 			/*
 			 * Calculate certainty for the first pass.
