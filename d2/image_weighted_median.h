@@ -133,6 +133,11 @@ public:
 	void accumulate(int i, int j, int f, pixel new_value, pixel new_weight) {
 		for (unsigned int k = 0; k < 3; k++) {
 
+			if (fabs(new_weight[k]) > ale_real_weight_floor)
+				new_value[k] /= new_weight[k]
+			else
+				continue;
+
 			/*
 			 * XXX: This initialization should not be necessary.
 			 */

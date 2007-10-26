@@ -446,15 +446,6 @@ public:
 		filter_channel(p, mapped_p, 0, hscale_rb, wscale_rb, result, weight, honor_exclusion, frame, prev_value[0], prev_weight[0]);
 		filter_channel(p, mapped_p, 2, hscale_rb, hscale_rb, result, weight, honor_exclusion, frame, prev_value[2], prev_weight[2]);
 		filter_channel(p, mapped_p, 1, hscale_g , hscale_g , result, weight, honor_exclusion, frame, prev_value[1], prev_weight[1]);
-
-		for (unsigned int k = 0; k < 3; k++) {
-			if (fabs((*weight)[k]) < 0.0001) {
-				(*weight)[k] = 0;
-				(*result)[k] = 0;
-			} else {
-				(*result)[k] /= (*weight)[k];
-			}
-		}
 	}
 };
 #endif

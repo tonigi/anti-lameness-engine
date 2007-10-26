@@ -771,7 +771,14 @@ private:
 				weight[1] = pixel(1, 1, 1);
 
 				if (interpolant != NULL) {
-					interpolant->filtered(i, j, &p[0], &weight[1], 1, f);
+					interpolant->filtered(i, j, &p[0], &weight[0], 1, f);
+
+					if (weight[0] > ale_real_weight_floor) {
+						p[0] /= weight[0];
+					} else {
+						return;
+					}
+
 				} else {
                                         p[0] = c.input->get_bl(t);
 				}

@@ -174,8 +174,8 @@ public:
 
 				scf->filtered(i, j, &value, &weight, replace_ex, frame_number);
 
-				if (weight.min_norm() > 0) {
-					rendered->set_pixel(i, j, shading * value);
+				if (weight.min_norm() > ale_real_weight_floor) {
+					rendered->set_pixel(i, j, shading * (value / weight));
 					continue;
 				}
 			}

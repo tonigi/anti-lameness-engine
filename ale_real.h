@@ -36,6 +36,7 @@
 
 #define ale_real_from_int(INT_VALUE, MAXVAL) (((float) (INT_VALUE)) / ((float) (MAXVAL)))
 #define ale_real_to_int(REAL_VALUE, MAXVAL) round((float) (REAL_VALUE) * (MAXVAL))
+#define ale_real_weight_floor 0.0001
 
 /*
  * Real-valued type used to represent the range of an image (colors, weights,
