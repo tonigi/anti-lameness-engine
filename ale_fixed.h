@@ -158,6 +158,10 @@ public:
 	}
 
 	static bits_t fixed_to_bits(ale_fixed f) {
+
+		if (f.bits >= 1 << N)
+			return ((1 << N) - 1);
+
 		return f.bits;
 	}
 
