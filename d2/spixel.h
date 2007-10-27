@@ -58,18 +58,36 @@ public:
 		return result;
 	}
 
-	const ale_sreal &operator[](int i) const {
-		assert (i >= 0);
+	const ale_sreal &operator[](unsigned int i) const {
+#if 0
+		/*
+		 * This may be expensive.
+		 */
 		assert (i < 3);
+#endif
 
 		return x[i];
 	}
 
-	ale_sreal &operator[](int i) {
-		assert (i >= 0);
+	ale_sreal &operator[](unsigned int i) {
+#if 0
+		/*
+		 * This may be expensive.
+		 */
 		assert (i < 3);
+#endif
 
 		return x[i];
+	}
+
+	ale_sreal min_norm() const {
+		ale_sreal m = x[0];
+		if (x[1] < m)
+			m = x[1];
+		if (x[2] < m)
+			m = x[2];
+
+		return m;
 	}
 
 	spixel operator+=(pixel p) {

@@ -71,7 +71,7 @@ private:
 			assert (i < (int) coarse_defined->height());
 			assert (j < (int) coarse_defined->width());
 
-			assert (coarse_defined->get_pixel(i, j)[k] > 0);
+			assert (coarse_defined->pix(i, j)[k] > 0);
 
 			ale_pos zero = +0.0;
 			ale_pos one = +1.0;
@@ -97,12 +97,12 @@ private:
 					 || jj < 0
 					 || ii >= (int) coarse_defined->height()
 					 || jj >= (int) coarse_defined->width()
-					 || !(coarse_defined->get_pixel(ii, jj)[k] > 0))
+					 || !(coarse_defined->pix(ii, jj)[k] > 0))
 						continue;
 
 					in_bounds = 1;
 
-					if (!(fine_weight->get_pixel(ii, jj)[k] > 0))
+					if (!(fine_weight->pix(ii, jj)[k] > 0))
 						continue;
 
 					ale_pos distance = sqrt( (ale_pos) ((i - ii) * (i - ii)
@@ -161,12 +161,12 @@ private:
 					 || jj < 0
 					 || ii >= (int) coarse_defined->height()
 					 || jj >= (int) coarse_defined->width()
-					 || !(coarse_defined->get_pixel(ii, jj)[k] > 0))
+					 || !(coarse_defined->pix(ii, jj)[k] > 0))
 						continue;
 
 					in_bounds = 1;
 
-					if (!(fine_weight->get_pixel(ii, jj)[k] > 0))
+					if (!(fine_weight->pix(ii, jj)[k] > 0))
 						continue;
 
 					ale_pos distance = sqrt( (ale_pos) ((i - ii) * (i - ii)
@@ -236,7 +236,7 @@ private:
 						 || jj + j >= (int) fine_weight->width())
 							continue;
 
-						ale_real pw = fine_weight->get_pixel(i + ii, j + jj)[k];
+						ale_real pw = fine_weight->pix(i + ii, j + jj)[k];
 
 						if (!(pw > 0))
 							continue;
@@ -394,7 +394,7 @@ public:
 		for (unsigned int i = 0; i < default_image->height(); i++)
 		for (unsigned int j = 0; j < default_image->width();  j++)
 			output_image->set_pixel(i, j, 
-				(partial_weight->get_pixel(i, j).min_norm() >= render::get_wt())
+				(partial_weight->pix(i, j).min_norm() >= render::get_wt())
 				? partial_image->get_pixel(i, j)
 				: default_image->get_pixel(i, j));
 
@@ -427,9 +427,9 @@ public:
 		for (j = 0; j < default_weight->width();  j++)
 		for (k = 0; k < default_weight->depth();  k++)
 			defined_image->set_pixel(i, j, 
-					(partial_weight->get_pixel(i, j).min_norm() >= render::get_wt())
-					? partial_weight->get_pixel(i, j)
-					: default_weight->get_pixel(i, j));
+					(partial_weight->pix(i, j).min_norm() >= render::get_wt())
+					? partial_weight->pix(i, j)
+					: default_weight->pix(i, j));
 
 		return defined_image;
 	}

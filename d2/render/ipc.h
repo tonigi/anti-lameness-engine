@@ -239,13 +239,13 @@ protected:
 
 					if (lsimulated->get_bayer() == IMAGE_BAYER_NONE) {
 						lsimulated->pix(ii, jj) +=
-							r(approximation->get_pixel(i, j));
+							r(approximation->pix(i, j));
 						lsim_weights->pix(ii, jj) +=
 							r.weight();
 					} else {
 						int k = ((image_bayer_ale_real *)lsimulated)->bayer_color(ii, jj);
 						lsimulated->chan(ii, jj, k) +=
-							r(approximation->get_pixel(i, j))[k];
+							r(approximation->pix(i, j))[k];
 						lsim_weights->chan(ii, jj, k) +=
 							r.weight()[k];
 					}

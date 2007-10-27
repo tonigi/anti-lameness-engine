@@ -39,13 +39,23 @@ public:
 	}
 
 	const ale_pos &operator[](unsigned int i) const {
+#if 0
+		/*
+		 * This may be expensive.
+		 */
 		assert (i < 2);
+#endif
 
 		return x[i];
 	}
 
 	ale_pos &operator[](unsigned int i) {
+#if 0
+		/*
+		 * This may be expensive.
+		 */
 		assert (i < 2);
+#endif
 
 		return x[i];
 	}

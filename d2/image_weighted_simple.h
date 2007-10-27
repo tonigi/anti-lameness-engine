@@ -71,15 +71,15 @@ public:
 		/*
 		 * Initial value
 		 */
-		if (inv->is_first() && weights->get_pixel(i, j)[0] != 0)
+		if (inv->is_first() && weights->pix(i, j)[0] != 0)
 			return 1;
 		/*
 		 * Weight limit satisfied
 		 */
 		if (inv->is_avgf() 
-		 && weights->get_pixel(i, j)[0] > inv->get_param()
-		 && weights->get_pixel(i, j)[1] > inv->get_param()
-		 && weights->get_pixel(i, j)[2] > inv->get_param())
+		 && weights->pix(i, j)[0] > inv->get_param()
+		 && weights->pix(i, j)[1] > inv->get_param()
+		 && weights->pix(i, j)[2] > inv->get_param())
 			return 1;
 
 		return 0;

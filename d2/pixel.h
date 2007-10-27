@@ -67,12 +67,22 @@ public:
 //	}
 
 	const ale_real &operator[](unsigned int i) const {
+#if 0
+		/*
+		 * This may be expensive.
+		 */
 		assert (i < 3);
+#endif
 		return x[i];
 	}
 
 	ale_real &operator[](unsigned int i) {
+#if 0
+		/*
+		 * This may be expensive.
+		 */
 		assert (i < 3);
+#endif
 		return x[i];
 	}
 
@@ -175,7 +185,7 @@ public:
 		return m;
 	}
 
-	ale_real min_norm() {
+	ale_real min_norm() const {
 		ale_real m = x[0];
 		if (x[1] < m)
 			m = x[1];
