@@ -106,7 +106,7 @@ public:
 		return pixel(x[0] / d, x[1] / d, x[2] / d);
 	}
 
-	pixel operator*(pixel p) const {
+	pixel mult(pixel p) const {
 		return pixel(x[0] * p[0], x[1] * p[1], x[2] * p[2]);
 	}
 
@@ -234,16 +234,16 @@ public:
 	}
 };
 
-inline pixel operator*(ale_real d, const pixel &p) {
+inline pixel operator*(const pixel &p, const pixel &q) {
+	return p.mult(q);
+}
+
+template<typename T>
+inline pixel operator*(T d, const pixel &p) {
 	return p.mult(d);
 }
-inline pixel operator*(const pixel &p, ale_real d) {
-	return p.mult(d);
-}
-inline pixel operator*(const pixel &p, double d) {
-	return p.mult(d);
-}
-inline pixel operator*(double d, const pixel &p) {
+template<typename T>
+inline pixel operator*(const pixel &p, T d) {
 	return p.mult(d);
 }
 
@@ -252,18 +252,12 @@ inline std::ostream &operator<<(std::ostream &o, const pixel &p) {
 	return o;
 }
 
-inline pixel ppow(pixel p, ale_real d) {
+template<typename T>
+inline pixel ppow(pixel p, T d) {
 	return pixel(
-			pow(p[0], d),
-			pow(p[1], d),
-			pow(p[2], d));
-}
-
-inline pixel ppow(pixel p, double d) {
-	return pixel(
-			pow((double) p[0], d),
-			pow((double) p[1], d),
-			pow((double) p[2], d));
+			pow((T) p[0], d),
+			pow((T) p[1], d),
+			pow((T) p[2], d));
 }
 
 inline pixel pexp(pixel p) {
