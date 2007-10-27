@@ -1424,11 +1424,21 @@ public:
 		if (arg_prefix_count(argc, argv, "--q") > 0)
 			ui::get()->error("Default settings --q* are no longer recognized.");
 
+#define FIXED16 4
+#if ALE_COLORS == FIXED16
+		const char *defaults = 
+   			"--dchain auto:triangle:2,fine:box:1,triangle:2 "
+			"--achain triangle:2 "
+			"--ips 0 "
+			"--3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2 ";
+#else
 		const char *defaults = 
    			"--dchain auto:triangle:2,fine:box:1,triangle:2 "
 			"--achain triangle:2 "
 			"--ips 1 "
 			"--3d-chain fine:triangle:2,fine:gauss:0.75,triangle:2 ";
+#endif
+#undef FIXED16
 
 		token_reader *default_reader = new cstring_token_reader(defaults);
 

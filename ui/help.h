@@ -279,7 +279,13 @@ public:
 			BETWEEN_SECTIONS
 			"Irani-Peleg iterative solver:\n"
 			HEADER_SPACE
+#define FIXED16 4
+#if ALE_COLORS == FIXED16
+			"--ips <i>         Run <i> iterations.                            (0 is default)\n"
+#else
 			"--ips <i>         Run <i> iterations.                            (1 is default)\n"
+#endif
+#undef FIXED16
 			"--ip-mean         Use the mean correction [default]\n"
 			"--ip-median       Use the median correction\n"
 			"--ip-wl <x>       Use weight limit <x>\n"
