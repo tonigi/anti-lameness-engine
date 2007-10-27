@@ -394,7 +394,7 @@ public:
 		for (unsigned int i = 0; i < default_image->height(); i++)
 		for (unsigned int j = 0; j < default_image->width();  j++)
 			output_image->set_pixel(i, j, 
-				(partial_weight->pix(i, j).min_norm() >= render::get_wt())
+				((ale_real) partial_weight->pix(i, j).min_norm() >= render::get_wt())
 				? partial_image->get_pixel(i, j)
 				: default_image->get_pixel(i, j));
 
@@ -427,7 +427,8 @@ public:
 		for (j = 0; j < default_weight->width();  j++)
 		for (k = 0; k < default_weight->depth();  k++)
 			defined_image->set_pixel(i, j, 
-					(partial_weight->pix(i, j).min_norm() >= render::get_wt())
+					((ale_real) partial_weight->pix(i, j).min_norm() 
+						>= render::get_wt())
 					? partial_weight->pix(i, j)
 					: default_weight->pix(i, j));
 
