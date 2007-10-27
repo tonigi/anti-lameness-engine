@@ -102,7 +102,12 @@ public:
 	}
 
 	const ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) const {
+#if 0
+		/*
+		 * This may be expensive.
+		 */
 		assert (k == bayer_color(y, x));
+#endif
 		return _p[y * _dimx + x];
 	}
 
