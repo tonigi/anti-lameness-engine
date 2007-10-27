@@ -177,12 +177,19 @@ public:
 
 		ale_real input_scaled = input / _multiplier[k];
 
-		ale_real unexponentiated = _4 * ((_1 / _4) - (ale_real) pow((_1 / _2) 
-		                                                      - input_scaled, _2));
+		ale_real unexponentiated = _1 - _4 * ((_1 / _2) - input_scaled)
+		                                   * ((_1 / _2) - input_scaled);
+
+// 		ale_real unexponentiated = _4 * ((_1 / _4) - (ale_real) ((_1 / _2) - input_scaled)
+// 		                                                      * ((_1 / _2) - input_scaled));
+
 		// ale_real unexponentiated = 4 * input_scaled * (0.25 - pow(0.5 - input_scaled, 2));
 
 		if (unexponentiated < _0) 
 			return confidence_floor;
+
+		if (confidence_exponent == _1)
+			return unexponentiated;
 
 		ale_real exponentiated = pow(unexponentiated, confidence_exponent);
 
