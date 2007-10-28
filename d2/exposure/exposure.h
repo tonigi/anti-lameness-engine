@@ -185,13 +185,18 @@ public:
 
 		// ale_real unexponentiated = 4 * input_scaled * (0.25 - pow(0.5 - input_scaled, 2));
 
-		if (unexponentiated < _0) 
-			return confidence_floor;
+		ale_real exponentiated;
 
-		if (confidence_exponent == _1)
-			return unexponentiated;
+		if (confidence_exponent != _1) {
 
-		ale_real exponentiated = pow(unexponentiated, confidence_exponent);
+			if (unexponentiated < _0) 
+				return confidence_floor;
+
+			exponentiated = pow(unexponentiated, confidence_exponent);
+
+		} else {
+			exponentiated = unexponentiated;
+		}
 
 		if (exponentiated < confidence_floor || !finite(exponentiated))
 			return confidence_floor;
