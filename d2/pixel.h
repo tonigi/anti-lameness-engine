@@ -267,4 +267,11 @@ inline pixel pexp(pixel p) {
 			exp((double) p[2]));
 }
 
+inline pixel psqrt(pixel p) {
+	return pixel(
+			sqrt(p[0]),
+			sqrt(p[1]),
+			sqrt(p[2]));
+}
+
 #endif

@@ -1553,8 +1553,8 @@ public:
 						      ? c.aweight->get_pixel(i, j)
 						      : pixel(1, 1, 1))
 						     * (pass_number
-						      ? ppow(c.certainty->get_pixel(i, j)
-						           * c.input_certainty->get_bl(q, 1), 0.5)
+						      ? psqrt(c.certainty->get_pixel(i, j)
+						            * c.input_certainty->get_bl(q, 1))
 						      : pixel(1, 1, 1));
 
 					asums[thread] += a * weight;
