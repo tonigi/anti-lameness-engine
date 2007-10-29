@@ -47,7 +47,7 @@ public:
 #else
 		const int table_size = 1024;
 		const int table_bits = 10;
-		const int interp_bits = 4;
+		const int interp_bits = 6;
 		static int table_is_built = 0;
 		static ale_real table[table_size];
 
@@ -105,7 +105,7 @@ public:
 
 		const int table_size = 1024;
 		const int table_bits = 10;
-		const int interp_bits = 4;
+		const int interp_bits = 6;
 		static int table_is_built = 0;
 		static ale_real table[table_size];
 
