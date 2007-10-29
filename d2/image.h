@@ -363,10 +363,30 @@ public:
 			for (int n = 0; n < 4; n++)
 				result += factor[n] * neighbor[n];
 		} else {
+#if 0
+			/*
+			 * Calculating the geometric mean may be expensive on
+			 * some platforms (e.g., those without floating-point
+			 * support.
+			 */
+
 			result = pixel(1, 1, 1);
 
 			for (int n = 0; n < 4; n++)
 				result *= ppow(neighbor[n], factor[n]);
+#else
+			/*
+			 * Taking the minimum value may be cheaper than
+			 * calculating a geometric mean.
+			 */
+
+			result = neighbor[0];
+
+			for (int n = 1; n < 4; n++) 
+			for (int k = 0; k < 3; k++) 
+				if (neighbor[n][k] < result[k])
+					result[k] = neighbor[n][k];
+#endif
 		}
 
 //		fprintf(stderr, "result=%f %f %f\n", 
@@ -794,17 +814,28 @@ public:
 		void subdomain_algorithm(unsigned int thread,
 				int i_min, int i_max, int j_min, int j_max) {
 
+#if 0
 			ale_real _0625 = (ale_real) 0.0625;
 			ale_real _125  = (ale_real) 0.125;
 			ale_real _25   = (ale_real) 0.25;
+#endif
 
-			unsigned int ui_min = (unsigned int) i_min;
-			unsigned int ui_max = (unsigned int) i_max;
-			unsigned int uj_min = (unsigned int) j_min;
-			unsigned int uj_max = (unsigned int) j_max;
+			int ui_min = (int) i_min;
+			int ui_max = (int) i_max;
+			int uj_min = (int) j_min;
+			int uj_max = (int) j_max;
 
-			for (unsigned int i = ui_min; i < ui_max; i++)
-			for (unsigned int j = uj_min; j < uj_max; j++) {
+			for (int i = ui_min; i < ui_max; i++)
+			for (int j = uj_min; j < uj_max; j++) {
+
+#if 0
+
+				/*
+				 * Calculate a geometric mean; this approach
+				 * may be expensive on some platforms (e.g.,
+				 * those without floating-point support in
+				 * hardware).
+				 */
 
 				pixel value = pixel
 
@@ -833,6 +864,27 @@ public:
 					* ((i < is->height() && j < is->width() - 1)
 					    ? ppow(iu->get_pixel(2 * i + 1, 2 * j + 1), _0625)
 					    : pixel(0, 0, 0))));
+#else
+
+				pixel value = iu->get_pixel(2 * i, 2 * j);
+
+				for (int ii = 2 * i - 1; ii <= 2 * i + 1; ii++)
+				for (int jj = 2 * j - 1; jj <= 2 * j + 1; jj++) {
+					if (ii < 0
+					 || jj < 0
+					 || ii > (int) iu->height() - 1
+					 || jj > (int) iu->height() - 1)
+						continue;
+
+					pixel value2 = iu->get_pixel(ii, jj);
+
+					for (int k = 0; k < 3; k++)
+						if (value2[k] < value[k]
+						 || !finite(value2[k]))   /* propagate non-finites */
+							value[k] = value2[k];
+				}
+
+#endif
 
 
 				for (int k = 0; k < 3; k++)
