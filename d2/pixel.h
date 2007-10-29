@@ -255,9 +255,9 @@ inline std::ostream &operator<<(std::ostream &o, const pixel &p) {
 template<typename T>
 inline pixel ppow(pixel p, T d) {
 	return pixel(
-			pow((T) p[0], d),
-			pow((T) p[1], d),
-			pow((T) p[2], d));
+			pow(p[0], d),
+			pow(p[1], d),
+			pow(p[2], d));
 }
 
 inline pixel pexp(pixel p) {
