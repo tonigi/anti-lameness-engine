@@ -85,7 +85,7 @@ public:
 
 			ale_real frac = ale_real_from_int((index3 << (16 - interp_bits)), 65535);
 
-			result[k] = (1 - frac) * table[index2] + frac * table[index2];
+			result[k] = (1 - frac) * table[index2] + frac * table[index2 + 1];
 		}
 
 		return result * get_multiplier();
@@ -143,7 +143,7 @@ public:
 
 			ale_real frac = ale_real_from_int((index3 << (16 - interp_bits)), 65535);
 
-			result[k] = (1 - frac) * table[index2] + frac * table[index2];
+			result[k] = (1 - frac) * table[index2] + frac * table[index2 + 1];
 		}
 
 		return result;
