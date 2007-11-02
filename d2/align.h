@@ -2467,6 +2467,7 @@ public:
 			 || !(t.scaled_width() > 0  && t.scaled_width() < s.scaled_width())) {
 				perturb /= pow(2, lod - lod_);
 				lod = lod_;
+				break;
 			} else {
 				offset = t;
 			}
@@ -2631,13 +2632,9 @@ public:
 						 * Rescale the transforms.
 						 */
 
-						ale_pos rescale_factor = 
-							(double)
-							(scale_clusters[lod + 0].accum->height()
-						       + scale_clusters[lod + 0].accum->width())
-						      / (double)
-						        (scale_clusters[lod + 1].accum->height()
-						       + scale_clusters[lod + 1].accum->width());
+						ale_pos rescale_factor = scale_factor
+						                       / pow(2, lod)
+								       / here.get_offset().scale();
 
 						here.rescale(rescale_factor, si);
 
@@ -2661,13 +2658,9 @@ public:
 		here.set_current_index(0);
 
 		if (lod > 0) {
-			ale_pos rescale_factor = 
-				(double)
-				(scale_clusters[  0].accum->height()
-			       + scale_clusters[  0].accum->width())
-			      / (double)
-				(scale_clusters[lod].accum->height()
-			       + scale_clusters[lod].accum->width());
+			ale_pos rescale_factor = scale_factor
+					       / pow(lod, 2)
+					       / here.get_offset().scale();
 
 			here.rescale(rescale_factor, scale_clusters[0]);
 		}
