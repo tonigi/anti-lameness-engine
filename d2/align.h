@@ -186,7 +186,6 @@ private:
 	struct element_t {
 		int is_default, old_is_default;
 		int is_primary;
-		int old_lod;
 		transformation old_initial_alignment;
 		transformation old_final_alignment;
 		transformation default_initial_alignment;
@@ -1961,9 +1960,6 @@ public:
 
 			ui::get()->following();
 
-			element->old_final_alignment.rescale (1 / pow(2, lod));
-			element->old_initial_alignment.rescale(1 / pow(2, lod - element->old_lod));
-
 			for (offset.set_current_index(0),
 			     element->old_initial_alignment.set_current_index(0),
 			     element->old_final_alignment.set_current_index(0),
@@ -2305,25 +2301,6 @@ public:
 		element->old_is_default = element->is_default;
 
 		/*
-		 * Scale default initial transform for lod
-		 */
-
-		for (int lod_ = 0; lod_ < lod; lod_++) {
-			transformation s = element->default_initial_alignment;
-			transformation t = element->default_initial_alignment;
-
-			t.rescale(1 / (double) 2);
-
-			if (!(t.scaled_height() > 0 && t.scaled_height() < s.scaled_height())
-			 || !(t.scaled_width() > 0  && t.scaled_width() < s.scaled_width())) {
-				perturb /= pow(2, lod - lod_);
-				lod = lod_;
-			} else {
-				element->default_initial_alignment = t;
-			}
-		}
-
-		/*
 		 * Set the default transformation.
 		 */
 
@@ -2346,8 +2323,6 @@ public:
 
 		offset.set_current_index(0);
 
-		ui::get()->set_offset(offset);
-
 		if (perturb > 0) {
 
 			/*
@@ -2359,98 +2334,10 @@ public:
 			new_offset.set_current_index(0);
 			
 			element->old_initial_alignment = offset;
-			element->old_lod = lod;
 			offset = new_offset;
 
 		} else {
 			element->old_initial_alignment = offset;
-			element->old_lod = lod;
-		}
-
-		struct scale_cluster si = scale_clusters[lod];
-
-		/*
-		 * Projective adjustment value
-		 */
-
-		ale_pos adj_p = (perturb >= pow(2, lod_diff))
-			     ? pow(2, lod_diff) : (double) perturb;
-
-		/*
-		 * Orientational adjustment value in degrees.
-		 *
-		 * Since rotational perturbation is now specified as an
-		 * arclength, we have to convert.
-		 */
-
-		ale_pos adj_o = (double) 2 * (double) perturb 
-				  / sqrt(pow((double) scale_clusters[0].input->height(), (double) 2)
-				       + pow((double) scale_clusters[0].input->width(),  (double) 2))
-				  * (double) 180
-				  / M_PI;
-
-		/*
-		 * Barrel distortion adjustment value
-		 */
-
-		ale_pos adj_b = perturb * bda_mult;
-
-		/*
-		 * Global search overlap requirements.
-		 */
-
-		local_gs_mo = (double) local_gs_mo / pow(pow(2, lod), 2);
-
-		/*
-		 * Pre-alignment exposure adjustment
-		 */
-
-		if (_exp_register) {
-			ui::get()->exposure_1();
-			transformation o = offset;
-			for (int k = lod; k > 0; k--)
-				o.rescale(2);
-			set_exposure_ratio(m, scale_clusters[0], o, local_ax_count, 0);
-		}
-
-		/*
-		 * Alignment statistics.
-		 */
-
-		diff_stat_t here;
-
-		/*
-		 * Current difference (error) value
-		 */
-
-		ui::get()->prematching();
-		here.diff(si, perturb, offset, local_ax_count, m);
-		ui::get()->set_match(here.get_error());
-
-		/*
-		 * Current and modified barrel distortion parameters
-		 */
-
-		ale_pos current_bd[BARREL_DEGREE];
-		ale_pos modified_bd[BARREL_DEGREE];
-		offset.bd_get(current_bd);
-		offset.bd_get(modified_bd);
-
-		/*
-		 * Translational global search step
-		 */
-
-		if (perturb >= local_lower && local_gs != 0 && local_gs != 5
-		 && (local_gs != 6 || element->is_default)) {
-			
-			ui::get()->global_alignment(perturb, lod);
-			ui::get()->gs_mo(local_gs_mo);
-
-			test_globals(&here, si, here.get_offset(), local_gs, adj_p,
-					local_ax_count, m, local_gs_mo, perturb);
-
-			ui::get()->set_match(here.get_error());
-			ui::get()->set_offset(here.get_offset());
 		}
 
 		/*
@@ -2459,10 +2346,7 @@ public:
 
 		if (local_gs == 5) {
 
-			transformation o = here.get_offset();
-
-			for (int k = lod; k > 0; k--)
-				o.rescale(2);
+			transformation o = offset;
 
 			/*
 			 * Determine centroid data
@@ -2558,15 +2442,108 @@ public:
 					adj_p /= 2;
 				}
 			}
+		}
 
-			if (_exp_register)
-				set_exposure_ratio(m, scale_clusters[0], o, local_ax_count, 0);
+		/*
+		 * Pre-alignment exposure adjustment
+		 */
 
-			for (int k = lod; k > 0; k--)
-				o.rescale(0.5);
+		if (_exp_register) {
+			ui::get()->exposure_1();
+			set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count, 0);
+		}
 
-			here.diff(si, perturb, o, local_ax_count, m);
-			here.confirm();
+		/*
+		 * Scale transform for lod
+		 */
+
+		for (int lod_ = 0; lod_ < lod; lod_++) {
+			transformation s = offset;
+			transformation t = offset;
+
+			t.rescale(1 / (double) 2);
+
+			if (!(t.scaled_height() > 0 && t.scaled_height() < s.scaled_height())
+			 || !(t.scaled_width() > 0  && t.scaled_width() < s.scaled_width())) {
+				perturb /= pow(2, lod - lod_);
+				lod = lod_;
+			} else {
+				offset = t;
+			}
+		}
+
+		ui::get()->set_offset(offset);
+
+		struct scale_cluster si = scale_clusters[lod];
+
+		/*
+		 * Projective adjustment value
+		 */
+
+		ale_pos adj_p = (perturb >= pow(2, lod_diff))
+			     ? pow(2, lod_diff) : (double) perturb;
+
+		/*
+		 * Orientational adjustment value in degrees.
+		 *
+		 * Since rotational perturbation is now specified as an
+		 * arclength, we have to convert.
+		 */
+
+		ale_pos adj_o = (double) 2 * (double) perturb 
+				  / sqrt(pow((double) scale_clusters[0].input->height(), (double) 2)
+				       + pow((double) scale_clusters[0].input->width(),  (double) 2))
+				  * (double) 180
+				  / M_PI;
+
+		/*
+		 * Barrel distortion adjustment value
+		 */
+
+		ale_pos adj_b = perturb * bda_mult;
+
+		/*
+		 * Global search overlap requirements.
+		 */
+
+		local_gs_mo = (double) local_gs_mo / pow(pow(2, lod), 2);
+
+		/*
+		 * Alignment statistics.
+		 */
+
+		diff_stat_t here;
+
+		/*
+		 * Current difference (error) value
+		 */
+
+		ui::get()->prematching();
+		here.diff(si, perturb, offset, local_ax_count, m);
+		ui::get()->set_match(here.get_error());
+
+		/*
+		 * Current and modified barrel distortion parameters
+		 */
+
+		ale_pos current_bd[BARREL_DEGREE];
+		ale_pos modified_bd[BARREL_DEGREE];
+		offset.bd_get(current_bd);
+		offset.bd_get(modified_bd);
+
+		/*
+		 * Translational global search step
+		 */
+
+		if (perturb >= local_lower && local_gs != 0 && local_gs != 5
+		 && (local_gs != 6 || element->is_default)) {
+			
+			ui::get()->global_alignment(perturb, lod);
+			ui::get()->gs_mo(local_gs_mo);
+
+			test_globals(&here, si, here.get_offset(), local_gs, adj_p,
+					local_ax_count, m, local_gs_mo, perturb);
+
 			ui::get()->set_match(here.get_error());
 			ui::get()->set_offset(here.get_offset());
 		}
@@ -2654,8 +2631,15 @@ public:
 						 * Rescale the transforms.
 						 */
 
-						here.rescale(2, si);
-						element->default_initial_alignment.rescale(2);
+						ale_pos rescale_factor = 
+							(double)
+							(scale_clusters[lod + 0].accum->height()
+						       + scale_clusters[lod + 0].accum->width())
+						      / (double)
+						        (scale_clusters[lod + 1].accum->height()
+						       + scale_clusters[lod + 1].accum->width());
+
+						here.rescale(rescale_factor, si);
 
 					} else {
 						adj_p = perturb;
@@ -2677,8 +2661,15 @@ public:
 		here.set_current_index(0);
 
 		if (lod > 0) {
-			here.rescale(pow(2, lod), scale_clusters[0]);
-			element->default_initial_alignment.rescale(pow(2, lod));
+			ale_pos rescale_factor = 
+				(double)
+				(scale_clusters[  0].accum->height()
+			       + scale_clusters[  0].accum->width())
+			      / (double)
+				(scale_clusters[lod].accum->height()
+			       + scale_clusters[lod].accum->width());
+
+			here.rescale(rescale_factor, scale_clusters[0]);
 		}
 
 		offset = here.get_offset();
