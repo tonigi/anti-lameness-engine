@@ -20,6 +20,14 @@
 
 <news>
 
+<release version="0.8.11" date="2007-Nov-03">
+
+<p>This release includes new fixed-point configuration options, improves
+floating-point performance in certain cases, and resolves a possible alignment
+bug.</p>
+
+</release>
+
 <release version="0.8.10.1" date="2007-Oct-04">
 
 <p>This release fixes an assertion failure occurring at large scale values.</p>

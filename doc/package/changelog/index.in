@@ -1,3 +1,25 @@
+V	0.8.11 2007-Nov-03
+
+o	Revise certain code for improved execution speed, including
+	disabling certain assertions and reducing calls to pow().
+
+o	Replace geometric-mean filtering of weight values with minimum-value
+	filtering, reducing calls to pow().
+
+o	Add fixed-point data types selectable at configuration time for
+	coordinate and color data, hence improving speed on certain embedded
+	platforms.  Use on phones was suggested by Wen Guihua.
+
+o	Revise incremental rendering code to store color values unnormalized by
+	weights.
+
+o	Revise multi-alignment options for the currently-considered
+	implementation.
+
+o	Eliminate NaN propagation that could lead to alignment failure in
+	certain cases, perhaps causing an alignment bug reported in earlier
+	versions by Gregory Maxwell.
+
 V	0.8.10.1 2007-Oct-04
 
 o	Change 'char *' referencing string literals to 'const char *'.
