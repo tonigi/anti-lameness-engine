@@ -70,6 +70,9 @@ public:
 			} else if (input[k] <= 0) {
 				result[k] = 0;
 				continue;
+			} else if (isnan(input[k])) {
+				result[k] = input[k];
+				continue;
 			}
 
 			int index1 = ale_real_to_int(input[k], 65535);
@@ -127,6 +130,9 @@ public:
 				continue;
 			} else if (input[k] <= 0) {
 				result[k] = 0;
+				continue;
+			} else if (isnan(input[k])) {
+				result[k] = input[k];
 				continue;
 			}
 
