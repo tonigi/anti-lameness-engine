@@ -146,6 +146,8 @@ public:
 			is->pix(i + top, j + left)
 				= get_pixel(i, j);
 
+		is->set_offset(_offset[0] - top, _offset[1] - left);
+
 		return is;
 	}
 

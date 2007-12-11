@@ -1334,9 +1334,10 @@ public:
         }
 
         const image *get_defined() const {
-		if (synced)
+		if (synced) {
+			assert(0);  /* definition is not set */
 			return definition;
-		else
+		} else
 			return input->get_defined();
         }
 
@@ -1353,7 +1354,7 @@ public:
 		input->sync();
                 synced = 1;
 		approximation = input->get_image()->clone("IPC Approximation");
-		definition = input->get_defined()->clone("IPC Definition");
+		// definition = input->get_defined()->clone("IPC Definition");
 		optimizations::ip_sources_obtained(this);
 		ui::get()->ip_start();
                 _ip();
