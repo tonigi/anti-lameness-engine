@@ -2849,12 +2849,22 @@ public:
 		 * XXX: note that the Irani-Peleg renderer currently
 		 * returns zero for ochain[0]->sync(), since it writes
 		 * output internally when inc != 0.
+		 *
+		 * XXX: Leave ochain[0] last, since this may allow disposal of
+		 * rendering structures not required by the Irani-Peleg
+		 * renderer.
 		 */
 
-		for (int opt = 0; opt < oc_count; opt++) 
+		for (int opt = 1; opt < oc_count; opt++) 
 		if  ((ochain[opt]->sync() || !inc) && !psf_match) {
 			ui::get()->writing_output(opt);
 			d2::image_rw::write_image(ochain_names[opt], ochain[opt]->get_image());
+		}
+
+		if (oc_count > 0)
+		if ((ochain[0]->sync() || !inc) && !psf_match) {
+			ui::get()->writing_output(0);
+			d2::image_rw::write_image(ochain_names[0], ochain[0]->get_image());
 		}
 
 		/*

@@ -42,6 +42,27 @@ private:
 	}
 
 public:
+
+	/*
+	 * Wrapper encapsulating details of the separation between the
+	 * resident-checking implementation and non-checking.
+	 */
+
+	static image *new_image_ale_real(unsigned int dimy,
+					 unsigned int dimx,
+					 unsigned int depth,
+					 const char *name = "anonymous",
+					 exposure *exp = NULL) {
+
+		unsigned int resident = image::get_resident();
+
+		if (resident == 0 || resident > dimy * dimx)
+			return new image_ale_real<0>(dimy, dimx, depth, name, exp);
+
+		return new image_ale_real<1>(dimy, dimx, depth, name, exp);
+
+	}
+
 	image_ale_real (unsigned int dimy, unsigned int dimx, unsigned int
 			depth, const char *name = "anonymous", exposure *exp = NULL) 
 			: image(dimy, dimx, depth, name, exp) {
@@ -88,7 +109,7 @@ public:
 	 * Make a new image suitable for receiving scaled values.
 	 */
 	virtual image *scale_generator(int height, int width, int depth, const char *name) const {
-		return new image_ale_real(height, width, depth, name, _exp);
+		return new_image_ale_real(height, width, depth, name, _exp);
 	}
 
 	/*
@@ -96,9 +117,9 @@ public:
 	 * initializing the new image areas with black pixels.  Negative values
 	 * shrink the image.
 	 */
-	void extend(int top, int bottom, int left, int right) {
+	image *_extend(int top, int bottom, int left, int right) {
 
-		image_ale_real *is = new image_ale_real (
+		image *is = new_image_ale_real (
 			height() + top  + bottom,
 			 width() + left + right , depth(), name, _exp);
 
@@ -125,20 +146,7 @@ public:
 			is->pix(i + top, j + left)
 				= get_pixel(i, j);
 
-		delete[] _p;
-
-		_p = is->_p;
-		_dimx = is->_dimx;
-		_dimy = is->_dimy;
-		_depth = is->_depth;
-		_offset[0] -= top;
-		_offset[1] -= left;
-
-		image_updated();
-
-		is->_p = NULL;
-
-		delete is;
+		return is;
 	}
 
 };
@@ -153,13 +161,7 @@ static inline image *new_image_ale_real(unsigned int dimy,
 				 const char *name = "anonymous",
 				 exposure *exp = NULL) {
 
-	unsigned int resident = image::get_resident();
-
-	if (resident == 0 || resident > dimy * dimx)
-		return new image_ale_real<0>(dimy, dimx, depth, name, exp);
-
-	return new image_ale_real<1>(dimy, dimx, depth, name, exp);
-
+	return image_ale_real<0>::new_image_ale_real(dimy, dimx, depth, name, exp);
 }
 
 

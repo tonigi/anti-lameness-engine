@@ -54,13 +54,15 @@ public:
 	 * initializing the new image areas with black pixels.  Negative values
 	 * shrink the image.
 	 */
-	void extend(int top, int bottom, int left, int right) {
-		colors->extend(top, bottom, left, right);
-		weights->extend(top, bottom, left, right);
+	image *_extend(int top, int bottom, int left, int right) {
+		extend(&colors, top, bottom, left, right);
+		extend(&weights, top, bottom, left, right);
 
 		_dimx = colors->width();
 		_dimy = colors->height();
 		_offset = colors->offset();
+
+		return NULL;
 	}
 
 	/*

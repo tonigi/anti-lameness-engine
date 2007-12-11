@@ -111,6 +111,7 @@ protected:
         int synced;
 	int inc;
         image *approximation;
+	image *definition;
         render *input;
         unsigned int iterations;
 	psf *lresponse, *nlresponse;
@@ -1333,7 +1334,10 @@ public:
         }
 
         const image *get_defined() const {
-                return input->get_defined();
+		if (synced)
+			return definition;
+		else
+			return input->get_defined();
         }
 
         void sync(int n) {
@@ -1348,7 +1352,9 @@ public:
         virtual int sync() {
 		input->sync();
                 synced = 1;
-                approximation = optimizations::get_ip_working_image(input->get_image());
+		approximation = input->get_image()->clone("IPC Approximation");
+		definition = input->get_defined()->clone("IPC Definition");
+		optimizations::ip_sources_obtained(this);
 		ui::get()->ip_start();
                 _ip();
 		ui::get()->ip_done();

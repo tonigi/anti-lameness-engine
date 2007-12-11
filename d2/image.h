@@ -983,7 +983,16 @@ public:
 	 * initializing the new image areas with black pixels.  Negative values
 	 * shrink the image.
 	 */
-	virtual void extend(int top, int bottom, int left, int right) = 0;
+	virtual image *_extend(int top, int bottom, int left, int right) = 0;
+
+	static void extend(image **i, int top, int bottom, int left, int right) {
+		image *is = (*i)->_extend(top, bottom, left, right);
+
+		if (is != NULL) {
+			delete (*i);
+			*i = is;
+		}
+	}
 
 	/*
 	 * Clone 

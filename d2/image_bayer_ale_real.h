@@ -70,6 +70,27 @@ private:
 	}
 
 public:
+
+	/*
+	 * Wrapper encapsulating details of the separation between the
+	 * resident-checking implementation and non-checking.
+	 */
+	static inline image *new_image_bayer_ale_real(unsigned int dimy,
+					 unsigned int dimx,
+					 unsigned int depth,
+					 unsigned int bayer,
+					 const char *name = "anonymous",
+					 exposure *exp = NULL) {
+
+		unsigned int resident = image::get_resident();
+
+		if (resident == 0 || resident > dimy * dimx)
+			return new image_bayer_ale_real<0>(dimy, dimx, depth, bayer, name, exp);
+
+		return new image_bayer_ale_real<1>(dimy, dimx, depth, bayer, name, exp);
+
+	}
+
 	image_bayer_ale_real (unsigned int dimy, unsigned int dimx, unsigned int depth,
 			unsigned int bayer, const char *name = "anonymous", exposure *exp = NULL) 
 			: image(dimy, dimx, depth, name, exp, bayer) {
@@ -236,12 +257,14 @@ public:
 	 * Extend the image area to the top, bottom, left, and right,
 	 * initializing the new image areas with black pixels.
 	 */
-	void extend(int top, int bottom, int left, int right) {
+	image *_extend(int top, int bottom, int left, int right) {
 		/*
 		 * Bayer-patterned images should always represent inputs,
 		 * which should not ever be extended.
 		 */
 		assert(0);
+
+		return NULL;
 	}
 
 };
@@ -257,13 +280,7 @@ static inline image *new_image_bayer_ale_real(unsigned int dimy,
 				 const char *name = "anonymous",
 				 exposure *exp = NULL) {
 
-	unsigned int resident = image::get_resident();
-
-	if (resident == 0 || resident > dimy * dimx)
-		return new image_bayer_ale_real<0>(dimy, dimx, depth, bayer, name, exp);
-
-	return new image_bayer_ale_real<1>(dimy, dimx, depth, bayer, name, exp);
-
+	return image_bayer_ale_real<0>::new_image_bayer_ale_real(dimy, dimx, depth, bayer, name, exp);
 }
 
 #endif

@@ -108,16 +108,18 @@ public:
 	 * initializing the new image areas with black pixels.  Negative values
 	 * shrink the image.
 	 */
-	void extend(int top, int bottom, int left, int right) {
+	image *_extend(int top, int bottom, int left, int right) {
 
 		for (unsigned int f = 0; f < capacity; f++) {
-			colors[f]->extend(top, bottom, left, right);
-			weights[f]->extend(top, bottom, left, right);
+			extend(&colors[f], top, bottom, left, right);
+			extend(&weights[f], top, bottom, left, right);
 		}
 
 		_dimx = colors[0]->width();
 		_dimy = colors[0]->height();
 		_offset = colors[0]->offset();
+
+		return NULL;
 	}
 
 	int accumulate_norender(int i, int j) {

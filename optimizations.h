@@ -29,22 +29,21 @@ class optimizations {
 public:
 
 	/*
-	 * Get the initial Irani-Peleg approximation.
+	 * Clean up any structures not required for Irani-Peleg rendering.
 	 */
-	static d2::image *get_ip_working_image(const d2::image *im) {
-		d2::image *result = im->clone("IPC Approximation");
-
+	static void ip_sources_obtained(d2::render *ip_instance) {
 #if OPTIMIZATIONS == 1
 		/*
-		 * Reduce the extents of the source.  (We might not be able to
-		 * delete it, since deletion might be performed by
-		 * begin_3d_work().)
+		 * Delete all rendering structures aside from Irani-Peleg.
 		 */
-		d2::image *im_noconst = (d2::image *) im;
-		im_noconst->extend(0, 1 - im->height(), 0, 1 - im->width());
-#endif
 
-		return result;
+		for (int n = 0; n < d2::render::render_count(); n++) {
+			if (n == ip_instance->entry())
+				continue;
+
+			d2::render::free_entry(n);
+		}
+#endif
 	}
 
 	/*

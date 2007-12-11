@@ -347,19 +347,25 @@ public:
 		directory[entry_number] = NULL;
 	}
 
+	int entry() {
+		return entry_number;
+	}
+
 	virtual void free_memory() = 0;
 
-	static void free_all_memory() {
+	static void free_entry(int n) {
+		if (directory[n] != NULL) {
+			directory[n]->free_memory();
+			delete directory[n];
+			directory[n] = NULL;
+		}
+	}
 
+	static void free_all_memory() {
 		for (int i = 0; i < ACTIVE_RENDERER_COUNT; i++)
-			if (directory[i] != NULL) {
-				directory[i]->free_memory();
-				delete directory[i];
-				directory[i] = NULL;
-			}
+			free_entry(i);
 
 		directory_length = 0;
-
 	}
 
 	static void reset() {
