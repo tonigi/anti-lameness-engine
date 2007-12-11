@@ -52,8 +52,8 @@ private:
 	 * It might be better to localize elements having identical spatial
 	 * coordinates.
 	 */
-	image_ale_real **colors;
-	image_ale_real **weights;
+	image **colors;
+	image **weights;
 	unsigned int capacity;
 
 public:
@@ -68,8 +68,8 @@ public:
 		} else
 			assert(0);
 
-		colors  = (image_ale_real **) malloc(this->capacity * sizeof(image_ale_real *));
-		weights = (image_ale_real **) malloc(this->capacity * sizeof(image_ale_real *));
+		colors  = (image **) malloc(this->capacity * sizeof(image *));
+		weights = (image **) malloc(this->capacity * sizeof(image *));
 
 		assert(colors);
 		assert(weights);
@@ -80,8 +80,8 @@ public:
 		}
 
 		for (unsigned int f = 0; f < this->capacity; f++) {
-			colors[f] = new image_ale_real(dimy, dimx, depth);
-			weights[f] = new image_ale_real(dimy, dimx, depth);
+			colors[f] = new_image_ale_real(dimy, dimx, depth);
+			weights[f] = new_image_ale_real(dimy, dimx, depth);
 
 			assert(colors[f]);
 			assert(weights[f]);

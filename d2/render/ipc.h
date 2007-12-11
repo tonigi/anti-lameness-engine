@@ -243,7 +243,7 @@ protected:
 						lsim_weights->pix(ii, jj) +=
 							r.weight();
 					} else {
-						int k = ((image_bayer_ale_real *)lsimulated)->bayer_color(ii, jj);
+						int k = lsimulated->bayer_color(ii, jj);
 						lsimulated->chan(ii, jj, k) +=
 							r(approximation->pix(i, j))[k];
 						lsim_weights->chan(ii, jj, k) +=
@@ -406,12 +406,12 @@ protected:
 		image *lsim_weights = NULL;
 
 		if (lsimulated->get_bayer() == IMAGE_BAYER_NONE) {
-			lsim_weights = new image_ale_real(
+			lsim_weights = new_image_ale_real(
 				lsimulated->height(),
 				lsimulated->width(),
 				lsimulated->depth());
 		} else {
-			lsim_weights = new image_bayer_ale_real(
+			lsim_weights = new_image_bayer_ale_real(
 				lsimulated->height(),
 				lsimulated->width(),
 				lsimulated->depth(), 
@@ -478,7 +478,7 @@ protected:
 		 * Initialize non-linear
 		 */
 
-		image_ale_real *nlsim_weights = new image_ale_real(
+		image *nlsim_weights = new_image_ale_real(
 				nlsimulated->height(),
 				nlsimulated->width(),
 				nlsimulated->depth());
@@ -548,8 +548,8 @@ protected:
 			if (use_weighted_median)
 				iwm = new image_weighted_median(h, w, d);
 			this->weight_limit = weight_limit;
-			c = new image_ale_real(h, w, d);
-			cc = new image_ale_real(h, w, d);
+			c = new_image_ale_real(h, w, d);
+			cc = new_image_ale_real(h, w, d);
 		}
 
 		/*
@@ -930,7 +930,7 @@ protected:
 					 */
 
 					if (real->get_bayer() != IMAGE_BAYER_NONE) {
-						int color = ((image_bayer_ale_real *)real)->bayer_color(ii, jj);
+						int color = real->bayer_color(ii, jj);
 						conf[(color + 1) % 3] = 0;
 						conf[(color + 2) % 3] = 0;
 					}
@@ -991,7 +991,7 @@ protected:
 			lreal = real;
 		else {
 
-			image *new_lreal = new image_ale_real(
+			image *new_lreal = new_image_ale_real(
 					real->height(),
 					real->width(),
 					real->depth(),
@@ -1051,7 +1051,7 @@ protected:
 			                  j < (unsigned int)  ceil(extents[1][1]); j++) {
 
 				if (real->get_bayer() != IMAGE_BAYER_NONE) {
-					int color = ((image_bayer_ale_real *)real)->bayer_color(i, j);
+					int color = real->bayer_color(i, j);
 					ale_real s = lsimulated->chan(i, j, color);
 					ale_real r = lreal->chan(i, j, color);
 
@@ -1123,12 +1123,12 @@ protected:
                 image *lsimulated;
 		
 		if (real->get_bayer() == IMAGE_BAYER_NONE) {
-			lsimulated = new image_ale_real(
+			lsimulated = new_image_ale_real(
 				real->height(),
 				real->width(), 
 				real->depth());
 		} else {
-			lsimulated = new image_bayer_ale_real(
+			lsimulated = new_image_bayer_ale_real(
 				real->height(),
 				real->width(),
 				real->depth(),
@@ -1138,7 +1138,7 @@ protected:
                 image *nlsimulated = NULL;
 
 		if (nlf)
-			nlsimulated = new image_ale_real(
+			nlsimulated = new_image_ale_real(
 				real->height(),
 				real->width(), 
 				real->depth());

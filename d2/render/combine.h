@@ -319,7 +319,7 @@ private:
 		const image *coarse_image = coarse->get_image();
 		const image *coarse_defined = coarse->get_defined();
 
-		output_image = new image_ale_real(coarse_defined->height(),
+		output_image = new_image_ale_real(coarse_defined->height(),
 				coarse_defined->width(), 3, NULL);
 
 		output_image->set_offset(coarse_defined->offset());
@@ -380,7 +380,7 @@ public:
 
 		const image *default_image = _default->get_image();
 
-		output_image = new image_ale_real(default_image->height(),
+		output_image = new_image_ale_real(default_image->height(),
 				default_image->width(), 3, NULL);
 
 		output_image->set_offset(default_image->offset());
@@ -418,7 +418,7 @@ public:
 		assert (default_weight->width()  == partial_weight->width());
 		assert (default_weight->height() == partial_weight->height());
 		
-		defined_image = new image_ale_real(default_weight->height(),
+		defined_image = new_image_ale_real(default_weight->height(),
 				default_weight->width(), 3, NULL);
 
 		defined_image->set_offset(default_weight->offset());

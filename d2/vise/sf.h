@@ -85,7 +85,7 @@ public:
 			floor(s.unscaled_width() * scale_factor);
 		s.set_domain(new_height, new_width);
 
-		image *rendered = new image_ale_real(new_height, new_width, 3);
+		image *rendered = new_image_ale_real(new_height, new_width, 3);
 
 		const image *replace_image = NULL;
 		

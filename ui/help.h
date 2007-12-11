@@ -712,6 +712,10 @@ public:
 		banner("Process details");
 		fprintf(help_stream,
 			BETWEEN_SECTIONS
+			"Memory:\n"
+			HEADER_SPACE
+			"--resident <x>    Max resident megapixels per array; 0 is unlimited (0 default)\n"
+			BETWEEN_SECTIONS
 			"Profiling:\n"
 			HEADER_SPACE
 			"--profile         Output performance data\n"

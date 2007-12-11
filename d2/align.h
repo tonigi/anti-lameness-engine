@@ -1751,7 +1751,7 @@ public:
 		 */
 
 		if (scale_clusters[0].input->get_bayer() != IMAGE_BAYER_NONE) {
-			scale_clusters[0].input_certainty = new image_bayer_ale_real(
+			scale_clusters[0].input_certainty = new_image_bayer_ale_real(
 					scale_clusters[0].input->height(),
 					scale_clusters[0].input->width(),
 					scale_clusters[0].input->depth(),
@@ -2819,7 +2819,7 @@ public:
 		int cols = reference_image->width();
 		int colors = reference_image->depth();
 
-		alignment_weights = new image_ale_real(rows, cols,
+		alignment_weights = new_image_ale_real(rows, cols,
 				colors, "alignment_weights");
 
 		assert (alignment_weights);
@@ -2919,7 +2919,7 @@ public:
 		int cols = reference_image->width();
 		int colors = reference_image->depth();
 
-		alignment_weights = new image_ale_real(rows, cols,
+		alignment_weights = new_image_ale_real(rows, cols,
 				colors, "alignment_weights");
 
 		fftw_complex *inout = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * rows * cols);

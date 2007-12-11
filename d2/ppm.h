@@ -218,9 +218,9 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 	/* Make a new image */
 
 	if (bayer == IMAGE_BAYER_NONE)
-		im = new image_ale_real(h, w, 3, "file", e);
+		im = new_image_ale_real(h, w, 3, "file", e);
 	else 
-		im = new image_bayer_ale_real(h, w, 3, bayer, "file", e);
+		im = new_image_bayer_ale_real(h, w, 3, bayer, "file", e);
 
 	assert (im);
 

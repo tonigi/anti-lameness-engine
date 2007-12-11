@@ -240,7 +240,7 @@ private:
 					continue;
 
 				if (bayer != IMAGE_BAYER_NONE
-				 && ((image_bayer_ale_real *) im)->bayer_color(i, j) != k)
+				 && (im->get_channels(i, j) & (1 << k)) == 0)
 					continue;
 
 				point a = point(i, j);
@@ -321,7 +321,7 @@ private:
 					continue;
 
 				if (bayer != IMAGE_BAYER_NONE
-				 && ((image_bayer_ale_real *) im)->bayer_color(i, j) != k)
+				 && (im->get_channels(i, j) & (1 << k)) == 0)
 					continue;
 
 				point a = transform(point(i, j));

@@ -129,7 +129,7 @@ public:
 		s.gpt_set(p);
 		s.bd_set(bd_count, bd);
 
-		image *rendered = new image_ale_real(new_height, new_width, 3);
+		image *rendered = new_image_ale_real(new_height, new_width, 3);
 
 		if (replace) {
 			const image *replace_image = NULL;

@@ -32,15 +32,15 @@
 class image_weighted_simple : public image_weighted_avg {
 private:
 	invariant *inv;
-	image_ale_real *colors;
-	image_ale_real *weights;
+	image *colors;
+	image *weights;
 	
 public:
 	image_weighted_simple (unsigned int dimy, unsigned int dimx, unsigned int
 			depth, invariant *inv, const char *name = "anonymous") 
 			: image_weighted_avg(dimy, dimx, depth, name) {
-		colors = new image_ale_real(dimy, dimx, depth);
-		weights = new image_ale_real(dimy, dimx, depth);
+		colors = new_image_ale_real(dimy, dimx, depth);
+		weights = new_image_ale_real(dimy, dimx, depth);
 		this->inv = inv;
 	}
 

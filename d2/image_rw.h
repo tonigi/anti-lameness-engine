@@ -180,9 +180,9 @@ public:
 			exit(1);
 
 		if (bayer == IMAGE_BAYER_NONE)
-			im = new image_ale_real(mi->rows, mi->columns, 3, name, exp);
+			im = new_image_ale_real(mi->rows, mi->columns, 3, name, exp);
 		else
-			im = new image_bayer_ale_real(mi->rows, mi->columns, 3, bayer, name, exp);
+			im = new_image_bayer_ale_real(mi->rows, mi->columns, 3, bayer, name, exp);
 
 		for (i = 0; i < mi->rows; i++) {
 			p = AcquireImagePixels(mi, 0, i, mi->columns, 1, &exception);

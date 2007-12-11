@@ -29,6 +29,8 @@
 #include "point.h"
 #include "image.h"
 
+
+template <int disk_support>
 class image_ale_real : public image {
 private:
 	spixel *_p;
@@ -140,5 +142,25 @@ public:
 	}
 
 };
+
+/*
+ * Wrapper encapsulating details of the separation between the
+ * resident-checking implementation and non-checking.
+ */
+static inline image *new_image_ale_real(unsigned int dimy,
+                                 unsigned int dimx,
+				 unsigned int depth,
+				 const char *name = "anonymous",
+				 exposure *exp = NULL) {
+
+	unsigned int resident = image::get_resident();
+
+	if (resident == 0 || resident > dimy * dimx)
+		return new image_ale_real<0>(dimy, dimx, depth, name, exp);
+
+	return new image_ale_real<1>(dimy, dimx, depth, name, exp);
+
+}
+
 
 #endif

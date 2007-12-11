@@ -1322,7 +1322,7 @@ public:
 				exit(1);
 			}
 
-			d2::image *i = new d2::image_ale_real((int)h, (int)w, 3);
+			d2::image *i = d2::new_image_ale_real((int)h, (int)w, 3);
 			d2::transformation t = d2::transformation::gpt_identity(i, 1);
 			d2::point q[4] = {
 				d2::point(tly, tlx),
@@ -2101,6 +2101,11 @@ public:
 				double cache = env->get_double_arg(i->first, 1);
 
 				d2::image_rw::set_cache(cache);
+
+			} else if (!strcmp(option_name, "resident")) {
+				int resident = env->get_int_arg(i->first, 1);
+
+				d2::image::set_resident(resident);
 
 			} else if (!strcmp(option_name, "bayer")) {
 

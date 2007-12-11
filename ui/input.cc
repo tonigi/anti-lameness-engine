@@ -106,6 +106,7 @@ input::simple_option input::simple_option_table[] = {
 	{ "mc", NULL, NULL, 1 },
 
 	{ "cache", NULL, NULL, 1 },
+	{ "resident", NULL, NULL, 1 },
 
 	{ "ev", NULL, NULL, 1 },
 	{ "black", NULL, NULL, 1 },

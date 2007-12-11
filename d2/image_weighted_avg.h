@@ -73,7 +73,7 @@ public:
 	 * Make a new image suitable for receiving scaled values.
 	 */
 	virtual image *scale_generator(int height, int width, int depth, const char *name) const {
-		return new image_ale_real(height, width, depth, name, _exp);
+		return new_image_ale_real(height, width, depth, name, _exp);
 	}
 
 	/*

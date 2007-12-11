@@ -54,7 +54,7 @@ public:
 		 */
 
                 const image *real = image_rw::open(m);
-                image *simulated = new image_ale_real(
+                image *simulated = new_image_ale_real(
 				real->height(),
 				real->width(), 3);
 
@@ -65,7 +65,7 @@ public:
 		 * frame pixels in the data structure SIM_WEIGHTS.
 		 */
 
-                image *sim_weights = new image_ale_real(
+                image *sim_weights = new_image_ale_real(
                                 simulated->height(),
                                 simulated->width(), 3);
 
@@ -133,11 +133,11 @@ public:
 		 */
 
 		if (nlresponse != NULL) {
-			image *nlsimulated = new image_ale_real(
+			image *nlsimulated = new_image_ale_real(
 					simulated->height(),
 					simulated->width(), 3);
 
-			image *nlsim_weights = new image_ale_real(
+			image *nlsim_weights = new_image_ale_real(
 					simulated->height(),
 					simulated->width(), 3);
 

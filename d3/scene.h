@@ -291,7 +291,7 @@ class scene {
 		}
 
 		d2::image *make_image(ale_pos sf, ale_real init_value = 0) {
-			d2::image *result = new d2::image_ale_real(
+			d2::image *result = d2::new_image_ale_real(
 					(unsigned int) ceil(transformation.unscaled_height() * sf),
 					(unsigned int) ceil(transformation.unscaled_width() * sf), 3);
 			assert(result);
@@ -2084,30 +2084,30 @@ public:
 
 		if (prune) {
 
-			im1 = new d2::image_ale_real((int) floor(ph[0] - pl[0]) + 1,
+			im1 = d2::new_image_ale_real((int) floor(ph[0] - pl[0]) + 1,
 					(int) floor(ph[1] - pl[1]) + 1, 3);
 
-			im2 = new d2::image_ale_real((int) floor(ph[0] - pl[0]) + 1,
+			im2 = d2::new_image_ale_real((int) floor(ph[0] - pl[0]) + 1,
 					(int) floor(ph[1] - pl[1]) + 1, 3);
 
-			im3 = new d2::image_ale_real((int) floor(ph[0] - pl[0]) + 1,
+			im3 = d2::new_image_ale_real((int) floor(ph[0] - pl[0]) + 1,
 					(int) floor(ph[1] - pl[1]) + 1, 3);
 
-			weights = new d2::image_ale_real((int) floor(ph[0] - pl[0]) + 1,
+			weights = d2::new_image_ale_real((int) floor(ph[0] - pl[0]) + 1,
 					(int) floor(ph[1] - pl[1]) + 1, 3);
 
 		} else {
 
-			im1 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+			im1 = d2::new_image_ale_real((int) floor(_pt.scaled_height()),
 			     	       (int) floor(_pt.scaled_width()), 3);
 
-			im2 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+			im2 = d2::new_image_ale_real((int) floor(_pt.scaled_height()),
 			     	       (int) floor(_pt.scaled_width()), 3);
 
-			im3 = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+			im3 = d2::new_image_ale_real((int) floor(_pt.scaled_height()),
 			     	       (int) floor(_pt.scaled_width()), 3);
 
-			weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+			weights = d2::new_image_ale_real((int) floor(_pt.scaled_height()),
 							(int) floor(_pt.scaled_width()), 3);
 		}
 
@@ -2122,10 +2122,10 @@ public:
 		delete weights;
 
 		if (prune) {
-			weights = new d2::image_ale_real((int) floor(ph[0] - pl[0]) + 1,
+			weights = d2::new_image_ale_real((int) floor(ph[0] - pl[0]) + 1,
 					(int) floor(ph[1] - pl[1]) + 1, 3);
 		} else {
-			weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+			weights = d2::new_image_ale_real((int) floor(_pt.scaled_height()),
 							(int) floor(_pt.scaled_width()), 3);
 		}
 
@@ -2447,7 +2447,7 @@ public:
 	}
 
 	static std::vector<space::node *> most_visible_scaled(pt _pt) {
-		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()), 
+		d2::image *weights = d2::new_image_ale_real((int) floor(_pt.scaled_height()), 
 				(int) floor(_pt.scaled_width()), 3);
 		std::vector<space::node *> results;
 
@@ -2459,7 +2459,7 @@ public:
 	}
 
 	static std::vector<space::node *> most_visible_unscaled(pt _pt) {
-		d2::image *weights = new d2::image_ale_real((int) floor(_pt.unscaled_height()), 
+		d2::image *weights = d2::new_image_ale_real((int) floor(_pt.unscaled_height()), 
 				(int) floor(_pt.unscaled_width()), 3);
 		std::vector<space::node *> results;
 		
@@ -2549,10 +2549,10 @@ public:
 			}
 
 			void init_color() {
-				color = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+				color = d2::new_image_ale_real((int) floor(_pt.scaled_height()),
 								(int) floor(_pt.scaled_width()), 3);
 
-				color_weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+				color_weights = d2::new_image_ale_real((int) floor(_pt.scaled_height()),
 								(int) floor(_pt.scaled_width()), 3);
 
 				get_view_recurse(color, color_weights, 0);
@@ -2775,8 +2775,8 @@ public:
 				 * Determine weight and color for the given point.
 				 */
 
-				d2::image *im_point = new d2::image_ale_real(1, 1, 3);
-				d2::image *wt_point = new d2::image_ale_real(1, 1, 3);
+				d2::image *im_point = d2::new_image_ale_real(1, 1, 3);
+				d2::image *wt_point = d2::new_image_ale_real(1, 1, 3);
 
 				view_recurse(0, im_point, wt_point, space::iterate(_pt.origin()), _pt, 1, p, p);
 
@@ -2873,7 +2873,7 @@ public:
 
 		const d2::image *depths = depth(_pt, n);
 
-		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+		d2::image *im = d2::new_image_ale_real((int) floor(_pt.scaled_height()),
 					       (int) floor(_pt.scaled_width()), 3);
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
@@ -2974,7 +2974,7 @@ public:
 
 		const d2::image *depths = depth(_pt, n);
 
-		d2::image *im = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+		d2::image *im = d2::new_image_ale_real((int) floor(_pt.scaled_height()),
 					       (int) floor(_pt.scaled_width()), 3);
 
 		_pt.view_angle(_pt.view_angle() * VIEW_ANGLE_MULTIPLIER);
@@ -2983,7 +2983,7 @@ public:
 		 * Use adaptive subspace data.
 		 */
 
-		d2::image *weights = new d2::image_ale_real((int) floor(_pt.scaled_height()),
+		d2::image *weights = d2::new_image_ale_real((int) floor(_pt.scaled_height()),
 						(int) floor(_pt.scaled_width()), 3);
 
 		/*

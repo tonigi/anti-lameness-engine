@@ -49,6 +49,7 @@
 
 class image : protected exposure::listener {
 protected:
+	static unsigned int resident;
 	unsigned int _dimx, _dimy, _depth;
 	point _offset;
 	const char *name;
@@ -134,6 +135,14 @@ protected:
 	}
 
 public:
+	static void set_resident(unsigned int r) {
+		resident = r;
+	}
+
+	static unsigned int get_resident() {
+		return resident;
+	}
+
 	image (unsigned int dimy, unsigned int dimx, unsigned int depth, 
 			const char *name = "anonymous", exposure *_exp = NULL,
 			unsigned int bayer = IMAGE_BAYER_NONE) {
@@ -161,6 +170,10 @@ public:
 
 	virtual char get_channels(int i, int j) const {
 		return 0x7;
+	}
+
+	virtual unsigned int bayer_color(unsigned int i, unsigned int j) const {
+		assert(0);
 	}
 
 	double storage_size() const {

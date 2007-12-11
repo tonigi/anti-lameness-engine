@@ -30,6 +30,7 @@
 #include "image.h"
 #include "image_ale_real.h"
 
+template <int disk_support>
 class image_bayer_ale_real : public image {
 private:
 	ale_sreal *_p;
@@ -228,7 +229,7 @@ public:
 	 * Make a new image suitable for receiving scaled values.
 	 */
 	virtual image *scale_generator(int height, int width, int depth, const char *name) const {
-		return new image_ale_real(height, width, depth, name, _exp);
+		return new_image_ale_real(height, width, depth, name, _exp);
 	}
 
 	/*
@@ -244,5 +245,25 @@ public:
 	}
 
 };
+
+/*
+ * Wrapper encapsulating details of the separation between the
+ * resident-checking implementation and non-checking.
+ */
+static inline image *new_image_bayer_ale_real(unsigned int dimy,
+                                 unsigned int dimx,
+				 unsigned int depth,
+				 unsigned int bayer,
+				 const char *name = "anonymous",
+				 exposure *exp = NULL) {
+
+	unsigned int resident = image::get_resident();
+
+	if (resident == 0 || resident > dimy * dimx)
+		return new image_bayer_ale_real<0>(dimy, dimx, depth, bayer, name, exp);
+
+	return new image_bayer_ale_real<1>(dimy, dimx, depth, bayer, name, exp);
+
+}
 
 #endif
