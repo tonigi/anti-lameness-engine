@@ -114,6 +114,36 @@ public:
 		return _count;
 	}
 
+	class rwlock_t {
+#ifdef USE_PTHREAD
+		pthread_rwlock_t _lock;
+#endif
+	public:
+		rwlock_t() {
+#ifdef USE_PTHREAD
+			pthread_rwlock_init(&_lock, NULL);
+#endif
+		}
+
+		void wrlock() {
+#ifdef USE_PTHREAD
+			pthread_rwlock_wrlock(&_lock);
+#endif
+		}
+
+		void rdlock() {
+#ifdef USE_PTHREAD
+			pthread_rwlock_rdlock(&_lock);
+#endif
+		}
+
+		void unlock() {
+#ifdef USE_PTHREAD
+			pthread_rwlock_unlock(&_lock);
+#endif
+		}
+	};
+
 	class lock_t {
 #ifdef USE_PTHREAD
 		pthread_mutex_t _lock;

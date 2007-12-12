@@ -239,16 +239,20 @@ protected:
 					lock();
 
 					if (lsimulated->get_bayer() == IMAGE_BAYER_NONE) {
-						lsimulated->pix(ii, jj) +=
-							r(approximation->pix(i, j));
-						lsim_weights->pix(ii, jj) +=
-							r.weight();
+						lsimulated->set_pixel(ii, jj,
+							(pixel) lsimulated->get_pixel(ii, jj)
+						      + r(approximation->get_pixel(i, j)));
+						lsim_weights->set_pixel(ii, jj,
+							(pixel) lsim_weights->get_pixel(ii, jj)
+						      + r.weight());
 					} else {
 						int k = lsimulated->bayer_color(ii, jj);
-						lsimulated->chan(ii, jj, k) +=
-							r(approximation->pix(i, j))[k];
-						lsim_weights->chan(ii, jj, k) +=
-							r.weight()[k];
+						lsimulated->set_chan(ii, jj, k,
+							lsimulated->get_chan(ii, jj, k)
+						      + r(approximation->get_pixel(i, j))[k]);
+						lsim_weights->set_chan(ii, jj, k,
+							lsim_weights->get_chan(ii, jj, k)
+						      + r.weight()[k]);
 					}
 
 					unlock();
@@ -356,10 +360,12 @@ protected:
 
 					lock();
 
-					nlsimulated->pix(ii, jj) +=
-						r(exp->unlinearize(lsimulated->get_pixel(i, j)));
-					nlsim_weights->pix(ii, jj) +=
-						r.weight();
+					nlsimulated->set_pixel(ii, jj,
+						(pixel) nlsimulated->get_pixel(ii, jj)
+					      + r(exp->unlinearize(lsimulated->get_pixel(i, j))));
+					nlsim_weights->set_pixel(ii, jj,
+						(pixel) nlsim_weights->get_pixel(ii, jj)
+					      + r.weight());
 
 					unlock();
 				}
@@ -451,13 +457,15 @@ protected:
 				if ((lsimulated->get_channels(ii, jj) & (1 << k)) == 0)
 					continue;
 
-				ale_real weight = lsim_weights->chan(ii, jj, k);
+				ale_real weight = lsim_weights->get_chan(ii, jj, k);
 
 				if (!(weight > weight_floor))
-					lsimulated->chan(ii, jj, k)
-						/= zero;  /* Generate a non-finite value */
+					lsimulated->set_chan(ii, jj, k,
+						lsimulated->get_chan(ii, jj, k)
+					      / zero);  /* Generate a non-finite value */
 				else
-					lsimulated->chan(ii, jj, k) /= weight;
+					lsimulated->set_chan(ii, jj, k,
+						lsimulated->get_chan(ii, jj, k) / weight);
 			}
 		}
 
@@ -505,11 +513,12 @@ protected:
 
 			for (int k = 0; k < 3; k++)
 				if (!(weight[k] > weight_floor))
-					nlsimulated->pix(ii, jj)[k]
-						/= zero;  /* Generate a non-finite value */
+					nlsimulated->set_chan(ii, jj, k,
+						nlsimulated->get_chan(ii, jj, k)
+					      / zero);  /* Generate a non-finite value */
 
-			nlsimulated->pix(ii, jj)
-				/= weight;
+			nlsimulated->set_pixel(ii, jj, 
+				(pixel) nlsimulated->get_pixel(ii, jj) / weight);
 		}
 
 		/*
@@ -593,8 +602,8 @@ protected:
 			if (use_weighted_median)
 				return iwm->get_colors()->get_pixel(i, j);
 			else
-				return c->get_pixel(i, j)
-				     / cc->get_pixel(i, j);
+				return (pixel) c->get_pixel(i, j)
+				     / (pixel) cc->get_pixel(i, j);
 		}
 
 		/*
@@ -616,8 +625,8 @@ protected:
 					/*
 					 * Reset the counters
 					 */
-					c->pix(i, j) = pixel::zero();
-					cc->pix(i, j) = pixel::zero();
+					c->set_pixel(i, j, pixel::zero());
+					cc->set_pixel(i, j, pixel::zero());
 				}
 			}
 		}
@@ -627,8 +636,8 @@ protected:
 		 * a weighted median update.
 		 */
 		void update(int i, int j, pixel value_times_weight, pixel weight) {
-			c->pix(i, j) += value_times_weight;
-			cc->pix(i, j) += weight;
+			c->set_pixel(i, j, (pixel) c->get_pixel(i, j) + value_times_weight);
+			cc->set_pixel(i, j, (pixel) cc->get_pixel(i, j) + weight);
 		}
 	};
 
@@ -749,7 +758,7 @@ protected:
 					 * Error calculation
 					 */
 
-					lreal->pix(i, j) += bpv;
+					lreal->set_pixel(i, j, (pixel) lreal->get_pixel(i, j) + bpv);
 				}
 			}
 
@@ -1053,8 +1062,8 @@ protected:
 
 				if (real->get_bayer() != IMAGE_BAYER_NONE) {
 					int color = real->bayer_color(i, j);
-					ale_real s = lsimulated->chan(i, j, color);
-					ale_real r = lreal->chan(i, j, color);
+					ale_real s = lsimulated->get_chan(i, j, color);
+					ale_real r = lreal->get_chan(i, j, color);
 
 					if (!finite(s)
 					 || !finite(r))
@@ -1279,7 +1288,7 @@ protected:
 					if (new_value < 0)
 						new_value = 0;
 
-					approximation->chan(i, j, k) = new_value;
+					approximation->set_chan(i, j, k, new_value);
 				}
 			}
 

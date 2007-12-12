@@ -245,7 +245,7 @@ private:
 
 				point a = point(i, j);
 
-				ale_real v = im->chan(i, j, k);
+				ale_real v = im->get_chan(i, j, k);
 
 				ale_real response = f->response((a - mapped_p) / fscale);
 
@@ -326,7 +326,7 @@ private:
 
 				point a = transform(point(i, j));
 
-				ale_real v = im->chan(i, j, k);
+				ale_real v = im->get_chan(i, j, k);
 
 				ale_real response = f->response((a - p) * point(hscale, wscale));
 

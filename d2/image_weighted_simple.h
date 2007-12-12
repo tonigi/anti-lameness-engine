@@ -73,15 +73,15 @@ public:
 		/*
 		 * Initial value
 		 */
-		if (inv->is_first() && weights->pix(i, j)[0] != 0)
+		if (inv->is_first() && weights->get_chan(i, j, 0) != 0)
 			return 1;
 		/*
 		 * Weight limit satisfied
 		 */
 		if (inv->is_avgf() 
-		 && weights->pix(i, j)[0] > inv->get_param()
-		 && weights->pix(i, j)[1] > inv->get_param()
-		 && weights->pix(i, j)[2] > inv->get_param())
+		 && weights->get_chan(i, j, 0) > inv->get_param()
+		 && weights->get_chan(i, j, 1) > inv->get_param()
+		 && weights->get_chan(i, j, 2) > inv->get_param())
 			return 1;
 
 		return 0;
@@ -112,8 +112,8 @@ public:
 			 */
 
 			if (inv->is_last() && new_weight[k] >= render::get_wt()) {
-				colors->chan(i, j, k) = new_value[k];
-				weights->chan(i, j, k) = new_weight[k];
+				colors->set_chan(i, j, k, new_value[k]);
+				weights->set_chan(i, j, k, new_weight[k]);
 				continue;
 			}
 
@@ -121,7 +121,7 @@ public:
 			 * Obtain the old pixel weight.
 			 */
 
-			ale_real old_weight = weights->chan(i, j, k);
+			ale_real old_weight = weights->get_chan(i, j, k);
 
 			/*
 			 * Cases independent of the old pixel value for which the
@@ -144,8 +144,8 @@ public:
 			if (old_weight == 0
 			 || (old_weight < render::get_wt()
 			  && !inv->is_avgx())) {
-				weights->chan(i, j, k) = new_weight[k];
-				colors ->chan(i, j, k) = new_value[k];
+				weights->set_chan(i, j, k, new_weight[k]);
+				colors ->set_chan(i, j, k, new_value[k]);
 				continue;
 			}
 
@@ -155,10 +155,10 @@ public:
 				 * Cases in which the old pixel value can be ignored
 				 */
 
-				if (new_value[k] * (ale_real) weights->chan(i, j, k)
-				  > (ale_real) colors->chan(i, j, k) * new_weight[k]) {
-					weights->chan(i, j, k) = new_weight[k];
-					colors-> chan(i, j, k) = new_value[k];
+				if (new_value[k] * (ale_real) weights->get_chan(i, j, k)
+				  > (ale_real) colors->get_chan(i, j, k) * new_weight[k]) {
+					weights->set_chan(i, j, k, new_weight[k]);
+					colors-> set_chan(i, j, k, new_value[k]);
 				}
 				
 				continue;
@@ -168,10 +168,10 @@ public:
 				 * Cases in which the old pixel value can be ignored
 				 */
 
-				if (new_value[k] * (ale_real) weights->chan(i, j, k)
-				  < (ale_real) colors->chan(i, j, k) * new_weight[k]) {
-					weights->chan(i, j, k) = new_weight[k];
-					colors-> chan(i, j, k) = new_value[k];
+				if (new_value[k] * (ale_real) weights->get_chan(i, j, k)
+				  < (ale_real) colors->get_chan(i, j, k) * new_weight[k]) {
+					weights->set_chan(i, j, k, new_weight[k]);
+					colors-> set_chan(i, j, k, new_value[k]);
 				}
 				
 				continue;
@@ -182,14 +182,14 @@ public:
 			 * Update weight and color values.
 			 */
 
-			weights->chan(i, j, k) += new_weight[k];
-			colors->chan(i, j, k) += new_value[k];
+			weights->set_chan(i, j, k, weights->get_chan(i, j, k) + new_weight[k]);
+			colors->set_chan(i, j, k, colors->get_chan(i, j, k) + new_value[k]);
 		}
 	}
 
 
-	pixel get_pixel(unsigned int y, unsigned int x) const {
-		return colors->get_pixel(y, x) / weights->get_pixel(y, x);
+	spixel get_pixel(unsigned int y, unsigned int x) const {
+		return (pixel) colors->get_pixel(y, x) / (pixel) weights->get_pixel(y, x);
 	}
 
 	image *get_weights() {

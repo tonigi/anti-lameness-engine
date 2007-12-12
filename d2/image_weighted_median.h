@@ -145,7 +145,7 @@ public:
 			 */
 			if (f == 0)
 			for (unsigned int ff = 0; ff < capacity; ff++)
-				weights[ff]->pix(i, j)[k] = 0;
+				weights[ff]->set_chan(i, j, k, 0);
 
 			assert (finite(new_weight[k]));
 
@@ -155,31 +155,36 @@ public:
 			for (unsigned int ff = 0; ff < capacity; ff++) {
 				assert (ff <= (unsigned int) f);
 				if (ff == capacity - 1) {
-					colors[ff]->pix(i, j)[k] = new_value[k];
-					weights[ff]->pix(i, j)[k] += new_weight[k];
+					colors[ff]->set_chan(i, j, k, new_value[k]);
+					weights[ff]->set_chan(i, j, k, 
+						weights[ff]->get_chan(i, j, k) + new_weight[k]);
 					break;
 				}
-				if ((ff == 0 && weights[ff]->pix(i, j)[k] == 0)
-				 || (ff >  0 && weights[ff]->pix(i, j)[k] == weights[ff - 1]->pix(i, j)[k])) {
-					colors[ff]->pix(i, j)[k] = new_value[k];
+				if ((ff == 0 && weights[ff]->get_chan(i, j, k) == 0)
+				 || (ff >  0 && weights[ff]->get_chan(i, j, k) == weights[ff - 1]->get_chan(i, j, k))) {
+					colors[ff]->set_chan(i, j, k, new_value[k]);
 					for (unsigned int fff = ff; fff < capacity; fff++)
-						weights[fff]->pix(i, j)[k] += new_weight[k];
+						weights[fff]->set_chan(i, j, k, 
+							weights[fff]->get_chan(i, j, k) + new_weight[k]);
 					break;
 				}
-				if (colors[ff]->pix(i, j)[k] == (ale_sreal) new_value[k]) {
+				if (colors[ff]->get_chan(i, j, k) == (ale_sreal) new_value[k]) {
 					for (unsigned int fff = ff; fff < capacity; fff++)
-						weights[fff]->pix(i, j)[k] += new_weight[k];
+						weights[fff]->set_chan(i, j, k, 
+							weights[fff]->get_chan(i, j, k) + new_weight[k]);
 					break;
 				}
-				if (colors[ff]->pix(i, j)[k] > (ale_sreal) new_value[k]) {
+				if (colors[ff]->get_chan(i, j, k) > (ale_sreal) new_value[k]) {
 					for (unsigned int fff = capacity - 1; fff > ff; fff--) {
-						weights[fff]->pix(i, j)[k] = weights[fff - 1]->get_pixel(i, j)[k] + new_weight[k];
-						colors[fff]->pix(i, j)[k]  = colors[fff - 1]->pix(i, j)[k];
+						weights[fff]->set_chan(i, j, k,  weights[fff - 1]->get_pixel(i, j)[k] + new_weight[k]);
+						colors[fff]->set_chan(i, j, k, colors[fff - 1]->get_pixel(i, j)[k]);
 					}
-					colors[ff]->pix(i, j)[k] = new_value[k];
-					weights[ff]->pix(i, j)[k] = new_weight[k];
+					colors[ff]->set_chan(i, j, k, new_value[k]);
+					weights[ff]->set_chan(i, j, k, new_weight[k]);
 					if (ff > 0)
-						weights[ff]->pix(i, j)[k] += weights[ff - 1]->pix(i, j)[k];
+						weights[ff]->set_chan(i, j, k,
+							weights[ff]->get_chan(i, j, k)
+						      + weights[ff - 1]->get_chan(i, j, k));
 
 					break;
 				}
@@ -190,11 +195,11 @@ public:
 	/*
 	 * XXX: This is inefficient in cases where only one channel is desired.
 	 */
-	pixel get_pixel(unsigned int y, unsigned int x) const {
+	spixel get_pixel(unsigned int y, unsigned int x) const {
 		pixel result;
 
 		for (int k = 0; k < 3; k++) {
-			ale_real midpoint = weights[capacity - 1]->chan(y, x, k) / 2;
+			ale_real midpoint = weights[capacity - 1]->get_chan(y, x, k) / 2;
 
 			if (midpoint == 0)
 				return pixel::zero();
@@ -208,20 +213,20 @@ public:
 			unsigned int m = h / 2;
 
 			while (h > l + 1) {
-				if ((ale_real) weights[m]->chan(y, x, k) < midpoint)
+				if ((ale_real) weights[m]->get_chan(y, x, k) < midpoint)
 					l = m;
 				else
 					h = m;
 				m = (h + l) / 2;
 			}
 
-			if ((ale_real) weights[l]->chan(y, x, k) < midpoint)
+			if ((ale_real) weights[l]->get_chan(y, x, k) < midpoint)
 				l = h;
-			if ((ale_real) weights[l]->chan(y, x, k) > midpoint)
-				result[k] = colors[l]->chan(y, x, k);
-			else if ((ale_real) weights[l]->chan(y, x, k) == midpoint)
-				result[k] = (colors[l]->chan(y, x, k)
-					   + colors[l + 1]->chan(y, x, k)) / 2;
+			if ((ale_real) weights[l]->get_chan(y, x, k) > midpoint)
+				result[k] = colors[l]->get_chan(y, x, k);
+			else if ((ale_real) weights[l]->get_chan(y, x, k) == midpoint)
+				result[k] = (colors[l]->get_chan(y, x, k)
+					   + colors[l + 1]->get_chan(y, x, k)) / 2;
 			else
 				assert(0);
 			

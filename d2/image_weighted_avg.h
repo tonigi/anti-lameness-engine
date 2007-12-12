@@ -45,28 +45,24 @@ public:
 	virtual ~image_weighted_avg() {
 	}
 
-	spixel &pix(unsigned int y, unsigned int x) {
+	void set_pixel(unsigned int y, unsigned int x, spixel p) {
 		assert(0);
-		static spixel foo;
-		return foo;
 	}
 
-	const spixel &pix(unsigned int y, unsigned int x) const {
+	spixel get_pixel(unsigned int y, unsigned int x) const {
 		assert(0);
-		static spixel foo;
-		return foo;
+
+		return spixel(0, 0, 0);
 	}
 
-	ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) {
+	void set_chan(unsigned int y, unsigned int x, unsigned int k, ale_sreal c) {
 		assert(0);
-		static ale_sreal foo;
-		return foo;
 	}
 
-	const ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) const {
+	ale_sreal get_chan(unsigned int y, unsigned int x, unsigned int k) const {
 		assert(0);
-		static ale_sreal foo;
-		return foo;
+
+		return 0;
 	}
 
 	/*

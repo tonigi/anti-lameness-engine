@@ -287,7 +287,7 @@ class scene {
 			assert(im);
 			for (unsigned int i = 0; i < im->height(); i++)
 			for (unsigned int j = 0; j < im->width(); j++)
-				im->pix(i, j) = d2::pixel(value, value, value);
+				im->set_pixel(i, j, d2::pixel(value, value, value));
 		}
 
 		d2::image *make_image(ale_pos sf, ale_real init_value = 0) {
@@ -375,7 +375,7 @@ class scene {
 			 * Check for the cases known to have no lower level of detail.
 			 */
 
-			if (im->pix(i, j)[0] == -1)
+			if (im->get_chan(i, j, 0) == -1)
 				return;
 
 			if (tc == tc_high)
@@ -398,7 +398,7 @@ class scene {
 			 * available.
 			 */
 
-			if (iim->pix(i / 2, j / 2)[0] == -1)
+			if (iim->get_chan(i / 2, j / 2, 0) == -1)
 				return;
 
 			/*
@@ -410,16 +410,16 @@ class scene {
 			for (unsigned int jj = (j / 2) * 2; jj < (j / 2) * 2 + 1; jj++) {
 				assert(ii <= im->height() - 1);
 				assert(jj <= im->width() - 1);
-				assert(im->pix(ii, jj)[0] == 0);
+				assert(im->get_chan(ii, jj, 0) == 0);
 
-				im->pix(ii, jj) = iim->pix(i / 2, j / 2);
+				im->set_pixel(ii, jj, iim->get_pixel(i / 2, j / 2));
 			}
 
 			/*
 			 * Set the lower level of detail to point here.
 			 */
 
-			iim->pix(i / 2, j / 2)[0] = -1;
+			iim->set_chan(i / 2, j / 2, 0, -1);
 		}
 
 		/*
@@ -444,9 +444,10 @@ class scene {
 			 * Check for positive values.
 			 */
 
-			if (im->pix(i, j)[0] > 0) {
+			if (im->get_chan(i, j, 0) > 0) {
 				if (st && st->node_value == im->get_pixel(i, j)[0])
-					im->pix(i, j)[0] += weight * (1 - im->get_pixel(i, j)[0]);
+					im->set_chan(i, j, 0, (ale_real) im->get_chan(i, j, 0) 
+					                    + weight * (1 - im->get_pixel(i, j)[0]));
 				return 1;
 			}
 
@@ -455,11 +456,11 @@ class scene {
 			 */
 
 			if (tc == tc_low) {
-				if (im->pix(i, j)[0] != 0) {
+				if (im->get_chan(i, j, 0) != 0) {
 					fprintf(stderr, "failing assertion: im[%d]->pix(%d, %d)[0] == %g\n", tc, i, j, 
-							(double) im->pix(i, j)[0]);
+							(double) im->get_chan(i, j, 0));
 				}
-				assert(im->pix(i, j)[0] == 0);
+				assert(im->get_chan(i, j, 0) == 0);
 				return 0;
 			}
 
@@ -478,7 +479,7 @@ class scene {
 			 && !success[0][1]
 			 && !success[1][0]
 			 && !success[1][1]) {
-				im->pix(i, j)[0] = 0;
+				im->set_chan(i, j, 0, 0);
 				return 0;
 			}
 
@@ -491,10 +492,10 @@ class scene {
 					assert(i * 2 + ii < iim->height());
 					assert(j * 2 + jj < iim->width());
 
-					iim->pix(i * 2 + ii, j * 2 + jj)[0] = weight;
+					iim->set_chan(i * 2 + ii, j * 2 + jj, 0, weight);
 				}
 
-			im->pix(i, j)[0] = -1;
+			im->set_chan(i, j, 0, -1);
 
 			return 1;
 		}
@@ -534,7 +535,7 @@ class scene {
 			 * then set the weight here.
 			 */
 
-			im->pix(i, j)[0] = weight;
+			im->set_chan(i, j, 0, weight);
 		}
 
 		void add_weight(int tc, d2::point p, ale_real weight, subtree *st) {
@@ -645,22 +646,22 @@ class scene {
 			assert(i < im->height());
 			assert(j < im->width());
 
-			if (im->pix(i, j)[0] == -1) {
+			if (im->get_chan(i, j, 0) == -1) {
 				return (get_weight(tc - 1, i * 2 + 0, j * 2 + 0)
 				      + get_weight(tc - 1, i * 2 + 1, j * 2 + 0)
 				      + get_weight(tc - 1, i * 2 + 1, j * 2 + 1)
 				      + get_weight(tc - 1, i * 2 + 0, j * 2 + 1)) / 4;
 			}
 
-			if (im->pix(i, j)[0] == 0) {
+			if (im->get_chan(i, j, 0) == 0) {
 				if (tc == tc_high)
 					return 0;
-				if (weights[tc - tc_low + 1]->pix(i / 2, j / 2)[0] == -1)
+				if (weights[tc - tc_low + 1]->get_chan(i / 2, j / 2, 0) == -1)
 					return 0;
 				return get_weight(tc + 1, i / 2, j / 2);
 			}
 
-			return im->pix(i, j)[0];
+			return im->get_chan(i, j, 0);
 		}
 
 		ale_real get_weight(int tc, d2::point p) {
@@ -749,7 +750,7 @@ class scene {
 			 * -1 weights are handled recursively
 			 */
 
-			if (im->pix(i, j)[0] == -1) {
+			if (im->get_chan(i, j, 0) == -1) {
 				subtree *result = new subtree(-1, 
 						get_subtree(tc - 1, i * 2 + 0, j * 2 + 0),
 						get_subtree(tc - 1, i * 2 + 0, j * 2 + 1),
@@ -757,7 +758,7 @@ class scene {
 						get_subtree(tc - 1, i * 2 + 1, j * 2 + 1));
 
 				if (is_simple(result)) {
-					im->pix(i, j)[0] = 0;
+					im->set_chan(i, j, 0, 0);
 					delete result;
 					return NULL;
 				}
@@ -769,14 +770,14 @@ class scene {
 			 * Zero weights have NULL subtrees.
 			 */
 
-			if (im->pix(i, j)[0] == 0)
+			if (im->get_chan(i, j, 0) == 0)
 				return NULL;
 
 			/*
 			 * Handle the remaining case.
 			 */
 
-			return new subtree(im->pix(i, j)[0], NULL, NULL, NULL, NULL);
+			return new subtree(im->get_chan(i, j, 0), NULL, NULL, NULL, NULL);
 		}
 
 		subtree *get_subtree(int tc, d2::point p) {
@@ -1945,8 +1946,10 @@ public:
 					 * Color view
 					 */
 
-					weights->pix(i, j) += encounter;
-					im->pix(i, j)      += encounter * color;
+					weights->set_pixel(i, j, (d2::pixel) weights->get_pixel(i, j) 
+					                       + encounter);
+					im->set_pixel(i, j, (d2::pixel) im->get_pixel(i, j)
+					                  + encounter * color);
 
 				} else if (type == 1) {
 
@@ -1955,8 +1958,10 @@ public:
 					 */
 
 					ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
-					weights->pix(i, j) += encounter;
-					im->pix(i, j)      += encounter * (ale_real) depth_value;
+					weights->set_pixel(i, j, (d2::pixel) weights->get_pixel(i, j)
+					                       + encounter);
+					im->set_pixel(i, j, (d2::pixel) im->get_pixel(i, j)
+					                  + encounter * (ale_real) depth_value);
 
 				} else if (type == 2) {
 
@@ -1964,8 +1969,9 @@ public:
 					 * Ambiguity (ambivalence) measure.
 					 */
 
-					weights->pix(i, j) = d2::pixel(1, 1, 1);
-					im->pix(i, j) += 0.1 * d2::pixel(1, 1, 1);
+					weights->set_pixel(i, j, d2::pixel(1, 1, 1));
+					im->set_pixel(i, j, (d2::pixel) im->get_pixel(i, j)
+					                  + 0.1 * d2::pixel(1, 1, 1));
 
 				} else if (type == 3) {
 
@@ -1974,13 +1980,13 @@ public:
 					 */
 
 					ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
-					if (weights->pix(i, j)[0] == 0) {
-						weights->pix(i, j) = d2::pixel(1, 1, 1);
-						im->pix(i, j) = d2::pixel(1, 1, 1) 
-						              * (ale_real) depth_value;
-					} else if (im->pix(i, j)[2] < (ale_sreal) depth_value) {
-						im->pix(i, j) = d2::pixel(1, 1, 1) 
-						              * (ale_real) depth_value;
+					if (weights->get_chan(i, j, 0) == 0) {
+						weights->set_pixel(i, j, d2::pixel(1, 1, 1));
+						im->set_pixel(i, j, d2::pixel(1, 1, 1)
+						                  * (ale_real) depth_value);
+					} else if (im->get_chan(i, j, 2) < (ale_sreal) depth_value) {
+						im->set_pixel(i, j, d2::pixel(1, 1, 1) 
+						              * (ale_real) depth_value);
 					} else {
 						continue;
 					}
@@ -1992,8 +1998,10 @@ public:
 					 */
 
 					ale_pos contribution_value = sn.get_pocc_density() /* + sn.get_socc_density() */;
-					weights->pix(i, j) += encounter;
-					im->pix(i, j)      += encounter * (ale_real) contribution_value;
+					weights->set_pixel(i, j, (d2::pixel) weights->get_pixel(i, j)
+					                       + encounter);
+					im->set_pixel(i, j, (d2::pixel) im->get_pixel(i, j) 
+					                  + encounter * (ale_real) contribution_value);
 
 					assert (finite(encounter[0]));
 					assert (finite(contribution_value));
@@ -2005,8 +2013,10 @@ public:
 					 */
 
 					ale_real contribution_value = occupancy;
-					weights->pix(i, j) += encounter;
-					im->pix(i, j)      += encounter * contribution_value;
+					weights->set_pixel(i, j, (d2::pixel) weights->get_pixel(i, j)
+					                       + encounter);
+					im->set_pixel(i, j, (d2::pixel) im->get_pixel(i, j)
+					                  + encounter * contribution_value);
 
 				} else if (type == 6) {
 					
@@ -2015,12 +2025,14 @@ public:
 					 */
 
 					ale_pos depth_value = _pt.wp_scaled(st.get_min())[2];
-					weights->pix(i, j)[0] += encounter[0];
+					weights->set_chan(i, j, 0, weights->get_chan(i, j, 0)
+					                         + encounter[0]);
 					if (weights->get_pixel(i, j)[1] < encounter[0]) {
-						weights->pix(i, j)[1] = encounter[0];
-						im->pix(i, j)[0] = weights->get_pixel(i, j)[1] * (ale_real) depth_value;
-						im->pix(i, j)[1] = ale_pos_to_real(max[0] - min[0]);
-						im->pix(i, j)[2] = ale_pos_to_real(max[1] - min[1]);
+						weights->set_chan(i, j, 1, encounter[0]);
+						im->set_pixel(i, j, d2::pixel(
+							weights->get_pixel(i, j)[1] * (ale_real) depth_value,
+							ale_pos_to_real(max[0] - min[0]),
+							ale_pos_to_real(max[1] - min[1])));
 					}
 
 				} else if (type == 7) {
@@ -2029,12 +2041,14 @@ public:
 					 * (xoff, yoff, 0) triple
 					 */
 
-					weights->pix(i, j)[0] += encounter[0];
-					if (weights->pix(i, j)[1] < (ale_sreal) encounter[0]) {
-						weights->pix(i, j)[1] = encounter[0];
-						im->pix(i, j)[0] = ale_pos_to_real(i - min[0]);
-						im->pix(i, j)[1] = ale_pos_to_real(j - min[1]);
-						im->pix(i, j)[2] = 0;
+					weights->set_chan(i, j, 0,
+						weights->get_chan(i, j, 0) + encounter[0]);
+					if (weights->get_chan(i, j, 1) < (ale_sreal) encounter[0]) {
+						weights->set_chan(i, j, 1, encounter[0]);
+						im->set_pixel(i, j, d2::pixel(
+							ale_pos_to_real(i - min[0]),
+							ale_pos_to_real(j - min[1]),
+							0));
 					}
 
 				} else if (type == 8) {
@@ -2043,8 +2057,8 @@ public:
 					 * Value = 1 for any intersected space.
 					 */
 
-					weights->pix(i, j) = d2::pixel(1, 1, 1);
-					im->pix(i, j) = d2::pixel(1, 1, 1);
+					weights->set_pixel(i, j, d2::pixel(1, 1, 1));
+					im->set_pixel(i, j, d2::pixel(1, 1, 1));
 
 				} else if (type == 9) {
 
@@ -2052,11 +2066,11 @@ public:
 					 * Number of contributions for the nearest space.
 					 */
 
-					if (weights->pix(i, j)[0] == 1)
+					if (weights->get_chan(i, j, 0) == 1)
 						continue;
 
-					weights->pix(i, j) = d2::pixel(1, 1, 1);
-					im->pix(i, j) = d2::pixel(1, 1, 1) * (sn.get_pocc_density() * 0.1);
+					weights->set_pixel(i, j, d2::pixel(1, 1, 1));
+					im->set_pixel(i, j, d2::pixel(1, 1, 1) * (sn.get_pocc_density() * 0.1));
 
 				} else 
 					assert(0);
@@ -2143,7 +2157,7 @@ public:
 		if (normalize_weights)
 		for (unsigned int i = 0; i < im1->height(); i++)
 		for (unsigned int j = 0; j < im1->width();  j++)
-			im1->pix(i, j)[0] /= weights->pix(i, j)[1];
+			im1->set_chan(i, j, 0, im1->get_chan(i, j, 0) / weights->get_chan(i, j, 1));
 
 	
 		for (unsigned int i = 0; i < im1->height(); i++)
@@ -2155,14 +2169,15 @@ public:
 
 			d2::point x;
 			d2::point blx;
-			d2::point res((double) im1->pix(i, j)[1], (double) im1->pix(i, j)[2]);
+			d2::point res((double) im1->get_chan(i, j, 1), 
+			              (double) im1->get_chan(i, j, 2));
 
 			for (int d = 0; d < 2; d++) {
 
-				if (im2->pix(i, j)[d] < (ale_sreal) res[d] / 2)
-					x[d] = (ale_pos) (d?j:i) - res[d] / 2 - (ale_pos) im2->pix(i, j)[d];
+				if (im2->get_chan(i, j, d) < (ale_sreal) res[d] / 2)
+					x[d] = (ale_pos) (d?j:i) - res[d] / 2 - (ale_pos) im2->get_chan(i, j, d);
 				else
-					x[d] = (ale_pos) (d?j:i) + res[d] / 2 - (ale_pos) im2->pix(i, j)[d];
+					x[d] = (ale_pos) (d?j:i) + res[d] / 2 - (ale_pos) im2->get_chan(i, j, d);
 
 				blx[d] = 1 - ((d?j:i) - x[d]) / res[d];
 			}
@@ -2192,10 +2207,10 @@ public:
 			 * Handle encounter thresholds
 			 */
 
-			if (weights->pix(i, j)[0] < encounter_threshold) {
-				im3->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
+			if (weights->get_chan(i, j, 0) < encounter_threshold) {
+				im3->set_pixel(i, j, d2::pixel::zero() / d2::pixel::zero());
 			} else {
-				im3->pix(i, j) = d2::pixel(1, 1, 1) * depth;
+				im3->set_pixel(i, j, d2::pixel(1, 1, 1) * depth);
 			}
 		}
 
@@ -2438,10 +2453,10 @@ public:
 				if (encounter > weights->get_pixel(i, j)[1]
 				 || results[i * weights->width() + j] == NULL) {
 					results[i * weights->width() + j] = st.get_node();
-					weights->chan(i, j, 1) = encounter;
+					weights->set_chan(i, j, 1, encounter);
 				}
 
-				weights->chan(i, j, 0) += encounter;
+				weights->set_chan(i, j, 0, weights->get_chan(i, j, 0) + encounter);
 			}
 		}
 	}
@@ -2780,8 +2795,8 @@ public:
 
 				view_recurse(0, im_point, wt_point, space::iterate(_pt.origin()), _pt, 1, p, p);
 
-				*color = im_point->pix(0, 0);
-				*weight = wt_point->pix(0, 0);
+				*color = im_point->get_pixel(0, 0);
+				*weight = wt_point->get_pixel(0, 0);
 
 				delete im_point;
 				delete wt_point;
@@ -2830,8 +2845,8 @@ public:
 				d2::image *median_diffs = local_depth->fcdiff_median((int) floor(diff_median_radius));
 				d2::image *median_depths = local_depth->medians((int) floor(depth_median_radius));
 
-				*_depth = median_depths->pix((int) radius, (int) radius);
-				*_diff = median_diffs->pix((int) radius, (int) radius);
+				*_depth = median_depths->get_pixel((int) radius, (int) radius);
+				*_diff = median_diffs->get_pixel((int) radius, (int) radius);
 
 				delete median_diffs;
 				delete median_depths;
@@ -2943,11 +2958,11 @@ public:
 			}
 
 			if (weight.min_norm() < encounter_threshold) {
-				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
+				im->set_pixel(i, j, d2::pixel::zero() / d2::pixel::zero());
 			} else if (normalize_weights)
-				im->pix(i, j) = color / weight;
+				im->set_pixel(i, j, color / weight);
 			else
-				im->pix(i, j) = color;
+				im->set_pixel(i, j, color);
 		}
 
 		delete depths;
@@ -2999,11 +3014,12 @@ public:
 		for (unsigned int i = 0; i < im->height(); i++)
 		for (unsigned int j = 0; j < im->width();  j++) {
 			if (weights->get_pixel(i, j).min_norm() < encounter_threshold
-			 || (d3px_count > 0 && isnan(depths->pix(i, j)[0]))) {
-				im->pix(i, j) = d2::pixel::zero() / d2::pixel::zero();
-				weights->pix(i, j) = d2::pixel::zero();
+			 || (d3px_count > 0 && isnan(depths->get_chan(i, j, 0)))) {
+				im->set_pixel(i, j, d2::pixel::zero() / d2::pixel::zero());
+				weights->set_pixel(i, j, d2::pixel::zero());
 			} else if (normalize_weights)
-				im->pix(i, j) /= weights->pix(i, j);
+				im->set_pixel(i, j, (d2::pixel) im->get_pixel(i, j) 
+				                  / (d2::pixel) weights->get_pixel(i, j));
 		}
 
 		delete weights;
@@ -3240,7 +3256,7 @@ public:
 
 			for (unsigned int i = 0; i < height; i++)
 			for (unsigned int j = 0; j < width; j++) {
-				if (df->get_pixel(i, j).finite()
+				if (((d2::pixel) df->get_pixel(i, j)).finite()
 				 && df->get_pixel(i, j)[0] > 0)
 					iwa->accumulate(i, j, v, im->get_pixel(i, j), d2::pixel(1, 1, 1));
 			}
@@ -3319,8 +3335,8 @@ public:
 				 * surface.
 				 */
 
-				d2::pixel depth = median_depths->pix(i, j);
-				d2::pixel diff = median_diffs->pix(i, j);
+				d2::pixel depth = median_depths->get_pixel(i, j);
+				d2::pixel diff = median_diffs->get_pixel(i, j);
 				// d2::pixel diff = d2::pixel(0, 0, 0);
 
 				if (!depth.finite() || !diff.finite())

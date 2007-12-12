@@ -119,8 +119,8 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 		 * Check reference frame definition.
 		 */
 
-		if (!c.accum->get_pixel(i, j).finite()
-		 || !(c.certainty->get_pixel(i, j).minabs_norm() > 0))
+		if (!((pixel) c.accum->get_pixel(i, j)).finite()
+		 || !(((pixel) c.certainty->get_pixel(i, j)).minabs_norm() > 0))
 			continue;
 
 		/*

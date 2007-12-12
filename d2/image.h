@@ -212,25 +212,17 @@ public:
 		return _depth;
 	}
 
-	virtual spixel &pix(unsigned int y, unsigned int x) = 0;
-
-	virtual const spixel &pix(unsigned int y, unsigned int x) const = 0;
-
-	virtual ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) = 0;
-
-	virtual const ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) const = 0;
-
-	virtual void set_pixel(unsigned int y, unsigned int x, spixel p) {
-		pix(y, x) = p;
-	}
+	virtual void set_pixel(unsigned int y, unsigned int x, spixel p) = 0;
 	
-	virtual pixel get_pixel(unsigned int y, unsigned int x) const {
-		return ((const image *)this)->pix(y, x);
-	}
+	virtual spixel get_pixel(unsigned int y, unsigned int x) const = 0;
 
-	virtual pixel get_raw_pixel(unsigned int y, unsigned int x) const {
+	virtual spixel get_raw_pixel(unsigned int y, unsigned int x) const {
 		return ((const image *)this)->get_pixel(y, x);
 	}
+
+	virtual void set_chan(unsigned int y, unsigned int x, unsigned int k, ale_sreal c) = 0;
+
+	virtual ale_sreal get_chan(unsigned int y, unsigned int x, unsigned int k) const = 0;
 
 	ale_real maxval() const {
 		ale_real result = get_pixel(0, 0)[0];
@@ -455,7 +447,7 @@ public:
 							p[k].push_back(get_pixel(iii, jjj)[k]);
 			}
 
-			is->pix(i, j) = d2::pixel::undefined();
+			is->set_pixel(i, j, d2::pixel::undefined());
 
 			for (int k = 0; k < 3; k++) {
 				std::sort(p[k].begin(), p[k].end());
@@ -466,9 +458,11 @@ public:
 					continue;
 
 				if (pkc % 2 == 0) 
-					is->chan(i, j, k) = (p[k][pkc / 2] + p[k][pkc / 2 - 1]) / 2;
+					is->set_chan(i, j, k, 
+						(p[k][pkc / 2] + p[k][pkc / 2 - 1]) / 2);
 				else
-					is->chan(i, j, k) = p[k][pkc / 2];
+					is->set_chan(i, j, k, 
+						p[k][pkc / 2]);
 			}
 		}
 
@@ -491,56 +485,57 @@ public:
 
 			if (i + 1 < height()
 			 && i > 0
-			 && !finite(chan(i, j, 0))) {
+			 && !finite(get_chan(i, j, 0))) {
 
-				is->chan(i, j, 0) = (chan(i + 1, j, 0) - chan(i - 1, j, 0)) / 2;
+				is->set_chan(i, j, 0, (get_chan(i + 1, j, 0) 
+				                     - get_chan(i - 1, j, 0)) / 2);
 
 			} else if (i + 1 < height()
 			        && i > 0
-			        && finite(chan(i + 1, j, 0))
-			        && finite(chan(i - 1, j, 0))) {
+			        && finite(get_chan(i + 1, j, 0))
+			        && finite(get_chan(i - 1, j, 0))) {
 
-				is->chan(i, j, 0) = ((chan(i, j, 0) - chan(i - 1, j, 0))
-						   + (chan(i + 1, j, 0) - chan(i, j, 0))) / 2;
+				is->set_chan(i, j, 0, ((get_chan(i, j, 0) - get_chan(i - 1, j, 0))
+						     + (get_chan(i + 1, j, 0) - get_chan(i, j, 0))) / 2);
 
 			} else if (i + 1 < height()
-				&& finite(chan(i + 1, j, 0))) {
+				&& finite(get_chan(i + 1, j, 0))) {
 
-				is->chan(i, j, 0) = chan(i + 1, j, 0) - chan(i, j, 0);
+				is->set_chan(i, j, 0, get_chan(i + 1, j, 0) - get_chan(i, j, 0));
 
 			} else if (i > 0
-				&& finite(chan(i - 1, j, 0))) {
+				&& finite(get_chan(i - 1, j, 0))) {
 				 
-				is->chan(i, j, 0) = chan(i, j, 0) - chan(i - 1, j, 0);
+				is->set_chan(i, j, 0, get_chan(i, j, 0) - get_chan(i - 1, j, 0));
 
 			} else {
-				is->chan(i, j, 0) = 0;
+				is->set_chan(i, j, 0, 0);
 			}
 
 			if (j + 1 < width()
 			 && j > 0
-			 && !finite(chan(i, j, 0))) {
+			 && !finite(get_chan(i, j, 0))) {
 
-				is->chan(i, j, 1) = (chan(i, j + 1, 0) - chan(i, j - 1, 0)) / 2;
+				is->set_chan(i, j, 1, (get_chan(i, j + 1, 0) - get_chan(i, j - 1, 0)) / 2);
 
 			} else if (j + 1 < width()
 			        && j > 0
-			        && finite(chan(i, j + 1, 0))
-			        && finite(chan(i, j - 1, 0))) {
+			        && finite(get_chan(i, j + 1, 0))
+			        && finite(get_chan(i, j - 1, 0))) {
 
-				is->chan(i, j, 1) = ((chan(i, j, 0) - chan(i, j - 1, 0))
-						   + (chan(i, j + 1, 0) - chan(i, j, 0))) / 2;
+				is->set_chan(i, j, 1, ((get_chan(i, j, 0) - get_chan(i, j - 1, 0))
+						     + (get_chan(i, j + 1, 0) - get_chan(i, j, 0))) / 2);
 
-			} else if (j + 1 < width() && finite(chan(i, j + 1, 0))) {
+			} else if (j + 1 < width() && finite(get_chan(i, j + 1, 0))) {
 
-				is->chan(i, j, 1) = chan(i, j + 1, 0) - chan(i, j, 0);
+				is->set_chan(i, j, 1, get_chan(i, j + 1, 0) - get_chan(i, j, 0));
 
-			} else if (j > 0 && finite(chan(i, j - 1, 0))) {
+			} else if (j > 0 && finite(get_chan(i, j - 1, 0))) {
 				 
-				is->chan(i, j, 1) = chan(i, j, 0) - chan(i, j - 1, 0);
+				is->set_chan(i, j, 1, get_chan(i, j, 0) - get_chan(i, j - 1, 0));
 
 			} else {
-				is->chan(i, j, 1) = 0;
+				is->set_chan(i, j, 1, 0);
 			}
 		}
 
@@ -709,46 +704,46 @@ public:
 			pixel value = pixel
 
 			      ( ( ((i > 0 && j > 0) 
-				    ? get_pixel(2 * i - 1, 2 * j - 1) 
-				    * weights->get_pixel(2 * i - 1, 2 * j - 1) 
+				    ? (pixel) get_pixel(2 * i - 1, 2 * j - 1) 
+				    * (pixel) weights->get_pixel(2 * i - 1, 2 * j - 1) 
 				    * (ale_real) 0.0625
 				    : pixel(0, 0, 0))
 				+ ((i > 0)
-				    ? get_pixel(2 * i - 1, 2 * j) 
-				    * weights->get_pixel(2 * i - 1, 2 * j)
+				    ? (pixel) get_pixel(2 * i - 1, 2 * j) 
+				    * (pixel) weights->get_pixel(2 * i - 1, 2 * j)
 				    * 0.125
 				    : pixel(0, 0, 0))
 				+ ((i > 0 && j < is->width() - 1)
-				    ? get_pixel(2 * i - 1, 2 * j + 1) 
-				    * weights->get_pixel(2 * i - 1, 2 * j + 1)
+				    ? (pixel) get_pixel(2 * i - 1, 2 * j + 1) 
+				    * (pixel) weights->get_pixel(2 * i - 1, 2 * j + 1)
 				    * 0.0625
 				    : pixel(0, 0, 0))
 				+ ((j > 0)
-				    ? get_pixel(2 * i, 2 * j - 1) 
-				    * weights->get_pixel(2 * i, 2 * j - 1)
+				    ? (pixel) get_pixel(2 * i, 2 * j - 1) 
+				    * (pixel) weights->get_pixel(2 * i, 2 * j - 1)
 				    * 0.125
 				    : pixel(0, 0, 0))
 				+ get_pixel(2 * i, 2 * j) 
-				    * weights->get_pixel(2 * i, 2 * j)
+				    * (pixel) weights->get_pixel(2 * i, 2 * j)
 				    * 0.25
 				+ ((j < is->width() - 1)
-				    ? get_pixel(2 * i, 2 * j + 1) 
-				    * weights->get_pixel(2 * i, 2 * j + 1)
+				    ? (pixel) get_pixel(2 * i, 2 * j + 1) 
+				    * (pixel) weights->get_pixel(2 * i, 2 * j + 1)
 				    * 0.125
 				    : pixel(0, 0, 0))
 				+ ((i < is->height() - 1 && j > 0)
-				    ? get_pixel(2 * i + 1, 2 * j - 1) 
-				    * weights->get_pixel(2 * i + 1, 2 * j - 1)
+				    ? (pixel) get_pixel(2 * i + 1, 2 * j - 1) 
+				    * (pixel) weights->get_pixel(2 * i + 1, 2 * j - 1)
 				    * 0.0625
 				    : pixel(0, 0, 0))
 				+ ((i < is->height() - 1)
-				    ? get_pixel(2 * i + 1, 2 * j) 
-				    * weights->get_pixel(2 * i + 1, 2 * j)
+				    ? (pixel) get_pixel(2 * i + 1, 2 * j) 
+				    * (pixel) weights->get_pixel(2 * i + 1, 2 * j)
 				    * 0.125
 				    : pixel(0, 0, 0))
 				+ ((i < is->height() && j < is->width() - 1)
-				    ? get_pixel(2 * i + 1, 2 * j + 1) 
-				    * weights->get_pixel(2 * i + 1, 2 * j + 1)
+				    ? (pixel) get_pixel(2 * i + 1, 2 * j + 1) 
+				    * (pixel) weights->get_pixel(2 * i + 1, 2 * j + 1)
 				    * 0.0625 
 				    : pixel(0, 0, 0)))
 

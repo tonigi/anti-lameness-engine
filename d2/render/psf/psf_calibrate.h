@@ -110,8 +110,10 @@ public:
 							    lef - jj, rig - jj,
 							    lresponse->select(ii, jj));
 
-					sim_weights->pix(ii, jj) += r.weight();
-					simulated->pix(ii, jj) += r(approximation->get_pixel(i, j));
+					sim_weights->set_pixel(ii, jj,
+						(pixel) sim_weights->get_pixel(ii, jj) + r.weight());
+					simulated->set_pixel(ii, jj,
+						(pixel) simulated->get_pixel(ii, jj) + r(approximation->get_pixel(i, j)));
                                 }
                         }
                 }
@@ -122,8 +124,8 @@ public:
 
 		for (unsigned int i = 0; i < simulated->height(); i++)
 		for (unsigned int j = 0; j < simulated->width();  j++)
-			simulated->pix(i, j) 
-				/= sim_weights->get_pixel(i, j);
+			simulated->set_pixel(i, j,
+				(pixel) simulated->get_pixel(i, j) / (pixel) sim_weights->get_pixel(i, j));
 
 		delete sim_weights;
 
@@ -164,9 +166,11 @@ public:
 								    lef - jj, rig - jj,
 								    nlresponse->select(ii, jj));
 
-						nlsim_weights->pix(ii, jj) += r.weight();
+						nlsim_weights->set_pixel(ii, jj,
+							(pixel) nlsim_weights->get_pixel(ii, jj) + r.weight());
 
-						nlsimulated->pix(ii, jj) += r(real->exp().unlinearize(simulated->get_pixel(i, j)));
+						nlsimulated->set_pixel(ii, jj,
+							(pixel) nlsimulated->get_pixel(ii, jj) + r(real->exp().unlinearize(simulated->get_pixel(i, j))));
 					}
 				}
 			}
@@ -177,8 +181,8 @@ public:
 
 			for (unsigned int i = 0; i < simulated->height(); i++)
 			for (unsigned int j = 0; j < simulated->width();  j++)
-				nlsimulated->pix(i, j) 
-					/= nlsim_weights->get_pixel(i, j);
+				nlsimulated->set_pixel(i, j,
+					(pixel) nlsimulated->get_pixel(i, j) / nlsim_weights->get_pixel(i, j));
 
 			/*
 			 * Linearize nlsimulated
@@ -186,8 +190,8 @@ public:
 
 			for (unsigned int i = 0; i < simulated->height(); i++)
 			for (unsigned int j = 0; j < simulated->width();  j++)
-				nlsimulated->pix(i, j) =
-					real->exp().linearize(nlsimulated->get_pixel(i, j));
+				nlsimulated->set_pixel(i, j,
+					real->exp().linearize(nlsimulated->get_pixel(i, j)));
 
 			delete simulated;
 			delete nlsim_weights;
@@ -301,12 +305,14 @@ public:
 
 		for (unsigned int i = 0; i < approximation->height(); i++)
 		for (unsigned int j = 0; j < approximation->width();  j++) {
-			approximation->pix(i, j) *= pixel(psf_match_args[0],
-					                  psf_match_args[1],
-							  psf_match_args[2]);
-			approximation->pix(i, j) += pixel(psf_match_args[3],
-					                  psf_match_args[4],
-							  psf_match_args[5]);
+			approximation->set_pixel(i, j, (pixel) approximation->get_pixel(i, j) 
+			                             * pixel(psf_match_args[0],
+					                     psf_match_args[1],
+							     psf_match_args[2]));
+			approximation->set_pixel(i, j, (pixel) approximation->get_pixel(i, j)
+			                             + pixel(psf_match_args[3],
+					                     psf_match_args[4],
+							     psf_match_args[5]));
 		}
 
 		for (unsigned int m = 0; m < image_rw::count() - 1; m++) {

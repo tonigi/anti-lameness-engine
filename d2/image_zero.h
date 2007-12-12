@@ -32,8 +32,20 @@
 class image_zero : public image_weighted_avg {
 public:
 
-	pixel get_pixel(unsigned int y, unsigned int x) const {
+	spixel get_pixel(unsigned int y, unsigned int x) const {
 		return pixel::zero();
+	}
+
+	void set_pixel(unsigned int y, unsigned int x, spixel p) {
+		assert(0);
+	}
+
+	void set_chan(unsigned int y, unsigned int x, unsigned int k, ale_sreal c) {
+		assert(0);
+	}
+
+	ale_sreal get_chan(unsigned int y, unsigned int x, unsigned int k) const {
+		return 0;
 	}
 
 	ale_real maxval() const {

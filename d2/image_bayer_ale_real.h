@@ -33,7 +33,24 @@
 template <int disk_support>
 class image_bayer_ale_real : public image {
 private:
+	/*
+	 * Data structures without file support.
+	 */
+
 	ale_sreal *_p;
+
+	/*
+	 * Data structures for file support.
+	 */
+
+	FILE *support;
+	mutable ale_sreal *_p_segments[RESIDENT_DIVISIONS];
+	mutable int dirty_segments[RESIDENT_DIVISIONS];
+	mutable int resident_list[RESIDENT_DIVISIONS];
+	mutable int resident_next;
+	int resident_max;
+	int rows_per_segment;
+	mutable thread::rwlock_t rwlock;
 
 private:
 	/*
@@ -62,13 +79,6 @@ public:
 		return (1 << bayer_color(i, j));
 	}
 
-private:
-	void trigger(pixel multiplier) {
-		for (unsigned int i = 0; i < _dimy; i++)
-		for (unsigned int j = 0; j < _dimx; j++)
-			_p[i * _dimx + j] *= multiplier[bayer_color(i, j)];
-	}
-
 public:
 
 	/*
@@ -84,7 +94,7 @@ public:
 
 		unsigned int resident = image::get_resident();
 
-		if (resident == 0 || resident > dimy * dimx)
+		if (resident == 0 || resident * 1000000 > dimy * dimx)
 			return new image_bayer_ale_real<0>(dimy, dimx, depth, bayer, name, exp);
 
 		return new image_bayer_ale_real<1>(dimy, dimx, depth, bayer, name, exp);
@@ -100,49 +110,172 @@ public:
 		     || bayer == IMAGE_BAYER_GRGB
 		     || bayer == IMAGE_BAYER_RGBG);
 
-		_p = new ale_sreal[dimx * dimy];
+		if (disk_support == 0) {
+			_p = new ale_sreal[dimx * dimy];
 
-		assert (_p);
+			assert (_p);
 
-		if (!_p) {
-			fprintf(stderr, "Could not allocate memory for image data.\n");
-			exit(1);
-		}
+			if (!_p) {
+				fprintf(stderr, "Could not allocate memory for image data.\n");
+				exit(1);
+			}
 
-		for (unsigned int i = 0; i < dimx * dimy; i++) {
-			_p[i] = 0;
+			for (unsigned int i = 0; i < dimx * dimy; i++) {
+				_p[i] = 0;
+			}
+		} else {
+			rows_per_segment = (int) ceil((double) dimy / (double) RESIDENT_DIVISIONS);
+
+			assert (rows_per_segment > 0);
+
+			for (int i = 0; i < RESIDENT_DIVISIONS; i++) {
+				_p_segments[i] = NULL;
+				dirty_segments[i] = 0;
+				resident_list[i] = -1;
+			}
+
+			resident_max = (image::get_resident() * 1000000)
+				     / (rows_per_segment * dimx);
+
+			assert (resident_max <= RESIDENT_DIVISIONS);
+
+			if (resident_max == 0) {
+				ui::get()->error_hint(
+					"No segments resident in image array.",
+					"Try recompiling with more RESIDENT_DIVISIONS");
+			}
+
+			resident_next = 0;
+
+			support = tmpfile();
+
+			if (!support) {
+				ui::get()->error_hint(
+					"Unable to create temporary file to support image array.",
+					"Set --resident 0, or Win32/64 users might run as admin.");
+			}
+
+			ale_sreal *zero = new ale_sreal[dimx];
+
+			assert(zero);
+
+			for (unsigned int i = 0; i < dimx; i++) 
+				zero[i] = 0;
+
+			for (unsigned int i = 0; i < dimy; i++) {
+				unsigned int c = fwrite(zero, sizeof(ale_sreal), dimx, support);
+				if (c < dimx)
+					ui::get()->error_hint("Image array support file error.",
+					                      "Submit a bug report.");
+			}
+
+			delete zero;
 		}
 	}
 
 	virtual ~image_bayer_ale_real() {
-		delete[] _p;
+		if (disk_support == 0) {
+			delete[] _p;
+		} else {
+			for (int i = 0; i < RESIDENT_DIVISIONS; i++) {
+				if (_p_segments[i])
+					delete _p_segments[i];
+			}
+
+			fclose(support);
+		}
 	}
 
-	ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) {
+	void resident_begin(unsigned int segment) const {
+		rwlock.rdlock();
+		if (_p_segments[segment])
+			return;
+		rwlock.unlock();
+
+		rwlock.wrlock();
+
+		if (resident_list[resident_next] >= 0) {
+			/*
+			 * Eject a segment
+			 */
+
+			if (dirty_segments[resident_list[resident_next]]) {
+				fseek(support, rows_per_segment * _dimx * sizeof(ale_sreal) 
+				             * resident_list[resident_next], 
+					       SEEK_SET);
+				assert(_p_segments[resident_list[resident_next]]);
+				fwrite(_p_segments[resident_list[resident_next]], 
+					sizeof(ale_sreal), rows_per_segment * _dimx, support);
+				dirty_segments[resident_list[resident_next]] = 0;
+			}
+
+			delete _p_segments[resident_list[resident_next]];
+			_p_segments[resident_list[resident_next]] = NULL;
+		}
+
+		resident_list[resident_next] = segment;
+
+		_p_segments[segment] = new ale_sreal[_dimx * rows_per_segment];
+
+		assert (_p_segments[segment]);
+
+		fseek(support, rows_per_segment * _dimx * sizeof(ale_sreal)
+		             * segment,
+			     SEEK_SET);
+
+		fread(_p_segments[segment], sizeof(ale_sreal), rows_per_segment * _dimx, support);
+
+		/*
+		 * Update the next ejection candidate.
+		 */
+		resident_next++;
+		if (resident_next >= resident_max)
+			resident_next = 0;
+	}
+
+	void resident_end(unsigned int segment) const {
+		rwlock.unlock();
+	}
+
+	void set_chan(unsigned int y, unsigned int x, unsigned int k, ale_sreal c) {
 		assert (k == bayer_color(y, x));
-		return _p[y * _dimx + x];
+		if (disk_support == 0) {
+			_p[y * _dimx + x] = c;
+		} else {
+			int segment = y / rows_per_segment;
+			assert (segment < RESIDENT_DIVISIONS);
+
+			resident_begin(segment);
+				
+			_p_segments[segment][(y % rows_per_segment) * _dimx + x] = c;
+			dirty_segments[segment] = 1;
+				
+			resident_end(segment);
+		}
 	}
 
-	const ale_sreal &chan(unsigned int y, unsigned int x, unsigned int k) const {
+	ale_sreal get_chan(unsigned int y, unsigned int x, unsigned int k) const {
 #if 0
 		/*
 		 * This may be expensive.
 		 */
 		assert (k == bayer_color(y, x));
 #endif
-		return _p[y * _dimx + x];
-	}
+		if (disk_support == 0) {
+			return _p[y * _dimx + x];
+		} else {
+			int segment = y / rows_per_segment;
+			assert (segment < RESIDENT_DIVISIONS);
 
-	spixel &pix(unsigned int y, unsigned int x) {
-		assert(0);
+			resident_begin(segment);
 
-		static spixel foo;
-		return foo;
-	}
+			ale_sreal result = _p_segments[segment]
+			                              [(y % rows_per_segment) * _dimx + x];
+				
+			resident_end(segment);
 
-	const spixel &pix(unsigned int y, unsigned int x) const {
-		static spixel foo = get_pixel(y, x);
-		return foo;
+			return result;
+		}
 	}
 
 	/*
@@ -150,19 +283,19 @@ public:
 	 * position.
 	 */
 	void set_pixel(unsigned int y, unsigned int x, spixel p) {
-		chan(y, x, bayer_color(y, x)) = p[bayer_color(y, x)];
+		set_chan(y, x, bayer_color(y, x), p[bayer_color(y, x)]);
 	}
 
 	/*
 	 * This method uses bilinear interpolation.
 	 */
-	pixel get_pixel(unsigned int y, unsigned int x) const {
+	spixel get_pixel(unsigned int y, unsigned int x) const {
 		pixel result;
 		unsigned int k = bayer_color(y, x);
 		ale_real sum;
 		unsigned int num;
 
-		result[k] = chan(y, x, k);
+		result[k] = get_chan(y, x, k);
 
 		if (k == 1) {
 			unsigned int k1 = bayer_color(y + 1, x);
@@ -170,11 +303,11 @@ public:
 
 			sum = 0; num = 0;
 			if (y > 0) {
-				sum += chan(y - 1, x, k1);
+				sum += get_chan(y - 1, x, k1);
 				num++;
 			}
 			if (y < _dimy - 1) {
-				sum += chan(y + 1, x, k1);
+				sum += get_chan(y + 1, x, k1);
 				num++;
 			}
 			assert (num > 0);
@@ -182,11 +315,11 @@ public:
 
 			sum = 0; num = 0;
 			if (x > 0) {
-				sum += chan(y, x - 1, k2);
+				sum += get_chan(y, x - 1, k2);
 				num++;
 			}
 			if (x < _dimx - 1) {
-				sum += chan(y, x + 1, k2);
+				sum += get_chan(y, x + 1, k2);
 				num++;
 			}
 			assert (num > 0);
@@ -197,19 +330,19 @@ public:
 
 		sum = 0; num = 0;
 		if (y > 0) {
-			sum += chan(y - 1, x, 1);
+			sum += get_chan(y - 1, x, 1);
 			num++;
 		}
 		if (x > 0) {
-			sum += chan(y, x - 1, 1);
+			sum += get_chan(y, x - 1, 1);
 			num++;
 		}
 		if (y < _dimy - 1) {
-			sum += chan(y + 1, x, 1);
+			sum += get_chan(y + 1, x, 1);
 			num++;
 		}
 		if (x < _dimx - 1) {
-			sum += chan(y, x + 1, 1);
+			sum += get_chan(y, x + 1, 1);
 			num++;
 		}
 		assert (num > 0);
@@ -217,19 +350,19 @@ public:
 
 		sum = 0; num = 0;
 		if (y > 0 && x > 0) {
-			sum += chan(y - 1, x - 1, 2 - k);
+			sum += get_chan(y - 1, x - 1, 2 - k);
 			num++;
 		} 
 		if (y > 0 && x < _dimx - 1) {
-			sum += chan(y - 1, x + 1, 2 - k);
+			sum += get_chan(y - 1, x + 1, 2 - k);
 			num++;
 		}
 		if (y < _dimy - 1 && x > 0) {
-			sum += chan(y + 1, x - 1, 2 - k);
+			sum += get_chan(y + 1, x - 1, 2 - k);
 			num++;
 		}
 		if (y < _dimy - 1 && x < _dimx - 1) {
-			sum += chan(y + 1, x + 1, 2 - k);
+			sum += get_chan(y + 1, x + 1, 2 - k);
 			num++;
 		}
 		result[2 - k] = sum/num;
@@ -237,11 +370,11 @@ public:
 		return result;
 	}
 
-	pixel get_raw_pixel(unsigned int y, unsigned int x) const {
+	spixel get_raw_pixel(unsigned int y, unsigned int x) const {
 		pixel result;
 		int k = bayer_color(y, x);
 
-		result[k] = chan(y, x, k);
+		result[k] = get_chan(y, x, k);
 
 		return result;
 	}
@@ -265,6 +398,15 @@ public:
 		assert(0);
 
 		return NULL;
+	}
+
+private:
+	void trigger(pixel multiplier) {
+		for (unsigned int i = 0; i < _dimy; i++)
+		for (unsigned int j = 0; j < _dimx; j++) {
+			unsigned int k = bayer_color(i, j);
+			set_chan(i, j, k, get_chan(i, j, k) * multiplier[k]); 
+		}
 	}
 
 };

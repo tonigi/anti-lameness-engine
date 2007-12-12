@@ -1542,14 +1542,14 @@ public:
 				 && q[0] <= c.input->height() - 1
 				 && q[1] >= 0
 				 && q[1] <= c.input->width() - 1
-				 && c.certainty->get_pixel(i, j).minabs_norm() != 0) { 
+				 && ((pixel) c.certainty->get_pixel(i, j)).minabs_norm() != 0) { 
 					pixel a = c.accum->get_pixel(i, j);
 					pixel b;
 
 					b = c.input->get_bl(q);
 
 					pixel weight = ((c.aweight && pass_number)
-						      ? c.aweight->get_pixel(i, j)
+						      ? (pixel) c.aweight->get_pixel(i, j)
 						      : pixel(1, 1, 1))
 						     * (pass_number
 						      ? psqrt(c.certainty->get_pixel(i, j)
@@ -1764,9 +1764,9 @@ public:
 		for (unsigned int j = 0; j < scale_clusters[0].input_certainty->width(); j++)
 		for (unsigned int k = 0; k < 3; k++)
 		if (scale_clusters[0].input->get_channels(i, j) & (1 << k))
-			((image *) scale_clusters[0].input_certainty)->chan(i, j, k) =
+			((image *) scale_clusters[0].input_certainty)->set_chan(i, j, k,
 				scale_clusters[0].input->
-					exp().confidence(scale_clusters[0].input->get_pixel(i, j))[k];
+					exp().confidence(scale_clusters[0].input->get_pixel(i, j))[k]);
 
 		scale_ax_parameters(*local_ax_count, scale_clusters[0].ax_parameters, scale_factor, 
 				(scale_factor < 1.0 && interpolant == NULL) ? scale_factor : (ale_pos) 1);
@@ -2851,7 +2851,9 @@ public:
 			 && map_weight_position[1] >= 0
 			 && map_weight_position[0] <= weight_map->height() - 1
 			 && map_weight_position[1] <= weight_map->width() - 1)
-				alignment_weights->pix(i, j) *= weight_map->get_bl(map_weight_position);
+				alignment_weights->set_pixel(i, j, 
+					alignment_weights->get_pixel(i, j) 
+				      * weight_map->get_bl(map_weight_position));
 		}
 	}
 
@@ -2895,7 +2897,9 @@ public:
 		else 
 			for (unsigned int i = 0; i < rows; i++)
 			for (unsigned int j = 0; j < cols; j++)
-				alignment_weights->pix(i, j) *= wmx_weights->pix(i, j);
+				alignment_weights->set_pixel(i, j,
+					(pixel) alignment_weights->get_pixel(i, j) 
+				      * (pixel) wmx_weights->get_pixel(i, j));
 #endif
 	}
 
@@ -2948,9 +2952,9 @@ public:
 #if 0
 				alignment_weights->pix(i / cols, i % cols)[k] = fabs(inout[i][0] / (rows * cols));
 #else
-				alignment_weights->pix(i / cols, i % cols)[k] = 
+				alignment_weights->set_chan(i / cols, i % cols, k,
 					sqrt(pow(inout[i][0] / (rows * cols), 2)
-					   + pow(inout[i][1] / (rows * cols), 2));
+					   + pow(inout[i][1] / (rows * cols), 2)));
 #endif
 			}
 		}
