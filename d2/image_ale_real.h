@@ -244,6 +244,48 @@ public:
 		}
 	}
 
+	void mul_pixel(unsigned int y, unsigned int x, spixel p) {
+		assert (x < _dimx);
+		assert (y < _dimy);
+
+		image_updated();
+
+		if (disk_support == 0) {
+			_p[y * _dimx + x] *= p;
+		} else {
+			int segment = y / rows_per_segment;
+			assert (segment < RESIDENT_DIVISIONS);
+
+			resident_begin(segment);
+				
+			_p_segments[segment][(y % rows_per_segment) * _dimx + x] *= p;
+			dirty_segments[segment] = 1;
+				
+			resident_end(segment);
+		}
+	}
+
+	void add_pixel(unsigned int y, unsigned int x, pixel p) {
+		assert (x < _dimx);
+		assert (y < _dimy);
+
+		image_updated();
+
+		if (disk_support == 0) {
+			_p[y * _dimx + x] += p;
+		} else {
+			int segment = y / rows_per_segment;
+			assert (segment < RESIDENT_DIVISIONS);
+
+			resident_begin(segment);
+				
+			_p_segments[segment][(y % rows_per_segment) * _dimx + x] += p;
+			dirty_segments[segment] = 1;
+				
+			resident_end(segment);
+		}
+	}
+
 	ale_sreal get_chan(unsigned int y, unsigned int x, unsigned int k) const {
 		assert (x < _dimx);
 		assert (y < _dimy);
@@ -280,6 +322,27 @@ public:
 			resident_begin(segment);
 				
 			_p_segments[segment][(y % rows_per_segment) * _dimx + x][k] = c;
+			dirty_segments[segment] = 1;
+				
+			resident_end(segment);
+		}
+	}
+
+	void div_chan(unsigned int y, unsigned int x, unsigned int k, ale_sreal c) {
+		assert (x < _dimx);
+		assert (y < _dimy);
+
+		image_updated();
+
+		if (disk_support == 0) {
+			_p[y * _dimx + x][k] /= c;
+		} else {
+			int segment = y / rows_per_segment;
+			assert (segment < RESIDENT_DIVISIONS);
+
+			resident_begin(segment);
+				
+			_p_segments[segment][(y % rows_per_segment) * _dimx + x][k] /= c;
 			dirty_segments[segment] = 1;
 				
 			resident_end(segment);
@@ -335,7 +398,7 @@ private:
 	void trigger(pixel multiplier) {
 		for (unsigned int i = 0; i < height(); i++)
 		for (unsigned int j = 0; j < width(); j++) {
-			set_pixel(i, j, get_pixel(i, j) * multiplier);
+			mul_pixel(i, j, multiplier);
 		}
 	}
 };

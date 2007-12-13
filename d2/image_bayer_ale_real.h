@@ -257,6 +257,40 @@ public:
 		}
 	}
 
+	void add_chan(unsigned int y, unsigned int x, unsigned int k, ale_sreal c) {
+		assert (k == bayer_color(y, x));
+		if (disk_support == 0) {
+			_p[y * _dimx + x] += c;
+		} else {
+			int segment = y / rows_per_segment;
+			assert (segment < RESIDENT_DIVISIONS);
+
+			resident_begin(segment);
+				
+			_p_segments[segment][(y % rows_per_segment) * _dimx + x] += c;
+			dirty_segments[segment] = 1;
+				
+			resident_end(segment);
+		}
+	}
+
+	void div_chan(unsigned int y, unsigned int x, unsigned int k, ale_sreal c) {
+		assert (k == bayer_color(y, x));
+		if (disk_support == 0) {
+			_p[y * _dimx + x] /= c;
+		} else {
+			int segment = y / rows_per_segment;
+			assert (segment < RESIDENT_DIVISIONS);
+
+			resident_begin(segment);
+				
+			_p_segments[segment][(y % rows_per_segment) * _dimx + x] /= c;
+			dirty_segments[segment] = 1;
+				
+			resident_end(segment);
+		}
+	}
+
 	ale_sreal get_chan(unsigned int y, unsigned int x, unsigned int k) const {
 #if 0
 		/*

@@ -220,6 +220,26 @@ public:
 		return ((const image *)this)->get_pixel(y, x);
 	}
 
+	virtual void add_pixel(unsigned int y, unsigned int x, pixel p) {
+		assert(0);
+	}
+
+	virtual void mul_pixel(unsigned int y, unsigned int x, pixel p) {
+		assert(0);
+	}
+
+	virtual void div_pixel(unsigned int y, unsigned int x, pixel p) {
+		assert(0);
+	}
+
+	virtual void add_chan(unsigned int y, unsigned int x, unsigned int k, ale_real c) {
+		assert(0);
+	}
+
+	virtual void div_chan(unsigned int y, unsigned int x, unsigned int k, ale_real c) {
+		assert(0);
+	}
+
 	virtual void set_chan(unsigned int y, unsigned int x, unsigned int k, ale_sreal c) = 0;
 
 	virtual ale_sreal get_chan(unsigned int y, unsigned int x, unsigned int k) const = 0;

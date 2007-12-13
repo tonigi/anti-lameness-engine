@@ -239,20 +239,16 @@ protected:
 					lock();
 
 					if (lsimulated->get_bayer() == IMAGE_BAYER_NONE) {
-						lsimulated->set_pixel(ii, jj,
-							(pixel) lsimulated->get_pixel(ii, jj)
-						      + r(approximation->get_pixel(i, j)));
-						lsim_weights->set_pixel(ii, jj,
-							(pixel) lsim_weights->get_pixel(ii, jj)
-						      + r.weight());
+						lsimulated->add_pixel(ii, jj, 
+							r(approximation->get_pixel(i, j)));
+						lsim_weights->add_pixel(ii, jj,
+							r.weight());
 					} else {
 						int k = lsimulated->bayer_color(ii, jj);
-						lsimulated->set_chan(ii, jj, k,
-							lsimulated->get_chan(ii, jj, k)
-						      + r(approximation->get_pixel(i, j))[k]);
-						lsim_weights->set_chan(ii, jj, k,
-							lsim_weights->get_chan(ii, jj, k)
-						      + r.weight()[k]);
+						lsimulated->add_chan(ii, jj, k,
+							r(approximation->get_pixel(i, j))[k]);
+						lsim_weights->add_chan(ii, jj, k,
+							r.weight()[k]);
 					}
 
 					unlock();
@@ -360,12 +356,10 @@ protected:
 
 					lock();
 
-					nlsimulated->set_pixel(ii, jj,
-						(pixel) nlsimulated->get_pixel(ii, jj)
-					      + r(exp->unlinearize(lsimulated->get_pixel(i, j))));
-					nlsim_weights->set_pixel(ii, jj,
-						(pixel) nlsim_weights->get_pixel(ii, jj)
-					      + r.weight());
+					nlsimulated->add_pixel(ii, jj,
+						r(exp->unlinearize(lsimulated->get_pixel(i, j))));
+					nlsim_weights->add_pixel(ii, jj,
+						r.weight());
 
 					unlock();
 				}
@@ -460,12 +454,11 @@ protected:
 				ale_real weight = lsim_weights->get_chan(ii, jj, k);
 
 				if (!(weight > weight_floor))
-					lsimulated->set_chan(ii, jj, k,
-						lsimulated->get_chan(ii, jj, k)
-					      / zero);  /* Generate a non-finite value */
+					lsimulated->div_chan(ii, jj, k, 
+						zero);  /* Generate a non-finite value */
 				else
-					lsimulated->set_chan(ii, jj, k,
-						lsimulated->get_chan(ii, jj, k) / weight);
+					lsimulated->div_chan(ii, jj, k,
+						weight);
 			}
 		}
 
@@ -513,12 +506,10 @@ protected:
 
 			for (int k = 0; k < 3; k++)
 				if (!(weight[k] > weight_floor))
-					nlsimulated->set_chan(ii, jj, k,
-						nlsimulated->get_chan(ii, jj, k)
-					      / zero);  /* Generate a non-finite value */
+					nlsimulated->div_chan(ii, jj, k,
+						zero);  /* Generate a non-finite value */
 
-			nlsimulated->set_pixel(ii, jj, 
-				(pixel) nlsimulated->get_pixel(ii, jj) / weight);
+			nlsimulated->div_pixel(ii, jj, weight);
 		}
 
 		/*
@@ -636,8 +627,8 @@ protected:
 		 * a weighted median update.
 		 */
 		void update(int i, int j, pixel value_times_weight, pixel weight) {
-			c->set_pixel(i, j, (pixel) c->get_pixel(i, j) + value_times_weight);
-			cc->set_pixel(i, j, (pixel) cc->get_pixel(i, j) + weight);
+			c->add_pixel(i, j, value_times_weight);
+			cc->add_pixel(i, j, weight);
 		}
 	};
 
@@ -758,7 +749,7 @@ protected:
 					 * Error calculation
 					 */
 
-					lreal->set_pixel(i, j, (pixel) lreal->get_pixel(i, j) + bpv);
+					lreal->add_pixel(i, j, bpv);
 				}
 			}
 
