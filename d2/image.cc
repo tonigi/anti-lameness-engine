@@ -24,4 +24,4 @@
  * See image.h for details on these variables.
  */
 
-unsigned int image::resident = 0;
+double image::resident = 0;

@@ -67,7 +67,7 @@ public:
 					 const char *name = "anonymous",
 					 exposure *exp = NULL) {
 
-		unsigned int resident = image::get_resident();
+		double resident = image::get_resident();
 
 		if (resident == 0 || resident * 1000000 >= dimy * dimx)
 			return new image_ale_real<0>(dimy, dimx, depth, name, exp);
@@ -100,8 +100,8 @@ public:
 				resident_list[i] = -1;
 			}
 
-			resident_max = (image::get_resident() * 1000000)
-				     / (rows_per_segment * dimx);
+			resident_max = (unsigned int) floor((image::get_resident() * 1000000)
+				                          / (rows_per_segment * dimx));
 
 			assert (resident_max <= RESIDENT_DIVISIONS);
 
@@ -132,7 +132,7 @@ public:
 					                      "Submit a bug report.");
 			}
 
-			delete zero;
+			delete[] zero;
 		}
 	}
 
@@ -142,7 +142,7 @@ public:
 		} else {
 			for (int i = 0; i < RESIDENT_DIVISIONS; i++) {
 				if (_p_segments[i])
-					delete _p_segments[i];
+					delete[] _p_segments[i];
 			}
 
 			fclose(support);
@@ -156,6 +156,9 @@ public:
 		rwlock.unlock();
 
 		rwlock.wrlock();
+
+		if (_p_segments[segment])
+			return;
 
 		if (resident_list[resident_next] >= 0) {
 			/*
@@ -172,7 +175,7 @@ public:
 				dirty_segments[resident_list[resident_next]] = 0;
 			}
 
-			delete _p_segments[resident_list[resident_next]];
+			delete[] _p_segments[resident_list[resident_next]];
 			_p_segments[resident_list[resident_next]] = NULL;
 		}
 

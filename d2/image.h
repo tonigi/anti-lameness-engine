@@ -49,7 +49,7 @@
 
 class image : protected exposure::listener {
 protected:
-	static unsigned int resident;
+	static double resident;
 	unsigned int _dimx, _dimy, _depth;
 	point _offset;
 	const char *name;
@@ -135,11 +135,11 @@ protected:
 	}
 
 public:
-	static void set_resident(unsigned int r) {
+	static void set_resident(double r) {
 		resident = r;
 	}
 
-	static unsigned int get_resident() {
+	static double get_resident() {
 		return resident;
 	}
 

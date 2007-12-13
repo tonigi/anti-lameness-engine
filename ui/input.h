@@ -2103,7 +2103,7 @@ public:
 				d2::image_rw::set_cache(cache);
 
 			} else if (!strcmp(option_name, "resident")) {
-				int resident = env->get_int_arg(i->first, 1);
+				double resident = env->get_double_arg(i->first, 1);
 
 				d2::image::set_resident(resident);
 
