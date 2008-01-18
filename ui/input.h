@@ -2715,7 +2715,7 @@ public:
 				if (!strcmp(option_name, "mc")) {
 					d2::align::mc(env->get_double_arg(i->first, 1));
 				} else if (!strcmp(option_name, "md")) {
-					d2::align::ma_decomp(env->get_int_arg(i->first, 1));
+					d2::align::ma_decomp(env->get_double_arg(i->first, 1));
 				} else if (!strcmp(option_name, "gs-mo")) {
 					const char *option = env->get_string_arg(i->first, 1);
 					double gs_mo;

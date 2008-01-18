@@ -3401,9 +3401,9 @@ public:
 	}
 
 	/*
-	 * Multi-alignment subdivision limit
+	 * Multi-alignment dimension minimum
 	 */
-	static void ma_decomp(unsigned int value) {
+	static void ma_decomp(double value) {
 		assert(0);
 	}
 

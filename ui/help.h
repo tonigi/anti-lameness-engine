@@ -253,7 +253,7 @@ public:
 			BETWEEN_SECTIONS
 			"Multi-alignment:\n"
 			HEADER_SPACE
-			"--md <n>          Use no more than <n>-fold decomposition.       (3 is default)\n"
+			"--md <x>          Set alignment element minimum dimension <x>.  (10 is default)\n"
 			"\n"
 		       );
 	}
