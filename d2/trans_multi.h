@@ -93,6 +93,22 @@ public:
 		current_element = i;
 	}
 
+	/*
+	 * Set the bounds of the reference image after incorporation
+	 * of the original frame.
+	 */
+	void set_original_bounds(const image *i) {
+		assert(0);
+	}
+
+	/*
+	 * Set the bounds of the reference image after incorporation
+	 * of the most recent frame.
+	 */
+	void set_current_bounds(const image *i) {
+		assert(0);
+	}
+
 	unsigned int stack_depth() {
 		return trans_stack.size();
 	}
