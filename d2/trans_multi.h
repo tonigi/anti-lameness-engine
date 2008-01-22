@@ -32,13 +32,13 @@
 struct trans_multi : public trans_abstract {
 private:
 	std::vector<trans_single> trans_stack;
-	int full_support;
+	int use_multi;
 	unsigned int current_element;
 	
 public:	
 
 	trans_multi() : trans_stack() {
-		full_support = 0;
+		use_multi = 0;
 		current_element = 0;
 	}
 
@@ -46,7 +46,7 @@ public:
 		this->trans_abstract::operator=(*((trans_abstract *) &tm));
 
 		trans_stack = tm.trans_stack;
-		full_support = tm.full_support;
+		use_multi = tm.use_multi;
 		current_element = tm.current_element;
 
 		return *this;
@@ -98,18 +98,18 @@ public:
 	}
 
 	int supported(int i, int j) {
-		if (full_support || current_element == 0)
+		if (use_multi || current_element == 0)
 			return 1;
 
 		return 0;
 	}
 	
-	void use_full_support() {
-		full_support = 1;
+	void set_multi() {
+		use_multi = 1;
 	}
 
-	void use_restricted_support() {
-		full_support = 0;
+	void unset_multi() {
+		use_multi = 0;
 	}
 
 	int is_nontrivial() {
