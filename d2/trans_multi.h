@@ -34,6 +34,8 @@ private:
 	std::vector<trans_single> trans_stack;
 	int use_multi;
 	unsigned int current_element;
+	unsigned int orig_ref_height, orig_ref_width;
+	unsigned int cur_ref_height, cur_ref_width;
 	
 public:	
 
@@ -98,7 +100,8 @@ public:
 	 * of the original frame.
 	 */
 	void set_original_bounds(const image *i) {
-		assert(0);
+		orig_ref_height = i->height();
+		orig_ref_width = i->width();
 	}
 
 	/*
@@ -106,7 +109,8 @@ public:
 	 * of the most recent frame.
 	 */
 	void set_current_bounds(const image *i) {
-		assert(0);
+		cur_ref_height = i->height();
+		cur_ref_width = i->width();
 	}
 
 	unsigned int stack_depth() {
