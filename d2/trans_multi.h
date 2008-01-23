@@ -42,6 +42,10 @@ public:
 	trans_multi() : trans_stack() {
 		use_multi = 0;
 		current_element = 0;
+		orig_ref_height = 0;
+		orig_ref_width = 0;
+		cur_ref_height = 0;
+		cur_ref_width = 0;
 	}
 
 	trans_multi &operator=(const trans_multi &tm) {
@@ -50,6 +54,11 @@ public:
 		trans_stack = tm.trans_stack;
 		use_multi = tm.use_multi;
 		current_element = tm.current_element;
+
+		orig_ref_height = tm.orig_ref_height;
+		orig_ref_width = tm.orig_ref_width;
+		cur_ref_height = tm.cur_ref_height;
+		cur_ref_width = tm.cur_ref_width;
 
 		return *this;
 	}
