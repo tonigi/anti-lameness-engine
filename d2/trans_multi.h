@@ -46,6 +46,8 @@ private:
 
 	unsigned int orig_ref_height, orig_ref_width;
 	unsigned int cur_ref_height, cur_ref_width;
+
+	char *spatio_elem_map;
 	
 public:	
 
@@ -56,6 +58,7 @@ public:
 		orig_ref_width = 0;
 		cur_ref_height = 0;
 		cur_ref_width = 0;
+		spatio_elem_map = NULL;
 	}
 
 	trans_multi &operator=(const trans_multi &tm) {
@@ -73,11 +76,25 @@ public:
 		cur_ref_height = tm.cur_ref_height;
 		cur_ref_width = tm.cur_ref_width;
 
+		size_t cur_size = cur_ref_width * cur_ref_height * sizeof(char);
+
+		if (cur_size > 0) {
+			spatio_elem_map = (char *) malloc(cur_size);
+			assert (spatio_elem_map);
+			memcpy(spatio_elem_map, tm.spatio_elem_map, cur_size);
+		} else {
+			spatio_elem_map = NULL;
+		}
+
 		return *this;
 	}
 
 	trans_multi(const trans_multi &tm) : trans_stack() {
 		operator=(tm);
+	}
+
+	~trans_multi() {
+		free(spatio_elem_map);
 	}
 
 	trans_single get_element(unsigned int index) {
