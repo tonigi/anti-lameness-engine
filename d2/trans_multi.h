@@ -30,10 +30,20 @@
 #include "trans_single.h"
 
 struct trans_multi : public trans_abstract {
+public:
+	struct multi_coordinate {
+		int degree;
+		int x;
+		int y;
+	};
 private:
 	std::vector<trans_single> trans_stack;
+	std::vector<multi_coordinate> coord_stack;
+	std::map<multi_coordinate, unsigned int> coordinate_map;
+
 	int use_multi;
 	unsigned int current_element;
+
 	unsigned int orig_ref_height, orig_ref_width;
 	unsigned int cur_ref_height, cur_ref_width;
 	
@@ -52,6 +62,9 @@ public:
 		this->trans_abstract::operator=(*((trans_abstract *) &tm));
 
 		trans_stack = tm.trans_stack;
+		coord_stack = tm.coord_stack;
+		coordinate_map = tm.coordinate_map;
+
 		use_multi = tm.use_multi;
 		current_element = tm.current_element;
 
