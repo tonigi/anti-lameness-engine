@@ -2680,10 +2680,8 @@ public:
 		 */
 
 		ui::get()->postmatching();
-		offset.use_full_support();
 		here.diff(scale_clusters[0], perturb, offset, local_ax_count, m);
 		here.confirm();
-		offset.use_restricted_support();
 		ui::get()->set_match(here.get_error());
 
 		/*
