@@ -49,7 +49,12 @@ private:
 
 	char *spatio_elem_map;
 	
-public:	
+	void push_element() {
+		assert (trans_stack.size() > 0);
+
+		if (++current_element == trans_stack.size())
+			trans_stack.push_back(trans_stack.back());
+	}
 
 	trans_multi() : trans_stack() {
 		use_multi = 0;
@@ -59,6 +64,39 @@ public:
 		cur_ref_height = 0;
 		cur_ref_width = 0;
 		spatio_elem_map = NULL;
+	}
+
+public:	
+
+	/*
+	 * Calculate euclidean identity transform for a given image.
+	 */
+	static struct trans_multi eu_identity(const image *i = NULL, ale_pos scale_factor = 1) {
+		struct trans_multi r;
+		r.input_width = i ? i->width() : 2;
+		r.input_height = i ? i->height() : 2;
+		r.scale_factor = scale_factor;
+		r.trans_stack.push_back(trans_single::eu_identity(i, scale_factor));
+		r.current_element = 0;
+		return r;
+	}
+
+	/*
+	 * Calculate projective transformation parameters from a euclidean
+	 * transformation.
+	 */
+	void eu_to_gpt() {
+		for (unsigned int t = 0; t < trans_stack.size(); t++)
+			trans_stack[t].eu_to_gpt();
+	}
+
+	/*
+	 * Calculate projective identity transform for a given image.
+	 */
+	static trans_multi gpt_identity(const image *i, ale_pos scale_factor) {
+		struct trans_multi r = eu_identity(i, scale_factor);
+		r.eu_to_gpt();
+		return r;
 	}
 
 	trans_multi &operator=(const trans_multi &tm) {
@@ -115,13 +153,6 @@ public:
 
 	void set_current_element(trans_single t) {
 		set_element(current_element, t);
-	}
-
-	void push_element() {
-		assert (trans_stack.size() > 0);
-
-		if (++current_element == trans_stack.size())
-			trans_stack.push_back(trans_stack.back());
 	}
 
 	unsigned int get_current_index() const {
@@ -212,37 +243,6 @@ public:
 		return trans_stack.front().pei(p);
 	}
 
-
-	/*
-	 * Calculate projective transformation parameters from a euclidean
-	 * transformation.
-	 */
-	void eu_to_gpt() {
-		for (unsigned int t = 0; t < trans_stack.size(); t++)
-			trans_stack[t].eu_to_gpt();
-	}
-
-	/*
-	 * Calculate euclidean identity transform for a given image.
-	 */
-	static struct trans_multi eu_identity(const image *i = NULL, ale_pos scale_factor = 1) {
-		struct trans_multi r;
-		r.input_width = i ? i->width() : 2;
-		r.input_height = i ? i->height() : 2;
-		r.scale_factor = scale_factor;
-		r.trans_stack.push_back(trans_single::eu_identity(i, scale_factor));
-		r.current_element = 0;
-		return r;
-	}
-
-	/*
-	 * Calculate projective identity transform for a given image.
-	 */
-	static trans_multi gpt_identity(const image *i, ale_pos scale_factor) {
-		struct trans_multi r = eu_identity(i, scale_factor);
-		r.eu_to_gpt();
-		return r;
-	}
 
 	/*
 	 * Modify a euclidean transform in the indicated manner.
