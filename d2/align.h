@@ -191,7 +191,11 @@ private:
 		const image *input_frame;
 
 	public:
-		astate_t() {
+		astate_t() : 
+				old_initial_alignment(transformation::eu_identity()),
+				old_final_alignment(transformation::eu_identity()),
+				default_initial_alignment(transformation::eu_identity()) {
+
 			is_default = 1;
 			input_frame = NULL;
 		}
@@ -694,11 +698,11 @@ private:
 			/*
 			 * Required for STL sanity.
 			 */
-			run() : offset() {
+			run() : offset(transformation::eu_identity()) {
 				init();
 			}
 
-			run(transformation _offset, ale_pos _perturb) : offset() {
+			run(transformation _offset, ale_pos _perturb) : offset(_offset) {
 				init(_offset, _perturb);
 			}
 
@@ -720,7 +724,7 @@ private:
 				de_sum += _run.de_sum;
 			}
 
-			run(const run &_run) : offset() {
+			run(const run &_run) : offset(_run.offset) {
 
 				/*
 				 * Initialize

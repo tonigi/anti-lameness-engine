@@ -82,7 +82,7 @@ private:
 	 */
 
 	mutable unsigned int t_two;
-	mutable transformation t[2];
+	mutable transformation t0, t1;
 	mutable int _is_projective;
 
 	/*
@@ -90,9 +90,9 @@ private:
 	 */
 	point transform(point p) const {
 		if (t_two)
-			return t[1].unscaled_inverse_transform(t[0].transform_unscaled(p));
+			return t1.unscaled_inverse_transform(t0.transform_unscaled(p));
 
-		return t[0].transform_unscaled(p);
+		return t0.transform_unscaled(p);
 	}
 
 	/*
@@ -100,9 +100,9 @@ private:
 	 */
 	point transform_inverse(point p) const {
 		if (t_two)
-			return t[0].unscaled_inverse_transform(t[1].transform_unscaled(p));
+			return t0.unscaled_inverse_transform(t1.transform_unscaled(p));
 
-		return t[0].unscaled_inverse_transform(p);
+		return t0.unscaled_inverse_transform(p);
 	}
 
 	/*
@@ -356,7 +356,10 @@ private:
 
 public:
 
-	scaled_filter(filter *f, int frequency_limit) {
+	scaled_filter(filter *f, int frequency_limit) :
+			t0(transformation::eu_identity()),
+			t1(transformation::eu_identity()) {
+
 		this->frequency_limit = frequency_limit;
 		this->f = f;
 	}
@@ -387,7 +390,7 @@ public:
 	 */
 	void set_parameters(transformation _t, const image *_im, point _offset) const {
 		t_two = 0;
-		t[0] = _t;
+		t0 = _t;
 		im = _im;
 
 		bayer = im->get_bayer();
@@ -401,14 +404,14 @@ public:
 	 */
 	void set_parameters(transformation _t, transformation _s, const image *_im) const {
 		t_two = 1;
-		t[0] = _t;
-		t[1] = _s;
+		t0 = _t;
+		t1 = _s;
 		im = _im;
 
 		bayer = im->get_bayer();
 		offset = point(0, 0);
 
-		_is_projective = t[0].is_projective() || t[1].is_projective();
+		_is_projective = t0.is_projective() || t1.is_projective();
 	}
 
 	
