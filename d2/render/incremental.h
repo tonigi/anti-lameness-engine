@@ -277,7 +277,8 @@ protected:
 		      int _frame,
 		      const image *_delta,
 		      transformation _t) : decompose_domain(0, _instance->accum_image->height(),
-		                                            0, _instance->accum_image->width()) {
+		                                            0, _instance->accum_image->width()),
+					   t(_t) {
 
 			instance = _instance;
 			frame = _frame;

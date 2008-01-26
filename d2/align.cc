@@ -28,7 +28,7 @@ int align::_exp_register = 1;
 
 ale_pos align::scale_factor;
 
-transformation align::orig_t;
+transformation align::orig_t = transformation::eu_identity();
 int align::_keep = 0;
 transformation *align::kept_t = NULL;
 int *align::kept_ok = NULL;
@@ -48,7 +48,7 @@ const char *align::fw_output = NULL;
 double align::horiz_freq_cut = 0;
 double align::vert_freq_cut = 0;
 double align::avg_freq_cut = 0;
-transformation align::latest_t;
+transformation align::latest_t = transformation::eu_identity();
 int align::latest_ok;
 int align::latest = -1;
 
@@ -80,8 +80,6 @@ int align::match_count = 0;
 ale_pos align::_mc = 30;
 int align::certainty_weights = 0;
 int align::_gs = 6;
-unsigned int align::_ma_card = 1;
-double align::_ma_cont = 100;
 
 ale_accum align::_gs_mo = 67;
 int align::gs_mo_percent = 1;

@@ -53,13 +53,13 @@ public:
 	 * Constructor
 	 */
 
-	pt() {
+	pt() : t(d2::transformation::eu_identity()) {
 		_view_angle = M_PI / 4;
 		scale_factor = 1;
 		diag_per_depth = 0;
 	}
 
-	pt(d2::transformation t, et e, ale_pos va, ale_pos sf = 1) {
+	pt(d2::transformation t, et e, ale_pos va, ale_pos sf = 1) : t(t) {
 		this->t = t;
 		euclidean = e;
 		_view_angle = va;

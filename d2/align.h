@@ -311,18 +311,6 @@ private:
 	static int _gs;
 
 	/*
-	 * Multi-alignment cardinality.
-	 */
-
-	static unsigned int _ma_card;
-
-	/*
-	 * Multi-alignment contiguity.
-	 */
-
-	static double _ma_cont;
-
-	/*
 	 * Minimum overlap for global searches
 	 */
 
@@ -952,11 +940,6 @@ private:
 			int subdomain;
 		};
 
-		int get_current_index() const {
-			assert(runs.size());
-			return runs[0].offset.get_current_index();
-		}
-
 		struct scale_cluster si;
 		int ax_count;
 		int frame;
@@ -1077,21 +1060,18 @@ public:
 			rediff();
 		}
 
-		void push_element() {
-			assert(runs.size() == 1);
-
-			runs[0].offset.push_element();
-
-			rediff();
+		unsigned int stack_depth() const {
+			assert(runs.size() > 0);
+			return runs[0].offset.stack_depth();
 		}
 
-		unsigned int get_current_index() {
+		unsigned int get_current_index() const {
 			assert (runs.size() > 0);
-
 			return runs[0].offset.get_current_index();
 		}
 
 		void set_current_index(unsigned int i) {
+
 			assert(runs.size() == 1);
 			runs[0].offset.set_current_index(i);
 			rediff();
@@ -1175,7 +1155,7 @@ public:
 
 			assert(runs.size() == 1);
 
-			transformation test_t;
+			transformation test_t(transformation::eu_identity());
 
 			/* 
 			 * Translational or euclidean transformation
@@ -1580,7 +1560,8 @@ public:
 				       transformation _t,
 				       int _ax_count,
 				       int _pass_number) : decompose_domain(0, _c.accum->height(), 
-				                                            0, _c.accum->width()){
+				                                            0, _c.accum->width()),
+							   t(_t) {
 
 			asum = _asum;
 			bsum = _bsum;
@@ -1963,15 +1944,11 @@ public:
 
 			ui::get()->following();
 
-			for (offset.set_current_index(0),
-			     astate->old_initial_alignment.set_current_index(0),
-			     astate->old_final_alignment.set_current_index(0),
-			     new_offset.set_current_index(0);
-
-			     offset.get_current_index() < _ma_card;
-
-			     offset.push_element(),
-			     new_offset.push_element()) {
+			for (unsigned int index = 0; index < offset.stack_depth(); index++) {
+				offset.set_current_index(index);
+				astate->old_initial_alignment.set_current_index(index);
+				astate->old_final_alignment.set_current_index(index);
+				new_offset.set_current_index(index);
 
 				if (alignment_class == 0) {
 					/*
@@ -2137,7 +2114,7 @@ public:
 		ale_pos adj_s;
 
 		transformation offset = t;
-		transformation test_t;
+		transformation test_t(transformation::eu_identity());
 
 		for (int i = 0; i < 2; i++)
 		for (adj_s = -adj_p; adj_s <= adj_p; adj_s += 2 * adj_p) {
@@ -2313,9 +2290,8 @@ public:
 		 * Load any file-specified transformations
 		 */
 
-		for (offset.set_current_index(0); 
-		     offset.get_current_index() < _ma_card; 
-		     offset.push_element()) {
+		for (unsigned int index = 0; index < offset.stack_depth(); index++) {
+			offset.set_current_index(index);
 
 			offset = tload_next(tload, alignment_class == 2, 
 					offset, 
@@ -2610,8 +2586,8 @@ public:
 
 				here.calculate_element_region();
 
-				if (here.get_current_index() + 1 < _ma_card) {
-					here.push_element();
+				if (here.get_current_index() + 1 < here.stack_depth()) {
+					here.set_current_index(here.get_current_index() + 1);
 					here.make_element_nontrivial(adj_p, adj_o);
 					astate->is_primary = 0;
 				} else {
@@ -2755,9 +2731,8 @@ public:
 		 * Save the transformation information
 		 */
 
-		for (offset.set_current_index(0); 
-		     offset.get_current_index() < _ma_card; 
-		     offset.push_element()) {
+		for (unsigned int index = 0; index < offset.stack_depth(); index++) {
+			offset.set_current_index(index);
 
 			tsave_next(tsave, offset, alignment_class == 2, 
 					  offset.get_current_index() == 0);
@@ -2996,7 +2971,7 @@ public:
 			tsave_first(tsave, result, alignment_class == 2);
 
 			if (_keep > 0) {
-				kept_t = new transformation[image_rw::count()];
+				kept_t = transformation::new_eu_identity_array(image_rw::count());
 				kept_ok = (int *) malloc(image_rw::count()
 						* sizeof(int));
 				assert (kept_t);
@@ -3393,28 +3368,6 @@ public:
 		} else {
 			ui::get()->error("bad global search type");
 		}
-	}
-
-	/*
-	 * Multi-alignment contiguity
-	 */
-	static void ma_cont(double value) {
-		_ma_cont = value;
-	}
-
-	/*
-	 * Multi-alignment dimension minimum
-	 */
-	static void ma_decomp(double value) {
-		assert(0);
-	}
-
-	/*
-	 * Multi-alignment cardinality
-	 */
-	static void ma_card(unsigned int value) {
-		assert (value >= 1);
-		_ma_card = value;
 	}
 
 	/*

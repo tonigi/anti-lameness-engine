@@ -137,6 +137,9 @@ protected:
 		const raster *nlresponse;
 		const exposure *exp;
 		point *extents;
+
+		sim_args() : t(transformation::eu_identity()) {
+		}
 	};
 
 	class simulate_linear : public thread::decompose_domain, 
@@ -662,6 +665,9 @@ protected:
 		const backprojector *lresponse;
 		const backprojector *nlresponse;
 		double weight_limit;
+
+		correct_args() : t(transformation::eu_identity()) {
+		}
 	};
 
 	class correct_nonlinear : public thread::decompose_domain, 

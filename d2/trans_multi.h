@@ -37,6 +37,8 @@ public:
 		int y;
 	};
 private:
+	static ale_pos _multi_decomp;
+
 	std::vector<trans_single> trans_stack;
 	std::vector<multi_coordinate> coord_stack;
 	std::map<multi_coordinate, unsigned int> coordinate_map;
@@ -68,6 +70,10 @@ private:
 
 public:	
 
+	static void set_md(double d) {
+		_multi_decomp = d;
+	}
+
 	/*
 	 * Calculate euclidean identity transform for a given image.
 	 */
@@ -79,6 +85,16 @@ public:
 		r.trans_stack.push_back(trans_single::eu_identity(i, scale_factor));
 		r.current_element = 0;
 		return r;
+	}
+
+	/*
+	 * Generate an array of identity transformations.
+	 */
+	static trans_multi *new_eu_identity_array(unsigned int size) {
+		trans_multi *result = new trans_multi[size];
+		for (unsigned int i = 0; i < size; i++)
+			result[i] = eu_identity();
+		return result;
 	}
 
 	/*
@@ -183,7 +199,7 @@ public:
 		cur_ref_width = i->width();
 	}
 
-	unsigned int stack_depth() {
+	unsigned int stack_depth() const {
 		return trans_stack.size();
 	}
 

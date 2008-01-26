@@ -1,5 +1,4 @@
-// Copyright 2003 David Hilvert <dhilvert@auricle.dyndns.org>, 
-//                              <dhilvert@ugcs.caltech.edu>
+// Copyright 2008 David Hilvert <dhilvert@auricle.dyndns.org>
 
 /*  This file is part of the Anti-Lamenessing Engine.
 
@@ -18,20 +17,10 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include "trans_multi.h"
+
 /*
- * Static data translation unit for classes treating scenes as
- * two-dimensional data.
+ * See trans_multi.h for details on these variables.
  */
 
-#include "d2.h"
-
-namespace d2 {
-	#include "d2/align.cc"
-	#include "d2/trans_multi.cc"
-	#include "d2/render.cc"
-	#include "d2/image_rw.cc"
-	#include "d2/image.cc"
-	#include "d2/exposure/exposure.cc"
-	#include "d2/vise_core.cc"
-	#include "d2/tfile.cc"
-}
+ale_pos trans_multi::_multi_decomp = 10;
