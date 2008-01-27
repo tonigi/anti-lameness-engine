@@ -48,7 +48,7 @@ private:
 
 	unsigned int orig_ref_height, orig_ref_width;
 	unsigned int cur_ref_height, cur_ref_width;
-	int cur_ref_xoff, cur_ref_yoff;
+	point cur_offset;
 
 	char *spatio_elem_map;
 	
@@ -66,8 +66,6 @@ private:
 		orig_ref_width = 0;
 		cur_ref_height = 0;
 		cur_ref_width = 0;
-		cur_ref_xoff = 0;
-		cur_ref_yoff = 0;
 		spatio_elem_map = NULL;
 	}
 
@@ -132,8 +130,7 @@ public:
 		orig_ref_width = tm.orig_ref_width;
 		cur_ref_height = tm.cur_ref_height;
 		cur_ref_width = tm.cur_ref_width;
-		cur_ref_xoff = tm.cur_ref_xoff;
-		cur_ref_yoff = tm.cur_ref_yoff;
+		cur_offset = tm.cur_offset;
 
 		size_t cur_size = cur_ref_width * cur_ref_height * sizeof(char);
 
@@ -202,8 +199,7 @@ public:
 	void set_current_bounds(const image *i) {
 		cur_ref_height = i->height();
 		cur_ref_width = i->width();
-		cur_ref_yoff = (int) i->offset()[0];
-		cur_ref_xoff = (int) i->offset()[1];
+		cur_offset = i->offset();
 	}
 
 	unsigned int stack_depth() const {
