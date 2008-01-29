@@ -50,7 +50,8 @@ private:
 	unsigned int cur_ref_height, cur_ref_width;
 	point cur_offset;
 
-	char *spatio_elem_map;
+	unsigned int *spatio_elem_map;
+	unsigned int *spatio_elem_map_r;
 	
 	void push_element() {
 		assert (trans_stack.size() > 0);
@@ -67,6 +68,7 @@ private:
 		cur_ref_height = 0;
 		cur_ref_width = 0;
 		spatio_elem_map = NULL;
+		spatio_elem_map_r = NULL;
 	}
 
 public:	
@@ -80,10 +82,18 @@ public:
 	 */
 	static struct trans_multi eu_identity(const image *i = NULL, ale_pos scale_factor = 1) {
 		struct trans_multi r;
+		multi_coordinate mc;
+		
+		mc.degree = 0;
+		mc.x = 0;
+		mc.y = 0;
+
 		r.input_width = i ? i->width() : 2;
 		r.input_height = i ? i->height() : 2;
 		r.scale_factor = scale_factor;
 		r.trans_stack.push_back(trans_single::eu_identity(i, scale_factor));
+		r.coord_stack.push_back(mc);
+		coordinate_map[mc] = r.trans_stack.size() - 1;
 		r.current_element = 0;
 		return r;
 	}
@@ -132,14 +142,23 @@ public:
 		cur_ref_width = tm.cur_ref_width;
 		cur_offset = tm.cur_offset;
 
-		size_t cur_size = cur_ref_width * cur_ref_height * sizeof(char);
+		size_t cur_size = cur_ref_width * cur_ref_height * sizeof(unsigned int);
 
 		if (cur_size > 0) {
-			spatio_elem_map = (char *) malloc(cur_size);
+			spatio_elem_map = (unsigned int *) malloc(cur_size);
 			assert (spatio_elem_map);
 			memcpy(spatio_elem_map, tm.spatio_elem_map, cur_size);
 		} else {
 			spatio_elem_map = NULL;
+		}
+
+		cur_size = input_height * input_width * sizeof(unsigned int);
+		if (cur_size > 0) {
+			spatio_elem_map_r = (unsigned int *) malloc(cur_size);
+			assert (spatio_elem_map_r);
+			memcpy(spatio_elem_map_r, tm.spatio_elem_map_r, cur_size);
+		} else {
+			spatio_elem_map_r = NULL;
 		}
 
 		return *this;
@@ -151,6 +170,7 @@ public:
 
 	~trans_multi() {
 		free(spatio_elem_map);
+		free(spatio_elem_map_r);
 	}
 
 	trans_single get_element(unsigned int index) {
@@ -188,8 +208,34 @@ public:
 	 * of the original frame.
 	 */
 	void set_original_bounds(const image *i) {
+		assert (orig_ref_width == 0);
+		assert (orig_ref_height == 0);
+
 		orig_ref_height = i->height();
 		orig_ref_width = i->width();
+
+		assert (orig_ref_width != 0);
+		assert (orig_ref_height != 0);
+	}
+
+	static multi_coordinate parent_mc(multi_coordinate mc) {
+		multi_coordinate result;
+
+		assert (mc.degree > 0);
+
+		if (mc.degree == 1) {
+			result.degree = 0;
+			result.x = 0;
+			result.y = 0;
+
+			return result;
+		}
+
+		result.degree = mc.degree - 1;
+		result.x = (int) floor((double) mc.x / (double) 2);
+		result.y = (int) floor((double) mc.y / (double) 2);
+
+		return result;
 	}
 
 	/*
@@ -197,48 +243,85 @@ public:
 	 * of the most recent frame.
 	 */
 	void set_current_bounds(const image *i) {
+		use_multi = 0;
+		free(spatio_elem_map);
+		free(spatio_elem_map_r);
+		spatio_elem_map = NULL;
+		spatio_elem_map_r = NULL;
+
 		cur_ref_height = i->height();
 		cur_ref_width = i->width();
 		cur_offset = i->offset();
+
+		for (int d = 1; d < _multi_decomp - 1; d++) {
+
+			ale_pos height_scale = orig_ref_height / pow(2, d);
+			ale_pos width_scale  = orig_ref_width  / pow(2, d);
+
+			for (int i = floor(cur_offset[0] / height_scale);
+				 i <= ceil((cur_offset[0] + cur_ref_height) / height_scale;
+				 i++)
+			for (int j = floor(cur_offset[1] / width_scale);
+			         j <= ceil((cur_offset[1] + cur_ref_width) / width_scale;
+				 j++) {
+
+				 multi_coordinate c;
+				 c.degree = d;
+				 c.x = j;
+				 c.y = i;
+
+				 if (!coordinate_map.count(c)) {
+				 	multi_coordinate parent = parent_mc(c);
+					assert (coordinate_map.count(parent));
+					trans_stack.push(trans_stack[coordinate_map[parent]]);
+					coord_stack.push(c);
+					coordinate_map[c] = trans_stack.size() - 1;
+				}
+			}
+		}
 	}
 
 	unsigned int stack_depth() const {
 		return trans_stack.size();
 	}
 
-	int supported(int i, int j) {
-		if (use_multi || current_element == 0)
-			return 1;
+	struct elem_bounds_t {
+		int imin, imax, jmin, jmax;
+	};
 
-		return 0;
+	elem_bounds_t elem_bounds() {
+		elem_bounds_t result;
+
+		result.imin = floor(cur_offset[0]);
+		result.imax = ceil(cur_offset[0] + cur_ref_height);
+		result.jmin = floor(cur_offset[1]);
+		result.jmax = ceil(cur_offset[1] + cur_ref_width);
+
+		if (current_element == 0)
+			return result;
+
+		multi_coordinate mc = coord_stack[current_element];
+		
+		ale_pos height_scale = orig_ref_height / pow(2, mc.d);
+		ale_pos width_scale  = orig_ref_width  / pow(2, mc.d);
+
+		if (height_scale * mc.y > result.imin)
+			result.imin = height_scale * mc.y;
+		if ((height_scale + 1) * mc.y < result.imax)
+			result.imax = (height_scale + 1) * mc.y;
+		if (width_scale * mc.x > result.jmin)
+			result.jmin = width_scale * mc.x;
+		if ((width_scale + 1) * mc.x < result.jmax)
+			result.jmax = (width_scale + 1) * mc.x;
+
+		return result;
 	}
-	
+
 	void set_multi() {
+		assert(use_multi == 0);
+		assert(spatio_elem_map == NULL);
+		assert(spatio_elem_map_r == NULL);
 		use_multi = 1;
-	}
-
-	void unset_multi() {
-		use_multi = 0;
-	}
-
-	int is_nontrivial() {
-		return 0;
-	}
-
-	void begin_calculate_scaled_region(unsigned int i_max, unsigned int j_max, point offset) {
-		assert(0);
-	}
-
-	void begin_calculate_unscaled_region(unsigned int i_max, unsigned int j_max, point offset) {
-		assert(0);
-	}
-
-	void end_calculate_region() {
-		assert(0);
-	}
-
-	point get_query_point(int i, int j) {
-		return point::undefined();
 	}
 
 	/*
@@ -358,14 +441,13 @@ public:
 	 */
 	void specific_rescale(ale_pos factor) {
 
-		if (trans_stack.size() > 1) {
+		/*
+		 * Ensure that no maps exist.
+		 */
 
-			/*
-			 * Rescale region map.
-			 */
-
-#warning d2::trans_multi::specific_rescale() does no region map rescaling.
-		}
+		assert (use_multi == 0);
+		assert (spatio_elem_map == NULL);
+		assert (spatio_elem_map_r == NULL);
 
 		for (unsigned int t = 0; t < trans_stack.size(); t++)
 			trans_stack[t].rescale(factor);
