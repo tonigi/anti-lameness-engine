@@ -35,7 +35,25 @@ public:
 		int degree;
 		int x;
 		int y;
+
+	public:
+		int operator<(const multi_coordinate &mc) const {
+			if (degree < mc.degree
+			 || degree == mc.degree && x < mc.x
+			 || degree == mc.degree && x == mc.x && y < mc.y)
+				return 1;
+
+			return 0;
+		}
 	};
+#if 0
+	class multi_compare {
+	public:
+		int operator() (const multi_coordinate a, const multi_coordinate b) {
+			return (a < b);
+		}
+	}
+#endif
 private:
 	static ale_pos _multi_decomp;
 
@@ -93,7 +111,7 @@ public:
 		r.scale_factor = scale_factor;
 		r.trans_stack.push_back(trans_single::eu_identity(i, scale_factor));
 		r.coord_stack.push_back(mc);
-		coordinate_map[mc] = r.trans_stack.size() - 1;
+		r.coordinate_map[mc] = r.trans_stack.size() - 1;
 		r.current_element = 0;
 		return r;
 	}
@@ -259,10 +277,10 @@ public:
 			ale_pos width_scale  = orig_ref_width  / pow(2, d);
 
 			for (int i = floor(cur_offset[0] / height_scale);
-				 i <= ceil((cur_offset[0] + cur_ref_height) / height_scale;
+				 i <= ceil((cur_offset[0] + cur_ref_height) / height_scale);
 				 i++)
 			for (int j = floor(cur_offset[1] / width_scale);
-			         j <= ceil((cur_offset[1] + cur_ref_width) / width_scale;
+			         j <= ceil((cur_offset[1] + cur_ref_width) / width_scale);
 				 j++) {
 
 				 multi_coordinate c;
@@ -273,8 +291,8 @@ public:
 				 if (!coordinate_map.count(c)) {
 				 	multi_coordinate parent = parent_mc(c);
 					assert (coordinate_map.count(parent));
-					trans_stack.push(trans_stack[coordinate_map[parent]]);
-					coord_stack.push(c);
+					trans_stack.push_back(trans_stack[coordinate_map[parent]]);
+					coord_stack.push_back(c);
 					coordinate_map[c] = trans_stack.size() - 1;
 				}
 			}
@@ -302,8 +320,8 @@ public:
 
 		multi_coordinate mc = coord_stack[current_element];
 		
-		ale_pos height_scale = orig_ref_height / pow(2, mc.d);
-		ale_pos width_scale  = orig_ref_width  / pow(2, mc.d);
+		ale_pos height_scale = orig_ref_height / pow(2, mc.degree);
+		ale_pos width_scale  = orig_ref_width  / pow(2, mc.degree);
 
 		if (height_scale * mc.y > result.imin)
 			result.imin = height_scale * mc.y;

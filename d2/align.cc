@@ -129,13 +129,6 @@ void *d2::align::diff_stat_t::diff_subdomain(void *args) {
 			continue;
 
 		/*
-		 * Check transformation support.
-		 */
-
-		if (!runs.back().offset.supported((int) (i + offset[0]), (int) (j + offset[1])))
-			continue;
-
-		/*
 		 * Transform
 		 */
 

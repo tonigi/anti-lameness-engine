@@ -447,53 +447,6 @@ private:
 	}
 
 	/*
-	 * Calculate the region associated with the current multi-alignment
-	 * element.
-	 */
-	static void calculate_element_region(transformation *t, scale_cluster si, 
-			int local_ax_count) {
-
-		unsigned int i_max = si.accum->height();
-		unsigned int j_max = si.accum->width();
-		point offset = si.accum->offset();
-
-		if (si.input_scale < 1.0 && interpolant == NULL)
-			t->begin_calculate_scaled_region(i_max, j_max, offset);
-		else
-			t->begin_calculate_unscaled_region(i_max, j_max, offset);
-
-		for (unsigned int i = 0; i < i_max; i++) 
-		for (unsigned int j = 0; j < j_max; j++) {
-
-			if (ref_excluded(i, j, offset, si.ax_parameters, local_ax_count))
-				continue;
-
-			point q;
-
-			while ((q = t->get_query_point((int) (i + offset[0]), 
-							(int) (j + offset[1]))).defined()) {
-
-				ale_pos ti = q[0];
-				ale_pos tj = q[1];
-
-				if (input_excluded(ti, tj, si.ax_parameters, ax_count))
-					continue;
-
-				if (ti >= 0
-				 && ti <= si.input->height() - 1
-				 && tj >= 0
-				 && tj <= si.input->width() - 1
-				 && si.certainty->get_pixel(i, j)[0] != 0) {
-
-					assert(0);
-				}
-			}
-		}
-
-		t->end_calculate_region();
-	}
-
-	/*
 	 * Monte carlo iteration class.
 	 *
 	 * Monte Carlo alignment has been used for statistical comparisons in
@@ -1077,14 +1030,6 @@ public:
 			rediff();
 		}
 
-		void calculate_element_region() {
-			assert(runs.size() == 1);
-
-			if (get_offset().get_current_index() > 0
-			 && get_offset().is_nontrivial()) 
-				align::calculate_element_region(&runs[0].offset, si, ax_count);
-		}
-
 		~diff_stat_t() {
 		}
 
@@ -1420,37 +1365,6 @@ public:
 
 				if (!found_unreliable)
 					return;
-			}
-		}
-
-		/*
-		 * Attempt to make the current element non-trivial, by finding a nearby
-		 * alignment admitting a non-empty element region.
-		 */
-		void make_element_nontrivial(ale_pos adj_p, ale_pos adj_o) {
-			assert(runs.size() == 1);
-
-			transformation *t = &runs[0].offset;
-
-			if (t->is_nontrivial())
-				return;
-
-			calculate_element_region();
-
-			if (t->is_nontrivial())
-				return;
-
-			std::vector<transformation> t_set;
-			get_perturb_set(&t_set, adj_p, adj_o, 0, NULL, NULL);
-
-			for (unsigned int i = 0; i < t_set.size(); i++) {
-
-				align::calculate_element_region(&t_set[i], si, ax_count);
-
-				if (t_set[i].is_nontrivial()) {
-					*t = t_set[i];
-					return;
-				}
 			}
 		}
 
@@ -2584,11 +2498,8 @@ public:
 
 				stable_count = 0;
 
-				here.calculate_element_region();
-
 				if (here.get_current_index() + 1 < here.stack_depth()) {
 					here.set_current_index(here.get_current_index() + 1);
-					here.make_element_nontrivial(adj_p, adj_o);
 					astate->is_primary = 0;
 				} else {
 
