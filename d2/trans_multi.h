@@ -46,14 +46,7 @@ public:
 			return 0;
 		}
 	};
-#if 0
-	class multi_compare {
-	public:
-		int operator() (const multi_coordinate a, const multi_coordinate b) {
-			return (a < b);
-		}
-	}
-#endif
+
 private:
 	static ale_pos _multi_decomp;
 
