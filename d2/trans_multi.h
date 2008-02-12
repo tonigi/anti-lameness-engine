@@ -266,10 +266,13 @@ public:
 		cur_ref_width = i->width();
 		cur_offset = i->offset();
 
-		for (int d = 1; d < _multi_decomp - 1; d++) {
+		for (int d = 1, ale_pos div = 2; 
+				orig_ref_height / div >= _multi_decomp
+		                orig_ref_width  / div >= _multi_decomp; 
+				d++, div *= 2) {
 
-			ale_pos height_scale = orig_ref_height / pow(2, d);
-			ale_pos width_scale  = orig_ref_width  / pow(2, d);
+			ale_pos height_scale = orig_ref_height / div;
+			ale_pos width_scale  = orig_ref_width  / div;
 
 			for (int i = floor(cur_offset[0] / height_scale);
 				 i <= ceil((cur_offset[0] + cur_ref_height) / height_scale);
