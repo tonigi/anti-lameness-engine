@@ -50,19 +50,21 @@ public:
 private:
 	static ale_pos _multi_decomp;
 
+	typedef unsigned int index_t;
+
 	std::vector<trans_single> trans_stack;
 	std::vector<multi_coordinate> coord_stack;
-	std::map<multi_coordinate, unsigned int> coordinate_map;
+	std::map<multi_coordinate, index_t> coordinate_map;
 
 	int use_multi;
-	unsigned int current_element;
+	index_t current_element;
 
-	unsigned int orig_ref_height, orig_ref_width;
-	unsigned int cur_ref_height, cur_ref_width;
+	index_t orig_ref_height, orig_ref_width;
+	index_t cur_ref_height, cur_ref_width;
 	point cur_offset;
 
-	unsigned int *spatio_elem_map;
-	unsigned int *spatio_elem_map_r;
+	index_t *spatio_elem_map;
+	index_t *spatio_elem_map_r;
 	
 	void push_element() {
 		assert (trans_stack.size() > 0);
@@ -153,19 +155,19 @@ public:
 		cur_ref_width = tm.cur_ref_width;
 		cur_offset = tm.cur_offset;
 
-		size_t cur_size = cur_ref_width * cur_ref_height * sizeof(unsigned int);
+		size_t cur_size = cur_ref_width * cur_ref_height * sizeof(index_t);
 
 		if (cur_size > 0) {
-			spatio_elem_map = (unsigned int *) malloc(cur_size);
+			spatio_elem_map = (index_t *) malloc(cur_size);
 			assert (spatio_elem_map);
 			memcpy(spatio_elem_map, tm.spatio_elem_map, cur_size);
 		} else {
 			spatio_elem_map = NULL;
 		}
 
-		cur_size = input_height * input_width * sizeof(unsigned int);
+		cur_size = input_height * input_width * sizeof(index_t);
 		if (cur_size > 0) {
-			spatio_elem_map_r = (unsigned int *) malloc(cur_size);
+			spatio_elem_map_r = (index_t *) malloc(cur_size);
 			assert (spatio_elem_map_r);
 			memcpy(spatio_elem_map_r, tm.spatio_elem_map_r, cur_size);
 		} else {
@@ -184,7 +186,7 @@ public:
 		free(spatio_elem_map_r);
 	}
 
-	trans_single get_element(unsigned int index) {
+	trans_single get_element(index_t index) {
 		assert (index < trans_stack.size());
 
 		return trans_stack[index];
@@ -194,7 +196,7 @@ public:
 		return get_element(current_element);
 	}
 
-	void set_element(unsigned int index, trans_single t) {
+	void set_element(index_t index, trans_single t) {
 		assert (index < trans_stack.size());
 
 		trans_stack[index] = t;
@@ -204,11 +206,11 @@ public:
 		set_element(current_element, t);
 	}
 
-	unsigned int get_current_index() const {
+	index_t get_current_index() const {
 		return current_element;
 	}
 
-	void set_current_index(unsigned int i) {
+	void set_current_index(index_t i) {
 		assert (i < trans_stack.size());
 
 		current_element = i;
@@ -292,7 +294,7 @@ public:
 		}
 	}
 
-	unsigned int stack_depth() const {
+	index_t stack_depth() const {
 		return trans_stack.size();
 	}
 
