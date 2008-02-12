@@ -276,9 +276,10 @@ public:
 		cur_ref_width = i->width();
 		cur_offset = i->offset();
 
-		for (int d = 1, ale_pos div = 2; 
+		int d; ale_pos div;
+		for (d = 1, div = 2; 
 				orig_ref_height / div >= _multi_decomp
-		                orig_ref_width  / div >= _multi_decomp; 
+		             && orig_ref_width  / div >= _multi_decomp; 
 				d++, div *= 2) {
 
 			ale_pos height_scale = orig_ref_height / div;
@@ -357,10 +358,11 @@ public:
 				input_height * input_width, sizeof(index_t));
 		assert(spatio_elem_map_r);
 
-		for (int i = 0; i < cur_ref_height; i++)
-		for (int j = 0; j < cur_ref_width;  j++) {
-			pixel rp = cur_ref.get_pixel(i, j);
-			for (int d = 1, ale_pos div = 2; ; d++, div *= 2) {
+		for (unsigned int i = 0; i < cur_ref_height; i++)
+		for (unsigned int j = 0; j < cur_ref_width;  j++) {
+			pixel rp = cur_ref->get_pixel(i, j);
+			int d; ale_pos div;
+			for (d = 1, div = 2; ; d++, div *= 2) {
 				ale_pos height_scale = orig_ref_height / div;
 				ale_pos width_scale = orig_ref_width / div;
 				multi_coordinate c;
@@ -373,7 +375,7 @@ public:
 				trans_single t = get_element(index);
 				point p = t.scaled_inverse_transform(point(cur_offset[0] + i, 
 				                                           cur_offset[1] + j));
-				if (!input.in_bounds(p))
+				if (!input->in_bounds(p))
 					continue;
 
 				trans_single s = get_element(spatio_elem_map[cur_ref_width * i + j]);
@@ -381,9 +383,9 @@ public:
 				point q = t.scaled_inverse_transform(point(cur_offset[0] + i,
 				 				           cur_offset[1] + j));
 				
-				if (input.in_bounds(q)) {
-					pixel ip1 = input.get_bl(p);
-					pixel ip0 = input.get_bl(q);
+				if (input->in_bounds(q)) {
+					pixel ip1 = input->get_bl(p);
+					pixel ip0 = input->get_bl(q);
 					
 					ale_real diff1 = (ip1 - rp).norm();
 					ale_real diff0 = (ip0 - rp).norm();
@@ -398,9 +400,9 @@ public:
 				trans_single u = get_element(spatio_elem_map_r[input_width * ii + jj]);
 				point r = u.transform_scaled(p);
 
-				if (cur_ref.in_bounds(r)) {
-					pixel ip1 = input.get_bl(p);
-					pixel rp0 = cur_ref.get_bl(r);
+				if (cur_ref->in_bounds(r)) {
+					pixel ip1 = input->get_bl(p);
+					pixel rp0 = cur_ref->get_bl(r);
 
 					ale_real diff1 = (ip1 - rp).norm();
 					ale_real diff0 = (ip1 - rp0).norm();
