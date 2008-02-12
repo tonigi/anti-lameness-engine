@@ -155,29 +155,32 @@ public:
 		cur_ref_width = tm.cur_ref_width;
 		cur_offset = tm.cur_offset;
 
+		free(spatio_elem_map);
+		free(spatio_elem_map_r);
+		spatio_elem_map = NULL;
+		spatio_elem_map_r = NULL;
+
 		size_t cur_size = cur_ref_width * cur_ref_height * sizeof(index_t);
 
-		if (cur_size > 0) {
+		if (cur_size > 0 && tm.spatio_elem_map) {
 			spatio_elem_map = (index_t *) malloc(cur_size);
 			assert (spatio_elem_map);
 			memcpy(spatio_elem_map, tm.spatio_elem_map, cur_size);
-		} else {
-			spatio_elem_map = NULL;
 		}
 
 		cur_size = input_height * input_width * sizeof(index_t);
-		if (cur_size > 0) {
+		if (cur_size > 0 && tm.spatio_elem_map_r) {
 			spatio_elem_map_r = (index_t *) malloc(cur_size);
 			assert (spatio_elem_map_r);
 			memcpy(spatio_elem_map_r, tm.spatio_elem_map_r, cur_size);
-		} else {
-			spatio_elem_map_r = NULL;
 		}
 
 		return *this;
 	}
 
 	trans_multi(const trans_multi &tm) : trans_stack() {
+		spatio_elem_map = NULL;
+		spatio_elem_map_r = NULL;
 		operator=(tm);
 	}
 
@@ -190,6 +193,13 @@ public:
 		assert (index < trans_stack.size());
 
 		return trans_stack[index];
+	}
+
+	trans_single get_element(multi_coordinate m) {
+		assert(coordinate_map.count(m));
+		index_t index = coordinate_map[m];
+
+		return get_element(index);
 	}
 
 	trans_single get_current_element() {
@@ -333,11 +343,73 @@ public:
 		return result;
 	}
 
-	void set_multi() {
+	void set_multi(image *cur_ref, image *input) {
 		assert(use_multi == 0);
 		assert(spatio_elem_map == NULL);
 		assert(spatio_elem_map_r == NULL);
 		use_multi = 1;
+
+		spatio_elem_map = (index_t *) calloc(
+				cur_ref_height * cur_ref_width, sizeof(index_t));
+		assert(spatio_elem_map);
+
+		spatio_elem_map_r = (index_t *) calloc(
+				input_height * input_width, sizeof(index_t));
+		assert(spatio_elem_map_r);
+
+		for (int i = 0; i < cur_ref_height; i++)
+		for (int j = 0; j < cur_ref_width;  j++) {
+			pixel rp = cur_ref.get_pixel(i, j);
+			for (int d = 1, ale_pos div = 2; ; d++, div *= 2) {
+				ale_pos height_scale = orig_ref_height / div;
+				ale_pos width_scale = orig_ref_width / div;
+				multi_coordinate c;
+				c.degree = d;
+				c.y = floor((cur_offset[0] + i) / height_scale);
+				c.x = floor((cur_offset[1] + j) / width_scale);
+				if (!coordinate_map.count(c))
+					break;
+				index_t index = coordinate_map[c];
+				trans_single t = get_element(index);
+				point p = t.scaled_inverse_transform(point(cur_offset[0] + i, 
+				                                           cur_offset[1] + j));
+				if (!input.in_bounds(p))
+					continue;
+
+				trans_single s = get_element(spatio_elem_map[cur_ref_width * i + j]);
+
+				point q = t.scaled_inverse_transform(point(cur_offset[0] + i,
+				 				           cur_offset[1] + j));
+				
+				if (input.in_bounds(q)) {
+					pixel ip1 = input.get_bl(p);
+					pixel ip0 = input.get_bl(q);
+					
+					ale_real diff1 = (ip1 - rp).norm();
+					ale_real diff0 = (ip0 - rp).norm();
+
+					if (diff1 < diff0)
+						spatio_elem_map[cur_ref_width * i + j] = index;
+				}
+
+				int ii = (int) p[0];
+				int jj = (int) p[1];
+
+				trans_single u = get_element(spatio_elem_map_r[input_width * ii + jj]);
+				point r = u.transform_scaled(p);
+
+				if (cur_ref.in_bounds(r)) {
+					pixel ip1 = input.get_bl(p);
+					pixel rp0 = cur_ref.get_bl(r);
+
+					ale_real diff1 = (ip1 - rp).norm();
+					ale_real diff0 = (ip1 - rp0).norm();
+
+					if (diff1 < diff0)
+						spatio_elem_map_r[input_width * ii + jj] = index;
+				}
+			}
+		}
 	}
 
 	/*
