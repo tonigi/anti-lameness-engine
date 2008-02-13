@@ -397,6 +397,10 @@ public:
 				int ii = (int) p[0];
 				int jj = (int) p[1];
 
+				if (ii < 0 || ii >= input_height
+				 || jj < 0 || jj >= input_width)
+					continue;
+
 				trans_single u = get_element(spatio_elem_map_r[input_width * ii + jj]);
 				point r = u.transform_scaled(p);
 
