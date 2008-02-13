@@ -2051,6 +2051,116 @@ public:
 		return 0;
 	}
 
+	static diff_stat_t _align_element(ale_pos perturb, ale_pos local_lower,
+			scale_cluster *scale_clusters, diff_stat_t here,
+			ale_pos adj_p, ale_pos adj_o, ale_pos adj_b, 
+			ale_pos *current_bd, ale_pos *modified_bd,
+			astate_t *astate, int lod, scale_cluster si) {
+
+		/*
+		 * Run initial tests to get perturbation multipliers and error
+		 * centroids.
+		 */
+
+		std::vector<transformation> t_set;
+
+		here.get_perturb_set(&t_set, adj_p, adj_o, adj_b, current_bd, modified_bd);
+
+		int stable_count = 0;
+
+		while (perturb >= local_lower) {
+
+			/*
+			 * Orientational adjustment value in degrees.
+			 *
+			 * Since rotational perturbation is now specified as an
+			 * arclength, we have to convert.
+			 */
+
+			ale_pos adj_o = 2 * (double) perturb 
+				          / sqrt(pow(scale_clusters[0].input->height(), 2)
+					       + pow(scale_clusters[0].input->width(),  2))
+					  * 180
+					  / M_PI;
+
+			/*
+			 * Barrel distortion adjustment value
+			 */
+
+			ale_pos adj_b = perturb * bda_mult;
+
+			diff_stat_t old_here = here;
+
+			here.perturb_test(perturb, adj_p, adj_o, adj_b, current_bd, modified_bd,
+				stable_count);
+
+			if (here.get_offset() == old_here.get_offset())
+				stable_count++;
+			else
+				stable_count = 0;
+
+			if (stable_count == 3) {
+
+				stable_count = 0;
+
+				if (here.get_current_index() + 1 < here.stack_depth()) {
+					here.set_current_index(here.get_current_index() + 1);
+					astate->is_primary = 0;
+				} else {
+
+					here.set_current_index(0);
+
+					astate->is_primary = 1;
+
+					perturb *= 0.5;
+
+					if (lod > 0) {
+
+						/*
+						 * Work with images twice as large
+						 */
+
+						lod--;
+						si = scale_clusters[lod];
+
+						/* 
+						 * Rescale the transforms.
+						 */
+
+						ale_pos rescale_factor = (double) scale_factor
+						                       / (double) pow(2, lod)
+								       / (double) here.get_offset().scale();
+
+						here.rescale(rescale_factor, si);
+
+					} else {
+						adj_p = perturb;
+					}
+
+					/*
+					 * Announce changes
+					 */
+
+					ui::get()->alignment_perturbation_level(perturb, lod);
+
+				}
+			}
+
+			ui::get()->set_match(here.get_error());
+			ui::get()->set_offset(here.get_offset());
+		}
+
+		if (lod > 0) {
+			ale_pos rescale_factor = (double) scale_factor
+					       / (double) pow(2, lod)
+					       / (double) here.get_offset().scale();
+
+			here.rescale(rescale_factor, scale_clusters[0]);
+		}
+
+		return here;
+	}
+
 	/*
 	 * Align frame m against the reference.
 	 *
@@ -2199,6 +2309,12 @@ public:
 		 */
 
 		transformation offset = astate->default_initial_alignment;
+
+		/*
+		 * Establish boundaries
+		 */
+
+		offset.set_current_bounds(reference_image);
 
 		/*
 		 * Load any file-specified transformations
@@ -2449,112 +2565,33 @@ public:
 		ui::get()->aligning(perturb, lod);
 
 		/*
-		 * Run initial tests to get perturbation multipliers and error
-		 * centroids.
-		 */
-
-		std::vector<transformation> t_set;
-
-		here.get_perturb_set(&t_set, adj_p, adj_o, adj_b, current_bd, modified_bd);
-
-		/*
 		 * Perturbation adjustment loop.  
 		 */
 
-		int stable_count = 0;
+		for (unsigned int i = 0; i < offset.stack_depth(); i++) {
 
-		while (perturb >= local_lower) {
+			int lodd = lod;
+			int divd = offset.get_current_coordinate().degree;
+			ale_pos perturbd = perturb;
 
-			/*
-			 * Orientational adjustment value in degrees.
-			 *
-			 * Since rotational perturbation is now specified as an
-			 * arclength, we have to convert.
-			 */
+			while (lodd > 0) {
+				lodd--;
+				divd++;
+				perturb *= 0.5;
+				si = scale_clusters[lod];
 
-			ale_pos adj_o = 2 * (double) perturb 
-				          / sqrt(pow(scale_clusters[0].input->height(), 2)
-					       + pow(scale_clusters[0].input->width(),  2))
-					  * 180
-					  / M_PI;
-
-			/*
-			 * Barrel distortion adjustment value
-			 */
-
-			ale_pos adj_b = perturb * bda_mult;
-
-			diff_stat_t old_here = here;
-
-			here.perturb_test(perturb, adj_p, adj_o, adj_b, current_bd, modified_bd,
-				stable_count);
-
-			if (here.get_offset() == old_here.get_offset())
-				stable_count++;
-			else
-				stable_count = 0;
-
-			if (stable_count == 3) {
-
-				stable_count = 0;
-
-				if (here.get_current_index() + 1 < here.stack_depth()) {
-					here.set_current_index(here.get_current_index() + 1);
-					astate->is_primary = 0;
-				} else {
-
-					here.set_current_index(0);
-
-					astate->is_primary = 1;
-
-					perturb *= 0.5;
-
-					if (lod > 0) {
-
-						/*
-						 * Work with images twice as large
-						 */
-
-						lod--;
-						si = scale_clusters[lod];
-
-						/* 
-						 * Rescale the transforms.
-						 */
-
-						ale_pos rescale_factor = (double) scale_factor
-						                       / (double) pow(2, lod)
-								       / (double) here.get_offset().scale();
-
-						here.rescale(rescale_factor, si);
-
-					} else {
-						adj_p = perturb;
-					}
-
-					/*
-					 * Announce changes
-					 */
-
-					ui::get()->alignment_perturbation_level(perturb, lod);
-
-				}
 			}
+			
+			ale_pos adj_pp = adj_p / pow(2, offset.get_current_coordinate().degree);
 
-			ui::get()->set_match(here.get_error());
-			ui::get()->set_offset(here.get_offset());
+			here = _align_element(perturb, local_lower, scale_clusters, 
+					here, adj_pp, adj_o, adj_b, current_bd, modified_bd,
+					astate, lod, si);
+
+			offset = here.get_offset();
 		}
 
 		here.set_current_index(0);
-
-		if (lod > 0) {
-			ale_pos rescale_factor = (double) scale_factor
-					       / (double) pow(2, lod)
-					       / (double) here.get_offset().scale();
-
-			here.rescale(rescale_factor, scale_clusters[0]);
-		}
-
 		offset = here.get_offset();
 
 		/*

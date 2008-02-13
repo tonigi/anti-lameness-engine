@@ -220,9 +220,12 @@ public:
 		return current_element;
 	}
 
+	multi_coordinate get_current_coordinate() const {
+		return coord_stack[current_element];
+	}
+
 	void set_current_index(index_t i) {
 		assert (i < trans_stack.size());
-
 		current_element = i;
 	}
 
@@ -563,8 +566,7 @@ public:
 		assert (spatio_elem_map == NULL);
 		assert (spatio_elem_map_r == NULL);
 
-		for (unsigned int t = 0; t < trans_stack.size(); t++)
-			trans_stack[t].rescale(factor);
+		trans_stack[current_element].rescale(factor);
 	}
 
 	/*
