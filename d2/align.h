@@ -1071,6 +1071,11 @@ public:
 			return runs[0].offset;
 		}
 
+		void set_multi() {
+			assert(runs.size() == 1);
+			runs[0].set_multi();
+		}
+
 		int operator!=(diff_stat_t &param) {
 			return (get_error() != param.get_error());
 		}
@@ -2570,28 +2575,33 @@ public:
 
 		for (unsigned int i = 0; i < offset.stack_depth(); i++) {
 
-			int lodd = lod;
-			int divd = offset.get_current_coordinate().degree;
-			ale_pos perturbd = perturb;
+			int e_lod = lod;
+			int e_div = offset.get_current_coordinate().degree;
+			ale_pos e_perturb = perturb;
+			ale_pos e_adj_p = adj_p;
+			ale_pos e_adj_b = adj_b;
 
-			while (lodd > 0) {
-				lodd--;
-				divd++;
-				perturb *= 0.5;
-				si = scale_clusters[lod];
-
+			for (int d = 0; d < e_div; d++) {
+				e_adj_b = 0;
+				e_perturb *= 0.5;
+				if (e_lod > 0) {
+					e_lod--;
+				} else {
+					e_adj_p *= 0.5;
+				}
 			}
-			
-			ale_pos adj_pp = adj_p / pow(2, offset.get_current_coordinate().degree);
 
-			here = _align_element(perturb, local_lower, scale_clusters, 
-					here, adj_pp, adj_o, adj_b, current_bd, modified_bd,
-					astate, lod, si);
+			si = scale_clusters[e_lod];
+
+			here = _align_element(e_perturb, local_lower, scale_clusters, 
+					here, e_adj_p, adj_o, e_adj_b, current_bd, modified_bd,
+					astate, e_lod, si);
 
 			offset = here.get_offset();
 		}
 
 		here.set_current_index(0);
+		here.set_multi();
 		offset = here.get_offset();
 
 		/*
