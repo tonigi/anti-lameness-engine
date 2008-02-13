@@ -429,14 +429,34 @@ public:
 	 * Projective/Euclidean transformations
 	 */
 	struct point pe(struct point p) const {
-		return trans_stack.front().pe(p);
+		if (!use_multi)
+			return trans_stack.front().pe(p);
+
+		int ii = (int) p[0];
+		int jj = (int) p[1];
+
+		if (ii < 0 || ii >= input_height
+		 || jj < 0 || jj >= input_width)
+			return trans_stack[0].pe(p);
+
+		return trans_stack[spatio_elem_map_r[input_width * ii + jj]].pe(p);
 	}
 
 	/*
 	 * Inverse transformations
 	 */
 	struct point pei(struct point p) const {
-		return trans_stack.front().pei(p);
+		if (!use_multi)
+			return trans_stack.front().pei(p);
+
+		int i = (int) p[0];
+		int j = (int) p[1];
+
+		if (i < 0 || i >= cur_ref_height
+		 || j < 0 || j >= cur_ref_width)
+			return trans_stack[0].pei(p);
+
+		return trans_stack[spatio_elem_map[cur_ref_width * i + j]].pei(p);
 	}
 
 
