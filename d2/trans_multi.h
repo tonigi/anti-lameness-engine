@@ -397,8 +397,8 @@ public:
 				int ii = (int) p[0];
 				int jj = (int) p[1];
 
-				if (ii < 0 || ii >= input_height
-				 || jj < 0 || jj >= input_width)
+				if (ii < 0 || (unsigned int) ii >= input_height
+				 || jj < 0 || (unsigned int) jj >= input_width)
 					continue;
 
 				trans_single u = get_element(spatio_elem_map_r[input_width * ii + jj]);
@@ -435,8 +435,8 @@ public:
 		int ii = (int) p[0];
 		int jj = (int) p[1];
 
-		if (ii < 0 || ii >= input_height
-		 || jj < 0 || jj >= input_width)
+		if (ii < 0 || (unsigned int) ii >= input_height
+		 || jj < 0 || (unsigned int) jj >= input_width)
 			return trans_stack[0].pe(p);
 
 		return trans_stack[spatio_elem_map_r[input_width * ii + jj]].pe(p);
@@ -452,8 +452,8 @@ public:
 		int i = (int) p[0];
 		int j = (int) p[1];
 
-		if (i < 0 || i >= cur_ref_height
-		 || j < 0 || j >= cur_ref_width)
+		if (i < 0 || (unsigned int) i >= cur_ref_height
+		 || j < 0 || (unsigned int) j >= cur_ref_width)
 			return trans_stack[0].pei(p);
 
 		return trans_stack[spatio_elem_map[cur_ref_width * i + j]].pei(p);
