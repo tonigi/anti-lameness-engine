@@ -347,7 +347,7 @@ public:
 		return result;
 	}
 
-	void set_multi(image *cur_ref, image *input) {
+	void set_multi(const image *cur_ref, const image *input) {
 		assert(use_multi == 0);
 		assert(spatio_elem_map == NULL);
 		assert(spatio_elem_map_r == NULL);

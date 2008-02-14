@@ -865,6 +865,10 @@ private:
 				return result;
 			}
 
+			void set_multi(const image *cur_ref, const image *input) {
+				offset.set_multi(cur_ref, input);
+			}
+
 		};
 
 		/*
@@ -931,15 +935,31 @@ public:
 
 			subdomain_args *args = new subdomain_args[N];
 
+			int global_i_min = 0;
+			int global_j_min = 0;
+			int global_i_max = c.accum->height();
+			int global_j_max = c.accum->width();
+
+			transformation::elem_bounds_t b = t.elem_bounds();
+
+			if (b.imin > global_i_min)
+				global_i_min = b.imin;
+			if (b.imax < global_i_max)
+				global_i_max = b.imax;
+			if (b.jmin > global_j_min)
+				global_j_min = b.jmin;
+			if (b.jmax < global_j_max)
+				global_j_max = b.jmax;
+
 			for (int ti = 0; ti < N; ti++) {
 				args[ti].c = c;
 				args[ti].runs = runs;
 				args[ti].ax_count = ax_count;
 				args[ti].f = f;
-				args[ti].i_min = (c.accum->height() * ti) / N;
-				args[ti].i_max = (c.accum->height() * (ti + 1)) / N;
-				args[ti].j_min = 0;
-				args[ti].j_max = c.accum->width();
+				args[ti].i_min = global_i_min + ((global_i_max - global_i_min) * ti) / N;
+				args[ti].i_max = global_i_min + ((global_i_max - global_i_min) * (ti + 1)) / N;
+				args[ti].j_min = global_j_min;
+				args[ti].j_max = global_j_max;
 				args[ti].subdomain = ti;
 #ifdef USE_PTHREAD
 				pthread_attr_init(&thread_attr[ti]);
@@ -1071,9 +1091,9 @@ public:
 			return runs[0].offset;
 		}
 
-		void set_multi() {
+		void set_multi(const image *cur_ref, const image *input) {
 			assert(runs.size() == 1);
-			runs[0].set_multi();
+			runs[0].set_multi(cur_ref, input);
 		}
 
 		int operator!=(diff_stat_t &param) {
@@ -2601,7 +2621,7 @@ public:
 		}
 
 		here.set_current_index(0);
-		here.set_multi();
+		here.set_multi(reference_image, scale_clusters[0].input);
 		offset = here.get_offset();
 
 		/*
