@@ -2986,6 +2986,9 @@ public:
 			reference_image = reference->get_image();
 			reference_defined = reference->get_defined();
 
+			if (i == 1)
+				astate.default_initial_alignment.set_original_bounds(reference_image);
+
 			reset_weights();
 			fw_update();
 			wmx_update();
