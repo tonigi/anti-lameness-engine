@@ -68,6 +68,7 @@ public:
 	}
 
 	void set_offset(d2::transformation);
+	void set_offset(d2::trans_single);
 
 	void gs_mo(ale_pos gs_mo) {
 		printf("Global search minimum overlap is %f pixels\n", (double) gs_mo);

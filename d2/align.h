@@ -597,10 +597,13 @@ private:
 	 */
 
 	class diff_stat_t {
+
+		typedef trans_single diff_trans;
+		transformation::elem_bounds_t elem_bounds;
 	
 		struct run {
 
-			transformation offset;
+			diff_trans offset;
 			ale_pos perturb;
 
 			ale_accum result;
@@ -630,7 +633,7 @@ private:
 				de_sum = 0;
 			}
 
-			void init(transformation _offset, ale_pos _perturb) {
+			void init(diff_trans _offset, ale_pos _perturb) {
 				offset = _offset;
 				perturb = _perturb;
 				init();
@@ -639,11 +642,11 @@ private:
 			/*
 			 * Required for STL sanity.
 			 */
-			run() : offset(transformation::eu_identity()) {
+			run() : offset(diff_trans::eu_identity()) {
 				init();
 			}
 
-			run(transformation _offset, ale_pos _perturb) : offset(_offset) {
+			run(diff_trans _offset, ale_pos _perturb) : offset(_offset) {
 				init(_offset, _perturb);
 			}
 
@@ -865,10 +868,6 @@ private:
 				return result;
 			}
 
-			void set_multi(const image *cur_ref, const image *input) {
-				offset.set_multi(cur_ref, input);
-			}
-
 		};
 
 		/*
@@ -883,7 +882,7 @@ private:
 		 * each multi-alignment element.
 		 */
 
-		typedef std::pair<unsigned int, unsigned int> run_index;
+		typedef int run_index;
 		std::map<run_index, run> old_runs;
 
 		static void *diff_subdomain(void *args);
@@ -905,7 +904,7 @@ private:
 
 public:
 		void diff(struct scale_cluster c, ale_pos perturb, 
-				transformation t, 
+				const diff_trans &t, 
 				int _ax_count, int f) {
 
 			if (runs.size() == 2)
@@ -919,8 +918,17 @@ public:
 
 			ui::get()->d2_align_sample_start();
 
-			if (interpolant != NULL) 
-				interpolant->set_parameters(t, c.input, c.accum->offset());
+			if (interpolant != NULL) {
+
+				/*
+				 * XXX: This has not been tested, and may be completely
+				 * wrong.
+				 */
+
+				transformation tt = transformation::eu_identity();
+				tt.set_current_element(t);
+				interpolant->set_parameters(tt, c.input, c.accum->offset());
+			}
 
 			int N;
 #ifdef USE_PTHREAD
@@ -940,16 +948,24 @@ public:
 			int global_i_max = c.accum->height();
 			int global_j_max = c.accum->width();
 
-			transformation::elem_bounds_t b = t.elem_bounds();
+			transformation::elem_bounds_t b = elem_bounds;
+
+			b.imin *= global_i_max;
+			b.imax *= global_i_max;
+			b.jmin *= global_j_max;
+			b.jmax *= global_j_max;
 
 			if (b.imin > global_i_min)
-				global_i_min = b.imin;
+				global_i_min = floor(b.imin);
 			if (b.imax < global_i_max)
-				global_i_max = b.imax;
+				global_i_max = ceil(b.imax);
 			if (b.jmin > global_j_min)
-				global_j_min = b.jmin;
+				global_j_min = floor(b.jmin);
 			if (b.jmax < global_j_max)
-				global_j_max = b.jmax;
+				global_j_max = ceil(b.jmax);
+
+			fprintf(stdout, "[%d %d] [%d %d]\n", 
+				global_i_min, global_i_max, global_j_min, global_j_max);
 
 			for (int ti = 0; ti < N; ti++) {
 				args[ti].c = c;
@@ -985,7 +1001,7 @@ public:
 
 	private:
 		void rediff() {
-			std::vector<transformation> t_array;
+			std::vector<diff_trans> t_array;
 			std::vector<ale_pos> p_array;
 
 			for (unsigned int r = 0; r < runs.size(); r++) {
@@ -1009,11 +1025,13 @@ public:
 			     || (!finite(runs[0].get_error()) && finite(runs[1].get_error())));
 		}
 
-		diff_stat_t() : runs(), old_runs(), perturb_multipliers() {
+		diff_stat_t(transformation::elem_bounds_t e) 
+				: runs(), old_runs(), perturb_multipliers() {
+			elem_bounds = e;
 		}
 
 		run_index get_run_index(unsigned int perturb_index) {
-			return run_index(get_current_index(), perturb_index);
+			return perturb_index;
 		}
 
 		run &get_run(unsigned int perturb_index) {
@@ -1030,23 +1048,6 @@ public:
 
 			runs[0].rescale(scale);
 			
-			rediff();
-		}
-
-		unsigned int stack_depth() const {
-			assert(runs.size() > 0);
-			return runs[0].offset.stack_depth();
-		}
-
-		unsigned int get_current_index() const {
-			assert (runs.size() > 0);
-			return runs[0].offset.get_current_index();
-		}
-
-		void set_current_index(unsigned int i) {
-
-			assert(runs.size() == 1);
-			runs[0].offset.set_current_index(i);
 			rediff();
 		}
 
@@ -1067,6 +1068,7 @@ public:
 			ax_count = dst.ax_count;
 			frame = dst.frame;
 			perturb_multipliers = dst.perturb_multipliers;
+			elem_bounds = dst.elem_bounds;
 
 			return *this;
 		}
@@ -1086,14 +1088,9 @@ public:
 			return runs[0].divisor;
 		}
 
-		transformation get_offset() {
+		diff_trans get_offset() {
 			assert(runs.size() == 1);
 			return runs[0].offset;
-		}
-
-		void set_multi(const image *cur_ref, const image *input) {
-			assert(runs.size() == 1);
-			runs[0].set_multi(cur_ref, input);
 		}
 
 		int operator!=(diff_stat_t &param) {
@@ -1118,14 +1115,14 @@ public:
 		/*
 		 * Get the set of transformations produced by a given perturbation
 		 */
-		void get_perturb_set(std::vector<transformation> *set, 
+		void get_perturb_set(std::vector<diff_trans> *set, 
 				ale_pos adj_p, ale_pos adj_o, ale_pos adj_b, 
 				ale_pos *current_bd, ale_pos *modified_bd,
 				std::vector<ale_pos> multipliers = std::vector<ale_pos>()) {
 
 			assert(runs.size() == 1);
 
-			transformation test_t(transformation::eu_identity());
+			diff_trans test_t(diff_trans::eu_identity());
 
 			/* 
 			 * Translational or euclidean transformation
@@ -1259,7 +1256,7 @@ public:
 					if (bda_rate > 0 && fabs(modified_bd[d] + adj_s - current_bd[d]) > bda_rate)
 						continue;
 				
-					transformation test_t = get_offset();
+					diff_trans test_t = get_offset();
 
 					test_t.bd_modify(d, adj_s);
 
@@ -1284,7 +1281,7 @@ public:
 
 			assert(runs.size() == 1);
 
-			std::vector<transformation> t_set;
+			std::vector<diff_trans> t_set;
 
 			if (perturb_multipliers.size() == 0) {
 				get_perturb_set(&t_set, adj_p, adj_o, adj_b, 
@@ -1951,7 +1948,7 @@ public:
 
 		diff_stat_t test(*here);
 
-		test.diff(si, perturb, t, local_ax_count, m);
+		test.diff(si, perturb, t.get_current_element(), local_ax_count, m);
 
 		unsigned int ovl = overlap(si, t, local_ax_count);
 
@@ -2087,7 +2084,7 @@ public:
 		 * centroids.
 		 */
 
-		std::vector<transformation> t_set;
+		std::vector<d2::trans_single> t_set;
 
 		here.get_perturb_set(&t_set, adj_p, adj_o, adj_b, current_bd, modified_bd);
 
@@ -2128,47 +2125,36 @@ public:
 
 				stable_count = 0;
 
-				if (here.get_current_index() + 1 < here.stack_depth()) {
-					here.set_current_index(here.get_current_index() + 1);
-					astate->is_primary = 0;
-				} else {
+				perturb *= 0.5;
 
-					here.set_current_index(0);
-
-					astate->is_primary = 1;
-
-					perturb *= 0.5;
-
-					if (lod > 0) {
-
-						/*
-						 * Work with images twice as large
-						 */
-
-						lod--;
-						si = scale_clusters[lod];
-
-						/* 
-						 * Rescale the transforms.
-						 */
-
-						ale_pos rescale_factor = (double) scale_factor
-						                       / (double) pow(2, lod)
-								       / (double) here.get_offset().scale();
-
-						here.rescale(rescale_factor, si);
-
-					} else {
-						adj_p = perturb;
-					}
+				if (lod > 0) {
 
 					/*
-					 * Announce changes
+					 * Work with images twice as large
 					 */
 
-					ui::get()->alignment_perturbation_level(perturb, lod);
+					lod--;
+					si = scale_clusters[lod];
 
+					/* 
+					 * Rescale the transforms.
+					 */
+
+					ale_pos rescale_factor = (double) scale_factor
+							       / (double) pow(2, lod)
+							       / (double) here.get_offset().scale();
+
+					here.rescale(rescale_factor, si);
+
+				} else {
+					adj_p = perturb;
 				}
+
+				/*
+				 * Announce changes
+				 */
+
+				ui::get()->alignment_perturbation_level(perturb, lod);
 			}
 
 			ui::get()->set_match(here.get_error());
@@ -2547,14 +2533,14 @@ public:
 		 * Alignment statistics.
 		 */
 
-		diff_stat_t here;
+		diff_stat_t here(offset.elem_bounds());
 
 		/*
 		 * Current difference (error) value
 		 */
 
 		ui::get()->prematching();
-		here.diff(si, perturb, offset, local_ax_count, m);
+		here.diff(si, perturb, offset.get_current_element(), local_ax_count, m);
 		ui::get()->set_match(here.get_error());
 
 		/*
@@ -2576,7 +2562,7 @@ public:
 			ui::get()->global_alignment(perturb, lod);
 			ui::get()->gs_mo(local_gs_mo);
 
-			test_globals(&here, si, here.get_offset(), local_gs, adj_p,
+			test_globals(&here, si, offset, local_gs, adj_p,
 					local_ax_count, m, local_gs_mo, perturb);
 
 			ui::get()->set_match(here.get_error());
@@ -2594,6 +2580,8 @@ public:
 		 */
 
 		for (unsigned int i = 0; i < offset.stack_depth(); i++) {
+
+			offset.set_current_element(here.get_offset());
 
 			int e_lod = lod;
 			int e_div = offset.get_current_coordinate().degree;
@@ -2617,12 +2605,12 @@ public:
 					here, e_adj_p, adj_o, e_adj_b, current_bd, modified_bd,
 					astate, e_lod, si);
 
-			offset = here.get_offset();
+			offset.set_current_element(here.get_offset());
 		}
 
-		here.set_current_index(0);
-		here.set_multi(reference_image, scale_clusters[0].input);
-		offset = here.get_offset();
+		offset.set_current_index(0);
+		offset.set_current_element(here.get_offset());
+		offset.set_multi(reference_image, scale_clusters[0].input);
 
 		/*
 		 * Post-alignment exposure adjustment
@@ -2638,7 +2626,7 @@ public:
 		 */
 
 		ui::get()->postmatching();
-		here.diff(scale_clusters[0], perturb, offset, local_ax_count, m);
+		here.diff(scale_clusters[0], perturb, offset.get_current_element(), local_ax_count, m);
 		here.confirm();
 		ui::get()->set_match(here.get_error());
 

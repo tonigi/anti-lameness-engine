@@ -65,5 +65,7 @@ void ui::handle_input(int argc, const char *argv[], const char *package, const c
 	input::handle(argc, argv, package, short_version, version);
 }
 
+void ui::set_offset(d2::trans_single offset) {
+}
 void ui::set_offset(d2::transformation offset) {
 }

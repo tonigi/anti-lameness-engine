@@ -23,6 +23,10 @@
 #include "d2.h"
 
 void ui_log::set_offset(d2::transformation offset) {
+	set_offset(offset.get_current_element());
+}
+
+void ui_log::set_offset(d2::trans_single offset) {
 	if (offset.is_projective()) {
 		printf("Alignment [P %f %f %f %f %f %f %f %f %f %f]\n",
 				(double) offset.scaled_width(),

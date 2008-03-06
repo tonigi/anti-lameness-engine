@@ -189,7 +189,7 @@ public:
 		free(spatio_elem_map_r);
 	}
 
-	trans_single get_element(index_t index) {
+	trans_single get_element(index_t index) const {
 		assert (index < trans_stack.size());
 
 		return trans_stack[index];
@@ -202,7 +202,7 @@ public:
 		return get_element(index);
 	}
 
-	trans_single get_current_element() {
+	trans_single get_current_element() const {
 		return get_element(current_element);
 	}
 
@@ -289,10 +289,10 @@ public:
 			ale_pos width_scale  = orig_ref_width  / div;
 
 			for (int i = floor(cur_offset[0] / height_scale);
-				 i <= ceil((cur_offset[0] + cur_ref_height) / height_scale);
+				 i < ceil((cur_offset[0] + cur_ref_height) / height_scale);
 				 i++)
 			for (int j = floor(cur_offset[1] / width_scale);
-			         j <= ceil((cur_offset[1] + cur_ref_width) / width_scale);
+			         j < ceil((cur_offset[1] + cur_ref_width) / width_scale);
 				 j++) {
 
 				 multi_coordinate c;
@@ -316,16 +316,16 @@ public:
 	}
 
 	struct elem_bounds_t {
-		int imin, imax, jmin, jmax;
+		ale_pos imin, imax, jmin, jmax;
 	};
 
-	elem_bounds_t elem_bounds() {
+	elem_bounds_t elem_bounds() const {
 		elem_bounds_t result;
 
-		result.imin = floor(cur_offset[0]);
-		result.imax = ceil(cur_offset[0] + cur_ref_height);
-		result.jmin = floor(cur_offset[1]);
-		result.jmax = ceil(cur_offset[1] + cur_ref_width);
+		result.imin = cur_offset[0];
+		result.imax = cur_offset[0] + cur_ref_height;
+		result.jmin = cur_offset[1];
+		result.jmax = cur_offset[1] + cur_ref_width;
 
 		if (current_element == 0)
 			return result;
@@ -337,12 +337,17 @@ public:
 
 		if (height_scale * mc.y > result.imin)
 			result.imin = height_scale * mc.y;
-		if ((height_scale + 1) * mc.y < result.imax)
-			result.imax = (height_scale + 1) * mc.y;
+		if (height_scale * (mc.y + 1) < result.imax)
+			result.imax = height_scale * (mc.y + 1);
 		if (width_scale * mc.x > result.jmin)
 			result.jmin = width_scale * mc.x;
-		if ((width_scale + 1) * mc.x < result.jmax)
-			result.jmax = (width_scale + 1) * mc.x;
+		if (width_scale * (mc.x + 1) < result.jmax)
+			result.jmax = width_scale * (mc.x + 1);
+
+		result.imin /= cur_ref_height;
+		result.imax /= cur_ref_height;
+		result.jmin /= cur_ref_width;
+		result.jmax /= cur_ref_width;
 
 		return result;
 	}

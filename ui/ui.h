@@ -43,6 +43,8 @@
 namespace d2 {
 	struct trans_multi;
 	typedef trans_multi transformation;
+	struct trans_abstract;
+	struct trans_single;
 }
 
 class ale_timer_t {
@@ -327,7 +329,8 @@ public:
 		update();
 	}
 
-	virtual void set_offset(d2::transformation offset);
+	virtual void set_offset(d2::trans_single offset);
+	virtual void set_offset(d2::trans_multi offset);
 
 	virtual void gs_mo(ale_pos gs_mo) {
 	}
