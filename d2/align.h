@@ -1078,6 +1078,10 @@ public:
 			operator=(dst);
 		}
 
+		void set_elem_bounds(transformation::elem_bounds_t e) {
+			elem_bounds = e;
+		}
+
 		ale_accum get_result() {
 			assert(runs.size() == 1);
 			return runs[0].result;
@@ -2579,9 +2583,13 @@ public:
 		 * Perturbation adjustment loop.  
 		 */
 
-		for (unsigned int i = 0; i < offset.stack_depth(); i++) {
+		offset.set_current_element(here.get_offset());
 
-			offset.set_current_element(here.get_offset());
+		for (unsigned int i = 0; i < offset.stack_depth(); i++) {
+		
+			offset.set_current_index(i);
+
+			here.set_elem_bounds(offset.elem_bounds());
 
 			int e_lod = lod;
 			int e_div = offset.get_current_coordinate().degree;
