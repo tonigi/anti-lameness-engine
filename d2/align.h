@@ -2613,6 +2613,8 @@ public:
 					here, e_adj_p, adj_o, e_adj_b, current_bd, modified_bd,
 					astate, e_lod, si);
 
+			offset.rescale(here.get_offset().scale() / offset.scale());
+
 			offset.set_current_element(here.get_offset());
 		}
 
