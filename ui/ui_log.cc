@@ -22,13 +22,10 @@
 #include "ui_log.h"
 #include "d2.h"
 
-void ui_log::set_offset(d2::transformation offset) {
-	set_offset(offset.get_current_element());
-}
-
-void ui_log::set_offset(d2::trans_single offset) {
+void ui_log::set_offset(d2::trans_single offset, int marker) {
 	if (offset.is_projective()) {
-		printf("Alignment [P %f %f %f %f %f %f %f %f %f %f]\n",
+		printf("Alignment [%s %f %f %f %f %f %f %f %f %f %f]\n",
+				marker ? "Q" : "P",
 				(double) offset.scaled_width(),
 				(double) offset.scaled_height(),
 				(double) offset.gpt_get(0, 1),
@@ -40,7 +37,8 @@ void ui_log::set_offset(d2::trans_single offset) {
 				(double) offset.gpt_get(3, 1),
 				(double) offset.gpt_get(3, 0) );
 	} else {
-		printf("Alignment [E %f %f %f %f %f]\n",
+		printf("Alignment [%s %f %f %f %f %f]\n",
+				marker ? "F" : "E",
 				(double) offset.scaled_width(),
 				(double) offset.scaled_height(),
 				(double) offset.eu_get(1),
@@ -48,3 +46,14 @@ void ui_log::set_offset(d2::trans_single offset) {
 				(double) offset.eu_get(2) );
 	}
 }
+
+void ui_log::set_offset(d2::trans_single offset) {
+	set_offset(offset, 0);
+}
+
+void ui_log::set_offset(d2::transformation offset) {
+	for (int i = 0; i < offset.stack_depth(); i++) {
+		set_offset(offset.get_element(i), i);
+	}
+}
+

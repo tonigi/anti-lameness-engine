@@ -2616,6 +2616,8 @@ public:
 			offset.rescale(here.get_offset().scale() / offset.scale());
 
 			offset.set_current_element(here.get_offset());
+
+			ui::get()->set_offset(offset);
 		}
 
 		offset.set_current_index(0);
