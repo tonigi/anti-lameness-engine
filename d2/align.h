@@ -2621,7 +2621,6 @@ public:
 		}
 
 		offset.set_current_index(0);
-		offset.set_current_element(here.get_offset());
 		offset.set_multi(reference_image, scale_clusters[0].input);
 
 		/*
