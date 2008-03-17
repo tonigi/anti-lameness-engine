@@ -82,9 +82,9 @@ private:
 	}
 
 
-	void status_printf(int count, ...) {
+	int status_printf(int count, ...) {
 		if (buffer_index < 0)
-			return;
+			return -1;
 
 		int n;
 
@@ -93,7 +93,7 @@ private:
 		assert(local_buffer);
 
 		if (!local_buffer)
-			return;
+			return -1;
 
 		for (int i = 0; i < count; i++) {
 			char *format = NULL;
@@ -120,7 +120,7 @@ private:
 
 			free(local_buffer);
 
-			return;
+			return 0;
 		}
 
 
@@ -131,6 +131,12 @@ private:
 		status_clear();
 
 		free(local_buffer);
+
+		/*
+		 * Failure.
+		 */
+
+		return -1;
 	}
 
 	void pad_align_status() {
@@ -142,8 +148,8 @@ private:
 		status_printf(1, "               ");
 	}
 
-	void write_match_status() {
-		status_printf(1, format_string_working(), status.match_value);
+	int write_match_status() {
+		return status_printf(1, format_string_working(), status.match_value);
 	}
 
 	void write_status() {
@@ -161,7 +167,11 @@ private:
 		 || status.code == status.POSTMATCH
 		 || status.code == status.EXPOSURE_PASS_2) {
 			pad_align_status();
-			write_match_status();
+			if (write_match_status()) {
+				clear_buffer();
+				fprintf(ui_stream, "\n");
+				write_match_status();
+			}
 		}
 
 		status_printf(1, " | ");
