@@ -4,9 +4,9 @@ ALE
 Overview
 --------
 
-ALE is a synthetic capture engine and renderer accepting as input a sequence of
-image frames and producing as output rendered images and registration data from
-scene models.
+ALE is a synthetic capture engine and renderer accepting, as input, a sequence
+of image frames, and producing, as output, rendered images, registration data,
+and 3D models (currently experimental).
 
 License
 -------
@@ -43,10 +43,10 @@ Image Galleries
 * link:gallery-auto[2D Gallery]
 * link:gallery-3d-auto[3D Gallery]
 
-Documentation
--------------
+Manuals
+-------
 
-* link:manuals[Documentation]
+* link:manuals[Manuals]
 
 Mailing List
 ------------
