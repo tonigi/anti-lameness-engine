@@ -1,0 +1,56 @@
+ALE
+===
+
+Overview
+--------
+
+ALE is a synthetic capture engine and renderer accepting as input a sequence of
+image frames and producing as output rendered images and registration data from
+scene models.
+
+License
+-------
+
+**************************
+This program is free software; you can redistribute it and/or modify it under
+the terms of the link:download/COPYING[GNU General Public License] as published
+by the Free Software Foundation; either version 3 of the License, or (at your
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+**************************
+
+Latest Release
+--------------
+
+`12`22~~~~~~~~~~~~
+link:download/ale-0.8.11.tar.gz[ale-0.8.11.tar.gz], Latest source release
+link:download/ale-0_8_11-win32.zip[ale-0_8_11-win32.zip], "Latest Win32 binary (PPM-only, unthreaded)"
+~~~~~~~~~~~~~~~~~~
+
+Git Server
+----------
+
+* http://repo.or.cz/w/Ale.git[Browse]
+* http://repo.or.cz/w/Ale.git?a=rss[RSS Feed]
+* http://repo.or.cz/mob.html[Uploading via mob]
+
+Image Galleries
+---------------
+
+* link:gallery-auto[2D Gallery]
+* link:gallery-3d-auto[3D Gallery]
+
+Documentation
+-------------
+
+* link:manuals[Documentation]
+
+Mailing List
+------------
+
+* http://ventricle.dyndns.org/cgi-bin/mailman/listinfo/ale[Mailing List]
+
+
