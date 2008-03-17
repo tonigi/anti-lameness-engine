@@ -189,7 +189,7 @@ public:
 			"Tunable parameters:\n"
 			HEADER_SPACE
 			"--metric=x        Set the alignment error metric exponent.       (2 is default)\n"
-			"--threshold=x     Min. match threshold; a perfect match is 100.  (0 is default)\n"
+			"--threshold=x     Minimum match percentage; -1 disables check.  (-1 is default)\n"
 			"--perturb-upper=x Perturbation upper bound pixels/arclength    (14%% is default)\n"
 			"                     ('x%%' uses a fraction of the smallest image dimension.)\n"
 			"--perturb-lower=x Perturbation lower bound pixels/arclength   (.125 is default)\n"

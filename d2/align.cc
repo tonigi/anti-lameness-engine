@@ -58,7 +58,7 @@ int align::perturb_type = 0;
 int align::is_fail_default = 0;
 int align::channel_alignment_type = 2;
 ale_real align::metric_exponent = 2;
-float align::match_threshold = 0;
+float align::match_threshold = -1;
 
 /*
  * Upper/lower bounds
