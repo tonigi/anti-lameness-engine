@@ -964,8 +964,8 @@ public:
 			if (b.jmax < global_j_max)
 				global_j_max = ceil(b.jmax);
 
-			fprintf(stdout, "[%d %d] [%d %d]\n", 
-				global_i_min, global_i_max, global_j_min, global_j_max);
+// 			fprintf(stdout, "[%d %d] [%d %d]\n", 
+// 				global_i_min, global_i_max, global_j_min, global_j_max);
 
 			for (int ti = 0; ti < N; ti++) {
 				args[ti].c = c;
