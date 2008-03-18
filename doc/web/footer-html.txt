@@ -1,6 +1,6 @@
 [footer]
-<p></p>
-<p></p>
+<br />
+<br />
 <hr />
 <small>
 <p>
