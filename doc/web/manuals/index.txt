@@ -1,0 +1,27 @@
+ALE Manuals
+===========
+
+User Manual
+-----------
+
+* link:../download/ale-0.8.x-user/[0.8.4-0.8.0]
+* link:../download/ale-0.7.x-user/[0.7.3-0.7.0]
+* link:../download/ale-0.6.0-user/[0.6.0]
+* link:../download/ale-0.5.1-user/[0.5.1]
+
+Technical Description
+---------------------
+
+* link:../download/ale-0.7.x-tech/[0.8.4-0.7.0]
+* link:../download/ale-0.6.0-tech/[0.6.0]
+* link:../download/ale-0.5.1-tech/[0.5.1-0.0.0]
+
+////////////////////////////////////////////////////
+TODO: step-by-step guides and printed documentation.
+////////////////////////////////////////////////////
+
+Development Versions
+--------------------
+
+See the http://repo.or.cz/w/Ale.git[git repository].
+
