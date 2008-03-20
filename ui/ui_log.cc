@@ -52,8 +52,5 @@ void ui_log::set_offset(d2::trans_single offset) {
 }
 
 void ui_log::set_offset(d2::transformation offset) {
-	for (int i = 0; i < offset.stack_depth(); i++) {
-		set_offset(offset.get_element(i), i);
-	}
+	set_offset(offset.get_element(offset.get_current_index()), 0);
 }
-
