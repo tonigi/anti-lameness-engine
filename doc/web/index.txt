@@ -37,11 +37,11 @@ Git Server
 * http://repo.or.cz/w/Ale.git?a=rss[RSS Feed]
 * http://repo.or.cz/mob.html[Uploading via mob]
 
-Image Galleries
----------------
+Examples
+--------
 
-* link:gallery-auto[2D Gallery]
-* link:gallery-3d-auto[3D Gallery]
+* link:gallery-auto[2D Image Gallery]
+* link:gallery-3d-auto[3D Image Gallery]
 
 Manuals
 -------
