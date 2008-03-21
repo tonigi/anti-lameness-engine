@@ -582,6 +582,9 @@ public:
 		printf(".");
 	}
 
+	virtual void start_multi_alignment_element(d2::trans_multi &tm) {
+	}
+
 	virtual void alignment_match_ok() {
 		status.code = status.UNDEFINED;
 		printf(format_string_ok(), status.match_value);

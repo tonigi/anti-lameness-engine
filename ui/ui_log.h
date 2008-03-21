@@ -69,6 +69,7 @@ public:
 
 	void set_offset(d2::transformation);
 	void set_offset(d2::trans_single);
+	void start_multi_alignment_element(d2::trans_multi &);
 	void set_offset(d2::trans_single, int marker);
 
 	void gs_mo(ale_pos gs_mo) {

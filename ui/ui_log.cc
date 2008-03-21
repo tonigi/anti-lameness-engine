@@ -54,3 +54,7 @@ void ui_log::set_offset(d2::trans_single offset) {
 void ui_log::set_offset(d2::transformation offset) {
 	set_offset(offset.get_element(offset.get_current_index()), 0);
 }
+
+void ui_log::start_multi_alignment_element(d2:;trans_multi &tm) {
+	printf("Starting multi-alignment element %d.", tm.get_current_index());
+}

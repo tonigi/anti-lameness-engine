@@ -2591,6 +2591,8 @@ public:
 
 			here.set_elem_bounds(offset.elem_bounds());
 
+			ui::get()->start_multi_alignment_element(offset);
+
 			int e_lod = lod;
 			int e_div = offset.get_current_coordinate().degree;
 			ale_pos e_perturb = perturb;
