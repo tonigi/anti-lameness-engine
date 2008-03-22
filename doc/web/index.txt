@@ -42,6 +42,7 @@ Examples
 
 * link:gallery-auto[2D Image Gallery]
 * link:gallery-3d-auto[3D Image Gallery]
+* http://commons.wikimedia.org/wiki/Image:A_wasp_eating_a_fly_DSCN2740_stable.ogg[Video Stabilization]
 
 Manuals
 -------
