@@ -264,6 +264,14 @@ public:
 		return result;
 	}
 
+	index_t parent_index(index_t i) {
+		multi_coordinate mc = coord_stack[i];
+		multi_coordinate mcp = parent_mc(mc);
+		index_t result = coordinate_map[mcp];
+
+		return result;
+	}
+
 	/*
 	 * Set the bounds of the reference image after incorporation
 	 * of the most recent frame.

@@ -1866,16 +1866,18 @@ public:
 	 *
 	 * Where ^-1 is the inverse operator.
 	 */
-	static transformation follow(astate_t *astate, transformation offset, int lod) {
+	static trans_single follow(astate_t *astate, trans_single offset, int lod, unsigned int index) {
 
-		transformation new_offset = offset;
+		trans_single new_offset = offset;
 
 		/*
 		 * Criteria for using following.
 		 */
 
 		if (!astate->old_is_default && !astate->is_default && 
-				default_initial_alignment_type == 1) {
+				default_initial_alignment_type == 1
+		 && astate->old_initial_alignment.stack_depth() > index
+		 && astate->old_final_alignment.stack_depth() > index) {
 			/*
 			 * Ensure that the lod for the old initial and final
 			 * alignments are equal to the lod for the new initial
@@ -1884,61 +1886,57 @@ public:
 
 			ui::get()->following();
 
-			for (unsigned int index = 0; index < offset.stack_depth(); index++) {
-				offset.set_current_index(index);
-				astate->old_initial_alignment.set_current_index(index);
-				astate->old_final_alignment.set_current_index(index);
-				new_offset.set_current_index(index);
+			astate->old_initial_alignment.set_current_index(index);
+			astate->old_final_alignment.set_current_index(index);
 
-				if (alignment_class == 0) {
-					/*
-					 * Translational transformations
-					 */
-		
-					ale_pos t0 = -astate->old_initial_alignment.eu_get(0) 
-						   +  astate->old_final_alignment.eu_get(0);
-					ale_pos t1 = -astate->old_initial_alignment.eu_get(1) 
-						   +  astate->old_final_alignment.eu_get(1);
+			if (alignment_class == 0) {
+				/*
+				 * Translational transformations
+				 */
+	
+				ale_pos t0 = -astate->old_initial_alignment.eu_get(0) 
+					   +  astate->old_final_alignment.eu_get(0);
+				ale_pos t1 = -astate->old_initial_alignment.eu_get(1) 
+					   +  astate->old_final_alignment.eu_get(1);
 
-					new_offset.eu_modify(0, t0);
-					new_offset.eu_modify(1, t1);
+				new_offset.eu_modify(0, t0);
+				new_offset.eu_modify(1, t1);
 
-				} else if (alignment_class == 1) {
-					/*
-					 * Euclidean transformations
-					 */
+			} else if (alignment_class == 1) {
+				/*
+				 * Euclidean transformations
+				 */
 
-					ale_pos t2 = -astate->old_initial_alignment.eu_get(2) 
-						   +  astate->old_final_alignment.eu_get(2);
+				ale_pos t2 = -astate->old_initial_alignment.eu_get(2) 
+					   +  astate->old_final_alignment.eu_get(2);
 
-					new_offset.eu_modify(2, t2);
+				new_offset.eu_modify(2, t2);
 
-					point p( offset.scaled_height()/2 + offset.eu_get(0) - astate->old_initial_alignment.eu_get(0),
-						 offset.scaled_width()/2 + offset.eu_get(1) - astate->old_initial_alignment.eu_get(1) );
+				point p( offset.scaled_height()/2 + offset.eu_get(0) - astate->old_initial_alignment.eu_get(0),
+					 offset.scaled_width()/2 + offset.eu_get(1) - astate->old_initial_alignment.eu_get(1) );
 
-					p = astate->old_final_alignment.transform_scaled(p);
+				p = astate->old_final_alignment.transform_scaled(p);
 
-					new_offset.eu_modify(0, p[0] - offset.scaled_height()/2 - offset.eu_get(0));
-					new_offset.eu_modify(1, p[1] - offset.scaled_width()/2 - offset.eu_get(1));
-					
-				} else if (alignment_class == 2) {
-					/*
-					 * Projective transformations
-					 */
+				new_offset.eu_modify(0, p[0] - offset.scaled_height()/2 - offset.eu_get(0));
+				new_offset.eu_modify(1, p[1] - offset.scaled_width()/2 - offset.eu_get(1));
+				
+			} else if (alignment_class == 2) {
+				/*
+				 * Projective transformations
+				 */
 
-					point p[4];
+				point p[4];
 
-					p[0] = astate->old_final_alignment.transform_scaled(astate->old_initial_alignment
-					     . scaled_inverse_transform(offset.get_current_element().transform_scaled(point(      0        ,       0       ))));
-					p[1] = astate->old_final_alignment.transform_scaled(astate->old_initial_alignment
-					     . scaled_inverse_transform(offset.get_current_element().transform_scaled(point(offset.scaled_height(),       0       ))));
-					p[2] = astate->old_final_alignment.transform_scaled(astate->old_initial_alignment
-					     . scaled_inverse_transform(offset.get_current_element().transform_scaled(point(offset.scaled_height(), offset.scaled_width()))));
-					p[3] = astate->old_final_alignment.transform_scaled(astate->old_initial_alignment
-					     . scaled_inverse_transform(offset.get_current_element().transform_scaled(point(      0        , offset.scaled_width()))));
+				p[0] = astate->old_final_alignment.transform_scaled(astate->old_initial_alignment
+				     . scaled_inverse_transform(offset.transform_scaled(point(      0        ,       0       ))));
+				p[1] = astate->old_final_alignment.transform_scaled(astate->old_initial_alignment
+				     . scaled_inverse_transform(offset.transform_scaled(point(offset.scaled_height(),       0       ))));
+				p[2] = astate->old_final_alignment.transform_scaled(astate->old_initial_alignment
+				     . scaled_inverse_transform(offset.transform_scaled(point(offset.scaled_height(), offset.scaled_width()))));
+				p[3] = astate->old_final_alignment.transform_scaled(astate->old_initial_alignment
+				     . scaled_inverse_transform(offset.transform_scaled(point(      0        , offset.scaled_width()))));
 
-					new_offset.gpt_set(p);
-				}
+				new_offset.gpt_set(p);
 			}
 
 			ui::get()->set_offset(offset);
@@ -2350,15 +2348,14 @@ public:
 		if (perturb > 0) {
 
 			/*
-			 * Apply following logic
+			 * Apply following logic for the primary element.
 			 */
 
-			transformation new_offset = follow(astate, offset, lod);
+			trans_single new_offset = follow(astate, offset.get_current_element(), lod, 0);
 
-			new_offset.set_current_index(0);
-			
+			offset.set_element(0, new_offset);
+
 			astate->old_initial_alignment = offset;
-			offset = new_offset;
 
 		} else {
 			astate->old_initial_alignment = offset;
@@ -2587,11 +2584,34 @@ public:
 
 		for (unsigned int i = 0; i < offset.stack_depth(); i++) {
 		
+			ui::get()->start_multi_alignment_element(offset);
+
 			offset.set_current_index(i);
 
-			here.set_elem_bounds(offset.elem_bounds());
+			ui::get()->set_offset(offset);
 
-			ui::get()->start_multi_alignment_element(offset);
+			if (i > 0) {
+
+				offset.set_current_element(offset.get_element(offset.parent_index(i)));
+
+				ui::get()->set_offset(offset);
+
+				if (perturb > 0) {
+
+					/*
+					 * Apply following logic for element i.
+					 */
+
+					trans_single new_offset = follow(astate, offset.get_element(i), lod, i);
+
+					astate->old_initial_alignment.set_element(i, new_offset);
+					offset.set_element(i, new_offset);
+
+				} else {
+					astate->old_initial_alignment.set_element(i, offset.get_element(i));
+				}
+
+			}
 
 			int e_lod = lod;
 			int e_div = offset.get_current_coordinate().degree;
@@ -2609,7 +2629,38 @@ public:
 				}
 			}
 
+			if (i > 0) {
+
+				/*
+				 * Scale transform for lod
+				 */
+
+				for (int lod_ = 0; lod_ < e_lod; lod_++) {
+					trans_single s = offset.get_element(i);
+					trans_single t = offset.get_element(i);
+
+					t.rescale(1 / (double) 2);
+
+					if (!(t.scaled_height() > 0 && t.scaled_height() < s.scaled_height())
+					 || !(t.scaled_width() > 0  && t.scaled_width() < s.scaled_width())) {
+						perturb /= pow(2, lod - lod_);
+						lod = lod_;
+						break;
+					} else {
+						offset.set_element(i, t);
+					}
+				}
+
+				ui::get()->set_offset(offset);
+			}
+
 			si = scale_clusters[e_lod];
+
+			here.set_elem_bounds(offset.elem_bounds());
+
+			here.diff(si, e_perturb, offset.get_current_element(), local_ax_count, m);
+
+			here.confirm();
 
 			here = _align_element(e_perturb, local_lower, scale_clusters, 
 					here, e_adj_p, adj_o, e_adj_b, current_bd, modified_bd,
