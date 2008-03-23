@@ -62,6 +62,7 @@ private:
 	index_t orig_ref_height, orig_ref_width;
 	index_t cur_ref_height, cur_ref_width;
 	point cur_offset;
+	point orig_offset;
 
 	index_t *spatio_elem_map;
 	index_t *spatio_elem_map_r;
@@ -154,6 +155,7 @@ public:
 		cur_ref_height = tm.cur_ref_height;
 		cur_ref_width = tm.cur_ref_width;
 		cur_offset = tm.cur_offset;
+		orig_offset = tm.orig_offset;
 
 		free(spatio_elem_map);
 		free(spatio_elem_map_r);
@@ -239,6 +241,7 @@ public:
 
 		orig_ref_height = i->height();
 		orig_ref_width = i->width();
+		orig_offset = i->offset();
 
 		assert (orig_ref_width != 0);
 		assert (orig_ref_height != 0);
@@ -296,11 +299,11 @@ public:
 			ale_pos height_scale = orig_ref_height / div;
 			ale_pos width_scale  = orig_ref_width  / div;
 
-			for (int i = floor(cur_offset[0] / height_scale);
-				 i < ceil((cur_offset[0] + cur_ref_height) / height_scale);
+			for (int i = floor((cur_offset[0] - orig_offset[0]) / height_scale);
+				 i < ceil((cur_offset[0] - orig_offset[0] + cur_ref_height) / height_scale);
 				 i++)
-			for (int j = floor(cur_offset[1] / width_scale);
-			         j < ceil((cur_offset[1] + cur_ref_width) / width_scale);
+			for (int j = floor((cur_offset[1] - orig_offset[1]) / width_scale);
+			         j < ceil((cur_offset[1] - orig_offset[1] + cur_ref_width) / width_scale);
 				 j++) {
 
 				 multi_coordinate c;
@@ -330,27 +333,32 @@ public:
 	elem_bounds_t elem_bounds() const {
 		elem_bounds_t result;
 
-		result.imin = cur_offset[0];
-		result.imax = cur_offset[0] + cur_ref_height;
-		result.jmin = cur_offset[1];
-		result.jmax = cur_offset[1] + cur_ref_width;
+		result.imin = cur_offset[0] - orig_offset[0];
+		result.imax = result.imin + cur_ref_height;
+		result.jmin = cur_offset[1] - orig_offset[1];
+		result.jmax = result.jmin + cur_ref_width;
 
-		if (current_element == 0)
-			return result;
+		if (current_element > 0) {
+			multi_coordinate mc = coord_stack[current_element];
+			
+			ale_pos height_scale = orig_ref_height / pow(2, mc.degree);
+			ale_pos width_scale  = orig_ref_width  / pow(2, mc.degree);
 
-		multi_coordinate mc = coord_stack[current_element];
-		
-		ale_pos height_scale = orig_ref_height / pow(2, mc.degree);
-		ale_pos width_scale  = orig_ref_width  / pow(2, mc.degree);
+			if (height_scale * mc.y > result.imin)
+				result.imin = height_scale * mc.y;
+			if (height_scale * (mc.y + 1) < result.imax)
+				result.imax = height_scale * (mc.y + 1);
+			if (width_scale * mc.x > result.jmin)
+				result.jmin = width_scale * mc.x;
+			if (width_scale * (mc.x + 1) < result.jmax)
+				result.jmax = width_scale * (mc.x + 1);
+		}
 
-		if (height_scale * mc.y > result.imin)
-			result.imin = height_scale * mc.y;
-		if (height_scale * (mc.y + 1) < result.imax)
-			result.imax = height_scale * (mc.y + 1);
-		if (width_scale * mc.x > result.jmin)
-			result.jmin = width_scale * mc.x;
-		if (width_scale * (mc.x + 1) < result.jmax)
-			result.jmax = width_scale * (mc.x + 1);
+		result.imin -= cur_offset[0] - orig_offset[0];
+		result.imax -= cur_offset[0] - orig_offset[0];
+		result.jmin -= cur_offset[1] - orig_offset[1];
+		result.jmax -= cur_offset[1] - orig_offset[1];
+
 
 		result.imin /= cur_ref_height;
 		result.imax /= cur_ref_height;
@@ -383,8 +391,8 @@ public:
 				ale_pos width_scale = orig_ref_width / div;
 				multi_coordinate c;
 				c.degree = d;
-				c.y = floor((cur_offset[0] + i) / height_scale);
-				c.x = floor((cur_offset[1] + j) / width_scale);
+				c.y = floor((cur_offset[0] - orig_offset[0] + i) / height_scale);
+				c.x = floor((cur_offset[1] - orig_offset[1] + j) / width_scale);
 				if (!coordinate_map.count(c))
 					break;
 				index_t index = coordinate_map[c];

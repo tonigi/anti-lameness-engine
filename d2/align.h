@@ -520,7 +520,10 @@ private:
 			j_min = _j_min;
 			j_max = _j_max;
 
-			index_max = (i_max - i_min) * (j_max - j_min);
+			if (i_max < i_min || j_max < j_min)
+				index_max = 0;
+			else 
+				index_max = (i_max - i_min) * (j_max - j_min);
 
 			if (index_max < 500 || _mc > 100 || _mc <= 0)
 				coverage = 1;
