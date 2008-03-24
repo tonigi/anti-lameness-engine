@@ -163,8 +163,6 @@ public:
 			p += half_diag;
 		}
 
-		assert (!isnan(p[0]) && !isnan(p[1]));
-
 		return p;
 	}
 
