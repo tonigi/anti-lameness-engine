@@ -404,7 +404,7 @@ public:
 
 				trans_single s = get_element(spatio_elem_map[cur_ref_width * i + j]);
 
-				point q = t.scaled_inverse_transform(point(cur_offset[0] + i,
+				point q = s.scaled_inverse_transform(point(cur_offset[0] + i,
 				 				           cur_offset[1] + j));
 				
 				if (input->in_bounds(q)) {
@@ -428,9 +428,9 @@ public:
 				trans_single u = get_element(spatio_elem_map_r[input_width * ii + jj]);
 				point r = u.transform_scaled(p);
 
-				if (cur_ref->in_bounds(r)) {
+				if (cur_ref->in_bounds(r - cur_offset)) {
 					pixel ip1 = input->get_bl(p);
-					pixel rp0 = cur_ref->get_bl(r);
+					pixel rp0 = cur_ref->get_bl(r - cur_offset);
 
 					ale_real diff1 = (ip1 - rp).norm();
 					ale_real diff0 = (ip1 - rp0).norm();
