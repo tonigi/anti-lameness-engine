@@ -2587,9 +2587,9 @@ public:
 
 		for (unsigned int i = 0; i < offset.stack_depth(); i++) {
 		
-			ui::get()->start_multi_alignment_element(offset);
-
 			offset.set_current_index(i);
+
+			ui::get()->start_multi_alignment_element(offset);
 
 			ui::get()->set_offset(offset);
 
