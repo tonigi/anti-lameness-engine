@@ -34,7 +34,7 @@ Distribution Status
 -------------------
 
 `2`10`22~~~~~~~~~~~~
-0.8.11, http://losslessjpegtoolbox.wordpress.com/ale-options/[ALE Options], "Win32 installation package maintained by Michael Lee."
+0.8.11, http://losslessjpegtoolbox.wordpress.com/ale-options/[ALE Options], "Win32 package maintained by Michael Lee."
 0.8.7, http://www.macports.org/[MacPorts], "Port maintained by shadow at dementia org."
 0.8.4, http://www.freebsd.org/[FreeBSD], "Port maintained by shaun at FreeBSD org." 
 0.7.1, http://www.debian.org/[Debian], "Packages maintained by Nick Rusnov."        
