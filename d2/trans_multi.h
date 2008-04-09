@@ -204,6 +204,10 @@ public:
 		return get_element(index);
 	}
 
+	int exists(multi_coordinate m) {
+		return coordinate_map.count(m);
+	}
+
 	trans_single get_current_element() const {
 		return get_element(current_element);
 	}
@@ -224,6 +228,11 @@ public:
 
 	multi_coordinate get_current_coordinate() const {
 		return coord_stack[current_element];
+	}
+
+	multi_coordinate get_coordinate(index_t i) const {
+		assert(i < trans_stack.size());
+		return coord_stack[i];
 	}
 
 	void set_current_index(index_t i) {
