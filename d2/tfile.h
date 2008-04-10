@@ -518,7 +518,7 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 							&values[4], &values[5], &values[6], &values[7],
 							&mc1.degree, &mc1.x, &mc1.y);
 				
-					if (count == 8) {
+					if (count == 13) {
 						mc2 = default_transform.get_current_coordinate();
 
 						if (mc1.degree < mc2.degree
