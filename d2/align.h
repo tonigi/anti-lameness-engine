@@ -2504,8 +2504,12 @@ public:
 
 			index_2 = offset.get_current_index();
 
-			if (index_2 > index)
+			if (index_2 > index) {
+				for (unsigned int index_3 = index; index_3 < index_2; index_3++)
+					astate->set_is_default(index_3, 1);
+
 				index = index_2;
+			}
 
 			astate->set_is_default(index, is_default);
 		}
