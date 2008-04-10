@@ -206,11 +206,20 @@ private:
 			return input_frame;
 		}
 
-		void set_is_default(int index, int value) {
+		void set_is_default(unsigned int index, int value) {
+
+			/*
+			 * Expand the array, if necessary.
+			 */
+			if (index == is_default.size());
+				is_default.resize(index + 1);
+
+			assert (index < is_default.size());
 			is_default[index] = value;
 		}
 
-		int get_is_default(int index) {
+		int get_is_default(unsigned int index) {
+			assert (index < is_default.size());
 			return is_default[index];
 		}
 
@@ -339,7 +348,7 @@ private:
 
 		void init_frame_alignment_primary(transformation *offset, int lod, ale_pos perturb) {
 
-			if (perturb > 0 && !old_is_default && !is_default[0]
+			if (perturb > 0 && !old_is_default && !get_is_default(0)
 			 && default_initial_alignment_type == 1) {
 
 				/*
@@ -360,6 +369,8 @@ private:
 			} else {
 				old_initial_alignment = *offset;
 			}
+
+			is_default.resize(old_initial_alignment.stack_depth());
 		}
 
 		void init_frame_alignment_nonprimary(transformation *offset, 
@@ -370,8 +381,8 @@ private:
 			unsigned int parent_index = offset->parent_index(index);
 
 			if (perturb > 0 
-			 && !is_default[parent_index]
-			 && !is_default[index]
+			 && !get_is_default(parent_index)
+			 && !get_is_default(index)
 			 && default_initial_alignment_type == 1) {
 
 				/*
@@ -430,7 +441,7 @@ private:
 			 * Handle other cases.
 			 */
 
-			if (is_default[index]) {
+			if (get_is_default(index)) {
 				offset->set_element(index, offset->get_element(parent_index));
 				ui::get()->set_offset(offset->get_element(index));
 			}
@@ -461,7 +472,7 @@ private:
 			else
 				assert(0);
 
-			old_is_default = is_default[0];
+			old_is_default = get_is_default(0);
 		}
 	};
 
