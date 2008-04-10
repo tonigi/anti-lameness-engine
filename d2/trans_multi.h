@@ -302,7 +302,8 @@ public:
 		int d; ale_pos div;
 		for (d = 1, div = 2; 
 				orig_ref_height / div >= _multi_decomp
-		             && orig_ref_width  / div >= _multi_decomp; 
+		             && orig_ref_width  / div >= _multi_decomp
+			     && _multi_decomp > 0; 
 				d++, div *= 2) {
 
 			ale_pos height_scale = orig_ref_height / div;

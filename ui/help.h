@@ -253,7 +253,7 @@ public:
 			BETWEEN_SECTIONS
 			"Multi-alignment:\n"
 			HEADER_SPACE
-			"--md <x>          Set alignment element minimum dimension <x>.  (10 is default)\n"
+			"--md <x>          Set element minimum dimension x; 0 disables.  (10 is default)\n"
 			"\n"
 		       );
 	}
