@@ -2495,11 +2495,17 @@ public:
 
 		for (unsigned int index = 0; index < offset.stack_depth(); index++) {
 			int is_default = 1;
+			unsigned int index_2;
 			offset.set_current_index(index);
 
 			offset = tload_next(tload, alignment_class == 2, 
 					offset, 
 					&is_default, offset.get_current_index() == 0);
+
+			index_2 = offset.get_current_index();
+
+			if (index_2 > index)
+				index = index_2;
 
 			astate->set_is_default(index, is_default);
 		}

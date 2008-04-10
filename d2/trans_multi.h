@@ -204,6 +204,11 @@ public:
 		return get_element(index);
 	}
 
+	index_t get_index(multi_coordinate m) {
+		assert(coordinate_map.count(m));
+		return coordinate_map[m];
+	}
+
 	int exists(multi_coordinate m) {
 		return coordinate_map.count(m);
 	}

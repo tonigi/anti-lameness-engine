@@ -500,7 +500,6 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 			case 'P':
 			case 'p':
 				/* Projective transformation data */
-				*is_default = 0;
 				if (is_p == 0) {
 					fprintf(stderr, "\ntrans-load: Error: "
 						"Projective data for euclidean "
@@ -512,11 +511,29 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 					double width, height, values[8];
 					int count, i;
 					point x[4];
+					transformation::multi_coordinate mc1, mc2;
 
-					count = sscanf(line + 1, " %lf%lf%lf%lf%lf%lf%lf%lf%lf%lf", &width, &height,
+					count = sscanf(line + 1, " %lf%lf%lf%lf%lf%lf%lf%lf%lf%lf%d%d%d", &width, &height,
 							&values[0], &values[1], &values[2], &values[3],
-							&values[4], &values[5], &values[6], &values[7]);
+							&values[4], &values[5], &values[6], &values[7],
+							&mc1.degree, &mc1.x, &mc1.y);
 				
+					if (count == 8) {
+						mc2 = default_transform.get_current_coordinate();
+
+						if (mc1.degree < mc2.degree
+						 || mc1.degree == mc2.degree && mc1.y < mc2.y
+						 || mc1.degree == mc2.degree && mc1.y == mc2.y && mc1.x < mc2.x)
+							break;
+						if (mc1.degree != mc2.degree
+						 || mc1.x != mc2.x
+						 || mc1.y != mc2.y) {
+							if (!result.exists(mc1))
+								break;
+							result.set_current_index(result.get_index(mc1));
+						}
+					}
+
 					int index = 0;
 					for (int i = 0; i < 4; i++)
 					for (int j = 1; j >= 0; j--) 
@@ -549,6 +566,7 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 						result.gpt_set(x);
 					}
 
+					*is_default = 0;
 					return result;
 				}
 				break;
@@ -559,16 +577,34 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 			case 'E':
 			case 'e':
 				/* Euclidean transformation data */
-				*is_default = 0;
 				{
 					double width, height;
 					double values[3] = {0, 0, 0};
 					int count, i;
 					ale_pos eu[3];
+					transformation::multi_coordinate mc1, mc2;
 
-					count = sscanf(line + 1, " %lf%lf%lf%lf%lf",
+					count = sscanf(line + 1, " %lf%lf%lf%lf%lf%d%d%d",
 							&width, &height,
-							&values[0], &values[1], &values[2]);
+							&values[0], &values[1], &values[2],
+							&mc1.degree, &mc1.x, &mc1.y);
+
+					if (count == 8) {
+						mc2 = default_transform.get_current_coordinate();
+
+						if (mc1.degree < mc2.degree
+						 || mc1.degree == mc2.degree && mc1.y < mc2.y
+						 || mc1.degree == mc2.degree && mc1.y == mc2.y && mc1.x < mc2.x)
+							break;
+						if (mc1.degree != mc2.degree
+						 || mc1.x != mc2.x
+						 || mc1.y != mc2.y) {
+							if (!result.exists(mc1))
+								break;
+							result.set_current_index(result.get_index(mc1));
+						}
+					}
+
 
 					eu[1] = values[0];
 					eu[0] = values[1];
@@ -599,6 +635,7 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 						result.eu_set(eu);
 					}
 
+					*is_default = 0;
 					return result;
 				}
 				break;
