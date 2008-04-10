@@ -770,6 +770,11 @@ static inline void tsave_next(struct tsave_t *t, transformation offset, int is_p
 		fprintf(t->file, "%f ",    (double) offset.eu_get(2));
 	}
 
+	if (!is_primary) {
+		transformation::multi_coordinate mc = offset.get_current_coordinate();
+		fprintf(t->file, "%d %d %d ", mc.degree, mc.x, mc.y);
+	}
+
 	fprintf(t->file, "\n");
 
 	fclose(t->file);
