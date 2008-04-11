@@ -160,6 +160,7 @@ protected:
 		int onum;
 		int steps;
 		int steps_completed;
+		int step_type;
 		double exp_multiplier[3];
 		double perturb_size;
 		double align_lod;
@@ -316,8 +317,9 @@ public:
 		exp_multiplier(mult[0], mult[1], mult[2]);
 	}
 
-	virtual void set_steps(int count) {
+	virtual void set_steps(int count, int type = 0) {
 		status.steps = count;
+		status.step_type = type;
 	}
 
 	virtual void set_steps_completed(int count) {
@@ -573,13 +575,22 @@ public:
 		update();
 	}
 
+	virtual void alignment_degree_complete(int degree) {
+		if (status.step_type == 1) {
+			status.steps_completed++;
+			printf("*");
+		}
+	}
+
 	virtual void alignment_perturbation_level(ale_pos perturb, ale_pos lod) {
 		perturb_timers[status.perturb_size].stop();
 		perturb_timers[perturb].start();
 		status.perturb_size = perturb;
 		status.align_lod = lod;
-		status.steps_completed++;
-		printf(".");
+		if (status.step_type == 0) {
+			status.steps_completed++;
+			printf(".");
+		}
 	}
 
 	virtual void start_multi_alignment_element(d2::trans_multi &tm) {

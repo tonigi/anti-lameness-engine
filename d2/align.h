@@ -2430,8 +2430,6 @@ public:
 			step_count++;
 		}
 
-		ui::get()->set_steps(step_count);
-
 		ale_pos perturb = local_upper;
 		int lod;
 
@@ -2491,6 +2489,12 @@ public:
 		 */
 
 		offset.set_current_bounds(reference_image);
+
+		if (offset.stack_depth() == 1) {
+			ui::get()->set_steps(step_count, 0);
+		} else {
+			ui::get()->set_steps(offset.get_coordinate(offset.stack_depth() - 1).degree + 1, 1);
+		}
 
 		/*
 		 * Load any file-specified transformations
@@ -2811,6 +2815,10 @@ public:
 			offset.set_current_element(here.get_offset());
 
 			ui::get()->set_offset(offset);
+
+			if (i + 1 == offset.stack_depth()
+			 || offset.get_coordinate(i).degree != offset.get_coordinate(i + 1).degree)
+				ui::get()->alignment_degree_complete(i);
 		}
 
 		offset.set_current_index(0);
