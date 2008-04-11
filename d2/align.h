@@ -874,9 +874,9 @@ private:
 	 *
 	 */
 
-	class diff_stat_t {
+	template<class diff_trans>
+	class diff_stat_generic {
 
-		typedef trans_single diff_trans;
 		transformation::elem_bounds_t elem_bounds;
 	
 		struct run {
@@ -1303,7 +1303,7 @@ public:
 			     || (!finite(runs[0].get_error()) && finite(runs[1].get_error())));
 		}
 
-		diff_stat_t(transformation::elem_bounds_t e) 
+		diff_stat_generic(transformation::elem_bounds_t e) 
 				: runs(), old_runs(), perturb_multipliers() {
 			elem_bounds = e;
 		}
@@ -1329,10 +1329,10 @@ public:
 			rediff();
 		}
 
-		~diff_stat_t() {
+		~diff_stat_generic() {
 		}
 
-		diff_stat_t &operator=(const diff_stat_t &dst) {
+		diff_stat_generic &operator=(const diff_stat_generic &dst) {
 			/*
 			 * Copy run information.
 			 */
@@ -1351,7 +1351,7 @@ public:
 			return *this;
 		}
 
-		diff_stat_t(const diff_stat_t &dst) : runs(), old_runs(),
+		diff_stat_generic(const diff_stat_generic &dst) : runs(), old_runs(),
 		                                      perturb_multipliers() {
 			operator=(dst);
 		}
@@ -1375,11 +1375,11 @@ public:
 			return runs[0].offset;
 		}
 
-		int operator!=(diff_stat_t &param) {
+		int operator!=(diff_stat_generic &param) {
 			return (get_error() != param.get_error());
 		}
 
-		int operator==(diff_stat_t &param) {
+		int operator==(diff_stat_generic &param) {
 			return !(operator!=(param));
 		}
 
@@ -1570,7 +1570,7 @@ public:
 						current_bd, modified_bd);
 
 				for (unsigned int i = 0; i < t_set.size(); i++) {
-					diff_stat_t test = *this;
+					diff_stat_generic test = *this;
 
 					test.diff(si, perturb, t_set[i], ax_count, frame);
 
@@ -1673,6 +1673,9 @@ public:
 		}
 
 	};
+
+	typedef diff_stat_generic<trans_single> diff_stat_t;
+	typedef diff_stat_generic<trans_multi> diff_stat_multi;
 
 
 	/*
@@ -2366,7 +2369,7 @@ public:
 	 * one case where special care must be taken to ensure that the scale
 	 * is always set correctly (by using the 'rescale' method).
 	 */
-	static diff_stat_t _align(int m, int local_gs, astate_t *astate) {
+	static diff_stat_multi _align(int m, int local_gs, astate_t *astate) {
 
 		const image *input_frame = astate->get_input_frame();
 
@@ -2823,13 +2826,13 @@ public:
 		}
 
 		/*
-		 * Recalculate error
+		 * Recalculate error on whole frame.
 		 */
 
 		ui::get()->postmatching();
-		here.diff(scale_clusters[0], perturb, offset.get_current_element(), local_ax_count, m);
-		here.confirm();
-		ui::get()->set_match(here.get_error());
+		diff_stat_generic<transformation> multi_here(offset.elem_bounds());
+		multi_here.diff(scale_clusters[0], perturb, offset, local_ax_count, m);
+		ui::get()->set_match(multi_here.get_error());
 
 		/*
 		 * Free the level-of-detail structures
@@ -2841,7 +2844,7 @@ public:
 		 * Ensure that the match meets the threshold.
 		 */
 
-		if (threshold_ok(here.get_error())) {
+		if (threshold_ok(multi_here.get_error())) {
 			/*
 			 * Update alignment variables
 			 */
@@ -2860,25 +2863,25 @@ public:
 			 * since variables like old_initial_value have been overwritten.
 			 */
 
-			diff_stat_t nested_result = _align(m, -1, astate);
+			diff_stat_multi nested_result = _align(m, -1, astate);
 
 			if (threshold_ok(nested_result.get_error())) {
 				return nested_result;
-			} else if (nested_result.get_error() < here.get_error()) {
-				here = nested_result;
+			} else if (nested_result.get_error() < multi_here.get_error()) {
+				multi_here = nested_result;
 			}
 
 			if (is_fail_default)
 				offset = astate->get_default();
 
-			ui::get()->set_match(here.get_error());
+			ui::get()->set_match(multi_here.get_error());
 			ui::get()->alignment_no_match();
 		
 		} else if (local_gs == -1) {
 			
 			latest_ok = 0;
 			latest_t = offset;
-			return here;
+			return multi_here;
 
 		} else {
 			if (is_fail_default)
@@ -2911,12 +2914,12 @@ public:
 		 * Update match statistics.
 		 */
 
-		match_sum += (1 - here.get_error()) * (ale_accum) 100;
+		match_sum += (1 - multi_here.get_error()) * (ale_accum) 100;
 		match_count++;
 		latest = m;
 		latest_t = offset;
 
-		return here;
+		return multi_here;
 	}
 
 #ifdef USE_FFTW
@@ -3562,5 +3565,106 @@ public:
 		return match_sum / (ale_accum) match_count;
 	}
 };
+
+template<class diff_trans>
+void *d2::align::diff_stat_generic<diff_trans>::diff_subdomain(void *args) {
+
+	subdomain_args *sargs = (subdomain_args *) args;
+
+	struct scale_cluster c = sargs->c;
+	std::vector<run> runs = sargs->runs;
+	int ax_count = sargs->ax_count;
+	int f = sargs->f;
+	int i_min = sargs->i_min;
+	int i_max = sargs->i_max;
+	int j_min = sargs->j_min;
+	int j_max = sargs->j_max;
+	int subdomain = sargs->subdomain;
+
+	assert (reference_image);
+
+	point offset = c.accum->offset();
+
+	for (mc_iterate m(i_min, i_max, j_min, j_max, subdomain); !m.done(); m++) {
+
+		int i = m.get_i();
+		int j = m.get_j();
+
+		/*
+		 * Check reference frame definition.
+		 */
+
+		if (!((pixel) c.accum->get_pixel(i, j)).finite()
+		 || !(((pixel) c.certainty->get_pixel(i, j)).minabs_norm() > 0))
+			continue;
+
+		/*
+		 * Check for exclusion in render coordinates.
+		 */
+
+		if (ref_excluded(i, j, offset, c.ax_parameters, ax_count))
+			continue;
+
+		/*
+		 * Transform
+		 */
+
+		struct point q, r = point::undefined();
+
+		q = (c.input_scale < 1.0 && interpolant == NULL)
+		  ? runs.back().offset.scaled_inverse_transform(
+			point(i + offset[0], j + offset[1]))
+		  : runs.back().offset.unscaled_inverse_transform(
+			point(i + offset[0], j + offset[1]));
+
+		if (runs.size() == 2) {
+			r = (c.input_scale < 1.0)
+			  ? runs.front().offset.scaled_inverse_transform(
+				point(i + offset[0], j + offset[1]))
+			  : runs.front().offset.unscaled_inverse_transform(
+				point(i + offset[0], j + offset[1]));
+		}
+
+		ale_pos ti = q[0];
+		ale_pos tj = q[1];
+
+		/*
+		 * Check that the transformed coordinates are within
+		 * the boundaries of array c.input and that they
+		 * are not subject to exclusion.
+		 *
+		 * Also, check that the weight value in the accumulated array
+		 * is nonzero, unless we know it is nonzero by virtue of the
+		 * fact that it falls within the region of the original frame
+		 * (e.g. when we're not increasing image extents).
+		 */
+
+		if (input_excluded(ti, tj, c.ax_parameters, ax_count))
+			continue;
+
+		if (input_excluded(r[0], r[1], c.ax_parameters, ax_count))
+			r = point::undefined();
+
+		/*
+		 * Check the boundaries of the input frame
+		 */
+
+		if (!(ti >= 0
+		   && ti <= c.input->height() - 1
+		   && tj >= 0
+		   && tj <= c.input->width() - 1))
+			continue;
+
+		if (!(r[0] >= 0
+		   && r[0] <= c.input->height() - 1
+		   && r[1] >= 0
+		   && r[1] <= c.input->width() - 1))
+			r = point::undefined();
+
+		sargs->runs.back().sample(f, c, i, j, q, r, runs.front());
+	}
+
+	return NULL;
+}
 
 #endif

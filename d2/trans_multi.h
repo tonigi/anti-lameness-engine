@@ -227,6 +227,10 @@ public:
 		set_element(current_element, t);
 	}
 
+	void set_current_element(const trans_multi &t) {
+		set_element(current_element, t.get_current_element());
+	}
+
 	index_t get_current_index() const {
 		return current_element;
 	}
