@@ -43,7 +43,7 @@ Distribution Status
 Git Server
 ----------
 
-* http://repo.or.cz/w/Ale.git[Browse]
+* http://repo.or.cz/w/Ale.git[Summary]
 * http://repo.or.cz/w/Ale.git?a=rss[RSS Feed]
 * http://repo.or.cz/mob.html[Uploading via mob]
 
