@@ -8,6 +8,13 @@ ALE is a synthetic capture engine and renderer accepting, as input, a sequence
 of image frames, and producing, as output, rendered images, registration data,
 and 3D models (currently experimental).
 
+Examples
+--------
+
+* link:gallery-auto[2D Image Gallery]
+* link:gallery-3d-auto[3D Image Gallery]
+* http://commons.wikimedia.org/wiki/Image:A_wasp_eating_a_fly_DSCN2740_stable.ogg[Video Stabilization] by Gregory Maxwell
+
 License
 -------
 
@@ -46,13 +53,6 @@ Git Server
 * http://repo.or.cz/w/Ale.git[Summary]
 * http://repo.or.cz/w/Ale.git?a=rss[RSS Feed]
 * http://repo.or.cz/mob.html[Uploading via mob]
-
-Examples
---------
-
-* link:gallery-auto[2D Image Gallery]
-* link:gallery-3d-auto[3D Image Gallery]
-* http://commons.wikimedia.org/wiki/Image:A_wasp_eating_a_fly_DSCN2740_stable.ogg[Video Stabilization] by Gregory Maxwell
 
 Manuals
 -------
