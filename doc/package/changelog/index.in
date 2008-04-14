@@ -1,3 +1,19 @@
+V	0.9.0 2008-Apr-14
+
+o	Add skeletal web documentation to the documentation tree, in doc/web,
+	and revise this to consolidate more information on the front page.
+
+o	Implement an alignment technique allowing multiple alignments for a
+	single frame.  Handling parts of a frame separately to resolve
+	alignment issues (but using match thresholding to discard regions
+	instead of using multiple alignments) was suggested by Rob Stewart.
+
+o	Add --resident parameter, allowing explicit allocation of backing store
+	for (e.g., large) image data structures.
+
+o	Check for NaN in linearization and unlinearization in exposure_default,
+	as a possible fix for a segmentation fault reported by Bret Towe.
+
 V	0.8.11 2007-Nov-03
 
 o	Revise certain code for improved execution speed, including

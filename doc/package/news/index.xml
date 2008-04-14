@@ -11,6 +11,7 @@
 <edit by="David Hilvert" in-year="2005"/>
 <edit by="David Hilvert" in-year="2006"/>
 <edit by="David Hilvert" in-year="2007"/>
+<edit by="David Hilvert" in-year="2008"/>
 
 
 <articleinfo xmlns:xi="http://www.w3.org/2001/XInclude">
@@ -19,6 +20,15 @@
 </articleinfo>
 
 <news>
+
+<release version="0.9.0" date="2008-Apr-14">
+
+<p>This testing release allows multiple alignments per input frame, and adds an
+option for specifying resident sizes for loaded images, allowing more efficient
+management of backing stores.  The current stable branch may offer more
+reliable performance and results.</p>
+
+</release>
 
 <release version="0.8.11" date="2007-Nov-03">
 
