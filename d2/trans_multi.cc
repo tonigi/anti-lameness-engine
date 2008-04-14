@@ -23,4 +23,4 @@
  * See trans_multi.h for details on these variables.
  */
 
-ale_pos trans_multi::_multi_decomp = 10;
+ale_pos trans_multi::_multi_decomp = 100;
