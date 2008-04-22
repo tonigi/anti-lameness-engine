@@ -254,6 +254,7 @@ public:
 			"Multi-alignment:\n"
 			HEADER_SPACE
 			"--md <x>          Set element minimum dimension x; 0 disables. (100 is default)\n"
+			"--ma-cert <x>     Set mean certainty lower bound.              (0.1 is default)\n" 
 			"\n"
 		       );
 	}
