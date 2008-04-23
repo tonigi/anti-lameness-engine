@@ -23,6 +23,7 @@ chomp ($ale_exec_dir = `dirname $0`);
 	"ALE_BIN" => "$ale_exec_dir/ale-bin",
 	"DCRAW" => "dcraw",
 	"EXIF_UTILITY" => "exiftool",
+	"ALE_COUNT_THREADS" => "0",
 );
 
 %devices = (
@@ -159,4 +160,33 @@ if ($started_conversion) {
 }
 
 @ARGV = ($0, @ARGV);
-system { $ENV{"ALE_BIN"} } @ARGV;
+
+if ($ENV{"ALE_COUNT_THREADS"} == 0) {
+	system { $ENV{"ALE_BIN"} } @ARGV;
+} else {
+	$| = 1;
+	$fork1 = fork();
+	if ($fork1 == 0) {
+		exec { $ENV{"ALE_BIN"} } @ARGV;
+	}
+
+	if (fork() == 0) {
+		$status_file = "/proc/$fork1/status";
+		while (-r $status_file && `cat $status_file 2> /dev/null | grep Threads` =~ /(\d+)/) {
+			if (defined $threads{$1}) {
+				$threads{$1}++;
+			} else {
+				$threads{$1} = 1;
+			}
+			sleep 1;
+		}
+		foreach $count (sort keys %threads) {
+			print("$count thread(s): $threads{$count} tick(s)\n");
+		}
+		exit(0);
+	}
+
+	while (wait() != -1) {}
+}
+
+
