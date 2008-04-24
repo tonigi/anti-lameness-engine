@@ -84,6 +84,8 @@ int align::_gs = 6;
 ale_accum align::_gs_mo = 67;
 int align::gs_mo_percent = 1;
 
+ale_real align::_ma_cert = 0.1;
+
 exclusion *align::ax_parameters = NULL;
 int align::ax_count = 0;
 

@@ -593,6 +593,12 @@ private:
 	static int gs_mo_percent;
 
 	/*
+	 * Minimum certainty for multi-alignment element registration.
+	 */
+
+	static ale_real _ma_cert;
+
+	/*
 	 * Exclusion regions
 	 */
 
@@ -3556,6 +3562,13 @@ public:
 	static void gs_mo(ale_pos value, int _gs_mo_percent) {
 		_gs_mo = value;
 		gs_mo_percent = _gs_mo_percent;
+	}
+
+	/*
+	 * Set mutli-alignment certainty lower bound.
+	 */
+	static void set_ma_cert(ale_real value) {
+		_ma_cert = value;
 	}
 
 	/*

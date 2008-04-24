@@ -2716,6 +2716,8 @@ public:
 					d2::align::mc(env->get_double_arg(i->first, 1));
 				} else if (!strcmp(option_name, "md")) {
 					d2::trans_multi::set_md(env->get_double_arg(i->first, 1));
+				} else if (!strcmp(option_name, "ma-cert")) {
+					d2::align::set_ma_cert(env->get_double_arg(i->first, 1));
 				} else if (!strcmp(option_name, "gs-mo")) {
 					const char *option = env->get_string_arg(i->first, 1);
 					double gs_mo;

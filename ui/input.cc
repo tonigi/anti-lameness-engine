@@ -43,6 +43,7 @@ const char *input::supported_nonglobal_option_table[] = {
 	"gs-mo",
 	"black",
 	"md",
+	"ma-cert",
 	NULL
 };
 
@@ -121,6 +122,7 @@ input::simple_option input::simple_option_table[] = {
 	{ "gs-mo", NULL, NULL, 1 },
 
 	{ "md", NULL, NULL, 1 },
+	{ "ma-cert", NULL, NULL, 1 },
 
 	{ "focus", "error" },
 
