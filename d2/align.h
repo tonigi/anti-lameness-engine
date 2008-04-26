@@ -2806,7 +2806,7 @@ public:
 			if (i > 0)
 				astate->init_frame_alignment_nonprimary(&offset, lod, perturb, i);
 
-			if (!ma_cert_satisfied(scale_clusters[0], offset, i)) {
+			if (i > 0 && !ma_cert_satisfied(scale_clusters[0], offset, i)) {
 
 				ui::get()->set_offset(offset);
 
