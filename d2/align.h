@@ -2367,6 +2367,49 @@ public:
 	}
 
 	/*
+	 * Check for satisfaction of the certainty threshold.
+	 */
+	static int ma_cert_satisfied(const scale_cluster &c, const transformation &t, unsigned int i) {
+		transformation::elem_bounds_t b = t.elem_bounds();
+		ale_accum sum[3] = {0, 0, 0};
+
+		unsigned int global_i_min = 0;
+		unsigned int global_j_min = 0;
+		unsigned int global_i_max = c.accum->height();
+		unsigned int global_j_max = c.accum->width();
+
+		b.imin *= global_i_max;
+		b.imax *= global_i_max;
+		b.jmin *= global_j_max;
+		b.jmax *= global_j_max;
+
+		if (b.imin > global_i_min)
+			global_i_min = floor(b.imin);
+		if (b.imax < global_i_max)
+			global_i_max = ceil(b.imax);
+		if (b.jmin > global_j_min)
+			global_j_min = floor(b.jmin);
+		if (b.jmax < global_j_max)
+			global_j_max = ceil(b.jmax);
+
+		for (unsigned int ii = global_i_min; ii < global_i_max; ii++)
+		for (unsigned int jj = global_j_min; jj < global_j_max; jj++) {
+			pixel p = c.accum->get_pixel(ii, jj);
+			sum[0] += p[0];
+			sum[1] += p[1];
+			sum[2] += p[2];
+		}
+
+		unsigned int count = (global_j_max - global_j_min) * (global_i_max - global_i_min);
+
+		for (int k = 0; k < 3; k++)
+			if (sum[k] / count < _ma_cert)
+				return 0;
+
+		return 1;
+	}
+
+	/*
 	 * Align frame m against the reference.
 	 *
 	 * XXX: the transformation class currently combines ordinary
@@ -2762,6 +2805,17 @@ public:
 
 			if (i > 0)
 				astate->init_frame_alignment_nonprimary(&offset, lod, perturb, i);
+
+			if (!ma_cert_satisfied(scale_clusters[0], offset, i)) {
+
+				ui::get()->set_offset(offset);
+
+				if (i + 1 == offset.stack_depth()
+				 || offset.get_coordinate(i).degree != offset.get_coordinate(i + 1).degree)
+					ui::get()->alignment_degree_complete(i);
+
+				continue;
+			}
 
 			int e_lod = lod;
 			int e_div = offset.get_current_coordinate().degree;
