@@ -345,8 +345,43 @@ public:
 		return trans_stack.size();
 	}
 
+	struct elem_bounds_int_t {
+		unsigned int imin, imax, jmin, jmax;
+	}
+
 	struct elem_bounds_t {
 		ale_pos imin, imax, jmin, jmax;
+
+		elem_bounds_int_t scale_to_bounds(unsigned int height, unsigned int width) {
+			elem_bounds_t e;
+			elem_bounds_int_t f;
+
+			e = *this;
+
+			e.imin *= height;
+			e.imax *= height;
+			e.jmin *= width;
+			e.jmax *= width;
+
+			if (e.imin > 0)
+				f.imin = (unsigned int) floor(e.imin);
+			else
+				f.imin = 0;
+			if (e.imax < height)
+				f.imax = (unsigned int) ceil(e.imax);
+			else
+				f.imax = height;
+			if (e.jmin > 0)
+				f.jmin = (unsigned int) floor(e.jmin);
+			else
+				f.jmin = 0;
+			if (e.jmax < width)
+				f.jmax = (unsigned int) ceil(e.jmax);
+			else
+				f.jmax = width;
+
+			return f;
+		}
 	};
 
 	elem_bounds_t elem_bounds() const {

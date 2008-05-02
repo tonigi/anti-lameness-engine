@@ -1227,26 +1227,7 @@ public:
 
 			subdomain_args *args = new subdomain_args[N];
 
-			int global_i_min = 0;
-			int global_j_min = 0;
-			int global_i_max = c.accum->height();
-			int global_j_max = c.accum->width();
-
-			transformation::elem_bounds_t b = elem_bounds;
-
-			b.imin *= global_i_max;
-			b.imax *= global_i_max;
-			b.jmin *= global_j_max;
-			b.jmax *= global_j_max;
-
-			if (b.imin > global_i_min)
-				global_i_min = floor(b.imin);
-			if (b.imax < global_i_max)
-				global_i_max = ceil(b.imax);
-			if (b.jmin > global_j_min)
-				global_j_min = floor(b.jmin);
-			if (b.jmax < global_j_max)
-				global_j_max = ceil(b.jmax);
+			transformation::elem_bounds_int_t b = elem_bounds.scale_to_bounds(c.accum->height(), c.accum->width());
 
 // 			fprintf(stdout, "[%d %d] [%d %d]\n", 
 // 				global_i_min, global_i_max, global_j_min, global_j_max);
@@ -1256,10 +1237,10 @@ public:
 				args[ti].runs = runs;
 				args[ti].ax_count = ax_count;
 				args[ti].f = f;
-				args[ti].i_min = global_i_min + ((global_i_max - global_i_min) * ti) / N;
-				args[ti].i_max = global_i_min + ((global_i_max - global_i_min) * (ti + 1)) / N;
-				args[ti].j_min = global_j_min;
-				args[ti].j_max = global_j_max;
+				args[ti].i_min = b.imin + ((b.imax - b.imin) * ti) / N;
+				args[ti].i_max = b.imin + ((b.imax - b.imin) * (ti + 1)) / N;
+				args[ti].j_min = b.jmin;
+				args[ti].j_max = b.jmax;
 				args[ti].subdomain = ti;
 #ifdef USE_PTHREAD
 				pthread_attr_init(&thread_attr[ti]);
@@ -2370,37 +2351,18 @@ public:
 	 * Check for satisfaction of the certainty threshold.
 	 */
 	static int ma_cert_satisfied(const scale_cluster &c, const transformation &t, unsigned int i) {
-		transformation::elem_bounds_t b = t.elem_bounds();
+		transformation::elem_bounds_int_t b = t.elem_bounds().scale_to_bounds(c.accum->height(), c.accum->width());
 		ale_accum sum[3] = {0, 0, 0};
 
-		unsigned int global_i_min = 0;
-		unsigned int global_j_min = 0;
-		unsigned int global_i_max = c.accum->height();
-		unsigned int global_j_max = c.accum->width();
-
-		b.imin *= global_i_max;
-		b.imax *= global_i_max;
-		b.jmin *= global_j_max;
-		b.jmax *= global_j_max;
-
-		if (b.imin > global_i_min)
-			global_i_min = floor(b.imin);
-		if (b.imax < global_i_max)
-			global_i_max = ceil(b.imax);
-		if (b.jmin > global_j_min)
-			global_j_min = floor(b.jmin);
-		if (b.jmax < global_j_max)
-			global_j_max = ceil(b.jmax);
-
-		for (unsigned int ii = global_i_min; ii < global_i_max; ii++)
-		for (unsigned int jj = global_j_min; jj < global_j_max; jj++) {
+		for (unsigned int ii = b.imin; ii < b.imax; ii++)
+		for (unsigned int jj = b.jmin; jj < b.jmax; jj++) {
 			pixel p = c.accum->get_pixel(ii, jj);
 			sum[0] += p[0];
 			sum[1] += p[1];
 			sum[2] += p[2];
 		}
 
-		unsigned int count = (global_j_max - global_j_min) * (global_i_max - global_i_min);
+		unsigned int count = (b.jmax - b.jmin) * (b.imax - b.imin);
 
 		for (int k = 0; k < 3; k++)
 			if (sum[k] / count < _ma_cert)
