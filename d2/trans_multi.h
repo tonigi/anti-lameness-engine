@@ -502,6 +502,23 @@ public:
 		return trans_stack[spatio_elem_map[cur_ref_width * i + j]].pei(p);
 	}
 
+	void get_tonal_multiplier(struct point p) {
+		if (!use_multi)
+			return trans_stack.front().get_tonal_multiplier(p);
+
+		int i = (int) p[0];
+		int j = (int) p[1];
+
+		if (i < 0 || (unsigned int) i >= cur_ref_height
+		 || j < 0 || (unsigned int) j >= cur_ref_width)
+		 	return trans_stack[0].get_tonal_multiplier(p);
+
+		return trans_stack[spatio_elem_map[cur_ref_width * i + j]].get_tonal_multiplier(p);
+	}
+
+	void set_tonal_multiplier(pixel p) {
+		trans_stack[current_element].set_tonal_multiplier(p);
+	}
 
 	/*
 	 * Modify a euclidean transform in the indicated manner.

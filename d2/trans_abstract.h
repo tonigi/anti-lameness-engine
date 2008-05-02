@@ -27,6 +27,7 @@
 
 #include "image.h"
 #include "point.h"
+#include "pixel.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -256,6 +257,16 @@ public:
 	 * transformation.
 	 */
 	virtual void eu_to_gpt() = 0;
+
+	/*
+	 * Set the tonal multiplier.
+	 */
+	virtual void set_tonal_multiplier(pixel p) = 0;
+
+	/*
+	 * Get the tonal multiplier.
+	 */
+	virtual void get_tonal_multiplier(struct point p) = 0;
 
 	/*
 	 * Modify a euclidean transform in the indicated manner.

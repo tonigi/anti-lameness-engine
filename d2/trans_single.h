@@ -80,6 +80,7 @@ private:
 	mutable ale_pos a, b, c, d, e, f, g, h;			// matrix
 	mutable ale_pos _a, _b, _c, _d, _e, _f, _g, _h;		// matrix inverse
 	int _is_projective;
+	pixel tonal_multiplier;
 	mutable int resultant_memo;
 	mutable int resultant_inverse_memo;
 
@@ -253,6 +254,8 @@ public:
 
 		_is_projective = ta._is_projective;
 
+		tonal_multiplier = ta.tonal_multiplier;
+
 		resultant_memo = 0;
 		resultant_inverse_memo = 0;
 
@@ -353,6 +356,8 @@ public:
 
 		r._is_projective = 0;
 
+		r.tonal_multiplier = pixel(1, 1, 1);
+
 		r.bd_set(0, (ale_pos *) NULL);
 
 		return r;
@@ -367,6 +372,17 @@ public:
 		r.eu_to_gpt();
 
 		return r;
+	}
+
+	/*
+	 * Set the tonal multiplier
+	 */
+	void set_tonal_multiplier(pixel p) {
+		tonal_multiplier = p;
+	}
+
+	pixel get_tonal_multiplier(struct point p) {
+		return tonal_multiplier;
 	}
 
 	/*
