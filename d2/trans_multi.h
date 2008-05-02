@@ -416,22 +416,24 @@ public:
 					break;
 				index_t index = coordinate_map[c];
 				trans_single t = get_element(index);
-				point p = t.scaled_inverse_transform(point(cur_offset[0] + i, 
-				                                           cur_offset[1] + j));
+				point p0 = point(cur_offset[0] + i, cur_offset[1] + j);
+				point p = t.scaled_inverse_transform(p0);
 				if (!input->in_bounds(p))
 					continue;
 
 				trans_single s = get_element(spatio_elem_map[cur_ref_width * i + j]);
 
-				point q = s.scaled_inverse_transform(point(cur_offset[0] + i,
-				 				           cur_offset[1] + j));
+				point q = s.scaled_inverse_transform(p0);
+
+				pixel pt = t.get_tonal_multiplier(p0);
+				pixel qt = s.get_tonal_multiplier(p0);
 				
 				if (input->in_bounds(q)) {
 					pixel ip1 = input->get_bl(p);
 					pixel ip0 = input->get_bl(q);
 					
-					ale_real diff1 = (ip1 - rp).norm();
-					ale_real diff0 = (ip0 - rp).norm();
+					ale_real diff1 = (ip1 - rp * pt).norm();
+					ale_real diff0 = (ip0 - rp * qt).norm();
 
 					if (diff1 < diff0)
 						spatio_elem_map[cur_ref_width * i + j] = index;
@@ -447,12 +449,14 @@ public:
 				trans_single u = get_element(spatio_elem_map_r[input_width * ii + jj]);
 				point r = u.transform_scaled(p);
 
+				pixel ut = u.get_tonal_multiplier(r);
+
 				if (cur_ref->in_bounds(r - cur_offset)) {
 					pixel ip1 = input->get_bl(p);
 					pixel rp0 = cur_ref->get_bl(r - cur_offset);
 
-					ale_real diff1 = (ip1 - rp).norm();
-					ale_real diff0 = (ip1 - rp0).norm();
+					ale_real diff1 = (ip1 - rp * pt).norm();
+					ale_real diff0 = (ip1 - rp0 * ut).norm();
 
 					if (diff1 < diff0)
 						spatio_elem_map_r[input_width * ii + jj] = index;
