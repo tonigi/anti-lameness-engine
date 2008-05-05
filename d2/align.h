@@ -1797,7 +1797,7 @@ public:
 	};
 
 	static void set_exposure_ratio(unsigned int m, struct scale_cluster c,
-			const transformation t, int ax_count, int pass_number) {
+			const transformation &t, int ax_count, int pass_number) {
 
 		if (_exp_register == 2) {
 			/*
