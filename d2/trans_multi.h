@@ -504,7 +504,7 @@ public:
 	 * Returns non-zero if the transformation might be non-Euclidean.
 	 */
 	int is_projective() const {
-		return trans_stack.front().is_projective();
+		return trans_stack[current_element].is_projective();
 	}
 
 	/*
@@ -512,7 +512,7 @@ public:
 	 */
 	struct point pe(struct point p) const {
 		if (!use_multi)
-			return trans_stack.front().pe(p);
+			return trans_stack[current_element].pe(p);
 
 		int ii = (int) p[0];
 		int jj = (int) p[1];
@@ -529,7 +529,7 @@ public:
 	 */
 	struct point pei(struct point p) const {
 		if (!use_multi)
-			return trans_stack.front().pei(p);
+			return trans_stack[current_element].pei(p);
 
 		int i = (int) p[0];
 		int j = (int) p[1];
@@ -543,7 +543,7 @@ public:
 
 	void get_tonal_multiplier(struct point p) {
 		if (!use_multi)
-			return trans_stack.front().get_tonal_multiplier(p);
+			return trans_stack[current_element].get_tonal_multiplier(p);
 
 		int i = (int) p[0];
 		int j = (int) p[1];
