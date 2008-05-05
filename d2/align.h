@@ -1686,7 +1686,7 @@ public:
 		pixel_accum *asum;
 		pixel_accum *bsum;
 		struct scale_cluster c;
-		transformation t;
+		const transformation &t;
 		int ax_count;
 		int pass_number;
 	protected:
@@ -1765,7 +1765,7 @@ public:
 		exposure_ratio_iterate(pixel_accum *_asum,
 				       pixel_accum *_bsum,
 				       struct scale_cluster _c,
-				       transformation _t,
+				       const transformation &_t,
 				       int _ax_count,
 				       int _pass_number) : decompose_domain(0, _c.accum->height(), 
 				                                            0, _c.accum->width()),
@@ -1774,7 +1774,23 @@ public:
 			asum = _asum;
 			bsum = _bsum;
 			c = _c;
-			t = _t;
+			ax_count = _ax_count;
+			pass_number = _pass_number;
+		}
+
+		exposure_ratio_iterate(pixel_accum *_asum,
+				       pixel_accum *_bsum,
+				       struct scale_cluster _c,
+				       const transformation &_t,
+				       int _ax_count,
+				       int _pass_number,
+				       transformation::elem_bounds_int_t b) : decompose_domain(b.imin, b.imax, 
+				                                               b.jmin, b.jmax),
+							      t(_t) {
+
+			asum = _asum;
+			bsum = _bsum;
+			c = _c;
 			ax_count = _ax_count;
 			pass_number = _pass_number;
 		}
@@ -2765,18 +2781,30 @@ public:
 
 			ui::get()->set_offset(offset);
 
-			if (i > 0)
+			if (i > 0) {
 				astate->init_frame_alignment_nonprimary(&offset, lod, perturb, i);
 
-			if (i > 0 && !ma_cert_satisfied(scale_clusters[0], offset, i)) {
+				if (!ma_cert_satisfied(scale_clusters[0], offset, i)) {
 
-				ui::get()->set_offset(offset);
+					ui::get()->set_offset(offset);
 
-				if (i + 1 == offset.stack_depth()
-				 || offset.get_coordinate(i).degree != offset.get_coordinate(i + 1).degree)
-					ui::get()->alignment_degree_complete(i);
+					if (i + 1 == offset.stack_depth()
+					 || offset.get_coordinate(i).degree != offset.get_coordinate(i + 1).degree)
+						ui::get()->alignment_degree_complete(i);
 
-				continue;
+					continue;
+				}
+
+				if (_exp_register == 1) {
+					ui::get()->exposure_1();
+					pixel_accum asum(0, 0, 0), bsum(0, 0, 0);
+					exposure_ratio_iterate eri(&asum, &bsum, scale_clusters[0], offset, local_ax_count, 0, 
+						offset.elem_bounds().scale_to_bounds(scale_clusters[0].accum->height(),
+										     scale_clusters[0].accum->width()));
+
+					eri.run();
+					offset.set_tonal_multiplier(asum / bsum);
+				}
 			}
 
 			int e_lod = lod;
@@ -2836,6 +2864,20 @@ public:
 
 			offset.set_current_element(here.get_offset());
 
+			if (i > 0 && _exp_register) {
+				ui::get()->exposure_2();
+				pixel_accum asum(0, 0, 0), bsum(0, 0, 0);
+				exposure_ratio_iterate eri(&asum, &bsum, scale_clusters[0], offset, local_ax_count, 1, 
+					offset.elem_bounds().scale_to_bounds(scale_clusters[0].accum->height(),
+					                                     scale_clusters[0].accum->width()));
+
+				eri.run();
+				offset.set_tonal_multiplier(asum / bsum);
+			} else if (_exp_register) {
+				ui::get()->exposure_2();
+				set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count, 1);
+			}
+
 			ui::get()->set_offset(offset);
 
 			if (i + 1 == offset.stack_depth()
@@ -2845,15 +2887,6 @@ public:
 
 		offset.set_current_index(0);
 		offset.set_multi(reference_image, scale_clusters[0].input);
-
-		/*
-		 * Post-alignment exposure adjustment
-		 */
-
-		if (_exp_register == 1) {
-			ui::get()->exposure_2();
-			set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count, 1);
-		}
 
 		/*
 		 * Recalculate error on whole frame.
