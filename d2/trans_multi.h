@@ -467,8 +467,8 @@ public:
 					pixel ip1 = input->get_bl(p);
 					pixel ip0 = input->get_bl(q);
 					
-					ale_real diff1 = (ip1 - rp * pt).norm();
-					ale_real diff0 = (ip0 - rp * qt).norm();
+					ale_real diff1 = (pt * ip1 - rp).norm();
+					ale_real diff0 = (qt * ip0 - rp).norm();
 
 					if (diff1 < diff0)
 						spatio_elem_map[cur_ref_width * i + j] = index;
@@ -490,8 +490,8 @@ public:
 					pixel ip1 = input->get_bl(p);
 					pixel rp0 = cur_ref->get_bl(r - cur_offset);
 
-					ale_real diff1 = (ip1 - rp * pt).norm();
-					ale_real diff0 = (ip1 - rp0 * ut).norm();
+					ale_real diff1 = (pt * ip1 - rp).norm();
+					ale_real diff0 = (ut * ip1 - rp0).norm();
 
 					if (diff1 < diff0)
 						spatio_elem_map_r[input_width * ii + jj] = index;
