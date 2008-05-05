@@ -266,7 +266,7 @@ public:
 	/*
 	 * Get the tonal multiplier.
 	 */
-	virtual void get_tonal_multiplier(struct point p) = 0;
+	virtual void get_tonal_multiplier(struct point p) const = 0;
 
 	/*
 	 * Modify a euclidean transform in the indicated manner.

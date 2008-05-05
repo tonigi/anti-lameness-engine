@@ -381,7 +381,7 @@ public:
 		tonal_multiplier = p;
 	}
 
-	pixel get_tonal_multiplier(struct point p) {
+	pixel get_tonal_multiplier(struct point p) const {
 		return tonal_multiplier;
 	}
 

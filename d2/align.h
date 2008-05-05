@@ -1013,8 +1013,11 @@ private:
                                         p[0] = c.input->get_bl(t);
 				}
 
+				p[0] *= offset.get_tonal_multiplier(t);
+
 				if (u.defined()) {
 					p[1] = c.input->get_bl(u);
+					p[1] *= comparison.offset.get_tonal_multiplier(u);
 				}
 
 

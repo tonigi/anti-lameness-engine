@@ -541,7 +541,7 @@ public:
 		return trans_stack[spatio_elem_map[cur_ref_width * i + j]].pei(p);
 	}
 
-	void get_tonal_multiplier(struct point p) {
+	void get_tonal_multiplier(struct point p) const {
 		if (!use_multi)
 			return trans_stack[current_element].get_tonal_multiplier(p);
 
