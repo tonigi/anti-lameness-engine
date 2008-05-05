@@ -1797,7 +1797,7 @@ public:
 	};
 
 	static void set_exposure_ratio(unsigned int m, struct scale_cluster c,
-			transformation t, int ax_count, int pass_number) {
+			const transformation t, int ax_count, int pass_number) {
 
 		if (_exp_register == 2) {
 			/*
@@ -2864,7 +2864,7 @@ public:
 
 			offset.set_current_element(here.get_offset());
 
-			if (i > 0 && _exp_register) {
+			if (i > 0 && _exp_register == 1) {
 				ui::get()->exposure_2();
 				pixel_accum asum(0, 0, 0), bsum(0, 0, 0);
 				exposure_ratio_iterate eri(&asum, &bsum, scale_clusters[0], offset, local_ax_count, 1, 
@@ -2873,7 +2873,7 @@ public:
 
 				eri.run();
 				offset.set_tonal_multiplier(asum / bsum);
-			} else if (_exp_register) {
+			} else if (_exp_register == 1) {
 				ui::get()->exposure_2();
 				set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count, 1);
 			}
