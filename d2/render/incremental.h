@@ -178,6 +178,7 @@ protected:
 	 * Merge operation for a single pixel in the accumulated image.
 	 */
 	void _merge_pixel(int frame, const image *delta, transformation t, int i, int j, const filter::ssfe *_ssfe) {
+		pixel tm = t.get_tonal_multiplier(point(i, j));
 
 		if (_ssfe->ex_is_honored() && is_excluded_r(i, j, frame))
 			return;
@@ -193,12 +194,12 @@ protected:
 		pixel value, confidence;
 
 		if (exposure::get_confidence() != 0) {
-			_ssfe->filtered(i, j, frame, &value, &confidence, accum_image->get_pixel(i, j), accum_image->get_weights()->get_pixel(i, j));
+			_ssfe->filtered(i, j, frame, &value, &confidence, accum_image->get_pixel(i, j) / tm, accum_image->get_weights()->get_pixel(i, j));
 		} else {
 			_ssfe->filtered(i, j, frame, &value, &confidence);
 		}
 
-		accum_image->accumulate(i, j, frame, value, confidence);
+		accum_image->accumulate(i, j, frame, tm * value, confidence);
 	}
 
 	/*
@@ -240,6 +241,7 @@ protected:
 
 				instance->_merge_pixel(frame, delta, t, i, j, _ssfe);
 #else
+				pixel tm = t.get_tonal_multiplier(point(i, j));
 
 				if (_ssfe->ex_is_honored() && instance->is_excluded_r(i, j, frame))
 					continue;
@@ -256,13 +258,13 @@ protected:
 
 				if (exposure::get_confidence() != 0) {
 					_ssfe->filtered(i, j, frame, &value, &confidence, 
-							accum_image->get_pixel(i, j), 
+							accum_image->get_pixel(i, j) / tm, 
 							accum_image->get_weights()->get_pixel(i, j));
 				} else {
 					_ssfe->filtered(i, j, frame, &value, &confidence);
 				}
 
-				accum_image->accumulate(i, j, frame, value, confidence);
+				accum_image->accumulate(i, j, frame, value * tm, confidence);
 #endif
 			}
 		}
