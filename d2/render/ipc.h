@@ -215,6 +215,8 @@ protected:
 				int jmin = (int) floor(lef + (ale_pos) lresponse->min_j());
 				int jmax = (int) ceil(rig + (ale_pos) lresponse->max_j());
 
+				pixel tr = pixel(1, 1, 1) / t.get_tonal_multiplier(point(i, j));
+
 				for (int ii = imin; ii <= imax; ii++)
 				for (int jj = jmin; jj <= jmax; jj++) {
 
@@ -243,13 +245,13 @@ protected:
 
 					if (lsimulated->get_bayer() == IMAGE_BAYER_NONE) {
 						lsimulated->add_pixel(ii, jj, 
-							r(approximation->get_pixel(i, j)));
+							r(approximation->get_pixel(i, j) * tr));
 						lsim_weights->add_pixel(ii, jj,
 							r.weight());
 					} else {
 						int k = lsimulated->bayer_color(ii, jj);
 						lsimulated->add_chan(ii, jj, k,
-							r(approximation->get_pixel(i, j))[k]);
+							r(approximation->get_pixel(i, j))[k] * tr[k]);
 						lsim_weights->add_chan(ii, jj, k,
 							r.weight()[k]);
 					}
