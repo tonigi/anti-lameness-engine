@@ -834,6 +834,8 @@ protected:
 				int jmin = (int) floor(lef + (ale_pos) lresponse->min_j());
 				int jmax = (int) ceil(rig + (ale_pos) lresponse->max_j());
 
+				pixel tr = t.get_tonal_multiplier(point(i, j));
+
 				for (int ii = imin; ii <= imax; ii++)
 				for (int jj = jmin; jj <= jmax; jj++) {
 
@@ -910,7 +912,7 @@ protected:
 					 * for confidence.
 					 */
 
-					pixel bpv = r(comp_lreal - comp_simu);
+					pixel bpv = tr * r(comp_lreal - comp_simu);
 
 					/*
 					 * Confidence [equal to (1, 1, 1) when
