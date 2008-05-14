@@ -555,6 +555,20 @@ public:
 		return trans_stack[spatio_elem_map[cur_ref_width * i + j]].get_tonal_multiplier(p);
 	}
 
+	void get_inverse_tonal_multiplier(struct point p) const {
+		if (!use_multi)
+			return trans_stack[current_element].get_inverse_tonal_multiplier(p);
+
+		int i = (int) p[0];
+		int j = (int) p[1];
+
+		if (i < 0 || (unsigned int) i >= input_height
+		 || j < 0 || (unsigned int) j >= input_width)
+		 	return trans_stack[0].get_inverse_tonal_multiplier(p);
+
+		return trans_stack[spatio_elem_map_r[input_width * i + j]].get_inverse_tonal_multiplier(p);
+	}
+
 	void set_tonal_multiplier(pixel p) {
 		trans_stack[current_element].set_tonal_multiplier(p);
 	}

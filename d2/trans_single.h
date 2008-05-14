@@ -385,6 +385,10 @@ public:
 		return tonal_multiplier;
 	}
 
+	pixel get_inverse_tonal_multiplier(struct point p) const {
+		return tonal_multiplier;
+	}
+
 	/*
 	 * Modify a euclidean transform in the indicated manner.
 	 */
