@@ -194,7 +194,7 @@ protected:
 		pixel value, confidence;
 
 		if (exposure::get_confidence() != 0) {
-			_ssfe->filtered(i, j, frame, &value, &confidence, accum_image->get_pixel(i, j) / tm, accum_image->get_weights()->get_pixel(i, j));
+			_ssfe->filtered(i, j, frame, &value, &confidence, ((pixel) accum_image->get_pixel(i, j)) / tm, accum_image->get_weights()->get_pixel(i, j));
 		} else {
 			_ssfe->filtered(i, j, frame, &value, &confidence);
 		}
@@ -258,7 +258,7 @@ protected:
 
 				if (exposure::get_confidence() != 0) {
 					_ssfe->filtered(i, j, frame, &value, &confidence, 
-							accum_image->get_pixel(i, j) / tm, 
+							((pixel) accum_image->get_pixel(i, j)) / tm, 
 							accum_image->get_weights()->get_pixel(i, j));
 				} else {
 					_ssfe->filtered(i, j, frame, &value, &confidence);
