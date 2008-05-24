@@ -2285,6 +2285,9 @@ public:
 		int stable_count = 0;
 
 		while (perturb >= local_lower) {
+			
+			ui::get()->alignment_dims(scale_clusters[lod].accum->height(), scale_clusters[lod].accum->width(),
+			                          scale_clusters[lod].input->height(), scale_clusters[lod].input->width());
 
 			/*
 			 * Orientational adjustment value in degrees.

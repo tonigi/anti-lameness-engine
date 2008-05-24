@@ -179,6 +179,10 @@ public:
 		printf("Perturbation set to %g; LOD set to %g.\n", (double) perturb, (double) lod);
 	}
 
+	void alignment_dims(unsigned int hr, unsigned int wr, unsigned int hi, unsigned int wi) {
+		printf("Aligning against reference (%u x %u), input (%u x %u).\n", wr, hr, wi, hi);
+	}
+
 	void alignment_match_ok() {
 		printf("Alignment match OK.\n");
 	}

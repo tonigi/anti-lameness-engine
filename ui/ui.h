@@ -593,6 +593,9 @@ public:
 		}
 	}
 
+	virtual void alignment_dims(unsigned int hr, unsigned int wr, unsigned int hi, unsigned int wi) {
+	}
+
 	virtual void start_multi_alignment_element(d2::trans_multi &tm) {
 	}
 
