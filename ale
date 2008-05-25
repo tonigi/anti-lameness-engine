@@ -53,6 +53,8 @@ for ($i = 0; $i < @ARGV; $i++) {
 	$i += 2  if $arg =~ /^-?-ochain$/;
 	$i += 3  if $arg =~ /^-?-wm$/;
 	$i += 3  if $arg =~ /^-?-wmx$/;
+	$i += 1  if $arg =~ /^-?-trans-load$/;
+	$i += 1  if $arg =~ /^-?-trans-save$/;
 
 	next if (!-e $arg); 
 
