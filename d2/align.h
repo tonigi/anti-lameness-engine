@@ -2768,12 +2768,6 @@ public:
 		}
 
 		/*
-		 * Announce perturbation size
-		 */
-
-		ui::get()->aligning(perturb, lod);
-
-		/*
 		 * Perturbation adjustment loop.  
 		 */
 
@@ -2853,6 +2847,12 @@ public:
 
 				ui::get()->set_offset(offset);
 			}
+
+			/*
+			 * Announce perturbation size
+			 */
+
+			ui::get()->aligning(e_perturb, e_lod);
 
 			si = scale_clusters[e_lod];
 
