@@ -279,7 +279,8 @@ input::simple_option input::simple_option_table[] = {
 	{ "bda-mult", NULL, NULL, 1 },
 	{ "bda-rate", NULL, NULL, 1 },
 
-	{ "lod-max", NULL, NULL, 1 },
+	{ "lod-preferred", NULL, NULL, 1 },
+	{ "min-dimension", NULL, NULL, 1 },
 
 	{ "model-load", NULL, NULL, 1 },
 	{ "model-save", NULL, NULL, 1 },

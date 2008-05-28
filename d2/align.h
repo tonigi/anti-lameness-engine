@@ -521,10 +521,16 @@ private:
 	static int perturb_upper_percent;
 
 	/*
-	 * Maximum level-of-detail scale factor is 2^lod_max/perturb.
+	 * Preferred level-of-detail scale factor is 2^lod_preferred/perturb.
 	 */
 
-	static int lod_max;
+	static int lod_preferred;
+
+	/*
+	 * Minimum dimension for reduced LOD.
+	 */
+
+	static int min_dimension;
 
 	/*
 	 * Maximum rotational perturbation
@@ -2474,10 +2480,10 @@ public:
 		/*
 		 * Maximum level-of-detail.  Use a level of detail at most
 		 * 2^lod_diff finer than the adjustment resolution.  lod_diff
-		 * is a synonym for lod_max.
+		 * is a synonym for lod_preferred.
 		 */
 
-		const int lod_diff = lod_max;
+		const int lod_diff = lod_preferred;
 
 		/*
 		 * Determine how many levels of detail should be prepared.
@@ -2487,8 +2493,8 @@ public:
 		 * Plain (unsigned int) casting seems to be broken in some cases.
 		 */
 
-		unsigned int steps = (perturb > pow(2, lod_max)) 
-			           ? (unsigned int) lrint(log(perturb) / log(2)) - lod_max + 1 : 1;
+		unsigned int steps = (perturb > pow(2, lod_preferred)) 
+			           ? (unsigned int) lrint(log(perturb) / log(2)) - lod_preferred + 1 : 1;
 
 		/*
 		 * Prepare multiple levels of detail.
@@ -3463,8 +3469,16 @@ public:
 	 * Level-of-detail
 	 */
 
-	static void set_lod_max(int lm) {
-		lod_max = lm;
+	static void set_lod_preferred(int lm) {
+		lod_preferred = lm;
+	}
+
+	/*
+	 * Minimum dimension for reduced level-of-detail.
+	 */
+
+	static void set_min_dimension(int md) {
+		min_dimension = md;
 	}
 
 	/*

@@ -2310,8 +2310,10 @@ public:
 				d2::align::set_bda_mult(env->get_double_arg(i->first, 1));
 			} else if (!strcmp(option_name, "bda-rate")) {
 				d2::align::set_bda_rate(env->get_double_arg(i->first, 1));
-			} else if (!strcmp(option_name, "lod-max")) {
-				d2::align::set_lod_max((int) floor(env->get_double_arg(i->first, 1)));
+			} else if (!strcmp(option_name, "lod-preferred")) {
+				d2::align::set_lod_preferred((int) floor(env->get_double_arg(i->first, 1)));
+			} else if (!strcmp(option_name, "min-dimension")) {
+				d2::align::set_min_dimension((int) ceil(env->get_double_arg(i->first, 1)));
 			} else if (!strcmp(option_name, "cpf-load")) {
 				d3::cpf::init_loadfile(env->get_string_arg(i->first, 1));
 #if 0
