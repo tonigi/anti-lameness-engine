@@ -2831,6 +2831,22 @@ public:
 
 			if (i > 0) {
 
+				d2::trans_multi::elem_bounds_t b = offset.elem_bounds();
+
+				for (int dim_satisfied = 0; e_lod > 0 && !dim_satisfied; ) {
+					int height = scale_clusters[e_lod].accum.height();
+					int width = scale_clusters[e_lod].accum.width();
+
+					d2::trans_multi::elem_bounds_int_t bi = b.scale_to_bounds(height, width);
+
+					dim_satisfied = bi.satisfies_min_dim(min_dimension);
+					
+					if (!dim_satisfied) {
+						e_lod--;
+						e_adj_p *= 2;
+					}
+				}
+
 				/*
 				 * Scale transform for lod
 				 */
