@@ -2701,8 +2701,7 @@ public:
 		 * Projective adjustment value
 		 */
 
-		ale_pos adj_p = (perturb >= pow(2, lod_preferred))
-			     ? pow(2, lod_preferred) : (double) perturb;
+		ale_pos adj_p = perturb / pow(2, lod);
 
 		/*
 		 * Orientational adjustment value in degrees.
