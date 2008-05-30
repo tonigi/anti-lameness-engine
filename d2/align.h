@@ -2478,14 +2478,6 @@ public:
 		}
 
 		/*
-		 * Maximum level-of-detail.  Use a level of detail at most
-		 * 2^lod_diff finer than the adjustment resolution.  lod_diff
-		 * is a synonym for lod_preferred.
-		 */
-
-		const int lod_diff = lod_preferred;
-
-		/*
 		 * Determine how many levels of detail should be prepared.
 		 */
 
@@ -2705,8 +2697,8 @@ public:
 		 * Projective adjustment value
 		 */
 
-		ale_pos adj_p = (perturb >= pow(2, lod_diff))
-			     ? pow(2, lod_diff) : (double) perturb;
+		ale_pos adj_p = (perturb >= pow(2, lod_preferred))
+			     ? pow(2, lod_preferred) : (double) perturb;
 
 		/*
 		 * Orientational adjustment value in degrees.
