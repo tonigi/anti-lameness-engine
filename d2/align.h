@@ -2470,7 +2470,6 @@ public:
 		}
 
 		ale_pos perturb = local_upper;
-		int lod;
 
 		if (_keep) {
 			kept_t[latest] = latest_t;
@@ -2478,19 +2477,23 @@ public:
 		}
 
 		/*
-		 * Determine how many levels of detail should be prepared.
+		 * Determine how many levels of detail should be prepared, by
+		 * calculating the initial (largest) value for the
+		 * level-of-detail variable.
 		 */
 
 		/*
 		 * Plain (unsigned int) casting seems to be broken in some cases.
 		 */
 
-		unsigned int steps = (perturb > pow(2, lod_preferred)) 
-			           ? (unsigned int) lrint(log(perturb) / log(2)) - lod_preferred + 1 : 1;
+		unsigned int lod = (perturb > pow(2, lod_preferred)) 
+			           ? (unsigned int) lrint(log(perturb) / log(2)) - lod_preferred : 0;
 
-		while (steps > 1 && (reference_image.width() < pow(2, steps - 1) * min_dimension
-		                  || reference_image.height() < pow(2, steps - 1) * min_dimension))
-			steps--;
+		while (lod > 0 && (reference_image.width() < pow(2, lod) * min_dimension
+		                || reference_image.height() < pow(2, lod) * min_dimension))
+			lod--;
+
+		unsigned int steps = lod + 1;
 
 		/*
 		 * Prepare multiple levels of detail.
@@ -2500,12 +2503,6 @@ public:
 		struct scale_cluster *scale_clusters = init_clusters(m,
 				scale_factor, input_frame, steps,
 				&local_ax_count);
-
-		/*
-		 * Initialize variables used in the main loop.
-		 */
-
-		lod = (steps - 1);
 
 		/*
 		 * Initialize the default initial transform
