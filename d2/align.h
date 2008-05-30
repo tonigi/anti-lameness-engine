@@ -2488,6 +2488,10 @@ public:
 		unsigned int steps = (perturb > pow(2, lod_preferred)) 
 			           ? (unsigned int) lrint(log(perturb) / log(2)) - lod_preferred + 1 : 1;
 
+		while (steps > 1 && (reference_image.width() < pow(2, steps - 1) * min_dimension
+		                  || reference_image.height() < pow(2, steps - 1) * min_dimension))
+			steps--;
+
 		/*
 		 * Prepare multiple levels of detail.
 		 */
