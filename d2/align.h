@@ -2851,8 +2851,8 @@ public:
 
 					if (!(t.scaled_height() > 0 && t.scaled_height() < s.scaled_height())
 					 || !(t.scaled_width() > 0  && t.scaled_width() < s.scaled_width())) {
-						perturb /= pow(2, lod - lod_);
-						lod = lod_;
+						e_perturb /= pow(2, e_lod - lod_);
+						e_lod = lod_;
 						break;
 					} else {
 						offset.set_element(i, t);
