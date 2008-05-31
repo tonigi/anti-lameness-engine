@@ -2488,8 +2488,8 @@ public:
 		if (lod < 0)
 			lod = 0;
 
-		while (lod > 0 && (reference_image.width() < pow(2, lod) * min_dimension
-		                || reference_image.height() < pow(2, lod) * min_dimension))
+		while (lod > 0 && (reference_image->width() < pow(2, lod) * min_dimension
+		                || reference_image->height() < pow(2, lod) * min_dimension))
 			lod--;
 
 		unsigned int steps = (unsigned int) lod + 1;
@@ -2825,8 +2825,8 @@ public:
 				d2::trans_multi::elem_bounds_t b = offset.elem_bounds();
 
 				for (int dim_satisfied = 0; e_lod > 0 && !dim_satisfied; ) {
-					int height = scale_clusters[e_lod].accum.height();
-					int width = scale_clusters[e_lod].accum.width();
+					int height = scale_clusters[e_lod].accum->height();
+					int width = scale_clusters[e_lod].accum->width();
 
 					d2::trans_multi::elem_bounds_int_t bi = b.scale_to_bounds(height, width);
 
