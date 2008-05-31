@@ -2483,18 +2483,16 @@ public:
 		 * level-of-detail variable.
 		 */
 
-		/*
-		 * Plain (unsigned int) casting seems to be broken in some cases.
-		 */
+		int lod = lrint(log(perturb) / log(2)) - lod_preferred;
 
-		unsigned int lod = (perturb > pow(2, lod_preferred)) 
-			           ? (unsigned int) lrint(log(perturb) / log(2)) - lod_preferred : 0;
+		if (lod < 0)
+			lod = 0;
 
 		while (lod > 0 && (reference_image.width() < pow(2, lod) * min_dimension
 		                || reference_image.height() < pow(2, lod) * min_dimension))
 			lod--;
 
-		unsigned int steps = lod + 1;
+		unsigned int steps = (unsigned int) lod + 1;
 
 		/*
 		 * Prepare multiple levels of detail.
