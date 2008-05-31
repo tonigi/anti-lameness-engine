@@ -2331,7 +2331,7 @@ public:
 				perturb *= 0.5;
 
 				if (lod > 0 
-				 && lod > (unsigned int) lrint(log(perturb) / log(2)) - lod_preferred) {
+				 && lod > lrint(log(perturb) / log(2)) - lod_preferred) {
 
 					/*
 					 * Work with images twice as large
