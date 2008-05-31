@@ -2351,7 +2351,7 @@ public:
 					here.rescale(rescale_factor, si);
 
 				} else {
-					adj_p = perturb;
+					adj_p = perturb / pow(2, lod);
 				}
 
 				/*
