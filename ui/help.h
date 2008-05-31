@@ -197,7 +197,7 @@ public:
 			"--rot-upper=x     Rotation-specific upper bound in degrees    (32.0 is default)\n"
 			"--bda-mult=x      Barrel distortion adjustment multiplier      (2.0 is default)\n"
 			"--bda-rate=x      Barrel distortion rate of change maximum     (8.0 is default)\n"   
-			"--lod-preferred=x Preferred LOD scale is (2^floor(x))/perturb)  (-4 is default)\n"
+			"--lod-preferred=x Preferred LOD scale is (2^floor(x))/perturb)  (-3 is default)\n"
 			"--min-dimension=x Minimum dimension for reduced LOD is x        (10 is default)\n"
 			"--mc <x>          Statically sample ~x%% of available pixels     (30 is default)\n"
 			BETWEEN_SECTIONS

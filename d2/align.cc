@@ -69,7 +69,7 @@ int align::perturb_lower_percent = 0;
 ale_pos align::perturb_upper = 14;
 int align::perturb_upper_percent = 1;
 
-int align::lod_preferred = -4;
+int align::lod_preferred = -3;
 int align::min_dimension = 10;
 
 ale_pos align::rot_max = 32.0;
