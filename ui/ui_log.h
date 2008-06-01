@@ -111,6 +111,10 @@ public:
 		printf("Aligning (perturb=%f, lod=%f).\n", (double) perturb, (double) lod);
 	}
 
+	void multi() {
+		printf("Assigning multi-alignment pixels.");
+	}
+
 	void following() {
 		printf("Applying initial-final following logic.\n");
 	}

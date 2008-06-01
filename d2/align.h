@@ -2800,7 +2800,9 @@ public:
 										     scale_clusters[0].accum->width()));
 
 					eri.run();
-					offset.set_tonal_multiplier(asum / bsum);
+					pixel_accum tr = asum / bsum;
+					ui::get()->exp_multiplier(tr[0], tr[1], tr[2]);
+					offset.set_tonal_multiplier(tr);
 				}
 			}
 
@@ -2891,7 +2893,9 @@ public:
 					                                     scale_clusters[0].accum->width()));
 
 				eri.run();
-				offset.set_tonal_multiplier(asum / bsum);
+				pixel_accum tr = asum / bsum;
+				ui::get()->exp_multiplier(tr[0], tr[1], tr[2]);
+				offset.set_tonal_multiplier(tr);
 			} else if (_exp_register == 1) {
 				ui::get()->exposure_2();
 				set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count, 1);
@@ -2905,6 +2909,8 @@ public:
 		}
 
 		offset.set_current_index(0);
+
+		ui::get()->multi();
 		offset.set_multi(reference_image, scale_clusters[0].input);
 
 		/*

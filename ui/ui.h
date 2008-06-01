@@ -139,7 +139,7 @@ protected:
 			LOAD_FILE, EXPOSURE_PASS_1,
 			LODCLUSTER_CREATE, PREMATCH, ALIGN, GLOBAL_ALIGN, POSTMATCH,
 			EXPOSURE_PASS_2, RENDERA, RENDERD, RENDERO, WRITED,
-			WRITEO, FRAME_DONE, SET_DONE, 
+			WRITEO, FRAME_DONE, SET_DONE, MULTI,
 			
 			/*
 			 * Irani-Peleg rendering.
@@ -385,6 +385,11 @@ public:
 		status.perturb_size = perturb;
 		status.align_lod = lod;
 		status.code = status.ALIGN;
+		update();
+	}
+
+	virtual void multi() {
+		status.code = status.MULTI;
 		update();
 	}
 

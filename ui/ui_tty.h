@@ -192,6 +192,9 @@ private:
 			case status_type::PREMATCH:
 				status_printf(3, "Calculating pre-alignment match", "Calculating match", "prematch");
 				break;
+			case status_type::MULTI:
+				status_printf(3, "Assigning multi-alignment pixels", "Multi-alignment", "multi");
+				break;
 			case status_type::GLOBAL_ALIGN:
 			case status_type::ALIGN:
 				status_printf(5, "%s [perturb=%6.3g] [lod=%6.3g] [exp_mult=%6.3g %6.3g %6.3g]", 
