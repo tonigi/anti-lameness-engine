@@ -49,6 +49,7 @@ public:
 
 private:
 	static ale_pos _multi_decomp;
+	static ale_real _multi_improvement;
 
 	typedef unsigned int index_t;
 
@@ -89,6 +90,10 @@ public:
 
 	static void set_md(double d) {
 		_multi_decomp = d;
+	}
+
+	static void set_mi(double d) {
+		_multi_improvement = d;
 	}
 
 	/*
@@ -478,7 +483,7 @@ public:
 					ale_real diff1 = (pt * ip1 - rp).norm();
 					ale_real diff0 = (qt * ip0 - rp).norm();
 
-					if (diff1 < diff0)
+					if (diff1 < diff0 * (1 - _multi_improvement))
 						spatio_elem_map[cur_ref_width * i + j] = index;
 				}
 
@@ -501,7 +506,7 @@ public:
 					ale_real diff1 = (pt * ip1 - rp).norm();
 					ale_real diff0 = (ut * ip1 - rp0).norm();
 
-					if (diff1 < diff0)
+					if (diff1 < diff0 * (1 - _multi_improvement))
 						spatio_elem_map_r[input_width * ii + jj] = index;
 				}
 			}

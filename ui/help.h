@@ -256,6 +256,7 @@ public:
 			HEADER_SPACE
 			"--md <x>          Set element minimum dimension x; 0 disables. (100 is default)\n"
 			"--ma-cert <x>     Set mean certainty lower bound.             (0.01 is default)\n" 
+			"--mi <x>          Require error improvement fraction <x>.        (0 is default)\n"
 			"\n"
 		       );
 	}

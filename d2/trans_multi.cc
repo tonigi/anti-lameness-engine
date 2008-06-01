@@ -24,3 +24,4 @@
  */
 
 ale_pos trans_multi::_multi_decomp = 100;
+ale_pos trans_multi::_multi_improvement = 0;
