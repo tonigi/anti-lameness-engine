@@ -83,6 +83,7 @@ private:
 
 	mutable unsigned int t_two;
 	mutable transformation t0, t1;
+	mutable trans_single ts0, ts1;
 	mutable int _is_projective;
 
 	/*
@@ -90,9 +91,9 @@ private:
 	 */
 	point transform(point p) const {
 		if (t_two)
-			return t1.unscaled_inverse_transform(t0.transform_unscaled(p));
+			return ts1.unscaled_inverse_transform(ts0.transform_unscaled(p));
 
-		return t0.transform_unscaled(p);
+		return ts0.transform_unscaled(p);
 	}
 
 	/*
@@ -100,9 +101,9 @@ private:
 	 */
 	point transform_inverse(point p) const {
 		if (t_two)
-			return t0.unscaled_inverse_transform(t1.transform_unscaled(p));
+			return ts0.unscaled_inverse_transform(ts1.transform_unscaled(p));
 
-		return t0.unscaled_inverse_transform(p);
+		return ts0.unscaled_inverse_transform(p);
 	}
 
 	/*
@@ -435,6 +436,13 @@ public:
 		ale_pos hscale_rb = 1;
 		ale_pos wscale_g = 1;
 		ale_pos wscale_rb = 1;
+
+		if (t_two) {
+			ts1 = t_at_point(p);
+			ts0 = t_at_inv_point(ts1.transform_unscaled(p));
+		} else {
+			ts0 = t_at_inv_point(p);
+		}
 
 		point mapped_p = transform_inverse(p);
 

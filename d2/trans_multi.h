@@ -521,6 +521,40 @@ public:
 	}
 
 	/*
+	 * Transformation at point in the domain 
+	 */
+	trans_single t_at_point(struct point p) const {
+		if (!use_multi)
+			return trans_stack[current_element];
+
+		int ii = (int) p[0];
+		int jj = (int) p[1];
+
+		if (ii < 0 || (unsigned int) ii >= input_height
+		 || jj < 0 || (unsigned int) jj >= input_width)
+			return trans_stack[0];
+
+		return trans_stack[spatio_elem_map_r[input_width * ii + jj]];
+	}
+
+	/*
+	 * Transformation at point in the co-domain.
+	 */
+	trans_single t_at_inv_point(struct point p) const {
+		if (!use_multi)
+			return trans_stack[current_element];
+
+		int i = (int) p[0];
+		int j = (int) p[1];
+
+		if (i < 0 || (unsigned int) i >= cur_ref_height
+		 || j < 0 || (unsigned int) j >= cur_ref_width)
+			return trans_stack[0];
+
+		return trans_stack[spatio_elem_map[cur_ref_width * i + j]];
+	}
+
+	/*
 	 * Projective/Euclidean transformations
 	 */
 	struct point pe(struct point p) const {
