@@ -734,6 +734,18 @@ public:
 			trans_stack[t].set_dimensions(im);
 	} 
 
+	void map_area(point p, point *q, ale_pos d[2]) {
+		t_at_point(p / scale_factor).map_area(p, q, d);
+	}
+
+	void map_area_unscaled(point p, point *q, ale_pos d[2]) {
+		t_at_point(p).map_area_unscaled(p, q, d);
+	}
+
+	void unscaled_map_area_inverse(point p, point *q, ale_pos d[2]) {
+		t_at_inv_point(p).unscaled_map_area_inverse(p, q, d);
+	}
+
 	/*
 	 * Modify all projective parameters at once.  Accommodate bugs in the
 	 * version 0 transformation file handler (ALE versions 0.4.0p1 and

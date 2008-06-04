@@ -468,7 +468,7 @@ public:
 	 * coordinate system to another, using the forward transformation.  
 	 * This function uses scaled input coordinates.
 	 */
-	void map_area(point p, point *q, ale_pos d[2]) {
+	virtual void map_area(point p, point *q, ale_pos d[2]) {
 
 		/*
 		 * Determine the coordinates in the target frame for the source
@@ -518,7 +518,7 @@ public:
 	 * coordinate system to another, using the forward transformation.  
 	 * This function uses unscaled input coordinates.
 	 */
-	void map_area_unscaled(point p, point *q, ale_pos d[2]) {
+	virtual void map_area_unscaled(point p, point *q, ale_pos d[2]) {
 
 		/*
 		 * Determine the coordinates in the target frame for the source
@@ -570,7 +570,7 @@ public:
 	 * obtain unscaled coordinates.  This method is very similar to the 
 	 * map_area method above.
 	 */
-	void unscaled_map_area_inverse(point p, point *q, ale_pos d[2]) {
+	virtual void unscaled_map_area_inverse(point p, point *q, ale_pos d[2]) {
 
 		/*
 		 * Determine the coordinates in the target frame for the source
