@@ -83,13 +83,12 @@ private:
 
 	mutable unsigned int t_two;
 	mutable transformation t0, t1;
-	mutable trans_single ts0, ts1;
 	mutable int _is_projective;
 
 	/*
 	 * Transform a point using the current transformation.
 	 */
-	point transform(point p) const {
+	point transform(point p, const trans_single &ts0, const trans_single &ts1) const {
 		if (t_two)
 			return ts1.unscaled_inverse_transform(ts0.transform_unscaled(p));
 
@@ -99,7 +98,7 @@ private:
 	/*
 	 * Inverse of the above.
 	 */
-	point transform_inverse(point p) const {
+	point transform_inverse(point p, const trans_single &ts0, const trans_single &ts1) const {
 		if (t_two)
 			return ts0.unscaled_inverse_transform(ts1.transform_unscaled(p));
 
@@ -119,15 +118,16 @@ private:
 	 * (Or do this approximately.)
 	 */
 	void freq_limit(point p, point mapped_p, ale_pos *hscale_g, 
-			ale_pos *hscale_rb, ale_pos *wscale_g, ale_pos *wscale_rb) const {
+			ale_pos *hscale_rb, ale_pos *wscale_g, ale_pos *wscale_rb,
+			const trans_single &ts0, const trans_single &ts1) const {
 
 		if (frequency_limit == 0)
 			return;
 
 		ale_pos hnorm, wnorm;
 
-		point dh = transform_inverse(p + point(1, 0));
-		point dw = transform_inverse(p + point(0, 1));
+		point dh = transform_inverse(p + point(1, 0), ts0, ts1);
+		point dw = transform_inverse(p + point(0, 1), ts0, ts1);
 
 		hnorm = (mapped_p - dh).norm();
 		wnorm = (mapped_p - dw).norm();
@@ -159,7 +159,8 @@ private:
 
 	void filter_channel(point p, point mapped_p, unsigned int k, ale_pos hscale,
 			ale_pos wscale, pixel *result, pixel *weight, int honor_exclusion, 
-			int frame, ale_real prev_value = 0, ale_real prev_weight = 0) const {
+			int frame, ale_real prev_value, ale_real prev_weight,
+			const trans_single &ts0, const trans_single &ts1) const {
 
 		ale_real temp_result = (*result)[k], temp_weight = (*weight)[k];
 		ale_real certainty;
@@ -281,7 +282,7 @@ private:
 				for (int ii = -1; ii <= +1; ii+=2)
 				for (int jj = -1; jj <= +1; jj+=2) {
 
-					point b = transform_inverse(point(hsup * ii, wsup * jj) + p);
+					point b = transform_inverse(point(hsup * ii, wsup * jj) + p, ts0, ts1);
 					for (int d = 0; d < 2; d++) {
 						if (b[d] < min[d])
 							min[d] = b[d];
@@ -325,7 +326,7 @@ private:
 				 && (im->get_channels(i, j) & (1 << k)) == 0)
 					continue;
 
-				point a = transform(point(i, j));
+				point a = transform(point(i, j), ts0, ts1);
 
 				ale_real v = im->get_chan(i, j, k);
 
@@ -427,6 +428,9 @@ public:
 			pixel prev_value = pixel(0, 0, 0), 
 			pixel prev_weight = pixel(0, 0, 0)) const {
 
+		trans_single ts0, ts1;
+		pixel tm;
+
 		point p = point(i, j) + offset;
 
 		*result = pixel(0, 0, 0);
@@ -440,11 +444,15 @@ public:
 		if (t_two) {
 			ts1 = t1.t_at_point(p);
 			ts0 = t0.t_at_inv_point(ts1.transform_unscaled(p));
+			tm = ts0.get_tonal_multiplier(point(0, 0)) / ts1.get_tonal_multiplier(point(0, 0));
 		} else {
 			ts0 = t0.t_at_inv_point(p);
+			tm = ts0.get_tonal_multiplier(point(0, 0));
 		}
 
-		point mapped_p = transform_inverse(p);
+		prev_value /= tm;
+
+		point mapped_p = transform_inverse(p, ts0, ts1);
 
 		/*
 		 * Allowing points such as these results in problems that are
@@ -457,11 +465,13 @@ public:
 		 || mapped_p[1] < 0 || mapped_p[1] > im->width() - 1)
 			return;
 
-		freq_limit(p, mapped_p, &hscale_g, &hscale_rb, &wscale_g, &wscale_rb);
+		freq_limit(p, mapped_p, &hscale_g, &hscale_rb, &wscale_g, &wscale_rb, ts0, ts1);
 
-		filter_channel(p, mapped_p, 0, hscale_rb, wscale_rb, result, weight, honor_exclusion, frame, prev_value[0], prev_weight[0]);
-		filter_channel(p, mapped_p, 2, hscale_rb, hscale_rb, result, weight, honor_exclusion, frame, prev_value[2], prev_weight[2]);
-		filter_channel(p, mapped_p, 1, hscale_g , hscale_g , result, weight, honor_exclusion, frame, prev_value[1], prev_weight[1]);
+		filter_channel(p, mapped_p, 0, hscale_rb, wscale_rb, result, weight, honor_exclusion, frame, prev_value[0], prev_weight[0], ts0, ts1);
+		filter_channel(p, mapped_p, 2, hscale_rb, hscale_rb, result, weight, honor_exclusion, frame, prev_value[2], prev_weight[2], ts0, ts1);
+		filter_channel(p, mapped_p, 1, hscale_g , hscale_g , result, weight, honor_exclusion, frame, prev_value[1], prev_weight[1], ts0, ts1);
+
+		(*result) *= tm;
 	}
 };
 #endif
