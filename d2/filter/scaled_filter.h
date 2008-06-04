@@ -438,10 +438,10 @@ public:
 		ale_pos wscale_rb = 1;
 
 		if (t_two) {
-			ts1 = t_at_point(p);
-			ts0 = t_at_inv_point(ts1.transform_unscaled(p));
+			ts1 = t1.t_at_point(p);
+			ts0 = t0.t_at_inv_point(ts1.transform_unscaled(p));
 		} else {
-			ts0 = t_at_inv_point(p);
+			ts0 = t0.t_at_inv_point(p);
 		}
 
 		point mapped_p = transform_inverse(p);
