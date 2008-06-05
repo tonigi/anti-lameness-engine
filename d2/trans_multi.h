@@ -594,6 +594,11 @@ public:
 #if 0
 		fill_multi(cur_ref, input);
 #endif
+
+		/*
+		 * All scale factors should be identical.
+		 */
+		scale_factor = trans_stack[0].scale();
 	}
 
 	/*

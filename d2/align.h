@@ -1006,6 +1006,8 @@ private:
 				weight[0] = pixel(1, 1, 1);
 				weight[1] = pixel(1, 1, 1);
 
+				pixel tm = offset.get_tonal_multiplier(point(i, j));
+
 				if (interpolant != NULL) {
 					interpolant->filtered(i, j, &p[0], &weight[0], 1, f);
 
@@ -1019,11 +1021,11 @@ private:
                                         p[0] = c.input->get_bl(t);
 				}
 
-				p[0] *= offset.get_tonal_multiplier(t);
+				p[0] *= tm;
 
 				if (u.defined()) {
 					p[1] = c.input->get_bl(u);
-					p[1] *= comparison.offset.get_tonal_multiplier(u);
+					p[1] *= tm;
 				}
 
 
@@ -2911,7 +2913,7 @@ public:
 		offset.set_current_index(0);
 
 		ui::get()->multi();
-		offset.set_multi(reference_image, scale_clusters[0].input);
+		offset.set_multi(reference_image, input_frame);
 
 		/*
 		 * Recalculate error on whole frame.
