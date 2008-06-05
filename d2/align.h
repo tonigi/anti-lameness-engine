@@ -1006,7 +1006,7 @@ private:
 				weight[0] = pixel(1, 1, 1);
 				weight[1] = pixel(1, 1, 1);
 
-				pixel tm = offset.get_tonal_multiplier(point(i, j));
+				pixel tm = offset.get_tonal_multiplier(point(i, j) + c.accum->offset());
 
 				if (interpolant != NULL) {
 					interpolant->filtered(i, j, &p[0], &weight[0], 1, f);

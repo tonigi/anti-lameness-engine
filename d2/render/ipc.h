@@ -215,7 +215,7 @@ protected:
 				int jmin = (int) floor(lef + (ale_pos) lresponse->min_j());
 				int jmax = (int) ceil(rig + (ale_pos) lresponse->max_j());
 
-				pixel tr = pixel(1, 1, 1) / t.get_tonal_multiplier(point(i, j));
+				pixel tr = pixel(1, 1, 1) / t.get_tonal_multiplier(p);
 
 				for (int ii = imin; ii <= imax; ii++)
 				for (int jj = jmin; jj <= jmax; jj++) {
@@ -834,7 +834,7 @@ protected:
 				int jmin = (int) floor(lef + (ale_pos) lresponse->min_j());
 				int jmax = (int) ceil(rig + (ale_pos) lresponse->max_j());
 
-				pixel tr = t.get_tonal_multiplier(point(i, j));
+				pixel tr = t.get_tonal_multiplier(p);
 
 				for (int ii = imin; ii <= imax; ii++)
 				for (int jj = jmin; jj <= jmax; jj++) {

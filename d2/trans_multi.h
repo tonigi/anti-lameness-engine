@@ -632,8 +632,8 @@ public:
 		if (!use_multi)
 			return trans_stack[current_element];
 
-		int i = (int) p[0];
-		int j = (int) p[1];
+		int i = (int) (p[0] - cur_offset[0]);
+		int j = (int) (p[1] - cur_offset[1]);
 
 		if (i < 0 || (unsigned int) i >= cur_ref_height
 		 || j < 0 || (unsigned int) j >= cur_ref_width)
@@ -666,8 +666,8 @@ public:
 		if (!use_multi)
 			return trans_stack[current_element].pei(p);
 
-		int i = (int) p[0];
-		int j = (int) p[1];
+		int i = (int) (p[0] - cur_offset[0]);
+		int j = (int) (p[1] - cur_offset[1]);
 
 		if (i < 0 || (unsigned int) i >= cur_ref_height
 		 || j < 0 || (unsigned int) j >= cur_ref_width)
@@ -680,8 +680,8 @@ public:
 		if (!use_multi)
 			return trans_stack[current_element].get_tonal_multiplier(p);
 
-		int i = (int) p[0];
-		int j = (int) p[1];
+		int i = (int) (p[0] - cur_offset[0]);
+		int j = (int) (p[1] - cur_offset[1]);
 
 		if (i < 0 || (unsigned int) i >= cur_ref_height
 		 || j < 0 || (unsigned int) j >= cur_ref_width)
