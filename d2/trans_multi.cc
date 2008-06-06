@@ -23,5 +23,6 @@
  * See trans_multi.h for details on these variables.
  */
 
+unsigned int trans_multi::_multi = 2;
 ale_pos trans_multi::_multi_decomp = 100;
 ale_pos trans_multi::_multi_improvement = 0;

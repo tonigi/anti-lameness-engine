@@ -119,6 +119,8 @@ input::simple_option input::simple_option_table[] = {
 	{ "oc" }, 
 	{ "no-oc", "oc", "0" },
 
+	{ "multi", NULL, NULL, 1 },
+
 	{ "gs", NULL, NULL, 1 },
 	{ "gs-mo", NULL, NULL, 1 },
 

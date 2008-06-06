@@ -89,7 +89,24 @@ private:
 public:	
 
 	static void set_md(double d) {
+		if (d < 1)
+			d = 1;
+
 		_multi_decomp = d;
+	}
+
+	static void set_multi(const char *type) {
+		if (!strcmp(type, "none")) {
+			_multi = 0;
+		} else if (!strcmp(type, "local")) {
+			_multi = 1;
+		} else if (!strcmp(type, "fill")) {
+			_multi = 2;
+		} else if (!strcmp(type, "llocal")) {
+			_multi = 3;
+		} else if (!strcmp(type, "global")) {
+			_multi = 4;
+		}
 	}
 
 	static void set_mi(double d) {
