@@ -254,9 +254,14 @@ public:
 			BETWEEN_SECTIONS
 			"Multi-alignment:\n"
 			HEADER_SPACE
-			"--md <x>          Set element minimum dimension x; 0 disables. (100 is default)\n"
+			"--multi <type>    Set multi-alignment <type>, one of:\n"
+			"                     none      Single alignment only\n"
+			"                     local     Best local element\n"
+			"                     fill      Best local element followed by filling [default]\n"
+			"                     llocal    Least-size local element\n"
+			"                     global    Best global element\n"
+			"--md <x>          Set element minimum dimension x.             (100 is default)\n"
 			"--ma-cert <x>     Set mean certainty lower bound.             (0.01 is default)\n" 
-			"--mi <x>          Require error improvement fraction <x>.        (0 is default)\n"
 			"\n"
 		       );
 	}
