@@ -2303,7 +2303,7 @@ public:
 			} else if (!strcmp(option_name, "hf-enhance")) {
 				unsupported::discontinued("--hf-enhance=<x>");
 			} else if (!strcmp(option_name, "multi")) {
-				d2::trans_multi::multi(env->get_string_arg(i->first, 1));
+				d2::trans_multi::set_multi(env->get_string_arg(i->first, 1));
 			} else if (!strcmp(option_name, "gs")) {
 				d2::align::gs(env->get_string_arg(i->first, 1));
 			} else if (!strcmp(option_name, "rot-upper")) {

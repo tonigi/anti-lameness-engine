@@ -48,6 +48,7 @@ public:
 	};
 
 private:
+	static unsigned int _multi;
 	static ale_pos _multi_decomp;
 	static ale_real _multi_improvement;
 
