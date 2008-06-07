@@ -415,7 +415,7 @@ public:
 		}
 	};
 
-	elem_bounds_t elem_bounds() const {
+	elem_bounds_t elem_bounds(int e) {
 		elem_bounds_t result;
 
 		result.imin = cur_offset[0] - orig_offset[0];
@@ -423,8 +423,8 @@ public:
 		result.jmin = cur_offset[1] - orig_offset[1];
 		result.jmax = result.jmin + cur_ref_width;
 
-		if (current_element > 0) {
-			multi_coordinate mc = coord_stack[current_element];
+		if (e > 0) {
+			multi_coordinate mc = coord_stack[e];
 			
 			ale_pos height_scale = orig_ref_height / pow(2, mc.degree);
 			ale_pos width_scale  = orig_ref_width  / pow(2, mc.degree);
@@ -451,6 +451,10 @@ public:
 		result.jmax /= cur_ref_width;
 
 		return result;
+	}
+
+	elem_bounds_t elem_bounds() const {
+		return elem_bounds(current_element);
 	}
 private:
 	void assign_multi_best(const image *cur_ref, const image *input) {
@@ -520,8 +524,20 @@ private:
 		}
 	}
 
-#if 0
 	void fill_multi_init(unsigned char *update_map) {
+		for (int l = 0; l < coord_stack.count(); l++) {
+			elem_bounds_init_t b = elem_bounds(l).scale_to_bounds(cur_ref_height, cur_ref_width);
+			
+			for (int i = b.imin; i < b.imax; b++) {
+				update_map[i * cur_ref_width + b.jmin] |= (1 |  2 |  4);
+				update_map[i * cur_ref_width + b.jmax] |= (8 | 16 | 32);
+			}
+
+			for (int j = b.jmin; j < b.max; b++) {
+				update_map[b.imin * cur_ref_width + j] |= (1 |  64 |  8);
+				update_map[b.imax * cur_ref_width + j] |= (4 | 128 | 32);
+			}
+		}
 	}
 
 	void fill_multi(const image *cur_ref, const image *input) {
@@ -529,8 +545,9 @@ private:
 				cur_ref_height * cur_ref_width, sizeof(unsigned char));
 
 		fill_multi_init(update_map);
+
+		free(update_map);
 	}
-#endif
 
 public:
 	void set_multi(const image *cur_ref, const image *input) {
@@ -549,9 +566,8 @@ public:
 
 		assign_multi_best(cur_ref, input);
 
-#if 0
-		fill_multi(cur_ref, input);
-#endif
+		if (_multi == 2) 
+			fill_multi(cur_ref, input);
 
 		/*
 		 * All scale factors should be identical.
