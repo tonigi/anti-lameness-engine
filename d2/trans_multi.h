@@ -538,13 +538,77 @@ private:
 				update_map[b.imax * cur_ref_width + j] |= (4 | 128 | 32);
 			}
 		}
+
+		for (int i = 0; i < cur_ref_height; i++)
+			update_map[cur_ref_width * cur_ref_height + i] = 1;
+		for (int j = 0; j < cur_ref_width; j++)
+			update_map[cur_ref_width * cur_ref_height + cur_ref_height + j] = 1;
+	}
+
+	int step_fill_multi(unsigned char *update_map, const image *cur_ref, const image *input) {
+		int i_min, i_max, j_min, j_max;
+
+		i_min = cur_ref_height;
+		i_max = cur_ref_height;
+		j_min = cur_ref_width;
+		j_max = cur_ref_width;
+
+		for (int i = 0; i < cur_ref_height; i++)
+			if (update_map[cur_ref_width * cur_ref_height + i]) {
+				i_min = i;
+				i_max = i + 1;
+				break;
+			}
+		for (int i = cur_ref_height - 1; i > i_max; i--)
+			if (update_map[cur_ref_width * cur_ref_height + i]) {
+				i_max = i + 1;
+				break;
+			}
+		for (int j = 0; j < cur_ref_width; j++)
+			if (update_map[cur_ref_width * cur_ref_height + cur_ref_height + j]) {
+				j_min = j;
+				j_max = j + 1;
+				break;
+			}
+		for (int j = cur_ref_width - 1; j > j_max; j--)
+			if (update_map[cur_ref_width * cur_ref_height + cur_ref_height + j]) {
+				j_max = j + 1;
+				break;
+			}
+
+		if (!(i_min < i_max) || !(j_min < j_max))
+			return 0;
+
+		for (int i = i_min; i < i_max; i++)
+			update_map[cur_ref_width * cur_ref_height + i] = 0;
+		for (int j = j_min; j < j_max; j++)
+			update_map[cur_ref_width * cur_ref_height + cur_ref_height + j] = 0;
+
+		for (int i = i_min; i < i_max; i++)
+		for (int j = j_min; j < j_max; j++) {
+			int o = cur_ref_width * i + j;
+			int n = o - cur_ref_width;
+			int s = o + cur_ref_width;
+			int e = o + 1;
+			int w = o - 1;
+			int ne = n + 1;
+			int nw = n - 1;
+			int se = s + 1;
+			int sw = s - 1;
+		}
+
+		return 1;
 	}
 
 	void fill_multi(const image *cur_ref, const image *input) {
 		unsigned char *update_map = (unsigned char *) calloc(
-				cur_ref_height * cur_ref_width, sizeof(unsigned char));
+				cur_ref_height * cur_ref_width 
+				+ cur_ref_height + cur_ref_width, 
+				sizeof(unsigned char));
 
 		fill_multi_init(update_map);
+
+		while (step_fill_multi(update_map, cur_ref, input));
 
 		free(update_map);
 	}
