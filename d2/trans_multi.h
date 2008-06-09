@@ -519,6 +519,15 @@ private:
 		return result;
 	}
 
+	void assign_multi_global_best(const image *cur_ref, const image *input) {
+		for (unsigned int i = 0; i < cur_ref_height; i++)
+		for (unsigned int j = 0; j < cur_ref_width;  j++) {
+			pixel rp = cur_ref->get_pixel(i, j);
+			for (index_t index = 0; index < coordinate_map.size(); index++)
+				check_multi(i, j, rp, cur_ref, input, index);
+		}
+	}
+
 	void assign_multi_best(const image *cur_ref, const image *input) {
 		for (unsigned int i = 0; i < cur_ref_height; i++)
 		for (unsigned int j = 0; j < cur_ref_width;  j++) {
@@ -704,10 +713,14 @@ public:
 				input_height * input_width, sizeof(index_t));
 		assert(spatio_elem_map_r);
 
-		assign_multi_best(cur_ref, input);
+		if (_multi == 4) {
+			assign_multi_global_best(cur_ref, input);
+		} else {
+			assign_multi_best(cur_ref, input);
 
-		if (_multi == 2) 
-			fill_multi(cur_ref, input);
+			if (_multi == 2) 
+				fill_multi(cur_ref, input);
+		}
 
 		/*
 		 * All scale factors should be identical.

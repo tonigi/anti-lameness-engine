@@ -259,7 +259,7 @@ public:
 			"                     local     Best local element\n"
 			"                     fill      Best local element followed by filling [default]\n"
 			"                     llocal    Least-size local element\n"
-			"                     global    Best global element\n"
+			"                     global    Best element\n"
 			"--md <x>          Set element minimum dimension x.             (100 is default)\n"
 			"--ma-cert <x>     Set mean certainty lower bound.             (0.01 is default)\n" 
 			"\n"
