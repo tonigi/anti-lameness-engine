@@ -662,7 +662,7 @@ private:
 						if (spatio_elem_map[dd] == spatio_elem_map[o])
 							continue;
 
-						update_map[dd] |= (1 << comp_dirs[dd]);
+						update_map[dd] |= (1 << comp_dirs[ddi]);
 
 						update_map[cur_ref_height * cur_ref_width 
 							+ dd / cur_ref_width] = 1;
