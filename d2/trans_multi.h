@@ -415,7 +415,7 @@ public:
 		}
 	};
 
-	elem_bounds_t elem_bounds(int e) {
+	elem_bounds_t elem_bounds(int e) const {
 		elem_bounds_t result;
 
 		result.imin = cur_offset[0] - orig_offset[0];
@@ -542,28 +542,32 @@ private:
 	}
 
 	void fill_multi_init(unsigned char *update_map) {
-		for (int l = 0; l < coord_stack.count(); l++) {
-			elem_bounds_init_t b = elem_bounds(l).scale_to_bounds(cur_ref_height, cur_ref_width);
+		for (unsigned int l = 0; l < coord_stack.size(); l++) {
+			elem_bounds_int_t b = elem_bounds(l).scale_to_bounds(cur_ref_height, cur_ref_width);
 			
-			for (int i = b.imin; i < b.imax; b++) {
+			for (unsigned int i = b.imin; i < b.imax; i++) {
 				update_map[i * cur_ref_width + b.jmin] |= (1 |  2 |  4);
 				update_map[i * cur_ref_width + b.jmax] |= (8 | 16 | 32);
 			}
 
-			for (int j = b.jmin; j < b.max; b++) {
+			for (unsigned int j = b.jmin; j < b.jmax; j++) {
 				update_map[b.imin * cur_ref_width + j] |= (1 |  64 |  8);
 				update_map[b.imax * cur_ref_width + j] |= (4 | 128 | 32);
 			}
 		}
 
-		for (int i = 0; i < cur_ref_height; i++)
+		for (unsigned int i = 0; i < cur_ref_height; i++)
 			update_map[cur_ref_width * cur_ref_height + i] = 1;
-		for (int j = 0; j < cur_ref_width; j++)
+		for (unsigned int j = 0; j < cur_ref_width; j++)
 			update_map[cur_ref_width * cur_ref_height + cur_ref_height + j] = 1;
 	}
 
 	int step_fill_multi(unsigned char *update_map, const image *cur_ref, const image *input) {
-		int i_min, i_max, j_min, j_max;
+		if (cur_ref_height == 0
+		 || cur_ref_width == 0)
+			return 0;
+
+		unsigned int i_min, i_max, j_min, j_max;
 		int result = 0;
 
 		i_min = cur_ref_height;
@@ -571,24 +575,24 @@ private:
 		j_min = cur_ref_width;
 		j_max = cur_ref_width;
 
-		for (int i = 0; i < cur_ref_height; i++)
+		for (unsigned int i = 0; i < cur_ref_height; i++)
 			if (update_map[cur_ref_width * cur_ref_height + i]) {
 				i_min = i;
 				i_max = i + 1;
 				break;
 			}
-		for (int i = cur_ref_height - 1; i > i_max; i--)
+		for (unsigned int i = cur_ref_height - 1; i > i_max; i--)
 			if (update_map[cur_ref_width * cur_ref_height + i]) {
 				i_max = i + 1;
 				break;
 			}
-		for (int j = 0; j < cur_ref_width; j++)
+		for (unsigned int j = 0; j < cur_ref_width; j++)
 			if (update_map[cur_ref_width * cur_ref_height + cur_ref_height + j]) {
 				j_min = j;
 				j_max = j + 1;
 				break;
 			}
-		for (int j = cur_ref_width - 1; j > j_max; j--)
+		for (unsigned int j = cur_ref_width - 1; j > j_max; j--)
 			if (update_map[cur_ref_width * cur_ref_height + cur_ref_height + j]) {
 				j_max = j + 1;
 				break;
@@ -597,13 +601,13 @@ private:
 		if (!(i_min < i_max) || !(j_min < j_max))
 			return 0;
 
-		for (int i = i_min; i < i_max; i++)
+		for (unsigned int i = i_min; i < i_max; i++)
 			update_map[cur_ref_width * cur_ref_height + i] = 0;
-		for (int j = j_min; j < j_max; j++)
+		for (unsigned int j = j_min; j < j_max; j++)
 			update_map[cur_ref_width * cur_ref_height + cur_ref_height + j] = 0;
 
-		for (int i = i_min; i < i_max; i++)
-		for (int j = j_min; j < j_max; j++) {
+		for (unsigned int i = i_min; i < i_max; i++)
+		for (unsigned int j = j_min; j < j_max; j++) {
 			int o = cur_ref_width * i + j;
 
 			if (!update_map[o])
@@ -636,7 +640,7 @@ private:
 
 				int d = dirs[di];
 
-				if (d < 0 || d >= cur_ref_width * cur_ref_height)
+				if (d < 0 || (unsigned int) d >= cur_ref_width * cur_ref_height)
 					continue;
 
 				int this_result;
@@ -652,7 +656,7 @@ private:
 					for (int ddi = 0; ddi < 8; ddi++) {
 						int dd = dirs[ddi];
 
-						if (dd < 0 || dd >= cur_ref_width * cur_ref_height)
+						if (dd < 0 || (unsigned int) dd >= cur_ref_width * cur_ref_height)
 							continue;
 
 						if (spatio_elem_map[dd] == spatio_elem_map[o])
