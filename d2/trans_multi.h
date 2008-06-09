@@ -512,7 +512,6 @@ private:
 
 			if (diff1 < diff0 /* * (1 - _multi_improvement) */
 			 || _multi == 3) {
-			 	result = 1;
 				spatio_elem_map_r[input_width * ii + jj] = index;
 			}
 		}
@@ -643,33 +642,35 @@ private:
 				if (d < 0 || (unsigned int) d >= cur_ref_width * cur_ref_height)
 					continue;
 
-				int this_result;
-
 				if (spatio_elem_map[d] == spatio_elem_map[o])
 					continue;
 
-				this_result = check_multi(i, j, rp, cur_ref, input, spatio_elem_map[d]);
+				int changed = check_multi(i, j, rp, cur_ref, input, spatio_elem_map[d]);
 
-				result |= this_result;
+				if (!changed)
+					continue;
 
-				if (this_result)
-					for (int ddi = 0; ddi < 8; ddi++) {
-						int dd = dirs[ddi];
+				for (int ddi = 0; ddi < 8; ddi++) {
+					int dd = dirs[ddi];
 
-						if (dd < 0 || (unsigned int) dd >= cur_ref_width * cur_ref_height)
-							continue;
+					if (dd < 0 || (unsigned int) dd >= cur_ref_width * cur_ref_height)
+						continue;
 
-						if (spatio_elem_map[dd] == spatio_elem_map[o])
-							continue;
+					if (spatio_elem_map[dd] == spatio_elem_map[o])
+						continue;
 
-						update_map[dd] |= (1 << comp_dirs[ddi]);
+					result |= 1;
 
-						update_map[cur_ref_height * cur_ref_width 
-							+ dd / cur_ref_width] = 1;
-						update_map[cur_ref_height * cur_ref_width 
-							+ cur_ref_height + dd % cur_ref_width] = 1;
-					}
+					update_map[dd] |= (1 << comp_dirs[ddi]);
+
+					update_map[cur_ref_height * cur_ref_width 
+						+ dd / cur_ref_width] = 1;
+					update_map[cur_ref_height * cur_ref_width 
+						+ cur_ref_height + dd % cur_ref_width] = 1;
+				}
 			}
+
+			update_map[o] = 0;
 		}
 
 		return result;
