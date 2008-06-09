@@ -457,6 +457,69 @@ public:
 		return elem_bounds(current_element);
 	}
 private:
+	int check_multi(int i, int j, pixel value, const image *cur_ref, const image *input, index_t check_index) {
+
+		int result = 0;
+		const pixel &rp = value;
+		index_t index = check_index;
+
+		trans_single t = get_element(index);
+		point p0 = point(cur_offset[0] + i, cur_offset[1] + j);
+		point p = t.unscaled_inverse_transform(p0);
+
+		if (!input->in_bounds(p))
+			return result;
+
+		trans_single s = get_element(spatio_elem_map[cur_ref_width * i + j]);
+
+		point q = s.unscaled_inverse_transform(p0);
+
+		pixel pt = t.get_tonal_multiplier(p0);
+		pixel qt = s.get_tonal_multiplier(p0);
+
+		if (input->in_bounds(q)) {
+			pixel ip1 = input->get_bl(p);
+			pixel ip0 = input->get_bl(q);
+			
+			ale_real diff1 = (pt * ip1 - rp).norm();
+			ale_real diff0 = (qt * ip0 - rp).norm();
+
+			if (diff1 < diff0 /* * (1 - _multi_improvement) */
+			 || _multi == 3) {
+			 	result = 1;
+				spatio_elem_map[cur_ref_width * i + j] = index;
+			}
+		}
+
+		int ii = (int) p[0];
+		int jj = (int) p[1];
+
+		if (ii < 0 || (unsigned int) ii >= input_height
+		 || jj < 0 || (unsigned int) jj >= input_width)
+			return result;
+
+		trans_single u = get_element(spatio_elem_map_r[input_width * ii + jj]);
+		point r = u.transform_unscaled(p);
+
+		pixel ut = u.get_tonal_multiplier(r);
+
+		if (cur_ref->in_bounds(r - cur_offset)) {
+			pixel ip1 = input->get_bl(p);
+			pixel rp0 = cur_ref->get_bl(r - cur_offset);
+
+			ale_real diff1 = (pt * ip1 - rp).norm();
+			ale_real diff0 = (ut * ip1 - rp0).norm();
+
+			if (diff1 < diff0 /* * (1 - _multi_improvement) */
+			 || _multi == 3) {
+			 	result = 1;
+				spatio_elem_map_r[input_width * ii + jj] = index;
+			}
+		}
+
+		return result;
+	}
+
 	void assign_multi_best(const image *cur_ref, const image *input) {
 		for (unsigned int i = 0; i < cur_ref_height; i++)
 		for (unsigned int j = 0; j < cur_ref_width;  j++) {
@@ -472,54 +535,8 @@ private:
 				if (!coordinate_map.count(c))
 					break;
 				index_t index = coordinate_map[c];
-				trans_single t = get_element(index);
-				point p0 = point(cur_offset[0] + i, cur_offset[1] + j);
-				point p = t.unscaled_inverse_transform(p0);
-				if (!input->in_bounds(p))
-					continue;
 
-				trans_single s = get_element(spatio_elem_map[cur_ref_width * i + j]);
-
-				point q = s.unscaled_inverse_transform(p0);
-
-				pixel pt = t.get_tonal_multiplier(p0);
-				pixel qt = s.get_tonal_multiplier(p0);
-				
-				if (input->in_bounds(q)) {
-					pixel ip1 = input->get_bl(p);
-					pixel ip0 = input->get_bl(q);
-					
-					ale_real diff1 = (pt * ip1 - rp).norm();
-					ale_real diff0 = (qt * ip0 - rp).norm();
-
-					if (diff1 < diff0 /* * (1 - _multi_improvement) */
-					 || _multi == 3)
-						spatio_elem_map[cur_ref_width * i + j] = index;
-				}
-
-				int ii = (int) p[0];
-				int jj = (int) p[1];
-
-				if (ii < 0 || (unsigned int) ii >= input_height
-				 || jj < 0 || (unsigned int) jj >= input_width)
-					continue;
-
-				trans_single u = get_element(spatio_elem_map_r[input_width * ii + jj]);
-				point r = u.transform_unscaled(p);
-
-				pixel ut = u.get_tonal_multiplier(r);
-
-				if (cur_ref->in_bounds(r - cur_offset)) {
-					pixel ip1 = input->get_bl(p);
-					pixel rp0 = cur_ref->get_bl(r - cur_offset);
-
-					ale_real diff1 = (pt * ip1 - rp).norm();
-					ale_real diff0 = (ut * ip1 - rp0).norm();
-
-					if (diff1 < diff0 /* * (1 - _multi_improvement) */
-					 || _multi == 3)
-						spatio_elem_map_r[input_width * ii + jj] = index;
-				}
+				check_multi(i, j, rp, cur_ref, input, index);
 			}
 		}
 	}
@@ -547,6 +564,7 @@ private:
 
 	int step_fill_multi(unsigned char *update_map, const image *cur_ref, const image *input) {
 		int i_min, i_max, j_min, j_max;
+		int result = 0;
 
 		i_min = cur_ref_height;
 		i_max = cur_ref_height;
@@ -587,6 +605,12 @@ private:
 		for (int i = i_min; i < i_max; i++)
 		for (int j = j_min; j < j_max; j++) {
 			int o = cur_ref_width * i + j;
+
+			if (!update_map[o])
+				continue;
+
+			pixel rp = cur_ref->get_pixel(i, j);
+
 			int n = o - cur_ref_width;
 			int s = o + cur_ref_width;
 			int e = o + 1;
@@ -595,9 +619,56 @@ private:
 			int nw = n - 1;
 			int se = s + 1;
 			int sw = s - 1;
+			int dirs[8] = {
+				nw, w, sw,
+				ne, e, se,
+				n, s
+			};
+			int comp_dirs[8] = {
+				5, 4, 3,
+				2, 1, 0,
+				7, 6
+			};
+
+			for (int di = 0; di < 8; di++) {
+				if (!(update_map[o] & (1 << di)))
+					continue;
+
+				int d = dirs[di];
+
+				if (d < 0 || d >= cur_ref_width * cur_ref_height)
+					continue;
+
+				int this_result;
+
+				if (spatio_elem_map[d] == spatio_elem_map[o])
+					continue;
+
+				this_result = check_multi(i, j, rp, cur_ref, input, spatio_elem_map[d]);
+
+				result |= this_result;
+
+				if (this_result)
+					for (int ddi = 0; ddi < 8; ddi++) {
+						int dd = dirs[ddi];
+
+						if (dd < 0 || dd >= cur_ref_width * cur_ref_height)
+							continue;
+
+						if (spatio_elem_map[dd] == spatio_elem_map[o])
+							continue;
+
+						update_map[dd] |= (1 << comp_dirs[dd]);
+
+						update_map[cur_ref_height * cur_ref_width 
+							+ dd / cur_ref_width] = 1;
+						update_map[cur_ref_height * cur_ref_width 
+							+ cur_ref_height + dd % cur_ref_width] = 1;
+					}
+			}
 		}
 
-		return 1;
+		return result;
 	}
 
 	void fill_multi(const image *cur_ref, const image *input) {
