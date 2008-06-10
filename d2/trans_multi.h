@@ -600,7 +600,7 @@ private:
 				i_max = i + 1;
 				break;
 			}
-		for (unsigned int i = cur_ref_height - 1; i > i_max; i--)
+		for (unsigned int i = cur_ref_height - 1; i >= i_max; i--)
 			if (update_map[cur_ref_width * cur_ref_height + i]) {
 				i_max = i + 1;
 				break;
@@ -611,7 +611,7 @@ private:
 				j_max = j + 1;
 				break;
 			}
-		for (unsigned int j = cur_ref_width - 1; j > j_max; j--)
+		for (unsigned int j = cur_ref_width - 1; j >= j_max; j--)
 			if (update_map[cur_ref_width * cur_ref_height + cur_ref_height + j]) {
 				j_max = j + 1;
 				break;
