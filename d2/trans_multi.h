@@ -484,7 +484,12 @@ private:
 			ale_real diff1 = (pt * ip1 - rp).norm();
 			ale_real diff0 = (qt * ip0 - rp).norm();
 
-			if (diff1 < diff0 /* * (1 - _multi_improvement) */
+			/*
+			 * 0.99 factor is for cycle avoidance (e.g., in
+			 * filling).
+			 */
+
+			if (diff1 < diff0 * 0.99 /* * (1 - _multi_improvement) */
 			 || _multi == 3) {
 			 	result = 1;
 				spatio_elem_map[cur_ref_width * i + j] = index;
@@ -510,7 +515,13 @@ private:
 			ale_real diff1 = (pt * ip1 - rp).norm();
 			ale_real diff0 = (ut * ip1 - rp0).norm();
 
-			if (diff1 < diff0 /* * (1 - _multi_improvement) */
+			/*
+			 * 0.99 factor is probably not necessary, but
+			 * is included for symmetry with cycle-avoidance 
+			 * factor.
+			 */
+
+			if (diff1 < diff0 * 0.99 /* * (1 - _multi_improvement) */
 			 || _multi == 3) {
 				spatio_elem_map_r[input_width * ii + jj] = index;
 			}
