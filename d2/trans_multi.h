@@ -566,12 +566,12 @@ private:
 			
 			for (unsigned int i = b.imin; i < b.imax; i++) {
 				update_map[i * cur_ref_width + b.jmin] |= (1 |  2 |  4);
-				update_map[i * cur_ref_width + b.jmax] |= (8 | 16 | 32);
+				update_map[i * cur_ref_width + (b.jmax - 1)] |= (8 | 16 | 32);
 			}
 
 			for (unsigned int j = b.jmin; j < b.jmax; j++) {
 				update_map[b.imin * cur_ref_width + j] |= (1 |  64 |  8);
-				update_map[b.imax * cur_ref_width + j] |= (4 | 128 | 32);
+				update_map[(b.imax - 1) * cur_ref_width + j] |= (4 | 128 | 32);
 			}
 		}
 
