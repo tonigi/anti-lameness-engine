@@ -1,0 +1,90 @@
+ALE(1)
+======
+David Hilvert <dhilvert@gmail.com>
+
+NAME
+----
+ale - a synthetic capture engine and renderer
+
+SYNOPSIS
+--------
+*ale* ['OPTIONS'] 'original-frame' ['supplemental-frames' ...] 'output-file'
+
+*ale* ['HELP OPTIONS']
+
+*ale --version*
+
+DESCRIPTION
+-----------
+*ALE* is a free software synthetic capture engine and renderer accepting, as
+input, a sequence of image frames, and producing, as output, rendered images,
+registration data, and 3D models (currently experimental).
+
+EXAMPLES
+--------
+*ale --hu*::
+	Print the help page on program usage.
+
+*ale 001.ppm 002.ppm 003.ppm out.ppm*::
+	Render output file *out.ppm* from inputs *001.ppm*, *002.ppm*, and
+	*003.ppm*.
+
+**ale --scale 2 001.ppm 002.ppm 003.ppm out.png**::
+	Render output file *out.png* at 2x scale.
+
+**ale --perturb-upper=0 --trans-load=a.t --projective frame*.png out.png**::
+	Render output file *out.png* from inputs **frame*.png**, using
+	projective transformations as described in the file *a.t*.
+
+**ale --3dv 0 out.png --projective frame*.png null:**::
+	Render output file *out.png* from inputs **frame*.png**, using a
+	3D scene model to determine transformations.
+
+**ale --visp last:sinc*lanc:6 sf:0 out/ .jpg in/*.jpg null:**::
+	Render a video stream from files **in/\*.jpg** to the directory **out/**,
+	stabilizing to the first frame, with a lanczos-windowed sinc filter.
+
+USAGE
+-----
+*ale* is a wrapper script that calls the executable *ale-bin* after extracting
+exposure EXIF information from image files (when the *exiftool* utility is
+available) and converting from raw formats (when the *dcraw* utility is
+available).
+
+When *ale-bin* has been linked with ImageMagick, input and output files may be
+of any kind supported by ImageMagick.  Otherwise, only PPM files can be read
+and written by *ale-bin*.
+
+OPTIONS
+-------
+'OPTIONS' are summarized via built-in help pages (see *HELP OPTIONS* below).
+More detailed manuals describing options and internal algorithms are available
+for certain versions of ALE.  See *SEE ALSO* below for more details on other
+manuals.
+
+HELP OPTIONS
+------------
+A listing of available help options can be obtained by invoking *ale --hu*.
+
+ENVIRONMENT
+-----------
+The wrapper script *ale* recognizes the following environment variables:
+
+*ALE_BIN*::
+	ALE executable to use.
+
+*DCRAW*::
+	dcraw raw extraction tool to use.
+
+*EXIF_UTILITY*::
+	EXIF extraction utility to use.
+
+*ALE_COUNT_THREADS*::
+	Displays statistics on thread counts when set to a non-zero value.
+
+SEE ALSO
+--------
+More detailed manuals for certain versions of ALE are distributed with source
+packages, and may also be available from:
+
+http://auricle.dyndns.org/ALE/manuals/[]
