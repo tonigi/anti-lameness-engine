@@ -78,6 +78,7 @@ cp /usr/share/aclocal/acx_pthread.m4 m4/.
 chmod a+x doc/make-changelog
 chmod a+x doc/make-infos
 make -C doc ../TODO ../README ../ChangeLog ../NEWS ../REPORTING-BUGS
+a2x -f manpage doc/man/ale.1.txt
 
 #
 # Import GNU extension strndup

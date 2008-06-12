@@ -71,3 +71,9 @@ bin_SCRIPTS = ale
 bin_PROGRAMS = ale-bin
 ale_bin_SOURCES = ale.cc thread.cc rand.cc ui/ui.cc ui/input.cc ui/ui_log.cc d2.cc d3.cc
 ale_bin_LDADD = lib/libgnu.la @OPTION_LIBS@
+
+#
+# Manuals
+#
+
+man_MANS = doc/man/ale.1
