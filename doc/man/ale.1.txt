@@ -82,6 +82,9 @@ The wrapper script *ale* recognizes the following environment variables:
 *ALE_COUNT_THREADS*::
 	Displays statistics on thread counts when set to a non-zero value.
 
+*PAGER*::
+	Text pager to use (e.g., for displaying help pages).
+
 SEE ALSO
 --------
 More detailed manuals for certain versions of ALE are distributed with source

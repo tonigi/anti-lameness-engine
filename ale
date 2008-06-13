@@ -24,6 +24,7 @@ chomp ($ale_exec_dir = `dirname $0`);
 	"DCRAW" => "dcraw",
 	"EXIF_UTILITY" => "exiftool",
 	"ALE_COUNT_THREADS" => "0",
+	"PAGER" => "/usr/bin/less",
 );
 
 %devices = (
@@ -35,6 +36,53 @@ for $default (keys %defaults) {
 	if (!defined $ENV{$default}) {
 		$ENV{$default} = $defaults{$default};
 	}
+}
+
+#
+# Wrap help page requests
+#
+
+if (!defined @ARGV || @ARGV == 0 || $ARGV[0] =~ /^--h[a-zA-Z0-9]$/) {
+	$ale_bin = $ENV{"ALE_BIN"};
+
+	#
+	# Find a pager
+	#
+	
+	undef $pager;
+	if (-x "$ENV{PAGER}") {
+		$pager = $ENV{"PAGER"};
+	} elsif (`which $ENV{"PAGER"}`) {
+		$pager = `which $ENV{"PAGER"}`;
+	} elsif (`which pager`) {
+		$pager = `which pager`;
+	} elsif (`which less`) {
+		$pager = `which less`;
+	} elsif (`which more`) {
+		$pager = `which more`;
+	} elsif (-x '/usr/bin/less') {
+		$pager = '/usr/bin/less';
+	} elsif (-x '/bin/more') {
+		$pager = '/bin/more';
+	}
+
+	#
+	# Set pager options
+	#
+	
+	$ENV{"LESS"} = "-X -F";
+
+	#
+	# Fetch help page
+	#
+
+	if (defined $pager) {
+		exec "exec -a $0 $ale_bin @ARGV | $pager";
+	} else {
+		exec "exec -a $0 $ale_bin @ARGV";
+	}
+
+	exit(0);
 }
 
 #
