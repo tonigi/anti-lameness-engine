@@ -112,7 +112,7 @@
           -->
 
 	<xsl:param name="product-name" select="'ALE'"/>
-	<xsl:param name="product-version" select="'0.9.0'"/>
+	<xsl:param name="product-version" select="'0.9.0.1'"/>
 	<xsl:param name="site-URL" select="
 		concat('http://auricle.dyndns.org/', $product-name, '/')"/>
 	<xsl:param name="download-URL" select="concat($site-URL, 'download/')"/>

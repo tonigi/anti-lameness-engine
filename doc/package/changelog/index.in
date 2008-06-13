@@ -1,3 +1,43 @@
+V	0.9.0.1 2008-Jun-13
+
+o	Use a pager (e.g., less) when displaying help.
+
+o	Add a man page, at the recommendation of Debian developer Ruben Molina.
+	The man page structure roughly follows that of Debian Iceweasel, GNU tar,
+	and the earlier ALE manual page for Debian by Nick Rusnov and Ruben
+	Molina.
+
+o	Add new algorithms for pixel assignment in multi-alignment, including
+	filling, least-size local selection, and global-best selection.
+
+o	Fix various multi-alignment bugs, including a bug causing increased
+	computational complexity for rendering, as well as offset and scaling
+	bugs.
+
+o	Modify --lod-max to --lod-preferred, add a dimension restriction
+	--min-dimension on level-of-detail, and make --lod-preferred=-3
+	and --min-dimension=100 default.
+
+o	Revise DejaGNU test suite for current option syntax, so that "make
+	check" now runs all tests.
+
+o	Do not attempt to handle --trans-{save,load} arguments as images in
+	the ale wrapper script.
+
+o	Add include <string.h> to ui/ui.h in an attempt to resolve Debian bug
+	#482765, reported by Marc Brockschmidt and noted by Ruben Molina.
+
+o	Include more information about scale cluster structures in the
+	logging ui.
+
+o	Add tonal registration by element to multi-alignment code.
+
+o	Add a minimum average certainty for registration of multi-alignment
+	elements.
+
+o	Modify ale script to tally thread statistics when the environment
+	variable ALE_COUNT_THREADS is set non-zero.
+
 V	0.9.0 2008-Apr-14
 
 o	Add skeletal web documentation to the documentation tree, in doc/web,
