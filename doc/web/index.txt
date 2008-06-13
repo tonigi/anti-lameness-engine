@@ -36,8 +36,8 @@ Testing
 ~~~~~~~
 
 `12`22~~~~~~~~~~~~
-link:download/ale-0.9.0.tar.gz[ale-0.9.0.tar.gz], Latest testing source release
-link:download/ale-0_9_0-win32.zip[ale-0_9_0-win32.zip], "Latest testing Win32 binary (PPM-only, unthreaded)"
+link:download/ale-0.9.0.1.tar.gz[ale-0.9.0.1.tar.gz], Latest testing source release
+link:download/ale-0_9_0_1-win32.zip[ale-0_9_0_1-win32.zip], "Latest testing Win32 binary (PPM-only, unthreaded)"
 ~~~~~~~~~~~~~~~~~~
 
 Stable
