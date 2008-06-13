@@ -16,7 +16,7 @@ o	Fix various multi-alignment bugs, including a bug causing increased
 
 o	Modify --lod-max to --lod-preferred, add a dimension restriction
 	--min-dimension on level-of-detail, and make --lod-preferred=-3
-	and --min-dimension=100 default.
+	and --min-dimension=10 default.
 
 o	Revise DejaGNU test suite for current option syntax, so that "make
 	check" now runs all tests.
