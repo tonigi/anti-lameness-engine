@@ -141,17 +141,6 @@
 	</para>
 	</xsl:template>
 
-	<xsl:template match="*|/" mode="license-object">
-	<para>
-	  Unless explicitly defined within the applicable version of the GNU
-	  General Public License, any references to "object code" within the
-	  license shall refer to any non-source version of this
-	  <xsl:apply-templates select="." mode="document-type"/> (or of any
-	  work based on this <xsl:apply-templates select="."
-	  mode="document-type"/>).
-	</para>
-	</xsl:template>
-
 	<xsl:template match="*|/" mode="license-warranty">
 	<para>
 	   This <xsl:apply-templates select="." mode="document-type"/> is
@@ -177,7 +166,6 @@
 	  <xsl:apply-templates select="." mode="license-terms"/>
 	  <xsl:apply-templates select="." mode="license-warranty"/>
 	  <xsl:apply-templates select="." mode="license-availability"/>
-	  <xsl:apply-templates select="." mode="license-object"/>
 	</legalnotice>
 	</xsl:template>
 
