@@ -9,6 +9,8 @@ o	Add a man page, at the recommendation of Debian developer Ruben Molina.
 
 o	Add new algorithms for pixel assignment in multi-alignment, including
 	filling, least-size local selection, and global-best selection.
+	Filling was motivated by Gregory Maxwell's viola set and was refined on
+	Mika Yrjola's ale_testset1.
 
 o	Fix various multi-alignment bugs, including a bug causing increased
 	computational complexity for rendering, as well as offset and scaling
