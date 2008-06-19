@@ -53,7 +53,7 @@ Distribution Status
 
 `12`22~~~~~~~~~~~~
 http://losslessjpegtoolbox.wordpress.com/ale-options/[ALE Options (Win32)], 0.8.11
-http://www.debian.org/[Debian], 0.7.1
+http://www.debian.org/[Debian], 0.9.0.1
 http://www.freebsd.org/[FreeBSD], 0.8.4
 http://www.macports.org/[MacPorts], 0.8.7
 ~~~~~~~~~~~~~~~~~~
