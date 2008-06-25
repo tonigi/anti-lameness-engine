@@ -19,11 +19,44 @@
 
 chomp ($ale_exec_dir = `dirname $0`);
 
+#
+# Detect software GPU
+#
+
 if (!defined $ENV{"ALE_SOFT_GPU"} && `which glxinfo` && `glxinfo | grep "direct rendering: No"`) {
 	$ENV{"ALE_SOFT_GPU"} = "1";
 } elsif (!defined $ENV{"ALE_SOFT_GPU"}) {
 	$ENV{"ALE_SOFT_GPU"} = "0";
 }
+
+#
+# Determine whether to use GL interface by default
+#
+
+# Blacklist
+
+if (!defined $ENV{"ALE_GL_UI_DEFAULT"} 
+ && ($ENV{"ALE_SOFT_GPU"} 
+  || !`glxinfo`)) {
+	$ENV{"ALE_GL_UI_DEFAULT"} = 0;
+} 
+
+# Whitelist
+
+if (!defined $ENV{"ALE_GL_UI_DEFAULT"} 
+ && (`uname -a | grep Linux`)) {
+	$ENV{"ALE_GL_UI_DEFAULT"} = 1;
+} 
+
+# Make GL UI non-default if neither blacklisted nor whitelisted
+
+if (!defined $ENV{"ALE_GL_UI_DEFAULT"}) {
+	$ENV{"ALE_GL_UI_DEFAULT"} = 0;
+}
+
+#
+# Environment variable defaults
+#
 
 %defaults = (
 	"ALE_BIN" => "$ale_exec_dir/ale-bin",
