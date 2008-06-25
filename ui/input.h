@@ -1254,6 +1254,7 @@ public:
 				"ALE_COUNT_THREADS",
 				"PAGER",
 				"ALE_SOFT_GPU",
+				"ALE_GL_UI_DEFAULT",
 				NULL
 			};
 
