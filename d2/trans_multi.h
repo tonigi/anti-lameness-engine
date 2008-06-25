@@ -39,8 +39,8 @@ public:
 	public:
 		int operator<(const multi_coordinate &mc) const {
 			if (degree < mc.degree
-			 || degree == mc.degree && y < mc.y
-			 || degree == mc.degree && y == mc.y && x < mc.x)
+			 || (degree == mc.degree && y < mc.y)
+			 || (degree == mc.degree && y == mc.y && x < mc.x))
 				return 1;
 
 			return 0;

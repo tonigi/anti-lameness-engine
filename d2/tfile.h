@@ -522,8 +522,8 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 						mc2 = default_transform.get_current_coordinate();
 
 						if (mc1.degree < mc2.degree
-						 || mc1.degree == mc2.degree && mc1.y < mc2.y
-						 || mc1.degree == mc2.degree && mc1.y == mc2.y && mc1.x < mc2.x)
+						 || (mc1.degree == mc2.degree && mc1.y < mc2.y)
+						 || (mc1.degree == mc2.degree && mc1.y == mc2.y && mc1.x < mc2.x))
 							break;
 						if (mc1.degree != mc2.degree
 						 || mc1.x != mc2.x
@@ -593,8 +593,8 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 						mc2 = default_transform.get_current_coordinate();
 
 						if (mc1.degree < mc2.degree
-						 || mc1.degree == mc2.degree && mc1.y < mc2.y
-						 || mc1.degree == mc2.degree && mc1.y == mc2.y && mc1.x < mc2.x)
+						 || (mc1.degree == mc2.degree && mc1.y < mc2.y)
+						 || (mc1.degree == mc2.degree && mc1.y == mc2.y && mc1.x < mc2.x))
 							break;
 						if (mc1.degree != mc2.degree
 						 || mc1.x != mc2.x
