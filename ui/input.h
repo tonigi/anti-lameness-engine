@@ -1241,6 +1241,29 @@ public:
 
 			fprintf(stdout, "%s", version);
 
+			/*
+			 * Output relevant environment variables
+			 */
+
+			fprintf(stdout, "Environment:\n");
+
+			const char *env_names[] = {
+				"ALE_BIN",
+				"DCRAW",
+				"EXIF_UTILITY",
+				"ALE_COUNT_THREADS",
+				"PAGER",
+				"ALE_SOFT_GPU",
+				NULL
+			};
+
+			for (int i = 0; env_names[i]; i++) {
+				char *value = getenv(env_names[i]);
+
+				fprintf(stdout, "   %s=%s\n",
+					env_names[i], value ? value : "");
+			}
+
 			return;
 		}
 
