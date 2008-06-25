@@ -19,6 +19,10 @@
 
 chomp ($ale_exec_dir = `dirname $0`);
 
+if (!defined $ENV{"ALE_SOFT_GPU"} && `which glxinfo` && `glxinfo | grep "direct rendering: No"`) {
+	$ENV{"ALE_SOFT_GPU"} = "1";
+}
+
 %defaults = (
 	"ALE_BIN" => "$ale_exec_dir/ale-bin",
 	"DCRAW" => "dcraw",

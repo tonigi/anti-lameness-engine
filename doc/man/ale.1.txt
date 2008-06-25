@@ -85,6 +85,10 @@ The wrapper script *ale* recognizes the following environment variables:
 *PAGER*::
 	Text pager to use (e.g., for displaying help pages).
 
+*ALE_SOFT_GPU*::
+	0 if hardware acceleration is available, 1 otherwise.  This variable
+	may be set automatically from the output of 'glxinfo'.
+
 SEE ALSO
 --------
 More detailed manuals for certain versions of ALE are distributed with source
