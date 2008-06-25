@@ -21,6 +21,8 @@ chomp ($ale_exec_dir = `dirname $0`);
 
 if (!defined $ENV{"ALE_SOFT_GPU"} && `which glxinfo` && `glxinfo | grep "direct rendering: No"`) {
 	$ENV{"ALE_SOFT_GPU"} = "1";
+} elsif (!defined $ENV{"ALE_SOFT_GPU"}) {
+	$ENV{"ALE_SOFT_GPU"} = "0";
 }
 
 %defaults = (
