@@ -130,6 +130,14 @@ if (!defined @ARGV || @ARGV == 0 || $ARGV[0] =~ /^--h[a-zA-Z0-9]$/) {
 
 $started_conversion = 0;
 undef $global_device;
+$extract_ev = 0;
+$extract_raw = 0;
+if ("@ARGV" =~ /exp-meta-only/ && defined $ENV{"EXIF_UTILITY"} && `which $ENV{"EXIF_UTILITY"}`) {
+	$extract_ev = 1;
+}
+if (defined $ENV{"DCRAW"} && `which $ENV{"DCRAW"}`) {
+	$extract_raw = 1;
+}
 for ($i = 0; $i < @ARGV; $i++) {
 	$arg = $ARGV[$i];
 
@@ -145,7 +153,7 @@ for ($i = 0; $i < @ARGV; $i++) {
 
 	next if (!-e $arg); 
 
-	if (defined $ENV{"EXIF_UTILITY"} && `which $ENV{"EXIF_UTILITY"}`) {
+	if ($extract_ev) {
 		if (`$ENV{"EXIF_UTILITY"} $arg | grep '^EV'` =~ /([0-9\.]+)/) {
 			$ev = $1;
 			if (`$ENV{"EXIF_UTILITY"} $arg | grep '^ISO'` =~ /([0-9\.]+)/) {
@@ -156,7 +164,7 @@ for ($i = 0; $i < @ARGV; $i++) {
 		}
 	}
 
-	if (defined $ENV{"DCRAW"} && `which $ENV{"DCRAW"}`) {
+	if ($extract_raw) {
 		$device_info = `$ENV{"DCRAW"} -i $arg 2> /dev/null`;
 
 		next if ($?);
