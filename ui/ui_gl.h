@@ -21,7 +21,12 @@
 #ifndef __ui_gl_h__
 #define __ui_gl_h__
 
+#ifdef USE_FREEGLUT
+#include <GL/freeglut.h>
+#endif
+
 #include "ui.h"
+#include "gpu.h"
 
 /*
  * OpenGL user interface.
@@ -37,15 +42,22 @@ private:
 	}
 
 	void update() {
-		if (status.code == status.FRAME_DONE) {
-			printf(".\n");
-		} else if (status.code == status.SET_DONE) {
-			printf("\n");
-		}
+#ifdef USE_FREEGLUT
+		gpu::lock();
+		glutMainLoopEvent();
+		gpu::unlock();
+#endif
 	}
 
 public:
 	ui_gl() {
+		int exception_value = 1;
+#ifndef USE_FREEGLUT
+		throw exception_value;
+#endif
+
+		if (!gpu::is_ok())
+			throw exception_value;
 	}
 };
 

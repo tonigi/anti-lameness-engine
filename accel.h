@@ -50,7 +50,7 @@ public:
 	}
 
 	static int is_gpu() {
-		if (use_gpu > 0 && gpu::is_gpu_ok())
+		if (use_gpu > 0 && gpu::is_ok())
 			return 1;
 
 		if (use_gpu == 1) {

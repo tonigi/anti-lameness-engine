@@ -34,8 +34,12 @@
 #include <GL/glut.h>
 #endif
 
+#include "thread.h"
+
+
 class gpu {
 	static int gpu_initialized;
+	static thread::lock_t _gpu_lock;
 
 	static void try_init_gpu() {
 		assert(!gpu_initialized);
@@ -57,12 +61,20 @@ class gpu {
 
 public:
 
-	static int is_gpu_ok() {
+	static int is_ok() {
 		if (!gpu_initialized) {
 			try_init_gpu();
 		}
 
 		return gpu_initialized;
+	}
+
+	static void lock() {
+		_gpu_lock.lock();
+	}
+
+	static void unlock() {
+		_gpu_lock.unlock();
 	}
 };
 
