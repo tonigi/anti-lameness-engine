@@ -41,6 +41,7 @@
  */
 
 #include "ui.h"
+#include "accel.h"
 #include "unsupported.h"
 #include "implication.h"
 
@@ -1876,6 +1877,18 @@ public:
 				user_view_angle = env->get_double_arg(i->first, 1) * M_PI / 180;
 			} else if (!strcmp(option_name, "cpf-load")) {
 				d3::cpf::init_loadfile(env->get_string_arg(i->first, 1));
+			} else if (!strcmp(option_name, "accel")) {
+				if (!strcmp(env->get_string_arg(i->first, 1), "gpu"))
+					accel::set_gpu();
+				else if (!strcmp(env->get_string_arg(i->first, 1), "none"))
+					accel::set_none();
+				else if (!strcmp(env->get_string_arg(i->first, 1), "auto"))
+					accel::set_auto();
+				else {
+					fprintf(stderr, "Error: Unknown acceleration type '%s'\n", 
+							env->get_string_arg(i->first, 1));
+					exit(1);
+				}
 			} else if (!strcmp(option_name, "ui")) {
 				if (!strcmp(env->get_string_arg(i->first, 1), "stream"))
 					ui::set_stream();
@@ -1885,6 +1898,10 @@ public:
 					ui::set_log();
 				else if (!strcmp(env->get_string_arg(i->first, 1), "quiet"))
 					ui::set_quiet();
+				else if (!strcmp(env->get_string_arg(i->first, 1), "gl"))
+					ui::set_gl();
+				else if (!strcmp(env->get_string_arg(i->first, 1), "auto"))
+					ui::set_auto();
 				else {
 					fprintf(stderr, "Error: Unknown user interface type '%s'\n", 
 							env->get_string_arg(i->first, 1));

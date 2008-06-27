@@ -140,6 +140,8 @@ input::simple_option input::simple_option_table[] = {
 
 	{ "cpf-load", NULL, NULL, 1 },
 
+	{ "accel", NULL, NULL, 1 },
+
 	{ "ui", NULL, NULL, 1 },
 
 	{ "3d-fmr", NULL, NULL, 1 },

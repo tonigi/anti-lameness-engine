@@ -110,6 +110,8 @@ private:
 	 * 1. tty
 	 * 2. log
 	 * 3. quiet
+	 * 4. gl
+	 * 5. auto
 	 */
 
 	static int type;
@@ -262,6 +264,16 @@ public:
 	static void set_quiet() {
 		assert(singleton == NULL);
 		type = 3;
+	}
+
+	static void set_gl() {
+		assert(singleton == NULL);
+		type = 4;
+	}
+
+	static void set_auto() {
+		assert(singleton == NULL);
+		type = 5;
 	}
 
 	static void set_profile() {
