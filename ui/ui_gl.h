@@ -53,6 +53,10 @@ private:
 
 public:
 	ui_gl() {
+#ifndef USE_GLUT
+		const char *glut_error = "this build was not configured for GLUT";
+		throw glut_error;
+#endif
 #ifndef HAVE_GLUT_MAIN_LOOP_EVENT
 		const char *freeglut_error = "need extension glutMainLoopEvent()";
 		throw freeglut_error;
