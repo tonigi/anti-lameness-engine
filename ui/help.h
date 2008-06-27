@@ -557,10 +557,12 @@ public:
 			"User Interfaces:\n"
 			HEADER_SPACE
 			"--ui=<type>       Set user interface to <type>, one of:\n"
-			"                     quiet\n"
-			"                     stream\n"
-			"                     tty [default]\n"
-			"                     log\n"
+			"                     gl         OpenGL interface\n"
+			"                     tty        TTY interface\n"
+			"                     log        Logging interface\n"
+			"                     quiet      Suppress output\n"
+			"                     stream     Stream interface\n"
+			"                     auto       Select automatically [default]\n"
 #ifndef USE_IOCTL
 			"\n"
 			"                     NOTE: since ALE was compiled without terminal size check,\n"
@@ -752,6 +754,12 @@ public:
 			"                           for threads.\n"
 			"\n"
 #endif
+			BETWEEN_SECTIONS
+			"Acceleration:\n"
+			"--accel <type>    Use acceleration <type>, one of:\n"
+			"                     gpu        Graphics processor acceleration.\n"
+			"                     none       No acceleration.\n"
+			"                     auto       Select automatically [default]\n"
 			"\n");
 	}
 	void undocumented() {
