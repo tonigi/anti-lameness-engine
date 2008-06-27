@@ -30,6 +30,18 @@ if (!defined $ENV{"ALE_SOFT_GPU"} && `which glxinfo` && `glxinfo | grep "direct 
 }
 
 #
+# Determine whether to use GPU acceleration by default
+#
+
+if (!defined $ENV{"ALE_GPU_ACCEL_DEFAULT"}
+ && ($ENV{"ALE_SOFT_GPU"}
+  || !`glxinfo`)) {
+  	$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 0;
+} else {
+	$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 1;
+}
+
+#
 # Determine whether to use GL interface by default
 #
 

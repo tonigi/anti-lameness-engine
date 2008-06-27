@@ -1256,6 +1256,7 @@ public:
 				"PAGER",
 				"ALE_SOFT_GPU",
 				"ALE_GL_UI_DEFAULT",
+				"ALE_GPU_ACCEL_DEFAULT",
 				NULL
 			};
 
