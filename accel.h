@@ -25,6 +25,8 @@
 #ifndef __accel_h__
 #define __accel_h__
 
+#include "gpu.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -48,7 +50,15 @@ public:
 	}
 
 	static int is_gpu() {
-		return use_gpu > 0;
+		if (use_gpu > 0 && gpu::is_gpu_ok())
+			return 1;
+
+		if (use_gpu == 1) {
+			fprintf(stderr, "GPU acceleration error.\n");
+			exit(1);
+		}
+
+		return 0;	
 	}
 
 	static int is_auto() {
