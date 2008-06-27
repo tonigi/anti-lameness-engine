@@ -30,10 +30,14 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef USE_GLUT
+#include <GL/glut.h>
+#endif
+
 class gpu {
 	static int gpu_initialized;
 
-	void try_init_gpu() {
+	static void try_init_gpu() {
 		assert(!gpu_initialized);
 
 #ifdef USE_GLUT
@@ -53,7 +57,7 @@ class gpu {
 
 public:
 
-	int is_gpu_ok() {
+	static int is_gpu_ok() {
 		if (!gpu_initialized) {
 			try_init_gpu();
 		}
