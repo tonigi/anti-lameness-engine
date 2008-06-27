@@ -57,6 +57,9 @@ ui *ui::get() {
 		case 4:
 			try {
 				singleton = new ui_gl();
+			} catch (const char *error) {
+				fprintf(stderr, "Error initializing GL interface: %s.\n", error);
+				exit(1);
 			} catch (...) {
 				fprintf(stderr, "Error initializing GL interface.\n");
 				exit(1);

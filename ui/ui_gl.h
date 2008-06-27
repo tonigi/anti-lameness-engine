@@ -23,6 +23,8 @@
 
 #ifdef USE_FREEGLUT
 #include <GL/freeglut.h>
+#elif USE_GLUT
+#include <GL/glut.h>
 #endif
 
 #include "ui.h"
@@ -42,7 +44,7 @@ private:
 	}
 
 	void update() {
-#ifdef USE_FREEGLUT
+#ifdef HAVE_GLUT_MAIN_LOOP_EVENT
 		gpu::lock();
 		glutMainLoopEvent();
 		gpu::unlock();
@@ -51,13 +53,15 @@ private:
 
 public:
 	ui_gl() {
-		int exception_value = 1;
-#ifndef USE_FREEGLUT
-		throw exception_value;
+#ifndef HAVE_GLUT_MAIN_LOOP_EVENT
+		const char *freeglut_error = "need extension glutMainLoopEvent()";
+		throw freeglut_error;
 #endif
 
-		if (!gpu::is_ok())
-			throw exception_value;
+		if (!gpu::is_ok()) {
+			const char *gpu_init_error = "GPU initialization error";
+			throw gpu_init_error;
+		}
 	}
 };
 
