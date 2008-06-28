@@ -137,13 +137,36 @@ AC_ARG_WITH(glut,        [  --with-glut             GL Utility Toolkit: auto,no,
 if test x$with_glut != xno; then
 	AX_CHECK_GLUT
 	if test x$no_glut != xyes; then
-		GLUT_CFLAGS="$GLUT_CFLAGS -DUSE_GLUT=1"
+		GLUT_CFLAGS="$GLUT_CFLAGS -DUSE_GLUT=1 -DUSE_GL=1"
 		AC_CHECK_HEADER(GL/freeglut.h, AC_DEFINE([USE_FREEGLUT], [], [GL/freeglut.h header is available]))
+		AC_CACHE_CHECK(whether glutMainLoopEvent() is available, ac_cv_glut_main_loop_event,[
+			AC_LANG_SAVE
+			AC_LANG_CPLUSPLUS
+			AC_TRY_COMPILE([
+				#ifdef USE_FREEGLUT
+				#include <GL/freeglut.h>
+				#elif USE_GLUT
+				#include <GL/glut.h>
+				#endif
+			],[
+				glutMainLoopEvent();
+			], ac_cv_glut_main_loop_event=yes, ac_cv_glut_main_loop_event=no)
+			AC_LANG_RESTORE])
+		if test $ac_cv_glut_main_loop_event = yes; then
+			GLUT_CFLAGS="$GLUT_CFLAGS -DHAVE_GLUT_MAIN_LOOP_EVENT=1"
+		fi
 	fi
 else
 	GLUT_CFLAGS=""
 	GLUT_LIBS=""
 fi
+
+# Fatal error if user flag for GLUT could not be satisified
+if test x$with_glut = xyes \
+&& test x$GLUT_CFLAGS = x; then
+	AC_MSG_ERROR([GLUT build requested (--with-glut=yes), but no usable library was found.])
+fi
+
 
 # Determine whether ImageMagick should be linked
 AC_ARG_WITH(imagemagick, [  --with-imagemagick      ImageMagick file handling: auto,no,yes (default=auto)])
