@@ -70,6 +70,9 @@ fi
 
 mkdir -p m4
 cp /usr/share/autoconf-archive/acx_pthread.m4 m4/.
+cp /usr/share/autoconf-archive/ax_lang_compiler_ms.m4 m4/.
+cp /usr/share/autoconf-archive/ax_check_gl.m4 m4/.
+cp /usr/share/autoconf-archive/ax_check_glu.m4 m4/.
 cp /usr/share/autoconf-archive/ax_check_glut.m4 m4/.
 
 #
