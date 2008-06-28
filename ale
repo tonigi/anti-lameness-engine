@@ -23,7 +23,7 @@ chomp ($ale_exec_dir = `dirname $0`);
 # Detect software GPU
 #
 
-if (!defined $ENV{"ALE_SOFT_GPU"} && `which glxinfo` && `glxinfo | grep "direct rendering: No"`) {
+if (!defined $ENV{"ALE_SOFT_GPU"} && `which glxinfo` && `glxinfo 2> /dev/null | grep "direct rendering: No"`) {
 	$ENV{"ALE_SOFT_GPU"} = "1";
 } elsif (!defined $ENV{"ALE_SOFT_GPU"}) {
 	$ENV{"ALE_SOFT_GPU"} = "0";
@@ -35,7 +35,7 @@ if (!defined $ENV{"ALE_SOFT_GPU"} && `which glxinfo` && `glxinfo | grep "direct 
 
 if (!defined $ENV{"ALE_GPU_ACCEL_DEFAULT"}
  && ($ENV{"ALE_SOFT_GPU"}
-  || !`glxinfo`)) {
+  || !`glxinfo 2> /dev/null`)) {
   	$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 0;
 } else {
 	$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 1;
@@ -49,7 +49,7 @@ if (!defined $ENV{"ALE_GPU_ACCEL_DEFAULT"}
 
 if (!defined $ENV{"ALE_GL_UI_DEFAULT"} 
  && ($ENV{"ALE_SOFT_GPU"} 
-  || !`glxinfo`)) {
+  || !`glxinfo 2> /dev/null`)) {
 	$ENV{"ALE_GL_UI_DEFAULT"} = 0;
 } 
 
