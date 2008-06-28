@@ -76,6 +76,13 @@ const char *version = PACKAGE_NAME " Version:      " VERSION "\n"
 #else
 		"Optimizations:    Disabled\n"
 #endif
+#ifdef USE_FREEGLUT
+		"GL support:       freeglut\n"
+#elif defined USE_GLUT
+		"GL support:       GLUT\n"
+#else
+		"GL support:       none\n"
+#endif
 ;
 
 /*
