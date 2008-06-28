@@ -52,7 +52,8 @@ class gpu {
 		strcpy(program_name, "ale");
 
 		glutInit(&fake_argc, fake_argv);
-		glutCreateWindow("ale");
+		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE); 
+		glutCreateWindow("Ale");
 		gpu_initialized = 1;
 #else
 		gpu_initialized = 0;

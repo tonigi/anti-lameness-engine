@@ -69,7 +69,7 @@ AM_LDFLAGS = @OPTION_CFLAGS@ @OPTION_LDFLAGS@
 
 bin_SCRIPTS = ale
 bin_PROGRAMS = ale-bin
-ale_bin_SOURCES = ale.cc thread.cc rand.cc accel.cc gpu.cc ui/ui.cc ui/input.cc ui/ui_log.cc d2.cc d3.cc
+ale_bin_SOURCES = ale.cc thread.cc rand.cc accel.cc gpu.cc ui/ui.cc ui/input.cc ui/ui_log.cc ui/ui_gl.cc d2.cc d3.cc
 ale_bin_LDADD = lib/libgnu.la @OPTION_LIBS@
 
 #
