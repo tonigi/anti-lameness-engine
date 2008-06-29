@@ -25,6 +25,8 @@
 #ifndef __gpu_h__
 #define __gpu_h__
 
+#include <config.h>
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -53,7 +55,7 @@ class gpu {
 
 		glutInit(&fake_argc, fake_argv);
 		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE); 
-		glutCreateWindow("Ale");
+		glutCreateWindow(PACKAGE_NAME " " VERSION);
 		gpu_initialized = 1;
 #else
 		gpu_initialized = 0;
