@@ -3214,6 +3214,8 @@ public:
 
 		static astate_t astate;
 
+		ui::get()->set_frame_num(n);
+
 		if (latest < 0) {
 
 			/*

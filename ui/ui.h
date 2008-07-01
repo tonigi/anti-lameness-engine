@@ -169,6 +169,8 @@ protected:
 		double align_lod;
 		unsigned int frame_num;
 		unsigned int irani_peleg_stage;
+		unsigned int irani_peleg_step;
+		unsigned int irani_peleg_steps;
 		unsigned int secondary_frame_num;
 		unsigned int view_num;
 		unsigned int x_coordinate, y_coordinate;;
@@ -462,6 +464,10 @@ public:
 		update();
 	}
 
+	void set_frame_num(unsigned int num) {
+		status.frame_num = num;
+	}
+
 	virtual void d3_subdivision_status(unsigned int primary_frame, unsigned int secondary_frame,
 			unsigned int i, unsigned int j) {
 		status.code = status.D3_SUBDIVIDING_SPACE;
@@ -551,6 +557,11 @@ public:
 		update();
 	}
 
+	void ip_step_start(int num, int total) {
+		status.irani_peleg_step = num;
+		status.irani_peleg_steps = total;
+	}
+		
 	virtual void ip_step_done() {
 		status.code = status.IP_STEP_DONE;
 		printf(".");

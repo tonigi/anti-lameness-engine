@@ -1221,6 +1221,8 @@ protected:
 
                 for (unsigned int n = 0; n < iterations; n++) {
 
+			ui::get()->ip_step_start(n, iterations);
+
 			correction_t *correction = new correction_t(
 					use_weighted_median,
 					weight_limit,

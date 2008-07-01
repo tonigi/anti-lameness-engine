@@ -27,6 +27,7 @@
 #include <GL/glut.h>
 #endif
 
+#include "../d2.h"
 #include "ui.h"
 #include "gpu.h"
 
@@ -39,12 +40,20 @@ private:
 	int osd_mode;
 	int width, height;
 
-
 #ifdef USE_PTHREAD
 	pthread_t update_thread;
 #endif
 
 	void printf(const char *format, ...) {
+		update();
+
+		/*
+		 * Reject messages that aren't loud.
+		 */
+
+		if (!strstr(format, "\n***"))
+			return;
+
 		va_list ap;
 		va_start(ap, format);
 		vfprintf(ui_stream, format, ap);
@@ -52,9 +61,7 @@ private:
 	}
 
 	void update() {
-		/*
-		 * Do nothing.  We only update via a thread loop.
-		 */
+		glutPostRedisplay();
 	}
 
 	static void *thread_update_loop(void *vu) {
@@ -152,15 +159,115 @@ private:
 		int baseline = instance->height - 15;
 
 		if (instance->osd_mode >= 1) {
-			snprintf(line_buffer, line_buffer_len, "%s (%u/%u)", "Aligning", 1, 3);
-			outline_string(10, line, line_buffer);
+			const char *action = "";
+			int current_frame = instance->status.frame_num;
+			int total_frames = d2::image_rw::count();
+			
+			switch(instance->status.code) {
+			case status_type::LOAD_FILE:
+				action = "Loading frame";
+				break;
+			case status_type::EXPOSURE_PASS_1:
+			case status_type::PREMATCH:
+			case status_type::ALIGN:
+			case status_type::GLOBAL_ALIGN:
+			case status_type::POSTMATCH:
+			case status_type::EXPOSURE_PASS_2:
+			case status_type::MULTI:
+				action = "Aligning";
+				break;
+			case status_type::RENDERA:
+			case status_type::RENDERD:
+			case status_type::RENDERO:
+				action = "Rendering";
+				break;
+			case status_type::WRITED:
+			case status_type::WRITEO:
+			case status_type::IP_WRITE:
+				action = "Writing";
+				break;
+			case status_type::IP_RENDER:
+			case status_type::IP_UPDATE:
+				action = "Irani-Peleg";
+				break;
+			case status_type::D3_CONTROL_POINT_SOLVE:
+			case status_type::D3_SUBDIVIDING_SPACE:
+			case status_type::D3_UPDATING_OCCUPANCY:
+			case status_type::D3_RENDER:
+				action = "3D operations";
+				break;
+			default:
+				break;
+			}
+			if (strcmp(action, "")) {
+				snprintf(line_buffer, line_buffer_len, "%s (%u/%u)", action, current_frame + 1, total_frames);
+				outline_string(10, line, line_buffer);
+			}
 			line += period;
 		}
 
 		if (instance->osd_mode >= 2) {
-			snprintf(line_buffer, line_buffer_len, "foo!");
-			outline_string(10, line, line_buffer);
-			line += period;
+			switch(instance->status.code) {
+			case status_type::PREMATCH:
+			case status_type::ALIGN:
+			case status_type::GLOBAL_ALIGN:
+			case status_type::POSTMATCH:
+			case status_type::MULTI:
+				snprintf(line_buffer, line_buffer_len, "match=%9.6f%%", instance->status.match_value);
+				outline_string(10, line, line_buffer);
+				line += period;
+
+				snprintf(line_buffer, line_buffer_len, "perturb=%6.3g", instance->status.perturb_size);
+				outline_string(10, line, line_buffer);
+				line += period;
+
+				snprintf(line_buffer, line_buffer_len, "lod=%6.3g", pow(2, -instance->status.align_lod));
+				outline_string(10, line, line_buffer);
+				line += period;
+
+				snprintf(line_buffer, line_buffer_len, "exp_mult=%6.3g %6.3g %6.3g",
+						instance->status.exp_multiplier[0],
+						instance->status.exp_multiplier[1],
+						instance->status.exp_multiplier[2]);
+				outline_string(10, line, line_buffer);
+				line += period;
+
+				break;
+			case status_type::WRITED:
+			case status_type::IP_WRITE:
+				snprintf(line_buffer, line_buffer_len, "%s", d2::image_rw::output_name());
+				outline_string(10, line, line_buffer);
+				line += period;
+				break;
+
+			case status_type::WRITEO:
+				break;
+
+			case status_type::IP_RENDER:
+			case status_type::IP_UPDATE:
+				snprintf(line_buffer, line_buffer_len, "Step %u/%u", instance->status.irani_peleg_step + 1, instance->status.irani_peleg_steps);
+				outline_string(10, line, line_buffer);
+				line += period;
+
+				if (instance->status.irani_peleg_stage == 1) {
+					snprintf(line_buffer, line_buffer_len, "Simulate");
+				} else if (instance->status.irani_peleg_stage == 2) {
+					snprintf(line_buffer, line_buffer_len, "Backproject");
+				} else {
+					snprintf(line_buffer, line_buffer_len, " ");
+				}
+				outline_string(10, line, line_buffer);
+				line += period;
+
+				break;
+			case status_type::D3_CONTROL_POINT_SOLVE:
+			case status_type::D3_SUBDIVIDING_SPACE:
+			case status_type::D3_UPDATING_OCCUPANCY:
+			case status_type::D3_RENDER:
+				break;
+			default:
+				break;
+			}
 		}
 
 		if (line < baseline - period)
@@ -207,7 +314,7 @@ public:
 
 		instance = this;
 
-		osd_mode = 0;
+		osd_mode = 2;
 
 		/*
 		 * Initialization
