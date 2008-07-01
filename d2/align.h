@@ -2523,6 +2523,8 @@ public:
 
 		offset.set_current_bounds(reference_image);
 
+		ui::get()->alignment_degree_max(offset.get_coordinate(offset.stack_depth() - 1).degree);
+
 		if (offset.stack_depth() == 1) {
 			ui::get()->set_steps(step_count, 0);
 		} else {
@@ -2773,6 +2775,8 @@ public:
 		offset.set_current_element(here.get_offset());
 
 		for (unsigned int i = 0; i < offset.stack_depth(); i++) {
+
+			ui::get()->aligning_element(i, offset.stack_depth());
 		
 			offset.set_current_index(i);
 
@@ -2787,9 +2791,10 @@ public:
 
 					ui::get()->set_offset(offset);
 
-					if (i + 1 == offset.stack_depth()
-					 || offset.get_coordinate(i).degree != offset.get_coordinate(i + 1).degree)
-						ui::get()->alignment_degree_complete(i);
+					if (i + 1 == offset.stack_depth())
+						ui::get()->alignment_degree_complete(offset.get_coordinate(i).degree);
+					else if (offset.get_coordinate(i).degree != offset.get_coordinate(i + 1).degree)
+						ui::get()->alignment_degree_complete(offset.get_coordinate(i + 1).degree);
 
 					continue;
 				}
@@ -2905,9 +2910,10 @@ public:
 
 			ui::get()->set_offset(offset);
 
-			if (i + 1 == offset.stack_depth()
-			 || offset.get_coordinate(i).degree != offset.get_coordinate(i + 1).degree)
-				ui::get()->alignment_degree_complete(i);
+			if (i + 1 == offset.stack_depth())
+				ui::get()->alignment_degree_complete(offset.get_coordinate(i).degree);
+			else if (offset.get_coordinate(i).degree != offset.get_coordinate(i + 1).degree)
+				ui::get()->alignment_degree_complete(offset.get_coordinate(i + 1).degree);
 		}
 
 		offset.set_current_index(0);

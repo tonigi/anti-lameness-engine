@@ -225,6 +225,8 @@ private:
 			case status_type::GLOBAL_ALIGN:
 			case status_type::POSTMATCH:
 			case status_type::MULTI:
+				printf_glut("  degree=%u/%u", instance->status.element_degree + 1, instance->status.total_degree + 1);
+				printf_glut(" element=%u/%u", instance->status.element_index + 1, instance->status.num_elements);
 				printf_glut("   match=%.6f%%", instance->status.match_value);
 				printf_glut(" perturb= %.3f", instance->status.perturb_size);
 				printf_glut("     lod= %.3f", pow(2, -instance->status.align_lod));

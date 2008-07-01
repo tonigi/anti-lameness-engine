@@ -167,6 +167,10 @@ protected:
 		double exp_multiplier[3];
 		double perturb_size;
 		double align_lod;
+		unsigned int element_degree;
+		unsigned int total_degree;
+		unsigned int element_index;
+		unsigned int num_elements;
 		unsigned int frame_num;
 		unsigned int irani_peleg_stage;
 		unsigned int irani_peleg_step;
@@ -604,12 +608,26 @@ public:
 		update();
 	}
 
+	void alignment_degree_max(int degree_total) {
+		status.total_degree = degree_total;
+		status.element_degree = 0;
+	}
+
 	virtual void alignment_degree_complete(int degree) {
 		if (status.step_type == 1) {
 			status.steps_completed++;
 			printf("*");
 		}
+		status.element_degree = degree;
+		update();
 	}
+
+	void aligning_element(unsigned int index, unsigned int num) {
+		status.element_index = index;
+		status.num_elements = num;
+		update();
+	}
+		
 
 	virtual void alignment_perturbation_level(ale_pos perturb, ale_pos lod) {
 		perturb_timers[status.perturb_size].stop();
