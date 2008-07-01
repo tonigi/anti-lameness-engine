@@ -42,6 +42,7 @@ private:
 	int width, height;
 	int cursor_line;
 	int cursor_period;
+	int dirty;
 
 #ifdef USE_PTHREAD
 	pthread_t update_thread;
@@ -64,16 +65,47 @@ private:
 	}
 
 	void update() {
-		glutPostRedisplay();
+		dirty = 1;
 	}
 
-	static void *thread_update_loop(void *vu) {
+	static void *glut_thread(void *vu) {
 #if defined HAVE_GLUT_MAIN_LOOP_EVENT && defined HAVE_NANOSLEEP
+		/*
+		 * Initialization
+		 */
+
+		if (!gpu::is_ok()) {
+			const char *gpu_init_error = "GPU initialization error";
+			throw gpu_init_error;
+		}
+
+		gpu::lock();
+		glMatrixMode( GL_PROJECTION );
+		glLoadIdentity();
+		gluOrtho2D( -1., 1., -1., 1. );
+		glMatrixMode( GL_MODELVIEW );
+		gpu::unlock();
+		
+		/*
+		 * XXX: We don't lock the GPU for these, which could cause a
+		 * problem.
+		 */
+
+		glutReshapeFunc(glutReshape);
+		glutDisplayFunc(glutDisplay);
+		glutKeyboardFunc(glutKeyboard);
+		glutReshapeWindow(640, 480);
+
 		for(;;) {
 			struct timespec t;
 			t.tv_sec = 0;
 			t.tv_nsec = 10000000;
 			nanosleep(&t, NULL);
+
+			if (instance->dirty) {
+				instance->dirty = 0;
+				glutPostRedisplay();
+			}
 
 			gpu::lock();
 			glutMainLoopEvent();
@@ -301,44 +333,18 @@ public:
 #endif
 
 
-		if (!gpu::is_ok()) {
-			const char *gpu_init_error = "GPU initialization error";
-			throw gpu_init_error;
-		}
-
 		instance = this;
 
 		osd_mode = 2;
 
 		/*
-		 * Initialization
-		 */
-
-		gpu::lock();
-		glMatrixMode( GL_PROJECTION );
-		glLoadIdentity();
-		gluOrtho2D( -1., 1., -1., 1. );
-		glMatrixMode( GL_MODELVIEW );
-		gpu::unlock();
-		
-		/*
-		 * XXX: We don't lock the GPU for these, which could cause a
-		 * problem.
-		 */
-
-		glutReshapeFunc(glutReshape);
-		glutDisplayFunc(glutDisplay);
-		glutKeyboardFunc(glutKeyboard);
-		glutReshapeWindow(640, 480);
-
-		/*
-		 * Start an update thread.
+		 * Start a GLUT thread.
 		 */
 #ifdef USE_PTHREAD
 		pthread_attr_t pattr;
 		pthread_attr_init(&pattr);
 		pthread_attr_setdetachstate(&pattr, PTHREAD_CREATE_JOINABLE);
-		pthread_create(&update_thread, NULL, thread_update_loop, (void *) this);
+		pthread_create(&update_thread, NULL, glut_thread, (void *) this);
 #endif
 	}
 
