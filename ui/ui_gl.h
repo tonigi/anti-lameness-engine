@@ -39,6 +39,8 @@ class ui_gl : public ui {
 private:
 	int osd_mode;
 	int width, height;
+	int cursor_line;
+	int cursor_period;
 
 #ifdef USE_PTHREAD
 	pthread_t update_thread;
@@ -123,6 +125,20 @@ private:
 		bitmap_string(s);
 	}
 
+	static void printf_glut(const char *format, ...) {
+		char line_buffer[1000];
+		line_buffer[999] = '\0';
+		int line_buffer_len = 999;
+
+		va_list ap;
+		va_start(ap, format);
+		vsnprintf(line_buffer, line_buffer_len, format, ap);
+		va_end(ap);
+
+		outline_string(10, instance->cursor_line, line_buffer);
+		instance->cursor_line += instance->cursor_period;
+	}
+
 	/*
 	 * Keyboard callback
 	 */
@@ -141,10 +157,6 @@ private:
 	 * Display callback
 	 */
 	static void glutDisplay() {
-		char line_buffer[1000];
-		line_buffer[999] = '\0';
-		int line_buffer_len = 999;
-
 		/*
 		 * Clear buffer
 		 */
@@ -154,8 +166,10 @@ private:
 		/*
 		 * Display text.
 		 */
-		int line = 23;
-		int period = 18;
+
+		instance->cursor_line = 23;
+		instance->cursor_period = 18;
+
 		int baseline = instance->height - 15;
 
 		if (instance->osd_mode >= 1) {
@@ -200,10 +214,8 @@ private:
 				break;
 			}
 			if (strcmp(action, "")) {
-				snprintf(line_buffer, line_buffer_len, "%s (%u/%u)", action, current_frame + 1, total_frames);
-				outline_string(10, line, line_buffer);
+				printf_glut("%s (%u/%u)", action, current_frame + 1, total_frames);
 			}
-			line += period;
 		}
 
 		if (instance->osd_mode >= 2) {
@@ -213,31 +225,17 @@ private:
 			case status_type::GLOBAL_ALIGN:
 			case status_type::POSTMATCH:
 			case status_type::MULTI:
-				snprintf(line_buffer, line_buffer_len, "match=%9.6f%%", instance->status.match_value);
-				outline_string(10, line, line_buffer);
-				line += period;
-
-				snprintf(line_buffer, line_buffer_len, "perturb=%6.3g", instance->status.perturb_size);
-				outline_string(10, line, line_buffer);
-				line += period;
-
-				snprintf(line_buffer, line_buffer_len, "lod=%6.3g", pow(2, -instance->status.align_lod));
-				outline_string(10, line, line_buffer);
-				line += period;
-
-				snprintf(line_buffer, line_buffer_len, "exp_mult=%6.3g %6.3g %6.3g",
+				printf_glut("   match=%.6f%%", instance->status.match_value);
+				printf_glut(" perturb= %.3f", instance->status.perturb_size);
+				printf_glut("     lod= %.3f", pow(2, -instance->status.align_lod));
+				printf_glut("exp_mult= %.3f %.3f %.3f",
 						instance->status.exp_multiplier[0],
 						instance->status.exp_multiplier[1],
 						instance->status.exp_multiplier[2]);
-				outline_string(10, line, line_buffer);
-				line += period;
-
 				break;
 			case status_type::WRITED:
 			case status_type::IP_WRITE:
-				snprintf(line_buffer, line_buffer_len, "%s", d2::image_rw::output_name());
-				outline_string(10, line, line_buffer);
-				line += period;
+				printf_glut(d2::image_rw::output_name());
 				break;
 
 			case status_type::WRITEO:
@@ -245,20 +243,12 @@ private:
 
 			case status_type::IP_RENDER:
 			case status_type::IP_UPDATE:
-				snprintf(line_buffer, line_buffer_len, "Step %u/%u", instance->status.irani_peleg_step + 1, instance->status.irani_peleg_steps);
-				outline_string(10, line, line_buffer);
-				line += period;
-
+				printf_glut("Step %u/%u", instance->status.irani_peleg_step + 1, instance->status.irani_peleg_steps);
 				if (instance->status.irani_peleg_stage == 1) {
-					snprintf(line_buffer, line_buffer_len, "Simulate");
+					printf_glut("Simulate");
 				} else if (instance->status.irani_peleg_stage == 2) {
-					snprintf(line_buffer, line_buffer_len, "Backproject");
-				} else {
-					snprintf(line_buffer, line_buffer_len, " ");
+					printf_glut("Backproject");
 				}
-				outline_string(10, line, line_buffer);
-				line += period;
-
 				break;
 			case status_type::D3_CONTROL_POINT_SOLVE:
 			case status_type::D3_SUBDIVIDING_SPACE:
@@ -270,16 +260,11 @@ private:
 			}
 		}
 
-		if (line < baseline - period)
-			line = baseline - period;
+		if (instance->cursor_line < baseline - instance->cursor_period)
+			instance->cursor_line = baseline - instance->cursor_period;
 
-		snprintf(line_buffer, line_buffer_len, "No preview available");
-		outline_string(10, line, line_buffer);
-		line += period;
-
-		snprintf(line_buffer, line_buffer_len, "'o' cycles text");
-		outline_string(10, line, line_buffer);
-		line += period;
+		printf_glut("No preview available");
+		printf_glut("'o' cycles text");
 
 		/*
 		 * Show result.
