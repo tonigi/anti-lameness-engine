@@ -36,6 +36,9 @@
 
 class ui_gl : public ui {
 private:
+	int osd_mode;
+	int width, height;
+
 
 #ifdef USE_PTHREAD
 	pthread_t update_thread;
@@ -82,44 +85,94 @@ private:
 	 */
 	static void glutReshape(int width, int height) {
 		/*
-		 * Adjust projection parameters.
+		 * Correct projection and window parameters.
 		 */
-		
 		glViewport(0, 0, width, height);
 
-		/*
-		 * Correct projection
-		 */
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-
-		/*
-		 * Normalize dimensions
-		 */
-		if (width > height) {
-			GLdouble aspect = (GLdouble) width / height;
-			gluOrtho2D(-aspect, aspect, -1., 1.);
-		} else {
-			GLdouble aspect = (GLdouble) height / width;
-			gluOrtho2D(-1., 1., -aspect, aspect);
-		}
-			
-		/*
-		 * Back to ModelView
-		 */
+		gluOrtho2D(0, width, height, 0);
 		glMatrixMode( GL_MODELVIEW );
+
+		instance->width = width;
+		instance->height = height;
 	}
+
+	static void bitmap_string(const char *s) {
+		while (*s)
+			glutBitmapCharacter(GLUT_BITMAP_8_BY_13, *s++);
+	}
+
+	static void outline_string(int i, int j, const char *s) {
+		for (int ii = -1; ii <= 1; ii++)
+		for (int jj = -1; jj <= 1; jj++) {
+			glColor3f(0, 0, 0);
+			glRasterPos2f(i + ii, j + jj);
+			bitmap_string(s);
+		}
+
+		glColor3f(1, 1, 1);
+		glRasterPos2f(i, j);
+		bitmap_string(s);
+	}
+
+	/*
+	 * Keyboard callback
+	 */
+	static void glutKeyboard(unsigned char c, int x, int y) {
+		if (c == 'o') {
+			instance->osd_mode = (instance->osd_mode + 1) % 3;
+			glutPostRedisplay();
+		} else if (c == 'O') {
+			instance->osd_mode = (instance->osd_mode + 2) % 3;
+			glutPostRedisplay();
+		}
+	}
+
 
 	/*
 	 * Display callback
 	 */
 	static void glutDisplay() {
+		char line_buffer[1000];
+		line_buffer[999] = '\0';
+		int line_buffer_len = 999;
 
 		/*
 		 * Clear buffer
 		 */
-		glClearColor( 0.f, 0.f, 0.f, 0.f );
-		glClear( GL_COLOR_BUFFER_BIT );
+		glClearColor(0, 0, 0, 0);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		/*
+		 * Display text.
+		 */
+		int line = 23;
+		int period = 18;
+		int baseline = instance->height - 15;
+
+		if (instance->osd_mode >= 1) {
+			snprintf(line_buffer, line_buffer_len, "%s (%u/%u)", "Aligning", 1, 3);
+			outline_string(10, line, line_buffer);
+			line += period;
+		}
+
+		if (instance->osd_mode >= 2) {
+			snprintf(line_buffer, line_buffer_len, "foo!");
+			outline_string(10, line, line_buffer);
+			line += period;
+		}
+
+		if (line < baseline - period)
+			line = baseline - period;
+
+		snprintf(line_buffer, line_buffer_len, "No preview available");
+		outline_string(10, line, line_buffer);
+		line += period;
+
+		snprintf(line_buffer, line_buffer_len, "'o' cycles text");
+		outline_string(10, line, line_buffer);
+		line += period;
 
 		/*
 		 * Show result.
@@ -154,6 +207,8 @@ public:
 
 		instance = this;
 
+		osd_mode = 0;
+
 		/*
 		 * Initialization
 		 */
@@ -172,6 +227,7 @@ public:
 
 		glutReshapeFunc(glutReshape);
 		glutDisplayFunc(glutDisplay);
+		glutKeyboardFunc(glutKeyboard);
 		glutReshapeWindow(640, 480);
 
 		/*
