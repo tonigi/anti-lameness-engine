@@ -35,7 +35,10 @@ if (!defined $ENV{"ALE_SOFT_GPU"} && `which glxinfo` && `glxinfo 2> /dev/null | 
 
 if (!defined $ENV{"ALE_GPU_ACCEL_DEFAULT"}
  && ($ENV{"ALE_SOFT_GPU"}
-  || !`glxinfo 2> /dev/null`)) {
+  || !`glxinfo 2> /dev/null`
+  || !`glxinfo 2> /dev/null | grep GL_ARB_fragment_program`
+  || !`glxinfo 2> /dev/null | grep GL_ARB_fragment_shader`
+  || !`glxinfo 2> /dev/null | grep GL_EXT_framebuffer_object`)) {
   	$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 0;
 } else {
 	$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 1;

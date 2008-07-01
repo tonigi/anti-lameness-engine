@@ -46,10 +46,17 @@ public:
 	}
 
 	static void set_auto() {
-		use_gpu = 2;
+		const char *accel_default = getenv("ALE_GPU_ACCEL_DEFAULT");
+		if (accel_default && !strcmp(accel_default, "1"))
+			use_gpu = 1;
+		else 
+			use_gpu = 0;
 	}
 
 	static int is_gpu() {
+		if (use_gpu == 2)
+			set_auto();
+
 		if (use_gpu > 0 && gpu::is_ok())
 			return 1;
 
@@ -59,10 +66,6 @@ public:
 		}
 
 		return 0;	
-	}
-
-	static int is_auto() {
-		return use_gpu == 2;
 	}
 };
 

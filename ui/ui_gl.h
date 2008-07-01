@@ -29,6 +29,7 @@
 
 #include "../d2.h"
 #include "ui.h"
+#include "accel.h"
 #include "gpu.h"
 
 /*
@@ -267,7 +268,11 @@ private:
 		if (instance->cursor_line < baseline - instance->cursor_period)
 			instance->cursor_line = baseline - instance->cursor_period;
 
-		printf_glut("No preview available");
+		if (accel::is_gpu() == 0)
+			printf_glut("No preview available (No GPU acceleration)");
+		else 
+			printf_glut("No preview available");
+
 		printf_glut("'o' cycles text");
 
 		/*
