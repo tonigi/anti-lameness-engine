@@ -65,7 +65,9 @@ private:
 	}
 
 	void update() {
+		gpu::lock();
 		dirty = 1;
+		gpu::unlock();
 	}
 
 	static void *glut_thread(void *vu) {
@@ -80,21 +82,19 @@ private:
 		}
 
 		gpu::lock();
+
 		glMatrixMode( GL_PROJECTION );
 		glLoadIdentity();
 		gluOrtho2D( -1., 1., -1., 1. );
 		glMatrixMode( GL_MODELVIEW );
-		gpu::unlock();
-		
-		/*
-		 * XXX: We don't lock the GPU for these, which could cause a
-		 * problem.
-		 */
+
 
 		glutReshapeFunc(glutReshape);
 		glutDisplayFunc(glutDisplay);
 		glutKeyboardFunc(glutKeyboard);
 		glutReshapeWindow(640, 480);
+
+		gpu::unlock();
 
 		for(;;) {
 			struct timespec t;
@@ -102,13 +102,15 @@ private:
 			t.tv_nsec = 10000000;
 			nanosleep(&t, NULL);
 
+			gpu::lock();
+
 			if (instance->dirty) {
 				instance->dirty = 0;
 				glutPostRedisplay();
 			}
 
-			gpu::lock();
 			glutMainLoopEvent();
+
 			gpu::unlock();
 		}
 #endif
