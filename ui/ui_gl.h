@@ -220,6 +220,8 @@ private:
 
 		if (instance->osd_mode >= 2) {
 			switch(instance->status.code) {
+			case status_type::EXPOSURE_PASS_1:
+			case status_type::EXPOSURE_PASS_2:
 			case status_type::PREMATCH:
 			case status_type::ALIGN:
 			case status_type::GLOBAL_ALIGN:
