@@ -214,6 +214,59 @@ protected:
 		invariant *inv;
 		image_weighted_avg *accum_image;
 	protected:
+
+		/*
+		 * Texture implementation.
+		 */
+		void accel_run() {
+			
+			point offset = accum_image->offset();
+
+			assert (accum_image != NULL);
+			assert (delta != NULL);
+
+			const filter::ssfe *_ssfe = inv->ssfe();
+
+			const char *shader_program[] = {
+				"void main() {",
+				"	vec3 value = vec3(0, 0, 0);",
+				"	vec3 confidence = vec3(0, 0, 0);",
+				"	if (_ssfe_ex_is_honored() && instance_is_excluded_r(",
+			};
+
+#if 0
+			for (int i = i_min; i < i_max; i++)
+			for (int j = j_min; j < j_max; j++) {
+
+				if (_ssfe->ex_is_honored() && instance->is_excluded_r(i, j, frame))
+					continue;
+
+				if (accum_image->accumulate_norender(i, j))
+					continue;
+				
+				/*
+				 * Pixel value to be merged, and the associated
+				 * confidence
+				 */
+
+				pixel value, confidence;
+
+				if (exposure::get_confidence() != 0) {
+					_ssfe->filtered(i, j, frame, &value, &confidence, 
+							((pixel) accum_image->get_pixel(i, j)), 
+							accum_image->get_weights()->get_pixel(i, j));
+				} else {
+					_ssfe->filtered(i, j, frame, &value, &confidence);
+				}
+
+				accum_image->accumulate(i, j, frame, value, confidence);
+			}
+#endif
+		}
+
+		/*
+		 * Iterative domain decomposition implementation.
+		 */
 		void prepare_subdomains(unsigned int N) {
 			ale_pos_disable_casting();
 			ale_real_disable_casting();
@@ -287,6 +340,14 @@ protected:
 
 			inv = instance->inv;
 			accum_image = instance->accum_image;
+		}
+
+		void run() {
+			if (accel::is_gpu()) {
+				accel_run();
+			} else {
+				decompose_domain::run();
+			}
 		}
 	};
 
