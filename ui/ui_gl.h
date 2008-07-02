@@ -46,6 +46,8 @@ private:
 
 #ifdef USE_PTHREAD
 	pthread_t update_thread;
+	pthread_mutex_t gpu_ready_mutex;
+	pthread_cond_t gpu_ready_cond;
 #endif
 
 	void printf(const char *format, ...) {
@@ -76,10 +78,13 @@ private:
 		 * Initialization
 		 */
 
-		if (!gpu::is_ok()) {
-			const char *gpu_init_error = "GPU initialization error";
-			throw gpu_init_error;
-		}
+		pthread_mutex_lock(&instance->gpu_ready_mutex);
+		gpu::is_ok();
+		pthread_cond_broadcast(&instance->gpu_ready_cond);
+		pthread_mutex_unlock(&instance->gpu_ready_mutex);
+
+		if (!gpu::is_ok())
+			return NULL;
 
 		gpu::lock();
 
@@ -339,15 +344,28 @@ public:
 
 		osd_mode = 2;
 
+
 		/*
 		 * Start a GLUT thread.
 		 */
 #ifdef USE_PTHREAD
+		pthread_cond_init(&gpu_ready_cond, NULL);
+		pthread_mutex_init(&gpu_ready_mutex, NULL);
+
+		pthread_mutex_lock(&gpu_ready_mutex);
+
 		pthread_attr_t pattr;
 		pthread_attr_init(&pattr);
 		pthread_attr_setdetachstate(&pattr, PTHREAD_CREATE_JOINABLE);
 		pthread_create(&update_thread, NULL, glut_thread, (void *) this);
+
+		pthread_cond_wait(&gpu_ready_cond, &gpu_ready_mutex);
 #endif
+		
+		if (!gpu::is_ok()) {
+			const char *gpu_init_error = "GPU initialization error";
+			throw gpu_init_error;
+		}
 	}
 
 	~ui_gl() {

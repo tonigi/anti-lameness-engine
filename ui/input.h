@@ -2388,6 +2388,12 @@ public:
 		}
 
 		/*
+		 * Initialize the interface.
+		 */
+
+		ui::get();
+
+		/*
 		 * Apply implication logic.
 		 */
 
