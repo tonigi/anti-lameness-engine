@@ -1026,9 +1026,6 @@ protected:
 			pixel ec;
 
 #if 0
-			ec = lsimulated->avg_channel_magnitude()
-			   / lreal->avg_channel_magnitude();
-#elsif 0
 			pixel_accum ratio_sum;
 			pixel_accum weight_sum;
 

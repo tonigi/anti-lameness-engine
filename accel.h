@@ -47,7 +47,7 @@ public:
 
 	static void set_auto() {
 		const char *accel_default = getenv("ALE_GPU_ACCEL_DEFAULT");
-		if (accel_default && !strcmp(accel_default, "1"))
+		if (accel_default && !strcmp(accel_default, "1") && gpu::is_ok())
 			use_gpu = 1;
 		else 
 			use_gpu = 0;

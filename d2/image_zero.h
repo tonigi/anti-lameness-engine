@@ -189,39 +189,6 @@ public:
 		return new image_zero(_dimy, _dimx, _depth, name);
 	}
 
-	/*
-	 * Calculate the average (mean) clamped magnitude of a channel across
-	 * all pixels in an image.  The magnitude is clamped to the range of 
-	 * real inputs.
-	 */
-	ale_real avg_channel_clamped_magnitude(unsigned int k) const {
-		return 0;
-	}
-
-	pixel avg_channel_clamped_magnitude() const {
-		return pixel::zero();
-	}
-
-	/*
-	 * Calculate the average (mean) magnitude of a channel across all
-	 * pixels in an image.
-	 */
-	ale_real avg_channel_magnitude(unsigned int k) const {
-		return 0;
-	}
-
-	pixel avg_channel_magnitude() const {
-		return pixel::zero();
-	}
-
-	/*
-	 * Calculate the average (mean) magnitude of a pixel (where magnitude
-	 * is defined as the mean of the channel values).
-	 */
-	ale_real avg_pixel_magnitude() const {
-		return 0;
-	}
-
 	image_zero(unsigned int dimy, unsigned int dimx, unsigned int depth,
 			const char *name = "anonymous") : image_weighted_avg(dimy, dimx, depth, name) {
 	}

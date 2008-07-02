@@ -29,6 +29,7 @@
 #include "image.h"
 #include "image_ale_real.h"
 #include "image_bayer_ale_real.h"
+#include "image_texture.h"
 #include "ppm.h"
 #include "exposure/exposure.h"
 #include "exposure/exposure_default.h"
@@ -132,25 +133,8 @@ class image_rw {
 #endif
 	}
 
-public:
-
-	/*
-	 * Methods to read and write image files
-	 */
-
-	/*
-	 * Read an image from a file
-	 */
-	static image *read_image(const char *filename, exposure *exp, const char *name = "file", 
-			unsigned int bayer = IMAGE_BAYER_DEFAULT, int init_reference_gain = 0) {
-		if (bayer == IMAGE_BAYER_DEFAULT)
-			bayer = bayer_default;
-
-		if (is_eppm(filename)) {
-			return read_ppm(filename, exp, bayer, init_reference_gain);
-		}
-
-#ifdef USE_MAGICK
+	static image *read_image_im_unaccel(const char *filename, exposure *exp, const char *name, 
+			unsigned int bayer, int init_reference_gain) {
 		/*
 		 * Patterned after http://www.imagemagick.org/www/api.html
 		 * and http://www.imagemagick.org/www/smile.c
@@ -211,9 +195,34 @@ public:
 		DestroyImageInfo(image_info);
 
 		return im;
+	}
+
+public:
+
+	/*
+	 * Read an image from a file
+	 */
+	static image *read_image(const char *filename, exposure *exp, const char *name = "file", 
+			unsigned int bayer = IMAGE_BAYER_DEFAULT, int init_reference_gain = 0) {
+		image *unaccel_result;
+
+		if (bayer == IMAGE_BAYER_DEFAULT)
+			bayer = bayer_default;
+
+		if (is_eppm(filename)) {
+			unaccel_result = read_ppm(filename, exp, bayer, init_reference_gain);
+		}
+
+#ifdef USE_MAGICK
+		unaccel_result = read_image_im_unaccel(filename, exp, name, bayer, init_reference_gain);
 #else
-		return read_ppm(filename, exp, bayer);
+		unaccel_result = read_ppm(filename, exp, bayer);
 #endif
+
+		if (accel::is_gpu()) 
+			return new image_texture(unaccel_result);
+
+		return unaccel_result;
 	}
 
 	/*

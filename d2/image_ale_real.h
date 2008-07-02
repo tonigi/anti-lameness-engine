@@ -227,8 +227,6 @@ public:
 		assert (x < _dimx);
 		assert (y < _dimy);
 
-		image_updated();
-
 		if (disk_support == 0) {
 			_p[y * _dimx + x] = p;
 		} else {
@@ -248,8 +246,6 @@ public:
 		assert (x < _dimx);
 		assert (y < _dimy);
 
-		image_updated();
-
 		if (disk_support == 0) {
 			_p[y * _dimx + x] *= p;
 		} else {
@@ -268,8 +264,6 @@ public:
 	void add_pixel(unsigned int y, unsigned int x, pixel p) {
 		assert (x < _dimx);
 		assert (y < _dimy);
-
-		image_updated();
 
 		if (disk_support == 0) {
 			_p[y * _dimx + x] += p;
@@ -311,8 +305,6 @@ public:
 		assert (x < _dimx);
 		assert (y < _dimy);
 
-		image_updated();
-
 		if (disk_support == 0) {
 			_p[y * _dimx + x][k] = c;
 		} else {
@@ -331,8 +323,6 @@ public:
 	void div_chan(unsigned int y, unsigned int x, unsigned int k, ale_sreal c) {
 		assert (x < _dimx);
 		assert (y < _dimy);
-
-		image_updated();
 
 		if (disk_support == 0) {
 			_p[y * _dimx + x][k] /= c;

@@ -55,85 +55,6 @@ protected:
 	const char *name;
 	mutable exposure *_exp;
 	unsigned int bayer;
-private:
-	/*
-	 * Memoized function variables.  We may want to change these even when
-	 * *this is constant.
-	 */
-	mutable int _apm_memo;
-	mutable ale_real _apm;
-	mutable int _accm_memo;
-	mutable pixel _accm;
-	mutable int _acm_memo;
-	mutable pixel _acm;
-
-	void avg_channel_clamped_magnitude_memo() const {
-		unsigned int i, j, k;
-		pixel_accum accumulator;
-		pixel_accum divisor;
-
-		if (_accm_memo)
-			return;
-
-		_accm_memo = 1;
-
-		accumulator = pixel_accum(0, 0, 0);
-
-		for (i = 0; i < _dimy;  i++)
-		for (j = 0; j < _dimx;  j++) {
-			pixel value = get_pixel(i, j);
-
-			for (k = 0; k < _depth; k++)
-				if (finite(value[k])) {
-					if (value[k] > 1)
-						value[k] = 1;
-					if (value[k] < 0)
-						value[k] = 0;
-					accumulator[k] += value[k];
-					divisor[k] += 1;
-				}
-		}
-
-		accumulator /= divisor;
-
-		_accm = accumulator;
-	}
-
-	void avg_channel_magnitude_memo() const {
-		unsigned int i, j, k;
-		pixel_accum accumulator;
-		pixel_accum divisor;
-
-		if (_acm_memo)
-			return;
-
-		_acm_memo = 1;
-
-		accumulator = pixel_accum(0, 0, 0);
-
-		for (i = 0; i < _dimy;  i++)
-		for (j = 0; j < _dimx;  j++) {
-			pixel value = get_pixel(i, j);
-
-			for (k = 0; k < _depth; k++) 
-				if (finite(value[k])) {
-					accumulator[k] += value[k];
-					divisor[k] += 1;
-				}
-		}
-
-		accumulator /= divisor;
-
-		_acm = accumulator;
-	}
-
-protected:
-	void image_updated() {
-		_apm_memo = 0;
-		_acm_memo = 0;
-		_accm_memo = 0;
-	}
-
 public:
 	static void set_resident(double r) {
 		resident = r;
@@ -153,9 +74,6 @@ public:
 		_dimx = dimx;
 		_dimy = dimy;
 		_offset = point(0, 0);
-		_apm_memo = 0;
-		_acm_memo = 0;
-		_accm_memo = 0;
 		this->name = name;
 		this->_exp = _exp;
 		this->bayer = bayer;
@@ -1026,91 +944,7 @@ public:
 
 		ic->_offset = _offset;
 
-		ic->_apm_memo = _apm_memo;
-		ic->_acm_memo = _acm_memo;
-		ic->_accm_memo = _accm_memo;
-		ic->_apm = _apm;
-		ic->_acm = _acm;
-		ic->_accm = _accm;
-
 		return ic;
-	}
-
-	/*
-	 * Calculate the average (mean) clamped magnitude of a channel across
-	 * all pixels in an image.  The magnitude is clamped to the range of 
-	 * real inputs.
-	 */
-	ale_real avg_channel_clamped_magnitude(unsigned int k) const {
-
-		/*
-		 * This is a memoized function
-		 */
-
-		assert (k < _depth);
-
-		avg_channel_clamped_magnitude_memo();
-		return _accm[k];
-	}
-
-	pixel avg_channel_clamped_magnitude() const {
-		avg_channel_clamped_magnitude_memo();
-		return _accm;
-	}
-
-	/*
-	 * Calculate the average (mean) magnitude of a channel across all
-	 * pixels in an image.
-	 */
-	ale_real avg_channel_magnitude(unsigned int k) const {
-
-		/*
-		 * This is a memoized function
-		 */
-
-		assert (k < _depth);
-
-		avg_channel_magnitude_memo();
-		return _acm[k];
-	}
-
-	pixel avg_channel_magnitude() const {
-		avg_channel_magnitude_memo();
-		return _acm;
-	}
-
-	/*
-	 * Calculate the average (mean) magnitude of a pixel (where magnitude
-	 * is defined as the mean of the channel values).
-	 */
-	ale_real avg_pixel_magnitude() const {
-		unsigned int i, j, k;
-
-		ale_accum accumulator;
-		ale_accum divisor = 0;
-
-		if (_apm_memo)
-			return _apm;
-
-		_apm_memo = 1;
-		accumulator = 0;
-
-		for (i = 0; i < _dimy;  i++)
-		for (j = 0; j < _dimx;  j++) {
-			pixel value = get_pixel(i, j);
-
-			for (k = 0; k < _depth; k++) 
-				if (finite(value[k])) {
-					accumulator += value[k];
-					divisor += 1;
-				}
-		}
-
-		accumulator /= divisor;
-
-		_apm = accumulator;
-
-		return _apm;
 	}
 
 	virtual ~image() {

@@ -2832,12 +2832,8 @@ public:
 				 * have one.
 				 */
 
-				const d2::image *im = d2::image_rw::open(0);
-				// tsave_orig(tsave, argv[i], im->avg_channel_magnitude());
-				// tsave_target(tsave, argv[argc - 1]);
-				tsave_orig(tsave, files[0].first, im->avg_channel_magnitude());
+				tsave_orig(tsave, files[0].first);
 				tsave_target(tsave, files[files.size() - 1].first);
-				d2::image_rw::close(0);
 
 				/*
 				 * Handle the original frame.
@@ -2878,11 +2874,6 @@ public:
 			 */
 
 			tsave_info (tsave, name);
-
-			const d2::image *im = d2::image_rw::open(j);
-			d2::pixel apm = im->avg_channel_magnitude();
-			tsave_apm(tsave, apm[0], apm[1], apm[2]);
-			d2::image_rw::close(j);
 
 			for (int opt = 0; opt < oc_count; opt++) {
 				ui::get()->set_orender_current(opt);
