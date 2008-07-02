@@ -214,8 +214,6 @@ private:
 
 		if (instance->osd_mode >= 1) {
 			const char *action = "";
-			int current_frame = instance->status.frame_num;
-			int total_frames = d2::image_rw::count();
 			
 			switch(instance->status.code) {
 			case status_type::LOAD_FILE:
@@ -253,7 +251,11 @@ private:
 			default:
 				break;
 			}
+
 			if (strcmp(action, "")) {
+				int current_frame = instance->status.frame_num;
+				int total_frames = d2::image_rw::count();
+
 				printf_glut("%s (%u/%u)", action, current_frame + 1, total_frames);
 			}
 		}
