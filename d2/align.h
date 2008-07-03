@@ -2316,12 +2316,12 @@ public:
 
 			ale_pos adj_b = perturb * bda_mult;
 
-			diff_stat_t old_here = here;
+			trans_single old_offset = here.get_offset();
 
 			here.perturb_test(perturb, adj_p, adj_o, adj_b, current_bd, modified_bd,
 				stable_count);
 
-			if (here.get_offset() == old_here.get_offset())
+			if (here.get_offset() == old_offset)
 				stable_count++;
 			else
 				stable_count = 0;
