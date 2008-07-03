@@ -73,7 +73,7 @@ private:
 	}
 
 	static void *glut_thread(void *vu) {
-#if defined HAVE_GLUT_MAIN_LOOP_EVENT && defined HAVE_NANOSLEEP
+#if defined HAVE_GLUT_MAIN_LOOP_EVENT && defined HAVE_NANOSLEEP && defined USE_PTHREAD
 		/*
 		 * Initialization
 		 */
