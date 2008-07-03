@@ -227,41 +227,41 @@ protected:
 
 			const filter::ssfe *_ssfe = inv->ssfe();
 
-			const char *shader_program[] = {
-				"void main() {",
-				"	vec3 value = vec3(0, 0, 0);",
-				"	vec3 confidence = vec3(0, 0, 0);",
-				"	if (_ssfe_ex_is_honored() && instance_is_excluded_r(",
-			};
+			const char *shader_main = 
+				"void main() {"\
+				"	vec3 value = vec3(0, 0, 0);"\
+				"	vec3 confidence = vec3(0, 0, 0);"\
+				"	if (_ssfe_ex_is_honored() && instance_is_excluded_r(i, j, frame));"\
+				"	else if (accum_image_accumulate_norender(gl_TexCoord[0]);"\
+				"	else if (exposure_get_confidence() != 0) {"\
+				"		_ssfe_filtered(gl_TexCoord[0], frame, value, confidence,"\
+				"				accum_image_get_weights_get_pixel(gl_TexCoord[0]))"\
+				"	} else {"\
+				"		_ssfe_filtered(gl_TexCoord[0], frame, value, confidence);"\
+				"	}"\
+				"	accum_image_accumulate(gl_TexCoord[0], frame, value, confidence);"\
+				"}";
 
-#if 0
-			for (int i = i_min; i < i_max; i++)
-			for (int j = j_min; j < j_max; j++) {
+			gpu::lock();
 
-				if (_ssfe->ex_is_honored() && instance->is_excluded_r(i, j, frame))
-					continue;
+			GLuint program = glCreateProgram();
+			GLuint shader = glCreateShader(GL_FRAGMENT_SHADER_ARB);
 
-				if (accum_image->accumulate_norender(i, j))
-					continue;
-				
-				/*
-				 * Pixel value to be merged, and the associated
-				 * confidence
-				 */
+			glShaderSource(shader, 1, &shader_main, NULL);
+			glCompileShader(shader);
 
-				pixel value, confidence;
+			char log[1000];
+			glGetShaderInfoLog(shader, 1000, NULL, log);
+			fprintf(stderr, "%s", log);
 
-				if (exposure::get_confidence() != 0) {
-					_ssfe->filtered(i, j, frame, &value, &confidence, 
-							((pixel) accum_image->get_pixel(i, j)), 
-							accum_image->get_weights()->get_pixel(i, j));
-				} else {
-					_ssfe->filtered(i, j, frame, &value, &confidence);
-				}
+			glAttachShader(program, shader);
 
-				accum_image->accumulate(i, j, frame, value, confidence);
-			}
-#endif
+			glLinkProgram(program);
+
+			glGetProgramInfoLog(program, 1000, NULL, log);
+			fprintf(stderr, "%s", log);
+
+			gpu::unlock();
 		}
 
 		/*
