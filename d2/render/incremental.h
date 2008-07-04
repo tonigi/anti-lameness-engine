@@ -262,6 +262,8 @@ protected:
 			fprintf(stderr, "%s", log);
 
 			gpu::unlock();
+
+			accum_image->accumulate_accel(program);
 #endif
 		}
 

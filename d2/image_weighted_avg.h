@@ -83,6 +83,12 @@ public:
 	 */
 	virtual void accumulate(int i, int j, int f, pixel new_value, pixel new_weight) = 0;
 
+#ifdef USE_GLEW
+	virtual void accumulate_accel(GLuint program) {
+		assert(0);
+	}
+#endif
+
 	/*
 	 * Get color map
 	 */
