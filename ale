@@ -38,7 +38,9 @@ if (!defined $ENV{"ALE_GPU_ACCEL_DEFAULT"}
   || !`glxinfo 2> /dev/null`
   || !`glxinfo 2> /dev/null | grep GL_ARB_fragment_program`
   || !`glxinfo 2> /dev/null | grep GL_ARB_fragment_shader`
-  || !`glxinfo 2> /dev/null | grep GL_EXT_framebuffer_object`)) {
+  || !`glxinfo 2> /dev/null | grep GL_EXT_framebuffer_object`
+  || !`glxinfo 2> /dev/null | grep GL_ARB_texture_float`
+  || !`glxinfo 2> /dev/null | grep GL_ARB_texture_rectangle`)) {
   	$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 0;
 } elsif (!defined $ENV{"ALE_GPU_ACCEL_DEFAULT"}) {
 	$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 1;
