@@ -557,7 +557,7 @@ public:
 			"User Interfaces:\n"
 			HEADER_SPACE
 			"--ui=<type>       Set user interface to <type>, one of:\n"
-			"                     gl         OpenGL interface\n"
+			"                     gl         OpenGL interface (may not be thread safe)\n"
 			"                     tty        TTY interface\n"
 			"                     log        Logging interface\n"
 			"                     quiet      Suppress output\n"
