@@ -79,6 +79,64 @@ class gpu {
 
 public:
 
+	class program {
+
+		static void check_log(const char *log) {
+			if (strcmp(log, "")) {
+				fprintf(stderr, "%s", log);
+				exit(1);
+			}
+		}
+
+#ifdef USE_GLEW
+		GLuint id;
+#endif
+
+	public:
+		class shader {
+#ifdef USE_GLEW
+			GLuint id;
+#endif
+
+		public:
+			void attach_to_program(const program *p) {
+#ifdef USE_GLEW
+				glAttachShader(p->id, id);
+#endif
+			}
+			shader(const char *source) {
+#ifdef USE_GLEW
+				char log[1000] = "";
+				id = glCreateShader(GL_FRAGMENT_SHADER_ARB);
+				glShaderSource(id, 1, &source, NULL);
+				glCompileShader(id);
+				glGetShaderInfoLog(id, 1000, NULL, log);
+				check_log(log);
+#endif
+			}
+		};
+
+		program() {
+#ifdef USE_GLEW
+			id = glCreateProgram();
+#endif
+		}
+
+		void attach(shader s) {
+			s.attach_to_program(this);
+		}
+
+		void link() {
+#ifdef USE_GLEW
+			char log[1000] = "";
+			glLinkProgram(id);
+			glGetProgramInfoLog(id, 1000, NULL, log);
+			check_log(log);
+#endif
+		}
+
+	};
+
 	static int is_ok() {
 		if (!gpu_initialized) {
 			try_init_gpu();

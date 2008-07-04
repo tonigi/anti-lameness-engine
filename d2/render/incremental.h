@@ -219,7 +219,6 @@ protected:
 		 * Texture implementation.
 		 */
 		void accel_run() {
-#ifdef USE_GLEW
 			point offset = accum_image->offset();
 
 			assert (accum_image != NULL);
@@ -244,27 +243,14 @@ protected:
 
 			gpu::lock();
 
-			GLuint program = glCreateProgram();
-			GLuint shader = glCreateShader(GL_FRAGMENT_SHADER_ARB);
-
-			glShaderSource(shader, 1, &shader_main, NULL);
-			glCompileShader(shader);
-
-			char log[1000];
-			glGetShaderInfoLog(shader, 1000, NULL, log);
-			fprintf(stderr, "%s", log);
-
-			glAttachShader(program, shader);
-
-			glLinkProgram(program);
-
-			glGetProgramInfoLog(program, 1000, NULL, log);
-			fprintf(stderr, "%s", log);
+			gpu::program p;
+			gpu::program::shader s(shader_main);
+			p.attach(s);
+			p.link();
 
 			gpu::unlock();
 
-			accum_image->accumulate_accel(program);
-#endif
+			accum_image->accumulate_accel(p);
 		}
 
 		/*
