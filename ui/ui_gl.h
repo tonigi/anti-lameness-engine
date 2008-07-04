@@ -68,6 +68,7 @@ private:
 
 	static void *glut_thread(void *vu) {
 #if defined HAVE_GLUT_MAIN_LOOP_EVENT && defined HAVE_NANOSLEEP && defined USE_PTHREAD
+
 		/*
 		 * Initialization
 		 */
@@ -91,6 +92,8 @@ private:
 		glutDisplayFunc(glutDisplay);
 		glutKeyboardFunc(glutKeyboard);
 		glutReshapeWindow(640, 480);
+
+		glFinish();
 
 		glutMainLoopEvent();
 

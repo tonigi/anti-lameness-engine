@@ -184,13 +184,15 @@ public:
 	static void lock() {
 		_gpu_lock.lock();
 #ifdef USE_GLUT
-		glFinish();
+		if (gpu_initialized)
+			glFinish();
 #endif
 	}
 
 	static void unlock() {
 #ifdef USE_GLUT
-		glFinish();
+		if (gpu_initialized)
+			glFinish();
 #endif
 		_gpu_lock.unlock();
 	}
