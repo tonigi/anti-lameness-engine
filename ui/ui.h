@@ -194,6 +194,14 @@ protected:
 
 			for (int k = 0; k < 3; k++)
 				exp_multiplier[k] = 1;
+
+			element_degree = 0;
+			total_degree = 0;
+			element_index = 0;
+			num_elements = 0;
+			match_value = 0;
+			perturb_size = 0;
+			align_lod = 0;
 		}
 	} status;
 
