@@ -362,6 +362,12 @@ public:
 			const char *gpu_init_error = "GPU initialization error";
 			throw gpu_init_error;
 		}
+
+		gpu::lock();
+#ifdef USE_GLUT
+		glutCreateWindow("Auxiliary Window");
+#endif
+		gpu::unlock();
 	}
 
 	~ui_gl() {
