@@ -73,27 +73,30 @@ private:
 		 */
 
 		pthread_mutex_lock(&instance->gpu_ready_mutex);
-		gpu::is_ok();
-		pthread_cond_broadcast(&instance->gpu_ready_cond);
-		pthread_mutex_unlock(&instance->gpu_ready_mutex);
-
-		if (!gpu::is_ok())
-			return NULL;
-
 		gpu::lock();
+
+		if (!gpu::is_ok()) {
+			gpu::unlock();
+			pthread_cond_broadcast(&instance->gpu_ready_cond);
+			pthread_mutex_unlock(&instance->gpu_ready_mutex);
+			return NULL;
+		}
 
 		glMatrixMode( GL_PROJECTION );
 		glLoadIdentity();
 		gluOrtho2D( -1., 1., -1., 1. );
 		glMatrixMode( GL_MODELVIEW );
 
-
 		glutReshapeFunc(glutReshape);
 		glutDisplayFunc(glutDisplay);
 		glutKeyboardFunc(glutKeyboard);
 		glutReshapeWindow(640, 480);
 
+		glutMainLoopEvent();
+
 		gpu::unlock();
+		pthread_cond_broadcast(&instance->gpu_ready_cond);
+		pthread_mutex_unlock(&instance->gpu_ready_mutex);
 
 		for(;;) {
 			struct timespec t;
@@ -366,6 +369,7 @@ public:
 		gpu::lock();
 #ifdef USE_GLUT
 		glutCreateWindow("Auxiliary Window");
+		glutHideWindow();
 #endif
 		gpu::unlock();
 	}
