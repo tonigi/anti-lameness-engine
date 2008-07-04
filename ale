@@ -47,9 +47,25 @@ if (!defined $ENV{"ALE_GPU_ACCEL_DEFAULT"}
 }
 
 #
-# Don't use the GL interface by default, since current code
-# (esp. GLUT) may not be thread safe.
+# Determine whether to use GL interface by default
 #
+
+# Blacklist
+
+if (!defined $ENV{"ALE_GL_UI_DEFAULT"} 
+ && ($ENV{"ALE_SOFT_GPU"} 
+  || !`glxinfo 2> /dev/null`)) {
+       $ENV{"ALE_GL_UI_DEFAULT"} = 0;
+} 
+
+# Whitelist
+
+if (!defined $ENV{"ALE_GL_UI_DEFAULT"} 
+ && (`uname -a | grep Linux`)) {
+       $ENV{"ALE_GL_UI_DEFAULT"} = 1;
+} 
+
+# Make GL UI non-default if neither blacklisted nor whitelisted
 
 if (!defined $ENV{"ALE_GL_UI_DEFAULT"}) {
 	$ENV{"ALE_GL_UI_DEFAULT"} = 0;
