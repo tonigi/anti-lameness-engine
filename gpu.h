@@ -122,12 +122,39 @@ public:
 				check_log(log);
 #endif
 			}
+			shader (const shader &p) {
+				assert(0);
+			}
+
+			shader &operator=(const shader &p) {
+				assert(0);
+			}
+
+			~shader() {
+#ifdef USE_GLEW
+				glDeleteShader(id);
+#endif
+			}
 		};
 
 		program() {
 #ifdef USE_GLEW
 			id = glCreateProgram();
 			check_id(id);
+#endif
+		}
+
+		program (const program &p) {
+			assert(0);
+		}
+
+		program &operator=(const program &p) {
+			assert(0);
+		}
+
+		~program() {
+#ifdef USE_GLEW
+			glDeleteProgram(id);
 #endif
 		}
 
