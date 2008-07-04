@@ -139,6 +139,8 @@ if test x$with_glut != xno; then
 	if test x$no_glut != xyes; then
 		GLUT_CFLAGS="$GLUT_CFLAGS -DUSE_GLUT=1 -DUSE_GL=1"
 		AC_CHECK_HEADER(GL/freeglut.h, AC_DEFINE([USE_FREEGLUT], [], [GL/freeglut.h header is available]))
+		AC_CHECK_HEADER(GL/glew.h, AC_DEFINE([USE_GLEW], [], [GL/glew.h header is available]))
+		AC_CHECK_LIB([GLEW], [glewInit], LIBS="-lGLEW $LIBS")
 		AC_CACHE_CHECK(whether glutMainLoopEvent() is available, ac_cv_glut_main_loop_event,[
 			AC_LANG_SAVE
 			AC_LANG_CPLUSPLUS

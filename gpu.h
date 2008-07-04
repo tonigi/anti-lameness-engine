@@ -32,7 +32,13 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef USE_GLUT
+#ifdef USE_GLEW
+#include <GL/glew.h>
+#endif
+
+#ifdef USE_FREEGLUT
+#include <GL/freeglut.h>
+#elif USE_GLUT
 #include <GL/glut.h>
 #endif
 
@@ -59,6 +65,15 @@ class gpu {
 		gpu_initialized = 1;
 #else
 		gpu_initialized = 0;
+#endif
+
+#ifdef USE_GLEW
+		if (gpu_initialized) {
+			if (glewInit() != GLEW_OK) {
+				fprintf(stderr, "glewInit() returned an error.\n");
+				exit(1);
+			}
+		}
 #endif
 	}
 

@@ -21,12 +21,6 @@
 #ifndef __ui_gl_h__
 #define __ui_gl_h__
 
-#ifdef USE_FREEGLUT
-#include <GL/freeglut.h>
-#elif USE_GLUT
-#include <GL/glut.h>
-#endif
-
 #include "../d2.h"
 #include "ui.h"
 #include "accel.h"
