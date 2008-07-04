@@ -89,6 +89,13 @@ public:
 		}
 
 #ifdef USE_GLEW
+		static void check_id(GLuint id) {
+			if (id == 0) {
+				fprintf(stderr, "GLSL object creation failed.\n");
+				exit(1);
+			}
+		}
+
 		GLuint id;
 #endif
 
@@ -108,6 +115,7 @@ public:
 #ifdef USE_GLEW
 				char log[1000] = "";
 				id = glCreateShader(GL_FRAGMENT_SHADER_ARB);
+				check_id(id);
 				glShaderSource(id, 1, &source, NULL);
 				glCompileShader(id);
 				glGetShaderInfoLog(id, 1000, NULL, log);
@@ -119,6 +127,7 @@ public:
 		program() {
 #ifdef USE_GLEW
 			id = glCreateProgram();
+			check_id(id);
 #endif
 		}
 
