@@ -219,7 +219,7 @@ protected:
 		 * Texture implementation.
 		 */
 		void accel_run() {
-			
+#ifdef USE_GLEW
 			point offset = accum_image->offset();
 
 			assert (accum_image != NULL);
@@ -262,6 +262,7 @@ protected:
 			fprintf(stderr, "%s", log);
 
 			gpu::unlock();
+#endif
 		}
 
 		/*

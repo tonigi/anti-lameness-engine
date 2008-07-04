@@ -83,6 +83,11 @@ const char *version = PACKAGE_NAME " Version:      " VERSION "\n"
 #else
 		"GL support:       none\n"
 #endif
+#ifdef USE_GLEW
+		"GLEW:             Yes\n"
+#else
+		"GLEW:             No\n"
+#endif
 ;
 
 /*

@@ -46,11 +46,15 @@ public:
 	}
 
 	static void set_auto() {
+#ifdef USE_GLEW
 		const char *accel_default = getenv("ALE_GPU_ACCEL_DEFAULT");
 		if (accel_default && !strcmp(accel_default, "1") && gpu::is_ok())
 			use_gpu = 1;
 		else 
 			use_gpu = 0;
+#else
+		use_gpu = 0;
+#endif
 	}
 
 	static int is_gpu() {
@@ -65,6 +69,7 @@ public:
 			exit(1);
 		}
 
+#ifdef USE_GLEW
 		const char *extensions[] = {
 			"GL_ARB_fragment_shader",
 			"GL_ARB_texture_float",
@@ -73,7 +78,6 @@ public:
 			NULL
 		};
 
-#ifdef USE_GLEW
 		int unsupported = 0;
 		for (const char **c = extensions; *c; c++) {
 			if (!glewIsSupported(*c)) {
@@ -83,6 +87,9 @@ public:
 		}
 		if (unsupported)
 			exit(1);
+#else
+		fprintf(stderr, "GLEW linkage is required for acceleration.\n");
+		exit(1);
 #endif
 
 		return 1;
