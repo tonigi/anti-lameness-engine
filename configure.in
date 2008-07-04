@@ -141,22 +141,6 @@ if test x$with_glut != xno; then
 		AC_CHECK_HEADER(GL/freeglut.h, AC_DEFINE([USE_FREEGLUT], [], [GL/freeglut.h header is available]))
 		AC_CHECK_HEADER(GL/glew.h, AC_DEFINE([USE_GLEW], [], [GL/glew.h header is available]))
 		AC_CHECK_LIB([GLEW], [glewInit], LIBS="-lGLEW $LIBS")
-		AC_CACHE_CHECK(whether glutMainLoopEvent() is available, ac_cv_glut_main_loop_event,[
-			AC_LANG_SAVE
-			AC_LANG_CPLUSPLUS
-			AC_TRY_COMPILE([
-				#ifdef USE_FREEGLUT
-				#include <GL/freeglut.h>
-				#elif USE_GLUT
-				#include <GL/glut.h>
-				#endif
-			],[
-				glutMainLoopEvent();
-			], ac_cv_glut_main_loop_event=yes, ac_cv_glut_main_loop_event=no)
-			AC_LANG_RESTORE])
-		if test $ac_cv_glut_main_loop_event = yes; then
-			GLUT_CFLAGS="$GLUT_CFLAGS -DHAVE_GLUT_MAIN_LOOP_EVENT=1"
-		fi
 	fi
 else
 	GLUT_CFLAGS=""

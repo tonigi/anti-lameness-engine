@@ -26,3 +26,4 @@
 
 int gpu::gpu_initialized = 0;
 thread::lock_t gpu::_gpu_lock;
+int gpu::dirty = 0;

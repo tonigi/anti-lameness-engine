@@ -31,18 +31,6 @@
  */
 
 class ui_gl : public ui {
-private:
-	int osd_mode;
-	int width, height;
-	int cursor_line;
-	int cursor_period;
-	int dirty;
-
-#ifdef USE_PTHREAD
-	pthread_t update_thread;
-	pthread_mutex_t gpu_ready_mutex;
-	pthread_cond_t gpu_ready_cond;
-#endif
 
 	void printf(const char *format, ...) {
 		update();
@@ -61,13 +49,21 @@ private:
 	}
 
 	void update() {
-		gpu::lock();
-		dirty = 1;
-		gpu::unlock();
+		gpu::update();
 	}
 
+#if defined USE_PTHREAD && defined USE_GLUT
+
+	int osd_mode;
+	int width, height;
+	int cursor_line;
+	int cursor_period;
+
+	pthread_t update_thread;
+	pthread_mutex_t gpu_ready_mutex;
+	pthread_cond_t gpu_ready_cond;
+
 	static void *glut_thread(void *vu) {
-#if defined HAVE_GLUT_MAIN_LOOP_EVENT && defined HAVE_NANOSLEEP && defined USE_PTHREAD
 
 		/*
 		 * Initialization
@@ -75,50 +71,16 @@ private:
 
 		pthread_mutex_lock(&instance->gpu_ready_mutex);
 		gpu::lock();
-
-		if (!gpu::is_ok()) {
-			gpu::unlock();
-			pthread_cond_broadcast(&instance->gpu_ready_cond);
-			pthread_mutex_unlock(&instance->gpu_ready_mutex);
-			return NULL;
-		}
-
-		glMatrixMode( GL_PROJECTION );
-		glLoadIdentity();
-		gluOrtho2D( -1., 1., -1., 1. );
-		glMatrixMode( GL_MODELVIEW );
-
-		glutReshapeFunc(glutReshape);
-		glutDisplayFunc(glutDisplay);
-		glutKeyboardFunc(glutKeyboard);
-		glutReshapeWindow(640, 480);
-
-		glFinish();
-
-		glutMainLoopEvent();
-
+		int ok = !gpu::old_context() && gpu::is_ok();
 		gpu::unlock();
 		pthread_cond_broadcast(&instance->gpu_ready_cond);
 		pthread_mutex_unlock(&instance->gpu_ready_mutex);
 
-		for(;;) {
-			struct timespec t;
-			t.tv_sec = 0;
-			t.tv_nsec = 10000000;
-			nanosleep(&t, NULL);
-
-			gpu::lock();
-
-			if (instance->dirty) {
-				instance->dirty = 0;
-				glutPostRedisplay();
-			}
-
-			glutMainLoopEvent();
-
-			gpu::unlock();
+		if (!ok) {
+			return NULL;
 		}
-#endif
+
+		gpu::glut_loop(glutReshape, glutDisplay, glutKeyboard, 640, 480);
 
 		return NULL;
 	}
@@ -321,6 +283,7 @@ private:
 		 */
 		glutSwapBuffers();
 	}
+#endif
 
 public:
 	ui_gl() {
@@ -328,18 +291,12 @@ public:
 		const char *glut_error = "this build was not configured for GLUT";
 		throw glut_error;
 #endif
-#ifndef HAVE_GLUT_MAIN_LOOP_EVENT
-		const char *freeglut_error = "need extension glutMainLoopEvent()";
-		throw freeglut_error;
-#endif
 #ifndef USE_PTHREAD
 		const char *pthread_error = "need POSIX threads";
 		throw pthread_error;
 #endif
-#ifndef HAVE_NANOSLEEP
-		const char *nanosleep_error = "need nanosleep()";
-		throw nanosleep_error;
-#endif
+
+#if defined USE_GLUT && defined USE_PTHREAD
 
 
 		instance = this;
@@ -350,7 +307,6 @@ public:
 		/*
 		 * Start a GLUT thread.
 		 */
-#ifdef USE_PTHREAD
 		pthread_cond_init(&gpu_ready_cond, NULL);
 		pthread_mutex_init(&gpu_ready_mutex, NULL);
 
@@ -362,23 +318,16 @@ public:
 		pthread_create(&update_thread, NULL, glut_thread, (void *) this);
 
 		pthread_cond_wait(&gpu_ready_cond, &gpu_ready_mutex);
-#endif
 		
 		if (!gpu::is_ok()) {
 			const char *gpu_init_error = "GPU initialization error";
 			throw gpu_init_error;
 		}
-
-		gpu::lock();
-#ifdef USE_GLUT
-		glutCreateWindow("Auxiliary Window");
-		glutHideWindow();
 #endif
-		gpu::unlock();
 	}
 
 	~ui_gl() {
-#ifdef USE_PTHREAD
+#if defined USE_PTHREAD && defined USE_GLUT
 		pthread_cancel(update_thread);
 		pthread_join(update_thread, NULL);
 #endif
