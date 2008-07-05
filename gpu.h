@@ -107,17 +107,23 @@ public:
 #endif
 
 		public:
-			void attach_to_program(const program *p) {
+			void attach_to_program(const program *p) const {
 #ifdef USE_GLEW
 				glAttachShader(p->id, id);
 #endif
 			}
-			shader(const char *source) {
+			shader(const char **source) {
 #ifdef USE_GLEW
+				int lines = 0;
+
 				char log[1000] = "";
 				id = glCreateShader(GL_FRAGMENT_SHADER_ARB);
 				check_id(id);
-				glShaderSource(id, 1, &source, NULL);
+
+				while (source[lines])
+					lines++;
+
+				glShaderSource(id, lines, source, NULL);
 				glCompileShader(id);
 				glGetShaderInfoLog(id, 1000, NULL, log);
 				check_log(log);
@@ -159,7 +165,7 @@ public:
 #endif
 		}
 
-		void attach(shader s) {
+		void attach(const shader &s) {
 			s.attach_to_program(this);
 		}
 

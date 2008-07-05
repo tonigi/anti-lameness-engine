@@ -226,20 +226,24 @@ protected:
 
 			const filter::ssfe *_ssfe = inv->ssfe();
 
-			const char *shader_main = 
-				"void main() {"\
-				"	vec3 value = vec3(0, 0, 0);"\
-				"	vec3 confidence = vec3(0, 0, 0);"\
-				"	if (_ssfe_ex_is_honored() && instance_is_excluded_r(i, j, frame));"\
-				"	else if (accum_image_accumulate_norender(gl_TexCoord[0]);"\
-				"	else if (exposure_get_confidence() != 0) {"\
-				"		_ssfe_filtered(gl_TexCoord[0], frame, value, confidence,"\
-				"				accum_image_get_weights_get_pixel(gl_TexCoord[0]))"\
-				"	} else {"\
-				"		_ssfe_filtered(gl_TexCoord[0], frame, value, confidence);"\
-				"	}"\
-				"	accum_image_accumulate(gl_TexCoord[0], frame, value, confidence);"\
-				"}";
+			const char *shader_main[] = {
+				"void main() {",
+#if 0
+				"	vec3 value = vec3(0, 0, 0);",
+				"	vec3 confidence = vec3(0, 0, 0);",
+				"	if (_ssfe_ex_is_honored() && instance_is_excluded_r(i, j, frame));",
+				"	else if (accum_image_accumulate_norender(gl_TexCoord[0]);",
+				"	else if (exposure_get_confidence() != 0) {",
+				"		_ssfe_filtered(gl_TexCoord[0], frame, value, confidence,",
+				"				accum_image_get_weights_get_pixel(gl_TexCoord[0]))",
+				"	} else {",
+				"		_ssfe_filtered(gl_TexCoord[0], frame, value, confidence);",
+				"	}",
+				"	accum_image_accumulate(gl_TexCoord[0], frame, value, confidence);",
+#endif
+				"}",
+				NULL
+			};
 
 			gpu::program p;
 			gpu::program::shader s(shader_main);

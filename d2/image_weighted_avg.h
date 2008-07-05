@@ -83,7 +83,7 @@ public:
 	 */
 	virtual void accumulate(int i, int j, int f, pixel new_value, pixel new_weight) = 0;
 
-	virtual void accumulate_accel(gpu::program p) {
+	virtual void accumulate_accel(const gpu::program &p) {
 		assert(0);
 	}
 
