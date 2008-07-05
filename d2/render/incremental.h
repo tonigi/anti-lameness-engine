@@ -241,15 +241,10 @@ protected:
 				"	accum_image_accumulate(gl_TexCoord[0], frame, value, confidence);"\
 				"}";
 
-			gpu::lock();
-
 			gpu::program p;
 			gpu::program::shader s(shader_main);
 			p.attach(s);
 			p.link();
-
-			gpu::unlock();
-
 			accum_image->accumulate_accel(p);
 		}
 

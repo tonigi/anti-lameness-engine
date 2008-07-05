@@ -280,16 +280,6 @@ public:
 		type = 3;
 	}
 
-	static void set_gl() {
-		assert(singleton == NULL);
-		type = 4;
-	}
-
-	static void set_auto() {
-		assert(singleton == NULL);
-		type = 5;
-	}
-
 	static void set_profile() {
 		output_performance_data = 1;
 	}

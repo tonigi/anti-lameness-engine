@@ -46,20 +46,7 @@
 
 
 class gpu {
-	static thread::lock_t _gpu_lock;
 	static int gpu_initialized;
-	static int dirty;
-
-public:
-	static void lock() {
-		_gpu_lock.lock();
-	}
-
-	static void unlock() {
-		_gpu_lock.unlock();
-	}
-
-private:
 
 	static void try_init_gpu() {
 		assert(!gpu_initialized);
@@ -89,13 +76,6 @@ private:
 			}
 		}
 #endif
-	}
-
-	static void glut_idle(void) {
-		if (dirty) {
-			dirty = 0;
-			glutPostRedisplay();
-		}
 	}
 
 public:
@@ -194,10 +174,6 @@ public:
 
 	};
 
-	static int old_context() {
-		return gpu_initialized;
-	}
-
 	static int is_ok() {
 		if (!gpu_initialized) {
 			try_init_gpu();
@@ -205,31 +181,6 @@ public:
 
 		return gpu_initialized;
 	}
-
-	static void glut_loop(void (*glutReshape)(int width, int height),
-	                      void (*glutDisplay)(),
-			      void (*glutKeyboard)(unsigned char c, int x, int y),
-			      int width, int height) {
-#if defined USE_GLUT
-
-		assert (gpu_initialized);
-
-		glutReshapeFunc(glutReshape);
-		glutDisplayFunc(glutDisplay);
-		glutKeyboardFunc(glutKeyboard);
-		glutReshapeWindow(width, height);
-		glutIdleFunc(glut_idle);
-
-		glFinish();
-
-		glutMainLoop();
-#endif
-	}
-
-	static void update() {
-		dirty = 1;
-	}
-
 };
 
 #endif

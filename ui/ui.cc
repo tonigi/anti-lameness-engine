@@ -22,7 +22,6 @@
 #include "ui_tty.h"
 #include "ui_log.h"
 #include "ui_quiet.h"
-#include "ui_gl.h"
 #include "input.h"
 #include "ui.h"
 #include "d2.h"
@@ -32,7 +31,7 @@
  */
 
 ui *ui::singleton = NULL;
-int ui::type = 5;   /* auto is default */
+int ui::type = 1;   /* tty is default */
 int ui::output_performance_data = 0;
 
 ui *ui::get() {
@@ -54,39 +53,6 @@ ui *ui::get() {
 		case 3:
 			singleton = new ui_quiet();
 			break;
-		case 4:
-			try {
-				singleton = new ui_gl();
-			} catch (const char *error) {
-				fprintf(stderr, "Error initializing GL interface: %s.\n", error);
-				exit(1);
-			} catch (...) {
-				fprintf(stderr, "Error initializing GL interface.\n");
-				exit(1);
-			}
-			break;
-		case 5:
-		{
-			const char *gl_default = getenv("ALE_GL_UI_DEFAULT");
-			if (gl_default && !strcmp(gl_default, "1")) {
-				try {
-					singleton = new ui_gl();
-				} catch (...) {
-					try {
-						singleton = new ui_tty();
-					} catch (...) {
-						singleton = new ui_wo();
-					}
-				}
-			} else {
-				try {
-					singleton = new ui_tty();
-				} catch (...) {
-					singleton = new ui_wo();
-				}
-			}
-			break;
-		}
 		default:
 			assert(0);
 		}

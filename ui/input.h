@@ -1255,7 +1255,6 @@ public:
 				"ALE_COUNT_THREADS",
 				"PAGER",
 				"ALE_SOFT_GPU",
-				"ALE_GL_UI_DEFAULT",
 				"ALE_GPU_ACCEL_DEFAULT",
 				NULL
 			};
@@ -1899,10 +1898,6 @@ public:
 					ui::set_log();
 				else if (!strcmp(env->get_string_arg(i->first, 1), "quiet"))
 					ui::set_quiet();
-				else if (!strcmp(env->get_string_arg(i->first, 1), "gl"))
-					ui::set_gl();
-				else if (!strcmp(env->get_string_arg(i->first, 1), "auto"))
-					ui::set_auto();
 				else {
 					fprintf(stderr, "Error: Unknown user interface type '%s'\n", 
 							env->get_string_arg(i->first, 1));
