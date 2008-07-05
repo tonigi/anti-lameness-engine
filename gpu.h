@@ -80,6 +80,16 @@ class gpu {
 
 public:
 
+	static int is_ok() {
+		if (!gpu_initialized) {
+			try_init_gpu();
+		}
+
+		return gpu_initialized;
+	}
+
+	static int is_enabled();
+
 	class program {
 
 		static void check_log(const char *log) {
@@ -114,6 +124,8 @@ public:
 			}
 			shader(const char **source) {
 #ifdef USE_GLEW
+				assert(is_enabled());
+
 				int lines = 0;
 
 				char log[1000] = "";
@@ -144,8 +156,16 @@ public:
 			}
 		};
 
+		class library {
+		public:
+			virtual void attach_shaders(program *p) = 0;
+		};
+
 		program() {
 #ifdef USE_GLEW
+
+			assert(is_enabled());
+
 			id = glCreateProgram();
 			check_id(id);
 #endif
@@ -165,8 +185,8 @@ public:
 #endif
 		}
 
-		void attach(const shader &s) {
-			s.attach_to_program(this);
+		void attach(const shader *s) {
+			s->attach_to_program(this);
 		}
 
 		void link() {
@@ -179,14 +199,6 @@ public:
 		}
 
 	};
-
-	static int is_ok() {
-		if (!gpu_initialized) {
-			try_init_gpu();
-		}
-
-		return gpu_initialized;
-	}
 };
 
 #endif

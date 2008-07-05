@@ -35,7 +35,7 @@
 #define median 5
 #define avgf 6
 
-class invariant {
+class invariant : public gpu::program::library {
 public:
 	int type;
 	double type_param;
@@ -45,6 +45,9 @@ public:
 		this->s = s;
 		type = 2;
 		type_param = 0;
+	}
+	void attach_shaders(gpu::program *p) {
+		assert(0);
 	}
 	int equals(const invariant *i) const {
 		return (i->type == type

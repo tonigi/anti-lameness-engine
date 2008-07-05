@@ -23,5 +23,10 @@
  */
 
 #include "gpu.h"
+#include "accel.h"
 
 int gpu::gpu_initialized = 0;
+
+int gpu::is_enabled() {
+	return accel::is_gpu();
+}

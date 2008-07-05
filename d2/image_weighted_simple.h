@@ -49,6 +49,10 @@ public:
 		delete weights;
 	}
 
+	void attach_shaders(gpu::program *p) {
+		assert(0);
+	}
+
 	/*
 	 * Extend the image area to the top, bottom, left, and right,
 	 * initializing the new image areas with black pixels.  Negative values

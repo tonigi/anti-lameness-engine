@@ -30,7 +30,7 @@
 #include "point.h"
 #include "image.h"
 
-class image_weighted_avg : public image {
+class image_weighted_avg : public image, public gpu::program::library {
 private:
 	void trigger(pixel multiplier) {
 		assert(0);
@@ -83,7 +83,7 @@ public:
 	 */
 	virtual void accumulate(int i, int j, int f, pixel new_value, pixel new_weight) = 0;
 
-	virtual void accumulate_accel(const gpu::program &p) {
+	virtual void accumulate_accel(const gpu::program *p) {
 		assert(0);
 	}
 

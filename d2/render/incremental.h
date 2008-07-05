@@ -33,6 +33,8 @@
 
 class incremental : public render {
 protected:
+	gpu::program *gpu_program;
+	gpu::program::shader *gpu_shader;
 	image_weighted_avg *accum_image;
 	invariant *inv;
 
@@ -226,30 +228,7 @@ protected:
 
 			const filter::ssfe *_ssfe = inv->ssfe();
 
-			const char *shader_main[] = {
-				"void main() {",
-#if 0
-				"	vec3 value = vec3(0, 0, 0);",
-				"	vec3 confidence = vec3(0, 0, 0);",
-				"	if (_ssfe_ex_is_honored() && instance_is_excluded_r(i, j, frame));",
-				"	else if (accum_image_accumulate_norender(gl_TexCoord[0]);",
-				"	else if (exposure_get_confidence() != 0) {",
-				"		_ssfe_filtered(gl_TexCoord[0], frame, value, confidence,",
-				"				accum_image_get_weights_get_pixel(gl_TexCoord[0]))",
-				"	} else {",
-				"		_ssfe_filtered(gl_TexCoord[0], frame, value, confidence);",
-				"	}",
-				"	accum_image_accumulate(gl_TexCoord[0], frame, value, confidence);",
-#endif
-				"}",
-				NULL
-			};
-
-			gpu::program p;
-			gpu::program::shader s(shader_main);
-			p.attach(s);
-			p.link();
-			accum_image->accumulate_accel(p);
+			accum_image->accumulate_accel(instance->gpu_program);
 		}
 
 		/*
@@ -365,8 +344,45 @@ public:
 	 * Constructor
 	 */
 	incremental(invariant *inv) {
+		const char *shader_main[] = {
+			"void main() {",
+#if 0
+			"	vec3 value = vec3(0, 0, 0);",
+			"	vec3 confidence = vec3(0, 0, 0);",
+			"	if (_ssfe_ex_is_honored() && instance_is_excluded_r(i, j, frame));",
+			"	else if (accum_image_accumulate_norender(gl_TexCoord[0]);",
+			"	else if (exposure_get_confidence() != 0) {",
+			"		_ssfe_filtered(gl_TexCoord[0], frame, value, confidence,",
+			"				accum_image_get_weights_get_pixel(gl_TexCoord[0]))",
+			"	} else {",
+			"		_ssfe_filtered(gl_TexCoord[0], frame, value, confidence);",
+			"	}",
+			"	accum_image_accumulate(gl_TexCoord[0], frame, value, confidence);",
+#endif
+			"}",
+			NULL
+		};
+
 		this->inv = inv;
-		accum_image = NULL;
+
+		if (inv->is_median())
+			accum_image = new image_weighted_median(1, 1, 3);
+		else
+			accum_image = new image_weighted_simple(1, 1, 3, inv);
+
+		assert (accum_image);
+
+		if (accel::is_gpu()) {
+			gpu_program = new gpu::program();
+			gpu_shader = new gpu::program::shader(shader_main);
+			gpu_program->attach(gpu_shader);
+			inv->attach_shaders(gpu_program);
+			accum_image->attach_shaders(gpu_program);
+			gpu_program->link();
+		} else {
+			gpu_program = NULL;
+			gpu_shader = NULL;
+		}
 	}
 	
 	/*
@@ -403,16 +419,8 @@ public:
 		/*
 		 * Dynamic invariants are not incrementally updated.
 		 */
-		if (inv->ssfe()->get_scaled_filter()->is_dynamic()) {
-			/*
-			 * Create a trivial image for the case where there is
-			 * no chain suffix.
-			 */
-			if (accum_image == NULL)
-				accum_image = new image_weighted_simple(1, 1, 3, inv);
-
+		if (inv->ssfe()->get_scaled_filter()->is_dynamic())
 			return;
-		}
 
 		assert (get_step() >= -1);
 		if (get_step() == 0) {
@@ -421,10 +429,6 @@ public:
 			const image *im = image_rw::open(0);
 
 			ui::get()->rendering();
-			if (inv->is_median())
-				accum_image = new image_weighted_median(1, 1, 3);
-			else
-				accum_image = new image_weighted_simple(1, 1, 3, inv);
 
 			set_extents_by_map(0, t);
 
@@ -444,14 +448,7 @@ public:
 
 
 	virtual void init_point_renderer(unsigned int h, unsigned int w, unsigned int d) {
-		assert(accum_image == NULL);
-
-		if (inv->is_median())
-			accum_image = new image_weighted_median(h, w, d);
-		else
-			accum_image = new image_weighted_simple(h, w, d, inv);
-
-		assert(accum_image);
+		accum_image->_extend(0, h - 1, 0, w - 1);
 	}
 	
 	virtual void point_render(unsigned int i, unsigned int j, unsigned int f, transformation t) {
