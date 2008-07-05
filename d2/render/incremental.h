@@ -345,17 +345,27 @@ public:
 	 */
 	incremental(invariant *inv) {
 		const char *shader_main[] = {
+			ALE_ACCEL_RENDER_INCLUDE,
+			ALE_ACCEL_SSFE_INCLUDE,
+			ALE_ACCEL_IMAGE_WEIGHTED_AVG_INCLUDE,
+
+			"uniform int frame;",
+			"uniform ssfe _ssfe;",
+			"uniform render _this_render;",
+			"uniform image_weighted_avg accum_image;",
+			"uniform bool use_certainty; /* == exposure->get_confidence() */ ",
+
 			"void main() {",
-#if 0
 			"	vec3 value = vec3(0, 0, 0);",
 			"	vec3 confidence = vec3(0, 0, 0);",
-			"	if (_ssfe_ex_is_honored() && instance_is_excluded_r(i, j, frame));",
-			"	else if (accum_image_accumulate_norender(gl_TexCoord[0]);",
-			"	else if (exposure_get_confidence() != 0) {",
-			"		_ssfe_filtered(gl_TexCoord[0], frame, value, confidence,",
+			"	if (ssfe_ex_is_honored(_ssfe) && render_is_excluded_r(_this_render, gl_TexCoord[0], frame));",
+			"	else if (image_weighted_avg_accumulate_norender(accum_image, gl_TexCoord[0]));",
+#if 0
+			"	else if (use_certainty) {",
+			"		ssfe_filtered(_ssfe, gl_TexCoord[0], frame, value, confidence,",
 			"				accum_image_get_weights_get_pixel(gl_TexCoord[0]))",
 			"	} else {",
-			"		_ssfe_filtered(gl_TexCoord[0], frame, value, confidence);",
+			"		ssfe_filtered(gl_TexCoord[0], frame, value, confidence);",
 			"	}",
 			"	accum_image_accumulate(gl_TexCoord[0], frame, value, confidence);",
 #endif

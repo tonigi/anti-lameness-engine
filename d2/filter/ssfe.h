@@ -24,6 +24,12 @@
 #include "scaled_filter.h"
 #include "filter.h"
 
+#define ALE_ACCEL_SSFE_INCLUDE \
+"struct ssfe {",\
+"	bool honor_exclusion;"\
+"};",\
+"bool ssfe_ex_is_honored(ssfe _this);"
+
 /*
  * Scaled filter class with exclusion.
  */

@@ -31,6 +31,12 @@
 
 #define ACTIVE_RENDERER_COUNT 30
 
+#define ALE_ACCEL_RENDER_INCLUDE \
+"struct render {",\
+"	int rx_count;"\
+"};",\
+"bool render_is_excluded_r(render _this, vec4 position, int frame);"
+
 /*
  * Class render accepts messages synchronizing rendering steps through the
  * methods sync(n) and sync(), and returns information about the currently

@@ -30,6 +30,12 @@
 #include "point.h"
 #include "image.h"
 
+#define ALE_ACCEL_IMAGE_WEIGHTED_AVG_INCLUDE \
+"struct image_weighted_avg {",\
+"	int type;",\
+"};",\
+"bool image_weighted_avg_accumulate_norender(image_weighted_avg _this, vec4 pos);"
+
 class image_weighted_avg : public image, public gpu::program::library {
 private:
 	void trigger(pixel multiplier) {

@@ -92,8 +92,9 @@ public:
 
 	class program {
 
-		static void check_log(const char *log) {
+		static void check_log(const char *description, const char *log) {
 			if (strcmp(log, "")) {
+				fprintf(stderr, "GLSL %s error log:\n", description);
 				fprintf(stderr, "%s", log);
 				exit(1);
 			}
@@ -138,7 +139,7 @@ public:
 				glShaderSource(id, lines, source, NULL);
 				glCompileShader(id);
 				glGetShaderInfoLog(id, 1000, NULL, log);
-				check_log(log);
+				check_log("shader compilation", log);
 #endif
 			}
 			shader (const shader &p) {
@@ -194,7 +195,7 @@ public:
 			char log[1000] = "";
 			glLinkProgram(id);
 			glGetProgramInfoLog(id, 1000, NULL, log);
-			check_log(log);
+			check_log("program linking", log);
 #endif
 		}
 
