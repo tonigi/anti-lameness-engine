@@ -32,7 +32,7 @@
 class image_zero : public image_weighted_avg {
 public:
 
-	void attach_shaders(gpu::program *p) {
+	void attach_shaders(gpu::program *p) const {
 	}
 
 	spixel get_pixel(unsigned int y, unsigned int x) const {

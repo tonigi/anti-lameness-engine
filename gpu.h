@@ -159,7 +159,7 @@ public:
 
 		class library {
 		public:
-			virtual void attach_shaders(program *p) = 0;
+			virtual void attach_shaders(program *p) const = 0;
 		};
 
 		program() {

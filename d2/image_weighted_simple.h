@@ -49,7 +49,7 @@ public:
 		delete weights;
 	}
 
-	void attach_shaders(gpu::program *p) {
+	void attach_shaders(gpu::program *p) const {
 		assert(0);
 	}
 

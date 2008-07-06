@@ -46,7 +46,7 @@ public:
 		type = 2;
 		type_param = 0;
 	}
-	void attach_shaders(gpu::program *p) {
+	void attach_shaders(gpu::program *p) const {
 		assert(0);
 	}
 	int equals(const invariant *i) const {

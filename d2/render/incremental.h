@@ -384,7 +384,7 @@ public:
 			gpu_program = new gpu::program();
 			gpu_shader = new gpu::program::shader(shader_main);
 			gpu_program->attach(gpu_shader);
-			inv->attach_shaders(gpu_program);
+			inv->ssfe()->attach_shaders(gpu_program);
 			accum_image->attach_shaders(gpu_program);
 			gpu_program->link();
 		} else {

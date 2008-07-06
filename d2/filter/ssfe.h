@@ -36,7 +36,7 @@
  * Scaled filter class with exclusion.
  */
 
-class ssfe {
+class ssfe : public gpu::program::library {
 private:
 	/*
 	 * Honor exclusion?
@@ -46,11 +46,35 @@ private:
 	mutable point _offset;
 	mutable int have_offset;
 
+	gpu::program::shader *gpu_shader;
+
 public:
 
 	ssfe(scaled_filter *f, int honor_exclusion) {
+		const char *shader_code[] = {
+			ALE_ACCEL_SSFE_INCLUDE,
+			"bool ssfe_ex_is_honored(ssfe _this) {",
+			"	return _this.honor_exclusion;",
+			"}",
+			"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight){",
+			"\n#error ssfe_filtered not implemented\n",
+			"}",
+			"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight, vec3 prev_weight){",
+			"\n#error ssfe_filtered not implemented\n",
+			"}",
+			NULL
+		};
+
 		this->honor_exclusion = honor_exclusion;
 		this->f = f;
+
+		if (accel::is_gpu()) {
+			gpu_shader = new gpu::program::shader(shader_code);
+		}
+	}
+
+	void attach_shaders(gpu::program *p) const {
+		p->attach(gpu_shader);
 	}
 
 	const scaled_filter *get_scaled_filter() const {
