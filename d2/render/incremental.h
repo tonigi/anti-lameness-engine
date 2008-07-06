@@ -360,15 +360,13 @@ public:
 			"	vec3 confidence = vec3(0, 0, 0);",
 			"	if (ssfe_ex_is_honored(_ssfe) && render_is_excluded_r(_this_render, gl_TexCoord[0], frame));",
 			"	else if (image_weighted_avg_accumulate_norender(accum_image, gl_TexCoord[0]));",
-#if 0
 			"	else if (use_certainty) {",
 			"		ssfe_filtered(_ssfe, gl_TexCoord[0], frame, value, confidence,",
-			"				accum_image_get_weights_get_pixel(gl_TexCoord[0]))",
+			"				image_get_pixel(image_weighted_avg_get_weights(accum_image), gl_TexCoord[0]));",
 			"	} else {",
-			"		ssfe_filtered(gl_TexCoord[0], frame, value, confidence);",
+			"		ssfe_filtered(_ssfe, gl_TexCoord[0], frame, value, confidence);",
 			"	}",
-			"	accum_image_accumulate(gl_TexCoord[0], frame, value, confidence);",
-#endif
+			"	image_weighted_avg_accumulate(accum_image, gl_TexCoord[0], frame, value, confidence);",
 			"}",
 			NULL
 		};

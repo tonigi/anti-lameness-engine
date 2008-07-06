@@ -28,7 +28,9 @@
 "struct ssfe {",\
 "	bool honor_exclusion;"\
 "};",\
-"bool ssfe_ex_is_honored(ssfe _this);"
+"bool ssfe_ex_is_honored(ssfe _this);",\
+"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight);",\
+"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight, vec3 prev_weight);"
 
 /*
  * Scaled filter class with exclusion.

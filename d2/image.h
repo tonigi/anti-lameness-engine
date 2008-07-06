@@ -47,6 +47,12 @@
 #define IMAGE_BAYER_GRGB 0x6 /* binary 110 */
 #define IMAGE_BAYER_BGRG 0x7 /* binary 111 */
 
+#define ALE_ACCEL_IMAGE_INCLUDE \
+"struct image {",\
+"	int type;",\
+"};"\
+"vec3 image_get_pixel(image _this, vec4 pos);"
+
 class image : protected exposure::listener {
 protected:
 	static double resident;

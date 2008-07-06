@@ -31,10 +31,13 @@
 #include "image.h"
 
 #define ALE_ACCEL_IMAGE_WEIGHTED_AVG_INCLUDE \
+ALE_ACCEL_IMAGE_INCLUDE \
 "struct image_weighted_avg {",\
 "	int type;",\
 "};",\
-"bool image_weighted_avg_accumulate_norender(image_weighted_avg _this, vec4 pos);"
+"bool image_weighted_avg_accumulate_norender(image_weighted_avg _this, vec4 pos);",\
+"void image_weighted_avg_accumulate(image_weighted_avg _this, vec4 pos, int frame, vec3 value, vec3 confidence);",\
+"image image_weighted_avg_get_weights(image_weighted_avg _this);"
 
 class image_weighted_avg : public image, public gpu::program::library {
 private:
