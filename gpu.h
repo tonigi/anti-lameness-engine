@@ -158,8 +158,23 @@ public:
 		};
 
 		class library {
+		protected:
+			shader *gpu_shader;
 		public:
-			virtual void attach_shaders(program *p) const = 0;
+			library() {
+				gpu_shader = NULL;
+			}
+
+			/*
+			 * For libraries containing multiple shaders, or
+			 * referencing shaders not stored locally, this
+			 * method can be overridden.
+			 */
+			virtual void attach_shaders(program *p) const {
+				assert(p);
+				if (gpu_shader)
+					p->attach(gpu_shader);
+			}
 		};
 
 		program() {

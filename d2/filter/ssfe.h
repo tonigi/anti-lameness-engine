@@ -46,8 +46,6 @@ private:
 	mutable point _offset;
 	mutable int have_offset;
 
-	gpu::program::shader *gpu_shader;
-
 public:
 
 	ssfe(scaled_filter *f, int honor_exclusion) {
@@ -71,10 +69,6 @@ public:
 		if (accel::is_gpu()) {
 			gpu_shader = new gpu::program::shader(shader_code);
 		}
-	}
-
-	void attach_shaders(gpu::program *p) const {
-		p->attach(gpu_shader);
 	}
 
 	const scaled_filter *get_scaled_filter() const {
