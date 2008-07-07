@@ -25,12 +25,16 @@
 #include "filter.h"
 
 #define ALE_GLSL_SSFE_INCLUDE \
+ALE_GLSL_SCALED_FILTER_INCLUDE\
 "struct ssfe {\n"\
 "	bool honor_exclusion;\n"\
+"	bool have_offset;\n"\
+"	vec2 _offset;\n"\
+"	scaled_filter f;\n"\
 "};\n"\
-"bool ssfe_ex_is_honored(ssfe _this);\n"\
-"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight);\n"\
-"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight, vec3 prev_weight);\n"
+"bool ssfe_ex_is_honored(inout ssfe _this);\n"\
+"void ssfe_filtered(inout ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight);\n"\
+"void ssfe_filtered(inout ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight, vec3 prev_value, vec3 prev_weight);\n"
 
 /*
  * Scaled filter class with exclusion.
@@ -49,16 +53,24 @@ private:
 public:
 
 	ssfe(scaled_filter *f, int honor_exclusion) {
+
 		const char *shader_code = 
 			ALE_GLSL_SSFE_INCLUDE
-			"bool ssfe_ex_is_honored(ssfe _this) {\n"
+			ALE_GLSL_ASSERT_INCLUDE
+			ALE_GLSL_RENDER_INCLUDE
+			"bool ssfe_ex_is_honored(inout ssfe _this) {\n"
 			"	return _this.honor_exclusion;\n"
 			"}\n"
-			"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight){\n"
-			"	ssfe_filtered(_this, pos, frame, result, weight, vec3(0, 0, 0));\n"
+			"void ssfe_filtered(inout ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight){\n"
+			"	ssfe_filtered(_this, pos, frame, result, weight, vec3(0, 0, 0), vec3(0, 0, 0));\n"
 			"}\n"
-			"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight, vec3 prev_weight){\n"
-			"#error ssfe_filtered not implemented\n"
+			"void ssfe_filtered(inout ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight, vec3 prev_value, vec3 prev_weight){\n"
+			"	assert(_this.have_offset || !_this.honor_exclusion);\n"
+			"	result = vec3(0, 0, 0);\n"
+			"	weight = vec3(0, 0, 0);\n"
+			"	if (_this.honor_exclusion && render_is_excluded_r(_this._offset, pos, frame))\n"
+			"		return;\n"
+			"	scaled_filter_filtered(_this.f, pos, result, weight, _this.honor_exclusion, frame, prev_value, prev_weight);\n"
 			"}\n";
 
 		this->honor_exclusion = honor_exclusion;

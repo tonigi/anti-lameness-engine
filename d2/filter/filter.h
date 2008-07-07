@@ -21,6 +21,11 @@
 #ifndef __filterclass_h__
 #define __filterclass_h__
 
+#define ALE_GLSL_FILTER_INCLUDE \
+"struct filter {\n"\
+"	int type;\n"\
+"};\n"
+
 /*
  * A superclass for all filtering classes.
  */

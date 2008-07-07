@@ -44,6 +44,8 @@
 
 #include "thread.h"
 
+#define ALE_GLSL_ASSERT_INCLUDE \
+"#define assert(x) { if ((x)); }\n"
 
 class gpu {
 	static int gpu_initialized;

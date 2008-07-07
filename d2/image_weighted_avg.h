@@ -35,9 +35,10 @@ ALE_GLSL_IMAGE_INCLUDE \
 "struct image_weighted_avg {\n"\
 "	int type;\n"\
 "};\n"\
-"bool image_weighted_avg_accumulate_norender(image_weighted_avg _this, vec4 pos);\n"\
-"void image_weighted_avg_accumulate(image_weighted_avg _this, vec4 pos, int frame, vec3 value, vec3 confidence);\n"\
-"image image_weighted_avg_get_weights(image_weighted_avg _this);\n"
+"bool image_weighted_avg_accumulate_norender(inout image_weighted_avg _this, vec4 pos);\n"\
+"void image_weighted_avg_accumulate(inout image_weighted_avg _this, vec4 pos, int frame, vec3 value, vec3 confidence);\n"\
+"image image_weighted_avg_get_weights(inout image_weighted_avg _this);\n"\
+"vec3 image_weighted_avg_get_pixel(inout image_weighted_avg _this, vec4 pos);\n"
 
 class image_weighted_avg : public image, public gpu::program::library {
 private:

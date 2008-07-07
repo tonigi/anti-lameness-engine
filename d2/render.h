@@ -35,7 +35,8 @@
 "struct render {\n"\
 "	int rx_count;\n"\
 "};\n"\
-"bool render_is_excluded_r(render _this, vec4 position, int frame);\n"
+"bool render_is_excluded_r(render _this, vec4 position, int frame);\n"\
+"bool render_is_excluded_r(vec2 offset, vec4 position, int frame);\n"
 
 /*
  * Class render accepts messages synchronizing rendering steps through the

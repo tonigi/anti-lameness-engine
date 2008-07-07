@@ -39,6 +39,14 @@
 static const ale_pos sqrt2          = sqrt((ale_pos) 2);
 static const ale_pos one_over_sqrt2 = 1 / sqrt2;
 
+#define ALE_GLSL_SCALED_FILTER_INCLUDE \
+ALE_GLSL_FILTER_INCLUDE\
+"struct scaled_filter {\n"\
+"	filter f;\n"\
+"};\n"\
+"void scaled_filter_filtered(inout scaled_filter _this, vec4 pos, out vec3 result, out vec3 weight,\n"\
+"				bool honor_exclusion, int frame, vec3 prev_value, vec3 prev_weight);\n"
+
 /*
  * Scaled filter class.
  */

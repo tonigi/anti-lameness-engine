@@ -362,6 +362,7 @@ public:
 			"	else if (image_weighted_avg_accumulate_norender(accum_image, gl_TexCoord[0]));\n"
 			"	else if (use_certainty) {\n"
 			"		ssfe_filtered(_ssfe, gl_TexCoord[0], frame, value, confidence,\n"
+			"				image_weighted_avg_get_pixel(accum_image, gl_TexCoord[0]),\n"
 			"				image_get_pixel(image_weighted_avg_get_weights(accum_image), gl_TexCoord[0]));\n"
 			"	} else {\n"
 			"		ssfe_filtered(_ssfe, gl_TexCoord[0], frame, value, confidence);\n"
