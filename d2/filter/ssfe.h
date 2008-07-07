@@ -55,7 +55,7 @@ public:
 			"	return _this.honor_exclusion;\n"
 			"}\n"
 			"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight){\n"
-			"#error ssfe_filtered not implemented\n"
+			"	ssfe_filtered(_this, pos, frame, result, weight, vec3(0, 0, 0));\n"
 			"}\n"
 			"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight, vec3 prev_weight){\n"
 			"#error ssfe_filtered not implemented\n"
