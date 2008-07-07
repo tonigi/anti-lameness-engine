@@ -31,7 +31,7 @@
 
 #define ACTIVE_RENDERER_COUNT 30
 
-#define ALE_ACCEL_RENDER_INCLUDE \
+#define ALE_GLSL_RENDER_INCLUDE \
 "struct render {\n"\
 "	int rx_count;\n"\
 "};\n"\

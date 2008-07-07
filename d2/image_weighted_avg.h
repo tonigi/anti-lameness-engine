@@ -30,8 +30,8 @@
 #include "point.h"
 #include "image.h"
 
-#define ALE_ACCEL_IMAGE_WEIGHTED_AVG_INCLUDE \
-ALE_ACCEL_IMAGE_INCLUDE \
+#define ALE_GLSL_IMAGE_WEIGHTED_AVG_INCLUDE \
+ALE_GLSL_IMAGE_INCLUDE \
 "struct image_weighted_avg {\n"\
 "	int type;\n"\
 "};\n"\

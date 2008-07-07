@@ -47,7 +47,7 @@
 #define IMAGE_BAYER_GRGB 0x6 /* binary 110 */
 #define IMAGE_BAYER_BGRG 0x7 /* binary 111 */
 
-#define ALE_ACCEL_IMAGE_INCLUDE \
+#define ALE_GLSL_IMAGE_INCLUDE \
 "struct image {\n"\
 "	int type;\n"\
 "};\n"\

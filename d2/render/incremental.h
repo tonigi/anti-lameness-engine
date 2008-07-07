@@ -345,9 +345,9 @@ public:
 	 */
 	incremental(invariant *inv) {
 		const char *shader_main =
-			ALE_ACCEL_RENDER_INCLUDE
-			ALE_ACCEL_SSFE_INCLUDE
-			ALE_ACCEL_IMAGE_WEIGHTED_AVG_INCLUDE
+			ALE_GLSL_RENDER_INCLUDE
+			ALE_GLSL_SSFE_INCLUDE
+			ALE_GLSL_IMAGE_WEIGHTED_AVG_INCLUDE
 
 			"uniform int frame;\n"
 			"uniform ssfe _ssfe;\n"

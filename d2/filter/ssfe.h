@@ -24,7 +24,7 @@
 #include "scaled_filter.h"
 #include "filter.h"
 
-#define ALE_ACCEL_SSFE_INCLUDE \
+#define ALE_GLSL_SSFE_INCLUDE \
 "struct ssfe {\n"\
 "	bool honor_exclusion;\n"\
 "};\n"\
@@ -50,7 +50,7 @@ public:
 
 	ssfe(scaled_filter *f, int honor_exclusion) {
 		const char *shader_code = 
-			ALE_ACCEL_SSFE_INCLUDE
+			ALE_GLSL_SSFE_INCLUDE
 			"bool ssfe_ex_is_honored(ssfe _this) {\n"
 			"	return _this.honor_exclusion;\n"
 			"}\n"
