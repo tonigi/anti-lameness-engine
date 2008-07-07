@@ -344,32 +344,30 @@ public:
 	 * Constructor
 	 */
 	incremental(invariant *inv) {
-		const char *shader_main[] = {
-			ALE_ACCEL_RENDER_INCLUDE,
-			ALE_ACCEL_SSFE_INCLUDE,
-			ALE_ACCEL_IMAGE_WEIGHTED_AVG_INCLUDE,
+		const char *shader_main =
+			ALE_ACCEL_RENDER_INCLUDE
+			ALE_ACCEL_SSFE_INCLUDE
+			ALE_ACCEL_IMAGE_WEIGHTED_AVG_INCLUDE
 
-			"uniform int frame;",
-			"uniform ssfe _ssfe;",
-			"uniform render _this_render;",
-			"uniform image_weighted_avg accum_image;",
-			"uniform bool use_certainty; /* == exposure->get_confidence() */ ",
+			"uniform int frame;\n"
+			"uniform ssfe _ssfe;\n"
+			"uniform render _this_render;\n"
+			"uniform image_weighted_avg accum_image;\n"
+			"uniform bool use_certainty; /* == exposure->get_confidence() */ \n"
 
-			"void main() {",
-			"	vec3 value = vec3(0, 0, 0);",
-			"	vec3 confidence = vec3(0, 0, 0);",
-			"	if (ssfe_ex_is_honored(_ssfe) && render_is_excluded_r(_this_render, gl_TexCoord[0], frame));",
-			"	else if (image_weighted_avg_accumulate_norender(accum_image, gl_TexCoord[0]));",
-			"	else if (use_certainty) {",
-			"		ssfe_filtered(_ssfe, gl_TexCoord[0], frame, value, confidence,",
-			"				image_get_pixel(image_weighted_avg_get_weights(accum_image), gl_TexCoord[0]));",
-			"	} else {",
-			"		ssfe_filtered(_ssfe, gl_TexCoord[0], frame, value, confidence);",
-			"	}",
-			"	image_weighted_avg_accumulate(accum_image, gl_TexCoord[0], frame, value, confidence);",
-			"}",
-			NULL
-		};
+			"void main() {\n"
+			"	vec3 value = vec3(0, 0, 0);\n"
+			"	vec3 confidence = vec3(0, 0, 0);\n"
+			"	if (ssfe_ex_is_honored(_ssfe) && render_is_excluded_r(_this_render, gl_TexCoord[0], frame));\n"
+			"	else if (image_weighted_avg_accumulate_norender(accum_image, gl_TexCoord[0]));\n"
+			"	else if (use_certainty) {\n"
+			"		ssfe_filtered(_ssfe, gl_TexCoord[0], frame, value, confidence,\n"
+			"				image_get_pixel(image_weighted_avg_get_weights(accum_image), gl_TexCoord[0]));\n"
+			"	} else {\n"
+			"		ssfe_filtered(_ssfe, gl_TexCoord[0], frame, value, confidence);\n"
+			"	}\n"
+			"	image_weighted_avg_accumulate(accum_image, gl_TexCoord[0], frame, value, confidence);\n"
+			"}\n";
 
 		this->inv = inv;
 

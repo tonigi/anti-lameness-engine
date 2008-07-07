@@ -25,12 +25,12 @@
 #include "filter.h"
 
 #define ALE_ACCEL_SSFE_INCLUDE \
-"struct ssfe {",\
-"	bool honor_exclusion;"\
-"};",\
-"bool ssfe_ex_is_honored(ssfe _this);",\
-"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight);",\
-"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight, vec3 prev_weight);"
+"struct ssfe {\n"\
+"	bool honor_exclusion;\n"\
+"};\n"\
+"bool ssfe_ex_is_honored(ssfe _this);\n"\
+"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight);\n"\
+"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight, vec3 prev_weight);\n"
 
 /*
  * Scaled filter class with exclusion.
@@ -49,19 +49,17 @@ private:
 public:
 
 	ssfe(scaled_filter *f, int honor_exclusion) {
-		const char *shader_code[] = {
-			ALE_ACCEL_SSFE_INCLUDE,
-			"bool ssfe_ex_is_honored(ssfe _this) {",
-			"	return _this.honor_exclusion;",
-			"}",
-			"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight){",
-			"\n#error ssfe_filtered not implemented\n",
-			"}",
-			"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight, vec3 prev_weight){",
-			"\n#error ssfe_filtered not implemented\n",
-			"}",
-			NULL
-		};
+		const char *shader_code = 
+			ALE_ACCEL_SSFE_INCLUDE
+			"bool ssfe_ex_is_honored(ssfe _this) {\n"
+			"	return _this.honor_exclusion;\n"
+			"}\n"
+			"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight){\n"
+			"#error ssfe_filtered not implemented\n"
+			"}\n"
+			"void ssfe_filtered(ssfe _this, vec4 pos, int frame, out vec3 result, out vec3 weight, vec3 prev_weight){\n"
+			"#error ssfe_filtered not implemented\n"
+			"}\n";
 
 		this->honor_exclusion = honor_exclusion;
 		this->f = f;

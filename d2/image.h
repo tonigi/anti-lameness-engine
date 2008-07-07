@@ -48,9 +48,9 @@
 #define IMAGE_BAYER_BGRG 0x7 /* binary 111 */
 
 #define ALE_ACCEL_IMAGE_INCLUDE \
-"struct image {",\
-"	int type;",\
-"};"\
+"struct image {\n"\
+"	int type;\n"\
+"};\n"\
 "vec3 image_get_pixel(image _this, vec4 pos);"
 
 class image : protected exposure::listener {

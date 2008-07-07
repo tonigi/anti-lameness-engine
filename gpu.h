@@ -92,10 +92,14 @@ public:
 
 	class program {
 
-		static void check_log(const char *description, const char *log) {
+		static void check_log(const char *description, const char *log, const char *program = NULL) {
 			if (strcmp(log, "")) {
 				fprintf(stderr, "GLSL %s error log:\n", description);
 				fprintf(stderr, "%s", log);
+				if (program) {
+					fprintf(stderr, "Program text:\n");
+					fprintf(stderr, "%s", program);
+				}
 				exit(1);
 			}
 		}
@@ -123,23 +127,17 @@ public:
 				glAttachShader(p->id, id);
 #endif
 			}
-			shader(const char **source) {
+			shader(const char *source) {
 #ifdef USE_GLEW
 				assert(is_enabled());
-
-				int lines = 0;
 
 				char log[1000] = "";
 				id = glCreateShader(GL_FRAGMENT_SHADER_ARB);
 				check_id(id);
-
-				while (source[lines])
-					lines++;
-
-				glShaderSource(id, lines, source, NULL);
+				glShaderSource(id, 1, &source, NULL);
 				glCompileShader(id);
 				glGetShaderInfoLog(id, 1000, NULL, log);
-				check_log("shader compilation", log);
+				check_log("shader compilation", log, source);
 #endif
 			}
 			shader (const shader &p) {
