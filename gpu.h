@@ -94,13 +94,22 @@ public:
 
 	class program {
 
-		static void check_log(const char *description, const char *log, const char *program = NULL) {
+		static const char **program_buffer;
+		static int program_buffer_size;
+
+		static void size_program_buffer() {
+			program_buffer = (const char **) realloc(program_buffer, sizeof(const char *) * program_buffer_size);
+			assert(program_buffer);
+		}
+
+		static void check_log(const char *description, const char *log, int program_lines = 0, const char **program = NULL) {
 			if (strcmp(log, "")) {
 				fprintf(stderr, "GLSL %s error log:\n", description);
 				fprintf(stderr, "%s", log);
 				if (program) {
 					fprintf(stderr, "Program text:\n");
-					fprintf(stderr, "%s", program);
+					for (int i = 0; i < program_lines; i++)
+						fprintf(stderr, "%s", program[i]);
 				}
 				exit(1);
 			}
@@ -131,15 +140,23 @@ public:
 			}
 			shader(const char *source) {
 #ifdef USE_GLEW
+
 				assert(is_enabled());
+
+				program_buffer_size++;
+				size_program_buffer();
+				program_buffer[program_buffer_size - 1] = source;
 
 				char log[1000] = "";
 				id = glCreateShader(GL_FRAGMENT_SHADER_ARB);
 				check_id(id);
-				glShaderSource(id, 1, &source, NULL);
+				glShaderSource(id, program_buffer_size, program_buffer, NULL);
 				glCompileShader(id);
 				glGetShaderInfoLog(id, 1000, NULL, log);
-				check_log("shader compilation", log, source);
+				check_log("shader compilation", log, program_buffer_size, program_buffer);
+
+				program_buffer_size--;
+				size_program_buffer();
 #endif
 			}
 			shader (const shader &p) {
@@ -177,6 +194,27 @@ public:
 			}
 		};
 
+		static void set_constant(const char *name, int value) {
+			program_buffer_size++;
+			size_program_buffer();
+
+			const int line_length = 1000;
+
+			char *program_line = (char *) malloc(line_length * sizeof(char));
+			assert(program_line);
+
+#if 0
+			/*
+			 * XXX: This seems to generate link errors, for some reason.
+			 */
+			snprintf(program_line, line_length, "const int %s = %d;\n", name, value);
+#else
+			snprintf(program_line, line_length, "#define %s %d\n", name, value);
+#endif
+
+			program_buffer[program_buffer_size - 1] = program_line;
+		}
+
 		program() {
 #ifdef USE_GLEW
 
@@ -203,6 +241,10 @@ public:
 
 		void attach(const shader *s) {
 			s->attach_to_program(this);
+		}
+
+		void attach(const library *l) {
+			l->attach_shaders(this);
 		}
 
 		void link() {

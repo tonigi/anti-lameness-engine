@@ -351,14 +351,13 @@ public:
 
 			"uniform int frame;\n"
 			"uniform ssfe _ssfe;\n"
-			"uniform render _this_render;\n"
 			"uniform image_weighted_avg accum_image;\n"
 			"uniform bool use_certainty; /* == exposure->get_confidence() */ \n"
 
 			"void main() {\n"
 			"	vec3 value = vec3(0, 0, 0);\n"
 			"	vec3 confidence = vec3(0, 0, 0);\n"
-			"	if (ssfe_ex_is_honored(_ssfe) && render_is_excluded_r(_this_render, gl_TexCoord[0], frame));\n"
+			"	if (ssfe_ex_is_honored(_ssfe) && render_is_excluded_r(accum_image.offset, gl_TexCoord[0], frame));\n"
 			"	else if (image_weighted_avg_accumulate_norender(accum_image, gl_TexCoord[0]));\n"
 			"	else if (use_certainty) {\n"
 			"		ssfe_filtered(_ssfe, gl_TexCoord[0], frame, value, confidence,\n"
@@ -383,8 +382,9 @@ public:
 			gpu_program = new gpu::program();
 			gpu_shader = new gpu::program::shader(shader_main);
 			gpu_program->attach(gpu_shader);
-			inv->ssfe()->attach_shaders(gpu_program);
-			accum_image->attach_shaders(gpu_program);
+			gpu_program->attach(inv->ssfe());
+			gpu_program->attach(accum_image);
+			gpu_program->attach((render *) this);
 			gpu_program->link();
 		} else {
 			gpu_program = NULL;

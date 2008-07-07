@@ -51,7 +51,7 @@
 "struct image {\n"\
 "	int type;\n"\
 "};\n"\
-"vec3 image_get_pixel(image _this, vec4 pos);"
+"vec3 image_get_pixel(image _this, vec4 pos);\n"
 
 class image : protected exposure::listener {
 protected:

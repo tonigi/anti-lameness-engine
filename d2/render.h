@@ -32,10 +32,15 @@
 #define ACTIVE_RENDERER_COUNT 30
 
 #define ALE_GLSL_RENDER_INCLUDE \
+"struct exclusion {\n"\
+"	bool is_render;\n"\
+"	float x[6];\n"\
+"};\n"\
 "struct render {\n"\
 "	int rx_count;\n"\
+"	exclusion rx_parameters[EXCLUSION_ARRAY_SIZE];\n"\
 "};\n"\
-"bool render_is_excluded_r(render _this, vec4 position, int frame);\n"\
+"uniform render render_static;\n"\
 "bool render_is_excluded_r(vec2 offset, vec4 position, int frame);\n"
 
 /*
@@ -45,7 +50,7 @@
  * abstract, and must be subclassed to be instantiated.
  */
 
-class render {
+class render : public gpu::program::library {
 private:
 	static unsigned int rx_count;
 	static exclusion *rx_parameters;
@@ -70,6 +75,25 @@ protected:
 	 * Constructor
 	 */
 	render() {
+		const char *shader_code =
+			ALE_GLSL_RENDER_INCLUDE
+			"bool render_is_excluded_r(vec2 offset, vec4 p, int f) {\n"
+			"	for (int param = 0; param < render_static.rx_count; param++)\n"
+			"		if (render_static.rx_parameters[param].is_render\n"
+			"		 && p.x + offset.x >= render_static.rx_parameters[param].x[0]\n"
+			"		 && p.x + offset.x <= render_static.rx_parameters[param].x[1]\n"
+			"		 && p.y + offset.y >= render_static.rx_parameters[param].x[2]\n"
+			"		 && p.y + offset.y <= render_static.rx_parameters[param].x[3]\n"
+			"		 && float(f) >= render_static.rx_parameters[param].x[4]\n"
+			"		 && float(f) <= render_static.rx_parameters[param].x[5])\n"
+			"			return true;\n"
+			"	return false;\n"
+			"}\n";
+
+		if (accel::is_gpu()) {
+			gpu_shader = new gpu::program::shader(shader_code);
+		}
+
 		if (directory_length >= ACTIVE_RENDERER_COUNT) {
 			fprintf(stderr, "\n\n*** Too many renderers in d2::render::render() ***\n\n");
 			exit(1);

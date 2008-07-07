@@ -2438,6 +2438,12 @@ public:
 		d2::render::render_init(ex_count, ex_parameters, ex_show, extend, scale_factor);
 
 		/*
+		 * Set GPU constants.
+		 */
+
+		gpu::program::set_constant("EXCLUSION_ARRAY_SIZE", (ex_count > 0) ? ex_count : 1);
+
+		/*
 		 * Set confidence
 		 */
 
