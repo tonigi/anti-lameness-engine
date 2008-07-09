@@ -25,4 +25,4 @@
 #include "accel.h"
 
 int accel::use_gpu = 2;  /* auto */
-int accel::mask_gpu = 0;
+int accel::_mask_gpu = 0;
