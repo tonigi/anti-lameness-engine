@@ -92,6 +92,15 @@ public:
 
 	static int is_enabled();
 
+	class image {
+#ifdef USE_GLUT
+		/*
+		 * For now, assume that the image fits in a single texture.
+		 */
+		GLuint texture;
+#endif
+	};
+
 	class program {
 
 		static const char **program_buffer;

@@ -953,6 +953,13 @@ public:
 		return ic;
 	}
 
+	/*
+	 * Acceleration domain sequence point.
+	 */
+
+	virtual void accel_domain_sequence() {
+	}
+
 	virtual ~image() {
 	}
 };

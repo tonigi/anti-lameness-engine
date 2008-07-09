@@ -34,8 +34,17 @@
 
 class accel {
 	static int use_gpu;
+	static int mask_gpu;
 
 public:
+
+	static void mask_gpu() {
+		mask_gpu = 1;
+	}
+
+	static void unmask_gpu() {
+		mask_gpu = 0;
+	}
 
 	static void set_gpu() {
 		use_gpu = 1;
@@ -62,6 +71,9 @@ public:
 			set_auto();
 
 		if (use_gpu == 0)
+			return 0;
+
+		if (mask_gpu)
 			return 0;
 
 		if (!gpu::is_ok()) {
