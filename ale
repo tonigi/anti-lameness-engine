@@ -162,8 +162,16 @@ for ($i = 0; $i < @ARGV; $i++) {
 
 	if ($extract_raw) {
 		$device_info = `$ENV{"DCRAW"} -i $arg 2> /dev/null`;
+		
+		if ($?) {
 
-		next if ($?);
+			# For efficiency, stop trying to extract raws if the first
+			# attempt fails.
+
+			$extract_raw = 0;
+
+			next;
+		}
 
 		if (!$started_conversion) {
 			print "Extracting frame data";
@@ -254,7 +262,9 @@ if ($started_conversion) {
 
 @ARGV = ($0, @ARGV);
 
-if ($ENV{"ALE_COUNT_THREADS"} == 0) {
+if (!$extract_raw && $ENV{"ALE_COUNT_THREADS"} == 0) {
+	exec { $ENV{"ALE_BIN"} } @ARGV;
+} elsif ($ENV{"ALE_COUNT_THREADS"} == 0) {
 	system { $ENV{"ALE_BIN"} } @ARGV;
 } else {
 	$| = 1;
