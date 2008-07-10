@@ -46,6 +46,10 @@ if (!defined $ENV{"ALE_GPU_ACCEL_DEFAULT"}
 	$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 1;
 }
 
+# Disable acceleration by default for now, as it doesn't work yet.
+
+$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 0;
+
 #
 # Environment variable defaults
 #
