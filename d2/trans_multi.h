@@ -735,29 +735,64 @@ private:
 
 	void track_median(const image *cur_ref, const image *input) {
 		std::vector<unsigned int> count(trans_stack.size());
+		std::vector<ale_pos> count_vertex[4];
+		std::vector<ale_pos> count_center;
 		unsigned int total_count = 0;
+		ale_pos total_count_vertex[4] = {0, 0, 0, 0};
+		ale_pos total_count_center = 0;
 
-		for (unsigned int i = 0; i < count.size(); i++)
-			count[i] = 0;
+		count.resize(trans_stack.size(), 0);
+		for (int i = 0; i < 4; i++)
+			count_vertex[i].resize(trans_stack.size(), 0);
+		count_center.resize(trans_stack.size(), 0);
 
 		for (unsigned int i = 0; i < cur_ref_height; i++)
 		for (unsigned int j = 0; j < cur_ref_width; j++) {
+			index_t index = spatio_elem_map[cur_ref_width * i + j];
 			point p = point (i + cur_offset[0], j + cur_offset[1]);
-			point q = trans_stack[spatio_elem_map[cur_ref_width * i + j]].pei(p);
+			point q = trans_stack[index].pei(p);
 
 			if (q[0] < 0 || q[0] >= input_height
 			 || q[1] < 0 || q[1] >= input_width)
 				continue;
 
-			count[spatio_elem_map[cur_ref_width * i + j]]++;
+			count[index]++;
 			total_count++;
+
+			ale_pos D = sqrt(input_height * input_height + input_width * input_width);
+			ale_pos d = sqrt(q[0] * q[0] + q[1] * q[1]);
+			ale_pos dd = (D - d) / D;
+			count_vertex[0][index] += dd;
+			total_count_vertex[0] += dd;
+
+			d = sqrt((input_height - q[0]) * (input_height - q[0]) + q[1] * q[1]);
+			dd = (D - d) / D;
+			count_vertex[1][index] += dd;
+			total_count_vertex[1] += dd;
+
+			d = sqrt((input_height - q[0]) * (input_height - q[0])
+			       + (input_width - q[1]) * (input_width - q[1]));
+			dd = (D - d) / D;
+			count_vertex[2][index] += dd;
+			total_count_vertex[2] += dd;
+
+			d = sqrt(q[0] * q[0] + (input_width - q[1]) * (input_width - q[1]));
+			dd = (D - d) / D;
+			count_vertex[3][index] += dd;
+			total_count_vertex[3] += dd;
+
+			d = sqrt((input_height - 2 * q[0]) * (input_height - 2 * q[0])
+			       + (input_width - 2 * q[1]) * (input_width - 2 * q[1]));
+			dd = d / D;
+			count_center[index] += dd;
+			total_count_center += dd;
 		}
 
 		if (total_count == 0)
 			return;
 
 		if (trans_stack[0].is_projective()) {
-			std::map<ale_pos, unsigned int> values[8];
+			std::map<ale_pos, ale_pos> values[8];
 
 			for (unsigned int ii = 0; ii < count.size(); ii++)
 			for (int d = 0; d < 8; d++) {
@@ -766,9 +801,9 @@ private:
 				ale_pos gpt_value = trans_stack[ii].gpt_get(param)[dim];
 
 				if (!values[d].count(gpt_value)) {
-					values[d].insert(std::pair<ale_pos, unsigned int>(gpt_value, count[ii]));
+					values[d].insert(std::pair<ale_pos, ale_pos>(gpt_value, count_vertex[param][ii]));
 				} else {
-					values[d][gpt_value] += count[ii];
+					values[d][gpt_value] += count_vertex[param][ii];
 				}
 			}
 
@@ -777,11 +812,11 @@ private:
 			for (int d = 0; d < 8; d++) {
 				int param = d / 2;
 				int dim = d % 2;
-				unsigned int partial_count = 0;
+				ale_pos partial_count = 0;
 
-				for (std::map<ale_pos, unsigned int>::iterator ii = values[d].begin(); ii != values[d].end(); ii++) {
+				for (std::map<ale_pos, ale_pos>::iterator ii = values[d].begin(); ii != values[d].end(); ii++) {
 					partial_count += ii->second;
-					if (partial_count < total_count / 2)
+					if (partial_count < total_count_vertex[param] / 2)
 						continue;
 
 					gpt_values[param][dim] = ii->first;
@@ -792,17 +827,24 @@ private:
 
 			trans_stack[0].gpt_set(gpt_values);
 		} else {
-			std::map<ale_pos, unsigned int> values[3];
+			std::map<ale_pos, ale_pos> values[3];
 
 			for (unsigned int ii = 0; ii < count.size(); ii++)
 			for (int d = 0; d < 3; d++) {
 				int param = d;
 				ale_pos eu_value = trans_stack[ii].eu_get(param);
+				ale_pos this_count;
+
+				if (param < 2)
+					this_count = count[ii];
+				else
+					this_count = count_center[ii];
+
 
 				if (!values[d].count(eu_value)) {
-					values[d].insert(std::pair<ale_pos, unsigned int>(eu_value, count[ii]));
+					values[d].insert(std::pair<ale_pos, ale_pos>(eu_value, this_count));
 				} else {
-					values[d][eu_value] += count[ii];
+					values[d][eu_value] += this_count;
 				}
 			}
 
@@ -810,11 +852,17 @@ private:
 
 			for (int d = 0; d < 3; d++) {
 				int param = d;
-				unsigned int partial_count = 0;
+				ale_pos partial_count = 0;
+				ale_pos this_total_count;
 
-				for (std::map<ale_pos, unsigned int>::iterator ii = values[d].begin(); ii != values[d].end(); ii++) {
+				if (d < 2)
+					this_total_count = total_count;
+				else
+					this_total_count = total_count_center;
+
+				for (std::map<ale_pos, ale_pos>::iterator ii = values[d].begin(); ii != values[d].end(); ii++) {
 					partial_count += ii->second;
-					if (partial_count < total_count / 2)
+					if (partial_count < this_total_count / 2)
 						continue;
 
 					eu_values[param] = ii->first;
