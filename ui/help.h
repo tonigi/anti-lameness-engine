@@ -261,7 +261,7 @@ public:
 			"                     llocal    Least-size local element\n"
 			"                     global    Best element\n"
 			"--track-none      Do not track.  [default]\n"
-			"--track-median    Track median.\n"
+			"--track-median    Track for lowest positional error sum up to median error.\n"
 			"--track-point x y Track point (x, y).\n"
 			"--md <x>          Set element minimum dimension x.             (100 is default)\n"
 			"--ma-cert <x>     Set mean certainty lower bound.             (0.01 is default)\n" 
