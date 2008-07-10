@@ -120,9 +120,9 @@ input::simple_option input::simple_option_table[] = {
 	{ "no-oc", "oc", "0" },
 
 	{ "multi", NULL, NULL, 1 },
-	{ "tk-none", "track", "none" },
-	{ "tk-median", "track", "median" },
-	{ "tk-pt", "track", "point", 2 },
+	{ "track-none", "track", "none" },
+	{ "track-median", "track", "median" },
+	{ "track-point", "track", "point", 2 },
 
 	{ "gs", NULL, NULL, 1 },
 	{ "gs-mo", NULL, NULL, 1 },
