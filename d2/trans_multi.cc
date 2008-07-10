@@ -26,3 +26,6 @@
 unsigned int trans_multi::_multi = 2;
 ale_pos trans_multi::_multi_decomp = 100;
 ale_pos trans_multi::_multi_improvement = 0;
+unsigned int trans_multi::_track = 0;  /* None */
+ale_pos trans_multi::track_x = 0;
+ale_pos trans_multi::track_y = 0;

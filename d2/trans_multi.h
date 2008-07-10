@@ -49,6 +49,9 @@ public:
 
 private:
 	static unsigned int _multi;
+	static unsigned int _track;
+	static ale_pos track_x;
+	static ale_pos track_y;
 	static ale_pos _multi_decomp;
 	static ale_real _multi_improvement;
 
@@ -108,6 +111,20 @@ public:
 		} else if (!strcmp(type, "global")) {
 			_multi = 4;
 		}
+	}
+
+	static void track_none() {
+		_track = 0;
+	}
+
+	static void track_median() {
+		_track = 1;
+	}
+
+	static void track_point(double x, double y) {
+		_track = 2;
+		track_x = y;
+		track_y = x;
 	}
 
 	static void set_mi(double d) {
@@ -709,6 +726,128 @@ private:
 		free(update_map);
 	}
 
+	void set_all_indices(index_t index) {
+		for (unsigned int ii = 0; ii < cur_ref_height * cur_ref_width; ii++)
+			spatio_elem_map[ii] = index;
+		for (unsigned int ii = 0; ii < input_height * input_width; ii++)
+			spatio_elem_map_r[ii] = index;
+	}
+
+	void track_median(const image *cur_ref, const image *input) {
+		std::vector<unsigned int> count(trans_stack.size());
+		unsigned int total_count = 0;
+
+		for (unsigned int i = 0; i < count.size(); i++)
+			count[i] = 0;
+
+		for (unsigned int i = 0; i < cur_ref_height; i++)
+		for (unsigned int j = 0; j < cur_ref_width; j++) {
+			point p = point (i + cur_offset[0], j + cur_offset[1]);
+			point q = trans_stack[spatio_elem_map[cur_ref_width * i + j]].pei(p);
+
+			if (q[0] < 0 || q[0] >= input_height
+			 || q[1] < 0 || q[1] >= input_width)
+				continue;
+
+			count[spatio_elem_map[cur_ref_width * i + j]]++;
+			total_count++;
+		}
+
+		if (total_count == 0)
+			return;
+
+		if (trans_stack[0].is_projective()) {
+			std::map<ale_pos, unsigned int> values[8];
+
+			for (unsigned int ii = 0; ii < count.size(); ii++)
+			for (int d = 0; d < 8; d++) {
+				int param = d / 2;
+				int dim = d % 2;
+				ale_pos gpt_value = trans_stack[ii].gpt_get(param)[dim];
+
+				if (!values[d].count(gpt_value)) {
+					values[d].insert(std::pair<ale_pos, unsigned int>(gpt_value, count[ii]));
+				} else {
+					values[d][gpt_value] += count[ii];
+				}
+			}
+
+			point gpt_values[4];
+
+			for (int d = 0; d < 8; d++) {
+				int param = d / 2;
+				int dim = d % 2;
+				unsigned int partial_count = 0;
+
+				for (std::map<ale_pos, unsigned int>::iterator ii = values[d].begin(); ii != values[d].end(); ii++) {
+					partial_count += ii->second;
+					if (partial_count < total_count / 2)
+						continue;
+
+					gpt_values[param][dim] = ii->first;
+
+					break;
+				}
+			}
+
+			trans_stack[0].gpt_set(gpt_values);
+		} else {
+			std::map<ale_pos, unsigned int> values[3];
+
+			for (unsigned int ii = 0; ii < count.size(); ii++)
+			for (int d = 0; d < 3; d++) {
+				int param = d;
+				ale_pos eu_value = trans_stack[ii].eu_get(param);
+
+				if (!values[d].count(eu_value)) {
+					values[d].insert(std::pair<ale_pos, unsigned int>(eu_value, count[ii]));
+				} else {
+					values[d][eu_value] += count[ii];
+				}
+			}
+
+			ale_pos eu_values[3];
+
+			for (int d = 0; d < 3; d++) {
+				int param = d;
+				unsigned int partial_count = 0;
+
+				for (std::map<ale_pos, unsigned int>::iterator ii = values[d].begin(); ii != values[d].end(); ii++) {
+					partial_count += ii->second;
+					if (partial_count < total_count / 2)
+						continue;
+
+					eu_values[param] = ii->first;
+
+					break;
+				}
+			}
+
+			trans_stack[0].eu_set(eu_values);
+		}
+
+		set_all_indices(0);
+	}
+
+	void track_point(const image *cur_ref, const image *input, ale_pos track_x, ale_pos track_y) {
+		point p = point(track_x, track_y);
+
+		int i = (int) (p[0] - cur_offset[0]);
+		int j = (int) (p[1] - cur_offset[1]);
+
+		if (i < 0 || (unsigned int) i >= cur_ref_height
+		 || j < 0 || (unsigned int) j >= cur_ref_width)
+			return;
+
+		point q = trans_stack[spatio_elem_map[cur_ref_width * i + j]].pei(p);
+
+		if (q[0] < 0 || q[0] >= input_height
+		 || q[1] < 0 || q[1] >= input_width)
+			return;
+
+		set_all_indices(spatio_elem_map[cur_ref_width * i + j]);
+	}
+
 public:
 	void set_multi(const image *cur_ref, const image *input) {
 		assert(use_multi == 0);
@@ -731,6 +870,16 @@ public:
 
 			if (_multi == 2) 
 				fill_multi(cur_ref, input);
+		}
+
+		/*
+		 * Perform tracking.
+		 */
+
+		if (_track == 1) {
+			track_median(cur_ref, input);
+		} else if (_track == 2) {
+			track_point(cur_ref, input, track_x, track_y);
 		}
 
 		/*

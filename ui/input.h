@@ -2341,6 +2341,17 @@ public:
 				unsupported::discontinued("--hf-enhance=<x>");
 			} else if (!strcmp(option_name, "multi")) {
 				d2::trans_multi::set_multi(env->get_string_arg(i->first, 1));
+			} else if (!strcmp(option_name, "track")) {
+				if (!strcmp(env->get_string_arg(i->first, 0), "none")) {
+					d2::trans_multi::track_none();
+				} else if (!strcmp(env->get_string_arg(i->first, 0), "median")) {
+					d2::trans_multi::track_median();
+				} else if (!strcmp(env->get_string_arg(i->first, 0), "point")) {
+					d2::trans_multi::track_point(env->get_double_arg(i->first, 1),
+					                             env->get_double_arg(i->first, 2));
+				} else {
+					assert(0);
+				}
 			} else if (!strcmp(option_name, "gs")) {
 				d2::align::gs(env->get_string_arg(i->first, 1));
 			} else if (!strcmp(option_name, "rot-upper")) {
