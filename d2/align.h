@@ -2369,7 +2369,6 @@ public:
 
 		if (lod > 0) {
 			ale_pos rescale_factor = (double) scale_factor
-					       / (double) pow(2, lod)
 					       / (double) here.get_offset().scale();
 
 			here.rescale(rescale_factor, scale_clusters[0]);
