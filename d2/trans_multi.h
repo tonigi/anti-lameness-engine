@@ -117,7 +117,7 @@ public:
 		_track = 0;
 	}
 
-	static void track_median() {
+	static void track_primary() {
 		_track = 1;
 	}
 
@@ -750,30 +750,123 @@ private:
 		}
 	}
 
-	ale_pos get_sample_error(const std::vector<point> &s, index_t index) {
-		ale_pos error = 0;
+	index_t get_index_for_point(struct point p) const {
+		if (!use_multi)
+			return current_element;
 
-		std::vector<ale_pos> errors;
+		int i = (int) (p[0] - cur_offset[0]);
+		int j = (int) (p[1] - cur_offset[1]);
 
-		for (unsigned int ii = 0; ii < s.size(); ii++) {
-			ale_pos error_part = (trans_stack[index].pei(s[ii])
-			                    - pei(s[ii])).norm();
+		if (i < 0 || (unsigned int) i >= cur_ref_height
+		 || j < 0 || (unsigned int) j >= cur_ref_width)
+			return 0;
 
-			errors.push_back(error_part);
+		return spatio_elem_map[cur_ref_width * i + j];
+	}
+
+	std::pair<ale_pos, ale_pos> get_point_error(point s, const trans_single &t) {
+		ale_pos diagonal = sqrt(input_height * input_height + input_width * input_width);
+		point center = point(input_height / 2, input_width / 2);
+
+		ale_pos error_index = (t.pei(s) - pei(s)).normsq();
+		ale_pos error_part = error_index;
+
+		if (is_projective()) {
+#if 0
+			/*
+			 * Aligning central regions is as important as
+			 * aligning the periphery.  Don't favor the
+			 * latter through large error values.  Rather,
+			 * divide by the square of the distance from
+			 * the center.
+			 */
+
+			error_part /= (1 + (center - pei(s)).normsq());
+#endif
+
+			/*
+			 * Add a local rigidity and rotational constraint.
+			 */
+
+			const trans_single &u = trans_stack[get_index_for_point(s)];
+
+			point d1 = point(1, 0);
+			point d2 = point(0, 1);
+
+			ale_pos dist1 = 0;
+			ale_pos dist2 = 0;
+#if 0
+			dist1 = ((t.pei(s + d1) - t.pei(s))
+				       - (u.pei(s + d1) - u.pei(s))).normsq();
+			dist2 = ((t.pei(s + d2) - t.pei(s))
+				       - (u.pei(s + d2) - u.pei(s))).normsq();
+#elif 0
+			dist1 = point(0, 0).anglebetw(t.pei(s + d1) - t.pei(s),
+			                              u.pei(s + d1) - u.pei(s));
+			dist2 = point(0, 0).anglebetw(t.pei(s + d2) - t.pei(s),
+			                              u.pei(s + d2) - u.pei(s));
+#elif 0
+			dist1 = pow((t.pei(s + d1) - t.pei(s)).norm()
+				       - (u.pei(s + d1) - u.pei(s)).norm(), 2);
+			dist2 = pow((t.pei(s + d2) - t.pei(s)).norm()
+				       - (u.pei(s + d2) - u.pei(s)).norm(), 2);
+#endif
+
+			ale_pos rigidity_error_part = dist1 + dist2;
+
+			error_part += rigidity_error_part * pow(diagonal / 2, 2);
+
 		}
 
-		std::sort(errors.begin(), errors.end());
+		return std::pair<ale_pos, ale_pos>(error_index, error_part);
+	}
 
-		for (unsigned int ii = 0; ii < s.size() / 2; ii++)
-			error += pow(errors[ii], 2);
-	
+	std::pair<ale_pos, ale_pos> get_point_error(point s1, point s2, const trans_single &t) {
+		std::pair<ale_pos, ale_pos> error1 = get_point_error(s1, t);
+		std::pair<ale_pos, ale_pos> error2 = get_point_error(s1, trans_stack[get_index_for_point(s2)]);
+
+#if 1
+		return error1;
+#elif 0
+		return (error1 / exp(error2));
+
+#elif 0
+		if (error1 > error2)
+			return error1 - error2;
+			
+		return 0;
+#endif
+	}
+
+
+	ale_pos get_sample_error(const std::vector<point> &s, const trans_single &t) {
+		ale_pos error = 0;
+		std::multimap<ale_pos, ale_pos> errors;
+
+#if 0
+		for (unsigned int ii = 0; ii < s.size(); ii++)
+			error += get_point_error(s[ii], s[(ii + 1) % s.size()], t).first;
+#elif 1
+		for (unsigned int ii = 0; ii < s.size(); ii++)
+			errors.insert(get_point_error(s[ii], s[(ii + 1) % s.size()], t));
+
+		std::multimap<ale_pos, ale_pos>::iterator error_iterator = errors.begin();
+		for (unsigned int ii = 0; ii < errors.size() / 2; ii++, error_iterator++) {
+			error += error_iterator->second;
+		}
+#endif
+
 		return error;
 	}
 
-	void track_median(const image *cur_ref, const image *input) {
+	ale_pos get_sample_error(const std::vector<point> &s, index_t index) {
+		return get_sample_error(s, trans_stack[index]);
+	}
+
+	void track_primary(const image *cur_ref, const image *input) {
 		std::vector<point> point_set;
 
-		get_input_sample(point_set, 401);
+		get_input_sample(point_set, 8000);
 
 		if (_multi == 4)
 		for (unsigned int ii = 0; ii < point_set.size(); ii++) {
@@ -796,6 +889,47 @@ private:
 
 			best_error = this_error;
 			best = index;
+		}
+
+		if (is_projective()) {
+			trans_single t = trans_stack[best];
+
+			int improvement = 1;
+
+			while (improvement) {
+				improvement = 0;
+
+				const ale_pos delta = 0.125;
+
+				for (int param = 0; param < 4; param++)
+				for (int n = 0; n < 9; n++) {
+					if (n == 4)
+						continue;
+
+					trans_single s = t;
+
+					if (n < 3)
+						s.gpt_modify(0, param, -delta);
+					else if (n > 5)
+						s.gpt_modify(0, param, delta);
+
+					if (n % 3 == 0)
+						s.gpt_modify(1, param, -delta);
+					else if (n % 3 == 2)
+						s.gpt_modify(1, param, delta);
+
+					ale_pos this_error = get_sample_error(point_set, s);
+
+					if (!(this_error < best_error))
+						continue;
+
+					t = s;
+					best_error = this_error;
+					improvement = 1;
+				}
+			}
+
+			trans_stack[best] = t;
 		}
 
 		set_all_indices(best);
@@ -858,7 +992,7 @@ public:
 		 */
 
 		if (_track == 1) {
-			track_median(cur_ref, input);
+			track_primary(cur_ref, input);
 		} else if (_track == 2) {
 			track_point(cur_ref, input, track_x, track_y);
 		}

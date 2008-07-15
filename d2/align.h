@@ -2786,6 +2786,7 @@ public:
 			if (i > 0) {
 				astate->init_frame_alignment_nonprimary(&offset, lod, perturb, i);
 
+#if 0
 				if (!ma_cert_satisfied(scale_clusters[0], offset, i)) {
 
 					ui::get()->set_offset(offset);
@@ -2797,6 +2798,7 @@ public:
 
 					continue;
 				}
+#endif
 
 				if (_exp_register == 1) {
 					ui::get()->exposure_1();
@@ -2892,16 +2894,20 @@ public:
 			offset.set_current_element(here.get_offset());
 
 			if (i > 0 && _exp_register == 1) {
-				ui::get()->exposure_2();
-				pixel_accum asum(0, 0, 0), bsum(0, 0, 0);
-				exposure_ratio_iterate eri(&asum, &bsum, scale_clusters[0], offset, local_ax_count, 1, 
-					offset.elem_bounds().scale_to_bounds(scale_clusters[0].accum->height(),
-					                                     scale_clusters[0].accum->width()));
+				if (ma_cert_satisfied(scale_clusters[0], offset, i)) {
+					ui::get()->exposure_2();
+					pixel_accum asum(0, 0, 0), bsum(0, 0, 0);
+					exposure_ratio_iterate eri(&asum, &bsum, scale_clusters[0], offset, local_ax_count, 1, 
+						offset.elem_bounds().scale_to_bounds(scale_clusters[0].accum->height(),
+										     scale_clusters[0].accum->width()));
 
-				eri.run();
-				pixel_accum tr = asum / bsum;
-				ui::get()->exp_multiplier(tr[0], tr[1], tr[2]);
-				offset.set_tonal_multiplier(tr);
+					eri.run();
+					pixel_accum tr = asum / bsum;
+					ui::get()->exp_multiplier(tr[0], tr[1], tr[2]);
+					offset.set_tonal_multiplier(tr);
+				} else {
+					offset.set_tonal_multiplier(offset.get_element(offset.parent_index(i)).get_tonal_multiplier(point(0, 0)));
+				}
 			} else if (_exp_register == 1) {
 				ui::get()->exposure_2();
 				set_exposure_ratio(m, scale_clusters[0], offset, local_ax_count, 1);

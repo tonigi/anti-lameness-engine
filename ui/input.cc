@@ -121,7 +121,7 @@ input::simple_option input::simple_option_table[] = {
 
 	{ "multi", NULL, NULL, 1 },
 	{ "track-none", "track", "none" },
-	{ "track-median", "track", "median" },
+	{ "track-primary", "track", "primary" },
 	{ "track-point", "track", "point", 2 },
 
 	{ "gs", NULL, NULL, 1 },
