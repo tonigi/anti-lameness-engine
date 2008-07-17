@@ -2786,20 +2786,6 @@ public:
 			if (i > 0) {
 				astate->init_frame_alignment_nonprimary(&offset, lod, perturb, i);
 
-#if 0
-				if (!ma_cert_satisfied(scale_clusters[0], offset, i)) {
-
-					ui::get()->set_offset(offset);
-
-					if (i + 1 == offset.stack_depth())
-						ui::get()->alignment_degree_complete(offset.get_coordinate(i).degree);
-					else if (offset.get_coordinate(i).degree != offset.get_coordinate(i + 1).degree)
-						ui::get()->alignment_degree_complete(offset.get_coordinate(i + 1).degree);
-
-					continue;
-				}
-#endif
-
 				if (_exp_register == 1) {
 					ui::get()->exposure_1();
 					pixel_accum asum(0, 0, 0), bsum(0, 0, 0);
