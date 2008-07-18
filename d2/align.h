@@ -894,7 +894,6 @@ private:
 		struct run {
 
 			diff_trans offset;
-			ale_pos perturb;
 
 			ale_accum result;
 			ale_accum divisor;
@@ -923,9 +922,8 @@ private:
 				de_sum = 0;
 			}
 
-			void init(diff_trans _offset, ale_pos _perturb) {
+			void init(diff_trans _offset) {
 				offset = _offset;
-				perturb = _perturb;
 				init();
 			}
 
@@ -936,8 +934,8 @@ private:
 				init();
 			}
 
-			run(diff_trans _offset, ale_pos _perturb) : offset(_offset) {
-				init(_offset, _perturb);
+			run(diff_trans _offset) : offset(_offset) {
+				init(_offset);
 			}
 
 			void add(const run &_run) {
@@ -963,7 +961,7 @@ private:
 				/*
 				 * Initialize
 				 */
-				init(_run.offset, _run.perturb);
+				init(_run.offset);
 
 				/*
 				 * Add
@@ -976,7 +974,7 @@ private:
 				/*
 				 * Initialize
 				 */
-				init(_run.offset, _run.perturb);
+				init(_run.offset);
 
 				/*
 				 * Add
@@ -1198,14 +1196,13 @@ private:
 		std::vector<ale_pos> perturb_multipliers;
 
 public:
-		void diff(struct scale_cluster c, ale_pos perturb, 
-				const diff_trans &t, 
+		void diff(struct scale_cluster c, const diff_trans &t, 
 				int _ax_count, int f) {
 
 			if (runs.size() == 2)
 				runs.pop_back();
 
-			runs.push_back(run(t, perturb));
+			runs.push_back(run(t));
 
 			si = c;
 			ax_count = _ax_count;
@@ -1278,17 +1275,15 @@ public:
 	private:
 		void rediff() {
 			std::vector<diff_trans> t_array;
-			std::vector<ale_pos> p_array;
 
 			for (unsigned int r = 0; r < runs.size(); r++) {
 				t_array.push_back(runs[r].offset);
-				p_array.push_back(runs[r].perturb);
 			}
 
 			runs.clear();
 
 			for (unsigned int r = 0; r < t_array.size(); r++)
-				diff(si, p_array[r], t_array[r], ax_count, frame);
+				diff(si, t_array[r], ax_count, frame);
 		}
 
 
@@ -1570,7 +1565,7 @@ public:
 				for (unsigned int i = 0; i < t_set.size(); i++) {
 					diff_stat_generic test = *this;
 
-					test.diff(si, perturb, t_set[i], ax_count, frame);
+					test.diff(si, t_set[i], ax_count, frame);
 
 					test.confirm();
 
@@ -1613,7 +1608,7 @@ public:
 					if (tested[i])
 						continue;
 
-					diff(si, perturb, t_set[i], ax_count, frame);
+					diff(si, t_set[i], ax_count, frame);
 
 					if (!(i < perturb_multipliers.size())
 					 || !finite(perturb_multipliers[i])) {
@@ -2150,7 +2145,7 @@ public:
 
 		diff_stat_t test(*here);
 
-		test.diff(si, perturb, t.get_current_element(), local_ax_count, m);
+		test.diff(si, t.get_current_element(), local_ax_count, m);
 
 		unsigned int ovl = overlap(si, t, local_ax_count);
 
@@ -2399,6 +2394,24 @@ public:
 				return 0;
 
 		return 1;
+	}
+
+	static diff_stat_t check_ancestor_path(const trans_multi &offset, const scale_cluster &si, diff_stat_t here, int local_ax_count, int frame) {
+
+		if (offset.get_current_index() > 0)
+		for (int i = offset.parent_index(offset.get_current_index()); i >= 0; i = (i > 0) ? (int) offset.parent_index(i) : -1) {
+			trans_single t = offset.get_element(i);
+			t.rescale(offset.get_current_element().scale());
+
+			here.diff(si, t, local_ax_count, frame);
+
+			if (here.better())
+				here.confirm();
+			else
+				here.discard();
+		}
+
+		return here;
 	}
 
 	/*
@@ -2738,7 +2751,7 @@ public:
 		 */
 
 		ui::get()->prematching();
-		here.diff(si, perturb, offset.get_current_element(), local_ax_count, m);
+		here.diff(si, offset.get_current_element(), local_ax_count, m);
 		ui::get()->set_match(here.get_error());
 
 		/*
@@ -2867,9 +2880,11 @@ public:
 
 			here.set_elem_bounds(offset.elem_bounds());
 
-			here.diff(si, e_perturb, offset.get_current_element(), local_ax_count, m);
+			here.diff(si, offset.get_current_element(), local_ax_count, m);
 
 			here.confirm();
+
+			here = check_ancestor_path(offset, si, here, local_ax_count, m);
 
 			here = _align_element(e_perturb, local_lower, scale_clusters, 
 					here, e_adj_p, adj_o, e_adj_b, current_bd, modified_bd,
@@ -2918,7 +2933,7 @@ public:
 
 		ui::get()->postmatching();
 		diff_stat_generic<transformation> multi_here(offset.elem_bounds());
-		multi_here.diff(scale_clusters[0], perturb, offset, local_ax_count, m);
+		multi_here.diff(scale_clusters[0], offset, local_ax_count, m);
 		ui::get()->set_match(multi_here.get_error());
 
 		/*

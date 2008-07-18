@@ -325,10 +325,11 @@ public:
 		return result;
 	}
 
-	index_t parent_index(index_t i) {
+	index_t parent_index(index_t i) const {
 		multi_coordinate mc = coord_stack[i];
 		multi_coordinate mcp = parent_mc(mc);
-		index_t result = coordinate_map[mcp];
+		// index_t result = coordinate_map[mcp];
+		index_t result = coordinate_map.find(mcp)->second;
 
 		return result;
 	}
