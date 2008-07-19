@@ -1296,6 +1296,13 @@ public:
 			     || (!finite(runs[0].get_error()) && finite(runs[1].get_error())));
 		}
 
+		int better_defined() {
+			assert(runs.size() >= 2);
+			assert(runs[0].offset.scale() == runs[1].offset.scale());
+
+			return (runs[1].get_error() < runs[0].get_error()); 
+		}
+
 		diff_stat_generic(transformation::elem_bounds_t e) 
 				: runs(), old_runs(), perturb_multipliers() {
 			elem_bounds = e;
@@ -2405,7 +2412,7 @@ public:
 
 			here.diff(si, t, local_ax_count, frame);
 
-			if (here.better())
+			if (here.better_defined())
 				here.confirm();
 			else
 				here.discard();
