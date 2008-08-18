@@ -1504,7 +1504,7 @@ public:
 					test_t = get_offset();
 
 					if (perturb_type == 0)
-						test_t.gpt_modify(j, i, adj_s);
+						test_t.gpt_modify_bounded(j, i, adj_s, elem_bounds.scale_to_bounds(si.accum->height(), si.accum->width()));
 					else if (perturb_type == 1)
 						test_t.gr_modify(j, i, adj_s);
 					else

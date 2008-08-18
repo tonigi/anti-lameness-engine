@@ -467,6 +467,16 @@ public:
 	}
 
 	/*
+	 * Modify projective transform with control points at the corners of a
+	 * specified bounded region.
+	 */
+
+	void gpt_modify_bounded(int i1, int i2, ale_pos diff, elem_bounds_int_t eb) {
+		assert(0);
+	}
+
+
+	/*
 	 * Modify a projective transform according to the group operation.
 	 */
 	void gr_modify(int i1, int i2, ale_pos diff) {

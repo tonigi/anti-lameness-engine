@@ -61,6 +61,18 @@ protected:
 
 public:	
 
+	struct elem_bounds_int_t {
+		unsigned int imin, imax, jmin, jmax;
+
+		int satisfies_min_dim(unsigned int min_dimension) {
+			if (imax - imin < min_dimension
+			 || jmax - jmin < min_dimension)
+				return 0;
+
+			return 1;
+		}
+	};
+
 	trans_abstract() {
 		bdcnum = 0;
 	}
