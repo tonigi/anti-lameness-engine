@@ -134,6 +134,7 @@ class image_rw {
 
 	static image *read_image_im_unaccel(const char *filename, exposure *exp, const char *name, 
 			unsigned int bayer, int init_reference_gain) {
+#ifdef USE_MAGICK
 		/*
 		 * Patterned after http://www.imagemagick.org/www/api.html
 		 * and http://www.imagemagick.org/www/smile.c
@@ -194,6 +195,9 @@ class image_rw {
 		DestroyImageInfo(image_info);
 
 		return im;
+#else
+		return NULL;
+#endif
 	}
 
 public:
