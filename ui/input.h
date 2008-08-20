@@ -54,14 +54,6 @@
 #endif
 
 /*
- * GNU extensions
- */
-
-extern "C" {
-#include "string_.h"
-}
-
-/*
  * Types
  */
 

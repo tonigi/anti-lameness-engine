@@ -777,10 +777,12 @@ private:
 			 * Add a local rigidity and rotational constraint.
 			 */
 
+#if 0
 			const trans_single &u = trans_stack[get_index_for_point(s)];
 
 			point d1 = point(1, 0);
 			point d2 = point(0, 1);
+#endif
 
 			ale_pos dist1 = 0;
 			ale_pos dist2 = 0;

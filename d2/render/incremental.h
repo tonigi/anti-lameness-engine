@@ -226,7 +226,9 @@ protected:
 			assert (accum_image != NULL);
 			assert (delta != NULL);
 
+#if 0
 			const filter::ssfe *_ssfe = inv->ssfe();
+#endif
 
 			accum_image->accumulate_accel(instance->gpu_program);
 		}
