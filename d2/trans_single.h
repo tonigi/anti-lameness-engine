@@ -367,6 +367,9 @@ public:
 	 * Calculate euclidean identity transform for a given image.
 	 */
 	static struct trans_single eu_identity(const image *i, ale_pos scale_factor = 1) {
+		if (i == NULL)
+			return eu_identity(2, 2, scale_factor);
+
 		return eu_identity(i->height(), i->width(), scale_factor);
 	}
 
