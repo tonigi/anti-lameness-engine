@@ -339,9 +339,9 @@ public:
 	}
 
 	/*
-	 * Calculate euclidean identity transform for a given image.
+	 * Identity transform for given dimensions
 	 */
-	static struct trans_single eu_identity(const image *i = NULL, ale_pos scale_factor = 1) {
+	static struct trans_single eu_identity(unsigned int height = 2, unsigned int width = 2, ale_pos scale_factor = 1) {
 		struct trans_single r;
 
 		r.resultant_memo = 0;
@@ -350,8 +350,8 @@ public:
 		r.eu[0] = 0;
 		r.eu[1] = 0;
 		r.eu[2] = 0;
-		r.input_width = i ? i->width() : 2;
-		r.input_height = i ? i->height() : 2;
+		r.input_width = width;
+		r.input_height = height;
 		r.scale_factor = scale_factor;
 
 		r._is_projective = 0;
@@ -359,6 +359,24 @@ public:
 		r.tonal_multiplier = pixel(1, 1, 1);
 
 		r.bd_set(0, (ale_pos *) NULL);
+
+		return r;
+	}
+
+	/*
+	 * Calculate euclidean identity transform for a given image.
+	 */
+	static struct trans_single eu_identity(const image *i, ale_pos scale_factor = 1) {
+		return eu_identity(i->height(), i->width(), scale_factor);
+	}
+
+	/*
+	 * Projective identity transform for given dimensions.
+	 */
+	static trans_single gpt_identity(unsigned int height, unsigned int width, ale_pos scale_factor) {
+		struct trans_single r = eu_identity(height, width, scale_factor);
+
+		r.eu_to_gpt();
 
 		return r;
 	}
@@ -472,7 +490,17 @@ public:
 	 */
 
 	void gpt_modify_bounded(int i1, int i2, ale_pos diff, elem_bounds_int_t eb) {
-		assert(0);
+
+		point new_x[4];
+
+		trans_single t = gpt_identity(eb.imax - eb.imin, eb.jmax - eb.jmin, 1);
+
+		t.gpt_modify(i1, i2, diff);
+
+		for (int p = 0; p < 4; p++) 
+			x[p] = t.transform_scaled(x[p] - point(eb.imin, eb.jmin)) + t.transform_scaled(point(eb.imin, eb.jmin));
+
+		gpt_set(new_x);
 	}
 
 
