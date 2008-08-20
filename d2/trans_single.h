@@ -501,7 +501,7 @@ public:
 		t.gpt_modify(i1, i2, diff);
 
 		for (int p = 0; p < 4; p++) 
-			x[p] = t.transform_scaled(x[p] - point(eb.imin, eb.jmin)) + point(eb.imin, eb.jmin);
+			new_x[p] = t.transform_scaled(x[p] - point(eb.imin, eb.jmin)) + point(eb.imin, eb.jmin);
 
 		gpt_set(new_x);
 	}
