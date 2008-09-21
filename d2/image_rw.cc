@@ -27,7 +27,7 @@
 int image_rw::ppm_type = 0;
 
 unsigned int image_rw::num_bits = 16;
-unsigned int image_rw::mcv = 255;
+unsigned int image_rw::mcv = 65535;
 
 unsigned int image_rw::file_count = 0;
 const char *image_rw::output_filename = NULL;

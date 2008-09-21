@@ -135,6 +135,13 @@ class image_rw {
 	static image *read_image_im_unaccel(const char *filename, exposure *exp, const char *name, 
 			unsigned int bayer, int init_reference_gain) {
 #ifdef USE_MAGICK
+
+		if (MaxRGB < 65535 && mcv == 65535) {
+			fprintf(stderr, "\n\n*** Warning: 16 bit-per-channel file output was specified,\n");
+			fprintf(stderr, "*** but ImageMagick has not been compiled with support for 16 bits.\n");
+			fprintf(stderr, "*** Reading input using 8 bits per channel.\n\n\n");
+		}
+
 		/*
 		 * Patterned after http://www.imagemagick.org/www/api.html
 		 * and http://www.imagemagick.org/www/smile.c
@@ -399,7 +406,7 @@ public:
 		if (MaxRGB < 65535 && mcv == 65535) {
 			fprintf(stderr, "\n\n*** Warning: 16 bit-per-channel file output was specified,\n");
 			fprintf(stderr, "*** but ImageMagick has not been compiled with support for this.\n");
-			fprintf(stderr, "*** Writing output using 8 bits per channel.\n");
+			fprintf(stderr, "*** Writing output using 8 bits per channel.\n\n\n");
 		}
 
 		/*
