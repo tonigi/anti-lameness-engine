@@ -35,6 +35,8 @@ AC_INIT(Ale, translit(m4_include(VERSION),'
 AC_CONFIG_SRCDIR([ale_accum.h])
 AC_CONFIG_HEADER([config.h])
 
+AC_PROG_LIBTOOL
+
 AM_INIT_AUTOMAKE
 
 # Checks for programs.
@@ -60,13 +62,11 @@ gl_INIT
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lm':
 AC_CHECK_LIB([m], [main])
-AC_CHECK_LIB([ale], [ale_new_backend],, [AC_MSG_ERROR([Usable ALE library not found (libale does not have ale_new_backend).])])
 
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([limits.h stdint.h stdlib.h string.h sys/ioctl.h unistd.h time.h sys/time.h])
-AC_CHECK_HEADER(ale.h,, [AC_MSG_ERROR([Usable ALE library not found (ale.h not found)])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -376,10 +376,17 @@ if test x$enable_wmx = xyes \
 	AC_MSG_ERROR([--wmx support requested (--enable-wmx=yes), but this configuration fails.])
 fi
 
+#
+# Ale library check
+#
+
+AC_CHECK_LIB([ale], [ale_new_backend],, [AC_MSG_ERROR([Usable ALE library not found (libale does not have ale_new_backend).])])
+AC_CHECK_HEADER(ale.h,, [AC_MSG_ERROR([Usable ALE library not found (ale.h not found)])])
+
 OPTION_CPPFLAGS="$ASSERT_FLAGS $IMAGEMAGICK_CPPFLAGS $FFTW_CPPFLAGS $UNIX_CPPFLAGS $IOCTL_CPPFLAGS $COORD_CPPFLAGS $COLOR_CPPFLAGS $OPTIMIZATION_CPPFLAGS $STL_CPPFLAGS"
 OPTION_CFLAGS="$IMAGEMAGICK_CFLAGS $PTHREAD_CFLAGS $GLUT_CFLAGS"
 OPTION_LDFLAGS="$IMAGEMAGICK_LDFLAGS"
-OPTION_LIBS="$PTHREAD_LIBS $IMAGEMAGICK_LIBS $GLUT_LIBS"
+OPTION_LIBS="$PTHREAD_LIBS $IMAGEMAGICK_LIBS $GLUT_LIBS $LIBS"
 
 AC_SUBST(OPTION_CPPFLAGS)
 AC_SUBST(OPTION_CFLAGS)

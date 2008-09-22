@@ -59,9 +59,14 @@ SUBDIRS = lib
 # that are required for both compile and link operations; hence, it has been
 # added to both AM_CPPFLAGS and AM_LDFLAGS.
 #
+# We use -rpath $(libdir) as a means of avoiding runtime load failures
+# when ldconfig has not been run.  For more detail, see 
+#
+# http://www.mail-archive.com/automake@gnu.org/msg13279.html
+#
 
 AM_CPPFLAGS = @OPTION_CFLAGS@ @OPTION_CPPFLAGS@ -I$(top_srcdir)/lib
-AM_LDFLAGS = @OPTION_CFLAGS@ @OPTION_LDFLAGS@
+AM_LDFLAGS = @OPTION_CFLAGS@ @OPTION_LDFLAGS@ -rpath $(libdir)
 
 #
 # Executable target.
