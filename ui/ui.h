@@ -21,6 +21,7 @@
 #ifndef __ui_h__
 #define __ui_h__
 
+#include <cstring>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
