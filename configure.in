@@ -35,8 +35,6 @@ AC_INIT(Ale, translit(m4_include(VERSION),'
 AC_CONFIG_SRCDIR([ale_accum.h])
 AC_CONFIG_HEADER([config.h])
 
-AC_PROG_LIBTOOL
-
 AM_INIT_AUTOMAKE
 
 # Checks for programs.
