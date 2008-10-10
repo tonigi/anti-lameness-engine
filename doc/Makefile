@@ -60,7 +60,8 @@ PDF_MAKER = fop
 # possible values for TXT_MAKER are:
 #   links|lynx|w3m|w3mmee
 TXT_MAKER = links
-TXT_MAKER_FLAGS = -dump -no-numbering -no-references
+# TXT_MAKER_FLAGS = -dump -no-numbering -no-references
+TXT_MAKER_FLAGS = -dump
 
 # xsl
 XSLT = xsltproc
