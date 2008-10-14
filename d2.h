@@ -40,6 +40,10 @@
 #include <ostream>
 #include <typeinfo>
 
+extern "C" {
+#include <ale.h>
+}
+
 #include "ale_math.h"
 #include "ale_real.h"
 #include "ale_accum.h"
@@ -109,6 +113,7 @@ namespace d2 {
 #include "optimizations.h"
 
 namespace d2 {
+#include "d2/image_accel.h"
 #include "d2/image_ale_real.h"
 #include "d2/image_weighted_avg.h"
 #include "d2/image_weighted_simple.h"
