@@ -79,8 +79,64 @@ public:
 		}
 	}
 
+	image_accel (const image &source) : image(source) {
+
+		assert (_depth == 3);
+
+		int libale_bayer;
+
+		switch (bayer) {
+		case IMAGE_BAYER_NONE:
+			libale_bayer = ALE_FORMAT_RGB;
+			break;
+		case IMAGE_BAYER_RGBG:
+			libale_bayer = ALE_FORMAT_BAYER_RGBG;
+			break;
+		case IMAGE_BAYER_GBGR:
+			libale_bayer = ALE_FORMAT_BAYER_GBGR;
+			break;
+		case IMAGE_BAYER_GRGB:
+			libale_bayer = ALE_FORMAT_BAYER_GRGB;
+			break;
+		case IMAGE_BAYER_BGRG:
+			libale_bayer = ALE_FORMAT_BAYER_BGRG;
+			break;
+		default:
+			assert(0);
+		}
+
+		im = ale_new_domain_2d(NULL, libale_bayer, ALE_TYPE_FLOAT_32, _dimy, _dimx);
+
+		assert (im);
+
+		if (!im) {
+			fprintf(stderr, "Could not allocate image data.\n");
+			exit(1);
+		}
+
+		/*
+		 * XXX: Image data should be copied here.
+		 */
+
+		assert(0);
+	}
+
 	virtual ~image_accel() {
 		ale_delete_domain_2d(im);
+	}
+
+	virtual int accel_type() {
+		return 1;
+	}
+
+	virtual image *unaccel_equiv() {
+		/*
+		 * XXX: An unaccelerated equivalent should be created here.
+		 */
+
+		assert(0);
+
+		return NULL;
 	}
 
 	spixel get_pixel(unsigned int y, unsigned int x) const {

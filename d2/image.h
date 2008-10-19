@@ -61,6 +61,23 @@ protected:
 	const char *name;
 	mutable exposure *_exp;
 	unsigned int bayer;
+
+	image (const image &source) {
+
+		assert (source._depth == 3);
+		_depth = 3;
+
+		_dimx = source._dimx;
+		_dimy = source._dimy;
+		_offset = source._offset;
+		name = source.name;
+		_exp = source._exp;
+		bayer = source.bayer;
+
+		if (_exp != NULL)
+			_exp->add_listener(this, name);
+	}
+
 public:
 	static void set_resident(double r) {
 		resident = r;
@@ -958,6 +975,24 @@ public:
 	 */
 
 	virtual void accel_domain_sequence() {
+	}
+
+	/*
+	 * Acceleration type.  0 indicates that the type's pixels are directly
+	 * accessible; 1 indicates pixels are of image_accel type.
+	 */
+
+	virtual int accel_type() {
+		return 0;
+	}
+
+	/*
+	 * Unaccelerated equivalent of an image.  Unaccelerated images return
+	 * NULL.
+	 */
+
+	virtual image *unaccel_equiv() {
+		return NULL;
 	}
 
 	virtual ~image() {
