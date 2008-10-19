@@ -991,7 +991,7 @@ public:
 	 * NULL.
 	 */
 
-	virtual image *unaccel_equiv() {
+	virtual image *unaccel_equiv() const {
 		return NULL;
 	}
 

@@ -29,6 +29,7 @@
 #include "image.h"
 #include "image_ale_real.h"
 #include "image_bayer_ale_real.h"
+#include "image_accel.h"
 #include "ppm.h"
 #include "exposure/exposure.h"
 #include "exposure/exposure_default.h"
@@ -235,6 +236,12 @@ public:
 
 		result->accel_domain_sequence();
 
+		image *accel_result = new image_accel(*result);
+
+		delete result;
+
+		result = accel_result;
+
 		return result;
 	}
 
@@ -366,6 +373,12 @@ public:
 			fprintf(stderr, "\n");
 
 			return;
+		}
+
+		image *unaccel_im = im->unaccel_equiv();
+
+		if (unaccel_im) {
+			im = unaccel_im;
 		}
 		
 #ifdef USE_MAGICK
@@ -523,6 +536,10 @@ public:
 		write_ppm(filename, im, exp, mcv, ppm_type == 2, rezero, exposure_scale || exp_scale_override, 
 				nn_defined_radius);
 #endif
+
+		if (unaccel_im) {
+			delete unaccel_im;
+		}
 	}
 
 	static void output(const image *i) {
