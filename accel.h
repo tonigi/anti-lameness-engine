@@ -25,7 +25,9 @@
 #ifndef __accel_h__
 #define __accel_h__
 
-#include "gpu.h"
+extern "C" {
+#include <ale.h>
+}
 
 #include <assert.h>
 #include <stdio.h>
@@ -35,6 +37,8 @@
 class accel {
 	static int use_gpu;
 	static int _mask_gpu;
+	static void *_accel_context;
+	static void *_accel_backend;
 
 public:
 
@@ -55,15 +59,33 @@ public:
 	}
 
 	static void set_auto() {
-#ifdef USE_GLEW
 		const char *accel_default = getenv("ALE_GPU_ACCEL_DEFAULT");
-		if (accel_default && !strcmp(accel_default, "1") && gpu::is_ok())
-			use_gpu = 1;
-		else 
+		if (!accel_default || strcmp(accel_default, "1")) {
 			use_gpu = 0;
-#else
-		use_gpu = 0;
-#endif
+			return;
+		}
+
+		_accel_backend = ale_new_backend("glsl");
+
+		if (!_accel_backend) {
+			ale_delete_backend(_accel_backend);
+			_accel_backend = NULL;
+			use_gpu = 0;
+			return;
+		}
+
+		_accel_context = ale_new_context(_accel_backend);
+
+		if (!_accel_context) {
+			ale_delete_context(_accel_context);
+			ale_delete_backend(_accel_backend);
+			_accel_context = NULL;
+			_accel_backend = NULL;
+			use_gpu = 0;
+			return;
+		}
+
+		use_gpu = 1;
 	}
 
 	static int is_gpu() {
@@ -76,36 +98,38 @@ public:
 		if (_mask_gpu)
 			return 0;
 
-		if (!gpu::is_ok()) {
-			fprintf(stderr, "GPU acceleration error.\n");
-			exit(1);
-		}
-
-#ifdef USE_GLEW
-		const char *extensions[] = {
-			"GL_ARB_fragment_shader",
-			"GL_ARB_texture_float",
-			"GL_ARB_texture_rectangle",
-			"GL_EXT_framebuffer_object",
-			NULL
-		};
-
-		int unsupported = 0;
-		for (const char **c = extensions; *c; c++) {
-			if (!glewIsSupported(*c)) {
-				fprintf(stderr, "GL feature %s not supported.\n", *c);
-				unsupported = 1;
-			}
-		}
-		if (unsupported)
-			exit(1);
-#else
-		fprintf(stderr, "GLEW linkage is required for acceleration.\n");
-		exit(1);
-#endif
-
 		return 1;
 	}
+
+	static void *context() {
+		if (use_gpu == 2)
+			set_auto();
+
+		if (_accel_context)
+			return _accel_context;
+
+		if (use_gpu == 0) {
+			_accel_backend = ale_new_backend("guile");
+		} else {
+			_accel_backend = ale_new_backend("glsl");
+		}
+
+		if (!_accel_backend) {
+			fprintf(stderr, "Could not create backend.\n");
+			exit(1);
+		}
+
+		_accel_context = ale_new_context(_accel_backend);
+
+		if (!_accel_context) {
+			fprintf(stderr, "Could not create context.\n");
+			exit(1);
+		}
+
+		return _accel_context;
+
+	}
+
 };
 
 #endif

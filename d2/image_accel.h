@@ -69,7 +69,7 @@ public:
 			assert(0);
 		}
 
-		im = ale_new_domain_2d(NULL, libale_bayer, ALE_TYPE_FLOAT_32, dimy, dimx);
+		im = ale_new_domain_2d(accel::context(), libale_bayer, ALE_TYPE_FLOAT_32, dimy, dimx);
 
 		assert (im);
 
@@ -105,7 +105,7 @@ public:
 			assert(0);
 		}
 
-		im = ale_new_domain_2d(NULL, libale_bayer, ALE_TYPE_FLOAT_32, _dimy, _dimx);
+		im = ale_new_domain_2d(accel::context(), libale_bayer, ALE_TYPE_FLOAT_32, _dimy, _dimx);
 
 		assert (im);
 
