@@ -68,8 +68,6 @@ public:
 		_accel_backend = ale_new_backend("glsl");
 
 		if (!_accel_backend) {
-			ale_delete_backend(_accel_backend);
-			_accel_backend = NULL;
 			use_gpu = 0;
 			return;
 		}
@@ -77,9 +75,7 @@ public:
 		_accel_context = ale_new_context(_accel_backend);
 
 		if (!_accel_context) {
-			ale_delete_context(_accel_context);
 			ale_delete_backend(_accel_backend);
-			_accel_context = NULL;
 			_accel_backend = NULL;
 			use_gpu = 0;
 			return;
