@@ -62,17 +62,22 @@ protected:
 	mutable exposure *_exp;
 	unsigned int bayer;
 
-	image (const image &source) {
+	/*
+	 * XXX: dummy_value prevents automatic conversions.  Is there a better
+	 * way?  This constructor is used by, e.g., d2/image_accel.
+	 */
 
-		assert (source._depth == 3);
+	image (const image *source, int dummy_value) {
+
+		assert (source->_depth == 3);
 		_depth = 3;
 
-		_dimx = source._dimx;
-		_dimy = source._dimy;
-		_offset = source._offset;
-		name = source.name;
-		_exp = source._exp;
-		bayer = source.bayer;
+		_dimx = source->_dimx;
+		_dimy = source->_dimy;
+		_offset = source->_offset;
+		name = source->name;
+		_exp = source->_exp;
+		bayer = source->bayer;
 
 		if (_exp != NULL)
 			_exp->add_listener(this, name);

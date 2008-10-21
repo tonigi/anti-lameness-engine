@@ -79,7 +79,7 @@ public:
 		}
 	}
 
-	image_accel (const image &source) : image(source) {
+	image_accel (const image *source) : image(source, 0) {
 
 		assert (_depth == 3);
 
@@ -115,10 +115,35 @@ public:
 		}
 
 		/*
-		 * XXX: Image data should be copied here.
+		 * Copy image data
 		 */
 
-		assert(0);
+		float *data = NULL;
+
+		if (bayer == IMAGE_BAYER_NONE) {
+			data = (float *) malloc(_dimy * _dimx * _depth * sizeof(float));
+
+			for (unsigned int i = 0; i < _dimy; i++)
+			for (unsigned int j = 0; j < _dimx; j++)
+			for (unsigned int k = 0; k < _depth; k++)
+				data[i * _dimx * _depth + j * _depth + k] = source->get_chan(i, j, k);
+
+		} else {
+			data = (float *) malloc(_dimy * _dimx * sizeof(float));
+
+			for (unsigned int i = 0; i < _dimy; i++)
+			for (unsigned int j = 0; j < _dimx; j++)
+				data[i * _dimx + j] = source->get_chan(i, j, source->bayer_color(i, j));
+		}
+
+		if (!data) {
+			fprintf(stderr, "Could not allocate image data.\n");
+			exit(1);
+		}
+
+		ale_load_into_domain(im, data);
+
+		free(data);
 	}
 
 	virtual ~image_accel() {

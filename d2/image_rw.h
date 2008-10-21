@@ -236,7 +236,7 @@ public:
 
 		result->accel_domain_sequence();
 
-		image *accel_result = new image_accel(*result);
+		image *accel_result = new image_accel(result);
 
 		delete result;
 
