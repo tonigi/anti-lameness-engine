@@ -107,10 +107,8 @@ public:
 
 		im = ale_new_domain_2d(accel::context(), libale_bayer, ALE_TYPE_FLOAT_32, _dimy, _dimx);
 
-		assert (im);
-
 		if (!im) {
-			fprintf(stderr, "Could not allocate image data.\n");
+			fprintf(stderr, "Could not allocate Libale domain.\n");
 			exit(1);
 		}
 
@@ -123,6 +121,11 @@ public:
 		if (bayer == IMAGE_BAYER_NONE) {
 			data = (float *) malloc(_dimy * _dimx * _depth * sizeof(float));
 
+			if (!data) {
+				fprintf(stderr, "Could not allocate image data.\n");
+				exit(1);
+			}
+
 			for (unsigned int i = 0; i < _dimy; i++)
 			for (unsigned int j = 0; j < _dimx; j++)
 			for (unsigned int k = 0; k < _depth; k++)
@@ -131,14 +134,14 @@ public:
 		} else {
 			data = (float *) malloc(_dimy * _dimx * sizeof(float));
 
+			if (!data) {
+				fprintf(stderr, "Could not allocate image data.\n");
+				exit(1);
+			}
+
 			for (unsigned int i = 0; i < _dimy; i++)
 			for (unsigned int j = 0; j < _dimx; j++)
 				data[i * _dimx + j] = source->get_chan(i, j, source->bayer_color(i, j));
-		}
-
-		if (!data) {
-			fprintf(stderr, "Could not allocate image data.\n");
-			exit(1);
 		}
 
 		ale_load_into_domain(im, data);
