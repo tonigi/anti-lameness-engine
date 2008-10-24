@@ -204,6 +204,16 @@ public:
 		};
 
 		static void set_constant(const char *name, int value) {
+
+			/*
+			 * XXX: if possible, it would probably be better not to
+			 * use this method, as it would require addition of
+			 * constant handling to Libale.
+			 */
+
+			assert(0);
+
+#if 0
 			program_buffer_size++;
 			size_program_buffer();
 
@@ -222,6 +232,7 @@ public:
 #endif
 
 			program_buffer[program_buffer_size - 1] = program_line;
+#endif
 		}
 
 		program() {
