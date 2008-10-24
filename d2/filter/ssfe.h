@@ -56,6 +56,7 @@ public:
 
 		const char *shader_code = 
 			ALE_GLSL_SSFE_INCLUDE
+			ALE_GPU_ASSERT_INCLUDE
 			ALE_GLSL_RENDER_INCLUDE
 			"bool ssfe_ex_is_honored(inout ssfe _this) {\n"
 			"	return _this.honor_exclusion;\n"

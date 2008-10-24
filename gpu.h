@@ -39,6 +39,9 @@ extern "C" {
 #include "accel.h"
 #include "thread.h"
 
+#define ALE_GPU_ASSERT_INCLUDE \
+"(define-macro (assert expr) `(if (not ,expr) (error \"Assertion failed: \" ,(object->string expr))))"
+
 class gpu {
 public:
 	class program {
