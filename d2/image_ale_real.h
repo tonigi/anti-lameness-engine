@@ -54,11 +54,6 @@ private:
 	int rows_per_segment;
 	mutable thread::rwlock_t rwlock;
 
-	/*
-	 * GPU structures
-	 */
-	gpu::image *gpu_image;
-
 public:
 
 	/*

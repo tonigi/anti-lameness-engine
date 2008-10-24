@@ -48,59 +48,7 @@
 "#define assert(x) { if ((x)); }\n"
 
 class gpu {
-	static int gpu_initialized;
-
-	static void try_init_gpu() {
-		assert(!gpu_initialized);
-		
-#ifdef USE_GLUT
-		char program_name[20];
-		int fake_argc = 1;
-		char *fake_argv[] = { program_name };
-
-		strcpy(program_name, "ale");
-
-		glutInit(&fake_argc, fake_argv);
-		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE); 
-		glutCreateWindow(PACKAGE_NAME " " VERSION);
-
-
-		gpu_initialized = 1;
-#else
-		gpu_initialized = 0;
-#endif
-
-#ifdef USE_GLEW
-		if (gpu_initialized) {
-			if (glewInit() != GLEW_OK) {
-				fprintf(stderr, "glewInit() returned an error.\n");
-				exit(1);
-			}
-		}
-#endif
-	}
-
 public:
-
-	static int is_ok() {
-		if (!gpu_initialized) {
-			try_init_gpu();
-		}
-
-		return gpu_initialized;
-	}
-
-	static int is_enabled();
-
-	class image {
-#ifdef USE_GLUT
-		/*
-		 * For now, assume that the image fits in a single texture.
-		 */
-		GLuint texture;
-#endif
-	};
-
 	class program {
 
 		static const char **program_buffer;
@@ -149,9 +97,6 @@ public:
 			}
 			shader(const char *source) {
 #ifdef USE_GLEW
-
-				assert(is_enabled());
-
 				program_buffer_size++;
 				size_program_buffer();
 				program_buffer[program_buffer_size - 1] = source;
@@ -237,9 +182,6 @@ public:
 
 		program() {
 #ifdef USE_GLEW
-
-			assert(is_enabled());
-
 			id = glCreateProgram();
 			check_id(id);
 #endif
