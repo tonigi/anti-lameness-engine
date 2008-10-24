@@ -32,99 +32,48 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef USE_GLEW
-#include <GL/glew.h>
-#endif
+extern "C" {
+#include <ale.h>
+}
 
-#ifdef USE_FREEGLUT
-#include <GL/freeglut.h>
-#elif USE_GLUT
-#include <GL/glut.h>
-#endif
-
+#include "accel.h"
 #include "thread.h"
-
-#define ALE_GLSL_ASSERT_INCLUDE \
-"#define assert(x) { if ((x)); }\n"
 
 class gpu {
 public:
 	class program {
 
-		static const char **program_buffer;
-		static int program_buffer_size;
+		/*
+		 * Libale kernel.
+		 */
 
-		static void size_program_buffer() {
-			program_buffer = (const char **) realloc(program_buffer, sizeof(const char *) * program_buffer_size);
-			assert(program_buffer);
-		}
-
-		static void check_log(const char *description, const char *log, int program_lines = 0, const char **program = NULL) {
-			if (strcmp(log, "")) {
-				fprintf(stderr, "GLSL %s error log:\n", description);
-				fprintf(stderr, "%s", log);
-				if (program) {
-					fprintf(stderr, "Program text:\n");
-					for (int i = 0; i < program_lines; i++)
-						fprintf(stderr, "%s", program[i]);
-				}
-				exit(1);
-			}
-		}
-
-#ifdef USE_GLEW
-		static void check_id(GLuint id) {
-			if (id == 0) {
-				fprintf(stderr, "GLSL object creation failed.\n");
-				exit(1);
-			}
-		}
-
-		GLuint id;
-#endif
+		void *lk;
 
 	public:
 		class shader {
-#ifdef USE_GLEW
-			GLuint id;
-#endif
+
+			/*
+			 * Libale kernel module.
+			 */
+
+			void *lkm;
 
 		public:
 			void attach_to_program(const program *p) const {
-#ifdef USE_GLEW
-				glAttachShader(p->id, id);
-#endif
+				ale_add_kernel_module(p->lk, lkm);
 			}
 			shader(const char *source) {
-#ifdef USE_GLEW
-				program_buffer_size++;
-				size_program_buffer();
-				program_buffer[program_buffer_size - 1] = source;
-
-				char log[1000] = "";
-				id = glCreateShader(GL_FRAGMENT_SHADER_ARB);
-				check_id(id);
-				glShaderSource(id, program_buffer_size, program_buffer, NULL);
-				glCompileShader(id);
-				glGetShaderInfoLog(id, 1000, NULL, log);
-				check_log("shader compilation", log, program_buffer_size, program_buffer);
-
-				program_buffer_size--;
-				size_program_buffer();
-#endif
+				lkm = ale_new_kernel_module(accel::context(), source);
 			}
 			shader (const shader &p) {
 				assert(0);
 			}
-
 			shader &operator=(const shader &p) {
 				assert(0);
 			}
 
 			~shader() {
-#ifdef USE_GLEW
-				glDeleteShader(id);
-#endif
+				ale_delete_kernel_module(lkm);
 			}
 		};
 
@@ -181,10 +130,7 @@ public:
 		}
 
 		program() {
-#ifdef USE_GLEW
-			id = glCreateProgram();
-			check_id(id);
-#endif
+			lk = ale_new_kernel(accel::context());
 		}
 
 		program (const program &p) {
@@ -196,9 +142,7 @@ public:
 		}
 
 		~program() {
-#ifdef USE_GLEW
-			glDeleteProgram(id);
-#endif
+			ale_delete_kernel(lk);
 		}
 
 		void attach(const shader *s) {
@@ -210,12 +154,7 @@ public:
 		}
 
 		void link() {
-#ifdef USE_GLEW
-			char log[1000] = "";
-			glLinkProgram(id);
-			glGetProgramInfoLog(id, 1000, NULL, log);
-			check_log("program linking", log);
-#endif
+			ale_link_kernel(lk);
 		}
 
 	};
