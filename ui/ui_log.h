@@ -22,6 +22,7 @@
 #define __ui_log_h__
 
 #include "ui.h"
+#include <string.h>
 
 /*
  * Logging user interface.

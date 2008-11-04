@@ -57,7 +57,7 @@
  */
 
 extern "C" {
-#include "string_.h"
+#include "string.h"
 }
 
 /*
