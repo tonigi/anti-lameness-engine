@@ -77,9 +77,9 @@ if (!defined @ARGV || @ARGV == 0 || $ARGV[0] =~ /^--h[a-zA-Z0-9]$/) {
 	#
 
 	if (defined $pager) {
-		exec "exec -a $0 $ale_bin @ARGV | $pager";
+		exec "/bin/bash -c 'exec -a $0 $ale_bin @ARGV | $pager'";
 	} else {
-		exec "exec -a $0 $ale_bin @ARGV";
+		exec "/bin/bash -c 'exec -a $0 $ale_bin @ARGV'";
 	}
 
 	exit(0);
