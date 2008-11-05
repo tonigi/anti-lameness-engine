@@ -21,6 +21,13 @@
 
 <news>
 
+<release version="0.9.0.2" date="2008-Nov-05">
+
+<p>This testing release has been revised for better compatibility with recent
+GCC versions, and includes other minor fixes to the documentation tree.</p>
+
+</release>
+
 <release version="0.9.0.1" date="2008-Jun-13">
 
 <p>This testing release adds support for regional adjustment of tone (e.g., for

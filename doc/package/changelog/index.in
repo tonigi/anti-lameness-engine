@@ -1,3 +1,10 @@
+V	0.9.0.2 2008-Nov-05
+
+o	Fix 'exec -a' bashism in ale script, after this was reported by
+	Mihai Varzaru as being broken in Ubuntu 8.10.
+
+o	Update documentation makefile for better links compatibility.
+
 V	0.9.0.1 2008-Jun-13
 
 o	Use a pager (e.g., less) when displaying help.
