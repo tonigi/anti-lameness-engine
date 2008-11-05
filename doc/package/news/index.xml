@@ -20,6 +20,13 @@
 
 <news>
 
+<release version="0.8.11.1" date="2008-Nov-04">
+
+<p>This release fixes certain compilation errors under recent GCC versions,
+and includes other minor fixes in the documentation tree.</p>
+
+</release>
+
 <release version="0.8.11" date="2007-Nov-03">
 
 <p>This release includes new fixed-point configuration options, improves
