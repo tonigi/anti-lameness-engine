@@ -151,13 +151,17 @@ if test x$with_imagemagick != xno; then
 		# Bugs have been encountered in certain versions of ImageMagick
 		# older than 6.0.6.  Until a test is written to check for these
 		# bugs, check the version number instead.
-
+		#
+		# Since GraphicsMagick uses different version numbering, accept
+		# any version number from a GraphicsMagick installation.
+		
 		IMAGEMAGICK_VERSION=`Magick-config --version`
 		IMAGEMAGICK_VERSION_A=`echo $IMAGEMAGICK_VERSION | cut -f 1 -d '.'`
 		IMAGEMAGICK_VERSION_B=`echo $IMAGEMAGICK_VERSION | cut -f 2 -d '.'`
 		IMAGEMAGICK_VERSION_C=`echo $IMAGEMAGICK_VERSION | cut -f 3 -d '.'`
-
-		if test $IMAGEMAGICK_VERSION_A -gt 6 \
+		
+		if test -x `which GraphicsMagick-config` \
+		|| test $IMAGEMAGICK_VERSION_A -gt 6 \
 		|| ( test $IMAGEMAGICK_VERSION_A -eq 6 \
 		  && test $IMAGEMAGICK_VERSION_B -gt 0 ) \
 		|| ( test $IMAGEMAGICK_VERSION_A -eq 6 \
