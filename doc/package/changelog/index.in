@@ -1,3 +1,10 @@
+V	0.8.11.1 2008-Nov-04
+
+o	Fix build for Ubuntu 8.10, after this was reported by Mihai Varzaru as
+	broken.
+
+o	Update documentation Makefile for better Links compatibility.
+	
 V	0.8.11 2007-Nov-03
 
 o	Revise certain code for improved execution speed, including
