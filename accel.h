@@ -69,7 +69,7 @@ public:
 			_accel_backend = ale_new_backend("glsl");
 			attempted_accel_type = 1;
 		} else if (!strcmp(accel_default, "cpu")) {
-			_accel_backend = ale_new_backend("shlib");
+			_accel_backend = ale_new_backend("dynlib");
 			attempted_accel_type = 2;
 		}
 
@@ -102,7 +102,7 @@ public:
 		} else if (accel_type == 1) {
 			_accel_backend = ale_new_backend("glsl");
 		} else {
-			_accel_backend = ale_new_backend("shlib");
+			_accel_backend = ale_new_backend("dynlib");
 		}
 
 		if (!_accel_backend) {
