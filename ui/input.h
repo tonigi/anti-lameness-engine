@@ -1872,6 +1872,8 @@ public:
 			} else if (!strcmp(option_name, "accel")) {
 				if (!strcmp(env->get_string_arg(i->first, 1), "gpu"))
 					accel::set_gpu();
+				else if (!strcmp(env->get_string_arg(i->first, 1), "cpu"))
+					accel::set_cpu();
 				else if (!strcmp(env->get_string_arg(i->first, 1), "none"))
 					accel::set_none();
 				else if (!strcmp(env->get_string_arg(i->first, 1), "auto"))

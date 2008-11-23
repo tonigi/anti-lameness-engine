@@ -24,7 +24,6 @@
 
 #include "accel.h"
 
-int accel::use_gpu = 2;  /* auto */
-int accel::_mask_gpu = 0;
+int accel::accel_type = -1;  /* auto */
 void *accel::_accel_context = NULL;
 void *accel::_accel_backend = NULL;

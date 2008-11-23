@@ -35,40 +35,46 @@ extern "C" {
 #include <stdlib.h>
 
 class accel {
-	static int use_gpu;
-	static int _mask_gpu;
+	static int accel_type;
 	static void *_accel_context;
 	static void *_accel_backend;
 
 public:
 
-	static void mask_gpu() {
-		_mask_gpu = 1;
-	}
-
-	static void unmask_gpu() {
-		_mask_gpu = 0;
-	}
-
 	static void set_gpu() {
-		use_gpu = 1;
+		accel_type = 1;
+	}
+
+	static void set_cpu() {
+		accel_type = 2;
 	}
 
 	static void set_none() {
-		use_gpu = 0;
+		accel_type = 0;
 	}
 
 	static void set_auto() {
-		const char *accel_default = getenv("ALE_GPU_ACCEL_DEFAULT");
-		if (!accel_default || strcmp(accel_default, "1")) {
-			use_gpu = 0;
+		const char *accel_default = getenv("ALE_ACCEL_DEFAULT");
+		int attempted_accel_type = 0;
+
+		if (!accel_default) {
+			accel_type = 0;
 			return;
 		}
 
-		_accel_backend = ale_new_backend("glsl");
+		if (!strcmp(accel_default, "none")) {
+			accel_type = 0;
+			return;
+		} else if (!strcmp(accel_default, "gpu")) {
+			_accel_backend = ale_new_backend("glsl");
+			attempted_accel_type = 1;
+		} else if (!strcmp(accel_default, "cpu")) {
+			_accel_backend = ale_new_backend("shlib");
+			attempted_accel_type = 2;
+		}
 
 		if (!_accel_backend) {
-			use_gpu = 0;
+			accel_type = 0;
 			return;
 		}
 
@@ -77,37 +83,26 @@ public:
 		if (!_accel_context) {
 			ale_delete_backend(_accel_backend);
 			_accel_backend = NULL;
-			use_gpu = 0;
+			accel_type = 0;
 			return;
 		}
 
-		use_gpu = 1;
-	}
-
-	static int is_gpu() {
-		if (use_gpu == 2)
-			set_auto();
-
-		if (use_gpu == 0)
-			return 0;
-
-		if (_mask_gpu)
-			return 0;
-
-		return 1;
+		accel_type = attempted_accel_type;
 	}
 
 	static void *context() {
-		if (use_gpu == 2)
+		if (accel_type == -1)
 			set_auto();
 
 		if (_accel_context)
 			return _accel_context;
 
-		if (use_gpu == 0) {
+		if (accel_type == 0) {
 			_accel_backend = ale_new_backend("guile");
-		} else {
+		} else if (accel_type == 1) {
 			_accel_backend = ale_new_backend("glsl");
+		} else {
+			_accel_backend = ale_new_backend("shlib");
 		}
 
 		if (!_accel_backend) {
