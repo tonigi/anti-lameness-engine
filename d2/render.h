@@ -90,9 +90,7 @@ protected:
 			"	return false;\n"
 			"}\n";
 
-		if (accel::is_gpu()) {
-			gpu_shader = new gpu::program::shader(shader_code);
-		}
+		gpu_shader = new gpu::program::shader(shader_code);
 
 		if (directory_length >= ACTIVE_RENDERER_COUNT) {
 			fprintf(stderr, "\n\n*** Too many renderers in d2::render::render() ***\n\n");

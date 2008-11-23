@@ -76,9 +76,7 @@ public:
 		this->honor_exclusion = honor_exclusion;
 		this->f = f;
 
-		if (accel::is_gpu()) {
-			gpu_shader = new gpu::program::shader(shader_code);
-		}
+		gpu_shader = new gpu::program::shader(shader_code);
 	}
 
 	const scaled_filter *get_scaled_filter() const {

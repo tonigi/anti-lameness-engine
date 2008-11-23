@@ -33,16 +33,16 @@ public:
 	static void changed(const char *description, const char *changes, const char *option = NULL) {
 		fprintf(stderr, "\n\n");
 		fprintf(stderr, "Program options have been automatically modified to satisfy the following:\n\n");
-		fprintf(stderr, description);
+		fprintf(stderr, "%s", description);
 		fprintf(stderr, "\n\n");
 
 		fprintf(stderr, "Changes are as follows:\n\n");
-		fprintf(stderr, changes);
+		fprintf(stderr, "%s", changes);
 		fprintf(stderr, "\n\n");
 
 		if (option) {
 			fprintf(stderr, "This is equivalent to manually setting the following options:\n\n");
-			fprintf(stderr, option);
+			fprintf(stderr, "%s", option);
 			fprintf(stderr, "\n\n");
 		}
 	}

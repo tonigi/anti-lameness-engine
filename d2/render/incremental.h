@@ -312,11 +312,7 @@ protected:
 		}
 
 		void run() {
-			if (accel::is_gpu()) {
-				accel_run();
-			} else {
-				decompose_domain::run();
-			}
+			accel_run();
 		}
 	};
 
@@ -380,18 +376,13 @@ public:
 
 		assert (accum_image);
 
-		if (accel::is_gpu()) {
-			gpu_program = new gpu::program();
-			gpu_shader = new gpu::program::shader(shader_main);
-			gpu_program->attach(gpu_shader);
-			gpu_program->attach(inv->ssfe());
-			gpu_program->attach(accum_image);
-			gpu_program->attach((render *) this);
-			gpu_program->link();
-		} else {
-			gpu_program = NULL;
-			gpu_shader = NULL;
-		}
+		gpu_program = new gpu::program();
+		gpu_shader = new gpu::program::shader(shader_main);
+		gpu_program->attach(gpu_shader);
+		gpu_program->attach(inv->ssfe());
+		gpu_program->attach(accum_image);
+		gpu_program->attach((render *) this);
+		gpu_program->link();
 	}
 	
 	/*

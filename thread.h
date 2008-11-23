@@ -53,8 +53,7 @@ class thread {
 		if (!cpuinfo)
 			return;
 
-		while (!feof(cpuinfo)) {
-			fgets(buffer, 100, cpuinfo);
+		while (!feof(cpuinfo) && fgets(buffer, 100, cpuinfo)) {
 			if (strncmp("processor", buffer, strlen("processor")))
 				continue;
 			_cpu_count++;

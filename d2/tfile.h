@@ -131,7 +131,10 @@ static inline transformation tload_first(struct tload_t *t, int is_p,
 	    || first_character == '#') {
 		ungetc(first_character, t->file);
 		char line[1024];
-		fgets(line, 1024, t->file);
+		char *fgets_result = fgets(line, 1024, t->file);
+
+		assert(fgets_result);
+
 		if (strlen(line) >= 1023) {
 			fprintf(stderr, 
 				"\ntrans-load: Error: line too long in input file\n");
@@ -161,7 +164,10 @@ static inline transformation tload_first(struct tload_t *t, int is_p,
 	 */
 
 	char line[1024];
-	fgets(line, 1024, t->file);
+	char *fgets_result = fgets(line, 1024, t->file);
+
+	assert(fgets_result);
+
 	if (strlen(line) >= 1023) {
 		fprintf(stderr, 
 			"\ntrans-load: Error: line too long in input file\n");
@@ -202,9 +208,7 @@ static inline transformation tload_first(struct tload_t *t, int is_p,
 	while (!feof(t->file)) {
 		char line[1024];
 
-		fgets(line, 1024, t->file);
-
-		if (feof(t->file))
+		if(!fgets(line, 1024, t->file))
 			return result;
 
 		if (strlen(line) >= 1023) {
@@ -419,9 +423,7 @@ static inline transformation tload_next(struct tload_t *t, int is_p,
 
 		char line[1024];
 
-		fgets(line, 1024, t->file);
-
-		if (feof(t->file))
+		if (!fgets(line, 1024, t->file))
 			return result;
 
 		if (strlen(line) >= 1023) {

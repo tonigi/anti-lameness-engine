@@ -217,8 +217,6 @@ public:
 			unsigned int bayer = IMAGE_BAYER_DEFAULT, int init_reference_gain = 0) {
 		image *result;
 
-		accel::mask_gpu();
-
 		if (bayer == IMAGE_BAYER_DEFAULT)
 			bayer = bayer_default;
 
@@ -231,8 +229,6 @@ public:
 #else
 		result = read_ppm(filename, exp, bayer);
 #endif
-
-		accel::unmask_gpu();
 
 		result->accel_domain_sequence();
 

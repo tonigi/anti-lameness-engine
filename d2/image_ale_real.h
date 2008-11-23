@@ -170,8 +170,11 @@ public:
 				             * resident_list[resident_next], 
 					       SEEK_SET);
 				assert(_p_segments[resident_list[resident_next]]);
-				fwrite(_p_segments[resident_list[resident_next]], 
+				size_t fwrite_result = fwrite(_p_segments[resident_list[resident_next]], 
 					sizeof(spixel), rows_per_segment * _dimx, support);
+
+				assert(fwrite_result == rows_per_segment * _dimx);
+
 				dirty_segments[resident_list[resident_next]] = 0;
 			}
 
@@ -189,7 +192,9 @@ public:
 		             * segment,
 			     SEEK_SET);
 
-		fread(_p_segments[segment], sizeof(spixel), rows_per_segment * _dimx, support);
+		size_t fread_result = fread(_p_segments[segment], sizeof(spixel), rows_per_segment * _dimx, support);
+
+		assert(fread_result == rows_per_segment * _dimx);
 
 		/*
 		 * Update the next ejection candidate.

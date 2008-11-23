@@ -125,7 +125,10 @@ static inline pt tload_first(struct tload_t *t,
 	    || first_character == '#') {
 		ungetc(first_character, t->file);
 		char line[1024];
-		fgets(line, 1024, t->file);
+		char *fgets_result = fgets(line, 1024, t->file);
+
+		assert(fgets_result);
+
 		if (strlen(line) >= 1023) {
 			fprintf(stderr, 
 				"\n3d-trans-load: Error: line too long in input file\n");
@@ -148,7 +151,10 @@ static inline pt tload_first(struct tload_t *t,
 	 */
 
 	char line[1024];
-	fgets(line, 1024, t->file);
+	char *fgets_result = fgets(line, 1024, t->file);
+
+	assert(fgets_result);
+
 	if (strlen(line) >= 1023) {
 		fprintf(stderr, 
 			"\n3d-trans-load: Error: line too long in input file\n");
@@ -176,9 +182,7 @@ static inline pt tload_first(struct tload_t *t,
 	while (!feof(t->file)) {
 		char line[1024];
 
-		fgets(line, 1024, t->file);
-
-		if (feof(t->file))
+		if (!fgets(line, 1024, t->file))
 			return result;
 
 		if (strlen(line) >= 1023) {
@@ -293,9 +297,7 @@ static inline pt tload_next(struct tload_t *t,
 	while (t && !feof(t->file)) {
 		char line[1024];
 
-		fgets(line, 1024, t->file);
-
-		if (feof(t->file))
+		if (!fgets(line, 1024, t->file))
 			return result;
 
 		if (strlen(line) >= 1023) {

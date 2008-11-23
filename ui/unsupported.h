@@ -32,7 +32,7 @@ public:
 	static void fornow(const char *description) {
 		fprintf(stderr, "\n\n");
 		fprintf(stderr, "The following feature is currently unsupported:\n\n");
-		fprintf(stderr, description);
+		fprintf(stderr, "%s", description);
 		fprintf(stderr, "\n\n");
 #if 0
 		fprintf(stderr, "For more information, see http://auricle.dyndns.org/ALE/unsupported/currently/\n\n");
