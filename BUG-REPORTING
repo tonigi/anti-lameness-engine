@@ -10,6 +10,22 @@ ALE uses the ditz distributed issue tracking system:
 http://ditz.rubyforge.org/
 
 
+Relevant information
+--------------------
+
+Providing information sufficient to reproduce a bug may allow more timely resolution
+of a bug report.  Relevant information may include:
+
+* the full output of ale --version
+* a list of steps sufficient to reproduce the bug
+
+
+Address
+-------
+
+Bug reports and patches can be sent by e-mail to ale@ventricle.dyndns.org.
+
+
 License
 -------
 
@@ -32,26 +48,13 @@ You should have received a copy of the GNU General Public License along with
 The Anti-Lamenessing Engine.  If not, see <http://www.gnu.org/licenses/>.
 **************************
 
+
 Copyright
 ---------
 
 Each entry of the issue tracking database is copyright its reporter.
 
 
-Address
--------
-
-Bug reports and patches can be sent by e-mail to ale@ventricle.dyndns.org.
-
-
-Relevant information
---------------------
-
-Providing information sufficient to reproduce a bug may allow more timely resolution
-of a bug report.  Relevant information may include:
-
-* the full output of ale --version
-* a list of steps sufficient to reproduce the bug
 
 
 // The following notice applies to this BUG-REPORTING document:
