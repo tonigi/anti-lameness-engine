@@ -1,0 +1,22 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Integrate with and migrate algorithms to libale.
+desc: |-
+  Core algorithms should probably be moved to the libale project, which has a
+  repository stored here:
+  
+  http://repo.or.cz/w/libale.git
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-01-11 06:33:26.944793 Z
+references: []
+
+id: 4bcb1e64de1b6ec60b100350f32e8f98ea7f0279
+log_events: 
+- - 2009-01-11 06:33:28.329070 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
