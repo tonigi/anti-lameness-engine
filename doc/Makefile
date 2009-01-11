@@ -530,10 +530,6 @@ manual-set.docbook: index.xml
 ../README: package/readme/index.txt
 	mv package/readme/index.txt ../README
 	
-../REPORTING-BUGS: package/bugs/index.txt
-	mv package/bugs/index.txt ../REPORTING-BUGS
-	
-
 man: $(LISTS_MAN)
 
 # we can generate PDFs from man pages

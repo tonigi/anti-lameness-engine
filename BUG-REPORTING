@@ -1,0 +1,74 @@
+BUG REPORTING
+=============
+
+
+Overview
+--------
+
+ALE uses the ditz distributed issue tracking system:
+
+http://ditz.rubyforge.org/
+
+
+License
+-------
+
+Content of the issue tracking database is licensed under the following terms:
+
+**************************
+This issue tracking database is part of the Anti-Lamenessing Engine.
+
+The Anti-Lamenessing Engine is free software: you can redistribute it and/or
+modify it under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at your option)
+any later version.
+
+The Anti-Lamenessing Engine is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License along with
+The Anti-Lamenessing Engine.  If not, see <http://www.gnu.org/licenses/>.
+**************************
+
+Copyright
+---------
+
+Each entry of the issue tracking database is copyright its reporter.
+
+
+Address
+-------
+
+Bug reports and patches can be sent by e-mail to ale@ventricle.dyndns.org.
+
+
+Relevant information
+--------------------
+
+Providing information sufficient to reproduce a bug may allow more timely resolution
+of a bug report.  Relevant information may include:
+
+* the full output of ale --version
+* a list of steps sufficient to reproduce the bug
+
+
+// The following notice applies to this BUG-REPORTING document:
+//
+// Copyright 2006, 2009 David Hilvert <dhilvert@gmail.com>
+//
+// This document is part of The Anti-Lamenessing Engine.
+//
+// The Anti-Lamenessing Engine is free software: you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version.
+//
+// The Anti-Lamenessing Engine is distributed in the hope that it will be
+// useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+// Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along with
+// The Anti-Lamenessing Engine.  If not, see <http://www.gnu.org/licenses/>.
