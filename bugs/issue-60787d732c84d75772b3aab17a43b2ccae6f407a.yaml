@@ -1,0 +1,18 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Migrate TODO to ditz.
+desc: Todo list items should probably be migrated to the ditz distributed issue tracking system.
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-01-11 16:21:22.052374 Z
+references: []
+
+id: 60787d732c84d75772b3aab17a43b2ccae6f407a
+log_events: 
+- - 2009-01-11 16:21:23.571937 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
