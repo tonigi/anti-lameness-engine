@@ -26,3 +26,10 @@ log_events:
     or by making it possible to use larger example sets without storing large image
     files in git (e.g., by having examples retrieved from an external site, or by
     generating images, perhaps via inkscape [as is done in the current test suite]).
+- - 2009-01-15 06:07:21.203849 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Also, splitting the documentation repository from the main repository (e.g.,
+    creating a new ale-doc or so) might be worthwhile, and might allow larger
+    images to be included.
