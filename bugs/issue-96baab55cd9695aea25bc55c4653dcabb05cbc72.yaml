@@ -1,0 +1,23 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Unify documentation for user commands
+desc: |-
+  The various (e.g., command-line and web) documentation for user commands
+  should probably be unified, probably via encoding as Asciidoc or something
+  similar.
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-01-15 06:38:28.336404 Z
+references: []
+
+id: 96baab55cd9695aea25bc55c4653dcabb05cbc72
+log_events: 
+- - 2009-01-15 06:39:35.389978 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - |-
+    Examples could probably be included in command-line documentation, perhaps
+    via a switch to enable or disable this feature.

@@ -1,0 +1,20 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Migrate technical documentation to asciidoc or similar.
+desc: |-
+  Technical documentation should probably be migrated to Asciidoc, or to
+  something similarly easy to edit and read without the use of specialized tools.
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-01-15 06:44:46.618515 Z
+references: []
+
+id: f592eb1a518b62d991b9e93d012d421ae4458c54
+log_events: 
+- - 2009-01-15 06:44:56.358827 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
