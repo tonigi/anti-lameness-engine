@@ -18,3 +18,9 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - created
   - ""
+- - 2009-01-15 06:46:54.985598 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note that technical documentation might eventually be stored within libale,
+    (future) ale-doc, or some other separate location, rather than within ALE.
