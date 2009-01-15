@@ -1,0 +1,28 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Integrate gallery with git-controlled web documentation.
+desc: |-
+  The web gallery should probably be integrated with git-controlled
+  publicly-available web documentation.
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-01-15 05:36:16.453694 Z
+references: []
+
+id: e47983ba64945ceb9ea741af4d32bccc302586db
+log_events: 
+- - 2009-01-15 05:36:16.454245 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
+- - 2009-01-15 05:39:09.908162 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    This could perhaps be accomplished by reducing the size of the example images,
+    or by making it possible to use larger example sets without storing large image
+    files in git (e.g., by having examples retrieved from an external site, or by
+    generating images, perhaps via inkscape [as is done in the current test suite]).
