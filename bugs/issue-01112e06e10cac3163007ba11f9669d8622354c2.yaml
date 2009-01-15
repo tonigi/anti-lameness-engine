@@ -1,0 +1,27 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Eliminate bash dependency in ale script
+desc: |-
+  The ale script currently depends on bashism '-a' to pass through the invocation
+  name, and so currently invokes bash to achieve this.  Some other method should
+  probably be found for doing this.
+type: :bugfix
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-01-15 04:35:47.740430 Z
+references: []
+
+id: 01112e06e10cac3163007ba11f9669d8622354c2
+log_events: 
+- - 2009-01-15 04:37:01.775921 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - |-
+    The following general remarks on git-style paging might be of some use, as might
+    further investigating the approach to paging used within git.
+    
+    http://nex-3.com/posts/73-git-style-automatic-paging-in-ruby#comments
+    http://potatosaladx.blogspot.com/2008/04/automatic-paging-with-ack-and-rak-git.html
+    http://rubyforge.org/pipermail/ditz-talk/2008-November/000379.html
