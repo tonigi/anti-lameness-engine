@@ -9,6 +9,8 @@ ALE uses the ditz distributed issue tracking system:
 
 http://ditz.rubyforge.org/
 
+with issue database directory `bugs/`.
+
 
 Relevant information
 --------------------
