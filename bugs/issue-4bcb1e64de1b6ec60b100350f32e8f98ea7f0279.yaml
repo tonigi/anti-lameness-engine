@@ -20,3 +20,11 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - created
   - ""
+- - 2009-03-04 17:00:25.730472 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Integration with Libale may involve changing certain interfaces (e.g., image,
+    render, etc.) to more closely resemble their Libale counterparts.  (E.g., image
+    should no longer allow pixel access, and render should accept something like
+    a sequence of (transformation, image) pairs.)
