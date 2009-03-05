@@ -28,3 +28,11 @@ log_events:
     render, etc.) to more closely resemble their Libale counterparts.  (E.g., image
     should no longer allow pixel access, and render should accept something like
     a sequence of (transformation, image) pairs.)
+- - 2009-03-05 02:50:22.970276 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Consider that, better than changing existing interfaces of image, render, etc.,
+    would be to replace instances of these classes with instances of their libale
+    counterparts, which approach would have the desirable side effect of
+    immediately using the modified and up-to-date interfaces within libale.
