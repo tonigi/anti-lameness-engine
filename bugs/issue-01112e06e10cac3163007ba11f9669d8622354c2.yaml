@@ -25,3 +25,9 @@ log_events:
     http://nex-3.com/posts/73-git-style-automatic-paging-in-ruby#comments
     http://potatosaladx.blogspot.com/2008/04/automatic-paging-with-ack-and-rak-git.html
     http://rubyforge.org/pipermail/ditz-talk/2008-November/000379.html
+- - 2009-03-18 14:04:33.484875 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note that the invocation name could probably be passed as an environment variable,
+    so that the -a option to exec is not needed.
