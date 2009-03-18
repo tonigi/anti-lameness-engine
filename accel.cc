@@ -25,5 +25,4 @@
 #include "accel.h"
 
 int accel::accel_type = -1;  /* auto */
-void *accel::_accel_context = NULL;
-void *accel::_accel_backend = NULL;
+ale_context accel::_accel_context = NULL;

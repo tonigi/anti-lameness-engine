@@ -760,7 +760,7 @@ public:
 			"--accel <type>    Use acceleration <type>, one of:\n"
 			"                     gpu        Graphics processor acceleration.\n"
 			"                     cpu        CPU acceleration.\n"
-			"                     none       No acceleration.\n"
+			"                     accel      Special-purpose accelerator.\n"
 			"                     auto       Select automatically [default]\n"
 			"\n");
 	}

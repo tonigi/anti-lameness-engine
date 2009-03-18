@@ -36,10 +36,13 @@ extern "C" {
 
 class accel {
 	static int accel_type;
-	static void *_accel_context;
-	static void *_accel_backend;
+	static ale_context _accel_context;
 
 public:
+
+	static void set_accel() {
+		accel_type = 0;
+	}
 
 	static void set_gpu() {
 		accel_type = 1;
@@ -49,78 +52,72 @@ public:
 		accel_type = 2;
 	}
 
-	static void set_none() {
-		accel_type = 0;
-	}
-
 	static void set_auto() {
-		const char *accel_default = getenv("ALE_ACCEL_DEFAULT");
-		int attempted_accel_type = 0;
+		/*
+		 * Set preference ACCELERATOR > GPU > DEFAULT > CPU
+		 */
 
-		if (!accel_default) {
-			accel_type = 0;
-			return;
-		}
+		cl_context cc;
 
-		if (!strcmp(accel_default, "none")) {
-			accel_type = 0;
-			return;
-		} else if (!strcmp(accel_default, "gpu")) {
-			_accel_backend = ale_new_backend("glsl");
-			attempted_accel_type = 1;
-		} else if (!strcmp(accel_default, "cpu")) {
-			_accel_backend = ale_new_backend("dynlib");
-			attempted_accel_type = 2;
-		}
+		cc = clCreateContextFromType(0, CL_DEVICE_TYPE_ACCELERATOR, NULL, NULL, NULL);
 
-		if (!_accel_backend) {
-			accel_type = 0;
-			return;
-		}
+	        if (cc == ((cl_context) 0))
+	                cc = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, NULL);
 
-		_accel_context = ale_new_context(_accel_backend);
+	        if (cc == ((cl_context) 0))
+	                cc = clCreateContextFromType(0, CL_DEVICE_TYPE_DEFAULT, NULL, NULL, NULL);
 
-		if (!_accel_context) {
-			ale_delete_backend(_accel_backend);
-			_accel_backend = NULL;
-			accel_type = 0;
-			return;
-		}
+	        if (cc == ((cl_context) 0))
+	                cc = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, NULL);
 
-		accel_type = attempted_accel_type;
-	}
-
-	static void *context() {
-		if (accel_type == -1)
-			set_auto();
-
-		if (_accel_context)
-			return _accel_context;
-
-		if (accel_type == 0) {
-			_accel_backend = ale_new_backend("guile");
-		} else if (accel_type == 1) {
-			_accel_backend = ale_new_backend("glsl");
-		} else {
-			_accel_backend = ale_new_backend("dynlib");
-		}
-
-		if (!_accel_backend) {
-			fprintf(stderr, "Could not create backend.\n");
+	        if (cc == ((cl_context) 0)) {
+			fprintf(stderr, "Could not create an OpenCL context.\n");
 			exit(1);
 		}
 
-		_accel_context = ale_new_context(_accel_backend);
+		_accel_context = ale_new_context(cc);
+		clReleaseContext(cc);
 
 		if (!_accel_context) {
-			fprintf(stderr, "Could not create context.\n");
+			fprintf(stderr, "Could not create an ALE context.\n");
+			exit(1);
+		}
+	}
+
+	static ale_context context() {
+		if (_accel_context)
+			return _accel_context;
+
+		if (accel_type == -1) {
+			set_auto();
+			return _accel_context;
+		}
+
+		cl_context cc;
+
+		if (accel_type == 0) {
+			cc = clCreateContextFromType(0, CL_DEVICE_TYPE_ACCELERATOR, NULL, NULL, NULL);
+		} else if (accel_type == 1) {
+			cc = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, NULL);
+		} else {
+			cc = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, NULL);
+		}
+
+	        if (cc == ((cl_context) 0)) {
+			fprintf(stderr, "Could not create an OpenCL context.\n");
+			exit(1);
+		}
+
+		_accel_context = ale_new_context(cc);
+		clReleaseContext(cc);
+
+		if (!_accel_context) {
+			fprintf(stderr, "Could not create an ALE context.\n");
 			exit(1);
 		}
 
 		return _accel_context;
-
 	}
-
 };
 
 #endif
