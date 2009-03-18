@@ -20,37 +20,6 @@
 chomp ($ale_exec_dir = `dirname $0`);
 
 #
-# Detect software GPU
-#
-
-if (!defined $ENV{"ALE_SOFT_GPU"} && `which glxinfo` && `glxinfo 2> /dev/null | grep "direct rendering: No"`) {
-	$ENV{"ALE_SOFT_GPU"} = "1";
-} elsif (!defined $ENV{"ALE_SOFT_GPU"}) {
-	$ENV{"ALE_SOFT_GPU"} = "0";
-}
-
-#
-# Determine whether to use GPU acceleration by default
-#
-
-if (!defined $ENV{"ALE_GPU_ACCEL_DEFAULT"}
- && ($ENV{"ALE_SOFT_GPU"}
-  || !`glxinfo 2> /dev/null`
-  || !`glxinfo 2> /dev/null | grep GL_ARB_fragment_program`
-  || !`glxinfo 2> /dev/null | grep GL_ARB_fragment_shader`
-  || !`glxinfo 2> /dev/null | grep GL_EXT_framebuffer_object`
-  || !`glxinfo 2> /dev/null | grep GL_ARB_texture_float`
-  || !`glxinfo 2> /dev/null | grep GL_ARB_texture_rectangle`)) {
-  	$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 0;
-} elsif (!defined $ENV{"ALE_GPU_ACCEL_DEFAULT"}) {
-	$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 1;
-}
-
-# Disable acceleration by default for now, as it doesn't work yet.
-
-$ENV{"ALE_GPU_ACCEL_DEFAULT"} = 0;
-
-#
 # Environment variable defaults
 #
 
