@@ -47,29 +47,29 @@ public:
 
 		assert (depth == 3);
 
-		int libale_bayer;
+		// int libale_bayer;
 
 		switch (bayer) {
 		case IMAGE_BAYER_NONE:
-			libale_bayer = ALE_FORMAT_RGB;
+			// libale_bayer = ALE_FORMAT_RGB;
 			break;
 		case IMAGE_BAYER_RGBG:
-			libale_bayer = ALE_FORMAT_BAYER_RGBG;
+			// libale_bayer = ALE_FORMAT_BAYER_RGBG;
 			break;
 		case IMAGE_BAYER_GBGR:
-			libale_bayer = ALE_FORMAT_BAYER_GBGR;
+			// libale_bayer = ALE_FORMAT_BAYER_GBGR;
 			break;
 		case IMAGE_BAYER_GRGB:
-			libale_bayer = ALE_FORMAT_BAYER_GRGB;
+			// libale_bayer = ALE_FORMAT_BAYER_GRGB;
 			break;
 		case IMAGE_BAYER_BGRG:
-			libale_bayer = ALE_FORMAT_BAYER_BGRG;
+			// libale_bayer = ALE_FORMAT_BAYER_BGRG;
 			break;
 		default:
 			assert(0);
 		}
 
-		im = ale_new_domain_2d(accel::context(), libale_bayer, ALE_TYPE_FLOAT_32, dimy, dimx);
+		// im = ale_new_domain_2d(accel::context(), libale_bayer, ALE_TYPE_FLOAT_32, dimy, dimx);
 
 		assert (im);
 
@@ -83,29 +83,29 @@ public:
 
 		assert (_depth == 3);
 
-		int libale_bayer;
+		// int libale_bayer;
 
 		switch (bayer) {
 		case IMAGE_BAYER_NONE:
-			libale_bayer = ALE_FORMAT_RGB;
+			// libale_bayer = ALE_FORMAT_RGB;
 			break;
 		case IMAGE_BAYER_RGBG:
-			libale_bayer = ALE_FORMAT_BAYER_RGBG;
+			// libale_bayer = ALE_FORMAT_BAYER_RGBG;
 			break;
 		case IMAGE_BAYER_GBGR:
-			libale_bayer = ALE_FORMAT_BAYER_GBGR;
+			// libale_bayer = ALE_FORMAT_BAYER_GBGR;
 			break;
 		case IMAGE_BAYER_GRGB:
-			libale_bayer = ALE_FORMAT_BAYER_GRGB;
+			// libale_bayer = ALE_FORMAT_BAYER_GRGB;
 			break;
 		case IMAGE_BAYER_BGRG:
-			libale_bayer = ALE_FORMAT_BAYER_BGRG;
+			// libale_bayer = ALE_FORMAT_BAYER_BGRG;
 			break;
 		default:
 			assert(0);
 		}
 
-		im = ale_new_domain_2d(accel::context(), libale_bayer, ALE_TYPE_FLOAT_32, _dimy, _dimx);
+		// im = ale_new_domain_2d(accel::context(), libale_bayer, ALE_TYPE_FLOAT_32, _dimy, _dimx);
 
 		if (!im) {
 			fprintf(stderr, "Could not allocate Libale domain.\n");
@@ -144,13 +144,13 @@ public:
 				data[i * _dimx + j] = source->get_chan(i, j, source->bayer_color(i, j));
 		}
 
-		ale_load_into_domain(im, data);
+		// ale_load_into_domain(im, data);
 
 		free(data);
 	}
 
 	virtual ~image_accel() {
-		ale_delete_domain_2d(im);
+		// ale_delete_domain_2d(im);
 	}
 
 	virtual int accel_type() {

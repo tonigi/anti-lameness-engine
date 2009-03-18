@@ -63,10 +63,10 @@ public:
 
 		public:
 			void attach_to_program(const program *p) const {
-				ale_add_kernel_module(p->lk, lkm);
+				// ale_add_kernel_module(p->lk, lkm);
 			}
 			shader(const char *source) {
-				lkm = ale_new_kernel_module(accel::context(), source);
+				// lkm = ale_new_kernel_module(accel::context(), source);
 			}
 			shader (const shader &p) {
 				assert(0);
@@ -76,7 +76,7 @@ public:
 			}
 
 			~shader() {
-				ale_delete_kernel_module(lkm);
+				// ale_delete_kernel_module(lkm);
 			}
 		};
 
@@ -133,7 +133,7 @@ public:
 		}
 
 		program() {
-			lk = ale_new_kernel(accel::context());
+			// lk = ale_new_kernel(accel::context());
 		}
 
 		program (const program &p) {
@@ -145,7 +145,7 @@ public:
 		}
 
 		~program() {
-			ale_delete_kernel(lk);
+			// ale_delete_kernel(lk);
 		}
 
 		void attach(const shader *s) {
@@ -157,7 +157,7 @@ public:
 		}
 
 		void link() {
-			ale_link_kernel(lk);
+			// ale_link_kernel(lk);
 		}
 
 	};
