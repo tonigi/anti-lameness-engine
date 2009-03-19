@@ -36,3 +36,11 @@ log_events:
     would be to replace instances of these classes with instances of their libale
     counterparts, which approach would have the desirable side effect of
     immediately using the modified and up-to-date interfaces within libale.
+- - 2009-03-19 13:38:35.089275 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note that certain aspects of current classes (esp. the render class) might be
+    desirable to keep, as their reproduction within Libale may be difficult.  Code
+    designed to avoid duplication of incremental renderers on a rendering sequence
+    is one example where such maintenance of current classes may be preferable.
