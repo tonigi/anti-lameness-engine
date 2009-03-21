@@ -19,3 +19,11 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - created
   - ""
+- - 2009-03-21 19:01:28.046377 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note also that it may be desirable to have Irani-Peleg rendering mirror the invariant
+    type of the underlying renderer, as suggested by the current API of Libale, as this
+    would avoid the need to duplicate configuration information across the two types of
+    rendering.
