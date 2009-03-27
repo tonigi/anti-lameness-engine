@@ -16,3 +16,10 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - created
   - ""
+- - 2009-03-27 17:52:43.565918 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Consider that, rather than wrapping d2::image over ale_image, it might be
+    better to have image_rw return either d2::image or ale_image, according to
+    request.
