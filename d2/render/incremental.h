@@ -311,9 +311,11 @@ protected:
 			accum_image = instance->accum_image;
 		}
 
+#if 0
 		void run() {
 			accel_run();
 		}
+#endif
 	};
 
 	void

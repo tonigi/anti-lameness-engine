@@ -1,0 +1,18 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Consider keeping 3D implementation in ALE initially, using either wrappers (e.g., d2::image over ale_image) or OpenCL for deprecated interfaces.
+desc: ""
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-03-27 17:42:45.482605 Z
+references: []
+
+id: 778d1e3305e6cf6dd72d9836499e1788ca686f67
+log_events: 
+- - 2009-03-27 17:42:45.948075 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
