@@ -1,0 +1,18 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Add a means of using moving average in --visp without anticipating future movement (i.e., ma over only past frames).
+desc: ""
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-03-27 16:27:52.227490 Z
+references: []
+
+id: ceffea60803a2074772a3b4a2ce45708e4b46590
+log_events: 
+- - 2009-03-27 16:27:52.804881 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
