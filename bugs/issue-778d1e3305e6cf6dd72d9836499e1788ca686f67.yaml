@@ -23,3 +23,10 @@ log_events:
     Consider that, rather than wrapping d2::image over ale_image, it might be
     better to have image_rw return either d2::image or ale_image, according to
     request.
+- - 2009-03-27 18:04:29.155755 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    An alternative to either wrappers or in-ALE OpenCL would be selective implementation
+    of algorithms within Libale, an approach that reflects what is generally being done
+    for the rest of the code, and which could also be applied to things like visp.
