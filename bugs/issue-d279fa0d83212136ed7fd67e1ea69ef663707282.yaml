@@ -1,0 +1,18 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Remove superfluous header 'Overview' from introductory sections of asciidoc documentation.
+desc: ""
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-03-28 08:37:16.047379 Z
+references: []
+
+id: d279fa0d83212136ed7fd67e1ea69ef663707282
+log_events: 
+- - 2009-03-28 08:37:16.512711 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
