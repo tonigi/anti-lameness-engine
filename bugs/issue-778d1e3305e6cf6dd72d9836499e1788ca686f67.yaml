@@ -30,3 +30,12 @@ log_events:
     An alternative to either wrappers or in-ALE OpenCL would be selective implementation
     of algorithms within Libale, an approach that reflects what is generally being done
     for the rest of the code, and which could also be applied to things like visp.
+- - 2009-03-28 05:18:27.499041 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note, given support for nice things such as vectors in OpenCL, that a migration
+    to Libale of the sort occurring in the 2D code might also be appropriate for
+    3D.  As a very rough example of what might occur, a new type 'scene' could be
+    added to Libale to subsume the sorts of operations currently occurring within
+    the d3::scene class.
