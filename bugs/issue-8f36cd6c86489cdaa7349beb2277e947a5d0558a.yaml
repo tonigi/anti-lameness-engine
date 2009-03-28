@@ -16,4 +16,8 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - created
   - ""
+- - 2009-03-28 22:53:46.644669 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - One approach that may be worth investigating is compression (e.g., by PNG).
 git_branch: 
