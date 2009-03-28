@@ -1,0 +1,19 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Reduce memory expense of multi-alignment (e.g., by discarding maps between passes, by reducing typical kept size, or by reducing map element size)
+desc: ""
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-03-28 22:53:12.231388 Z
+references: []
+
+id: 8f36cd6c86489cdaa7349beb2277e947a5d0558a
+log_events: 
+- - 2009-03-28 22:53:12.832156 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
+git_branch: 
