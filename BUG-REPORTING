@@ -1,15 +1,12 @@
 BUG REPORTING
 =============
 
-
-Overview
---------
-
 ALE uses the ditz distributed issue tracking system:
 
 http://ditz.rubyforge.org/
 
-with issue database directory `bugs/`.
+with issue database directory `bugs/`.  Issue database patches (as well as
+bugfixes) can be sent by e-mail to ale@ventricle.dyndns.org.
 
 
 Relevant information
@@ -20,12 +17,6 @@ of a bug report.  Relevant information may include:
 
 * the full output of ale --version
 * a list of steps sufficient to reproduce the bug
-
-
-Address
--------
-
-Bug reports and patches can be sent by e-mail to ale@ventricle.dyndns.org.
 
 
 License
