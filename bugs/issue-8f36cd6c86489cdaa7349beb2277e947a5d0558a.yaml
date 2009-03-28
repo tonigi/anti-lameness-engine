@@ -20,4 +20,10 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - commented
   - One approach that may be worth investigating is compression (e.g., by PNG).
+- - 2009-03-28 22:56:07.802488 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Related to assertion failiure bug reported by Jari Juslin in message
+    [ale] Processing color negative scans with ALE (was: Help with aligning images)
 git_branch: 
