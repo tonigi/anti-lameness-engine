@@ -52,7 +52,7 @@ private:
 	static ale_pos _multi_decomp;
 	static ale_real _multi_improvement;
 
-	typedef unsigned int index_t;
+	typedef unsigned short index_t;
 
 	std::vector<trans_single> trans_stack;
 	std::vector<multi_coordinate> coord_stack;
