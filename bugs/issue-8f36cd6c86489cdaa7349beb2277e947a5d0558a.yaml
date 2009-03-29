@@ -26,4 +26,21 @@ log_events:
   - |-
     Related to assertion failiure bug reported by Jari Juslin in message
     [ale] Processing color negative scans with ALE (was: Help with aligning images)
+- - 2009-03-29 08:22:52.909320 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Patch sent to list, adapted for the current branch:
+    
+    --- a/d2/trans_multi.h
+    +++ b/d2/trans_multi.h
+    @@ -55,7 +55,7 @@ private:
+    static ale_pos _multi_decomp;
+    static ale_real _multi_improvement;
+    
+    -       typedef unsigned int index_t;
+    +       typedef unsigned short index_t;
+    
+    std::vector<trans_single> trans_stack;
+    std::vector<multi_coordinate> coord_stack;
 git_branch: 
