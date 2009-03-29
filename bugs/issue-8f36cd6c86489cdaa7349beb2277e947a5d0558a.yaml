@@ -43,4 +43,11 @@ log_events:
     
     std::vector<trans_single> trans_stack;
     std::vector<multi_coordinate> coord_stack;
+- - 2009-03-29 08:34:03.662057 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    One approach to solving this would be restricting the candidate set size
+    for each pixel in the map, so that, e.g., only regions neighboring a local
+    region (allowing any level of decomposition) can be mapped.
 git_branch: 
