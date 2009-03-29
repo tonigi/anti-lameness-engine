@@ -16,4 +16,17 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - created
   - ""
+- - 2009-03-29 23:46:56.060560 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Consider that a qualifier (e.g., -) might be added as a suffix to --ev added by
+    the wrapper script, so that these can be ignored in certain circumstances
+    (e.g., by default for initial exposure settings, or for exposure settings under
+    a new --exp-user-meta, or so, option).
+    
+    As another possibility, if OpenCL-enabled alignment is sufficiently fast,
+    alignments beginning with specified EV might by default be accompanied by
+    alignment with automatic EV, with final alignment determined by match
+    values after the final exposure adjustment occurs.
 git_branch: 
