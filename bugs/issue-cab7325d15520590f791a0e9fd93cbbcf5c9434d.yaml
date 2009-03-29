@@ -29,4 +29,12 @@ log_events:
     alignments beginning with specified EV might by default be accompanied by
     alignment with automatic EV, with final alignment determined by match
     values after the final exposure adjustment occurs.
+- - 2009-03-29 23:58:46.043533 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Consider that it might be useful to distinguish between default alignments and
+    non-default (as is done for --gs default), so that the former might rely on
+    wrapper-derived --ev by default for the default alignment case, but not for
+    alignments loaded from a file.
 git_branch: 
