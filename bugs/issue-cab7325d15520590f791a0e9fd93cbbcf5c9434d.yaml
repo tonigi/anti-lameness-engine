@@ -1,0 +1,19 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Modify alignment flow so that --ev determines initial exposure in cases where --exp-meta-only is not specified.
+desc: ""
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-03-29 18:36:44.854396 Z
+references: []
+
+id: cab7325d15520590f791a0e9fd93cbbcf5c9434d
+log_events: 
+- - 2009-03-29 18:36:46.182066 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
+git_branch: 
