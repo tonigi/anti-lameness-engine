@@ -79,9 +79,6 @@ The wrapper script *ale* recognizes the following environment variables:
 *EXIF_UTILITY*::
 	EXIF extraction utility to use.
 
-*ALE_COUNT_THREADS*::
-	Displays statistics on thread counts when set to a non-zero value.
-
 SEE ALSO
 --------
 More detailed manuals for certain versions of ALE are distributed with source
