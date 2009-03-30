@@ -1,0 +1,38 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Serious memory leak affecting all current versions.
+desc: |-
+  Jari Juslin reports in message '[ale] Processing color negative scans with ALE'
+  an apparent out-of-memory condition affecting 0.9 branch with --ips 0.  Testing
+  with 0.8.11.1 indicates that the 0.8 branch is affected also.  In particular,
+  the following commands result in memory increase without bounds (e.g., visible
+  in top or atop) throughout execution, which is unexpected for this
+  configuration:
+  
+  $ convert -size 1000x1000 xc:gray gray.png
+  $ ale-bin --cache 0 --no-inc --dchain zero --achain zero --perturb-upper=0 --ips 0 `for i in \`seq 1 1000\`; do echo -n "gray.png "; done` null:
+  
+  (Ignore the segfault following execution; this is a consequence of the 'zero'
+  filter.)
+  
+  Running 'valgrind' on an input set of smaller dimensions and frame count reveals
+  a number of memory leaks (reachable and unreachable) which have now been fixed.
+type: :bugfix
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :closed
+disposition: :fixed
+creation_time: 2009-03-30 18:46:16.735784 Z
+references: []
+
+id: ec7a9aea4ad735dc6d5e00fe93335cc4b93f7801
+log_events: 
+- - 2009-03-30 18:46:22.694825 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
+- - 2009-03-30 18:47:15.401088 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - closed with disposition fixed
+  - ""
+git_branch: 
