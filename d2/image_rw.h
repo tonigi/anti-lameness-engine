@@ -142,6 +142,9 @@ public:
 	 */
 	static image *read_image(const char *filename, exposure *exp, const char *name = "file", 
 			unsigned int bayer = IMAGE_BAYER_DEFAULT, int init_reference_gain = 0) {
+
+		static int warned = 0;
+
 		if (bayer == IMAGE_BAYER_DEFAULT)
 			bayer = bayer_default;
 
@@ -150,6 +153,16 @@ public:
 		}
 
 #ifdef USE_MAGICK
+
+                if (MaxRGB < 65535 && mcv == 65535 && !warned) {
+                        fprintf(stderr, "\n\n*** Warning: ImageMagick has not been compiled with 16 bit support.\n");
+                        fprintf(stderr, "*** Reading input using 8 bits per channel.\n");
+                        fprintf(stderr, "*** \n"); 
+                        fprintf(stderr, "*** (To silence this warning, specify option --8bpc)\n\n\n");
+
+			warned = 1;
+                }
+
 		/*
 		 * Patterned after http://www.imagemagick.org/www/api.html
 		 * and http://www.imagemagick.org/www/smile.c
@@ -327,6 +340,8 @@ public:
 	 * Write an image to a file
 	 */
 	static void write_image(const char *filename, const image *im, exposure *exp = output_exposure, int rezero = 0, int exp_scale_override = 0) {
+		static int warned = 0;
+
 		/*
 		 * Handle ALE-specific magical filenames.
 		 */
@@ -378,10 +393,13 @@ public:
 		else
 			mi->depth = 16;
 
-		if (MaxRGB < 65535 && mcv == 65535) {
-			fprintf(stderr, "\n\n*** Warning: 16 bit-per-channel file output was specified,\n");
-			fprintf(stderr, "*** but ImageMagick has not been compiled with support for this.\n");
+		if (MaxRGB < 65535 && mcv == 65535 && !warned) {
+			fprintf(stderr, "\n\n*** Warning: ImageMagick has not been compiled with 16 bit support.\n");
 			fprintf(stderr, "*** Writing output using 8 bits per channel.\n");
+                        fprintf(stderr, "*** \n"); 
+                        fprintf(stderr, "*** (To silence this warning, specify option --8bpc)\n\n\n");
+
+			warned = 1;
 		}
 
 		/*
