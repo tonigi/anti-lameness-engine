@@ -135,13 +135,17 @@ class image_rw {
 
 	static image *read_image_im_unaccel(const char *filename, exposure *exp, const char *name, 
 			unsigned int bayer, int init_reference_gain) {
+		static int warned = 0;
 #ifdef USE_MAGICK
 
-		if (MaxRGB < 65535 && mcv == 65535) {
-			fprintf(stderr, "\n\n*** Warning: 16 bit-per-channel file output was specified,\n");
-			fprintf(stderr, "*** but ImageMagick has not been compiled with support for 16 bits.\n");
-			fprintf(stderr, "*** Reading input using 8 bits per channel.\n\n\n");
-		}
+                if (MaxRGB < 65535 && mcv == 65535 && !warned) {
+                        fprintf(stderr, "\n\n*** Warning: ImageMagick has not been compiled with 16 bit support.\n");
+                        fprintf(stderr, "*** Reading input using 8 bits per channel.\n");
+                        fprintf(stderr, "*** \n"); 
+                        fprintf(stderr, "*** (To silence this warning, specify option --8bpc)\n\n\n");
+
+			warned = 1;
+                }
 
 		/*
 		 * Patterned after http://www.imagemagick.org/www/api.html
@@ -355,6 +359,8 @@ public:
 	 * Write an image to a file
 	 */
 	static void write_image(const char *filename, const image *im, exposure *exp = output_exposure, int rezero = 0, int exp_scale_override = 0) {
+		static int warned = 0;
+
 		/*
 		 * Handle ALE-specific magical filenames.
 		 */
@@ -412,10 +418,13 @@ public:
 		else
 			mi->depth = 16;
 
-		if (MaxRGB < 65535 && mcv == 65535) {
-			fprintf(stderr, "\n\n*** Warning: 16 bit-per-channel file output was specified,\n");
-			fprintf(stderr, "*** but ImageMagick has not been compiled with support for this.\n");
-			fprintf(stderr, "*** Writing output using 8 bits per channel.\n\n\n");
+		if (MaxRGB < 65535 && mcv == 65535 && !warned) {
+			fprintf(stderr, "\n\n*** Warning: ImageMagick has not been compiled with 16 bit support.\n");
+			fprintf(stderr, "*** Writing output using 8 bits per channel.\n");
+                        fprintf(stderr, "*** \n"); 
+                        fprintf(stderr, "*** (To silence this warning, specify option --8bpc)\n\n\n");
+
+			warned = 1;
 		}
 
 		/*
