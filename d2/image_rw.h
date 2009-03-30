@@ -234,6 +234,7 @@ public:
 		result = read_ppm(filename, exp, bayer);
 #endif
 
+#if 0
 		result->accel_domain_sequence();
 
 		image *accel_result = new image_accel(result);
@@ -241,6 +242,7 @@ public:
 		delete result;
 
 		result = accel_result;
+#endif
 
 		return result;
 	}
