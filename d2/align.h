@@ -1018,6 +1018,11 @@ public:
 				runs.back().add(args[ti].runs.back());
 			}
 
+#ifdef USE_PTHREAD
+			free(threads);
+			free(thread_attr);
+#endif
+
 			delete[] args;
 
 			ui::get()->d2_align_sample_stop();
@@ -1817,8 +1822,9 @@ public:
 
 		if (scale_clusters[0].input_scale < 1.0) {
 			delete scale_clusters[0].input;
-			delete scale_clusters[0].input_certainty;
 		}
+
+		delete scale_clusters[0].input_certainty;
 
 		free((void *)scale_clusters[0].ax_parameters);
 

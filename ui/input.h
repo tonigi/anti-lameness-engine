@@ -371,6 +371,8 @@ class input {
 			snprintf(desired_string, length, "%u %s", arg, name + strlen("0 "));
 
 			environment_map.erase(desired_string);
+
+			free(desired_string);
 		}
 
 		const char *get_string_arg(const char *name, unsigned int arg) {
