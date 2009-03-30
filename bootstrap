@@ -59,8 +59,8 @@ if ! which autoreconf &> /dev/null; then
 	exit
 fi
 
-if ! test -e /usr/share/autoconf-archive/acx_pthread.m4; then
-	echo "*** Cannot find file '/usr/share/autoconf-archive/acx_pthread.m4'. ***"
+if ! test -e /usr/share/aclocal/acx_pthread.m4; then
+	echo "*** Cannot find file '/usr/share/aclocal/acx_pthread.m4'. ***"
 	exit
 fi
 
@@ -69,11 +69,11 @@ fi
 #
 
 mkdir -p m4
-cp /usr/share/autoconf-archive/acx_pthread.m4 m4/.
-cp /usr/share/autoconf-archive/ax_lang_compiler_ms.m4 m4/.
-cp /usr/share/autoconf-archive/ax_check_gl.m4 m4/.
-cp /usr/share/autoconf-archive/ax_check_glu.m4 m4/.
-cp /usr/share/autoconf-archive/ax_check_glut.m4 m4/.
+cp /usr/share/aclocal/acx_pthread.m4 m4/.
+cp /usr/share/aclocal/ax_lang_compiler_ms.m4 m4/.
+cp /usr/share/aclocal/ax_check_gl.m4 m4/.
+cp /usr/share/aclocal/ax_check_glu.m4 m4/.
+cp /usr/share/aclocal/ax_check_glut.m4 m4/.
 
 #
 # Make documentation
