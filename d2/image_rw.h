@@ -51,7 +51,6 @@ class image_rw {
 	/*
 	 * Bit depth
 	 */
-	static unsigned int num_bits;
 	static unsigned int mcv;
 
 	/*
@@ -288,12 +287,10 @@ public:
 	}
 
 	static void depth16() {
-		num_bits = 16;
 		mcv = 65535;
 	}
 
 	static void depth8() {
-		num_bits = 8;
 		mcv = 255;
 	}
 
