@@ -40,13 +40,17 @@
  * Version Information
  */
 
+#ifdef USE_MAGICK
+#include <magick/api.h>
+#endif
+
 const char *package_name = PACKAGE_NAME;
 
 const char *short_version = VERSION;
 
 const char *version = PACKAGE_NAME " Version:      " VERSION "\n"
 #ifdef USE_MAGICK
-		"File handler:     ImageMagick\n"
+		"File handler:     " MagickPackageName " " MagickLibVersionText " " MagickReleaseDate " " MagickQuantumDepth "\n"
 #else
 		"File handler:     PPM\n"
 #endif
