@@ -12,6 +12,7 @@
 <edit by="David Hilvert" in-year="2006"/>
 <edit by="David Hilvert" in-year="2007"/>
 <edit by="David Hilvert" in-year="2008"/>
+<edit by="David Hilvert" in-year="2009"/>
 
 
 <articleinfo xmlns:xi="http://www.w3.org/2001/XInclude">
@@ -20,6 +21,13 @@
 </articleinfo>
 
 <news>
+
+<release version="0.9.0.3" date="2009-Mar-31">
+
+<p>This testing release fixes a serious memory leak, fixes an output bit depth
+bug, and refines bit depth checks.</p>
+
+</release>
 
 <release version="0.9.0.2" date="2008-Nov-05">
 
