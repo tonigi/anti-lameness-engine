@@ -1,3 +1,17 @@
+V	0.8.11.2 2009-Mar-31
+
+o	Revise --version to include ImageMagick library information.
+
+o	Add web documentation to this tree.
+
+o	Add ditz issue database and package document BUG-REPORTING.
+
+o	Add a manual page, as advised by Debian Developer Ruben Molina.
+
+o	Refine warnings for 8-bit output when --16bpc (incl. default).
+
+o	Fixed serious memory leak in alignment code, and less serious leaks.
+
 V	0.8.11.1 2008-Nov-04
 
 o	Fix build for Ubuntu 8.10, after this was reported by Mihai Varzaru as

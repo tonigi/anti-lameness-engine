@@ -20,6 +20,13 @@
 
 <news>
 
+<release version="0.8.11.2" date="2009-Mar-31">
+
+<p>This release fixes a serious memory leak, adds a manual page, and refines
+checks for bit depth capabilities.</p>
+
+</release>
+
 <release version="0.8.11.1" date="2008-Nov-04">
 
 <p>This release fixes certain compilation errors under recent GCC versions,
