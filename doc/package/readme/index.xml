@@ -274,7 +274,7 @@ file 'INSTALL' in the source package.</p>
 <s><t>On-line resources</t>
 
 <ll>Home Page               http://auricle.dyndns.org/ALE/
-darcs repository        http://auricle.dyndns.org/darcs/ale/
+git repository          http://repo.or.cz/w/Ale.git
 Mailing list archive    http://ventricle.dyndns.org/pipermail/ale/
 </ll>
 
