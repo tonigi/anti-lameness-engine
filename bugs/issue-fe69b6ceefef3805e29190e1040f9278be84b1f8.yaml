@@ -5,8 +5,8 @@ type: :task
 component: ale
 release: 
 reporter: David Hilvert <dhilvert@auricle.dyndns.org>
-status: :unstarted
-disposition: 
+status: :closed
+disposition: :fixed
 creation_time: 2009-03-30 19:52:00.861315 Z
 references: []
 
@@ -16,4 +16,8 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - created
   - ""
+- - 2009-03-31 12:23:33.521227 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - closed with disposition fixed
+  - Current configure seems to be OK for ImageMagick 6.4.5 2009-01-22 Q16 (shipped with Ubuntu).
 git_branch: 
