@@ -33,24 +33,21 @@ Testing
 ~~~~~~~
 
 `12`22~~~~~~~~~~~~
-link:download/ale-0.9.0.tar.gz[ale-0.9.0.tar.gz], Latest testing source release
-link:download/ale-0_9_0-win32.zip[ale-0_9_0-win32.zip], "Latest testing Win32 binary (PPM-only, unthreaded)"
+link:download/ale-0.9.0.3.tar.gz[ale-0.9.0.3.tar.gz], Latest testing source release
 ~~~~~~~~~~~~~~~~~~
 
 Stable
 ~~~~~~
 
 `12`22~~~~~~~~~~~~
-link:download/ale-0.8.11.tar.gz[ale-0.8.11.tar.gz], Latest stable source release
-link:download/ale-0_8_11-win32.zip[ale-0_8_11-win32.zip], "Latest stable Win32 binary (PPM-only, unthreaded)"
+link:download/ale-0.8.11.2.tar.gz[ale-0.8.11.2.tar.gz], Latest stable source release
 ~~~~~~~~~~~~~~~~~~
 
 Distribution Status
 ~~~~~~~~~~~~~~~~~~~
 
 `12`22~~~~~~~~~~~~
-http://losslessjpegtoolbox.wordpress.com/ale-options/[ALE Options (Win32)], 0.8.11
-http://www.debian.org/[Debian], 0.7.1
+http://www.debian.org/[Debian], 0.9.0.1
 http://www.freebsd.org/[FreeBSD], 0.8.4
 http://www.macports.org/[MacPorts], 0.8.7
 ~~~~~~~~~~~~~~~~~~
