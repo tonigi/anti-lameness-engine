@@ -139,7 +139,7 @@ class image_rw {
 #ifdef USE_MAGICK
 
                 if (MaxRGB < 65535 && mcv == 65535 && !warned) {
-                        fprintf(stderr, "\n\n*** Warning: ImageMagick has not been compiled with 16 bit support.\n");
+                        fprintf(stderr, "\n\n*** Warning: " MagickPackageName " has not been compiled with 16 bit support.\n");
                         fprintf(stderr, "*** Reading input using 8 bits per channel.\n");
                         fprintf(stderr, "*** \n"); 
                         fprintf(stderr, "*** (To silence this warning, specify option --8bpc)\n\n\n");
@@ -421,7 +421,7 @@ public:
 			mi->depth = 16;
 
 		if (MaxRGB < 65535 && mcv == 65535 && !warned) {
-			fprintf(stderr, "\n\n*** Warning: ImageMagick has not been compiled with 16 bit support.\n");
+			fprintf(stderr, "\n\n*** Warning: " MagickPackageName " has not been compiled with 16 bit support.\n");
 			fprintf(stderr, "*** Writing output using 8 bits per channel.\n");
                         fprintf(stderr, "*** \n"); 
                         fprintf(stderr, "*** (To silence this warning, specify option --8bpc)\n\n\n");
