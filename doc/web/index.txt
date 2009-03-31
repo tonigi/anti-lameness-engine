@@ -65,12 +65,6 @@ Manuals
 
 * link:manuals[Manuals]
 
-GUIs
-----
-
-* http://losslessjpegtoolbox.wordpress.com/ale-options/[ALE Options] Win32 GUI, by Michael Lee, free for non-commercial use.
-
-
 Mailing List
 ------------
 
