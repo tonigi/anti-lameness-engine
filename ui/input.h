@@ -1248,8 +1248,6 @@ public:
 				"EXIF_UTILITY",
 				"ALE_COUNT_THREADS",
 				"PAGER",
-				"ALE_SOFT_GPU",
-				"ALE_GPU_ACCEL_DEFAULT",
 				NULL
 			};
 
