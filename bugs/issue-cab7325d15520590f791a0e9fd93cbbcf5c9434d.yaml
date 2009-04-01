@@ -37,4 +37,13 @@ log_events:
     non-default (as is done for --gs default), so that the former might rely on
     wrapper-derived --ev by default for the default alignment case, but not for
     alignments loaded from a file.
+- - 2009-04-01 17:00:01.797700 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note that the approach of using multiple alignments from different starting
+    conditions (dependent on having a sufficiently fast computational substrate,
+    perhaps OpenCL) might also be applied to non-exposure variables, such as
+    for alignment of spatial positioning (perhaps eliminating the follow/identity
+    split.
 git_branch: 
