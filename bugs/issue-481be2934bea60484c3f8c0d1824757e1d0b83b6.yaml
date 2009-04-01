@@ -1,0 +1,19 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Consider adding sectioned manual (serving as help) pages in the style of git, or unsectioned (but also serving as help), in the style of mplayer.
+desc: ""
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-04-01 21:31:38.597218 Z
+references: []
+
+id: 481be2934bea60484c3f8c0d1824757e1d0b83b6
+log_events: 
+- - 2009-04-01 21:31:39.422246 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
+git_branch: 
