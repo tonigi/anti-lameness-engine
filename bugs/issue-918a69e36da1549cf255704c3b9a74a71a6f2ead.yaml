@@ -1,0 +1,23 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Consider adding bayer pattern auto-detection (e.g., by checking whether extrema tend to occur on particular grids).
+desc: ""
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-04-01 17:33:53.774829 Z
+references: []
+
+id: 918a69e36da1549cf255704c3b9a74a71a6f2ead
+log_events: 
+- - 2009-04-01 17:33:54.360437 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
+- - 2009-04-01 17:35:43.092157 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - edited title
+  - ""
+git_branch: 
