@@ -50,4 +50,10 @@ log_events:
     One approach to solving this would be restricting the candidate set size
     for each pixel in the map, so that, e.g., only regions neighboring a local
     region (allowing any level of decomposition) can be mapped.
+- - 2009-04-01 22:41:46.741662 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note that the int -> short patch was accidentally committed prior to 0.9.0.3,
+    and was included in that version.  This patch has since been reverted.
 git_branch: 
