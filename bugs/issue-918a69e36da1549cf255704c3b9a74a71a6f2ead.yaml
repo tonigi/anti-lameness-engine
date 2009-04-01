@@ -43,4 +43,11 @@ log_events:
     For distinguishing R/B, the commonest type for the given orientation might be
     chosen if no other marker is available (e.g., RGBG in the upright horizontal
     orientation is probably more common than BGRG).
+- - 2009-04-01 17:47:49.629116 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note further that autodetection might be overridden by detected values from
+    the script (e.g., based on a database within the script, or based on output
+    from a program such as dcraw, should relevant output be available).
 git_branch: 
