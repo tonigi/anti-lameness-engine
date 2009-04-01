@@ -29,4 +29,18 @@ log_events:
      '002.png (RGB )'*** okay (84.073183% match).
      '003.png (rgbg)'*** okay (90.266200% match).
      '004.png (gbgr)'*** okay (78.123316% match).
+- - 2009-04-01 17:46:49.842335 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Consider that, for detecting grayscale uninterpolated bayer patterns (e.g.,
+    those produced by dcraw -d/-D), it could be worthwhile to check for apparent
+    similarity within planes of candidate bayer patterns, when compared against
+    similarity in the grayscale image generally.  Such checks would, assumedly, be
+    performed solely on images found to be grayscale (e.g., images having all
+    channels equal for each pixel, if no other indicator of grayness is available).
+    
+    For distinguishing R/B, the commonest type for the given orientation might be
+    chosen if no other marker is available (e.g., RGBG in the upright horizontal
+    orientation is probably more common than BGRG).
 git_branch: 
