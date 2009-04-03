@@ -50,4 +50,14 @@ log_events:
     Note further that autodetection might be overridden by detected values from
     the script (e.g., based on a database within the script, or based on output
     from a program such as dcraw, should relevant output be available).
+- - 2009-04-03 14:10:05.538913 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note that, perhaps especially in the case of a GUI, a step might be added to
+    inquire whether a rendering looks OK, or whether red and blue values should be
+    swapped, and that, in the case that they should be swapped, a request might
+    be made that the user submits camera info (e.g., via EXIF) for updating the
+    bayer pattern database, perhaps along with certain program output (e.g., for
+    determining the assumed pattern, as well as the correct pattern).
 git_branch: 
