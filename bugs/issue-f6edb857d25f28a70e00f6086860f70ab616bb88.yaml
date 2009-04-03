@@ -1,0 +1,23 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Limited multi-pass registration
+desc: |-
+  Consider that, as a special case of the general multi-pass approach to
+  registration suggested (e.g., in current TODO), multiple passes might be
+  performed for positions of early images in a sequence (or perhaps early images
+  in a subsequence over a particular image region).
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-04-03 01:28:09.058241 Z
+references: []
+
+id: f6edb857d25f28a70e00f6086860f70ab616bb88
+log_events: 
+- - 2009-04-03 01:28:09.787624 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
+git_branch: 
