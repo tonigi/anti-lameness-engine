@@ -60,4 +60,18 @@ log_events:
     be made that the user submits camera info (e.g., via EXIF) for updating the
     bayer pattern database, perhaps along with certain program output (e.g., for
     determining the assumed pattern, as well as the correct pattern).
+- - 2009-04-03 14:23:11.454480 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Consider that, for requesting user input regarding patterns, rather than
+    requesting any information at the end of a run, a question might be asked at
+    the beginning (perhaps in conjunction with an image viewer such as display),
+    and, furthermore, that such questions should probably be limited to the case
+    where a grayscale bayer is provided as original input.  (In particular, the
+    case of color input and the case of raws processed by dcraw should be possible
+    to address in the typical case with no user input [e.g., as dcraw can be called
+    twice, once generating a color result].  For this case, however, a request
+    could still be made that a report be submitted regarding the hardware, so that
+    an addition could be made to the hardware database.
 git_branch: 
