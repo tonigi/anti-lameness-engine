@@ -81,4 +81,13 @@ log_events:
     Consider that a reasonable first implementation might be to add recognition for
     color inputs, either PPM or those read by ImageMagick (as this is probably the case
     most commonly seen, and also the case most in need of recognition).
+- - 2009-04-04 19:27:00.179279 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Consider that a reasonable definition of a preferred Bayer pattern might be one
+    that explains (e.g., via a particular sort of interpolation, such as triangle)
+    the input better than any other Bayer pattern, perhaps by some margin.  An
+    additional constraint (e.g., such as those previously considered) might be used
+    to determine whether a Bayer pattern is preferred over no Bayer pattern.
 git_branch: 
