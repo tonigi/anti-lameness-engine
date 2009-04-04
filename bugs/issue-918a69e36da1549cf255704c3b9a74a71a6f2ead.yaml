@@ -74,4 +74,11 @@ log_events:
     twice, once generating a color result].  For this case, however, a request
     could still be made that a report be submitted regarding the hardware, so that
     an addition could be made to the hardware database.
+- - 2009-04-04 18:56:15.772655 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Consider that a reasonable first implementation might be to add recognition for
+    color inputs, either PPM or those read by ImageMagick (as this is probably the case
+    most commonly seen, and also the case most in need of recognition).
 git_branch: 
