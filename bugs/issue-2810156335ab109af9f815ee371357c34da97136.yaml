@@ -19,4 +19,12 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - created
   - ""
+- - 2009-04-04 23:20:04.756736 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Consider that such a modified re-filtering step, or something similar, might
+    also be applied following Irani-Peleg adjustments, so that results reflecting
+    points having low certainty might be discarded in favor of a filtered result
+    from surrounding points.
 git_branch: 
