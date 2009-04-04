@@ -1,0 +1,22 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Consider revising re-filtering operation for more natural handling of low-certainty points
+desc: |-
+  In particular, when combining images of varying exposure, points having low
+  certainty (e.g., as a consequence of the exposure of the image) should probably
+  be dropped from refiltering, in favor of surrounding points.
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-04-04 22:38:15.743369 Z
+references: []
+
+id: 2810156335ab109af9f815ee371357c34da97136
+log_events: 
+- - 2009-04-04 22:38:16.359970 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
+git_branch: 
