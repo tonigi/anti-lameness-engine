@@ -27,4 +27,12 @@ log_events:
     also be applied following Irani-Peleg adjustments, so that results reflecting
     points having low certainty might be discarded in favor of a filtered result
     from surrounding points.
+- - 2009-04-05 08:57:00.478102 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note that, in any treatment of varying-exposure images in Irani-Peleg code,
+    it might be best to work on the certainty handling within the code (e.g.,
+    one-sided certainty and such) rather than applying any filter after the
+    run is complete.
 git_branch: 
