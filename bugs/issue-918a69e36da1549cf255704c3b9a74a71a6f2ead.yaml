@@ -90,4 +90,14 @@ log_events:
     the input better than any other Bayer pattern, perhaps by some margin.  An
     additional constraint (e.g., such as those previously considered) might be used
     to determine whether a Bayer pattern is preferred over no Bayer pattern.
+- - 2009-04-05 09:37:11.504870 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Consider that, in the case that orientation information is not present,
+    hardware database bayer pattern information might still be ignored in
+    favor of autodetection (since bayer patterns may change with orientation).
+    A weaker version of this would be to ignore the database bayer pattern
+    in cases where orientation information is not present and the orientation
+    is not a horizontal orientation (as observed by input resolution).
 git_branch: 
