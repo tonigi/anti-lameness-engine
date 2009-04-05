@@ -30,8 +30,7 @@
 #
 
 AC_PREREQ(2.60)
-AC_INIT(ALE, translit(m4_include(VERSION),'
-'), ale@ventricle.dyndns.org)
+AC_INIT(m4_esyscmd(./version -n package-name), m4_esyscmd(./version -n version), m4_esyscmd(./version -n mailing-list))
 AC_CONFIG_SRCDIR([ale_accum.h])
 AC_CONFIG_HEADER([config.h])
 
