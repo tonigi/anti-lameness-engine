@@ -23,6 +23,9 @@ if [ "$1" = "-n" ]; then
 elif [ "$1" = "-x" ]; then
 	XSLT_PROCESSOR="1"
 	shift
+elif [ "$1" = "-a" ]; then
+	ASCIIDOC_PROCESSOR="1"
+	shift
 fi
 
 #
@@ -35,6 +38,16 @@ if [ -z "$1" ]; then
 		j=`$0 $i`;
 		if [ -n "$XSLT_PROCESSOR" ]; then
 			echo -n "--stringparam $i \"$j\" "
+		elif [ -n "$ASCIIDOC_PROCESSOR" ]; then
+
+			# XXX: I can't get asciidoc -a spaces to work with
+			# double or single quotes; do this instead, as it
+			# allows values without spaces to continue to work.
+			#
+			# - dhilvert
+
+			j=`echo -n $j | sed -e 's/ /\\\\ /g'`
+			echo -n "-a $i=$j "
 		else
 			echo ":$i:	$j"
 		fi

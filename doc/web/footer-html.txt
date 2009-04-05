@@ -12,7 +12,7 @@ Copyright &copy; 2002, 2003, 2004, 2005, 2006, 2007, 2008
 This document is part of ALE.</p>
 <p>
 ALE is free software; you can redistribute it and/or modify it under the terms
-of the <a href="{ale-root}/download/COPYING">GNU General Public License</a> as
+of the <a href="{web-gpl-link}">GNU General Public License</a> as
 published by the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.</p>
 <p>
@@ -21,8 +21,8 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.</p>
 <p>
 This document was generated from <a href="index.txt">AsciiDoc&nbsp;Source</a>, an
-<a href="{ale-root}/footer-html.txt">AsciiDoc Footer</a>, and a <a
-href="{ale-root}/VERSION.txt">Version file</a>.  The generator script for this
+<a href="{web-root}/footer-html.txt">AsciiDoc Footer</a>, and a <a
+href="{web-root}/VERSION.txt">Version file</a>.  The generator script for this
 document is included in the corresponding <a href="{version-url}">source
 package</a>.</p>
 
