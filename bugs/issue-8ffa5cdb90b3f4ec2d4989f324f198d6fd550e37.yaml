@@ -16,4 +16,17 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - created
   - ""
+- - 2009-04-05 10:58:46.833488 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Consider that the bootstrap script might be modified to inject a variety of
+    package variables, including mailing list, home page, and package name; that
+    these might be built into the executable (and displayed with --version); and
+    that they might perhaps be stored within the VERSION file if any storage is
+    necessary for package configuration or re-configuration, or perhaps within
+    appropriately named package files (e.g., MAILING-LIST, PACKAGE-NAME, etc.).
+    
+    Note that asciidoc attribute entries might be used as a means of embedding the
+    variables into package documentation.
 git_branch: 
