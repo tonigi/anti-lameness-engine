@@ -89,6 +89,13 @@ make -C doc ../TODO ../README ../ChangeLog ../NEWS
 a2x -f manpage doc/man/ale.1.txt
 
 #
+# Make web documentation
+#
+
+cp VERSION doc/web/VERSION.txt
+find doc/web/. -name index.txt | xargs -r -n 1 asciidoc -a ale-root=`./version web-root` -a version=`./version version` -a version-url=`./version version-url` -f doc/web/footer-html.txt -b xhtml11
+
+#
 # Import GNU extension strndup
 #
 
