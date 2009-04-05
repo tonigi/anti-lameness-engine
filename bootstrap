@@ -93,7 +93,7 @@ a2x -f manpage doc/man/ale.1.txt
 #
 
 cp VERSION doc/web/VERSION.txt
-find doc/web/. -name index.txt | xargs -r -n 1 asciidoc -a ale-root=`./version web-root` -a version=`./version version` -a version-url=`./version version-url` -f doc/web/footer-html.txt -b xhtml11
+find doc/web/. -name index.txt | xargs -r -n 1 asciidoc `./version -a` -f doc/web/footer-html.txt -b xhtml11
 
 #
 # Import GNU extension strndup
