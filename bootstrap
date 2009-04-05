@@ -39,7 +39,7 @@ if test -e configure && test "x$1" != "x-r"; then
 	exit
 fi
 
-chmod a+x version
+chmod a+x version.sh
 
 if ! which gnulib-tool &> /dev/null; then
 	echo "*** Cannot find 'gnulib-tool'. ***"
@@ -83,7 +83,7 @@ cp /usr/share/aclocal/ax_check_glut.m4 m4/.
 
 chmod a+x doc/make-changelog
 chmod a+x doc/make-infos
-XSLT_VERSION_INFO=`./version -x`
+XSLT_VERSION_INFO=`./version.sh -x`
 export XSLT_VERSION_INFO
 make -C doc ../TODO ../README ../ChangeLog ../NEWS
 a2x -f manpage doc/man/ale.1.txt
@@ -93,7 +93,7 @@ a2x -f manpage doc/man/ale.1.txt
 #
 
 cp VERSION doc/web/VERSION.txt
-find doc/web/. -name index.txt | xargs -r -n 1 asciidoc `./version -a` -f doc/web/footer-html.txt -b xhtml11
+find doc/web/. -name index.txt | xargs -r -n 1 asciidoc `./version.sh -a` -f doc/web/footer-html.txt -b xhtml11
 
 #
 # Import GNU extension strndup
