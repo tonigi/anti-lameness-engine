@@ -39,6 +39,8 @@ if test -e configure && test "x$1" != "x-r"; then
 	exit
 fi
 
+chmod a+x version
+
 if ! which gnulib-tool &> /dev/null; then
 	echo "*** Cannot find 'gnulib-tool'. ***"
 	exit
@@ -81,6 +83,8 @@ cp /usr/share/aclocal/ax_check_glut.m4 m4/.
 
 chmod a+x doc/make-changelog
 chmod a+x doc/make-infos
+XSLT_VERSION_INFO=`./version -x`
+export XSLT_VERSION_INFO
 make -C doc ../TODO ../README ../ChangeLog ../NEWS
 a2x -f manpage doc/man/ale.1.txt
 
