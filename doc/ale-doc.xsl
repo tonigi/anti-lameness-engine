@@ -111,21 +111,13 @@
 	  -  Product information
           -->
 
-	<xsl:param name="product-name" select="'ALE'"/>
-	<xsl:param name="product-version" select="'0.8.11.2'"/>
-	<xsl:param name="site-URL" select="
-		concat('http://auricle.dyndns.org/', $product-name, '/')"/>
-	<xsl:param name="download-URL" select="concat($site-URL, 'download/')"/>
-	<xsl:param name="windows-binary-package-name" select="
-		concat(translate($product-name, &uppercase;, &lowercase;), '-', 
-		       translate($product-version, '.', '_'), '-win32.zip')"/>
-	<xsl:param name="source-package-name" select="
-		concat(translate($product-name, &uppercase;, &lowercase;), '-', $product-version)"/>
-	<xsl:param name="source-package-name-tar-gz" select="
-		concat($source-package-name, '.tar.gz')"/>
-	<xsl:param name="windows-binary-URL" select="concat($download-URL, $windows-binary-package-name)"/>
-	<xsl:param name="source-URL" select="concat($download-URL, $source-package-name-tar-gz)"/>
-	<xsl:param name="mailing-list-address" select="'ale@ventricle.dyndns.org'"/>
+	<xsl:param name="product-name" select="$package-name"/>
+	<xsl:param name="product-version" select="$version"/>
+	<xsl:param name="site-URL" select="$home-page"/>
+	<xsl:param name="source-package-name-tar-gz" select="$version-gz"/>
+	<xsl:param name="source-package-name" select="$version-pack"/>
+	<xsl:param name="source-URL" select="$version-url"/>
+	<xsl:param name="mailing-list-address" select="$mailing-list"/>
 
 	<!--
 	  -  License information

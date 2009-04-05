@@ -1,1 +1,20 @@
-git-repository
+:package-name:  ALE
+:version:   	git-repository
+:testing-ver:	0.9.0.3
+:stable-ver:	0.8.11.2
+:invocation:    ale
+:git-repo:	http://repo.or.cz/w/Ale.git
+:git-rss:	{git-repo}?a=rss
+:web-root:	http://auricle.dyndns.org/ALE
+:home-page:	{web-root}/
+:manuals-url:	{web-root}/manuals/
+:download-root:	{web-root}/download
+:web-gpl-link:	{download-root}/COPYING
+:version-pack:	{invocation}-{version}
+:version-gz:	{version-pack}.tar.gz
+:version-url:	{download-root}/{version-gz}
+:testing-url:	{download-root}/{invocation}-{testing-ver}.tar.gz
+:stable-url:	{download-root}/{invocation}-{stable-ver}.tar.gz
+:mailing-list:  ale@ventricle.dyndns.org
+:ml-listinfo:	http://ventricle.dyndns.org/cgi-bin/mailman/listinfo/ale
+:ml-archive:	http://ventricle.dyndns.org/pipermail/ale/

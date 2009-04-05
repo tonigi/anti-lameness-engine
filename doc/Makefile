@@ -64,7 +64,7 @@ TXT_MAKER_FLAGS = -dump
 
 # xsl
 XSLT = xsltproc
-XSLT_FLAGS = --xinclude
+XSLT_FLAGS = --xinclude $(XSLT_VERSION_INFO)
 
 # http://dblatex.sourceforge.net/
 DBLATEX = dblatex
