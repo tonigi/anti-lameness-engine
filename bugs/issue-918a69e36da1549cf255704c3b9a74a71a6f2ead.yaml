@@ -100,4 +100,18 @@ log_events:
     A weaker version of this would be to ignore the database bayer pattern
     in cases where orientation information is not present and the orientation
     is not a horizontal orientation (as observed by input resolution).
+- - 2009-04-05 09:42:03.072064 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note that even in the case that orientation information is never present, and
+    even in the case that this implies (through a given ALE policy) that the
+    specific bayer pattern in the database is never determining of the resulting
+    bayer pattern, it may still be desirable to ask that users submit information
+    for database addition, simply because this may allow elimination of the
+    possibility that the input is 3-channel RGB (e.g., in the case that the input
+    image is full resolution for the device and it is known that the device
+    is not 3-channel at every sensor site, then it is known that the input image
+    is not 3-channel at every sensor site [and so the best bayer option should
+    be preferred over 3-channel RGB]).
 git_branch: 
