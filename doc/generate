@@ -1,9 +1,0 @@
-ROOT=""
-VERSION=""
-
-[ -z "$1" ] || ROOT="-a ale-root=$1"
-[ -z "$2" ] || VERSION="-a version=$2"
-
-[ -z "$ROOT" ] && echo "No root specified." && exit 1
-
-find web/. -name index.txt | xargs -r -n 1 asciidoc $ROOT $VERSION -f web/footer-html.txt -b xhtml11
