@@ -2,6 +2,12 @@
 :version:   	git-repository
 :testing-ver:	0.9.0.3
 :stable-ver:	0.8.11.2
+:debian-dver:	0.9.0.1
+:freebsd-dver:	0.8.4
+:macports-dver:	0.8.7
+:debian-dref:	http://www.debian.org/[Debian]
+:freebsd-dref:	http://www.freebsd.org/[FreeBSD]
+:macports-dref:	http://www.macports.org/[MacPorts]
 :invocation:    ale
 :git-repo:	http://repo.or.cz/w/Ale.git
 :git-rss:	{git-repo}?a=rss
@@ -13,8 +19,12 @@
 :version-pack:	{invocation}-{version}
 :version-gz:	{version-pack}.tar.gz
 :version-url:	{download-root}/{version-gz}
-:testing-url:	{download-root}/{invocation}-{testing-ver}.tar.gz
-:stable-url:	{download-root}/{invocation}-{stable-ver}.tar.gz
+:testing-pack:	{invocation}-{testing-ver}
+:testing-gz:	{testing-pack}.tar.gz
+:testing-url:	{download-root}/{testing-gz}
+:stable-pack:	{invocation}-{stable-ver}
+:stable-gz:	{stable-pack}.tar.gz
+:stable-url:	{download-root}/{stable-gz}
 :mailing-list:  ale@ventricle.dyndns.org
 :ml-listinfo:	http://ventricle.dyndns.org/cgi-bin/mailman/listinfo/ale
 :ml-archive:	http://ventricle.dyndns.org/pipermail/ale/
