@@ -1,3 +1,5 @@
+include::VERSION.txt[]
+
 ALE
 ===
 
@@ -17,9 +19,9 @@ License
 
 **************************
 This program is free software; you can redistribute it and/or modify it under
-the terms of the link:download/COPYING[GNU General Public License] as published
-by the Free Software Foundation; either version 3 of the License, or (at your
-option) any later version.
+the terms of the {web-gpl-link}[GNU General Public License] as published by the
+Free Software Foundation; either version 3 of the License, or (at your option)
+any later version.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
@@ -33,40 +35,40 @@ Testing
 ~~~~~~~
 
 `12`22~~~~~~~~~~~~
-link:download/ale-0.9.0.3.tar.gz[ale-0.9.0.3.tar.gz], Latest testing source release
+{testing-url}[{testing-gz}], Latest testing source release
 ~~~~~~~~~~~~~~~~~~
 
 Stable
 ~~~~~~
 
 `12`22~~~~~~~~~~~~
-link:download/ale-0.8.11.2.tar.gz[ale-0.8.11.2.tar.gz], Latest stable source release
+{stable-url}[{stable-gz}], Latest stable source release
 ~~~~~~~~~~~~~~~~~~
 
 Distribution Status
 ~~~~~~~~~~~~~~~~~~~
 
 `12`22~~~~~~~~~~~~
-http://www.debian.org/[Debian], 0.9.0.1
-http://www.freebsd.org/[FreeBSD], 0.8.4
-http://www.macports.org/[MacPorts], 0.8.7
+{debian-dref}, {debian-dver}
+{freebsd-dref}, {freebsd-dver}
+{macports-dref}, {macports-dver}
 ~~~~~~~~~~~~~~~~~~
 
 Git Server
 ----------
 
-* http://repo.or.cz/w/Ale.git[Summary]
-* http://repo.or.cz/w/Ale.git?a=rss[RSS Feed]
+* {git-repo}[Summary]
+* {git-rss}[RSS Feed]
 * http://repo.or.cz/mob.html[Uploading via mob]
 
 Manuals
 -------
 
-* link:manuals[Manuals]
+* {manuals-url}[Manuals]
 
 Mailing List
 ------------
 
-* http://ventricle.dyndns.org/cgi-bin/mailman/listinfo/ale[Mailing List]
+* {ml-listinfo}[Mailing List]
 
 
