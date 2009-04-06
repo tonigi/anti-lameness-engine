@@ -33,11 +33,25 @@ fi
 #
 
 if [ -z "$1" ]; then
-	VARS=`cat VERSION | grep "^:.*:" | cut -d: -s -f 2`
+
+	# XXX: surely there's a better way to do this than sed and un-sed.
+	# Setting IFS seems to cause various disaster.
+
+	VARS=`cat VERSION | grep "^:.*:" | sed -e 's/ /%20/' | cut -d: -s -f 2`
 	for i in $VARS; do
-		j=`$0 $i`;
+		i=`echo -n $i | sed -e 's/%20/ /'`
+		j=`$0 "$i"`
 		if [ -n "$XSLT_PROCESSOR" ]; then
-			echo -n "--stringparam $i \"$j\" "
+			
+			# XXX: xsltproc reports a problem with too many
+			# parameters (!!!).  Get around this by excluding
+			# certain parameters.  We choose man page parameters,
+			# since we probably don't need these.
+
+			if ! echo $i | grep -q '^man '; then
+				echo -n "--stringparam $i \"$j\" "
+			fi
+
 		elif [ -n "$ASCIIDOC_PROCESSOR" ]; then
 
 			# XXX: Using include:: is better, but this option is
@@ -49,6 +63,7 @@ if [ -z "$1" ]; then
 			# - dhilvert
 
 			j=`echo -n $j | sed -e 's/ /\\\\ /g'`
+			i=`echo -n $i | sed -e 's/ /\\\\ /g'`
 			echo -n "-a $i=$j "
 		else
 			echo ":$i:	$j"
