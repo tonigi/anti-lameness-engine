@@ -62,7 +62,7 @@ if test "x$1" = "x-v"; then
 
 	cd $PACKAGE_NAME
 
-	if ! git checkout $BOOTSTRAP_VERSION; then
+	if ! git checkout $BOOTSTRAP_VERSION && ! git checkout origin/$BOOTSTRAP_VERSION; then
 		echo "$0: Could not check out version $BOOTSTRAP_VERSION."
 		cd $SOURCE_DIR
 		rm -rf $TEMPDIR
