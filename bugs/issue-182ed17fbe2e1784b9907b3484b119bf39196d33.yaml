@@ -18,4 +18,15 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - created
   - ""
+- - 2009-04-06 23:15:46.260987 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Another possible approach to combination with certainty over regions might be
+    to discard elements (or indeed images) having match indicating that they are
+    outliers (whether due to lack of focus or otherwise).  Consider further that,
+    if certainty weighting by frequency characteristics over a region is determined
+    by such characteristics measured without registration of exposure, then the
+    added noise at low (or clipping at high) exposure should not present a
+    significant factor of confusion.
 git_branch: 
