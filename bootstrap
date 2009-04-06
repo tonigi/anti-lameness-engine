@@ -37,6 +37,8 @@ if test "x$1" = "x-v"; then
 
 	SOURCE_DIR=`pwd`
 
+	REMOTE_REPO=`./version.sh git-repo` 
+
 	PACKAGE_NAME="ale-$BOOTSTRAP_VERSION"
 
 	TEMPDIR=`mktemp -d`
@@ -49,7 +51,7 @@ if test "x$1" = "x-v"; then
 		exit 1
 	fi
 
-	if ! git clone $SOURCE_DIR $PACKAGE_NAME; then
+	if ! git clone "$SOURCE_DIR" "$PACKAGE_NAME" && ! git clone "$REMOTE_REPO" "$PACKAGE_NAME"; then
 		echo "$0: Could not perform git clone."
 		cd $SOURCE_DIR
 		rm -rf $TEMPDIR
