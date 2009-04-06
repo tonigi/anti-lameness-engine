@@ -88,8 +88,7 @@ a2x -f manpage doc/man/ale.1.txt
 # Make web documentation
 #
 
-cp VERSION doc/web/VERSION.txt
-find doc/web/. -name index.txt | xargs -r -n 1 asciidoc `./version.sh -a` -f doc/web/footer-html.txt -b xhtml11
+make -C doc/web
 
 #
 # Import GNU extension strndup

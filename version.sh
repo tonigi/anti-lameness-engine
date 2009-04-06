@@ -40,7 +40,9 @@ if [ -z "$1" ]; then
 			echo -n "--stringparam $i \"$j\" "
 		elif [ -n "$ASCIIDOC_PROCESSOR" ]; then
 
-			# XXX: I can't get asciidoc -a spaces to work with
+			# XXX: Using include:: is better, but this option is
+			# here for completeness.  Unfortunately, I can't get
+			# asciidoc -a values having spaces to work with either
 			# double or single quotes; do this instead, as it
 			# allows values without spaces to continue to work.
 			#
