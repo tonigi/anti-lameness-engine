@@ -1,3 +1,5 @@
+include::../../VERSION[]
+
 ALE(1)
 ======
 David Hilvert <dhilvert@gmail.com>
