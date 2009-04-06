@@ -162,7 +162,8 @@ chmod a+x doc/make-infos
 XSLT_VERSION_INFO=`./version.sh -x`
 export XSLT_VERSION_INFO
 make -C doc ../TODO ../README ../ChangeLog ../NEWS
-a2x -f manpage doc/man/ale.1.txt
+# XXX: Asciidoc considers out-of-directory includes unsafe.
+a2x --asciidoc-opts="--unsafe" -f manpage doc/man/ale.1.txt
 
 #
 # Make web documentation

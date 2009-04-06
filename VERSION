@@ -9,6 +9,9 @@
 :freebsd-dref:	http://www.freebsd.org/[FreeBSD]
 :macports-dref:	http://www.macports.org/[MacPorts]
 :invocation:    ale
+:man source:	Ale
+:man version:	{version}
+:man manual:	Ale Manual
 :git-repo:	http://repo.or.cz/w/Ale.git
 :git-rss:	{git-repo}?a=rss
 :web-root:	http://auricle.dyndns.org/ALE
@@ -28,3 +31,4 @@
 :mailing-list:  ale@ventricle.dyndns.org
 :ml-listinfo:	http://ventricle.dyndns.org/cgi-bin/mailman/listinfo/ale
 :ml-archive:	http://ventricle.dyndns.org/pipermail/ale/
+
