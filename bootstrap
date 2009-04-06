@@ -24,6 +24,78 @@
 ###
 
 #
+# If a version argument is given, generate a tarball.
+#
+
+if test "x$1" = "x-v"; then
+	BOOTSTRAP_VERSION=$2
+
+	if test "x$BOOTSTRAP_VERSION" = "x"; then
+		echo "bootstrap: -v requires a version argument."
+		exit 1
+	fi
+
+	SOURCE_DIR=`pwd`
+
+	PACKAGE_NAME="ale-$BOOTSTRAP_VERSION"
+
+	TEMPDIR=`mktemp -d`
+
+	cd $TEMPDIR
+
+	if test $SOURCE_DIR = `pwd`; then
+		echo "$0: could not change directory from source."
+		cd $SOURCE_DIR
+		exit 1
+	fi
+
+	if ! git clone $SOURCE_DIR $PACKAGE_NAME; then
+		echo "$0: Could not perform git clone."
+		cd $SOURCE_DIR
+		rm -rf $TEMPDIR
+		exit 1
+	fi
+
+	cd $PACKAGE_NAME
+
+	if ! git checkout $BOOTSTRAP_VERSION; then
+		echo "$0: Could not check out version $BOOTSTRAP_VERSION."
+		cd $SOURCE_DIR
+		rm -rf $TEMPDIR
+		exit 1
+	fi
+
+	mv .git ../git-moved-$BOOTSTRAP_VERSION
+
+	if grep ":version:" VERSION; then
+		(echo ":%s/^:version:.*/:version:	$BOOTSTRAP_VERSION/"; echo ":wq") | ex VERSION
+	elif test -e VERSION; then
+		echo "$BOOTSTRAP_VERSION" > VERSION
+	fi
+
+	if test -e bootstrap && (! chmod a+x bootstrap || ! ./bootstrap); then
+		echo "$0: Nested bootstrap failed."
+		cd $SOURCE_DIR
+		rm -rf $TEMPDIR
+		exit 1
+	fi
+
+	cd ..
+
+	tar czf $PACKAGE_NAME.tar.gz $PACKAGE_NAME
+
+	cd $SOURCE_DIR
+
+	mv $TEMPDIR/$PACKAGE_NAME.tar.gz .
+
+	rm -rf $TEMPDIR
+
+	echo "Bootstrapped package created as $PACKAGE_NAME.tar.gz."
+
+	exit 0
+fi
+
+#
 # Check for the existence of a configure script.
 #
 
@@ -36,34 +108,34 @@ if test -e configure && test "x$1" != "x-r"; then
 	echo ""
 	echo "* To regenerate configure, run '$0 -r'"
 	echo
-	exit
+	exit 1
 fi
 
 chmod a+x version.sh
 
 if ! which gnulib-tool &> /dev/null; then
 	echo "*** Cannot find 'gnulib-tool'. ***"
-	exit
+	exit 1
 fi
 
 if ! which ln &> /dev/null; then
 	echo "*** Cannot find 'ln'. ***"
-	exit
+	exit 1
 fi
 
 if ! which automake &> /dev/null; then
 	echo "*** Cannot find 'automake'. ***"
-	exit 
+	exit 1
 fi
 
 if ! which autoreconf &> /dev/null; then
 	echo "*** Cannot find 'autoreconf'. ***"
-	exit
+	exit 1
 fi
 
 if ! test -e /usr/share/aclocal/acx_pthread.m4; then
 	echo "*** Cannot find file '/usr/share/aclocal/acx_pthread.m4'. ***"
-	exit
+	exit 1
 fi
 
 #
