@@ -16,4 +16,11 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - created
   - ""
+- - 2009-04-07 14:31:08.043623 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note that something like info format would also be appropriate, especially in
+    the case that it were more widely supported (e.g., having output from asciidoc,
+    or better rendering within the Gnome help browser (yelp)).
 git_branch: 
