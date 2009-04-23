@@ -1,0 +1,19 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Fix broken formats.html link for manuals other than 0.8.x.  (See change for 0.8.x manual, suggested by Carl Shapiro.)
+desc: ""
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-04-23 22:29:53.112896 Z
+references: []
+
+id: ac0c28cbaf03d4bbc5bd255e449625b38a876638
+log_events: 
+- - 2009-04-23 22:29:54.201491 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - ""
+git_branch: 
