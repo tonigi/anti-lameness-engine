@@ -30,7 +30,7 @@
 #include "pixel.h"
 #include "exposure/exposure.h"
 
-#define IMAGE_BAYER_NONE 0
+#define IMAGE_BAYER_NONE ALE_BAYER_NONE
 
 /*
  * This constant indicates that some other default value should be filled in.
@@ -42,10 +42,10 @@
  * Do not change these values without inspecting
  * image_bayer_ale_real::r_*_offset().
  */
-#define IMAGE_BAYER_RGBG 0x4 /* binary 100 */
-#define IMAGE_BAYER_GBGR 0x5 /* binary 101 */
-#define IMAGE_BAYER_GRGB 0x6 /* binary 110 */
-#define IMAGE_BAYER_BGRG 0x7 /* binary 111 */
+#define IMAGE_BAYER_RGBG ALE_BAYER_RGBG
+#define IMAGE_BAYER_GBGR ALE_BAYER_GRGB  /* inverse sense (libale clockwise vs. ALE counterclockwise) */
+#define IMAGE_BAYER_GRGB ALE_BAYER_GBGR  /* inverse sense (libale clockwise vs. ALE counterclockwise) */
+#define IMAGE_BAYER_BGRG ALE_BAYER_BGRG
 
 #define ALE_GLSL_IMAGE_INCLUDE \
 "struct image {\n"\

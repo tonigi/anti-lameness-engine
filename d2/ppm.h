@@ -137,13 +137,27 @@ static inline int is_eppm(const char *filename) {
 	return 1;
 }
 
-static inline image *read_ppm(const char *filename, exposure *e, unsigned int bayer, int init_reference_gain = 0) {
+static int ppm_void_file_close(void *f) {
+	return fclose((FILE *) f);
+}
+
+static int ppm_short_little_endian_check() {
+	/*
+	 * Modified from http://unixpapa.com/incnote/byteorder.html
+	 */
+	
+	short one = 1;
+	return (*((char *)(&one)));
+}
+
+static inline ale_image read_ppm(const char *filename, exposure *e, unsigned int bayer, int init_reference_gain = 0) {
 	unsigned int i, j, k;
-	image *im;
+	ale_image im;
 	unsigned char m1, m2, val;
 	int m3, m4;
-	int ival;
-	int w, h, mcv;
+	long ival;
+	int w, h;
+	unsigned long mcv;  // XXX: could be 32 bit, which could break things.
 	int n;
 	struct extended_t extended;
 	FILE *f = fopen(filename, "rb");
@@ -202,7 +216,7 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 	/* Maximum component value */
 
 	eat_comments(f, filename, &extended);
-	n = fscanf(f, "%d", &mcv);
+	n = fscanf(f, "%lu", &mcv);
 	assert(n == 1);
 	assert(mcv <= 65535 || m2 == '3');
 
@@ -215,15 +229,6 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 	if (n != 1 || (mcv > 65535 && m2 == '6'))
 		error_ppm(filename);
 
-	/* Make a new image */
-
-	if (bayer == IMAGE_BAYER_NONE)
-		im = new_image_ale_real(h, w, 3, "file", e);
-	else 
-		im = new_image_bayer_ale_real(h, w, 3, bayer, "file", e);
-
-	assert (im);
-
 	/* Trailing whitespace */
 
 	if (fgetc(f) == EOF) {
@@ -231,12 +236,37 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 		error_ppm(filename);
 	}
 
-	/* Pixels */
+	/* Make a new image */
 
-	for (i = 0; i < im->height(); i++)
-	for (j = 0; j < im->width();  j++) {
-		pixel p;
-		for (k = 0; k < im->depth();  k++) {
+	im = ale_new_image(accel::context(), 
+			(bayer == IMAGE_BAYER_NONE) ? ALE_IMAGE_RGB : ALE_IMAGE_Y,
+			(mcv <= 255) ? ALE_TYPE_UINT_8 :
+			((mcv <= 65535) ? ALE_TYPE_UINT_16 :
+			((mcv <= 4294967295ul ? ALE_TYPE_UINT_32 : ALE_TYPE_UINT_64))));		// (XXX: mcv type may be too short for this to be meaningful.)
+
+	if (m2 == '6' && bayer == IMAGE_BAYER_NONE 
+	 && (mcv <= 255 || ppm_short_little_endian_check())) {
+
+		/*
+		 * For 3-channel binary 8-bit, and 16-bit on little-endian
+		 * systems, use a file suffix.
+		 */
+
+		ale_image_set_file_static(im, w, h, f, ftell(f), ppm_void_file_close, f);
+
+	} else {
+
+		/*
+		 * For all others, convert data via a new, temporary file.
+		 */
+
+		FILE *converted_f = tmpfile();
+
+		/* Pixels */
+
+		for (i = 0; i < h; i++)
+		for (j = 0; j < w;  j++)
+		for (k = 0; k < 3;  k++) {
 
 			if (m2 == '6') {
 
@@ -266,21 +296,28 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 
 				eat_comments(f, filename, &extended);
 
-				n = fscanf(f, "%d", &ival);
+				n = fscanf(f, "%ld", &ival);
 
 				assert (n == 1);
 				if (n != 1)
 					error_ppm(filename);
 			}
 
-			p[k] = ale_real_from_int(ival, mcv);
+			if (!ale_has_channel(i, j, k, bayer))
+				continue;
 
+			fprintf(converted_f, "%c", ((char *) ival)[0]);
+			if (mcv > 255)
+				fprintf(converted_f, "%c", ((char *) ival)[1]);
+			if (mcv > 65535)
+				fprintf(converted_f, "%c%c", ((char *) ival)[2], ((char *) ival)[3]);
+			if (mcv > 4294967295ul)
+				fprintf(converted_f, "%c%c%c%c", ((char *) ival)[4], ((char *) ival)[5], ((char *) ival)[6], ((char *) ival)[7]);   // XXX: ival might be too short for this
 		}
 
-		pixel p_linear = (e->linearize(p) - e->get_multiplier() * extended.black_level)
-			       / (1 - extended.black_level);
+		 ale_image_set_file_static(im, w, h, converted_f, 0, ppm_void_file_close, converted_f);
 
-		im->set_pixel(i, j, p_linear);
+		 fclose(f);
 	}
 
 	/* Handle exposure and gain */
@@ -308,10 +345,6 @@ static inline image *read_ppm(const char *filename, exposure *e, unsigned int ba
 						     / combined_gain);
 		}
 	}
-
-	/* Done */
-
-	fclose(f);
 
 	return im;
 }

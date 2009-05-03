@@ -217,9 +217,9 @@ public:
 	/*
 	 * Read an image from a file
 	 */
-	static image *read_image(const char *filename, exposure *exp, const char *name = "file", 
+	static ale_image read_image(const char *filename, exposure *exp, const char *name = "file", 
 			unsigned int bayer = IMAGE_BAYER_DEFAULT, int init_reference_gain = 0) {
-		image *result;
+		ale_image result;
 
 		if (bayer == IMAGE_BAYER_DEFAULT)
 			bayer = bayer_default;
@@ -229,19 +229,9 @@ public:
 		}
 
 #ifdef USE_MAGICK
-		result = read_image_im_unaccel(filename, exp, name, bayer, init_reference_gain);
+		result = read_image_im(filename, exp, name, bayer, init_reference_gain);
 #else
 		result = read_ppm(filename, exp, bayer);
-#endif
-
-#if 0
-		result->accel_domain_sequence();
-
-		image *accel_result = new image_accel(result);
-
-		delete result;
-
-		result = accel_result;
 #endif
 
 		return result;
