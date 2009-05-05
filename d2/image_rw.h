@@ -87,7 +87,7 @@ class image_rw {
 	 */
 	static const char **filenames;
 	static unsigned int file_count;
-	static const image **images;
+	static ale_image *images;
 	static int *files_open;
 
 	/*
@@ -262,7 +262,7 @@ public:
 		input_exposure = _input_exposure;
 		output_exposure = _output_exposure;
 
-		images = (const image **)malloc(file_count * sizeof(image *));
+		images = (ale_image *)malloc(file_count * sizeof(ale_image));
 		bayer_specific = (unsigned int *)malloc(file_count * sizeof(unsigned int));
 		files_open = (int *)calloc(file_count, sizeof(int));
 
@@ -587,7 +587,7 @@ public:
 			return bayer_specific[n];
 	}
 
-	static const image *open(unsigned int n) {
+	static const ale_image open(unsigned int n) {
 		assert (n <  file_count);
 		assert (!files_open[n]);
 
@@ -602,7 +602,7 @@ public:
 			return images[n];
 
 		ui::get()->loading_file();
-		image *i = read_image(filenames[n], input_exposure[n], "file", bayer(n), (n == 0));
+		ale_image i = read_image(filenames[n], input_exposure[n], "file", bayer(n), (n == 0));
 
 		images[n] = i;
 
@@ -614,12 +614,12 @@ public:
 			open(n);
 	}
 
-	static const image *get_open(unsigned int n) {
+	static ale_image get_open(unsigned int n) {
 		assert (files_open[n]);
 		return images[n];
 	}
 
-	static image *copy(unsigned int n, const char *name) {
+	static ale_image copy(unsigned int n, const char *name) {
 		assert (n <  file_count);
 
 		if (files_open[n])
