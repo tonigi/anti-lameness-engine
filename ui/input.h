@@ -1418,6 +1418,7 @@ public:
 		d2::pixel exp_mult = d2::pixel(1, 1, 1);
 		std::map<const char *, d3::pt> d3_output_pt;
 		std::map<const char *, d3::pt> d3_depth_pt;
+		double cache = 256; /* MB */
 
 		/*
 		 * dchain is ochain[0].
@@ -2129,10 +2130,7 @@ public:
 			} else if (!strcmp(option_name, "ip")) {
 				unsupported::discontinued("--ip <r> <i>", "--lpsf box=<r> --ips <i>");
 			} else if (!strcmp(option_name, "cache")) {
-				double cache = env->get_double_arg(i->first, 1);
-
-				d2::image_rw::set_cache(cache);
-
+				cache = env->get_double_arg(i->first, 1);
 			} else if (!strcmp(option_name, "resident")) {
 				double resident = env->get_double_arg(i->first, 1);
 
@@ -2628,6 +2626,8 @@ public:
 
 		d2::image_rw::init(input_file_count, input_files, files[files.size() - 1].first,
 				input_exposure, output_exposure);
+
+		ale_image_seq image_seq = ale_new_image_seq(open_file_by_number, NULL, cache);
 
 		ochain_names[0] = files[files.size() - 1].first;
 

@@ -96,12 +96,6 @@ class image_rw {
 	static int latest_close_num;
 
 	/*
-	 * Maximum cache size, in megabytes (2^20 * bytes), for images not most
-	 * recently closed.
-	 */
-	static double cache_size_max;
-
-	/*
 	 * Actual cache size.
 	 */
 	static double cache_size;
@@ -316,10 +310,6 @@ public:
 	static void depth8() {
 		num_bits = 8;
 		mcv = 255;
-	}
-
-	static void set_cache(double size) {
-		cache_size_max = size;
 	}
 
 	static void destroy() {
