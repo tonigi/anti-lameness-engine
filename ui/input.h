@@ -2627,7 +2627,7 @@ public:
 		d2::image_rw::init(input_file_count, input_files, files[files.size() - 1].first,
 				input_exposure, output_exposure);
 
-		ale_sequence sequence = ale_new_sequence(seq_file, seq_trans, seq_ex, NULL, cache);
+		ale_sequence sequence = ale_new_sequence(seq_file, seq_trans, seq_ex, seq_render, seq_ui, NULL, cache);
 
 		ochain_names[0] = files[files.size() - 1].first;
 
@@ -2747,6 +2747,8 @@ public:
 		/*
 		 * Iterate through all files.
 		 */
+
+		ale_sequence_run(sequence);
 
 		for (unsigned int j = 0; j < d2::image_rw::count(); j++) {
 
