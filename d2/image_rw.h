@@ -577,6 +577,12 @@ public:
 			return bayer_specific[n];
 	}
 
+	static const ale_image open_simple(unsigned int n) {
+		assert (n <  file_count);
+
+		return read_image(filenames[n], input_exposure[n], "file", bayer(n), (n == 0));
+	}
+
 	static const ale_image open(unsigned int n) {
 		assert (n <  file_count);
 		assert (!files_open[n]);

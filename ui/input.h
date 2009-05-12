@@ -1204,6 +1204,18 @@ class input {
 	}
 
 public:
+
+	/*
+	 * Libale Sequence structure and functions.
+	 */
+
+	struct seq_struct {
+	};
+
+	ale_image seq_file(int n, void *seq) {
+		return d2::image_rw::open_simple(n);
+	}
+	
 	/*
 	 * Input handler.
 	 *
@@ -2627,7 +2639,9 @@ public:
 		d2::image_rw::init(input_file_count, input_files, files[files.size() - 1].first,
 				input_exposure, output_exposure);
 
-		ale_sequence sequence = ale_new_sequence(seq_file, seq_trans, seq_ex, seq_render, seq_ui, NULL, cache);
+		seq_struct seq;
+
+		ale_sequence sequence = ale_new_sequence(seq_file, seq_trans, seq_ex, seq_step, seq_ui, (void *) &seq, cache);
 
 		ochain_names[0] = files[files.size() - 1].first;
 
