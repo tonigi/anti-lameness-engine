@@ -1210,10 +1210,26 @@ public:
 	 */
 
 	struct seq_struct {
+		ale_exclusion_list ex;
+		ale_render *ochain;
+		int oc_count;
 	};
 
-	ale_image seq_file(int n, void *seq) {
+	ale_image seq_file(int n, ale_sequence s) {
 		return d2::image_rw::open_simple(n);
+	}
+
+	ale_trans seq_trans(int n, ale_sequence s) {
+		return align::of(n);
+	}
+
+	ale_exclusion_list seq_ex(int n, ale_sequence s) {
+		return ((seq_struct *) ale_sequence_data(s))->ex;
+	}
+
+	void seq_step(int n, ale_sequence s) {
+		seq_struct *seq_data = (seq_struct *) ale_sequence_data(s);
+
 	}
 	
 	/*
