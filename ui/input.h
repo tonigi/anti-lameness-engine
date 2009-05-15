@@ -1215,21 +1215,24 @@ public:
 		int oc_count;
 	};
 
-	ale_image seq_file(int n, ale_sequence s) {
+	static ale_image seq_file(int n, ale_sequence s) {
 		return d2::image_rw::open_simple(n);
 	}
 
-	ale_trans seq_trans(int n, ale_sequence s) {
+	static ale_trans seq_trans(int n, ale_sequence s) {
 		return align::of(n);
 	}
 
-	ale_exclusion_list seq_ex(int n, ale_sequence s) {
+	static ale_exclusion_list seq_ex(int n, ale_sequence s) {
 		return ((seq_struct *) ale_sequence_data(s))->ex;
 	}
 
-	void seq_step(int n, ale_sequence s) {
+	static void seq_step(int n, ale_sequence s) {
 		seq_struct *seq_data = (seq_struct *) ale_sequence_data(s);
 
+	}
+
+	static void seq_ui(int n, ale_sequence s) {
 	}
 	
 	/*
