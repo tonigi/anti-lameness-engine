@@ -1213,28 +1213,35 @@ public:
 		ale_exclusion_list ex;
 		ale_render *ochain;
 		int oc_count;
+		int extend;
 	};
 
-	static ale_image seq_file(int n, ale_sequence s) {
+	static ale_image seq_file(ale_sequence s, int n) {
 		return d2::image_rw::open_simple(n);
 	}
 
-	static ale_trans seq_trans(int n, ale_sequence s) {
+	static ale_trans seq_trans(ale_sequence s, int n) {
 		return align::of(n);
 	}
 
-	static ale_exclusion_list seq_ex(int n, ale_sequence s) {
+	static ale_exclusion_list seq_ex(ale_sequence s, int n) {
 		return ((seq_struct *) ale_sequence_data(s))->ex;
-	}
-
-	static void seq_step(int n, ale_sequence s) {
-		seq_struct *seq_data = (seq_struct *) ale_sequence_data(s);
-
 	}
 
 	static void seq_ui(int n, ale_sequence s) {
 	}
 	
+	static void seq_step(ale_sequence s, int n) {
+		seq_struct *seq_data = (seq_struct *) ale_sequence_data(s);
+
+		for (int i = 0; i < seq_data->oc_count; i++) {
+			if (seq_data->extend || n == 0)
+				ale_render_extend_sync(seq_data->ochain[i], s, n);
+
+			ale_render_merge_sync(seq_data->ochain[i], s, n);
+		}
+	}
+
 	/*
 	 * Input handler.
 	 *
@@ -2660,7 +2667,7 @@ public:
 
 		seq_struct seq;
 
-		ale_sequence sequence = ale_new_sequence(seq_file, seq_trans, seq_ex, seq_step, seq_ui, (void *) &seq, cache);
+		ale_sequence sequence = ale_new_sequence(seq_file, seq_trans, seq_ex, seq_ui, (void *) &seq, cache);
 
 		ochain_names[0] = files[files.size() - 1].first;
 
@@ -2781,7 +2788,7 @@ public:
 		 * Iterate through all files.
 		 */
 
-		ale_sequence_run(sequence);
+		ale_sequence_run(sequence, seq_step);
 
 		for (unsigned int j = 0; j < d2::image_rw::count(); j++) {
 
