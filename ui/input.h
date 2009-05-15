@@ -1209,13 +1209,6 @@ public:
 	 * Libale Sequence structure and functions.
 	 */
 
-	struct seq_struct {
-		ale_exclusion_list ex;
-		ale_render *ochain;
-		int oc_count;
-		int extend;
-	};
-
 	static ale_image seq_file(ale_sequence s, int n) {
 		return d2::image_rw::open_simple(n);
 	}
@@ -1225,20 +1218,20 @@ public:
 	}
 
 	static ale_exclusion_list seq_ex(ale_sequence s, int n) {
-		return ((seq_struct *) ale_sequence_data(s))->ex;
+		return ((input *) ale_sequence_data(s))->ex;
 	}
 
 	static void seq_ui(int n, ale_sequence s) {
 	}
 	
 	static void seq_step(ale_sequence s, int n) {
-		seq_struct *seq_data = (seq_struct *) ale_sequence_data(s);
+		input *input_data = (input *) ale_sequence_data(s);
 
-		for (int i = 0; i < seq_data->oc_count; i++) {
-			if (seq_data->extend || n == 0)
-				ale_render_extend_sync(seq_data->ochain[i], s, n);
+		for (int i = 0; i < input_data->oc_count; i++) {
+			if (input_data->extend || n == 0)
+				ale_render_extend_sync(input_data->ochain[i], s, n);
 
-			ale_render_merge_sync(seq_data->ochain[i], s, n);
+			ale_render_merge_sync(input_data->ochain[i], s, n);
 		}
 	}
 
@@ -2665,9 +2658,7 @@ public:
 		d2::image_rw::init(input_file_count, input_files, files[files.size() - 1].first,
 				input_exposure, output_exposure);
 
-		seq_struct seq;
-
-		ale_sequence sequence = ale_new_sequence(seq_file, seq_trans, seq_ex, seq_ui, (void *) &seq, cache);
+		ale_sequence sequence = ale_new_sequence(seq_file, seq_trans, seq_ex, seq_ui, (void *) this, cache);
 
 		ochain_names[0] = files[files.size() - 1].first;
 
