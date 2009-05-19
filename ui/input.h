@@ -1224,15 +1224,130 @@ public:
 	static void seq_ui(int n, ale_sequence s) {
 	}
 	
-	static void seq_step(ale_sequence s, int n) {
+	static void seq_step(ale_sequence s, int j) {
 		input *input_data = (input *) ale_sequence_data(s);
 
-		for (int i = 0; i < input_data->oc_count; i++) {
-			if (input_data->extend || n == 0)
-				ale_render_extend_sync(input_data->ochain[i], s, n);
+		/*
+		 * Iterate through non-global options
+		 */
 
-			ale_render_merge_sync(input_data->ochain[i], s, n);
+		environment *env = files[j].second;
+
+		for (std::map<const char *, const char *>::iterator i = env->get_map().begin();
+				i != env->get_map().end(); i++) {
+
+			if (!env->is_option(i->first))
+				continue;
+
+			const char *option_name = env->get_option_name(i->first);
+
+			if (!strcmp(option_name, "mc")) {
+				d2::align::mc(env->get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "md")) {
+				d2::trans_multi::set_md(env->get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "ma-cert")) {
+				d2::align::set_ma_cert(env->get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "mi")) {
+				d2::trans_multi::set_mi(env->get_double_arg(i->first, 1));
+			} else if (!strcmp(option_name, "gs-mo")) {
+				const char *option = env->get_string_arg(i->first, 1);
+				double gs_mo;
+				int characters;
+				sscanf(option, "%lf%n", &gs_mo, &characters);
+				if (*(option + characters) == '%')
+					d2::align::gs_mo(gs_mo, 1);
+				else
+					d2::align::gs_mo(gs_mo, 0);
+			} else if (!strcmp(option_name, "ev")) {
+				double ev = env->get_double_arg(i->first, 1);
+				double gain_value = pow(2, -ev);
+
+				if (j == 0)
+					d2::exposure::set_gain_reference(gain_value);
+				else 
+					input_exposure[j]->set_gain_multiplier(
+							(double) d2::exposure::get_gain_reference()
+						      / gain_value);
+
+			} else if (!strcmp(option_name, "black")) {
+				double black = env->get_double_arg(i->first, 1);
+				input_exposure[j]->set_black_level(black);
+			} else if (!strcmp(option_name, "perturb-upper")) {
+				const char *option = env->get_string_arg(i->first, 1);
+				double perturb_upper;
+				int characters;
+				sscanf(option, "%lf%n", &perturb_upper, &characters);
+				if (*(option + characters) == '%')
+					d2::align::set_perturb_upper(perturb_upper, 1);
+				else
+					d2::align::set_perturb_upper(perturb_upper, 0);
+			} else if (!strcmp(option_name, "threads")) {
+				thread::set_count((unsigned int) env->get_int_arg(i->first, 1));
+			} else if (!strcmp(option_name, "per-cpu")) {
+				thread::set_per_cpu((unsigned int) env->get_int_arg(i->first, 1));
+			} else {
+				/*
+				 * This error should be encountered earlier.
+				 */
+
+				assert(0);
+
+				fprintf(stderr, "\n\nError: option `%s' must be applied globally.", option_name);
+				fprintf(stderr, "\n\nHint:  Move option `%s' prior to file and scope operators.\n\n", 
+						option_name);
+				exit(1);
+			}
 		}
+
+		if (j == 0) {
+
+			/*
+			 * Write comment information about original frame and
+			 * target image to the transformation save file, if we
+			 * have one.
+			 */
+
+			tsave_orig(tsave, files[0].first);
+			tsave_target(tsave, files[files.size() - 1].first);
+
+			ui::get()->original_frame_start(files[0].first);
+
+		} else {
+
+			/*
+			 * Write comment information about the supplemental
+			 * frame to the transformation save file, if we have
+			 * one.
+			 */
+
+			tsave_info (tsave, name);
+
+			ui::get()->supplemental_frame_start(d2::image_rw::name(j));
+
+		}
+
+		for (int i = 0; i < input_data->oc_count; i++) {
+
+			ui::get()->set_orender_current(opt);
+
+			if (input_data->extend || j == 0)
+				ale_render_extend_sync(input_data->ochain[i], s, j);
+
+			ale_render_merge_sync(input_data->ochain[i], s, j);
+
+			if (inc) {
+				ui::get()->writing_output(opt);
+				d2::image_rw::write_image(ochain_names[opt], ochain[opt]->get_image(0));
+			}
+
+			d2::vise_core::frame_queue_add(j);
+		}
+
+		if (j == 0)
+			ui::get()->original_frame_done();
+		else
+			ui::get()->supplemental_frame_done();
+
 	}
 
 	/*
@@ -2783,144 +2898,6 @@ public:
 
 		for (unsigned int j = 0; j < d2::image_rw::count(); j++) {
 
-			/*
-			 * Iterate through non-global options
-			 */
-
-			environment *env = files[j].second;
-
-			for (std::map<const char *, const char *>::iterator i = env->get_map().begin();
-					i != env->get_map().end(); i++) {
-
-				if (!env->is_option(i->first))
-					continue;
-
-				const char *option_name = env->get_option_name(i->first);
-
-				if (!strcmp(option_name, "mc")) {
-					d2::align::mc(env->get_double_arg(i->first, 1));
-				} else if (!strcmp(option_name, "md")) {
-					d2::trans_multi::set_md(env->get_double_arg(i->first, 1));
-				} else if (!strcmp(option_name, "ma-cert")) {
-					d2::align::set_ma_cert(env->get_double_arg(i->first, 1));
-				} else if (!strcmp(option_name, "mi")) {
-					d2::trans_multi::set_mi(env->get_double_arg(i->first, 1));
-				} else if (!strcmp(option_name, "gs-mo")) {
-					const char *option = env->get_string_arg(i->first, 1);
-					double gs_mo;
-					int characters;
-					sscanf(option, "%lf%n", &gs_mo, &characters);
-					if (*(option + characters) == '%')
-						d2::align::gs_mo(gs_mo, 1);
-					else
-						d2::align::gs_mo(gs_mo, 0);
-				} else if (!strcmp(option_name, "ev")) {
-					double ev = env->get_double_arg(i->first, 1);
-					double gain_value = pow(2, -ev);
-
-					if (j == 0)
-						d2::exposure::set_gain_reference(gain_value);
-					else 
-						input_exposure[j]->set_gain_multiplier(
-								(double) d2::exposure::get_gain_reference()
-							      / gain_value);
-
-				} else if (!strcmp(option_name, "black")) {
-					double black = env->get_double_arg(i->first, 1);
-					input_exposure[j]->set_black_level(black);
-				} else if (!strcmp(option_name, "perturb-upper")) {
-					const char *option = env->get_string_arg(i->first, 1);
-					double perturb_upper;
-					int characters;
-					sscanf(option, "%lf%n", &perturb_upper, &characters);
-					if (*(option + characters) == '%')
-						d2::align::set_perturb_upper(perturb_upper, 1);
-					else
-						d2::align::set_perturb_upper(perturb_upper, 0);
-				} else if (!strcmp(option_name, "threads")) {
-					thread::set_count((unsigned int) env->get_int_arg(i->first, 1));
-				} else if (!strcmp(option_name, "per-cpu")) {
-					thread::set_per_cpu((unsigned int) env->get_int_arg(i->first, 1));
-				} else {
-					/*
-					 * This error should be encountered earlier.
-					 */
-
-					assert(0);
-
-					fprintf(stderr, "\n\nError: option `%s' must be applied globally.", option_name);
-					fprintf(stderr, "\n\nHint:  Move option `%s' prior to file and scope operators.\n\n", 
-							option_name);
-					exit(1);
-				}
-			}
-
-
-
-			if (j == 0) {
-
-				/*
-				 * Write comment information about original frame and
-				 * target image to the transformation save file, if we
-				 * have one.
-				 */
-
-				tsave_orig(tsave, files[0].first);
-				tsave_target(tsave, files[files.size() - 1].first);
-
-				/*
-				 * Handle the original frame.
-				 */
-
-				// ui::get()->original_frame_start(argv[i]);
-				ui::get()->original_frame_start(files[0].first);
-
-				for (int opt = 0; opt < oc_count; opt++) {
-					ui::get()->set_orender_current(opt);
-					ochain[opt]->sync(0);
-					if  (inc) {
-						ui::get()->writing_output(opt);
-						d2::image_rw::write_image(ochain_names[opt], 
-							ochain[opt]->get_image(0));
-					}
-				}
-
-				d2::vise_core::frame_queue_add(0);
-
-				ui::get()->original_frame_done();
-
-				continue;
-			}
-
-			/*
-			 * Handle supplemental frames.
-			 */
-
-			const char *name = d2::image_rw::name(j);
-
-			ui::get()->supplemental_frame_start(name);
-
-			/*
-			 * Write comment information about the
-			 * supplemental frame to the transformation
-			 * save file, if we have one.
-			 */
-
-			tsave_info (tsave, name);
-
-			for (int opt = 0; opt < oc_count; opt++) {
-				ui::get()->set_orender_current(opt);
-				ochain[opt]->sync(j);
-				if (inc) {
-					ui::get()->writing_output(opt);
-					d2::image_rw::write_image(ochain_names[opt], 
-						ochain[opt]->get_image(j));
-				}
-			}
-
-			d2::vise_core::frame_queue_add(j);
-
-			ui::get()->supplemental_frame_done();
 		}
 
 		/*
