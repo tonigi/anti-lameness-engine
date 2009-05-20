@@ -2896,10 +2896,6 @@ public:
 
 		ale_sequence_run(sequence, seq_step);
 
-		for (unsigned int j = 0; j < d2::image_rw::count(); j++) {
-
-		}
-
 		/*
 		 * Do any post-processing and output final image
 		 *
