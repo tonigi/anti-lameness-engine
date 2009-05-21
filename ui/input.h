@@ -1221,7 +1221,7 @@ public:
 		return ((input *) ale_sequence_data(s))->ex;
 	}
 
-	static void seq_ui(int n, ale_sequence s) {
+	static void seq_status(int n, ale_sequence s) {
 	}
 	
 	static void seq_step(ale_sequence s, int j) {
@@ -2773,7 +2773,7 @@ public:
 		d2::image_rw::init(input_file_count, input_files, files[files.size() - 1].first,
 				input_exposure, output_exposure);
 
-		ale_sequence sequence = ale_new_sequence(seq_file, seq_trans, seq_ex, seq_ui, (void *) this, cache);
+		ale_sequence sequence = ale_new_sequence(seq_file, seq_trans, seq_ex, seq_status, (void *) this, cache);
 
 		ochain_names[0] = files[files.size() - 1].first;
 
