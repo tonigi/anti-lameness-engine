@@ -2908,16 +2908,22 @@ public:
 		 * renderer.
 		 */
 
-		for (int opt = 1; opt < oc_count; opt++) 
-		if  ((ochain[opt]->sync() || !inc) && !psf_match) {
-			ui::get()->writing_output(opt);
-			d2::image_rw::write_image(ochain_names[opt], ochain[opt]->get_image());
+		for (int opt = 1; opt < oc_count; opt++) {
+			ale_render_stream_process(ochain[opt], sequence);
+
+			if ((sync_updated || !inc) && !psf_match) {
+				ui::get()->writing_output(opt);
+				d2::image_rw::write_image(ochain_names[opt], ochain[opt]->get_image());
+			}
 		}
 
-		if (oc_count > 0)
-		if ((ochain[0]->sync() || !inc) && !psf_match) {
-			ui::get()->writing_output(0);
-			d2::image_rw::write_image(ochain_names[0], ochain[0]->get_image());
+		if (oc_count > 0) {
+			ale_render_stream_process(ochain[0], sequence);
+
+			if ((sync_updated || !inc) && !psf_match) {
+				ui::get()->writing_output(0);
+				d2::image_rw::write_image(ochain_names[0], ochain[0]->get_image());
+			}
 		}
 
 		/*
