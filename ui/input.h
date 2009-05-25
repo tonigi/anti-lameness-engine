@@ -2863,22 +2863,7 @@ public:
 		}
 #endif
 
-		if (psf_match) {
-			
-			/*
-			 * Point-spread function calibration renderer.
-			 * This renderer does not produce image output.
-			 * It is reserved for use with the point-spread
-			 * function calibration script
-			 * ale-psf-calibrate.
-			 */
-
-			ochain[0] = new d2::psf_calibrate(ochain[0],
-					1, inc, response[psf_linear],
-					response[psf_nonlinear],
-					psf_match_args);
-
-		} else if (ip_iterations != 0) {
+		if (ip_iterations != 0) {
 
 			/*
 			 * Irani-Peleg renderer
@@ -2895,6 +2880,51 @@ public:
 		 */
 
 		ale_sequence_run(sequence, seq_step);
+
+		/*
+		 * Output a summary match statistic.
+		 */
+
+		ui::get()->ale_2d_done((double) d2::align::match_summary());
+
+		/*
+		 * Special case for point-spread function calibration
+		 * renderer.  This renderer does not produce image
+		 * output.  It is reserved for use with the
+		 * point-spread function calibration script
+		 * ale-psf-calibrate.
+		 */
+
+		if (psf_match) {
+			
+			/*
+			 * Point-spread function calibration renderer.
+			 * This renderer does not produce image output.
+			 * It is reserved for use with the point-spread
+			 * function calibration script
+			 * ale-psf-calibrate.
+			 */
+
+			fprintf(stderr, "\nIPC Calibration option enabled.\n\n");
+			fprintf(stderr, "(This option is designed for use with a calibration script.)\n\n");
+
+			/*
+			 * TODO: assign response values appropriately for
+			 * Libale, and remove the below code.
+			 */
+
+			ochain[0] = new d2::psf_calibrate(ochain[0],
+					1, inc, response[psf_linear],
+					response[psf_nonlinear],
+					psf_match_args);
+
+			double diff = ale_psf_error(ale_sequence_retain_image(sequence, input_file_count - 1), sequence);
+			
+			fprintf(stderr, "\n\nPSF Error:: %e\n\n", (double) diff);
+
+			exit(0);
+		}
+
 
 		/*
 		 * Do any post-processing and output final image
@@ -2925,12 +2955,6 @@ public:
 				d2::image_rw::write_image(ochain_names[0], ochain[0]->get_image());
 			}
 		}
-
-		/*
-		 * Output a summary match statistic.
-		 */
-
-		ui::get()->ale_2d_done((double) d2::align::match_summary());
 
 		/*
 		 * Perform any 3D tasks
