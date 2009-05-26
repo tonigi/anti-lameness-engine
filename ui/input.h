@@ -2910,7 +2910,9 @@ public:
 
 			/*
 			 * TODO: assign response values appropriately for
-			 * Libale, and remove the below code.
+			 * Libale, and remove the below code.  This can
+			 * probably be done by passing a response object to
+			 * d2::align in the seq_step loop.
 			 */
 
 			ochain[0] = new d2::psf_calibrate(ochain[0],
