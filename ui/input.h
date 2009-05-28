@@ -2608,7 +2608,7 @@ public:
 		// int input_file_count = argc - i - 1;
 		int input_file_count = files.size() - 1;
 
-		d2::psf *device_response[psf_N] = { NULL, NULL };
+		ale_psf device_response[psf_N] = { NULL, NULL };
 		d2::exposure **input_exposure = NULL;
 		ale_pos view_angle = 43.7 * M_PI / 180;  
 		// ale_pos view_angle = 90 * M_PI / 180;  
@@ -2714,10 +2714,16 @@ public:
 		 * Configure the response function.
 		 */
 
-		d2::psf *response[2] = {NULL, NULL};
+		ale_psf response[2] = {NULL, NULL};
 
 		for (int n = 0; n < psf_N; n++ ) {
 			if (psf[n] != NULL) {
+
+				response[n] = ale_new_psf(accel::context(), psf[n]);
+
+				/*
+				 * TODO: migrate PSF parser to Libale, and remove below code.
+				 */
 
 				response[n] = d2::psf_parse::get((n == psf_linear), psf[n]);
 
@@ -2741,6 +2747,12 @@ public:
 					 * Default lpsf is a box filter
 					 * of diameter 1.0 (radius
 					 * 0.5).
+					 */
+
+					response[n] = ale_new_psf(accel::context(), "box:1");
+
+					/*
+					 * TODO: migrate PSF parser to Libale, and remove below code.
 					 */
 
 					response[n] = new d2::box(0.5);
