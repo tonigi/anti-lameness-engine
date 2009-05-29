@@ -627,6 +627,13 @@ public:
 		return images[n];
 	}
 
+#if 0
+	/*
+	 * XXX: as far as I can tell, 'copy' is currently always used
+	 * as a kind of 'retain', so that calls to this can probably be
+	 * replaced by calls to an appropriate retain method.
+	 */
+
 	static ale_image copy(unsigned int n, const char *name) {
 		assert (n <  file_count);
 
@@ -637,6 +644,12 @@ public:
 			return i;
 		}
 	}
+#endif
+
+#if 0
+	/*
+	 * This method should be replaced by ale_sequence_release_image.
+	 */
 
 	static void close(unsigned int image) {
 		assert (image <  file_count);
@@ -670,6 +683,7 @@ public:
 		for (unsigned int n = 0; n < file_count; n++) 
 			close(n);
 	}
+#endif
 
 };
 
