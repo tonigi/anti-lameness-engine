@@ -127,7 +127,7 @@ class image_rw {
 #endif
 	}
 
-	static image *read_image_im_unaccel(const char *filename, exposure *exp, const char *name, 
+	static ale_image read_image_im(const char *filename, exposure *exp, const char *name, 
 			unsigned int bayer, int init_reference_gain) {
 		static int warned = 0;
 #ifdef USE_MAGICK
@@ -149,7 +149,8 @@ class image_rw {
 		ExceptionInfo exception;
 		Image *mi;
 		ImageInfo *image_info;
-		image *im;
+		ale_image im;
+		FILE *converted_f = tmpfile();
 		const PixelPacket *p;
 
 		unsigned int i, j;
@@ -169,10 +170,11 @@ class image_rw {
 		if (mi == (Image *) NULL)
 			exit(1);
 
-		if (bayer == IMAGE_BAYER_NONE)
-			im = new_image_ale_real(mi->rows, mi->columns, 3, name, exp);
-		else
-			im = new_image_bayer_ale_real(mi->rows, mi->columns, 3, bayer, name, exp);
+		im = ale_new_image(accel::context(),
+			(bayer == IMAGE_BAYER_NONE) ? ALE_IMAGE_RGB : ALE_IMAGE_Y,
+			(image_info->depth == 8) ? ALE_TYPE_UINT_8 :
+			((image_info->depth == 16) ? ALE_TYPE_UINT_16 :
+			((image_info->depth == 32) ? ALE_TYPE_UINT_32 : ALE_TYPE_UINT_64)));
 
 		for (i = 0; i < mi->rows; i++) {
 			p = AcquireImagePixels(mi, 0, i, mi->columns, 1, &exception);
@@ -183,19 +185,29 @@ class image_rw {
 				exit(1);
 
 			for (j = 0; j < mi->columns; j++) {
-
-				pixel input ( ale_real_from_int(p->red, MaxRGB),
-					      ale_real_from_int(p->green, MaxRGB),
-					      ale_real_from_int(p->blue, MaxRGB) );
-
-				pixel linear_input = (exp->linearize(input) - exp->get_multiplier() * black_level)
-					           / (1 - black_level);
 				
-				im->set_pixel(i, j, linear_input);
+				long ival[3] = { p->red, p->green, p->blue };
+
+				for (int k = 0; k < 3; k++) {
+
+					if (!ale_has_channel(i, j, k, bayer))
+						continue;
+
+					fprintf(converted_f, "%c", ((char *) ival)[0]);
+					if (image_info->depth >= 16)
+						fprintf(converted_f, "%c", ((char *) ival)[1]);
+					if (image_info->depth >= 32)
+						fprintf(converted_f, "%c%c", ((char *) ival)[2], ((char *) ival)[3]);
+					if (image_info->depth >= 64)
+						fprintf(converted_f, "%c%c%c%c", ((char *) ival)[4], ((char *) ival)[5], ((char *) ival)[6], ((char *) ival)[7]);   // XXX: ival might be too short for this
+
+				}
 
 				p++;
 			}
 		}
+
+		ale_image_set_file_static(im, mi->columns, mi->rows, converted_f, 0, ppm_void_file_close, converted_f);
 
 		DestroyImage(mi);
 		DestroyImageInfo(image_info);

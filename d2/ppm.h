@@ -242,7 +242,7 @@ static inline ale_image read_ppm(const char *filename, exposure *e, unsigned int
 			(bayer == IMAGE_BAYER_NONE) ? ALE_IMAGE_RGB : ALE_IMAGE_Y,
 			(mcv <= 255) ? ALE_TYPE_UINT_8 :
 			((mcv <= 65535) ? ALE_TYPE_UINT_16 :
-			((mcv <= 4294967295ul ? ALE_TYPE_UINT_32 : ALE_TYPE_UINT_64))));		// (XXX: mcv type may be too short for this to be meaningful.)
+			((mcv <= 4294967295ul) ? ALE_TYPE_UINT_32 : ALE_TYPE_UINT_64)));		// (XXX: mcv type may be too short for this to be meaningful.)
 
 	if (m2 == '6' && bayer == IMAGE_BAYER_NONE 
 	 && (mcv <= 255 || ppm_short_little_endian_check())) {
