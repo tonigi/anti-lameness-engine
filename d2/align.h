@@ -104,7 +104,7 @@ private:
 	 * Non-certainty alignment weights
 	 */
 
-	static image *alignment_weights;
+	static ale_image alignment_weights;
 
 	/*
 	 * Latest transformation.
@@ -3064,7 +3064,7 @@ public:
 	 */
 	static void reset_weights() {
 		if (alignment_weights != NULL)
-			delete alignment_weights;
+			ale_image_release(alignment_weights);
 
 		alignment_weights = NULL;
 	}
@@ -3148,9 +3148,9 @@ public:
 		if (exit_status)
 			ui::get()->fork_failure("d2::align");
 
-		image *wmx_weights = image_rw::read_image(wmx_file, exp_def);
+		ale_image wmx_weights = image_rw::read_image(wmx_file, exp_def);
 
-		if (wmx_weights->height() != rows || wmx_weights->width() != cols)
+		if (ale_image_get_height(wmx_weights) != rows || ale_image_get_width(wmx_weights) != cols)
 			ui::get()->error("algorithmic weighting must not change image size");
 
 		if (alignment_weights == NULL)
