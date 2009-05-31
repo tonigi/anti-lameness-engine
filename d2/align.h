@@ -74,8 +74,7 @@ private:
 
 	static render *reference;
 	static filter::scaled_filter *interpolant;
-	static const image *reference_image;
-	static const image *reference_defined;
+	static ale_image reference_image;
 
  	/*
 	 * Per-pixel alignment weight map
@@ -2369,14 +2368,11 @@ public:
 		if (alignment_weights != NULL) 
 			return;
 
-		int rows = reference_image->height();
-		int cols = reference_image->width();
-		int colors = reference_image->depth();
-
-		alignment_weights = new_image_ale_real(rows, cols,
-				colors, "alignment_weights");
+		alignment_weights = ale_new_image(accel::context(), ALE_IMAGE_RGB, ale_image_get_type(reference_image));
 
 		assert (alignment_weights);
+
+		ale_resize_image(alignment_weights, 0, 0, ale_image_get_width(reference_image), ale_image_get_height(reference_image));
 
 		for (int i = 0; i < rows; i++)
 		for (int j = 0; j < cols; j++)
