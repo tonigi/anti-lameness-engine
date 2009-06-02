@@ -2372,11 +2372,9 @@ public:
 
 		assert (alignment_weights);
 
-		ale_resize_image(alignment_weights, 0, 0, ale_image_get_width(reference_image), ale_image_get_height(reference_image));
+		assert (!ale_resize_image(alignment_weights, 0, 0, ale_image_get_width(reference_image), ale_image_get_height(reference_image)));
 
-		for (int i = 0; i < rows; i++)
-		for (int j = 0; j < cols; j++)
-			alignment_weights->set_pixel(i, j, pixel(1, 1, 1));
+		ale_image_map_0(alignment_weights, "SET_PIXEL(p, PIXEL(1, 1, 1))");
 	}
 	
 	/*
