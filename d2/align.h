@@ -2389,6 +2389,11 @@ public:
 
 		init_weights();
 
+		/*
+		 * XXX: the below bounds-checking logic should be migrated to 
+		 * ale_image_map_update_2(), and the below code removed.
+		 */
+
 		point map_offset = reference_image->offset() - weight_map->offset();
 
 		int rows = reference_image->height();
@@ -2405,6 +2410,14 @@ public:
 					alignment_weights->get_pixel(i, j) 
 				      * weight_map->get_bl(map_weight_position));
 		}
+
+		/*
+		 * XXX: this should perhaps use GET_PIXEL_BI_GEOMETRIC, or GET_PIXEL_BI_MINIMUM
+		 * (as, e.g., implemented in the deprecated image::get_bl() method).
+		 */
+
+		ale_image_map_update_2(alignment_weights, weight_map, " \
+			SET_PIXEL(p, GET_PIXEL(0, p) * GET_PIXEL_BL(1, p))");
 	}
 
 	/*
