@@ -2387,6 +2387,7 @@ public:
 
 		init_weights();
 
+#if 0
 		/*
 		 * XXX: the below bounds-checking logic should be migrated to 
 		 * ale_image_map_update_2(), and the below code removed.
@@ -2408,6 +2409,7 @@ public:
 					alignment_weights->get_pixel(i, j) 
 				      * weight_map->get_bl(map_weight_position));
 		}
+#endif
 
 		/*
 		 * XXX: this should perhaps use GET_PIXEL_BI_GEOMETRIC, or GET_PIXEL_BI_MINIMUM
