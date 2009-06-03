@@ -975,31 +975,6 @@ public:
 		return ic;
 	}
 
-	/*
-	 * Acceleration domain sequence point.
-	 */
-
-	virtual void accel_domain_sequence() {
-	}
-
-	/*
-	 * Acceleration type.  0 indicates that the type's pixels are directly
-	 * accessible; 1 indicates pixels are of image_accel type.
-	 */
-
-	virtual int accel_type() {
-		return 0;
-	}
-
-	/*
-	 * Unaccelerated equivalent of an image.  Unaccelerated images return
-	 * NULL.
-	 */
-
-	virtual image *unaccel_equiv() const {
-		return NULL;
-	}
-
 	virtual ~image() {
 	}
 };
