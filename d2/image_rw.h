@@ -360,23 +360,63 @@ public:
 		 */
 
 		if (!strcmp(filename, "dump:")) {
+			FILE *image_data = ale_image_retain_file(im);
+
 			fprintf(stderr, "Image dump: ");
-			for (unsigned int i = 0; i < im->height(); i++)
-			for (unsigned int j = 0; j < im->width(); j++) {
-				pixel p = im->get_pixel(i, j);
-				fprintf(stderr, "(%d, %d): [%f %f %f] ", i, j, (double) p[0], (double) p[1], (double) p[2]);
+			for (unsigned int i = 0; i < ale_image_get_height(im); i++)
+			for (unsigned int j = 0; j < ale_image_get_width(im); j++) {
+				fprintf(stderr, "(%d, %d): ", i, j);
+
+				int format = ale_image_get_format(im);
+				int type = ale_image_get_type(im);
+
+				fprintf(stderr, "[");
+				for (unsigned int k = 0; k < ale_image_get_depth(im); k++) {
+					if (k != 0)
+						fprintf(stderr, " ");
+
+					double result = 0;
+					unsigned char data[8];
+
+					switch (type) {
+					ALE_TYPE_UINT_8:
+						fscanf(image_data, "%c", &data[0]);
+						result = (double) data[0];
+						break;
+					ALE_TYPE_UINT_16:
+						unsigned char data[2];
+						fscanf(image_data, "%c%c", &data[0], &data[1]);
+						result = (double) *((unsigned short *) data);
+						break;
+					ALE_TYPE_UINT_32:
+						fscanf(image_data, "%c%c%c%c", &data[0], &data[1], &data[2], &data[3]);
+						result = (double) *((unsigned int *) data);
+						break;
+					ALE_TYPE_UINT_64:
+						fscanf(image_data, "%c%c%c%c%c%c%c%c", &data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6], &data[7]);
+						result = (double) *((unsigned long *) data);  // XXX: may not be long enough.
+						break;
+					ALE_TYPE_FLOAT_32:
+						fscanf(image_data, "%c%c%c%c", &data[0], &data[1], &data[2], &data[3]);
+						result = (double) *((float *) data);
+						break;
+					ALE_TYPE_FLOAT_64:
+						fscanf(image_data, "%c%c%c%c%c%c%c%c", &data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6], &data[7]);
+						result = *((double *) data);
+						break;
+					}
+
+					fprintf(stderr, "%f", result);
+				}
+				fprintf(stderr, "] ");
 			}
 			fprintf(stderr, "\n");
+
+			ale_image_release_file(im, image_data);
 
 			return;
 		}
 
-		image *unaccel_im = im->unaccel_equiv();
-
-		if (unaccel_im) {
-			im = unaccel_im;
-		}
-		
 #ifdef USE_MAGICK
 
 		/*
