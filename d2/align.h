@@ -2432,8 +2432,8 @@ public:
 		if (wmx_file == NULL || wmx_exec == NULL || wmx_defs == NULL)
 			return;
 
-		unsigned int rows = reference_image->height();
-		unsigned int cols = reference_image->width();
+		unsigned int rows = ale_image_get_height(reference_image);
+		unsigned int cols = ale_image_get_width(reference_image);
 
 		image_rw::write_image(wmx_file, reference_image);
 		image_rw::write_image(wmx_defs, reference_defined, exp_bool);

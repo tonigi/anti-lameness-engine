@@ -352,7 +352,7 @@ public:
 	/*
 	 * Write an image to a file
 	 */
-	static void write_image(const char *filename, const image *im, exposure *exp = output_exposure, int rezero = 0, int exp_scale_override = 0) {
+	static void write_image(const char *filename, ale_image im, exposure *exp = output_exposure, int rezero = 0, int exp_scale_override = 0) {
 		static int warned = 0;
 
 		/*
