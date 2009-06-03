@@ -80,7 +80,7 @@ private:
 	 * Per-pixel alignment weight map
 	 */
 
-	static const image *weight_map;
+	static ale_image weight_map;
 
 	/*
 	 * Frequency-dependent alignment weights
