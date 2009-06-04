@@ -438,8 +438,8 @@ public:
 			MagickError(ResourceLimitError,
 				"Unable to display image", "MemoryAllocationFailed");
 
-		mi->columns = im->width();
-		mi->rows = im->height();
+		mi->columns = ale_image_get_width(im);
+		mi->rows = ale_image_get_height(im);
 
 		/*
 		 * Set the output image depth
@@ -477,18 +477,34 @@ public:
 		 * Automatic exposure adjustment (don't blow out highlights)
 		 */
 		ale_real maxval = 1;
-		ale_real minval = (rezero ? im->minval() : (ale_real) 0);
+		ale_real minval = (rezero ? (ale_real) ale_image_minval(im) : (ale_real) 0);
 		if (minval > 0)
 			minval = 0;
 		pixel minval_pixel(minval, minval, minval);
 
 
 		if (exposure_scale || exp_scale_override) {
-			ale_real new_maxval = im->maxval();
+			ale_real new_maxval = ale_image_maxval(im);
 
 			if (new_maxval > maxval)
 				maxval = new_maxval;
 		}
+
+		/*
+		 * Nearest-neighbor fill.
+		 */
+
+		ale_image temp_image = ale_image_nn_fill(im, nn_defined_radius);
+
+		/*
+		 * Unlinearize
+		 */
+
+		ale_image_map_1(temp_image, temp_image, "\
+			SET_PIXEL(p, pow((GET_PIXEL(0, p) - (PIXEL(1, 1, 1) * %0f)) / (%1f - %0f), 0.45))",
+			minval, maxval);
+
+		FILE *image_data = ale_image_retain_file(temp_image);
 
 		/*
 		 * Write the image
@@ -502,6 +518,9 @@ public:
 			for (j = 0; j < mi->columns; j++) {
 
 				pixel value = im->get_pixel(i, j);
+
+#if 0
+				/* XXX: migrate to Libale. */
 
 				/*
 				 * Get nearest-neighbor defined values.
@@ -539,6 +558,7 @@ public:
 							          / (maxval - minval)));
 
 				unlinearized = unlinearized.clamp();
+#endif
 
 				p->red =   (Quantum) ale_real_to_int(unlinearized[0], MaxRGB);
 				p->green = (Quantum) ale_real_to_int(unlinearized[1], MaxRGB);
