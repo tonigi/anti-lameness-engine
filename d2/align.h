@@ -2390,7 +2390,7 @@ public:
 #if 0
 		/*
 		 * XXX: the below bounds-checking logic should be migrated to 
-		 * ale_image_map_update_2(), and the below code removed.
+		 * ale_image_map_2(), and the below code removed.
 		 */
 
 		point map_offset = reference_image->offset() - weight_map->offset();
@@ -2416,7 +2416,7 @@ public:
 		 * (as, e.g., implemented in the deprecated image::get_bl() method).
 		 */
 
-		ale_image_map_update_2(alignment_weights, weight_map, " \
+		ale_image_map_2(alignment_weights, alignment_weights, weight_map, " \
 			SET_PIXEL(p, GET_PIXEL(0, p) * GET_PIXEL_BL(1, p))");
 	}
 
