@@ -362,20 +362,22 @@ public:
 		if (!strcmp(filename, "dump:")) {
 			FILE *image_data = ale_image_retain_file(im);
 
+			int format = ale_image_get_format(im);
+			int type = ale_image_get_type(im);
+
 			fprintf(stderr, "Image dump: ");
 			for (unsigned int i = 0; i < ale_image_get_height(im); i++)
 			for (unsigned int j = 0; j < ale_image_get_width(im); j++) {
 				fprintf(stderr, "(%d, %d): ", i, j);
 
-				int format = ale_image_get_format(im);
-				int type = ale_image_get_type(im);
-
 				fprintf(stderr, "[");
+
 				for (unsigned int k = 0; k < ale_image_get_depth(im); k++) {
-					if (k != 0)
-						fprintf(stderr, " ");
 
 					unsigned char data[8];
+
+					if (k != 0)
+						fprintf(stderr, " ");
 
 					switch (type) {
 					ALE_TYPE_UINT_8:
