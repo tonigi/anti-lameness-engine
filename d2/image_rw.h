@@ -375,38 +375,34 @@ public:
 					if (k != 0)
 						fprintf(stderr, " ");
 
-					double result = 0;
 					unsigned char data[8];
 
 					switch (type) {
 					ALE_TYPE_UINT_8:
 						fscanf(image_data, "%c", &data[0]);
-						result = (double) data[0];
+						fprintf(stderr, "%u", (unsigned int) data[0]);
 						break;
 					ALE_TYPE_UINT_16:
-						unsigned char data[2];
 						fscanf(image_data, "%c%c", &data[0], &data[1]);
-						result = (double) *((unsigned short *) data);
+						fprintf(stderr, "%u", (unsigned int) *((unsigned short *) data));
 						break;
 					ALE_TYPE_UINT_32:
 						fscanf(image_data, "%c%c%c%c", &data[0], &data[1], &data[2], &data[3]);
-						result = (double) *((unsigned int *) data);
+						fprintf(stderr, "%u", *((unsigned int *) data));
 						break;
 					ALE_TYPE_UINT_64:
 						fscanf(image_data, "%c%c%c%c%c%c%c%c", &data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6], &data[7]);
-						result = (double) *((unsigned long *) data);  // XXX: may not be long enough.
+						fprintf(stderr, "%lu", *((unsigned long *) data));  // XXX: may not be long enough.
 						break;
 					ALE_TYPE_FLOAT_32:
 						fscanf(image_data, "%c%c%c%c", &data[0], &data[1], &data[2], &data[3]);
-						result = (double) *((float *) data);
+						fprintf(stderr, "%f", (double) *((float *) data));
 						break;
 					ALE_TYPE_FLOAT_64:
 						fscanf(image_data, "%c%c%c%c%c%c%c%c", &data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6], &data[7]);
-						result = *((double *) data);
+						fprintf(stderr, "%f", *((double *) data));
 						break;
 					}
-
-					fprintf(stderr, "%f", result);
 				}
 				fprintf(stderr, "] ");
 			}
