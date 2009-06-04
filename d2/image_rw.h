@@ -525,9 +525,8 @@ public:
 
 				pixel value = im->get_pixel(i, j);
 
+#warning migrate to libale
 #if 0
-				/* XXX: migrate to Libale. */
-
 				/*
 				 * Get nearest-neighbor defined values.
 				 *

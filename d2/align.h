@@ -2387,12 +2387,8 @@ public:
 
 		init_weights();
 
+#warning migrate to libale (e.g., ale_image_map_2)
 #if 0
-		/*
-		 * XXX: the below bounds-checking logic should be migrated to 
-		 * ale_image_map_2(), and the below code removed.
-		 */
-
 		point map_offset = reference_image->offset() - weight_map->offset();
 
 		int rows = reference_image->height();
@@ -2411,6 +2407,7 @@ public:
 		}
 #endif
 
+#warning current filtering might be inappropriate
 		/*
 		 * XXX: this should perhaps use GET_PIXEL_BI_GEOMETRIC, or GET_PIXEL_BI_MINIMUM
 		 * (as, e.g., implemented in the deprecated image::get_bl() method).
