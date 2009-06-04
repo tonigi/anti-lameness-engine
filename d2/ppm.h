@@ -349,8 +349,7 @@ static inline ale_image read_ppm(const char *filename, exposure *e, unsigned int
 	return im;
 }
 
-static inline void write_ppm(const char *filename, const image *im, exposure *e, 
-		unsigned int mcv, int plain, int rezero, int exposure_scale, double nn_defined_radius) {
+static inline void write_ppm(const char *filename, ale_image im, unsigned int mcv, int plain) {
 	unsigned int i, j, k;
 	FILE *f = fopen(filename, "wb");
 
@@ -374,68 +373,23 @@ static inline void write_ppm(const char *filename, const image *im, exposure *e,
 
 	/* Width */
 
-	fprintf(f, "%d ", im->width());
+	fprintf(f, "%d ", ale_image_get_width(im));
 
 	/* Height */
 
-	fprintf(f, "%d ", im->height());
+	fprintf(f, "%d ", ale_image_get_height(im));
 
 	/* Maximum component value */
 
 	fprintf(f, "%d\n", mcv);
 
-	/* Automatic exposure adjustment information */
-
-	ale_real maxval = 1;
-	ale_real minval = (rezero ? im->minval() : (ale_real) 0);
-	if (minval > 0)
-		minval = 0;
-	pixel minval_pixel(minval, minval, minval);
-
-	if (exposure_scale) {
-		ale_real new_maxval = im->maxval();
-
-		if (new_maxval > maxval)
-			maxval = new_maxval;
-	}
-
 	/* Pixels */
 
-	for (i = 0; i < im->height(); i++)
-	for (j = 0; j < im->width();  j++) {
+	for (i = 0; i < ale_image_get_height(im); i++)
+	for (j = 0; j < ale_image_get_width(im);  j++) {
+#warning incomplete code
+#if 0
 		pixel value = im->get_pixel(i, j);
-
-		/*
-		 * Get nearest-neighbor defined values.
-		 *
-		 * XXX: While this implementation is correct, it is inefficient
-		 * for large radii.  A better implementation would search
-		 * perimeters of squares of ever-increasing radius, tracking
-		 * the best-so-far data until the square perimeter exceeded the
-		 * best-so-far radius.
-		 */
-
-		for (k = 0; k < 3; k++)
-		if (isnan(value[k]))
-		for (int radius = 1; radius <= nn_defined_radius; radius++) {
-			double nearest_radius_squared = (radius + 1) * (radius + 1);
-			for (int ii = -radius; ii <= radius; ii++)
-			for (int jj = -radius; jj <= radius; jj++) {
-				if (!im->in_bounds(point(i + ii, j + jj)))
-					continue;
-				if (ii * ii + jj * jj < nearest_radius_squared
-				 && finite(im->get_pixel(i + ii, j + jj)[k])) {
-					value[k] = im->get_pixel(i + ii, j + jj)[k];
-					nearest_radius_squared = ii * ii + jj * jj;
-				}
-			}
-			if (nearest_radius_squared < (radius + 1) * (radius + 1))
-				break;
-		}
-
-		pixel exposure_adjust = (value - minval_pixel)
-			              / (maxval - minval);
-		pixel unlinearized = (e->unlinearize(exposure_adjust)).clamp();
 
 		for (k = 0; k < im->depth();  k++) {
 
@@ -452,7 +406,7 @@ static inline void write_ppm(const char *filename, const image *im, exposure *e,
 
 		if (plain)
 			fprintf(f, "\n");
-
+#endif
 	}
 
 	/* Done */

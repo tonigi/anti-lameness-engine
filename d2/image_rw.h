@@ -352,7 +352,7 @@ public:
 	/*
 	 * Write an image to a file
 	 */
-	static void write_image(const char *filename, ale_image im, exposure *exp = output_exposure, int rezero = 0, int exp_scale_override = 0) {
+	static void write_image(const char *filename, ale_image im, int rezero = 0, int exp_scale_override = 0, double gamma = 0.45) {
 		static int warned = 0;
 
 		/*
@@ -416,62 +416,19 @@ public:
 		}
 
 #ifdef USE_MAGICK
-
 		/*
-		 * Patterned after http://www.imagemagick.org/www/api.html
-		 * and http://www.imagemagick.org/www/smile.c
+		 * If necessary, adjust mcv to match library limits.
 		 */
 
-		ExceptionInfo exception;
-		Image *mi;
-		ImageInfo *image_info;
-		PixelPacket *p;
-
-		unsigned int i, j;
-
-		GetExceptionInfo(&exception);
-		image_info = CloneImageInfo((ImageInfo *) NULL);
-		strncpy(image_info->filename, filename, MaxTextExtent);
-
-		mi = AllocateImage(image_info);
-		if (mi == (Image *) NULL) 
-			MagickError(ResourceLimitError,
-				"Unable to display image", "MemoryAllocationFailed");
-
-		mi->columns = ale_image_get_width(im);
-		mi->rows = ale_image_get_height(im);
-
-		/*
-		 * Set the output image depth
-		 */
-
-		if (MaxRGB < 65535 || mcv < 65535)
-			mi->depth = 8;
-		else
-			mi->depth = 16;
-
-		if (MaxRGB < 65535 && mcv == 65535 && !warned) {
+		if (MaxRGB < 65535 && mcv == 65535) {
 			fprintf(stderr, "\n\n*** Warning: " MagickPackageName " has not been compiled with 16 bit support.\n");
 			fprintf(stderr, "*** Writing output using 8 bits per channel.\n");
                         fprintf(stderr, "*** \n"); 
                         fprintf(stderr, "*** (To silence this warning, specify option --8bpc)\n\n\n");
 
-			warned = 1;
+			mcv = 255;
 		}
-
-		/*
-		 * Set compression type
-		 */
-
-		if (ppm_type == 2) {
-			mi->compression = NoCompression;
-			image_info->compression = NoCompression;
-			strncpy(mi->magick, "PNM", MaxTextExtent);
-			strncpy(image_info->magick, "PNM", MaxTextExtent);
-		} else if (ppm_type == 1) {
-			strncpy(mi->magick, "PNM", MaxTextExtent);
-			strncpy(image_info->magick, "PNM", MaxTextExtent);
-		}
+#endif
 
 		/*
 		 * Automatic exposure adjustment (don't blow out highlights)
@@ -501,14 +458,63 @@ public:
 		 */
 
 		ale_image_map_1(temp_image, temp_image, "\
-			SET_PIXEL(p, pow((GET_PIXEL(0, p) - (PIXEL(1, 1, 1) * %0f)) / (%1f - %0f), 0.45))",
-			minval, maxval);
+			SET_PIXEL(p, pow((GET_PIXEL(0, p) - (PIXEL(1, 1, 1) * %0f)) / (%1f - %0f), %2f))",
+			minval, maxval, gamma);
 
-		FILE *image_data = ale_image_retain_file(temp_image);
+#ifdef USE_MAGICK
+
+		/*
+		 * Patterned after http://www.imagemagick.org/www/api.html
+		 * and http://www.imagemagick.org/www/smile.c
+		 */
+
+		ExceptionInfo exception;
+		Image *mi;
+		ImageInfo *image_info;
+		PixelPacket *p;
+
+		unsigned int i, j;
+
+		GetExceptionInfo(&exception);
+		image_info = CloneImageInfo((ImageInfo *) NULL);
+		strncpy(image_info->filename, filename, MaxTextExtent);
+
+		mi = AllocateImage(image_info);
+		if (mi == (Image *) NULL) 
+			MagickError(ResourceLimitError,
+				"Unable to display image", "MemoryAllocationFailed");
+
+		mi->columns = ale_image_get_width(im);
+		mi->rows = ale_image_get_height(im);
+
+		/*
+		 * Set the output image depth
+		 */
+
+		if (mcv < 65535)
+			mi->depth = 8;
+		else
+			mi->depth = 16;
+
+		/*
+		 * Set compression type
+		 */
+
+		if (ppm_type == 2) {
+			mi->compression = NoCompression;
+			image_info->compression = NoCompression;
+			strncpy(mi->magick, "PNM", MaxTextExtent);
+			strncpy(image_info->magick, "PNM", MaxTextExtent);
+		} else if (ppm_type == 1) {
+			strncpy(mi->magick, "PNM", MaxTextExtent);
+			strncpy(image_info->magick, "PNM", MaxTextExtent);
+		}
 
 		/*
 		 * Write the image
 		 */
+
+		FILE *image_data = ale_image_retain_file(temp_image);
 
 		for (i = 0; i < mi->rows; i++) {
 			p = SetImagePixels(mi, 0, i, mi->columns, 1);
@@ -570,6 +576,8 @@ public:
 				break;
 		}
 
+		ale_image_release_file(temp_image, image_data);
+
 		if (!WriteImage(image_info, mi)) {
 
 			/*
@@ -590,13 +598,12 @@ public:
 		DestroyImage(mi);
 		DestroyImageInfo(image_info);
 #else
-		write_ppm(filename, im, exp, mcv, ppm_type == 2, rezero, exposure_scale || exp_scale_override, 
-				nn_defined_radius);
+		write_ppm(filename, temp_image, mcv, ppm_type == 2);
 #endif
 
-		if (unaccel_im) {
-			delete unaccel_im;
-		}
+		ale_image_release(temp_image);
+
+	
 	}
 
 	static void output(const image *i) {
