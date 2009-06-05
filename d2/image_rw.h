@@ -466,7 +466,7 @@ public:
 				ALE_TYPE_UINT_16 : ALE_TYPE_UINT_8);
 
 		ale_image_map_1(quantized_image, temp_image, "\
-				SET_PIXEL(p, round(GET_PIXEL(0, p) * %0f))", (mcv > 255) ? 65535 : 255);
+				SET_PIXEL(p, round(GET_PIXEL(0, p) * %0f))", (double) ((mcv > 255) ? 65535 : 255));
 
 		ale_image_release(temp_image);
 
