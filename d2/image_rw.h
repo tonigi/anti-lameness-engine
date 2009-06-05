@@ -461,6 +461,10 @@ public:
 			SET_PIXEL(p, pow((GET_PIXEL(0, p) - (PIXEL(1, 1, 1) * %0f)) / (%1f - %0f), %2f))",
 			minval, maxval, gamma);
 
+		ale_image quantized_image = ale_image_quantize(temp_image, (mcv > 255) ? ALE_TYPE_UINT_16 : ALE_TYPE_UINT_8);
+
+		ale_image_release(temp_image);
+
 #ifdef USE_MAGICK
 
 		/*
@@ -514,7 +518,7 @@ public:
 		 * Write the image
 		 */
 
-		FILE *image_data = ale_image_retain_file(temp_image);
+		FILE *image_data = ale_image_retain_file(quantized_image);
 
 		for (i = 0; i < mi->rows; i++) {
 			p = SetImagePixels(mi, 0, i, mi->columns, 1);
@@ -575,7 +579,7 @@ public:
 				break;
 		}
 
-		ale_image_release_file(temp_image, image_data);
+		ale_image_release_file(quantized_image, image_data);
 
 		if (!WriteImage(image_info, mi)) {
 
@@ -597,10 +601,10 @@ public:
 		DestroyImage(mi);
 		DestroyImageInfo(image_info);
 #else
-		write_ppm(filename, temp_image, mcv, ppm_type == 2);
+		write_ppm(filename, quantized_image, mcv, ppm_type == 2);
 #endif
 
-		ale_image_release(temp_image);
+		ale_image_release(quantized_image);
 
 	
 	}
