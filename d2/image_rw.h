@@ -462,7 +462,7 @@ public:
 				ALE_TYPE_UINT_16 : ALE_TYPE_UINT_8);
 
 		ale_image_map_1(quantized_image, temp_image, "\
-			SET_PIXEL(p, pow((GET_PIXEL(0, p) - (PIXEL(1, 1, 1) * %0f)) / (%1f - %0f), %2f) * %3f)",
+			SET_PIXEL(p, CLAMP(pow((GET_PIXEL(0, p) - (PIXEL(1, 1, 1) * %0f)) / (%1f - %0f), %2f)) * %3f)",
 			minval, maxval, gamma, (double) ((mcv > 255) ? 65535 : 255));
 
 		ale_image_release(temp_image);
@@ -530,46 +530,6 @@ public:
 			for (j = 0; j < mi->columns; j++) {
 
 				pixel value = im->get_pixel(i, j);
-
-#warning migrate to libale
-#if 0
-				/*
-				 * Get nearest-neighbor defined values.
-				 *
-				 * XXX: While this implementation is correct, it is inefficient
-				 * for large radii.  A better implementation would search
-				 * perimeters of squares of ever-increasing radius, tracking
-				 * the best-so-far data until the square perimeter exceeded the
-				 * best-so-far radius.
-				 */
-
-				for (int k = 0; k < 3; k++)
-				if (isnan(value[k]))
-				for (int radius = 1; radius <= nn_defined_radius; radius++) {
-					double nearest_radius_squared = (radius + 1) * (radius + 1);
-					for (int ii = -radius; ii <= radius; ii++)
-					for (int jj = -radius; jj <= radius; jj++) {
-						if (!im->in_bounds(point(i + ii, j + jj)))
-							continue;
-						if (ii * ii + jj * jj < nearest_radius_squared
-						 && finite(im->get_pixel(i + ii, j + jj)[k])) {
-							value[k] = im->get_pixel(i + ii, j + jj)[k];
-							nearest_radius_squared = ii * ii + jj * jj;
-						}
-					}
-					if (nearest_radius_squared < (radius + 1) * (radius + 1))
-						break;
-				}
-
-				/*
-				 * Unlinearize
-				 */
-
-				pixel unlinearized(exp->unlinearize((value - minval_pixel) 
-							          / (maxval - minval)));
-
-				unlinearized = unlinearized.clamp();
-#endif
 
 				p->red =   (Quantum) ale_real_to_int(unlinearized[0], MaxRGB);
 				p->green = (Quantum) ale_real_to_int(unlinearized[1], MaxRGB);
