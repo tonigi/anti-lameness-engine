@@ -385,28 +385,22 @@ static inline void write_ppm(const char *filename, ale_image im, unsigned int mc
 
 	/* Pixels */
 
-	for (i = 0; i < ale_image_get_height(im); i++)
-	for (j = 0; j < ale_image_get_width(im);  j++) {
-#warning incomplete code
-#if 0
-		pixel value = im->get_pixel(i, j);
+	FILE *image_data = ale_image_retain_file(im);
 
-		for (k = 0; k < im->depth();  k++) {
+	if (plain) {
+		while (!feof(image_data)) {
+			char c[2];
+			c[0] = fgetc(image_data);
+			c[1] = fgetc(image_data);
 
-			uint16_t output_value = (uint16_t) ale_real_to_int(unlinearized[k], mcv);
-
-			if (plain) {
-				fprintf(f, "%d ", output_value);
-			} else {
-				if (mcv > 255)
-					fprintf(f, "%c", output_value >> 8);
-				fprintf(f, "%c", 0xff & output_value);
-			}
+			fprintf(f, "%u", *((unsigned short *) c));
 		}
-
-		if (plain)
-			fprintf(f, "\n");
-#endif
+	} else {
+		while (!feof(image_data)) {
+			char c = fgetc(image_data);
+			if (c == EOF)
+				break;
+		}
 	}
 
 	/* Done */
