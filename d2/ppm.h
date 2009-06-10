@@ -403,6 +403,8 @@ static inline void write_ppm(const char *filename, ale_image im, unsigned int mc
 		}
 	}
 
+	ale_image_release_file(image_data);
+
 	/* Done */
 
 	fclose(f);
