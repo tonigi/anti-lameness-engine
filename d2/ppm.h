@@ -400,7 +400,7 @@ static inline void write_ppm(const char *filename, ale_image im, unsigned int mc
 		unsigned char c;
 		c = fgetc(image_data);
 
-		if (feof(image_data)
+		if (feof(image_data))
 			break;
 
 		fprintf(f, "%u ", (unsigned int) c);
