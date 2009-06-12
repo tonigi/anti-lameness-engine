@@ -2387,14 +2387,8 @@ public:
 
 		init_weights();
 
-#warning current filtering might be inappropriate
-		/*
-		 * XXX: this should perhaps use GET_PIXEL_BI_GEOMETRIC, or GET_PIXEL_BI_MINIMUM
-		 * (as, e.g., implemented in the deprecated image::get_bl() method).
-		 */
-
 		ale_image_map_2(alignment_weights, alignment_weights, weight_map, " \
-			SET_PIXEL(p, GET_PIXEL(0, p) * GET_PIXEL_BL(1, p))");
+			SET_PIXEL(p, GET_PIXEL(0, p) * GET_PIXEL_BG(1, p))");
 	}
 
 	/*
