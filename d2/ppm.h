@@ -387,20 +387,30 @@ static inline void write_ppm(const char *filename, ale_image im, unsigned int mc
 
 	FILE *image_data = ale_image_retain_file(im);
 
-	if (plain) {
-		while (!feof(image_data)) {
-			char c[2];
-			c[0] = fgetc(image_data);
-			c[1] = fgetc(image_data);
+	if (plain && mcv > 255) while (!feof(image_data)) {
+		char c[2];
+		c[0] = fgetc(image_data);
+		c[1] = fgetc(image_data);
 
-			fprintf(f, "%u", *((unsigned short *) c));
-		}
-	} else {
-		while (!feof(image_data)) {
-			char c = fgetc(image_data);
-			if (c == EOF)
-				break;
-		}
+		if (feof(image_data))
+			break;
+
+		fprintf(f, "%u ", *((unsigned short *) c));
+	} else if (plain) while (!feof(image_data)) {
+		unsigned char c;
+		c = fgetc(image_data);
+
+		if (feof(image_data)
+			break;
+
+		fprintf(f, "%u ", (unsigned int) c);
+	} else while (!feof(image_data)) {
+		char c = fgetc(image_data);
+
+		if (feof(image_data))
+			break;
+
+		fprintf(f, "%c", c);
 	}
 
 	ale_image_release_file(im, image_data);
