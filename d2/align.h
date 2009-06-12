@@ -2387,26 +2387,6 @@ public:
 
 		init_weights();
 
-#warning migrate to libale (e.g., ale_image_map_2)
-#if 0
-		point map_offset = reference_image->offset() - weight_map->offset();
-
-		int rows = reference_image->height();
-		int cols = reference_image->width();
-
-		for (int i = 0; i < rows; i++)
-		for (int j = 0; j < cols; j++) {
-			point map_weight_position = map_offset + point(i, j);
-			if (map_weight_position[0] >= 0
-			 && map_weight_position[1] >= 0
-			 && map_weight_position[0] <= weight_map->height() - 1
-			 && map_weight_position[1] <= weight_map->width() - 1)
-				alignment_weights->set_pixel(i, j, 
-					alignment_weights->get_pixel(i, j) 
-				      * weight_map->get_bl(map_weight_position));
-		}
-#endif
-
 #warning current filtering might be inappropriate
 		/*
 		 * XXX: this should perhaps use GET_PIXEL_BI_GEOMETRIC, or GET_PIXEL_BI_MINIMUM
