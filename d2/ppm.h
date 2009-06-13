@@ -379,7 +379,7 @@ static inline void write_ppm(const char *filename, ale_image im, unsigned long m
 	assert(mcv <= 65535);
 
 	if (mcv > 65535) {
-		fprintf("error: I don't know how to produce greater than 16-bit output.\n");
+		fprintf(stderr, "error: I don't know how to produce greater than 16-bit output.\n");
 		exit(1);
 	} 
 
@@ -404,7 +404,7 @@ static inline void write_ppm(const char *filename, ale_image im, unsigned long m
 
 	/* Maximum component value */
 
-	fprintf(f, "%d\n", mcv);
+	fprintf(f, "%lu\n", mcv);
 
 	/* Pixels */
 
@@ -417,7 +417,7 @@ static inline void write_ppm(const char *filename, ale_image im, unsigned long m
 		if (mcv > 255) {
 			fread(&val, sizeof(cl_ushort), 1, image_data);
 		} else {
-			cl_ushort = fgetc(image_data);
+			val = fgetc(image_data);
 		}
 
 		if (feof(image_data))
