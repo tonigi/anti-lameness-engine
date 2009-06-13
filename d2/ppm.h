@@ -359,7 +359,7 @@ static inline ale_image read_ppm(const char *filename, exposure *e, unsigned int
 	return im;
 }
 
-static inline void write_ppm(const char *filename, ale_image im, unsigned int mcv, int plain) {
+static inline void write_ppm(const char *filename, ale_image im, unsigned long mcv, int plain) {
 	unsigned int i, j, k;
 	FILE *f = fopen(filename, "wb");
 
@@ -369,6 +369,19 @@ static inline void write_ppm(const char *filename, ale_image im, unsigned int mc
 	}
 
 	assert(f);
+
+	/*
+	 * XXX: For simplicity of implementation, we currently only handle up
+	 * to 16-bit output, which should be within the limits of the current
+	 * ALE user interface.
+	 */
+
+	assert(mcv <= 65535);
+
+	if (mcv > 65535) {
+		fprintf("error: I don't know how to produce greater than 16-bit output.\n");
+		exit(1);
+	} 
 
 	/*
 	 * Output a plain (ASCII) or raw (binary) PPM file
@@ -397,30 +410,26 @@ static inline void write_ppm(const char *filename, ale_image im, unsigned int mc
 
 	FILE *image_data = ale_image_retain_file(im);
 
-	if (plain && mcv > 255) while (!feof(image_data)) {
-		char c[2];
-		c[0] = fgetc(image_data);
-		c[1] = fgetc(image_data);
+	while (!feof(image_data)) {
+
+		cl_ushort val;
+
+		if (mcv > 255) {
+			fread(&val, sizeof(cl_ushort), 1, image_data);
+		} else {
+			cl_ushort = fgetc(image_data);
+		}
 
 		if (feof(image_data))
 			break;
 
-		fprintf(f, "%u ", *((unsigned short *) c));
-	} else if (plain) while (!feof(image_data)) {
-		unsigned char c;
-		c = fgetc(image_data);
-
-		if (feof(image_data))
-			break;
-
-		fprintf(f, "%u ", (unsigned int) c);
-	} else while (!feof(image_data)) {
-		char c = fgetc(image_data);
-
-		if (feof(image_data))
-			break;
-
-		fprintf(f, "%c", c);
+		if (plain) {
+			fprintf(f, "%u ", (unsigned int) val);
+		} else if (mcv <= 255) {
+			fprintf(f, "%c", (unsigned char) val);
+		} else {
+			fprintf(f, "%c%c", (unsigned char) (val >> 8), (unsigned char) (val & 0xff));
+		}
 	}
 
 	ale_image_release_file(im, image_data);
