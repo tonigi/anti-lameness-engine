@@ -263,7 +263,7 @@ static inline ale_image read_ppm(const char *filename, exposure *e, unsigned int
 	/* Maximum component value */
 
 	eat_comments(f, filename, &extended);
-	n = fscanf(f, "%lu", &mcv);
+	n = fscanf(f, "%llu", &mcv);
 	assert(n == 1);
 	assert(mcv <= 65535 || m2 == '3');
 
@@ -322,10 +322,10 @@ static inline ale_image read_ppm(const char *filename, exposure *e, unsigned int
 				PPM_CHANNEL_READ((m2 == '6'), (ale_has_channel(i, j, k, bayer)), f, converted_f, filename, cl_uchar, "%hhu", ((cl_uchar) mcv), (&extended))
 			else if (mcv <= 65535)
 				PPM_CHANNEL_READ((m2 == '6'), (ale_has_channel(i, j, k, bayer)), f, converted_f, filename, cl_ushort, "%hu", ((cl_ushort) mcv), (&extended))
-			else if (mcv <= 64294967295ul)
+			else if (mcv <= 4294967295ul)
 				PPM_CHANNEL_READ((m2 == '6'), (ale_has_channel(i, j, k, bayer)), f, converted_f, filename, cl_uint, "%u", ((cl_uint) mcv), (&extended))
 			else
-				PPM_CHANNEL_READ((m2 == '6'), (ale_has_channel(i, j, k, bayer)), f, converted_f, filename, cl_ulong, "%lu", ((cl_ulong) mcv), (&extended))
+				PPM_CHANNEL_READ((m2 == '6'), (ale_has_channel(i, j, k, bayer)), f, converted_f, filename, cl_ulong, "%llu", ((cl_ulong) mcv), (&extended))
 
 		}
 
