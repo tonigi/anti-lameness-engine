@@ -315,9 +315,6 @@ static inline ale_image read_ppm(const char *filename, exposure *e, unsigned int
 		for (j = 0; j < w;  j++)
 		for (k = 0; k < 3;  k++) {
 
-			if (!ale_has_channel(i, j, k, bayer))
-				continue;
-
 			if (mcv <= 255)
 				PPM_CHANNEL_READ((m2 == '6'), (ale_has_channel(i, j, k, bayer)), f, converted_f, filename, cl_uchar, "%hhu", ((cl_uchar) mcv), (&extended))
 			else if (mcv <= 65535)
