@@ -192,10 +192,9 @@ static int ppm_short_little_endian_check() {
 			error_ppm(f_name);\
 	}\
 \
-	if (!transfer)\
-		continue;\
+	if (transfer)\
+		fwrite(&ival, sizeof(channel_type), 1, f_dest);\
 \
-	fwrite(&ival, sizeof(channel_type), 1, f_dest);\
 }
 
 static inline ale_image read_ppm(const char *filename, exposure *e, unsigned int bayer, int init_reference_gain = 0) {
