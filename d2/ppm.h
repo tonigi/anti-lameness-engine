@@ -245,10 +245,10 @@ static inline ale_image read_ppm(const char *filename, exposure *e, unsigned int
 			((mcv <= 4294967295ul) ? ALE_TYPE_UINT_32 : ALE_TYPE_UINT_64)));		// (XXX: mcv type may be too short for this to be meaningful.)
 
 	if (m2 == '6' && bayer == IMAGE_BAYER_NONE 
-	 && (mcv <= 255 || ppm_short_little_endian_check())) {
+	 && (mcv <= 255 || !ppm_short_little_endian_check())) {
 
 		/*
-		 * For 3-channel binary 8-bit, and 16-bit on little-endian
+		 * For 3-channel binary 8-bit, and 16-bit on big-endian
 		 * systems, use a file suffix.
 		 */
 
