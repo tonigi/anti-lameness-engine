@@ -150,14 +150,61 @@ static int ppm_short_little_endian_check() {
 	return (*((char *)(&one)));
 }
 
+#define PPM_CHANNEL_READ(is_binary, transfer, f_source, f_dest, f_name, channel_type, channel_format, channel_mcv, extended_ptr) {\
+	channel_type ival;\
+\
+	if (is_binary) {\
+\
+		unsigned char val;\
+		int n;\
+\
+		/* Binary data */\
+\
+		n = fscanf(f_source, "%c", &val);\
+		assert (n == 1);\
+\
+		if (n != 1)\
+			error_ppm(f_name);\
+\
+		ival = val;\
+\
+		for (channel_type mcv_r = channel_mcv / 256; mcv_r; mcv_r /= 256) {\
+\
+			n = fscanf(f_source, "%c", &val);\
+			assert(n == 1);\
+\
+			if (n != 1)\
+				error_ppm(f_name);\
+\
+			ival = (ival << 8) | val;\
+		}\
+\
+	} else {\
+\
+		/* ASCII data */\
+\
+		eat_comments(f_source, f_name, extended_ptr);\
+\
+		n = fscanf(f, channel_format, &ival);\
+\
+		assert (n == 1);\
+		if (n != 1)\
+			error_ppm(f_name);\
+	}\
+\
+	if (!transfer)\
+		continue;\
+\
+	fwrite(&ival, sizeof(channel_type), 1, f_dest);\
+}
+
 static inline ale_image read_ppm(const char *filename, exposure *e, unsigned int bayer, int init_reference_gain = 0) {
 	unsigned int i, j, k;
 	ale_image im;
 	unsigned char m1, m2, val;
 	int m3, m4;
-	long ival;
 	int w, h;
-	unsigned long mcv;  // XXX: could be 32 bit, which could break things.
+	cl_ulong mcv;
 	int n;
 	struct extended_t extended;
 	FILE *f = fopen(filename, "rb");
@@ -242,7 +289,7 @@ static inline ale_image read_ppm(const char *filename, exposure *e, unsigned int
 			(bayer == IMAGE_BAYER_NONE) ? ALE_IMAGE_RGB : ALE_IMAGE_Y,
 			(mcv <= 255) ? ALE_TYPE_UINT_8 :
 			((mcv <= 65535) ? ALE_TYPE_UINT_16 :
-			((mcv <= 4294967295ul) ? ALE_TYPE_UINT_32 : ALE_TYPE_UINT_64)));		// (XXX: mcv type may be too short for this to be meaningful.)
+			((mcv <= 4294967295ul) ? ALE_TYPE_UINT_32 : ALE_TYPE_UINT_64)));
 
 	if (m2 == '6' && bayer == IMAGE_BAYER_NONE 
 	 && (mcv <= 255 || !ppm_short_little_endian_check())) {
@@ -268,51 +315,18 @@ static inline ale_image read_ppm(const char *filename, exposure *e, unsigned int
 		for (j = 0; j < w;  j++)
 		for (k = 0; k < 3;  k++) {
 
-			if (m2 == '6') {
-
-				/* Binary data */
-
-				n = fscanf(f, "%c", &val);
-				assert (n == 1);
-
-				if (n != 1)
-					error_ppm(filename);
-
-				ival = val;
-
-				if (mcv > 255) {
-					n = fscanf(f, "%c", &val);
-					assert(n == 1);
-
-					if (n != 1)
-						error_ppm(filename);
-
-					ival = (ival << 8) | val;
-				}
-
-			} else {
-
-				/* ASCII data */
-
-				eat_comments(f, filename, &extended);
-
-				n = fscanf(f, "%ld", &ival);
-
-				assert (n == 1);
-				if (n != 1)
-					error_ppm(filename);
-			}
-
 			if (!ale_has_channel(i, j, k, bayer))
 				continue;
 
-			fprintf(converted_f, "%c", ((char *) ival)[0]);
-			if (mcv > 255)
-				fprintf(converted_f, "%c", ((char *) ival)[1]);
-			if (mcv > 65535)
-				fprintf(converted_f, "%c%c", ((char *) ival)[2], ((char *) ival)[3]);
-			if (mcv > 4294967295ul)
-				fprintf(converted_f, "%c%c%c%c", ((char *) ival)[4], ((char *) ival)[5], ((char *) ival)[6], ((char *) ival)[7]);   // XXX: ival might be too short for this
+			if (mcv <= 255)
+				PPM_CHANNEL_READ((m2 == '6'), (ale_has_channel(i, j, k, bayer)), f, converted_f, filename, cl_uchar, "%hhu", ((cl_uchar) mcv), (&extended))
+			else if (mcv <= 65535)
+				PPM_CHANNEL_READ((m2 == '6'), (ale_has_channel(i, j, k, bayer)), f, converted_f, filename, cl_ushort, "%hu", ((cl_ushort) mcv), (&extended))
+			else if (mcv <= 64294967295ul)
+				PPM_CHANNEL_READ((m2 == '6'), (ale_has_channel(i, j, k, bayer)), f, converted_f, filename, cl_uint, "%u", ((cl_uint) mcv), (&extended))
+			else
+				PPM_CHANNEL_READ((m2 == '6'), (ale_has_channel(i, j, k, bayer)), f, converted_f, filename, cl_ulong, "%lu", ((cl_ulong) mcv), (&extended))
+
 		}
 
 		 ale_image_set_file_static(im, w, h, converted_f, 0, ppm_void_file_close, converted_f);
