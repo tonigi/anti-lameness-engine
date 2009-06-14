@@ -436,6 +436,17 @@ public:
 
 			mcv = 255;
 		}
+
+		/*
+		 * We currently can't handle mcv greater than 65535 here.
+		 */
+
+		assert(mcv <= 65535);
+
+		if (mcv > 65535) {
+			fprintf(stderr, "error: I don't know how to produce greater than 16-bit output.\n");
+			exit(1);
+		} 
 #endif
 
 		/*
@@ -537,11 +548,19 @@ public:
 
 			for (j = 0; j < mi->columns; j++) {
 
-				pixel value = im->get_pixel(i, j);
+				cl_ushort val[3];
 
-				p->red =   (Quantum) ale_real_to_int(unlinearized[0], MaxRGB);
-				p->green = (Quantum) ale_real_to_int(unlinearized[1], MaxRGB);
-				p->blue =  (Quantum) ale_real_to_int(unlinearized[2], MaxRGB);
+				for (int k = 0; k < 3; k++) {
+					if (mcv <= 255) {
+						val[k] = fgetc(image_data);
+					} else {
+						assert(fread(&(val[k]), sizeof(cl_ushort), 1, image_data));
+					}
+				}
+
+				p->red =   (Quantum) val[0];
+				p->green = (Quantum) val[1];
+				p->blue =  (Quantum) val[2];
 				p++;
 			}
 
