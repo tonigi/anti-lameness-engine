@@ -2423,7 +2423,8 @@ public:
 
 		ale_image wmx_weights = image_rw::read_image(wmx_file, exp_def);
 
-#warning wmx_weights should be given offset identical to the reference image.
+		ale_image_set_x_offset(wmx_weights, ale_image_get_x_offset(reference_image));
+		ale_image_set_y_offset(wmx_weights, ale_image_get_y_offset(reference_image));
 
 		if (ale_image_get_height(wmx_weights) != rows || ale_image_get_width(wmx_weights) != cols)
 			ui::get()->error("algorithmic weighting must not change image size");
