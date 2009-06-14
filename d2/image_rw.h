@@ -602,7 +602,7 @@ public:
 	
 	}
 
-	static void output(const image *i) {
+	static void output(ale_image i) {
 		assert (file_count > 0);
 		write_image(output_name(), i, output_exposure);
 	}
