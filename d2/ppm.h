@@ -415,7 +415,8 @@ static inline void write_ppm(const char *filename, ale_image im, unsigned long m
 		cl_ushort val;
 
 		if (mcv > 255) {
-			fread(&val, sizeof(cl_ushort), 1, image_data);
+			if (!fread(&val, sizeof(cl_ushort), 1, image_data))
+				break;
 		} else {
 			val = fgetc(image_data);
 		}
