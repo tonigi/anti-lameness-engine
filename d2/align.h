@@ -182,12 +182,12 @@ private:
 	 */
 
 	class astate_t {
-		transformation old_initial_alignment;
-		transformation old_final_alignment;
-		transformation default_initial_alignment;
+		ale_trans old_initial_alignment;
+		ale_trans old_final_alignment;
+		ale_trans default_initial_alignment;
 		int old_is_default;
 		std::vector<int> is_default;
-		const image *input_frame;
+		ale_image input_frame;
 
 	public:
 		astate_t() : 
@@ -201,7 +201,7 @@ private:
 			old_is_default = 1;
 		}
 
-		const image *get_input_frame() const {
+		ale_image get_input_frame() const {
 			return input_frame;
 		}
 
@@ -238,7 +238,7 @@ private:
 			old_final_alignment = t;
 		}
 
-		void set_input_frame(const image *i) {
+		void set_input_frame(ale_image i) {
 			input_frame = i;
 		}
 
