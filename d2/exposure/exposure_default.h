@@ -36,6 +36,11 @@
 
 class exposure_default : public exposure {
 public:
+
+	double get_gamma() {
+		return 0.45;
+	}
+
 	pixel linearize(pixel input) const {
 #if 0
 		/*

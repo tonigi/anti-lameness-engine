@@ -31,6 +31,13 @@
 
 class exposure_boolean : public exposure {
 public:
+	double get_gamma() {
+		double one = 1;
+		double zero = 0;
+
+		return one / zero;
+	}
+
 	pixel linearize(pixel input) const {
 		for (int k = 0; k < 3; k++)
 			input[k] = (input[k] == 0) ? 0 : 1;

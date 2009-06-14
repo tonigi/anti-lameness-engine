@@ -360,7 +360,7 @@ public:
 	/*
 	 * Write an image to a file
 	 */
-	static void write_image(const char *filename, ale_image im, int rezero = 0, int exp_scale_override = 0, double gamma = 0.45) {
+	static void write_image(const char *filename, ale_image im, double gamma = 0.45, int rezero = 0, int exp_scale_override = 0) {
 		static int warned = 0;
 
 		/*
@@ -604,17 +604,17 @@ public:
 
 	static void output(ale_image i) {
 		assert (file_count > 0);
-		write_image(output_name(), i, output_exposure);
+		write_image(output_name(), i, output_exposure->get_gamma());
 	}
 
-	static void vise_write(const char *p, const char *s, const image *i) {
+	static void vise_write(const char *p, const char *s, ale_image i) {
 		static int count = 0;
 		int length = strlen(p) + strlen(s) + 8;
 		char *output_string = (char *) malloc(length * sizeof(char));
 
 		snprintf(output_string, length, "%s%08d%s", p, count, s);
 
-		write_image(output_string, i, output_exposure);
+		write_image(output_string, i, output_exposure->get_gamma());
 
 		count++;
 	}

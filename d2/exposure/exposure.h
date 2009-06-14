@@ -45,6 +45,13 @@ private:
 public:
 
 	/*
+	 * gamma information
+	 */
+	virtual double get_gamma() {
+		return 1;
+	}
+
+	/*
 	 * confidence/uniform static mutators
 	 */
 	static void set_confidence(ale_real exponent) {
