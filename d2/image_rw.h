@@ -172,9 +172,9 @@ class image_rw {
 
 		im = ale_new_image(accel::context(),
 			(bayer == IMAGE_BAYER_NONE) ? ALE_IMAGE_RGB : ALE_IMAGE_Y,
-			(image_info->depth == 8) ? ALE_TYPE_UINT_8 :
-			((image_info->depth == 16) ? ALE_TYPE_UINT_16 :
-			((image_info->depth == 32) ? ALE_TYPE_UINT_32 : ALE_TYPE_UINT_64)));
+			(image_info->depth <= 8) ? ALE_TYPE_UINT_8 :
+			((image_info->depth <= 16) ? ALE_TYPE_UINT_16 :
+			((image_info->depth <= 32) ? ALE_TYPE_UINT_32 : ALE_TYPE_UINT_64)));
 
 		for (i = 0; i < mi->rows; i++) {
 			p = AcquireImagePixels(mi, 0, i, mi->columns, 1, &exception);
@@ -186,21 +186,29 @@ class image_rw {
 
 			for (j = 0; j < mi->columns; j++) {
 				
-				long ival[3] = { p->red, p->green, p->blue };
+				Quantum ival[3] = { p->red, p->green, p->blue };
 
 				for (int k = 0; k < 3; k++) {
 
 					if (!ale_has_channel(i, j, k, bayer))
 						continue;
 
-					fprintf(converted_f, "%c", ((char *) ival)[0]);
-					if (image_info->depth >= 16)
-						fprintf(converted_f, "%c", ((char *) ival)[1]);
-					if (image_info->depth >= 32)
-						fprintf(converted_f, "%c%c", ((char *) ival)[2], ((char *) ival)[3]);
-					if (image_info->depth >= 64)
-						fprintf(converted_f, "%c%c%c%c", ((char *) ival)[4], ((char *) ival)[5], ((char *) ival)[6], ((char *) ival)[7]);   // XXX: ival might be too short for this
-
+					if (image_info->depth <= 8) {
+						cl_uchar c = ival[k];
+						fwrite(&c, sizeof(cl_uchar), 1, converted_f);
+					} else if (image_info->depth <= 16) {
+						cl_ushort c = ival[k];
+						fwrite(&c, sizeof(cl_ushort), 1, converted_f);
+					} else if (image_info->depth <= 32) {
+						cl_uint c = ival[k];
+						fwrite(&c, sizeof(cl_uint), 1, converted_f);
+					} else if (image_info->depth <= 64) {
+						cl_ulong c = ival[k];
+						fwrite(&c, sizeof(cl_ulong), 1, converted_f);
+					} else {
+						fprintf(stderr, "error: unable to handle image depth %u\n", (unsigned int) image_info->depth);
+						exit(1);
+					}
 				}
 
 				p++;
