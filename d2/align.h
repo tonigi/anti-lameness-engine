@@ -2407,7 +2407,7 @@ public:
 		unsigned int cols = ale_image_get_width(reference_image);
 
 		image_rw::write_image(wmx_file, reference_image);
-		image_rw::write_image(wmx_defs, reference_defined, exp_bool->get_gamma());
+		image_rw::write_image(wmx_defs, reference_image, exp_bool->get_gamma(), 0, 0, 1);
 
 		/* execute ... */
 		int exit_status = 1;

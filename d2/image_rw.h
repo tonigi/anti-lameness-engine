@@ -360,7 +360,7 @@ public:
 	/*
 	 * Write an image to a file
 	 */
-	static void write_image(const char *filename, ale_image im, double gamma = 0.45, int rezero = 0, int exp_scale_override = 0) {
+	static void write_image(const char *filename, ale_image im, double gamma = 0.45, int rezero = 0, int exp_scale_override = 0, int use_weights = 0) {
 		static int warned = 0;
 
 		/*
@@ -474,7 +474,8 @@ public:
 		 * Nearest-neighbor fill.
 		 */
 
-		ale_image temp_image = ale_image_nn_fill(im, nn_defined_radius);
+		 ale_image temp_image = use_weights ? ale_image_nn_fill(im, nn_defined_radius)
+		 				    : ale_image_get_weights(im);
 
 		/*
 		 * Unlinearize and quantize
