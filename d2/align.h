@@ -2423,17 +2423,16 @@ public:
 
 		ale_image wmx_weights = image_rw::read_image(wmx_file, exp_def);
 
+#warning wmx_weights should be given offset identical to the reference image.
+
 		if (ale_image_get_height(wmx_weights) != rows || ale_image_get_width(wmx_weights) != cols)
 			ui::get()->error("algorithmic weighting must not change image size");
 
 		if (alignment_weights == NULL)
 			alignment_weights = wmx_weights;
 		else 
-			for (unsigned int i = 0; i < rows; i++)
-			for (unsigned int j = 0; j < cols; j++)
-				alignment_weights->set_pixel(i, j,
-					(pixel) alignment_weights->get_pixel(i, j) 
-				      * (pixel) wmx_weights->get_pixel(i, j));
+			ale_image_map_2(alignment_weights, alignment_weights, wmx_weights, "\
+				SET_PIXEL(p, GET_PIXEL(0, p) * GET_PIXEL(1, p))");
 #endif
 	}
 
