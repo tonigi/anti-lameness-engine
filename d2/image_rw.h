@@ -382,36 +382,40 @@ public:
 
 				for (unsigned int k = 0; k < ale_image_get_depth(im); k++) {
 
-					unsigned char data[8];
-
 					if (k != 0)
 						fprintf(stderr, " ");
 
 					switch (type) {
-					ALE_TYPE_UINT_8:
-						fscanf(image_data, "%c", &data[0]);
-						fprintf(stderr, "%u", (unsigned int) data[0]);
-						break;
-					ALE_TYPE_UINT_16:
-						fscanf(image_data, "%c%c", &data[0], &data[1]);
-						fprintf(stderr, "%u", (unsigned int) *((unsigned short *) data));
-						break;
-					ALE_TYPE_UINT_32:
-						fscanf(image_data, "%c%c%c%c", &data[0], &data[1], &data[2], &data[3]);
-						fprintf(stderr, "%u", *((unsigned int *) data));
-						break;
-					ALE_TYPE_UINT_64:
-						fscanf(image_data, "%c%c%c%c%c%c%c%c", &data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6], &data[7]);
-						fprintf(stderr, "%lu", *((unsigned long *) data));  // XXX: may not be long enough.
-						break;
-					ALE_TYPE_FLOAT_32:
-						fscanf(image_data, "%c%c%c%c", &data[0], &data[1], &data[2], &data[3]);
-						fprintf(stderr, "%f", (double) *((float *) data));
-						break;
-					ALE_TYPE_FLOAT_64:
-						fscanf(image_data, "%c%c%c%c%c%c%c%c", &data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6], &data[7]);
-						fprintf(stderr, "%f", *((double *) data));
-						break;
+					ALE_TYPE_UINT_8: {
+						cl_uchar data;
+						assert(fread(&data, sizeof(cl_uchar), 1, image_data));
+						fprintf(stderr, "%u", (unsigned int) data);
+						break; }
+					ALE_TYPE_UINT_16: {
+						cl_ushort data;
+						assert(fread(&data, sizeof(cl_ushort), 1, image_data));
+						fprintf(stderr, "%u", (unsigned int) data);
+						break; }
+					ALE_TYPE_UINT_32: {
+						cl_uint data;
+						assert(fread(&data, sizeof(cl_uint), 1, image_data));
+						fprintf(stderr, "%u", (unsigned int) data);
+						break; }
+					ALE_TYPE_UINT_64: {
+						cl_ulong data;
+						assert(fread(&data, sizeof(cl_ulong), 1, image_data));
+						fprintf(stderr, "%llu", data);
+						break; }
+					ALE_TYPE_FLOAT_32: {
+						cl_float data;
+						assert(fread(&data, sizeof(cl_float), 1, image_data));
+						fprintf(stderr, "%f", (double) data);
+						break; }
+					ALE_TYPE_FLOAT_64: {
+						double data;
+						assert(fread(&data, sizeof(double), 1, image_data));
+						fprintf(stderr, "%f", data);
+						break; }
 					}
 				}
 				fprintf(stderr, "] ");
