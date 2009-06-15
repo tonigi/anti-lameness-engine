@@ -191,10 +191,11 @@ private:
 
 	public:
 		astate_t() : 
-				old_initial_alignment(transformation::eu_identity()),
-				old_final_alignment(transformation::eu_identity()),
-				default_initial_alignment(transformation::eu_identity()),
 				is_default(1) {
+
+			old_initial_alignment = ale_new_trans(accel::context(), NULL);
+			old_final_alignment = ale_new_trans(accel::context(), NULL);
+			default_initial_alignment = ale_new_trans(accel::context(), NULL);
 
 			input_frame = NULL;
 			is_default[0] = 1;
@@ -222,11 +223,11 @@ private:
 			return is_default[index];
 		}
 
-		transformation get_default() {
+		ale_trans get_default() {
 			return default_initial_alignment;
 		}
 
-		void set_default(transformation t) {
+		void set_default(ale_trans t) {
 			default_initial_alignment = t;
 		}
 		
