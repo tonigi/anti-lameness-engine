@@ -231,8 +231,8 @@ private:
 			default_initial_alignment = t;
 		}
 		
-		void default_set_original_bounds(const image *i) {
-			default_initial_alignment.set_original_bounds(i);
+		void default_set_original_bounds(ale_image i) {
+			ale_trans_set_original_bounds(i);
 		}
 
 		void set_final(transformation t) {

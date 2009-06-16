@@ -289,22 +289,6 @@ public:
 		current_element = i;
 	}
 
-	/*
-	 * Set the bounds of the reference image after incorporation
-	 * of the original frame.
-	 */
-	void set_original_bounds(const image *i) {
-		assert (orig_ref_width == 0);
-		assert (orig_ref_height == 0);
-
-		orig_ref_height = i->height();
-		orig_ref_width = i->width();
-		orig_offset = i->offset();
-
-		assert (orig_ref_width != 0);
-		assert (orig_ref_height != 0);
-	}
-
 	static multi_coordinate parent_mc(multi_coordinate mc) {
 		multi_coordinate result;
 
