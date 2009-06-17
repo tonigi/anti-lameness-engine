@@ -232,7 +232,7 @@ private:
 		}
 		
 		void default_set_original_bounds(ale_image i) {
-			ale_trans_set_original_bounds(i);
+			ale_trans_set_original_bounds(default_initial_alignment, i);
 		}
 
 		void set_final(transformation t) {
