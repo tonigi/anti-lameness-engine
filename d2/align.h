@@ -235,7 +235,7 @@ private:
 			ale_trans_set_original_bounds(default_initial_alignment, i);
 		}
 
-		void set_final(transformation t) {
+		void set_final(ale_trans t) {
 			old_final_alignment = t;
 		}
 
