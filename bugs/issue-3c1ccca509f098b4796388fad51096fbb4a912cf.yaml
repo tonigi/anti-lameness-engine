@@ -16,4 +16,11 @@ log_events:
   - David Hilvert <dhilvert@auricle.dyndns.org>
   - created
   - ""
+- - 2009-06-20 21:12:28.472388 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Additionally, update file headers to reflect the ranges of dates indicated by
+    git blame after these deficiencies are corrected, as certain notices appear to
+    be out of date.
 git_branch: 
