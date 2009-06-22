@@ -37,6 +37,21 @@ class align {
 private:
 
 	/*
+	 * Alignment properties
+	 */
+
+	static ale_align_properties align_properties() {
+		static ale_align_properties data = NULL;
+
+		if (data == NULL)
+			data = ale_new_align_properties();
+
+		assert(data);
+
+		return data;
+	}
+	
+	/*
 	 * Private data members
 	 */
 
@@ -2104,7 +2119,7 @@ public:
 		assert (n <= latest + 1);
 		assert (n >= 0);
 
-		static astate_t astate;
+		ale_align_properties astate = align_properties();
 
 		ui::get()->set_frame_num(n);
 
