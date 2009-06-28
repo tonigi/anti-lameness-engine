@@ -2129,7 +2129,9 @@ public:
 			 * Handle the initial frame
 			 */
 
-			ale_image i = image_rw::open(n);
+			astate.set_input_frame(image_rw::open(n));
+
+			const image *i = astate.get_input_frame();
 			int is_default;
 			transformation result = alignment_class == 2
 				? transformation::gpt_identity(i, scale_factor)
