@@ -1983,7 +1983,7 @@ public:
 
 		assert (!ale_resize_image(alignment_weights, 0, 0, ale_image_get_width(reference_image), ale_image_get_height(reference_image)));
 
-		ale_image_map_0(alignment_weights, "SET_PIXEL(p, PIXEL(1, 1, 1))");
+		ale_eval("SET_PIXEL(%0I, p, PIXEL(1, 1, 1))", alignment_weights);
 	}
 	
 	/*
@@ -1996,8 +1996,7 @@ public:
 
 		init_weights();
 
-		ale_image_map_2(alignment_weights, alignment_weights, weight_map, " \
-			SET_PIXEL(p, GET_PIXEL(0, p) * GET_PIXEL_BG(1, p))");
+		ale_eval("SET_PIXEL(%0I, p, GET_PIXEL(%0i, p) * GET_PIXEL_BG(%1i, p))", alignment_weights, weight_map);
 	}
 
 	/*
@@ -2041,8 +2040,7 @@ public:
 		if (alignment_weights == NULL)
 			alignment_weights = wmx_weights;
 		else 
-			ale_image_map_2(alignment_weights, alignment_weights, wmx_weights, "\
-				SET_PIXEL(p, GET_PIXEL(0, p) * GET_PIXEL(1, p))");
+			ale_eval("SET_PIXEL(%0I, p, GET_PIXEL(%0i, p) * GET_PIXEL(%1i, p))", alignment_weights, wmx_weights);
 #endif
 	}
 

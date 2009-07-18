@@ -485,9 +485,8 @@ public:
 				ale_image_get_format(temp_image), (mcv > 255) ?
 				ALE_TYPE_UINT_16 : ALE_TYPE_UINT_8);
 
-		ale_image_map_1(quantized_image, temp_image, "\
-			SET_PIXEL(p, CLAMP(pow((GET_PIXEL(0, p) - (PIXEL(1, 1, 1) * %0f)) / (%1f - %0f), %2f)) * %3f)",
-			minval, maxval, gamma, (double) ((mcv > 255) ? 65535 : 255));
+		ale_eval("SET_PIXEL(%0I, p, CLAMP(pow((GET_PIXEL(%1i, p) - (PIXEL(1, 1, 1) * %2f)) / (%3f - %2f), %4f)) * %5f)",
+			quantized_image, temp_image, minval, maxval, gamma, (double) ((mcv > 255) ? 65535 : 255));
 
 		ale_image_release(temp_image);
 
