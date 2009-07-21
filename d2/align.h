@@ -344,8 +344,10 @@ private:
 	 *
 	 * And assign to libale functionality like this:
 	 *
-	 *   * correct each element based on an estimated error from alignment-
-	 *     calculated change in the parent element.
+	 *   * correct each received start element (other than 0th) based on an
+	 *     estimated error from alignment-calculated change in the parent
+	 *     element.  (I.e., propagate final alignment calculations to 
+	 *     any children's start values.)
 	 */
 
 	/*
