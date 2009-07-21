@@ -329,6 +329,23 @@ private:
 	 * would be desirable to rewrite following logic more concisely, using,
 	 * e.g., the recently-introduced ale_eval to facilitate abstraction, so
 	 * that the split in functionality can be performed more cleanly.
+	 *
+	 * The split in following should probably assign to ALE functionality
+	 * like this:
+	 *
+	 * Working one's way up the hierarchy,
+	 *
+	 *   * If file data is available for both prev. and current transf's,
+	 *        -> use established 'delta --follow semantics' described below
+	 *   * If file data is available for only current transf.,
+	 *        -> adjust file current according to parent adjustment rel. to file.
+	 *   * else (2 cases)
+	 *        -> use parent calc. adj. by any prev. final against its parent.
+	 *
+	 * And assign to libale functionality like this:
+	 *
+	 *   * correct each element based on an estimated error from alignment-
+	 *     calculated change in the parent element.
 	 */
 
 	/*
