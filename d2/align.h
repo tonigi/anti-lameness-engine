@@ -657,39 +657,6 @@ private:
 
 
 	/*
-	 * Types for scale clusters.
-	 */
-
-	struct nl_scale_cluster {
-		const image *accum_max;
-		const image *accum_min;
-		const image *certainty_max;
-		const image *certainty_min;
-		const image *aweight_max;
-		const image *aweight_min;
-		exclusion *ax_parameters;
-
-		ale_pos input_scale;
-		const image *input_certainty_max;
-		const image *input_certainty_min;
-		const image *input_max;
-		const image *input_min;
-	};
-
-	struct scale_cluster {
-		const image *accum;
-		const image *certainty;
-		const image *aweight;
-		exclusion *ax_parameters;
-
-		ale_pos input_scale;
-		const image *input_certainty;
-		const image *input;
-
-		nl_scale_cluster *nl_scale_clusters;
-	};
-
-	/*
 	 * Check for exclusion region coverage in the reference 
 	 * array.
 	 */
