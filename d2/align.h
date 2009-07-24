@@ -1884,46 +1884,6 @@ public:
 	}
 
 	/*
-	 * Copy ax parameters according to frame.
-	 */
-	static exclusion *filter_ax_parameters(int frame, int *local_ax_count) {
-
-		exclusion *dest = (exclusion *) malloc(ax_count * sizeof(exclusion));
-
-		assert (dest);
-
-		if (!dest)
-			ui::get()->memory_error("exclusion regions");
-
-		*local_ax_count = 0;
-
-		for (int idx = 0; idx < ax_count; idx++) {
-			if (ax_parameters[idx].x[4] > frame 
-			 || ax_parameters[idx].x[5] < frame)
-				continue;
-
-			dest[*local_ax_count] = ax_parameters[idx];
-
-			(*local_ax_count)++;
-		}
-
-		return dest;
-	}
-
-	static void scale_ax_parameters(int local_ax_count, exclusion *ax_parameters, 
-			ale_pos ref_scale, ale_pos input_scale) {
-		for (int i = 0; i < local_ax_count; i++) {
-			ale_pos scale = (ax_parameters[i].type == exclusion::RENDER)
-				      ? ref_scale
-				      : input_scale;
-
-			for (int n = 0; n < 6; n++) {
-				ax_parameters[i].x[n] = ax_parameters[i].x[n] * scale;
-			}
-		}
-	}
-
-	/*
 	 * Prepare the next level of detail for ordinary images.
 	 */
 	static const image *prepare_lod(const image *current) {
