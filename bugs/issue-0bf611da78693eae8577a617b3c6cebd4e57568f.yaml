@@ -27,4 +27,17 @@ log_events:
     This might be perhaps be most appropriate for the 0.9 branch separate from current
     master, or perhaps on its own branch, to allow for separate development of development
     for Libale, perhaps with cherry-picking of changes between branches or so.
+- - 2009-10-28 03:21:43.117033 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    One approach to this might be to implement acceleration for an early version
+    (for which implementation would be easier; in the limiting case, 0.0.0 should
+    be fairly straightforward), and then migrate the relevant patches for
+    acceleration to later versions (in the limiting case, version by version, with
+    a new branch at every version, or, perhaps easier, on a separate acceleration
+    branch anchored at the point of the initial implementation), hence
+    accomplishing a piecewise (or incremental) refactoring while allowing testing
+    of the resulting code at every stage (and, more significantly, allowing early
+    testing).
 git_branch: 
