@@ -40,4 +40,11 @@ log_events:
     accomplishing a piecewise (or incremental) refactoring while allowing testing
     of the resulting code at every stage (and, more significantly, allowing early
     testing).
+- - 2009-10-28 03:42:44.651555 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note that the mentioned approach to incremental refactoring over a series of
+    existing versions might also be applied to separation of code into a library
+    part, with likely the same advantages as mentioned for the acceleration case.
 git_branch: 
