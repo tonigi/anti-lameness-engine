@@ -38,4 +38,20 @@ log_events:
     and as the register architecture has changed for the larger, if I recall
     correctly (see Wikipedia for SSE, etc.; see also recent Libale bugs discussing
     acceleration issues).
+- - 2009-10-29 00:49:28.992087 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Gregory Maxwell had pointed out in 2004 that object abstraction in ALE may be
+    preventing auto vectorization (SSE).  This seems a possibility, and might be a
+    motivation for removing such abstraction (which might also make other sorts of
+    acceleration -- such as via OpenCL -- easier).  He also notes that single
+    precision is better optimized than double by GCC (but single is the default
+    configuration).
+    
+    Jeff Epler had noted in 2003 that the then default flags (with -Os) produced
+    better performance on Athlon XP 2600+ than specifying -march -mcpu -sse and
+    -mfpmath flags in addition to -Os, or specifying -O2; I'd replied that this
+    might be due to -Os keeping code in cache.  It's possible that the ordering of
+    best options would have changed since then, in any case.
 git_branch: 
