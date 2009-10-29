@@ -54,4 +54,11 @@ log_events:
     -mfpmath flags in addition to -Os, or specifying -O2; I'd replied that this
     might be due to -Os keeping code in cache.  It's possible that the ordering of
     best options would have changed since then, in any case.
+- - 2009-10-29 03:24:39.158184 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    One refinement of abstraction removal might be removal in the common case
+    (e.g., for box and triangle filters).  See related bug ({issue 8ffa5cdb90b3f4ec2d4989f324f198d6fd550e37} ?) for proposed
+    separation of these cases for acceleration via OpenCL.
 git_branch: 
