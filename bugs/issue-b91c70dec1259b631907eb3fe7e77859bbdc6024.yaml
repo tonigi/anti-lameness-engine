@@ -1,0 +1,41 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Select or recommend how to select -march and -mtune for GCC
+desc: |-
+  GCC supports a variety of -march and -mtune options (see `info gcc`); it might be
+  worthwhile to test these on relevant platforms and perhaps either set reasonable
+  defaults or recommend such for users, if typical GCC defaults are not adequate.
+type: :task
+component: ale
+release: 
+reporter: David Hilvert <dhilvert@auricle.dyndns.org>
+status: :unstarted
+disposition: 
+creation_time: 2009-10-29 00:16:24.548702 Z
+references: []
+
+id: b91c70dec1259b631907eb3fe7e77859bbdc6024
+log_events: 
+- - 2009-10-29 00:20:54.590697 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - created
+  - |-
+    Perhaps most notable are -march=native and -mtune=native, which are said to
+    select something reasonably optimal for the machine on which the compiler is
+    being run.  From GCC documentation, the options appear support a rather broad
+    range of x86 subtypes and instruction set features, so the native options 
+    might be a good start.
+    
+    Other notable options would include `-mfpmath=see and -mfpmath=sse,387 .
+- - 2009-10-29 00:28:45.350517 Z
+  - David Hilvert <dhilvert@auricle.dyndns.org>
+  - commented
+  - |-
+    Note that use of SSE or so was brought up on either mailing list or e-mail some
+    time ago, so it would probably be appropriate to look through the archives for
+    a reference when publishing results (if any) to the mailing list (if I recall,
+    no tests were mentioned, however).  Variation between 32- and 64-bit might also
+    be worth looking at, as this has also been a topic of discussion on the list,
+    and as the register architecture has changed for the larger, if I recall
+    correctly (see Wikipedia for SSE, etc.; see also recent Libale bugs discussing
+    acceleration issues).
+git_branch: 
